@@ -1,0 +1,317 @@
+import json
+import os
+import tempfile
+import threading
+import unittest
+import urllib.parse
+import urllib.request
+from datetime import datetime, timedelta, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from unittest.mock import patch
+from zoneinfo import ZoneInfo
+
+from app import storage
+from app.server import Handler, night_analysis
+
+
+MEAL_AT = "2026-09-23T10:00:00Z"
+
+
+class FakeNightscout(BaseHTTPRequestHandler):
+    treatments = []
+    profile = {
+        "_id": "current-profile",
+        "startDate": "2026-01-01T00:00:00.000Z",
+        "defaultProfile": "Default",
+        "store": {"Default": {
+            "timezone": "Europe/Berlin", "units": "mg/dl",
+            "sens": [
+                {"time": "00:00", "timeAsSeconds": 0, "value": 50},
+                {"time": "12:00", "timeAsSeconds": 43200, "value": 45},
+            ],
+        }},
+    }
+    entries = [
+        {"_id": "glucose-start", "date": 1790157600000, "type": "sgv", "sgv": 100},
+        {"_id": "glucose-end", "date": 1790168400000, "type": "sgv", "sgv": 120},
+    ]
+
+    def log_message(self, *args):
+        pass
+
+    def do_GET(self):
+        parsed = urllib.parse.urlparse(self.path)
+        assert urllib.parse.parse_qs(parsed.query)["token"] == ["test-raw-token"]
+        if parsed.path.endswith("/entries/sgv.json"):
+            value = self.entries
+        elif parsed.path.endswith("/treatments.json"):
+            value = self.treatments
+        elif parsed.path.endswith("/profile/current"):
+            value = self.profile
+        else:
+            self.send_error(404)
+            return
+        raw = json.dumps(value).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(raw)))
+        self.end_headers()
+        self.wfile.write(raw)
+
+    def do_POST(self):
+        parsed = urllib.parse.urlparse(self.path)
+        assert urllib.parse.parse_qs(parsed.query)["token"] == ["test-raw-token"]
+        value = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        for item in value:
+            item["_id"] = "ns-" + str(len(self.treatments) + 1)
+            self.treatments.append(item)
+        raw = json.dumps(value).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(raw)))
+        self.end_headers()
+        self.wfile.write(raw)
+
+
+class IntegrationTests(unittest.TestCase):
+    def setUp(self):
+        self.old_env = dict(os.environ)
+        self.old_db = storage.DB_PATH
+        self.temp = tempfile.TemporaryDirectory()
+        storage.DB_PATH = Path(self.temp.name) / "app.sqlite3"
+        storage.init()
+        FakeNightscout.treatments = []
+        FakeNightscout.entries = [
+            {"_id": "glucose-start", "date": 1790157600000, "type": "sgv", "sgv": 100},
+            {"_id": "glucose-end", "date": 1790168400000, "type": "sgv", "sgv": 120},
+            {"_id": "glucose-extended", "date": int(datetime(2026, 9, 23, 15, 30, tzinfo=timezone.utc).timestamp() * 1000), "type": "sgv", "sgv": 120},
+            {"_id": "glucose-snack-end", "date": int(datetime(2026, 9, 23, 14, tzinfo=timezone.utc).timestamp() * 1000), "type": "sgv", "sgv": 120},
+        ]
+        self.fake = ThreadingHTTPServer(("127.0.0.1", 0), FakeNightscout)
+        threading.Thread(target=self.fake.serve_forever, daemon=True).start()
+        os.environ.update({
+            "NIGHTSCOUT_URL": f"http://127.0.0.1:{self.fake.server_port}",
+            "NIGHTSCOUT_AUTH_MODE": "token",
+            "NIGHTSCOUT_CREDENTIAL": "test-raw-token",
+            "APP_PASSWORD": "",
+        })
+        self.app = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=self.app.serve_forever, daemon=True).start()
+        self.base = f"http://127.0.0.1:{self.app.server_port}"
+        self.request("/api/settings", method="POST", body={
+            "isf_schedule": [{"start_minute": 0, "mgdl_per_unit": 50}],
+            "peak_minutes": 60, "duration_minutes": 180, "window_minutes": 180,
+        })
+
+    def tearDown(self):
+        self.app.shutdown()
+        self.fake.shutdown()
+        self.app.server_close()
+        self.fake.server_close()
+        storage.DB_PATH = self.old_db
+        os.environ.clear()
+        os.environ.update(self.old_env)
+        self.temp.cleanup()
+
+    def request(self, path, method="GET", body=None):
+        raw = json.dumps(body).encode() if body is not None else None
+        headers = {"Content-Type": "application/json"} if raw is not None else {}
+        req = urllib.request.Request(self.base + path, data=raw, headers=headers, method=method)
+        with urllib.request.urlopen(req) as response:
+            return json.loads(response.read())
+
+    def test_current_nightscout_profile_is_the_only_isf_source(self):
+        data = self.request("/api/settings")
+        self.assertEqual(data["settings"]["isf_schedule"], [
+            {"start_minute": 0, "mgdl_per_unit": "50"},
+            {"start_minute": 720, "mgdl_per_unit": "45"},
+        ])
+        self.assertEqual(data["settings"]["nightscout_profile"]["profile_name"], "Default")
+        self.assertIsNotNone(data["profile_sync_at"])
+
+        self.request("/api/settings", method="POST", body={
+            "window_minutes": 180,
+            "isf_schedule": [{"start_minute": 0, "mgdl_per_unit": 999}],
+        })
+        _, settings = storage.get_settings()
+        self.assertEqual(settings["isf_schedule"][0]["mgdl_per_unit"], "50")
+
+        refreshed = self.request("/api/profile/sync", method="POST", body={})
+        self.assertEqual(refreshed["profile"]["profile_name"], "Default")
+
+        original = FakeNightscout.profile
+        FakeNightscout.profile = json.loads(json.dumps(original))
+        FakeNightscout.profile["store"]["Default"]["units"] = "mmol/L"
+        FakeNightscout.profile["store"]["Default"]["sens"][0]["value"] = 2.8
+        try:
+            self.request("/api/profile/sync", method="POST", body={})
+            _, settings = storage.get_settings()
+            self.assertEqual(settings["isf_schedule"][0]["mgdl_per_unit"], "50.45096")
+        finally:
+            FakeNightscout.profile = original
+
+    def test_nightscout_write_read_mirror_and_calculation(self):
+        episode_id = "cb529c35-e44b-4fe5-a69b-d2aec69ae7fe"
+        event_id = "d2fc91b4-dde4-41c2-bf57-75638224e389"
+        created = self.request("/api/episode", method="POST", body={
+            "at": MEAL_AT, "meal": "lunch", "carbs": "60", "insulin": "4",
+            "episode_id": episode_id, "event_id": event_id,
+        })
+        self.assertEqual(created["episode_id"], episode_id)
+        self.request("/api/episode", method="POST", body={
+            "at": MEAL_AT, "meal": "lunch", "carbs": "60", "insulin": "4",
+            "episode_id": episode_id, "event_id": event_id,
+        })
+        self.assertEqual(len(FakeNightscout.treatments), 1)
+
+        before = self.request("/api/day?date=2026-09-23")
+        self.assertEqual(len(before["meals"]), 1)
+        self.assertIsNotNone(before["meals"][0]["calculation"]["ratio_g_per_unit"])
+
+        self.request("/api/dose", method="POST", body={
+            "at": "2026-09-23T12:30:00Z", "meal": "lunch", "role": "correction",
+            "insulin": "1", "episode_id": episode_id,
+            "event_id": "079a06b1-7b2c-4d99-9171-79014c175b47",
+        })
+        after = self.request("/api/day?date=2026-09-23")
+        result = after["meals"][0]["calculation"]
+        self.assertEqual(len(result["doses"]), 2)
+        self.assertAlmostEqual(float(result["factor_units_per_ke"]) * float(result["ratio_g_per_unit"]), 10.0)
+        self.assertLess(float(result["ratio_g_per_unit"]), float(before["meals"][0]["calculation"]["ratio_g_per_unit"]))
+        self.assertIsNotNone(storage.synced_at("2026-09-23"))
+        with storage.connect() as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM treatments").fetchone()[0], 2)
+
+    def test_snack_is_shown_with_meal_when_counted_in_factor(self):
+        FakeNightscout.treatments = [
+            {"_id": "meal", "created_at": MEAL_AT, "eventType": "Meal Bolus", "carbs": 60, "insulin": 4},
+            {"_id": "snack", "created_at": "2026-09-23T11:00:00Z", "eventType": "Snack Bolus", "carbs": 15, "insulin": 1,
+             "notes": "[DA1:cb529c35-e44b-4fe5-a69b-d2aec69ae7fe:lunch:correction]"},
+            {"_id": "later", "created_at": "2026-09-23T14:00:00Z", "eventType": "Snack Bolus", "carbs": 8, "insulin": 0},
+        ]
+        day = self.request("/api/day?date=2026-09-23")
+        meal = day["meals"][0]
+        self.assertEqual(float(meal["calculation"]["carbs_total"]), 75)
+        self.assertEqual(float(meal["calculation"]["rapid_units_in_window"]), 5)
+        self.assertEqual([event["id"] for event in meal["events"]], ["meal", "snack"])
+        self.assertEqual(meal["events"][1]["role"], "correction")
+        self.assertEqual(meal["events"][1]["eventType"], "Snack Bolus")
+        self.assertEqual(meal["calculation"]["doses"][1]["event_type"], "Snack Bolus")
+        self.assertEqual([event["at"] for event in day["other_events"]], ["2026-09-23T14:00:00+00:00"])
+
+    def test_night_starts_three_hours_after_last_rapid_injection(self):
+        dinner = datetime(2026, 9, 22, 18, tzinfo=timezone.utc)
+        correction = datetime(2026, 9, 22, 22, tzinfo=timezone.utc)
+        breakfast = datetime(2026, 9, 23, 6, tzinfo=timezone.utc)
+        treatments = [
+            {"at": dinner, "insulin": 4, "role": "meal"},
+            {"at": correction, "insulin": 1, "role": "correction"},
+            {"at": dinner + timedelta(hours=1), "insulin": 8, "eventType": "Basal Injection"},
+            {"id": "breakfast", "at": breakfast, "insulin": 3, "role": "meal", "carbs": 50, "eventType": "Meal Bolus", "notes": ""},
+        ]
+        entries = [
+            {"at": correction + timedelta(hours=3), "sgv": 150},
+            {"at": breakfast, "sgv": 110},
+            {"at": correction + timedelta(hours=4), "sgv": 95},
+        ]
+        meals = [{"meal": "dinner", "at": dinner}]
+        settings = {"timezone": "Europe/Berlin", "window_minutes": 180}
+        night = night_analysis("2026-09-22", treatments, entries, meals, settings)
+        self.assertEqual(night["last_injection_at"], correction)
+        self.assertEqual(night["start"], correction + timedelta(hours=3))
+        self.assertEqual(night["delta_mgdl"], -40)
+        self.assertEqual(night["minimum_glucose"], 95)
+
+    def test_breakfast_work_free_defaults_and_day_override(self):
+        today = datetime.now(ZoneInfo("Europe/Berlin")).date()
+        monday = (today - timedelta(days=today.weekday())).isoformat()
+        saturday = (today - timedelta(days=(today.weekday() - 5) % 7)).isoformat()
+        meals_by_day = {
+            monday: [{"id": "work-breakfast", "meal": "breakfast", "at": monday + "T08:00:00+02:00",
+                      "calculation": {"factor_units_per_ke": "1", "ratio_g_per_unit": "10"}}],
+            saturday: [{"id": "free-breakfast", "meal": "breakfast", "at": saturday + "T08:00:00+02:00",
+                        "calculation": {"factor_units_per_ke": "2", "ratio_g_per_unit": "5"}}],
+        }
+
+        def payload(day, refresh=False):
+            return {"meals": meals_by_day.get(day, [])}
+
+        with patch("app.server.day_payload", side_effect=payload):
+            initial = self.request("/api/summary?days=7")["groups"]["breakfast"]
+            self.assertEqual(initial["by_day_type"]["work"]["mean_units_per_ke"], "1")
+            self.assertEqual(initial["by_day_type"]["free"]["mean_units_per_ke"], "2")
+            self.assertEqual(initial["count"], 2)
+            self.request("/api/analysis/day-type", method="POST", body={"day": monday, "day_type": "free"})
+            changed = self.request("/api/summary?days=7")["groups"]["breakfast"]
+            self.assertEqual(changed["by_day_type"]["work"]["count"], 0)
+            self.assertEqual(changed["by_day_type"]["free"]["mean_units_per_ke"], "1.5")
+            self.assertEqual(changed["count"], 2)
+            self.assertEqual(storage.analysis_day_types()[monday], "free")
+            self.request("/api/analysis/exclusion", method="POST", body={
+                "meal_id": "work-breakfast", "day": monday, "excluded": True,
+            })
+            filtered = self.request("/api/summary?days=7")["groups"]["breakfast"]
+            self.assertEqual(filtered["by_day_type"]["free"]["count"], 1)
+            self.assertEqual(filtered["by_day_type"]["free"]["excluded_count"], 1)
+            self.assertEqual(filtered["by_day_type"]["free"]["mean_units_per_ke"], "2")
+
+    def test_summary_shows_median_middle_half_and_full_range(self):
+        factors = ["1", "1.1", "1.2", "1.3", "5"]
+        meals = [{
+            "id": f"meal-{index}",
+            "meal": "lunch",
+            "at": f"2026-09-{10 + index}T12:00:00+00:00",
+            "calculation": {
+                "factor_units_per_ke": factor,
+                "ratio_g_per_unit": str(10 / float(factor)),
+            },
+        } for index, factor in enumerate(factors)]
+        with patch("app.server.day_payload", side_effect=[{"meals": meals}] + [{"meals": []}] * 13):
+            group = self.request("/api/summary?days=14")["groups"]["lunch"]
+        self.assertEqual(group["count"], 5)
+        self.assertEqual(group["median_units_per_ke"], "1.2")
+        self.assertEqual(float(group["mean_units_per_ke"]), 1.92)
+        self.assertEqual(float(group["q1_units_per_ke"]), 1.1)
+        self.assertEqual(float(group["q3_units_per_ke"]), 1.3)
+        self.assertEqual(group["min_units_per_ke"], "1")
+        self.assertEqual(group["max_units_per_ke"], "5")
+        self.assertEqual([item["units_per_ke"] for item in group["calculations"]], factors)
+        self.assertEqual(group["strong_outlier_count"], 1)
+        self.assertEqual([item["strong_outlier"] for item in group["calculations"]], [False, False, False, False, True])
+
+        with patch("app.server.day_payload", return_value={"meals": meals}):
+            response = self.request("/api/analysis/exclusion", method="POST", body={
+                "meal_id": "meal-4", "day": "2026-09-23", "excluded": True,
+            })
+        self.assertTrue(response["excluded"])
+        self.assertIn("meal-4", storage.analysis_exclusions())
+        with patch("app.server.day_payload", side_effect=[{"meals": meals}] + [{"meals": []}] * 13):
+            filtered = self.request("/api/summary?days=14")["groups"]["lunch"]
+        self.assertEqual(filtered["count"], 4)
+        self.assertEqual(filtered["excluded_count"], 1)
+        self.assertEqual(filtered["valid_count"], 5)
+        self.assertEqual(float(filtered["mean_units_per_ke"]), 1.15)
+        self.assertEqual(filtered["max_units_per_ke"], "1.3")
+        self.assertTrue(filtered["calculations"][-1]["excluded"])
+        self.assertTrue(filtered["calculations"][-1]["strong_outlier"])
+
+        with patch("app.server.day_payload", return_value={"meals": meals}):
+            self.request("/api/analysis/exclusion", method="POST", body={
+                "meal_id": "meal-4", "day": "2026-09-23", "excluded": False,
+            })
+        self.assertNotIn("meal-4", storage.analysis_exclusions())
+
+        with patch("app.server.day_payload", side_effect=[{"meals": meals[:4]}] + [{"meals": []}] * 13):
+            small_group = self.request("/api/summary?days=14")["groups"]["lunch"]
+        self.assertIsNone(small_group["q1_units_per_ke"])
+        self.assertIsNone(small_group["q3_units_per_ke"])
+        self.assertEqual(float(small_group["median_units_per_ke"]), 1.15)
+
+        with patch("app.server.day_payload", side_effect=[{"meals": meals[:2]}] + [{"meals": []}] * 13):
+            sparse_group = self.request("/api/summary?days=14")["groups"]["lunch"]
+        self.assertEqual(sparse_group["strong_outlier_count"], 0)
+
+
+if __name__ == "__main__":
+    unittest.main()
