@@ -20,7 +20,7 @@ from app import calculation, episodes, nightscout, storage
 WEB = Path(__file__).resolve().parent.parent / "web"
 MAX_BODY = 64 * 1024
 MEALS = {"breakfast", "lunch", "dinner"}
-DOSAGE_ROLES = {"meal-dose", "correction"}
+DOSAGE_ROLES = {"meal-dose", "correction", "snack"}
 
 
 def median(values: list[Decimal]) -> Decimal:
@@ -667,6 +667,11 @@ class Handler(BaseHTTPRequestHandler):
                 units = calculation.dec(payload["insulin"])
                 if not 0 < units <= 100:
                     raise ValueError("Insulin außerhalb des erlaubten Bereichs")
+                carbs = calculation.dec(payload.get("carbs") or 0)
+                if role == "snack" and not 0 < carbs <= 500:
+                    raise ValueError("Kohlenhydrate außerhalb des erlaubten Bereichs")
+                if role != "snack" and carbs != 0:
+                    raise ValueError("Kohlenhydrate nur für Zwischenmahlzeiten erlaubt")
                 event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
                 _, settings = storage.get_settings()
                 day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
@@ -675,7 +680,8 @@ class Handler(BaseHTTPRequestHandler):
                     roots = [row for meal_day in nearby_days for row in day_payload(meal_day)["meals"]]
                     if not any(row["id"] == episode_id and row["meal"] == meal and 0 <= (at - parse_instant(row["at"])).total_seconds() <= 3 * 3600 for row in roots):
                         raise ValueError("Zugehörige Mahlzeit innerhalb von drei Stunden fehlt")
-                    record = record_with_tag(at, "Correction Bolus" if role == "correction" else "Meal Bolus", episode_id, meal, role, Decimal(0), units, "", event_id)
+                    event_type = {"correction": "Correction Bolus", "meal-dose": "Meal Bolus", "snack": "Snack Bolus"}[role]
+                    record = record_with_tag(at, event_type, episode_id, meal, role, carbs, units, "", event_id)
                     nightscout.write_treatment(record)
                 self._response(200, {"event_id": event_id, "day": day})
                 return

@@ -214,6 +214,34 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(meal["calculation"]["doses"][1]["event_type"], "Snack Bolus")
         self.assertEqual([event["at"] for event in day["other_events"]], ["2026-09-23T14:00:00+00:00"])
 
+    def test_snack_bolus_write_includes_carbs_and_insulin_in_meal(self):
+        episode_id = "cb529c35-e44b-4fe5-a69b-d2aec69ae7fe"
+        self.request("/api/episode", method="POST", body={
+            "at": MEAL_AT, "meal": "lunch", "carbs": "60", "insulin": "4", "episode_id": episode_id,
+        })
+        self.request("/api/dose", method="POST", body={
+            "at": "2026-09-23T11:00:00Z", "meal": "lunch", "role": "snack",
+            "carbs": "15", "insulin": "1", "episode_id": episode_id,
+        })
+        snack = FakeNightscout.treatments[1]
+        self.assertEqual(snack["eventType"], "Snack Bolus")
+        self.assertEqual(snack["carbs"], 15)
+        self.assertEqual(snack["insulin"], 1)
+        day = self.request("/api/day?date=2026-09-23")
+        meal = day["meals"][0]
+        self.assertEqual(len(day["meals"]), 1)
+        self.assertEqual(meal["events"][1]["role"], "snack")
+        self.assertEqual(float(meal["calculation"]["carbs_total"]), 75)
+        self.assertEqual(float(meal["calculation"]["rapid_units_in_window"]), 5)
+
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            self.request("/api/dose", method="POST", body={
+                "at": "2026-09-23T11:30:00Z", "meal": "lunch", "role": "snack",
+                "carbs": "0", "insulin": "1", "episode_id": episode_id,
+            })
+        self.assertEqual(error.exception.code, 400)
+        self.assertEqual(len(FakeNightscout.treatments), 2)
+
     def test_delete_individual_dose_from_nightscout_and_cache(self):
         episode_id = "cb529c35-e44b-4fe5-a69b-d2aec69ae7fe"
         self.request("/api/episode", method="POST", body={

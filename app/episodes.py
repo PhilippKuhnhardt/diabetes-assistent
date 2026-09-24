@@ -5,7 +5,7 @@ import re
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
-TAG = re.compile(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction)\]")
+TAG = re.compile(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction|snack)\]")
 EVENT_TAG = re.compile(r"\[DAE:[a-f0-9-]{36}\]")
 SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio)\]")
 SPORT_LABELS = {"jogging": "Joggen", "gym": "Gym", "light_cardio": "Leichtes Cardio"}
@@ -26,7 +26,7 @@ def treatment_tag(record: dict) -> dict | None:
 
 
 def tag(episode_id: str, meal: str, role: str) -> str:
-    if meal not in ("breakfast", "lunch", "dinner") or role not in ("meal", "meal-dose", "correction"):
+    if meal not in ("breakfast", "lunch", "dinner") or role not in ("meal", "meal-dose", "correction", "snack"):
         raise ValueError("Ungültiger Ereignistyp")
     if not re.fullmatch(r"[a-f0-9-]{36}", episode_id):
         raise ValueError("Ungültige Mahlzeit-ID")

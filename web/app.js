@@ -250,12 +250,13 @@ function mealHTML(meal, entries) {
     (meal.notes ? '<p class="meal-note">' + escapeHTML(meal.notes) + '</p>' : '') +
     chartFor(meal, entries) +
     '<ul class="events">' + events + '</ul>' +
-    (meal.imported ? '' : '<button type="button" class="add-dose" data-episode="' + escapeHTML(meal.id) + '">+ Injektion ergänzen</button>') +
+    (meal.imported ? '' : '<button type="button" class="add-dose" data-episode="' + escapeHTML(meal.id) + '">+ Bolus oder Snack ergänzen</button>') +
     '<form class="dose-form" data-episode="' + escapeHTML(meal.id) + '" data-meal="' + escapeHTML(meal.meal) + '" hidden>' +
-    '<label>Art <select name="role"><option value="meal-dose">Mahlzeitenbolus</option><option value="correction">Korrektur</option></select></label>' +
+    '<label>Art <select name="role"><option value="meal-dose">Mahlzeitenbolus</option><option value="correction">Korrektur</option><option value="snack">Zwischenmahlzeit mit Bolus</option></select></label>' +
     '<label>Datum <input type="date" name="date" required></label>' +
     '<label>Uhrzeit (HH:MM, 24 h)<input type="time" name="at" step="60" required></label>' +
-    '<label>Insulin <span>E</span><input type="number" name="insulin" min="0.01" max="100" step="0.01" required></label>' +
+    '<label>Insulin <span>IE</span><input type="number" name="insulin" min="0.01" max="100" step="0.01" required></label>' +
+    '<label class="snack-carbs" hidden>Kohlenhydrate <span>g</span><input type="number" name="carbs" min="0.1" max="500" step="0.1" inputmode="decimal"></label>' +
     '<button type="submit" class="primary">In Nightscout speichern</button></form>' +
     '</article>';
 }
@@ -348,7 +349,15 @@ function renderDay(data) {
       form.elements.insulin.focus();
     }
   }));
-  $$(".dose-form").forEach(form => form.addEventListener("submit", saveDose));
+  $$(".dose-form").forEach(form => {
+    form.elements.role.addEventListener("change", () => {
+      const snack = form.elements.role.value === "snack";
+      form.elements.carbs.closest("label").hidden = !snack;
+      form.elements.carbs.required = snack;
+      if (!snack) form.elements.carbs.value = "";
+    });
+    form.addEventListener("submit", saveDose);
+  });
 }
 
 async function loadDay() {
@@ -430,6 +439,7 @@ async function saveDose(event) {
   const payload = {
     episode_id: form.dataset.episode, meal: form.dataset.meal,
     role: form.elements.role.value, insulin: form.elements.insulin.value,
+    carbs: form.elements.role.value === "snack" ? form.elements.carbs.value : "0",
     at: toInstant(form.elements.date.value, form.elements.at.value),
     event_id: form.dataset.pendingId || crypto.randomUUID(),
   };
@@ -439,7 +449,7 @@ async function saveDose(event) {
   try {
     await api("/api/dose", { method: "POST", body: JSON.stringify(payload) });
     delete form.dataset.pendingId;
-    toast("Injektion in Nightscout gespeichert");
+    toast("Eintrag in Nightscout gespeichert");
     await loadDay();
   } catch (error) {
     toast(error.message, true);
