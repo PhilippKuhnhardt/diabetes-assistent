@@ -260,60 +260,15 @@ function chartFor(meal, entries) {
 function calculationHTML(result) {
   if (!result || !result.start) return '<div class="factor unavailable"><span>Insulinfaktor</span><strong>—</strong><small>' + escapeHTML(result?.reason || "Noch keine Berechnung") + '</small></div>';
   const valid = result.factor_units_per_ke != null;
-  const badge = '<div class="factor' + (valid ? '' : ' unavailable') + '"><span>Insulinfaktor</span><strong>' +
+  const summary = [
+    num(result.carbs_total) + " g KH",
+    num(result.rapid_units_in_window, 2) + " IE",
+    "Ende " + timeOnly(result.end),
+  ].join(" · ");
+  return '<div class="calc-block"><div class="factor' + (valid ? '' : ' unavailable') + '"><span>Insulinfaktor</span><strong>' +
     (valid ? escapeHTML(num(result.factor_units_per_ke, 3)) + ' <small>IE/KE</small>' : '—') +
-    '</strong><small>' + escapeHTML(num(result.carbs_total)) + ' g KH im Mahlzeitenfenster</small></div>';
-  const endMinutes = num(result.actual_window_minutes, 1);
-  const extended = result.end_reason === "after_last_injection"
-    ? '<p class="calc-note">Endpunkt wegen einer späteren Injektion verschoben. Jede schnell wirksame Dosis im Fenster erhält ' + escapeHTML(num(result.window_minutes, 0)) + ' Minuten Beobachtungszeit.</p>' : '';
-  const shortened = result.end_reason === "before_next_meal"
-    ? '<p class="calc-note">Endpunkt auf den letzten CGM-Wert vor der nächsten Hauptmahlzeit um ' +
-      escapeHTML(timeOnly(result.next_main_meal_at)) + ' verkürzt.</p>' : '';
-  const reason = result.reason
-    ? '<p class="calc-note">Kein Faktor: ' + escapeHTML(result.reason) + '.</p>' : '';
-  const glucose = '<div class="calc-step"><span>Glukose von ' + escapeHTML(timeOnly(result.start)) + ' bis ' + escapeHTML(timeOnly(result.end)) +
-    ' (+' + escapeHTML(endMinutes) + ' min)</span><b>' + escapeHTML(num(result.g0, 3)) + ' → ' +
-    escapeHTML(num(result.g3, 3)) + ' mg/dL · Δ ' + escapeHTML(num(result.delta_mgdl, 3)) + '</b></div>';
-  const insulin = '<div class="calc-step"><span>Schnell wirksames Insulin im Fenster</span><b>' +
-    escapeHTML(num(result.rapid_units_in_window, 2)) + ' IE vollständig berücksichtigt · ' +
-    escapeHTML(num(result.insulin_effect_mgdl, 3)) + ' mg/dL rechnerischer Insulineffekt</b></div>';
-  const carbs = '<div class="calc-step"><span>KH × Korrekturfaktor</span><b>' +
-    (result.extra_carb_count ? 'Σ(KH × KF) = ' : escapeHTML(num(result.carbs_total)) + ' g × ' + escapeHTML(num(result.meal_isf)) + ' mg/dL/IE = ') +
-    escapeHTML(num(result.carbs_times_isf_total, 3)) + '</b></div>';
-  const formula = valid
-    ? '<p class="formula">IE/KE = 10 × (' + escapeHTML(num(result.delta_mgdl, 3)) +
-      (Number(result.sport_effect_mgdl) ? ' + ' + escapeHTML(num(result.sport_effect_mgdl, 3)) + ' Sport' : '') +
-      ' + ' + escapeHTML(num(result.insulin_effect_mgdl, 3)) + ') ÷ ' +
-      escapeHTML(num(result.carbs_times_isf_total, 3)) + ' = ' + escapeHTML(num(result.factor_units_per_ke, 3)) + '</p>'
-    : '';
-  const profileInfo = result.nightscout_profile
-    ? ' · aktuelles Nightscout-Profil „' + escapeHTML(result.nightscout_profile.profile_name) + '“'
-    : '';
-  const doseNames = { meal: "Mahlzeit", "meal-dose": "Mahlzeitenbolus", correction: "Korrektur", "Snack Bolus": "Snack-Bolus", "Meal Bolus": "Mahlzeitenbolus", "Correction Bolus": "Korrektur", Bolus: "Bolus" };
-  const doseRows = result.doses.map(dose => '<tr><td>' + escapeHTML(timeOnly(dose.at)) + '</td><td>' +
-    escapeHTML(dose.event_type === "Snack Bolus" ? "Snack-Bolus" : doseNames[dose.role] || dose.role) + '</td><td>' + escapeHTML(num(dose.units)) + ' IE</td><td>' +
-    escapeHTML(num(dose.isf)) + '</td><td>' +
-    escapeHTML(num(dose.effect_mgdl, 3)) + '</td></tr>').join("");
-  const carbRows = result.carb_events.map(item => '<tr><td>' + escapeHTML(timeOnly(item.at)) + '</td><td>' +
-    escapeHTML(item.kind === "meal" ? "Mahlzeit" : item.kind === "snack" ? "Snack" : "Weitere KH") + '</td><td>' +
-    escapeHTML(num(item.carbs)) + ' g</td><td>' + escapeHTML(num(item.isf)) + '</td><td>' +
-    escapeHTML(num(item.carbs_times_isf, 3)) + '</td></tr>').join("");
-  return '<div class="calc-block">' + badge + '<div class="calc-steps">' + glucose + insulin + carbs + '</div>' +
-    formula + extended + shortened + reason +
-    '<details class="math"><summary>Alle Dosen, KH und Rohwerte anzeigen</summary>' +
-    '<h4>KH-Ereignisse</h4><div class="table-wrap"><table><thead><tr><th>Zeit</th><th>Art</th><th>KH</th><th>KF mg/dL/IE</th><th>KH × KF</th></tr></thead><tbody>' + carbRows + '</tbody></table></div>' +
-    '<h4>Insulineffekt</h4><div class="table-wrap"><table><thead><tr><th>Zeit</th><th>Art</th><th>Dosis</th><th>KF mg/dL/IE</th><th>mg/dL</th></tr></thead><tbody>' + doseRows + '</tbody></table></div>' +
-    '<p class="hint">Rohwerte: gemessenes Δ ' + escapeHTML(result.delta_mgdl) +
-      ' mg/dL · bestätigte Sport-Senkung ' + escapeHTML(result.sport_effect_mgdl || "0") +
-      ' mg/dL · bereinigtes Δ ' + escapeHTML(result.adjusted_delta_mgdl || result.delta_mgdl) +
-      ' mg/dL · rechnerischer Insulineffekt ' +
-      escapeHTML(result.insulin_effect_mgdl) + ' mg/dL · Summe ' + escapeHTML(result.denominator_mgdl) +
-      ' mg/dL' + (valid ? ' · IE/KE ' + escapeHTML(result.factor_units_per_ke) + ' · Nightscout-I:C ' +
-      escapeHTML(result.ratio_g_per_unit) + ' g/IE' : '') + '.</p>' +
-    '<p class="hint">CGM-Stützpunkte: ' + escapeHTML(result.g0_sources.join(" / ")) + ' und ' +
-      escapeHTML(result.g3_sources.join(" / ")) + '. Modell ' + escapeHTML(result.algorithm) +
-      ' · Einstellungen ' + escapeHTML(result.settings_version) + profileInfo + '.</p>' +
-    '<p class="hint">Annahmen: ' + result.assumptions.map(escapeHTML).join(" · ") + '</p></details></div>';
+    '</strong><small>' + escapeHTML(summary) + '</small>' +
+    (result.reason ? '<small>' + escapeHTML(result.reason) + '</small>' : '') + '</div></div>';
 }
 
 function mealHTML(meal, entries) {
@@ -449,28 +404,21 @@ async function updateDoseHelp() {
        signedChange(data.trend_delta_mgdl, 0) + " in " + num(data.trend_minutes, 0) + " min");
     const today = new Date().toLocaleDateString("sv-SE", { timeZone: state.settings?.timezone || "Europe/Berlin" });
     const canRecord = state.day === today;
-    const option = (label, variant, target, correction, total, units) => {
-      if (total == null) return "";
+    const option = (label, variant, target, units) => {
+      if (units == null) return "";
       const valid = Number(units) > 0 || Number(data.carbs_g) > 0;
       const allowed = valid && Number(units) <= 100 && canRecord;
       return '<div class="dose-option"><span>' + escapeHTML(label) + ' · Ziel ' + escapeHTML(num(target, 0)) +
-        ' mg/dL</span><small>Korrektur: (' + escapeHTML(num(data.glucose_mgdl, 0)) + ' − ' +
-        escapeHTML(num(target, 0)) + ') ÷ ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' = ' +
-        escapeHTML(num(correction, 2)) + ' IE</small><strong>Gesamt: ' + escapeHTML(num(total, 2)) +
+        ' mg/dL</span><strong>' + escapeHTML(num(units, 2)) +
         ' IE</strong><button type="button" class="record-dose" data-variant="' + variant + '"' +
         (allowed && !doseSaving ? '' : ' disabled') + '>' +
         (Number(units) > 0 ? escapeHTML(num(units, 2)) + ' IE jetzt in Nightscout eintragen' :
           'KH ohne Insulin jetzt in Nightscout eintragen') + '</button></div>';
     };
     output.innerHTML = '<div class="dose-glucose"><span>Aktueller Blutzucker</span><strong>' +
-      escapeHTML(glucose) + '</strong></div><div class="dose-math">' +
-      (data.carb_units == null ? '' : '<span>KH: ' + escapeHTML(num(data.carbs_g)) + ' g × ' +
-      escapeHTML(num(data.units_per_ke, 3)) + ' IE/KE = <b>' +
-      escapeHTML(num(data.carb_units, 2)) + ' IE</b></span>') + '</div>' +
-      '<div class="dose-options">' +
-      option("Normal", "normal", data.target_mgdl, data.correction_units, data.total_units, data.entry_units) +
-      option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_correction_units,
-        data.cautious_total_units, data.cautious_entry_units) + '</div>' +
+      escapeHTML(glucose) + '</strong></div><div class="dose-options">' +
+      option("Normal", "normal", data.target_mgdl, data.entry_units) +
+      option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_entry_units) + '</div>' +
       (!canRecord ? '<p class="hint">Direktes Eintragen ist nur für den heutigen Tag möglich.</p>' : '') +
       (data.recent_rapid_doses?.length ? '<p class="hint">Schnell wirksame Dosen in den letzten 3 h: ' +
       data.recent_rapid_doses.map(row => escapeHTML(timeOnly(row.at) + " · " + num(row.units) + " IE")).join(", ") +
