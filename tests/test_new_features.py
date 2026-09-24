@@ -28,11 +28,25 @@ class DosingTests(unittest.TestCase):
         self.assertEqual(Decimal(result["target_mgdl"]), Decimal(100))
         self.assertEqual(Decimal(result["correction_units"]), Decimal("1.25"))
         self.assertAlmostEqual(float(result["total_units"]), 4.05)
-        self.assertEqual(Decimal(result["entry_units"]), Decimal("4.05"))
+        self.assertEqual(Decimal(result["entry_units"]), Decimal("4"))
+        self.assertEqual(Decimal(result["cautious_entry_units"]), Decimal("3"))
+        self.assertEqual(Decimal(result["expected_glucose_mgdl"]), Decimal("102"))
+        self.assertEqual(Decimal(result["cautious_expected_glucose_mgdl"]), Decimal("142"))
         self.assertEqual(Decimal(result["cautious_target_mgdl"]), Decimal(140))
         self.assertEqual(Decimal(result["cautious_correction_units"]), Decimal("0.25"))
         self.assertAlmostEqual(float(result["cautious_total_units"]), 3.05)
         self.assertEqual(Decimal(result["trend_delta_mgdl"]), Decimal(20))
+
+    def test_half_unit_tie_rounds_to_next_injectable_amount(self):
+        entries = [{"at": self.now, "sgv": 190}]
+        result = dosing.suggest("20", self.settings, entries, [], self.now)
+        self.assertAlmostEqual(float(result["total_units"]), 5.05)
+        self.assertEqual(Decimal(result["entry_units"]), Decimal("5"))
+        entries[0]["sgv"] = 198
+        result = dosing.suggest("20", self.settings, entries, [], self.now)
+        self.assertAlmostEqual(float(result["total_units"]), 5.25)
+        self.assertEqual(Decimal(result["entry_units"]), Decimal("5.5"))
+        self.assertEqual(Decimal(result["expected_glucose_mgdl"]), Decimal("90"))
 
     def test_configured_target_and_zero_floor(self):
         settings = {**self.settings, "dose_target_mgdl": "120"}
@@ -50,6 +64,7 @@ class DosingTests(unittest.TestCase):
         self.assertNotIn("total_units", result)
         self.assertNotIn("cautious_total_units", result)
         self.assertFalse(result["glucose_fresh"])
+        self.assertNotIn("expected_glucose_mgdl", result)
 
     def test_missing_nightscout_target_does_not_block_local_target(self):
         settings = {**self.settings, "target_schedule": []}

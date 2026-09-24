@@ -18,9 +18,11 @@ Für die eingegebenen Kohlenhydrate `KH`, den aktuellen CGM-Wert `G`, den Zielwe
 KH-Anteil        = KH / R
 Korrekturanteil  = (G - Z) / KF
 Vorschlag        = max(0, KH-Anteil + Korrekturanteil)
+Spritzmenge      = Vorschlag auf nächste 0,5 IE gerundet
+Erwarteter BG    = G + (KH-Anteil - Spritzmenge) × KF
 ```
 
-Der normale Vorschlag verwendet den lokalen Zielwert (Standard 100 mg/dL), der vorsichtige 140 mg/dL. Der Eintragswert wird auf 0,01 IE gerundet. Ein CGM-Wert muss höchstens 15 Minuten alt sein. Vor dem Schreiben nach Nightscout wird mit aktuellen Daten erneut gerechnet; ein geänderter Vorschlag muss erneut bestätigt werden. Der angezeigte Glukosetrend und schnell wirksame Injektionen der letzten drei Stunden werden nicht verrechnet.
+Der normale Vorschlag verwendet den lokalen Zielwert (Standard 100 mg/dL), der vorsichtige 140 mg/dL. Die Spritzmenge wird auf 0,5 IE gerundet. Der erwartete BG wird aus dieser gerundeten Spritzmenge berechnet und ist ein Modellwert bei voller KH- und Insulinwirkung, kein zeitlicher Glukoseverlauf. Ein CGM-Wert muss höchstens 15 Minuten alt sein. Vor dem Schreiben nach Nightscout wird mit aktuellen Daten erneut gerechnet; ein geänderter Vorschlag muss erneut bestätigt werden. Der angezeigte Glukosetrend und schnell wirksame Injektionen der letzten drei Stunden werden nicht verrechnet.
 
 ## Faktor je Hauptmahlzeit
 

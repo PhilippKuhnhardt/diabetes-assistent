@@ -156,17 +156,11 @@ function clockMinute(value) {
   return hours * 60 + minutes;
 }
 
-const entryInfo = {
-  meal: "Trage Kohlenhydrate, Insulin oder beides ein. Sobald du Kohlenhydrate eingibst, erscheint die aktuelle Empfehlung. Hauptmahlzeiten werden anhand der Uhrzeit erkannt.",
-  exercise: "Sportart, Beginn und Dauer erfassen. Ob Sport den Mahlzeitenfaktor beeinflusst, bestätigst du später bei der betroffenen Mahlzeit.",
-};
-
 function updateEntryFields() {
   const form = $("#entry-form");
   const mode = form.elements.kind.value;
   form.elements.carbs.setCustomValidity("");
   $$(".entry-mode").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.entryMode === mode)));
-  $("#entry-info").textContent = entryInfo[mode];
   $("#entry-meal-fields").hidden = mode !== "meal";
   $("#entry-sport-field").hidden = mode !== "exercise";
   $("#entry-duration-field").hidden = mode !== "exercise";
@@ -319,6 +313,13 @@ function calculationHTML(result) {
     (result.reason ? '<small>' + escapeHTML(result.reason) + '</small>' : '') + '</div></div>';
 }
 
+function sportEffectLabel(sport) {
+  if (sport.status === "affected") return "Im Faktor berücksichtigt: " + num(sport.effect_mgdl, 0) + " mg/dL Senkung";
+  if (sport.status === "unaffected") return "Sport bestätigt ohne Einfluss · 0 mg/dL berücksichtigt";
+  if (sport.suggested) return "Sport noch nicht bestätigt · 0 mg/dL berücksichtigt";
+  return "Kein Sporteffekt angesetzt · 0 mg/dL berücksichtigt";
+}
+
 function mealHTML(meal, entries) {
   const sport = meal.sport || {};
   const status = sport.status || "auto";
@@ -328,7 +329,7 @@ function mealHTML(meal, entries) {
   return '<article class="meal-card">' +
     '<div class="meal-top"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) +
     '</span><h3>' + escapeHTML(timeOnly(meal.at)) + ' <small>· ' + escapeHTML(num(meal.carbs)) + ' g KH</small></h3></div></div>' +
-    '<div class="sport-review">' + (suggested ? '<span>' + escapeHTML(suggested) + '</span>' : '') +
+    '<div class="sport-review"><strong class="sport-applied">' + escapeHTML(sportEffectLabel(sport)) + '</strong>' + (suggested ? '<span>' + escapeHTML(suggested) + '</span>' : '') +
     '<label>Einfluss <select class="sport-status" data-meal-id="' + escapeHTML(meal.id) +
     '" data-day="' + escapeHTML(state.day) + '">' +
     '<option value="auto"' + (status === "auto" ? " selected" : "") + '>Noch nicht bewertet</option>' +
@@ -468,17 +469,21 @@ async function updateDoseHelp() {
       (data.trend_delta_mgdl == null ? "" : " · " +
        (Number(data.trend_delta_mgdl) > 0 ? "↗ " : Number(data.trend_delta_mgdl) < 0 ? "↘ " : "→ ") +
        signedChange(data.trend_delta_mgdl, 0) + " in " + num(data.trend_minutes, 0) + " min");
-    const option = (label, variant, target, units) => {
+    const option = (label, variant, target, units, exact, expectedGlucose) => {
       if (units == null) return "";
       return '<div class="dose-option"><span>' + escapeHTML(label) + ' · Ziel ' + escapeHTML(num(target, 0)) +
         ' mg/dL</span><strong>' + escapeHTML(num(units, 2)) +
-        ' IE</strong><button type="button" class="apply-dose" data-variant="' + variant + '"' +
+        ' IE</strong><small>Berechnet: ' + escapeHTML(num(exact, 2)) + ' IE · auf 0,5 IE gerundet</small>' +
+        '<span class="dose-expected">Erwarteter BG (Modell): <strong>' + escapeHTML(num(expectedGlucose, 0)) + ' mg/dL</strong></span><button type="button" class="apply-dose" data-variant="' + variant + '"' +
         (Number(units) > 100 ? ' disabled' : '') + '>IE übernehmen</button></div>';
     };
     output.innerHTML = '<div class="dose-heading">Aktuelle Empfehlung</div><div class="dose-glucose"><span>Aktueller Blutzucker</span><strong>' +
-      escapeHTML(glucose) + '</strong></div><div class="dose-options">' +
-      option("Normal", "normal", data.target_mgdl, data.entry_units) +
-      option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_entry_units) + '</div>' +
+      escapeHTML(glucose) + '</strong></div>' +
+      (data.units_per_ke != null ? '<p class="dose-factor">Verwendeter Insulinfaktor: <strong>' + escapeHTML(num(data.units_per_ke, 3)) + ' IE/KE</strong> · Korrekturfaktor: ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' mg/dL je IE</p>' : '') +
+      '<div class="dose-options">' +
+      option("Normal", "normal", data.target_mgdl, data.entry_units, data.total_units, data.expected_glucose_mgdl) +
+      option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_entry_units, data.cautious_total_units, data.cautious_expected_glucose_mgdl) + '</div>' +
+      (data.expected_glucose_mgdl != null ? '<p class="hint">Modellwert bei voller Wirkung der eingegebenen KH und der angezeigten IE. Trend, frühere Dosen und weitere Einflüsse sind nicht eingerechnet.</p>' : '') +
       (data.recent_rapid_doses?.length ? '<p class="hint">Schnell wirksame Dosen in den letzten 3 h: ' +
       data.recent_rapid_doses.map(row => escapeHTML(timeOnly(row.at) + " · " + num(row.units) + " IE")).join(", ") +
       '.</p>' : '') +
@@ -500,7 +505,7 @@ async function applyDoseSuggestion(event) {
     const current = await updateDoseHelp();
     if (!current) throw new Error("Empfehlung konnte nicht aktualisiert werden");
     const keys = ["carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl",
-      "cautious_target_mgdl", "entry_units", "cautious_entry_units"];
+      "cautious_target_mgdl", "units_per_ke", "total_units", "cautious_total_units", "entry_units", "cautious_entry_units", "expected_glucose_mgdl", "cautious_expected_glucose_mgdl"];
     if (keys.some(key => previous[key] !== current[key]) ||
         JSON.stringify(previous.recent_rapid_doses) !== JSON.stringify(current.recent_rapid_doses)) {
       toast("Empfehlung geändert. Bitte den neuen Wert prüfen und erneut übernehmen.", true);
@@ -516,34 +521,92 @@ async function applyDoseSuggestion(event) {
   }
 }
 
-function resetEntryForm() {
+function closeEditDialog() {
   state.editing = null;
+  $("#edit-dialog").close();
+}
+
+function resetEntryForm() {
   state.pendingEventId = null;
   const form = $("#entry-form");
   form.reset();
   form.elements.carbs.setCustomValidity("");
   setDefaultMealTime();
   updateEntryFields();
-  $("#entry-title").textContent = "Eintrag hinzufügen";
-  $("#cancel-edit").hidden = true;
+  if ($("#edit-dialog").open) closeEditDialog();
 }
 
 function editEntry(id) {
   const item = state.dayData?.timeline.find(row => row.id === id);
   if (!item || item.kind === "other") return;
   state.editing = item;
-  const form = $("#entry-form");
-  form.elements.kind.value = item.kind === "exercise" ? "exercise" : "meal";
+  const form = $("#edit-form");
+  form.reset();
   form.elements.at.value = timeOnly(item.at);
   form.elements.carbs.value = Number(item.carbs) || "";
   form.elements.insulin.value = Number(item.insulin) || "";
   form.elements.sport_kind.value = item.sport_kind || "jogging";
   form.elements.duration_minutes.value = Number(item.duration_minutes) || "";
   form.elements.notes.value = item.notes || "";
-  updateEntryFields();
-  $("#entry-title").textContent = "Eintrag bearbeiten";
-  $("#cancel-edit").hidden = false;
-  form.scrollIntoView({ behavior: "smooth", block: "start" });
+  const sport = item.kind === "exercise";
+  $("#edit-meal-fields").hidden = sport;
+  $("#edit-sport-field").hidden = !sport;
+  $("#edit-duration-field").hidden = !sport;
+  form.elements.carbs.disabled = sport;
+  form.elements.insulin.disabled = sport;
+  form.elements.sport_kind.disabled = !sport;
+  form.elements.duration_minutes.disabled = !sport;
+  form.elements.duration_minutes.required = sport;
+  $("#edit-date").textContent = new Date(state.day + "T12:00:00").toLocaleDateString("de-DE", {day: "numeric", month: "long", year: "numeric"});
+  $("#edit-dialog").showModal();
+  form.elements.at.focus();
+}
+
+async function saveEditedEntry(event) {
+  event.preventDefault();
+  const item = state.editing;
+  if (!item) return;
+  const form = event.currentTarget;
+  const sport = item.kind === "exercise";
+  const carbs = sport ? 0 : Number(form.elements.carbs.value || 0);
+  const insulin = sport ? 0 : Number(form.elements.insulin.value || 0);
+  if (!sport && carbs <= 0 && insulin <= 0) {
+    form.elements.carbs.setCustomValidity("Bitte Kohlenhydrate, Insulin oder beides eintragen.");
+    form.elements.carbs.reportValidity();
+    return;
+  }
+  const kind = sport ? "exercise" : carbs > 0
+    ? (item.kind === "snack" ? "snack" : item.kind === "carbs" && insulin === 0 ? "carbs" : "meal")
+    : "correction";
+  let at;
+  try { at = toInstant(state.day, form.elements.at.value); }
+  catch (error) { toast(error.message, true); return; }
+  const payload = {
+    id: item.id, original_day: state.day, kind, at, carbs, insulin,
+    sport_kind: form.elements.sport_kind.value,
+    duration_minutes: form.elements.duration_minutes.value || 0,
+    notes: form.elements.notes.value,
+  };
+  const button = $('button[type="submit"]', form);
+  button.disabled = true;
+  try {
+    const result = await api("/api/treatment", { method: "POST", body: JSON.stringify(payload) });
+    const refreshed = await api("/api/day?date=" + encodeURIComponent(result.day));
+    const saved = refreshed.timeline.find(row => row.id === item.id);
+    if (!saved || Number(saved.carbs) !== carbs || Number(saved.insulin) !== insulin)
+      throw new Error("Die Änderung ist in Nightscout noch nicht sichtbar. Bitte Eintrag aktualisieren.");
+    state.day = result.day;
+    $("#selected-day").value = state.day;
+    updateLocation(true);
+    renderDay(refreshed);
+    await updateDoseHelp();
+    closeEditDialog();
+    toast("Änderung in Nightscout gespeichert");
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
 }
 
 async function saveEntry(event) {
@@ -557,17 +620,16 @@ async function saveEntry(event) {
     form.elements.carbs.reportValidity();
     return;
   }
-  const kind = mode === "exercise" ? "exercise" : carbs > 0
-    ? (state.editing?.kind === "snack" ? "snack"
-      : state.editing?.kind === "carbs" && insulin === 0 ? "carbs" : "meal")
-    : "correction";
+  const kind = mode === "exercise" ? "exercise" : carbs > 0 ? "meal" : "correction";
+  let at;
+  try { at = toInstant(state.day, form.elements.at.value); }
+  catch (error) { toast(error.message, true); return; }
   const payload = {
-    kind, at: toInstant(state.day, form.elements.at.value),
+    kind, at,
     carbs, insulin,
     sport_kind: form.elements.sport_kind.value,
     duration_minutes: form.elements.duration_minutes.value || 0,
     notes: form.elements.notes.value,
-    id: state.editing?.id || null, original_day: state.day,
     event_id: state.pendingEventId || crypto.randomUUID(),
   };
   state.pendingEventId = payload.event_id;
@@ -767,7 +829,7 @@ async function loadSummary() {
             const excluded = item.units_per_ke != null && item.excluded;
             const sport = item.sport || {};
             const status = sport.status || "auto";
-            const sportReview = '<div class="sport-review sport-review-table">' +
+            const sportReview = '<div class="sport-review sport-review-table"><strong class="sport-applied">' + escapeHTML(sportEffectLabel(sport)) + '</strong>' +
               (sport.suggested ? '<small>Vorschlag: ' + escapeHTML(num(sport.suggested_effect_mgdl, 0)) + ' mg/dL</small>' : '') +
               '<select class="sport-status" data-meal-id="' + escapeHTML(item.id) + '" data-day="' + escapeHTML(item.day) + '">' +
               '<option value="auto"' + (status === "auto" ? " selected" : "") + '>Offen</option>' +
@@ -891,7 +953,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#entry-kind").value = button.dataset.entryMode;
     updateEntryFields();
   }));
-  $("#cancel-edit").addEventListener("click", resetEntryForm);
+  $("#edit-form").addEventListener("submit", saveEditedEntry);
+  $("#edit-form").elements.carbs.addEventListener("input", event => event.target.setCustomValidity(""));
+  $("#edit-form").elements.insulin.addEventListener("input", () => $("#edit-form").elements.carbs.setCustomValidity(""));
+  $("#cancel-edit").addEventListener("click", closeEditDialog);
+  $("#close-edit").addEventListener("click", closeEditDialog);
+  $("#edit-dialog").addEventListener("close", () => { state.editing = null; });
   $("#dose-result").addEventListener("click", applyDoseSuggestion);
   $("#entry-form").elements.carbs.addEventListener("input", event => {
     event.target.setCustomValidity("");

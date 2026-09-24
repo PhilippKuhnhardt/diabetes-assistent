@@ -60,12 +60,16 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         cautious_correction_units = (latest[1] - cautious_target) / isf
         total = max(Decimal(0), carb_units + correction_units)
         cautious_total = max(Decimal(0), carb_units + cautious_correction_units)
+        entry_units = (total * 2).quantize(Decimal("1"), rounding=ROUND_HALF_UP) / 2
+        cautious_entry_units = (cautious_total * 2).quantize(Decimal("1"), rounding=ROUND_HALF_UP) / 2
         result["correction_units"] = str(correction_units)
         result["total_units"] = str(total)
-        result["entry_units"] = str(total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+        result["entry_units"] = str(entry_units)
+        result["expected_glucose_mgdl"] = str(latest[1] + (carb_units - entry_units) * isf)
         result["cautious_correction_units"] = str(cautious_correction_units)
         result["cautious_total_units"] = str(cautious_total)
-        result["cautious_entry_units"] = str(cautious_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+        result["cautious_entry_units"] = str(cautious_entry_units)
+        result["cautious_expected_glucose_mgdl"] = str(latest[1] + (carb_units - cautious_entry_units) * isf)
     else:
         result["reason"] = "Kein aktueller CGM-Wert innerhalb von 15 Minuten"
     return result
