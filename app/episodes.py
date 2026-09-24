@@ -81,9 +81,13 @@ def normalize_treatments(raw: list[dict]) -> list[dict]:
     return sorted(result, key=lambda x: x["at"])
 
 
-def meals_for_day(treatments: list[dict], day: str, timezone_name: str) -> list[dict]:
+def meals_for_day(treatments: list[dict], day: str, timezone_name: str,
+                  settings: dict | None = None) -> list[dict]:
     zone = ZoneInfo(timezone_name)
     roots = []
+    settings = settings or {}
+    breakfast_end = int(settings.get("breakfast_end_minute", 660))
+    lunch_end = int(settings.get("lunch_end_minute", 1020))
     for item in treatments:
         tagged = item.get("role") == "meal" and item.get("episode_id")
         imported = not item.get("episode_id") and item.get("eventType") == "Meal Bolus" and float(item.get("carbs") or 0) > 0
@@ -91,8 +95,10 @@ def meals_for_day(treatments: list[dict], day: str, timezone_name: str) -> list[
             continue
         if item["at"].astimezone(zone).date().isoformat() != day:
             continue
-        local_hour = item["at"].astimezone(zone).hour
-        inferred = "breakfast" if local_hour < 11 else "lunch" if local_hour < 17 else "dinner"
+        local = item["at"].astimezone(zone)
+        minute = local.hour * 60 + local.minute
+        inferred = ("breakfast" if minute < breakfast_end else
+                    "lunch" if minute < lunch_end else "dinner")
         roots.append({
             "id": item["episode_id"] if tagged else item["id"],
             "source_id": item["id"], "imported": bool(imported),

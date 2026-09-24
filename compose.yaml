@@ -2,13 +2,17 @@ services:
   app:
     build: .
     restart: unless-stopped
-    env_file: .env
     user: "${APP_UID:-1000}:${APP_GID:-1000}"
     ports:
-      - "127.0.0.1:${APP_PORT:-8765}:8765"
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8765}:8765"
     environment:
       APP_HOST: 0.0.0.0
       APP_PORT: 8765
       APP_DB: /data/app.sqlite3
+      APP_TIMEZONE: ${APP_TIMEZONE:-Europe/Berlin}
+      NIGHTSCOUT_URL: ${NIGHTSCOUT_URL:?NIGHTSCOUT_URL setzen}
+      NIGHTSCOUT_AUTH_MODE: ${NIGHTSCOUT_AUTH_MODE:-secret}
+      NIGHTSCOUT_CREDENTIAL: ${NIGHTSCOUT_CREDENTIAL:?NIGHTSCOUT_CREDENTIAL setzen}
+      APP_PASSWORD: ${APP_PASSWORD:?APP_PASSWORD setzen}
     volumes:
-      - ./data:/data
+      - ${APP_DATA_DIR:-./data}:/data

@@ -1,7 +1,6 @@
 """Single-process local web server and JSON API."""
 from __future__ import annotations
 
-import base64
 import hmac
 import json
 import mimetypes
@@ -15,7 +14,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
 
-from app import calculation, episodes, nightscout, sensitivity, storage
+from app import auth, calculation, dosing, episodes, nightscout, sensitivity, storage
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 MAX_BODY = 64 * 1024
@@ -77,12 +76,15 @@ def parse_instant(value: str) -> datetime:
 def validate_settings(value: dict) -> dict:
     _, old = storage.get_settings()
     result = dict(old)
-    for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes"):
+    for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes",
+                "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
+                "sport_effects_mgdl"):
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
     result.pop("isf_schedule", None)
     result.pop("ic_schedule", None)
+    result.pop("target_schedule", None)
     result.pop("nightscout_profile", None)
     ZoneInfo(result["timezone"])
     window = int(result["window_minutes"])
@@ -90,14 +92,30 @@ def validate_settings(value: dict) -> dict:
     duration = int(result["duration_minutes"])
     if not (60 <= window <= 360 and 20 <= peak < duration <= 600):
         raise ValueError("Ungültige Zeitparameter")
+    breakfast_end = int(result["breakfast_end_minute"])
+    lunch_end = int(result["lunch_end_minute"])
+    lookback = int(result["sport_lookback_minutes"])
+    effects = result["sport_effects_mgdl"]
+    if not (0 < breakfast_end < lunch_end < 1440 and 0 <= lookback <= 1440):
+        raise ValueError("Ungültige Mahlzeiten- oder Sportzeiten")
+    if not isinstance(effects, dict) or set(effects) != set(episodes.SPORT_LABELS):
+        raise ValueError("Ungültige Sportarten")
+    clean_effects = {}
+    for kind, amount in effects.items():
+        effect = calculation.dec(amount)
+        if not effect.is_finite() or not 0 <= effect <= 500:
+            raise ValueError("Ungültiger Sporteffekt")
+        clean_effects[kind] = str(effect)
     result.update({
         "window_minutes": window, "peak_minutes": peak, "duration_minutes": duration,
+        "breakfast_end_minute": breakfast_end, "lunch_end_minute": lunch_end,
+        "sport_lookback_minutes": lookback, "sport_effects_mgdl": clean_effects,
     })
     return result
 
 def sync_profile_cache(force: bool = False) -> None:
     if not nightscout.is_configured():
-        raise nightscout.NightscoutError("Nightscout-Zugang in .env fehlt")
+        raise nightscout.NightscoutError("Nightscout-Zugang in Umgebungsvariablen fehlt")
     if not force and not storage.profile_sync_due():
         return
     storage.mark_profile_sync_attempt()
@@ -113,7 +131,7 @@ def night_analysis(day: str, treatments: list[dict], entries: list[dict], meals:
     dinner = max(evening_meals, key=lambda item: item["at"])
 
     next_day = (date.fromisoformat(day) + timedelta(days=1)).isoformat()
-    next_meals = episodes.meals_for_day(treatments, next_day, settings["timezone"])
+    next_meals = episodes.meals_for_day(treatments, next_day, settings["timezone"], settings)
     breakfasts = [item for item in next_meals
                   if item.get("meal") == "breakfast" and item["at"] > dinner["at"]]
     if not breakfasts:
@@ -183,7 +201,8 @@ def day_payload(day: str, refresh: bool = True) -> dict:
     raw_entries, raw_treatments = storage.cached_between(start, end)
     entries = episodes.normalize_entries(raw_entries)
     treatments = episodes.normalize_treatments(raw_treatments)
-    meals = episodes.meals_for_day(treatments, day, settings["timezone"])
+    meals = episodes.meals_for_day(treatments, day, settings["timezone"], settings)
+    sport_marks = storage.analysis_sport_marks()
     rendered = []
     main_meal_ids = {item["id"] for item in treatments
                      if (item.get("role") == "meal" or item.get("eventType") == "Meal Bolus")
@@ -193,11 +212,32 @@ def day_payload(day: str, refresh: bool = True) -> dict:
         meal_settings_id, meal_settings = storage.get_settings_at(meal["at"])
         associated = [item for item in treatments if item.get("episode_id") == meal["id"] or item.get("id") == meal["source_id"]]
         output = {**meal}
+        nearby_sport = [
+            item for item in treatments
+            if item.get("eventType") == "Exercise"
+            and item["at"] + timedelta(minutes=int(item.get("duration") or 0)) <= meal["at"]
+            and item["at"] + timedelta(minutes=int(item.get("duration") or 0)) >=
+                meal["at"] - timedelta(minutes=int(meal_settings["sport_lookback_minutes"]))
+        ]
+        proposed_effect = sum((
+            calculation.dec(meal_settings["sport_effects_mgdl"].get(item.get("sport_type"), 0))
+            for item in nearby_sport), Decimal(0))
+        mark = sport_marks.get(meal["id"], {})
+        confirmed_effect = calculation.dec(mark.get("effect_mgdl", 0)) if mark.get("status") == "affected" else Decimal(0)
+        output["sport"] = {
+            "status": mark.get("status", "auto"),
+            "suggested": bool(nearby_sport),
+            "suggested_effect_mgdl": str(proposed_effect),
+            "effect_mgdl": str(confirmed_effect),
+            "events": [{"id": item["id"], "at": item["at"], "kind": item.get("sport_type")}
+                       for item in nearby_sport],
+        }
         if not meal_settings["isf_schedule"]:
             output["calculation"] = {"reason": "Korrekturfaktor-Profil aus Nightscout fehlt"}
         else:
             try:
-                output["calculation"] = calculation.calculate_episode(meal, treatments, entries, meal_settings)
+                output["calculation"] = calculation.calculate_episode(
+                    meal, treatments, entries, meal_settings, confirmed_effect)
                 output["calculation"]["settings_version"] = meal_settings_id
                 output["calculation"]["nightscout_profile"] = meal_settings.get("nightscout_profile")
             except ValueError as error:
@@ -240,11 +280,51 @@ def day_payload(day: str, refresh: bool = True) -> dict:
             "insulin": item["insulin"], "basal_units": item["basal_units"],
             "notes": episodes.EVENT_TAG.sub("", episodes.TAG.sub("", item["notes"])).strip(),
         })
+    timeline = []
+    for item in treatments:
+        if item["at"].astimezone(zone).date().isoformat() != day:
+            continue
+        event_type = item["eventType"]
+        if event_type == "Exercise":
+            kind = "exercise"
+        elif event_type == "Meal Bolus" and calculation.dec(item["carbs"]) > 0:
+            kind = "meal"
+        elif event_type == "Snack Bolus" or "[DA2:snack]" in item["notes"]:
+            kind = "snack"
+        elif event_type == "Carb Correction":
+            kind = "carbs"
+        elif event_type in {"Correction Bolus", "Meal Bolus", "Bolus"} and calculation.dec(item["insulin"]) > 0:
+            kind = "correction"
+        else:
+            kind = "other"
+        note = episodes.EVENT_TAG.sub("", episodes.SPORT_TAG.sub("",
+               episodes.TAG.sub("", item["notes"]))).replace("[DA2:snack]", "").strip()
+        for label in episodes.SPORT_LABELS.values():
+            if kind == "exercise" and (note == label or note.startswith(label + " — ")):
+                note = note[len(label):].lstrip(" —")
+                break
+        try:
+            glucose = calculation.interpolate_glucose(entries, item["at"])["value"]
+            glucose_at = item["at"]
+        except ValueError:
+            previous = [point for point in entries
+                        if point["at"] <= item["at"]
+                        and item["at"] - point["at"] <= timedelta(minutes=15)]
+            glucose = calculation.dec(previous[-1]["sgv"]) if previous else None
+            glucose_at = previous[-1]["at"] if previous else None
+        timeline.append({
+            "id": item["id"], "at": item["at"], "kind": kind, "eventType": event_type,
+            "carbs": item["carbs"], "insulin": item["insulin"],
+            "basal_units": item["basal_units"], "duration_minutes": item["duration"],
+            "sport_kind": item.get("sport_type"), "notes": note,
+            "glucose_mgdl": glucose, "glucose_at": glucose_at,
+        })
     return json_safe({
         "day": day, "connected": nightscout.is_configured(),
         "synced_at": storage.synced_at(day), "sync_error": sync_error,
         "profile_sync_error": profile_sync_error,
         "settings_version": settings_id, "meals": rendered, "exercises": exercises, "other_events": other_events,
+        "timeline": timeline,
         "night": night,
         "entries": [{"at": item["at"], "sgv": item["sgv"]} for item in entries],
         "treatments": [episodes.serialize_treatment(item) for item in treatments],
@@ -268,6 +348,96 @@ def ensure_not_duplicate(day: str, event_id: str) -> bool:
     return any(item.get("identifier") == event_id or f"[DAE:{event_id}]" in str(item.get("notes") or "") for item in existing)
 
 
+def save_diary_treatment(payload: dict) -> dict:
+    """Validate a standalone diary event and write it to Nightscout."""
+    if not nightscout.is_configured():
+        raise ValueError("Zuerst Nightscout verbinden")
+    kind = str(payload["kind"])
+    if kind not in {"meal", "snack", "carbs", "correction", "exercise"}:
+        raise ValueError("Ungültiger Eintragstyp")
+    at = parse_instant(str(payload["at"]))
+    _, settings = storage.get_settings()
+    day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+    carbs = calculation.dec(payload.get("carbs") or 0)
+    units = calculation.dec(payload.get("insulin") or 0)
+    if not carbs.is_finite() or not units.is_finite() or not 0 <= carbs <= 500 or not 0 <= units <= 100:
+        raise ValueError("KH oder Insulin außerhalb des erlaubten Bereichs")
+    if kind in {"meal", "snack", "carbs"} and carbs <= 0:
+        raise ValueError("Kohlenhydrate müssen positiv sein")
+    if kind in {"correction", "exercise"} and carbs != 0:
+        raise ValueError("Dieser Eintrag hat keine Kohlenhydrate")
+    if ((kind in {"carbs", "exercise"} and units != 0)
+            or (kind == "correction" and units <= 0)):
+        raise ValueError("Ungültige Insulinmenge")
+    duration = 0
+    sport_kind = None
+    if kind == "exercise":
+        sport_kind = str(payload.get("sport_kind", ""))
+        if sport_kind not in episodes.SPORT_LABELS:
+            raise ValueError("Ungültige Sportart")
+        duration = int(payload.get("duration_minutes", 0))
+        if not 1 <= duration <= 1440:
+            raise ValueError("Sportdauer muss zwischen 1 und 1440 Minuten liegen")
+    note = str(payload.get("notes") or "").strip()[:500]
+    record_id = str(payload.get("id") or "")
+    existing = None
+    if record_id:
+        old_day = str(payload.get("original_day") or day)
+        date.fromisoformat(old_day)
+        start, end = local_day_range(old_day, settings["timezone"])
+        _, records = nightscout.fetch_range(start, end)
+        existing = next((item for item in records if str(item.get("_id")) == record_id), None)
+        if existing is None:
+            raise ValueError("Eintrag in Nightscout nicht gefunden")
+        if existing.get("eventType") not in {"Meal Bolus", "Snack Bolus", "Carb Correction",
+                                              "Correction Bolus", "Bolus", "Exercise"}:
+            raise ValueError("Dieser Eintragstyp kann hier nicht bearbeitet werden")
+    previous_id = str((existing or {}).get("identifier") or "")
+    try:
+        previous_id = str(uuid.UUID(previous_id))
+    except ValueError:
+        previous_id = ""
+    event_id = previous_id or str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
+    if kind == "exercise":
+        event_type = "Exercise"
+        label = episodes.SPORT_LABELS[sport_kind]
+        notes = label + (f" — {note}" if note else "") + f" [DAS1:{sport_kind}] [DAE:{event_id}]"
+    else:
+        event_type = {"meal": "Meal Bolus", "snack": "Snack Bolus" if units > 0 else "Carb Correction",
+                      "carbs": "Carb Correction", "correction": "Correction Bolus"}[kind]
+        marker = " [DA2:snack]" if kind == "snack" else ""
+        notes = (note + marker + f" [DAE:{event_id}]").strip()
+        legacy = episodes.TAG.search(str((existing or {}).get("notes") or ""))
+        if kind == "meal" and legacy and legacy.group(4) == "meal":
+            notes += " " + legacy.group(0)
+    record = dict(existing or {})
+    record.update({
+        "eventType": event_type, "created_at": at.isoformat().replace("+00:00", "Z"),
+        "notes": notes, "enteredBy": "Diabetes Diary", "identifier": event_id,
+        "carbs": float(carbs), "insulin": float(units),
+    })
+    if "date" in record:
+        record["date"] = int(at.timestamp() * 1000)
+    if kind == "exercise":
+        record["duration"] = duration
+    else:
+        record.pop("duration", None)
+    if existing:
+        nightscout.update_treatment(record_id, record)
+        start, end = local_day_range(day, settings["timezone"])
+        _, confirmed = nightscout.fetch_range(start, end)
+        saved = next((item for item in confirmed if str(item.get("_id")) == record_id), None)
+        if (saved is None or saved.get("eventType") != event_type
+                or calculation.dec(saved.get("carbs") or 0) != carbs
+                or calculation.dec(saved.get("insulin") or 0) != units
+                or str(saved.get("notes") or "") != notes):
+            raise nightscout.NightscoutError("Nightscout hat die Änderung nicht bestätigt")
+        storage.delete_cached_treatment(record_id)
+    elif not ensure_not_duplicate(day, event_id):
+        nightscout.write_treatment(record)
+    return {"id": record_id or None, "event_id": event_id, "day": day}
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "DiabetesAnalysis/0.1"
 
@@ -276,17 +446,16 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def _authorized(self) -> bool:
-        expected = os.environ.get("APP_PASSWORD", "").strip()
-        if not expected:
-            return True
-        header = self.headers.get("Authorization", "")
-        if not header.startswith("Basic "):
-            return False
-        try:
-            supplied = base64.b64decode(header[6:]).decode("utf-8").split(":", 1)[1]
-        except (ValueError, IndexError):
-            return False
-        return hmac.compare_digest(supplied, expected)
+        return auth.authorized(self.headers.get("Cookie", ""))
+
+    def _redirect(self, location: str, cookie: str | None = None) -> None:
+        self.send_response(303)
+        self.send_header("Location", location)
+        self.send_header("Cache-Control", "no-store")
+        if cookie:
+            self.send_header("Set-Cookie", cookie)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def _response(self, status: int, payload: object):
         body = json.dumps(json_safe(payload), ensure_ascii=False, separators=(",", ":")).encode("utf-8")
@@ -302,10 +471,10 @@ class Handler(BaseHTTPRequestHandler):
     def _check_auth(self) -> bool:
         if self._authorized():
             return True
-        self.send_response(401)
-        self.send_header("WWW-Authenticate", 'Basic realm="Diabetes Analysis"')
-        self.send_header("Content-Length", "0")
-        self.end_headers()
+        if urlparse(self.path).path.startswith("/api/"):
+            self._response(401, {"error": "Bitte anmelden"})
+        else:
+            self._redirect("/login")
         return False
 
     def _body(self) -> dict:
@@ -324,6 +493,16 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/health":
             self._response(200, {"ok": True})
             return
+        if path == "/login" or path == "/styles.css":
+            target = WEB / ("login.html" if path == "/login" else "styles.css")
+            data = target.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", mimetypes.guess_type(target)[0] or "text/html")
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if not self._check_auth():
             return
         try:
@@ -338,6 +517,7 @@ class Handler(BaseHTTPRequestHandler):
                 profile_sync = storage.profile_sync_status()
                 self._response(200, {
                     "version": version, "settings": settings, "connected": nightscout.is_configured(),
+                    "login_required": bool(auth.password()),
                     "profile_sync_at": profile_sync["synced_at"], "profile_sync_error": profile_sync_error,
                 })
                 return
@@ -354,7 +534,7 @@ class Handler(BaseHTTPRequestHandler):
                 return
             if path == "/api/test-connection":
                 if not nightscout.is_configured():
-                    raise ValueError("Nightscout-Zugang in .env fehlt")
+                    raise ValueError("Nightscout-Zugang in Umgebungsvariablen fehlt")
                 sync_profile_cache(force=True)
                 _, settings = storage.get_settings()
                 today = datetime.now(ZoneInfo(settings["timezone"])).date().isoformat()
@@ -428,6 +608,7 @@ class Handler(BaseHTTPRequestHandler):
                             "end": result.get("end"),
                             "reason": result.get("reason"),
                             "excluded": excluded,
+                            "sport": meal.get("sport", {}),
                         })
                         item = group["calculations"][-1]
                         item["expected_delta_mgdl"] = None
@@ -442,7 +623,7 @@ class Handler(BaseHTTPRequestHandler):
                                     datetime.fromisoformat(event["at"]), settings["ic_schedule"],
                                     settings["timezone"], "grams_per_unit")
                                 for event in result["carb_events"]), Decimal(0))
-                            expected = carb_effect - Decimal(result["insulin_effect_mgdl"])
+                            expected = carb_effect - Decimal(result["insulin_effect_mgdl"]) - Decimal(result.get("sport_effect_mgdl", "0"))
                             item["expected_delta_mgdl"] = str(expected)
                             item["deviation_mgdl"] = str(Decimal(result["delta_mgdl"]) - expected)
                         sensitivity_meals.append({"calculation": result, "excluded": excluded,
@@ -481,6 +662,20 @@ class Handler(BaseHTTPRequestHandler):
                     # With fewer than five meals, quartiles imply more precision than the data support.
                     group["q1_units_per_ke"] = str(quartile(values, Decimal("0.25"))) if len(values) >= 5 else None
                     group["q3_units_per_ke"] = str(quartile(values, Decimal("0.75"))) if len(values) >= 5 else None
+                    chronological = sorted(
+                        (item for item in group["calculations"]
+                         if item["units_per_ke"] is not None and not item["excluded"]),
+                        key=lambda item: item["at"], reverse=True)
+                    if len(chronological) >= 6:
+                        recent = median(sorted(Decimal(item["units_per_ke"]) for item in chronological[:3]))
+                        previous = median(sorted(Decimal(item["units_per_ke"]) for item in chronological[3:6]))
+                        group["recent_median_units_per_ke"] = str(recent)
+                        group["previous_median_units_per_ke"] = str(previous)
+                        group["trend_units_per_ke"] = str(recent - previous)
+                    else:
+                        group["recent_median_units_per_ke"] = None
+                        group["previous_median_units_per_ke"] = None
+                        group["trend_units_per_ke"] = None
                 breakfast = groups["breakfast"]
                 breakfast["by_day_type"] = {}
                 for kind in ("work", "free"):
@@ -523,6 +718,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", mimetypes.guess_type(target)[0] or "application/octet-stream")
             self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Content-Security-Policy", "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'")
             self.end_headers()
@@ -535,15 +731,72 @@ class Handler(BaseHTTPRequestHandler):
             self._response(500, {"error": "Interner Fehler"})
 
     def do_POST(self):
+        path = urlparse(self.path).path
+        if path == "/login":
+            origin = self.headers.get("Origin")
+            if origin and urlparse(origin).netloc != self.headers.get("Host"):
+                self._response(403, {"error": "Ungültiger Ursprung"})
+                return
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                if not 0 < length <= 4096:
+                    raise ValueError
+                form = parse_qs(self.rfile.read(length).decode("utf-8"))
+                supplied = form.get("password", [""])[0]
+            except (ValueError, UnicodeDecodeError):
+                supplied = ""
+            if auth.password() and hmac.compare_digest(supplied, auth.password()):
+                secure = self.headers.get("X-Forwarded-Proto", "") == "https"
+                self._redirect("/", auth.cookie_header(secure=secure))
+            elif not auth.password():
+                self._redirect("/")
+            else:
+                self._redirect("/login?error=1")
+            return
+        if path == "/logout":
+            secure = self.headers.get("X-Forwarded-Proto", "") == "https"
+            self._redirect("/login", auth.cookie_header(secure=secure, clear=True))
+            return
         if not self._check_auth():
             return
         origin = self.headers.get("Origin")
         if origin and urlparse(origin).netloc != self.headers.get("Host"):
             self._response(403, {"error": "Ungültiger Ursprung"})
             return
-        path = urlparse(self.path).path
         try:
             payload = self._body()
+            if path == "/api/dose-help":
+                _, current_settings = storage.get_settings()
+                today = datetime.now(ZoneInfo(current_settings["timezone"])).date().isoformat()
+                synced = storage.synced_at(today)
+                cached_recently = bool(synced and datetime.now(timezone.utc) -
+                                       parse_instant(synced) < timedelta(minutes=1))
+                current_day = day_payload(today, refresh=not cached_recently)
+                entries = [{"at": parse_instant(row["at"]), "sgv": row["sgv"]}
+                           for row in current_day["entries"]]
+                treatments = [{"at": parse_instant(row["at"]), **{k: v for k, v in row.items() if k != "at"}}
+                              for row in current_day["treatments"]]
+                self._response(200, dosing.suggest(payload.get("carbs", 0),
+                                                   current_settings, entries, treatments))
+                return
+            if path == "/api/treatment":
+                self._response(200, save_diary_treatment(payload))
+                return
+            if path == "/api/analysis/sport":
+                meal_id = payload.get("meal_id")
+                status = payload.get("status")
+                day = str(payload.get("day", ""))
+                date.fromisoformat(day)
+                if not isinstance(meal_id, str) or not 0 < len(meal_id) <= 200 or status not in ("auto", "affected", "unaffected"):
+                    raise ValueError("Ungültige Sport-Markierung")
+                if meal_id not in {meal["id"] for meal in day_payload(day, refresh=False)["meals"]}:
+                    raise ValueError("Mahlzeit nicht gefunden")
+                effect = calculation.dec(payload.get("effect_mgdl", 0))
+                if not effect.is_finite() or not 0 <= effect <= 500:
+                    raise ValueError("Ungültiger Sporteffekt")
+                storage.set_analysis_sport_mark(meal_id, status, str(effect))
+                self._response(200, {"meal_id": meal_id, "status": status, "effect_mgdl": str(effect)})
+                return
             if path == "/api/analysis/day-type":
                 day = payload.get("day")
                 day_type = payload.get("day_type")
@@ -567,7 +820,7 @@ class Handler(BaseHTTPRequestHandler):
                 return
             if path == "/api/sync":
                 if not nightscout.is_configured():
-                    raise ValueError("Nightscout-Zugang in .env fehlt")
+                    raise ValueError("Nightscout-Zugang in Umgebungsvariablen fehlt")
                 days = int(payload.get("days", 14))
                 if days not in (1, 3, 7, 14, 30):
                     raise ValueError("Ungültiger Zeitraum")
