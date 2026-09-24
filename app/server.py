@@ -365,7 +365,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/summary":
                 params = parse_qs(urlparse(self.path).query)
                 days = int(params.get("days", ["14"])[0])
-                if days not in (7, 14, 30):
+                if days not in (1, 3, 7, 14, 30):
                     raise ValueError("Ungültiger Zeitraum")
                 profile_sync_error = None
                 if nightscout.is_configured():
@@ -419,8 +419,6 @@ class Handler(BaseHTTPRequestHandler):
                             group["multi_carb_count"] += 1
                         factor_text = result.get("factor_units_per_ke")
                         excluded = meal["id"] in excluded_ids
-                        sensitivity_meals.append({"at": meal["at"], "calculation": result,
-                                                  "excluded": excluded})
                         group["calculations"].append({
                             "id": meal["id"], "day": day, "at": meal["at"],
                             "day_type": day_type, "units_per_ke": factor_text,
@@ -447,6 +445,8 @@ class Handler(BaseHTTPRequestHandler):
                             expected = carb_effect - Decimal(result["insulin_effect_mgdl"])
                             item["expected_delta_mgdl"] = str(expected)
                             item["deviation_mgdl"] = str(Decimal(result["delta_mgdl"]) - expected)
+                        sensitivity_meals.append({"calculation": result, "excluded": excluded,
+                                                  "deviation_mgdl": item["deviation_mgdl"]})
                         if factor_text is None:
                             group["blocked_count"] += 1
                         else:
@@ -569,7 +569,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not nightscout.is_configured():
                     raise ValueError("Nightscout-Zugang in .env fehlt")
                 days = int(payload.get("days", 14))
-                if days not in (7, 14, 30):
+                if days not in (1, 3, 7, 14, 30):
                     raise ValueError("Ungültiger Zeitraum")
                 profile_sync_error = None
                 try:
