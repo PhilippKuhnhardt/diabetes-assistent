@@ -412,7 +412,7 @@ def save_diary_treatment(payload: dict) -> dict:
         marker = " [DA2:snack]" if kind == "snack" else ""
         notes = (note + marker + f" [DAE:{event_id}]").strip()
         legacy = episodes.TAG.search(str((existing or {}).get("notes") or ""))
-        if kind == "meal" and legacy and legacy.group(4) == "meal":
+        if kind == "meal" and legacy and legacy.group(3) == "meal":
             notes += " " + legacy.group(0)
     record = dict(existing or {})
     record.update({

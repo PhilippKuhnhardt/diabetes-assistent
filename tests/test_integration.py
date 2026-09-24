@@ -266,6 +266,41 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(Decimal(str(snack["insulin"])), Decimal(1))
         self.assertEqual(snack["notes"], "Apfel")
 
+    def test_existing_carbs_change_from_13_to_130_is_visible(self):
+        at = "2026-09-23T09:53:00Z"
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": at, "carbs": "13", "insulin": "1",
+        })
+        before = self.request("/api/day?date=2026-09-23")
+        entry = next(item for item in before["timeline"] if Decimal(str(item["carbs"])) == 13)
+        self.request("/api/treatment", method="POST", body={
+            "id": entry["id"], "original_day": "2026-09-23", "kind": "meal",
+            "at": at, "carbs": "130", "insulin": "1",
+        })
+        after = self.request("/api/day?date=2026-09-23")
+        saved = next(item for item in after["timeline"] if item["id"] == entry["id"])
+        self.assertEqual(Decimal(str(saved["carbs"])), Decimal(130))
+        self.assertEqual(len(FakeNightscout.treatments), 1)
+
+    def test_tagged_meal_can_be_updated_without_losing_its_episode(self):
+        at = "2026-09-23T09:53:00Z"
+        episode_id = "cb529c35-e44b-4fe5-a69b-d2aec69ae7fe"
+        self.request("/api/episode", method="POST", body={
+            "at": at, "meal": "lunch", "carbs": "13", "insulin": "1",
+            "episode_id": episode_id,
+        })
+        before = self.request("/api/day?date=2026-09-23")
+        entry = next(item for item in before["timeline"] if Decimal(str(item["carbs"])) == 13)
+        self.request("/api/treatment", method="POST", body={
+            "id": entry["id"], "original_day": "2026-09-23", "kind": "meal",
+            "at": at, "carbs": "130", "insulin": "1",
+        })
+        after = self.request("/api/day?date=2026-09-23")
+        saved = next(item for item in after["timeline"] if item["id"] == entry["id"])
+        self.assertEqual(Decimal(str(saved["carbs"])), Decimal(130))
+        self.assertEqual(after["meals"][0]["id"], episode_id)
+        self.assertEqual(len(FakeNightscout.treatments), 1)
+
     def test_sport_effect_is_confirmed_per_meal_and_does_not_exclude_it(self):
         meal_at = "2026-09-23T10:00:00Z"
         self.request("/api/treatment", method="POST", body={
