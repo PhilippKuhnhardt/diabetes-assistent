@@ -35,9 +35,7 @@ main { min-height: 70vh; }
 .view { padding: 36px 0 50px; }
 [hidden] { display: none !important; }
 .page-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
-.eyebrow { color: var(--green); font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .15em; margin: 0 0 8px; }
 h1 { margin: 0; font-size: clamp(28px, 3vw, 38px); font-weight: 680; letter-spacing: -.045em; }
-.lead { color: var(--muted); font-size: 14px; margin: 9px 0 0; line-height: 1.55; }
 .day-nav { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .day-nav button, .day-nav input { min-height: 40px; }
 .day-nav button, button:not(.tab):not(.primary) { border: 1px solid var(--line); background: white; color: var(--ink); border-radius: 8px; padding: 9px 13px; font-weight: 600; }
@@ -50,7 +48,7 @@ input, select { width: 100%; background: white; color: var(--ink); border: 1px s
 .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 0 0 18px; }
 h2 { font-size: 17px; margin: 0 0 18px; letter-spacing: -.02em; }
 .section-head h2 { margin: 0; }
-.hint, .subtle, .form-note { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.hint, .form-note { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .form-note { margin: 12px 0 0; }
 .sport-entry { margin-top: 25px; padding-top: 21px; border-top: 1px solid var(--line); }
 label { display: block; font-size: 12px; font-weight: 650; margin-bottom: 16px; }
@@ -108,7 +106,7 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .summary-card { padding: 23px; }
 .summary-card strong { display: block; margin-top: 13px; font-size: 30px; color: var(--green-dark); letter-spacing: -.04em; }
 .summary-card strong small { font-size: 13px; }
-.summary-card p, .explain { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.summary-card p { font-size: 12px; color: var(--muted); line-height: 1.6; }
 .settings-grid { display: grid; grid-template-columns: minmax(220px, 340px) minmax(0, 650px); gap: 25px; align-items: start; }
 .settings-grid .panel p { font-size: 13px; line-height: 1.55; color: var(--muted); }
 .mono, code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
@@ -116,7 +114,6 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .isf-row label { margin-bottom: 10px; }
 .isf-row button { margin-bottom: 10px; height: 42px; }
 .spaced { margin-top: 28px; }
-footer { border-top: 1px solid var(--line); color: var(--muted); padding: 20px 0 28px; font-size: 11px; }
 #toast { position: fixed; right: 24px; bottom: 22px; max-width: min(360px, calc(100vw - 36px)); background: var(--ink); color: #fff; border-radius: 9px; padding: 13px 17px; font-size: 13px; box-shadow: 0 12px 28px #10281833; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s; }
 #toast.visible { opacity: 1; transform: translateY(0); }
 #toast.error { background: #8e372e; }
@@ -169,7 +166,7 @@ footer { border-top: 1px solid var(--line); color: var(--muted); padding: 20px 0
 .summary-primary strong { margin-top: 2px; }
 .summary-metric { margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--line); }
 .summary-metric strong { margin: 2px 0; font-size: 25px; }
-.summary-card .summary-range, .summary-card .summary-note { margin: 12px 0 0; }
+.summary-card .summary-range { margin: 12px 0 0; }
 .summary-details { margin-top: 15px; }
 .summary-details summary { color: var(--green); font-size: 12px; font-weight: 700; cursor: pointer; }
 .summary-details ol { margin: 10px 0 0; padding-left: 21px; max-height: 240px; overflow: auto; }
@@ -179,7 +176,6 @@ footer { border-top: 1px solid var(--line); color: var(--muted); padding: 20px 0
 @media (max-width: 850px) { .calc-steps { grid-template-columns: 1fr; } }
 
 .analysis-list { margin-top: 20px; }
-.analysis-list .subtle { margin: -5px 0 18px; }
 .analysis-table { min-width: 900px; }
 .glucose-change { display: inline-block; padding: 3px 7px; border-radius: 6px; font-weight: 650; white-space: nowrap; }
 .glucose-change.rising { color: #8a3b16; background: #fff0e5; }
@@ -195,9 +191,6 @@ footer { border-top: 1px solid var(--line); color: var(--muted); padding: 20px 0
 .exclude-label span { color: inherit; font-weight: 600; }
 .analysis-table .quiet { font-size: 11px; padding: 6px 9px; }
 
-.outlier-explain { margin: -5px 0 16px; color: var(--muted); font-size: 12px; line-height: 1.5; }
-.outlier-explain summary { width: fit-content; cursor: pointer; color: var(--green); font-weight: 650; }
-.outlier-explain p { max-width: 760px; margin: 8px 0 0; }
 .analysis-day-row th { padding: 12px 11px; background: var(--green-light); color: var(--green-dark); font-size: 12px; font-weight: 750; text-align: left; text-transform: capitalize; white-space: normal; border-top: 2px solid #c8dfd1; }
 .analysis-table .analysis-outlier td:nth-child(3) { color: var(--amber); }
 .outlier-badge { display: inline-block; margin-left: 7px; padding: 3px 6px; border-radius: 5px; background: var(--amber-light); color: var(--amber); font-size: 11px; font-weight: 750; white-space: nowrap; }
@@ -208,7 +201,6 @@ footer { border-top: 1px solid var(--line); color: var(--muted); padding: 20px 0
 .breakfast-subcard strong { margin-top: 7px; font-size: 20px; }
 .breakfast-subcard strong small { font-size: 11px; font-weight: 500; }
 .breakfast-subcard > small { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; line-height: 1.4; }
-.summary-card .breakfast-subnote { margin: 9px 0 0; font-size: 11px; }
 .day-type-label { display: inline-flex; align-items: center; gap: 6px; margin-left: 14px; text-transform: none; color: var(--green-dark); font-weight: 600; }
 .day-type-label select { min-height: 30px; padding: 3px 6px; font-size: 12px; }
 .isf-table { margin: 10px 0 14px; border-top: 1px solid var(--line); }
@@ -280,7 +272,6 @@ footer { border-top: 1px solid var(--line); color: var(--muted); padding: 20px 0
 .login-page { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
 .login-card { width: min(100%, 400px); }
 .login-card h1 { margin-bottom: 8px; }
-.login-card p { color: var(--muted); font-size: 13px; }
 .login-card form { margin-top: 22px; }
 .login-card .primary { width: 100%; }
 .login-card .form-error { color: #9b3c33; }

@@ -135,7 +135,8 @@ async function loadSettings() {
   state.settings = data.settings;
   $("#connection").textContent = data.connected ? "Nightscout konfiguriert" : "Nightscout einrichten";
   $("#connection").classList.toggle("connected", data.connected);
-  $("#nightscout-location").textContent = data.connected ? "Verbindung über Umgebungsvariablen konfiguriert" : "NIGHTSCOUT_URL und NIGHTSCOUT_CREDENTIAL als Umgebungsvariablen setzen";
+  $("#nightscout-location").hidden = data.connected;
+  $("#nightscout-location").textContent = data.connected ? "" : "NIGHTSCOUT_URL und NIGHTSCOUT_CREDENTIAL setzen";
   $("#settings-version").textContent = "Einstellungsversion " + data.version;
   $("#logout-form").hidden = !data.login_required;
   const form = $("#settings-form");
@@ -261,8 +262,7 @@ function calculationHTML(result) {
   const valid = result.factor_units_per_ke != null;
   const badge = '<div class="factor' + (valid ? '' : ' unavailable') + '"><span>Insulinfaktor</span><strong>' +
     (valid ? escapeHTML(num(result.factor_units_per_ke, 3)) + ' <small>IE/KE</small>' : '—') +
-    '</strong><small>' + escapeHTML(num(result.carbs_total)) + ' g KH im Mahlzeitenfenster · ' +
-    result.carb_events.length + ' KH-Ereignis' + (result.carb_events.length === 1 ? '' : 'se') + '</small></div>';
+    '</strong><small>' + escapeHTML(num(result.carbs_total)) + ' g KH im Mahlzeitenfenster</small></div>';
   const endMinutes = num(result.actual_window_minutes, 1);
   const extended = result.end_reason === "after_last_injection"
     ? '<p class="calc-note">Endpunkt wegen einer späteren Injektion verschoben. Jede schnell wirksame Dosis im Fenster erhält ' + escapeHTML(num(result.window_minutes, 0)) + ' Minuten Beobachtungszeit.</p>' : '';
@@ -289,9 +289,6 @@ function calculationHTML(result) {
   const profileInfo = result.nightscout_profile
     ? ' · aktuelles Nightscout-Profil „' + escapeHTML(result.nightscout_profile.profile_name) + '“'
     : '';
-  const windowNote = result.extra_carb_count
-    ? '<p class="calc-note">Alle ' + result.carb_events.length + ' KH-Ereignisse im Fenster sind summiert. Das Modell setzt voraus, dass auch spätere KH bis zum Endpunkt vollständig wirken.</p>'
-    : '';
   const doseNames = { meal: "Mahlzeit", "meal-dose": "Mahlzeitenbolus", correction: "Korrektur", "Snack Bolus": "Snack-Bolus", "Meal Bolus": "Mahlzeitenbolus", "Correction Bolus": "Korrektur", Bolus: "Bolus" };
   const doseRows = result.doses.map(dose => '<tr><td>' + escapeHTML(timeOnly(dose.at)) + '</td><td>' +
     escapeHTML(dose.event_type === "Snack Bolus" ? "Snack-Bolus" : doseNames[dose.role] || dose.role) + '</td><td>' + escapeHTML(num(dose.units)) + ' IE</td><td>' +
@@ -302,7 +299,7 @@ function calculationHTML(result) {
     escapeHTML(num(item.carbs)) + ' g</td><td>' + escapeHTML(num(item.isf)) + '</td><td>' +
     escapeHTML(num(item.carbs_times_isf, 3)) + '</td></tr>').join("");
   return '<div class="calc-block">' + badge + '<div class="calc-steps">' + glucose + insulin + carbs + '</div>' +
-    formula + extended + shortened + reason + windowNote +
+    formula + extended + shortened + reason +
     '<details class="math"><summary>Alle Dosen, KH und Rohwerte anzeigen</summary>' +
     '<h4>KH-Ereignisse</h4><div class="table-wrap"><table><thead><tr><th>Zeit</th><th>Art</th><th>KH</th><th>KF mg/dL/IE</th><th>KH × KF</th></tr></thead><tbody>' + carbRows + '</tbody></table></div>' +
     '<h4>Insulineffekt</h4><div class="table-wrap"><table><thead><tr><th>Zeit</th><th>Art</th><th>Dosis</th><th>KF mg/dL/IE</th><th>mg/dL</th></tr></thead><tbody>' + doseRows + '</tbody></table></div>' +
@@ -324,11 +321,11 @@ function mealHTML(meal, entries) {
   const status = sport.status || "auto";
   const suggested = sport.suggested
     ? "Sport zuvor · Vorschlag " + num(sport.suggested_effect_mgdl, 0) + " mg/dL Senkung"
-    : "Kein Sport im eingestellten Zeitraum erkannt";
+    : "";
   return '<article class="meal-card">' +
     '<div class="meal-top"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) +
     '</span><h3>' + escapeHTML(timeOnly(meal.at)) + ' <small>· ' + escapeHTML(num(meal.carbs)) + ' g KH</small></h3></div></div>' +
-    '<div class="sport-review"><span>' + escapeHTML(suggested) + '</span>' +
+    '<div class="sport-review">' + (suggested ? '<span>' + escapeHTML(suggested) + '</span>' : '') +
     '<label>Einfluss <select class="sport-status" data-meal-id="' + escapeHTML(meal.id) +
     '" data-day="' + escapeHTML(state.day) + '">' +
     '<option value="auto"' + (status === "auto" ? " selected" : "") + '>Noch nicht bewertet</option>' +
@@ -364,7 +361,7 @@ function renderNight(night) {
   $("#night-values").innerHTML =
     metric("Startwert", night.start_glucose, startTime ? "3 h nach letzter Injektion · " + startTime : "3 h nach letzter Injektion") +
     metric("Endwert", night.end_glucose, endTime ? "Beginn Frühstück · " + endTime : "Beginn Frühstück") +
-    '<div class="night-metric"><span>Veränderung</span><strong>' + escapeHTML(signedChange(night.delta_mgdl)) + '</strong><small>Endwert − Startwert</small></div>' +
+    '<div class="night-metric"><span>Veränderung</span><strong>' + escapeHTML(signedChange(night.delta_mgdl)) + '</strong></div>' +
     metric("Minimalwert", night.minimum_glucose, night.minimum_at ? "um " + timeOnly(night.minimum_at) : "im Nachtfenster");
   const reason = $("#night-reason");
   reason.hidden = !night.reason;
@@ -477,7 +474,7 @@ async function updateDoseHelp() {
       (!canRecord ? '<p class="hint">Direktes Eintragen ist nur für den heutigen Tag möglich.</p>' : '') +
       (data.recent_rapid_doses?.length ? '<p class="hint">Schnell wirksame Dosen in den letzten 3 h: ' +
       data.recent_rapid_doses.map(row => escapeHTML(timeOnly(row.at) + " · " + num(row.units) + " IE")).join(", ") +
-      '. Nicht abgezogen.</p>' : '') +
+      '.</p>' : '') +
       (data.reason ? '<p class="hint">' + escapeHTML(data.reason) + '</p>' : '');
     return data;
   } catch (error) {
@@ -671,7 +668,7 @@ function renderNightSummary(night) {
   $("#night-summary-cards").innerHTML = metrics.map(([label, key]) =>
     '<div class="summary-card"><span>' + label + ' · Median</span><strong>' +
     (night[key] == null ? '—' : label === "Veränderung" ? escapeHTML(signedChange(night[key])) : escapeHTML(num(night[key], 1)) + ' <small>mg/dL</small>') +
-    '</strong><p>Aus ' + night.count + ' ausgewerteten Nächten</p></div>'
+    '</strong></div>'
   ).join("");
   const cell = (value, at) => value == null ? '—' : escapeHTML(num(value, 1)) + ' mg/dL' +
     (at ? '<small class="night-error">' + escapeHTML(timeOnly(at)) + ' Uhr</small>' : '');
@@ -709,7 +706,7 @@ async function loadSummary() {
         ' <small>IE/KE</small></strong>' +
         '<small>Median: ' + (subset.count ? escapeHTML(num(subset.median_units_per_ke, 3)) + ' IE/KE' : '—') +
         ' · ' + subset.count + ' Werte</small></div>';
-    }).join("") + '</div><p class="breakfast-subnote">Mo–Fr: Arbeit · Sa–So: Frei. Einzelne Tage kannst du unten ändern.</p>';
+    }).join("") + '</div>';
     $("#summary").innerHTML = ["breakfast", "lunch", "dinner"].map(kind => {
       const row = data.groups[kind];
       const hasValues = row.count > 0;
@@ -718,7 +715,7 @@ async function loadSummary() {
         ? '<div class="summary-metric"><span>Mittlere 50 % der berücksichtigten Werte</span><strong>' +
           escapeHTML(num(row.q1_units_per_ke, 3)) + '–' + escapeHTML(num(row.q3_units_per_ke, 3)) +
           ' <small>IE/KE</small></strong></div>'
-        : '<p class="summary-note">Für den Bereich der mittleren 50 % sind mindestens 5 berücksichtigte Mahlzeiten nötig.</p>';
+        : '';
       const range = hasValues
         ? '<p class="summary-range">Berücksichtigter Bereich: ' + escapeHTML(num(row.min_units_per_ke, 3)) +
           '–' + escapeHTML(num(row.max_units_per_ke, 3)) + ' IE/KE</p>'
