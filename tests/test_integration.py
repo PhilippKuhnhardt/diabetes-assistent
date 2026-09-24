@@ -3,6 +3,7 @@ import os
 import tempfile
 import threading
 import unittest
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -72,6 +73,19 @@ class FakeNightscout(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(raw)))
         self.end_headers()
         self.wfile.write(raw)
+
+    def do_DELETE(self):
+        parsed = urllib.parse.urlparse(self.path)
+        assert urllib.parse.parse_qs(parsed.query)["token"] == ["test-raw-token"]
+        record_id = parsed.path.rsplit("/", 1)[-1]
+        before = len(self.treatments)
+        self.treatments[:] = [item for item in self.treatments if item.get("_id") != record_id]
+        if len(self.treatments) == before:
+            self.send_error(404)
+            return
+        self.send_response(204)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
 
 class IntegrationTests(unittest.TestCase):
@@ -199,6 +213,29 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(meal["events"][1]["eventType"], "Snack Bolus")
         self.assertEqual(meal["calculation"]["doses"][1]["event_type"], "Snack Bolus")
         self.assertEqual([event["at"] for event in day["other_events"]], ["2026-09-23T14:00:00+00:00"])
+
+    def test_delete_individual_dose_from_nightscout_and_cache(self):
+        episode_id = "cb529c35-e44b-4fe5-a69b-d2aec69ae7fe"
+        self.request("/api/episode", method="POST", body={
+            "at": MEAL_AT, "meal": "lunch", "carbs": "60", "insulin": "4", "episode_id": episode_id,
+        })
+        self.request("/api/dose", method="POST", body={
+            "at": "2026-09-23T12:30:00Z", "meal": "lunch", "role": "meal-dose",
+            "insulin": "1", "episode_id": episode_id,
+        })
+        before = self.request("/api/day?date=2026-09-23")
+        dose_id = before["meals"][0]["events"][1]["id"]
+        self.request("/api/treatment/delete", method="POST", body={"id": dose_id, "day": "2026-09-23"})
+        self.assertEqual(len(FakeNightscout.treatments), 1)
+        with storage.connect() as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM treatments WHERE id=?", (dose_id,)).fetchone()[0], 0)
+        after = self.request("/api/day?date=2026-09-23")
+        self.assertEqual(len(after["meals"]), 1)
+        self.assertEqual([event["id"] for event in after["meals"][0]["events"]], ["ns-1"])
+        self.assertEqual(len(after["meals"][0]["calculation"]["doses"]), 1)
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            self.request("/api/treatment/delete", method="POST", body={"id": dose_id, "day": "2026-09-23"})
+        self.assertEqual(error.exception.code, 400)
 
     def test_night_starts_three_hours_after_last_rapid_injection(self):
         dinner = datetime(2026, 9, 22, 18, tzinfo=timezone.utc)
