@@ -216,6 +216,18 @@ class IntegrationTests(unittest.TestCase):
         finally:
             FakeNightscout.profile = original
 
+    def test_ie_per_ke_input_is_converted_to_nightscout_grams_per_unit(self):
+        result = self.request("/api/profile/ic", method="POST", body={
+            "profile_id": FakeNightscout.profile["_id"],
+            "ic_schedule": [
+                {"start_minute": 0, "units_per_ke": "0.8"},
+                {"start_minute": 720, "units_per_ke": "1.25"},
+            ],
+        })
+        values = FakeNightscout.profile["store"]["Default"]["carbratio"]
+        self.assertEqual([row["value"] for row in values], [12.5, 8.0])
+        self.assertEqual(result["settings"]["ic_schedule"][0]["grams_per_unit"], "12.5")
+
     def test_expected_change_uses_current_time_specific_nightscout_profile(self):
         meal = {"id": "lunch-with-snack", "meal": "lunch", "at": "2026-09-23T10:00:00+02:00",
                 "calculation": {
@@ -230,6 +242,28 @@ class IntegrationTests(unittest.TestCase):
             row = self.request("/api/summary?days=7")["groups"]["lunch"]["calculations"][0]
         self.assertEqual(Decimal(row["expected_delta_mgdl"]), Decimal("27.5"))
         self.assertEqual(Decimal(row["deviation_mgdl"]), Decimal("12.5"))
+
+    def test_deviation_uses_ie_per_ke_conversion_and_hides_blocked_meals(self):
+        FakeNightscout.profile["store"]["Default"]["sens"] = [
+            {"time": "00:00", "timeAsSeconds": 0, "value": 30}]
+        FakeNightscout.profile["store"]["Default"]["carbratio"] = [
+            {"time": "00:00", "timeAsSeconds": 0, "value": 12.5}]
+        self.request("/api/profile/sync", method="POST", body={})
+        at = "2026-09-23T19:12:00+02:00"
+        calculated = {"id": "dinner", "meal": "dinner", "at": at,
+                      "calculation": {"factor_units_per_ke": "0.8", "ratio_g_per_unit": "12.5",
+                                      "delta_mgdl": "36.8",
+                                      "insulin_effect_mgdl": "135",
+                                      "carb_events": [{"at": at, "carbs": "55", "isf": "30"}]}}
+        blocked = {"id": "blocked", "meal": "dinner", "at": at,
+                   "calculation": {**calculated["calculation"], "factor_units_per_ke": None,
+                                   "reason": "CGM-Lücke"}}
+        with patch("app.server.day_payload", side_effect=[{"meals": [calculated, blocked]}] +
+                   [{"meals": []}] * 6):
+            rows = self.request("/api/summary?days=7")["groups"]["dinner"]["calculations"]
+        self.assertEqual(Decimal(rows[0]["expected_delta_mgdl"]), Decimal("-3"))
+        self.assertEqual(Decimal(rows[0]["deviation_mgdl"]), Decimal("39.8"))
+        self.assertIsNone(rows[1]["deviation_mgdl"])
 
     def test_sensitivity_write_converts_to_nightscout_mmol_units(self):
         original = FakeNightscout.profile

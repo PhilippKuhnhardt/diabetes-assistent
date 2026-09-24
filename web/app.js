@@ -139,12 +139,12 @@ function renderIcRows(rows) {
     return;
   }
   $("#save-ic").disabled = false;
-  list.innerHTML = '<div class="isf-table"><div class="isf-table-head"><span>Ab</span><span>I:C (g/IE)</span></div>' +
+  list.innerHTML = '<div class="isf-table"><div class="isf-table-head"><span>Ab</span><span>Insulinfaktor (IE/KE)</span></div>' +
     rows.map(row => {
       const start = Number(row.start_minute);
       const time = String(Math.floor(start / 60)).padStart(2, "0") + ':' + String(start % 60).padStart(2, "0");
       return '<label class="ic-row"><span>' + time + '</span><input type="number" min="0.001" max="1000" step="any" required data-start-minute="' +
-        escapeHTML(start) + '" value="' + escapeHTML(row.grams_per_unit) + '" aria-label="I:C ab ' + time + ' in g je IE"></label>';
+        escapeHTML(start) + '" value="' + escapeHTML(10 / Number(row.grams_per_unit)) + '" aria-label="Insulinfaktor ab ' + time + ' in IE je KE"></label>';
     }).join("") + '</div>';
 }
 
@@ -153,7 +153,7 @@ async function saveProfileSchedule(kind) {
   const button = $(isIc ? "#save-ic" : "#save-isf");
   const inputs = $$(isIc ? "#ic-rows input" : "#isf-rows input");
   const status = $(isIc ? "#ic-status" : "#isf-sync-status");
-  const key = isIc ? "grams_per_unit" : "mgdl_per_unit";
+  const key = isIc ? "units_per_ke" : "mgdl_per_unit";
   if (button.disabled) return;
   if (!inputs.every(input => input.reportValidity())) return;
   button.disabled = true;
@@ -613,6 +613,22 @@ async function loadSummary() {
         row.excluded_count + ' ausgeklammert · ' + row.blocked_count + ' nicht berechenbar</p>' +
         (kind === "breakfast" ? breakfastSubcards() : '') + '</div>';
     }).join("");
+    const comparisons = data.sensitivity_comparison || [];
+    $("#sensitivity-comparison").innerHTML = comparisons.length
+      ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Ab</th><th>Aktuell</th><th>Vergleichswert</th><th>Prüfung an neueren Mahlzeiten</th><th>Mahlzeiten</th></tr></thead><tbody>' +
+        comparisons.map(row => {
+          const minute = Number(row.start_minute);
+          const time = String(Math.floor(minute / 60)).padStart(2, "0") + ':' + String(minute % 60).padStart(2, "0");
+          const candidate = row.candidate_mgdl_per_unit == null ? '—' : escapeHTML(num(row.candidate_mgdl_per_unit, 2)) + ' mg/dL je IE';
+          const checked = row.candidate_mae_mgdl == null ? escapeHTML(row.reason || 'Keine Prüfung möglich') :
+            'Aktuell ' + escapeHTML(num(row.baseline_mae_mgdl, 1)) + ' · Vergleichswert ' +
+            escapeHTML(num(row.candidate_mae_mgdl, 1)) + ' mg/dL' +
+            (Number(row.candidate_mae_mgdl) < Number(row.baseline_mae_mgdl) ? ' · kleinere Abweichung' : ' · keine Verbesserung');
+          return '<tr><td>' + escapeHTML(time) + '</td><td>' + escapeHTML(num(row.current_mgdl_per_unit, 2)) +
+            ' mg/dL je IE</td><td>' + candidate + '</td><td>' + checked + '</td><td>' +
+            row.meal_count + ' (davon ' + row.validation_count + ' geprüft)</td></tr>';
+        }).join('') + '</tbody></table></div>'
+      : '<p class="hint">Für den Vergleich fehlen ein I:C- oder Korrekturfaktor-Zeitplan.</p>';
     const calculations = ["breakfast", "lunch", "dinner"]
       .flatMap(kind => data.groups[kind].calculations.map(item => ({ ...item, kind })))
       .sort((a, b) => b.at.localeCompare(a.at));
@@ -660,6 +676,7 @@ async function loadSummary() {
     $("#night-summary-cards").innerHTML = '<div class="empty">Nachtübersicht nicht verfügbar.</div>';
     $("#night-records").innerHTML = "";
     $("#calculations").innerHTML = "";
+    $("#sensitivity-comparison").innerHTML = "";
       toast(error.message, true);
   }
 }
