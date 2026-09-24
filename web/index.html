@@ -104,14 +104,14 @@
       <section id="analysis-view" class="view" hidden>
         <div class="page-head"><div><p class="eyebrow">Analyse</p><h1>Insulinfaktor je KE</h1><p class="lead">Alle KH und schnell wirksamen Injektionen im Mahlzeitenfenster fließen in einen Insulinfaktor ein. Quelle: Nightscout.</p></div></div>
         <div class="analysis-controls">
-          <label>Zeitraum <select id="summary-days"><option value="7">7 Tage</option><option value="14" selected>14 Tage</option><option value="30">30 Tage</option></select></label>
+          <label>Zeitraum <select id="summary-days"><option value="1">1 Tag</option><option value="3">3 Tage</option><option value="7">7 Tage</option><option value="14" selected>14 Tage</option><option value="30">30 Tage</option></select></label>
           <button id="sync-range" class="primary" type="button">Zeitraum aus Nightscout laden</button>
           <span id="sync-progress" class="hint"></span>
         </div>
         <div id="summary" class="summary-grid"></div>
         <section class="analysis-list panel">
           <div class="section-head"><h2>Korrekturfaktor im Vergleich</h2></div>
-          <p class="subtle">Der I:C-Zeitplan bleibt fest. Für jeden Zeitabschnitt wird ein Vergleichswert aus den älteren Mahlzeiten berechnet und an den neueren Mahlzeiten geprüft. Angezeigt wird die mittlere absolute Abweichung in mg/dL. Mindestens 6 Mahlzeiten mit ausreichend KH-Insulin-Differenz sind nötig. Ein unpassender I:C-Faktor oder nicht erfasste Einflüsse können das Ergebnis verfälschen. Das Nightscout-Profil wird nicht geändert.</p>
+          <p class="subtle">Für den gewählten Zeitraum werden die Abweichungen aus der Mahlzeitentabelle erneut mit einem anderen Korrekturfaktor berechnet. Der angezeigte Vergleichswert ergibt die kleinste mittlere absolute Abweichung; der I:C-Zeitplan bleibt fest. Mahlzeiten ohne rechnerischen Einfluss auf einen Zeitabschnitt ändern dessen Vergleich nicht. Das Ergebnis ist eine Modellbeobachtung und ändert das Nightscout-Profil nicht.</p>
           <div id="sensitivity-comparison"></div>
         </section>
         <section class="analysis-list panel">

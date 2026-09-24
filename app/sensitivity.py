@@ -1,8 +1,4 @@
-"""Retrospective comparison of correction-factor schedule values.
-
-The meal I:C schedule stays fixed. This is a descriptive model check, not a
-dosing recommendation or an estimate of physiological insulin action.
-"""
+"""Compare current correction factors against recorded meal deviations."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -23,16 +19,28 @@ def mean_absolute(errors: list[Decimal]) -> Decimal:
     return sum((abs(error) for error in errors), Decimal(0)) / len(errors)
 
 
+def weighted_median(values: list[tuple[Decimal, Decimal]]) -> Decimal:
+    """Minimize the sum of weighted absolute deviations."""
+    ordered = sorted(values)
+    halfway = sum((weight for _, weight in ordered), Decimal(0)) / 2
+    weight_so_far = Decimal(0)
+    for value, weight in ordered:
+        weight_so_far += weight
+        if weight_so_far >= halfway:
+            return value
+    return ordered[-1][0]
+
+
 def compare_schedule(meals: list[dict], isf_schedule: list[dict], ic_schedule: list[dict],
                      timezone: str) -> list[dict]:
-    """Fit each ISF slot on older meals; report error on newer meals only."""
+    """Minimize existing absolute meal deviations for each schedule slot."""
     if not isf_schedule or not ic_schedule:
         return []
     rows = []
     for meal in meals:
         result = meal.get("calculation") or {}
-        if (meal.get("excluded") or result.get("factor_units_per_ke") is None
-                or result.get("delta_mgdl") is None or result.get("carb_events") is None
+        if (meal.get("excluded") or meal.get("deviation_mgdl") is None
+                or result.get("carb_events") is None
                 or result.get("doses") is None):
             continue
         exposure = {int(row["start_minute"]): Decimal(0) for row in isf_schedule}
@@ -44,40 +52,33 @@ def compare_schedule(meals: list[dict], isf_schedule: list[dict], ic_schedule: l
         for dose in result["doses"]:
             slot = slot_at(datetime.fromisoformat(dose["at"]), isf_schedule, timezone)
             exposure[slot] -= dec(dose["units"])
-        expected = sum((exposure[int(row["start_minute"])] * dec(row["mgdl_per_unit"])
-                        for row in isf_schedule), Decimal(0))
-        rows.append({"at": meal["at"], "exposure": exposure,
-                     "error": dec(result["delta_mgdl"]) - expected})
+        rows.append({"exposure": exposure, "error": dec(meal["deviation_mgdl"])})
     output = []
     for slot in sorted(isf_schedule, key=lambda row: int(row["start_minute"])):
         minute = int(slot["start_minute"])
         current = dec(slot["mgdl_per_unit"])
-        relevant = sorted((row for row in rows if abs(row["exposure"][minute]) >= Decimal("0.25")),
-                          key=lambda row: row["at"])
+        relevant = [row for row in rows if row["exposure"][minute] != 0]
         item = {"start_minute": minute, "current_mgdl_per_unit": str(current),
-                "meal_count": len(relevant), "training_count": 0, "validation_count": 0,
+                "meal_count": len(relevant),
                 "candidate_mgdl_per_unit": None, "baseline_mae_mgdl": None,
                 "candidate_mae_mgdl": None, "reason": None}
-        if len(relevant) < 6:
-            item["reason"] = "Mindestens 6 aussagekräftige Mahlzeiten nötig"
+        if not relevant:
+            item["reason"] = "Keine Mahlzeit mit Einfluss auf diesen Zeitabschnitt"
             output.append(item)
             continue
-        split = max(4, len(relevant) * 2 // 3)
-        training, validation = relevant[:split], relevant[split:]
-        item["training_count"] = len(training)
-        item["validation_count"] = len(validation)
-        numerator = sum((row["exposure"][minute] * row["error"] for row in training), Decimal(0))
-        denominator = sum((row["exposure"][minute] ** 2 for row in training), Decimal(0))
-        candidate = current + numerator / denominator
+        candidate = weighted_median([
+            (current + row["error"] / row["exposure"][minute], abs(row["exposure"][minute]))
+            for row in relevant
+        ])
         if not Decimal("0.001") <= candidate <= Decimal(1000):
             item["reason"] = "Kein gültiger positiver Vergleichswert"
             output.append(item)
             continue
         item["candidate_mgdl_per_unit"] = str(candidate)
-        item["baseline_mae_mgdl"] = str(mean_absolute([row["error"] for row in validation]))
+        item["baseline_mae_mgdl"] = str(mean_absolute([row["error"] for row in relevant]))
         item["candidate_mae_mgdl"] = str(mean_absolute([
             row["error"] - (candidate - current) * row["exposure"][minute]
-            for row in validation
+            for row in relevant
         ]))
         output.append(item)
     return output
