@@ -235,7 +235,7 @@ def day_payload(day: str, refresh: bool = True) -> dict:
             })
             continue
         other_events.append({
-            "at": item["at"], "eventType": item["eventType"], "carbs": item["carbs"],
+            "id": item["id"], "at": item["at"], "eventType": item["eventType"], "carbs": item["carbs"],
             "insulin": item["insulin"], "basal_units": item["basal_units"],
             "notes": episodes.EVENT_TAG.sub("", episodes.TAG.sub("", item["notes"])).strip(),
         })
@@ -579,6 +579,23 @@ class Handler(BaseHTTPRequestHandler):
                     "message": ("Nightscout-Profil synchronisiert" if profile else
                                 "Nightscout hat kein Korrekturfaktor-Profil geliefert"),
                 })
+                return
+            if path == "/api/treatment/delete":
+                if not nightscout.is_configured():
+                    raise ValueError("Zuerst Nightscout verbinden")
+                record_id = payload.get("id")
+                day = payload.get("day")
+                if not isinstance(record_id, str) or not record_id or len(record_id) > 200 or not isinstance(day, str):
+                    raise ValueError("Ungültiger Eintrag")
+                date.fromisoformat(day)
+                _, settings = storage.get_settings()
+                start, end = local_day_range(day, settings["timezone"])
+                _, treatments = nightscout.fetch_range(start, end)
+                if not any(item.get("_id") == record_id for item in treatments):
+                    raise ValueError("Eintrag in Nightscout nicht gefunden")
+                nightscout.delete_treatment(record_id)
+                storage.delete_cached_treatment(record_id)
+                self._response(200, {"id": record_id})
                 return
             if path == "/api/settings":
                 settings = validate_settings(payload)

@@ -234,6 +234,11 @@ def cached_between(start: datetime, end: datetime) -> tuple[list[dict], list[dic
     return [json.loads(row["payload"]) for row in entries], [json.loads(row["payload"]) for row in treatments]
 
 
+def delete_cached_treatment(record_id: str) -> None:
+    with connect() as db:
+        db.execute("DELETE FROM treatments WHERE id=?", (record_id,))
+
+
 def synced_at(day: str) -> str | None:
     with connect() as db:
         row = db.execute("SELECT synced_at FROM synced_days WHERE day=?", (day,)).fetchone()

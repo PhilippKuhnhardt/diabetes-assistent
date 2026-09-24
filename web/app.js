@@ -240,7 +240,7 @@ function mealHTML(meal, entries) {
     : event.role === "meal-dose" ? "Mahlzeitenbolus"
     : event.role === "correction" || event.eventType === "Correction Bolus" ? "Korrektur"
     : Number(event.carbs) ? "Weitere KH" : "Weiterer Bolus";
-  const events = meal.events.map(event => '<li><span>' + escapeHTML(timeOnly(event.at)) + '</span><b>' + escapeHTML(eventName(event)) + '</b><span>' + (Number(event.carbs) ? escapeHTML(num(event.carbs)) + ' g KH ' : '') + (Number(event.insulin) ? escapeHTML(num(event.insulin)) + ' E' : '') + '</span></li>').join("");
+  const events = meal.events.map(event => '<li><span>' + escapeHTML(timeOnly(event.at)) + '</span><b>' + escapeHTML(eventName(event)) + '</b><span>' + (Number(event.carbs) ? escapeHTML(num(event.carbs)) + ' g KH ' : '') + (Number(event.insulin) ? escapeHTML(num(event.insulin)) + ' E' : '') + '</span>' + deleteButton(event.id, eventName(event), event.at) + '</li>').join("");
   const totalCarbs = meal.calculation?.blockers?.length ? null : meal.calculation?.carbs_total;
   const carbLabel = totalCarbs != null ? num(totalCarbs) + " g KH im Fenster" : num(meal.carbs) + " g KH";
   return '<article class="meal-card">' +
@@ -254,10 +254,17 @@ function mealHTML(meal, entries) {
     '<form class="dose-form" data-episode="' + escapeHTML(meal.id) + '" data-meal="' + escapeHTML(meal.meal) + '" hidden>' +
     '<label>Art <select name="role"><option value="meal-dose">Mahlzeitenbolus</option><option value="correction">Korrektur</option></select></label>' +
     '<label>Datum <input type="date" name="date" required></label>' +
-    '<label>Uhrzeit (HH:MM, 24 h)<input type="text" name="at" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" maxlength="5" placeholder="14:30" required></label>' +
+    '<label>Uhrzeit (HH:MM, 24 h)<input type="time" name="at" step="60" required></label>' +
     '<label>Insulin <span>E</span><input type="number" name="insulin" min="0.01" max="100" step="0.01" required></label>' +
     '<button type="submit" class="primary">In Nightscout speichern</button></form>' +
     '</article>';
+}
+
+function deleteButton(id, label, at) {
+  if (!id) return "";
+  return '<button type="button" class="delete-treatment" data-id="' + escapeHTML(id) +
+    '" data-label="' + escapeHTML(label) + '" data-at="' + escapeHTML(at) +
+    '" aria-label="' + escapeHTML(label + " um " + timeOnly(at) + " löschen") + '">Löschen</button>';
 }
 
 function renderNight(night) {
@@ -314,7 +321,7 @@ function renderDay(data) {
       const duration = Number(item.duration_minutes) > 0 ? num(item.duration_minutes, 0) + " min" : "Dauer unbekannt";
       return '<li><time>' + escapeHTML(timeOnly(item.at)) + '</time><strong>' + escapeHTML(item.label) + '</strong><span>' +
         escapeHTML(duration + (Number(item.duration_minutes) > 0 ? " · bis " + endLabel : "")) +
-        (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') + '</span></li>';
+        (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') + '</span>' + deleteButton(item.id, item.label, item.at) + '</li>';
     }).join("");
     sportEvents.innerHTML = '<div class="section-head"><h2>Sport an diesem Tag</h2></div><ul>' + rows + '</ul>';
   }
@@ -327,7 +334,7 @@ function renderDay(data) {
       const rapid = Number(event.insulin);
       const kind = basal ? "Basalinsulin" : event.eventType === "Snack Bolus" ? "Zwischenmahlzeit" : event.eventType === "Correction Bolus" ? "Korrektur" : "Weiterer Eintrag";
       const detail = [carbs ? num(carbs) + " g KH" : "", rapid ? num(rapid) + " IE schnell wirksam" : "", basal ? num(basal) + " IE lang wirksam" : ""].filter(Boolean).join(" · ");
-      return '<li><time>' + escapeHTML(timeOnly(event.at)) + '</time><strong>' + escapeHTML(kind) + '</strong><span>' + escapeHTML(detail || event.notes) + '</span></li>';
+      return '<li><time>' + escapeHTML(timeOnly(event.at)) + '</time><strong>' + escapeHTML(kind) + '</strong><span>' + escapeHTML(detail || event.notes) + '</span>' + deleteButton(event.id, kind, event.at) + '</li>';
     }).join("");
     other.innerHTML = '<h3>Weitere Einträge</h3><ul>' + rows + '</ul>';
   }
@@ -438,6 +445,22 @@ async function saveDose(event) {
     toast(error.message, true);
   } finally {
     button.disabled = false;
+  }
+}
+
+async function deleteTreatment(event) {
+  const button = event.target.closest(".delete-treatment");
+  if (!button) return;
+  const label = button.dataset.label + " um " + timeOnly(button.dataset.at);
+  if (!window.confirm(label + " Uhr wirklich aus Nightscout löschen?")) return;
+  button.disabled = true;
+  try {
+    await api("/api/treatment/delete", { method: "POST", body: JSON.stringify({ id: button.dataset.id, day: state.day }) });
+    toast("Eintrag aus Nightscout gelöscht");
+    await loadDay();
+  } catch (error) {
+    button.disabled = false;
+    toast(error.message, true);
   }
 }
 
@@ -662,6 +685,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#refresh-day").addEventListener("click", loadDay);
   $("#meal-form").addEventListener("submit", saveMeal);
   $("#sport-form").addEventListener("submit", saveSport);
+  $("#diary-view").addEventListener("click", deleteTreatment);
   $("#sport-kind").addEventListener("change", setSportDuration);
   $("#settings-form").addEventListener("submit", saveSettings);
   $("#sync-profile").addEventListener("click", async event => {
