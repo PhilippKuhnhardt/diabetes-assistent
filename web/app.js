@@ -615,14 +615,16 @@ async function loadSummary() {
     }).join("");
     const comparisons = data.sensitivity_comparison || [];
     $("#sensitivity-comparison").innerHTML = comparisons.length
-      ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Ab</th><th>Mathematisch bester Korrekturfaktor</th></tr></thead><tbody>' +
+      ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Ab</th><th>Aktuell</th><th>Mathematisch bester Korrekturfaktor</th></tr></thead><tbody>' +
         comparisons.map(row => {
           const minute = Number(row.start_minute);
           const time = String(Math.floor(minute / 60)).padStart(2, "0") + ':' + String(minute % 60).padStart(2, "0");
           const candidate = row.candidate_mgdl_per_unit == null
             ? escapeHTML(row.reason || 'Kein Wert berechenbar')
             : '<b>' + escapeHTML(num(row.candidate_mgdl_per_unit, 2)) + ' mg/dL je IE</b>';
-          return '<tr><td>' + escapeHTML(time) + '</td><td>' + candidate + '</td></tr>';
+          return '<tr><td>' + escapeHTML(time) + '</td><td>' +
+            escapeHTML(num(row.current_mgdl_per_unit, 2)) + ' mg/dL je IE</td><td>' +
+            candidate + '</td></tr>';
         }).join('') + '</tbody></table></div>'
       : '<p class="hint">Für den Vergleich fehlen ein I:C- oder Korrekturfaktor-Zeitplan.</p>';
     const calculations = ["breakfast", "lunch", "dinner"]
