@@ -86,7 +86,7 @@ h3 small { font-size: 13px; color: var(--muted); font-weight: 500; letter-spacin
 .events li b { font-weight: 650; }
 .delete-treatment { color: #9b3c33 !important; font-size: 12px; padding: 7px 9px !important; }
 .add-dose { font-size: 12px; margin-top: 6px; }
-.dose-form { display: grid; grid-template-columns: .9fr 1fr 1fr .7fr .7fr auto; align-items: end; gap: 9px; margin-top: 16px; padding: 14px; background: var(--canvas); border-radius: 9px; }
+.dose-form { display: grid; grid-template-columns: .9fr 1fr .7fr .7fr auto; align-items: end; gap: 9px; margin-top: 16px; padding: 14px; background: var(--canvas); border-radius: 9px; }
 .dose-form label { margin: 0; }
 .dose-form button { white-space: nowrap; }
 .math { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 13px; }
