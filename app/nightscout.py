@@ -60,6 +60,21 @@ def _request(method: str, path: str, query: dict | None = None, body: object | N
         raise NightscoutError("Ungültige Antwort von Nightscout") from None
 
 
+def fetch_recent_glucose(now: datetime) -> list[dict]:
+    start_ms = int((now - timedelta(hours=1)).timestamp() * 1000)
+    end_ms = int(now.timestamp() * 1000)
+    entries = _request("GET", "/api/v1/entries/sgv.json", {
+        "find[date][$gte]": start_ms,
+        "find[date][$lt]": end_ms + 1,
+        "count": 1000,
+    })
+    if not isinstance(entries, list):
+        raise NightscoutError("Nightscout lieferte unerwartete CGM-Daten")
+    if len(entries) >= 1000:
+        raise NightscoutError("Zu viele CGM-Werte in der letzten Stunde")
+    return entries
+
+
 def fetch_range(start: datetime, end: datetime) -> tuple[list[dict], list[dict]]:
     entries = []
     cursor = start

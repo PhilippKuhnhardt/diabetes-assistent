@@ -170,6 +170,23 @@ class IntegrationTests(unittest.TestCase):
         with urllib.request.urlopen(req) as response:
             return json.loads(response.read())
 
+    def test_current_glucose_endpoint_uses_live_nightscout_values(self):
+        now = datetime.now(timezone.utc)
+        FakeNightscout.profile["store"]["Default"]["target_low"] = [{"time": "00:00", "value": 100}]
+        FakeNightscout.profile["store"]["Default"]["target_high"] = [{"time": "00:00", "value": 160}]
+        self.request("/api/profile/sync", method="POST", body={})
+        FakeNightscout.entries = [
+            {"_id": "prior", "date": int((now - timedelta(minutes=12)).timestamp() * 1000),
+             "type": "sgv", "sgv": 120},
+            {"_id": "latest", "date": int((now - timedelta(minutes=2)).timestamp() * 1000),
+             "type": "sgv", "sgv": 130},
+        ]
+        result = self.request("/api/glucose/current")
+        self.assertEqual(result["status"], "in_range")
+        self.assertEqual(Decimal(result["glucose_mgdl"]), Decimal(130))
+        self.assertEqual(Decimal(result["trend_delta_mgdl"]), Decimal(10))
+        self.assertTrue(result["fresh"])
+
     def test_local_dose_target_is_saved_without_changing_nightscout_profile(self):
         initial = self.request("/api/settings")
         self.assertEqual(Decimal(str(initial["settings"]["dose_target_mgdl"])), Decimal(100))
@@ -211,6 +228,20 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["insulin"])),
                          Decimal(suggestion["entry_units"]))
         self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["carbs"])), Decimal(20))
+
+    def test_meal_without_insulin_and_insulin_without_carbs_are_separate_entries(self):
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": MEAL_AT, "carbs": "30", "insulin": 0,
+        })
+        self.request("/api/treatment", method="POST", body={
+            "kind": "correction", "at": "2026-09-23T10:30:00Z", "carbs": 0, "insulin": "1.5",
+        })
+        day = self.request("/api/day?date=2026-09-23")
+        self.assertEqual([item["kind"] for item in day["timeline"]], ["meal", "correction"])
+        self.assertEqual(Decimal(str(day["timeline"][0]["insulin"])), Decimal(0))
+        self.assertEqual(Decimal(str(day["timeline"][1]["carbs"])), Decimal(0))
+        self.assertEqual(len(day["meals"]), 1)
+        self.assertEqual(Decimal(str(day["meals"][0]["carbs"])), Decimal(30))
 
     def test_standalone_carb_and_correction_entries_can_be_edited(self):
         at = "2026-09-23T10:30:00Z"

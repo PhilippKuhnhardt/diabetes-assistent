@@ -14,7 +14,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
 
-from app import auth, calculation, dosing, episodes, nightscout, sensitivity, storage
+from app import auth, calculation, dosing, episodes, glucose, nightscout, sensitivity, storage
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 MAX_BODY = 64 * 1024
@@ -524,6 +524,27 @@ class Handler(BaseHTTPRequestHandler):
                     "login_required": bool(auth.password()),
                     "profile_sync_at": profile_sync["synced_at"], "profile_sync_error": profile_sync_error,
                 })
+                return
+            if path == "/api/glucose/current":
+                if not nightscout.is_configured():
+                    raise ValueError("Nightscout-Zugang in Umgebungsvariablen fehlt")
+                profile_current = True
+                try:
+                    sync_profile_cache()
+                except nightscout.NightscoutError:
+                    profile_current = False
+                _, settings = storage.get_settings()
+                profile_sync = storage.profile_sync_status()
+                synced_at = profile_sync["synced_at"]
+                attempted_at = profile_sync["attempted_at"]
+                profile_current = (profile_current and bool(synced_at) and
+                                   (not attempted_at or parse_instant(synced_at) >= parse_instant(attempted_at)))
+                if not profile_current:
+                    settings["target_schedule"] = []
+                now = datetime.now(timezone.utc)
+                raw = nightscout.fetch_recent_glucose(now)
+                entries = episodes.normalize_entries(raw)
+                self._response(200, glucose.current_status(entries, settings, now))
                 return
             if path == "/api/settings/history":
                 self._response(200, {"versions": storage.settings_history()})
