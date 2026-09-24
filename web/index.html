@@ -112,6 +112,7 @@
         <section class="analysis-list panel">
           <div class="section-head"><h2>Alle Kalkulationen</h2><span id="calculation-count" class="hint"></span></div>
           <p class="subtle">Markiere einzelne Mahlzeiten als Ausreißer. Sie bleiben im Tagebuch und in Nightscout erhalten, gehen aber nicht in die Kennzahlen ein. Die Auswahl kannst du jederzeit ändern. „Stark abweichend“ ist ein Hinweis und klammert keinen Wert automatisch aus.</p>
+          <p class="subtle">Erwartet = Σ(KH ÷ aktuellem Nightscout-I:C × zeitabhängigem KF) − rechnerischer Insulineffekt. Delta = gemessen − erwartet. Die Farben zeigen das Vorzeichen: <span class="glucose-change rising">positiv</span>, <span class="glucose-change falling">negativ</span>, <span class="glucose-change steady">null</span>. Ein positives Delta liegt über der Erwartung. Die Farben bewerten keine Dosis.</p>
           <details class="outlier-explain"><summary>Wie entsteht die Markierung?</summary><p>Verglichen werden berechenbare Faktoren derselben Mahlzeitenart im gewählten Zeitraum, beim Frühstück getrennt nach Arbeit und Frei, auch bereits ausgeklammerte. Ab drei Werten erscheint der Hinweis, wenn ein Wert mehr als 50 % vom Median entfernt ist und sein Abstand zugleich mehr als dreimal so groß ist wie der Median der absoluten Abweichungen. Bei wenigen Werten ist die Einordnung unsicher.</p></details>
           <div id="calculations"></div>
         </section>
@@ -136,10 +137,16 @@
           </section>
           <form id="settings-form" class="panel">
             <h2>Korrekturfaktor aus Nightscout</h2>
-            <p class="subtle">Nightscout ist die maßgebliche Quelle. Änderungen am Profil nimmst du im Nightscout Profile Editor vor. Die App synchronisiert das aktuelle Profil automatisch und speichert eine lokale Kopie für die Analysen. Der aktuelle Zeitplan gilt für alle Mahlzeiten.</p>
+            <p class="subtle">Nightscout ist die maßgebliche Quelle. Die App synchronisiert das aktuelle Profil und speichert eine lokale Kopie für die Analysen. Der aktuelle Zeitplan gilt für alle Mahlzeiten.</p>
             <div id="isf-rows" aria-live="polite"></div>
+            <button type="button" id="save-isf">Korrekturfaktor in Nightscout speichern</button>
             <button type="button" id="sync-profile">Nightscout-Profil synchronisieren</button>
             <p id="isf-sync-status" class="hint"></p>
+            <h2 class="spaced">Insulin-Kohlenhydrat-Verhältnis aus Nightscout</h2>
+            <p class="subtle">Nightscout speichert I:C in g je IE. Daraus folgt für 1 KE = 10 g: IE/KE = 10 ÷ I:C. Der aktuelle Zeitplan wird für alle Analysen verwendet.</p>
+            <div id="ic-rows"></div>
+            <button type="button" id="save-ic">I:C in Nightscout speichern</button>
+            <p id="ic-status" class="hint"></p>
             <h2 class="spaced">Mahlzeitenfenster</h2>
             <p class="subtle">Standard: 180 Minuten. Alle dokumentierten KH und alle schnell wirksamen Injektionen im Fenster gehen vollständig in einen gemeinsamen Insulinfaktor ein. Das ist eine Rechenannahme, keine Aussage über den tatsächlichen Wirkverlauf.</p>
             <label>Auswertung nach <span>min</span><input name="window_minutes" type="number" min="60" max="360" step="1" required></label>

@@ -7,6 +7,9 @@ const views = new Set(["diary", "analysis", "settings"]);
 const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 const num = (value, digits = 2) => Number(value).toLocaleString("de-DE", { maximumFractionDigits: digits, minimumFractionDigits: 0 });
 const signedChange = (value, digits = 1) => value == null ? "—" : (Number(value) > 0 ? "+" : "") + num(value, digits) + " mg/dL";
+const glucoseChangeHTML = value => value == null ? '—' :
+  '<span class="glucose-change ' + (Number(value) > 0 ? 'rising' : Number(value) < 0 ? 'falling' : 'steady') + '">' +
+  escapeHTML(signedChange(value)) + '</span>';
 const timeOnly = (value) => new Date(value).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
 const localInputTime = date => {
@@ -125,20 +128,67 @@ async function loadSettings() {
   const form = $("#settings-form");
   form.elements.window_minutes.value = data.settings.window_minutes;
   renderIsfRows(data.settings.isf_schedule, data.settings.nightscout_profile, data.profile_sync_at, data.profile_sync_error);
+  renderIcRows(data.settings.ic_schedule || []);
+}
+
+function renderIcRows(rows) {
+  const list = $("#ic-rows");
+  if (!rows.length) {
+    list.innerHTML = '<p class="hint">Kein I:C-Zeitplan aus Nightscout verfügbar.</p>';
+    $("#save-ic").disabled = true;
+    return;
+  }
+  $("#save-ic").disabled = false;
+  list.innerHTML = '<div class="isf-table"><div class="isf-table-head"><span>Ab</span><span>I:C (g/IE)</span></div>' +
+    rows.map(row => {
+      const start = Number(row.start_minute);
+      const time = String(Math.floor(start / 60)).padStart(2, "0") + ':' + String(start % 60).padStart(2, "0");
+      return '<label class="ic-row"><span>' + time + '</span><input type="number" min="0.001" max="1000" step="any" required data-start-minute="' +
+        escapeHTML(start) + '" value="' + escapeHTML(row.grams_per_unit) + '" aria-label="I:C ab ' + time + ' in g je IE"></label>';
+    }).join("") + '</div>';
+}
+
+async function saveProfileSchedule(kind) {
+  const isIc = kind === "ic";
+  const button = $(isIc ? "#save-ic" : "#save-isf");
+  const inputs = $$(isIc ? "#ic-rows input" : "#isf-rows input");
+  const status = $(isIc ? "#ic-status" : "#isf-sync-status");
+  const key = isIc ? "grams_per_unit" : "mgdl_per_unit";
+  if (button.disabled) return;
+  if (!inputs.every(input => input.reportValidity())) return;
+  button.disabled = true;
+  status.textContent = "Profil-Zeitplan wird in Nightscout gespeichert …";
+  try {
+    const result = await api("/api/profile/" + kind, { method: "POST", body: JSON.stringify({
+      profile_id: state.settings.nightscout_profile.profile_id,
+      [isIc ? "ic_schedule" : "isf_schedule"]: inputs.map(input => ({ start_minute: Number(input.dataset.startMinute), [key]: input.value })),
+    }) });
+    await loadSettings();
+    if (state.view === "analysis") await loadSummary();
+    status.textContent = result.message;
+    toast(result.message);
+  } catch (error) {
+    status.textContent = error.message;
+    toast(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function renderIsfRows(rows, profile, syncedAt, syncError) {
   const list = $("#isf-rows");
   if (!rows.length) {
     list.innerHTML = '<p class="hint">Kein Korrekturfaktor-Profil aus Nightscout im lokalen Cache.</p>';
+    $("#save-isf").disabled = true;
   } else {
+    $("#save-isf").disabled = false;
     list.innerHTML = '<div class="isf-table"><div class="isf-table-head"><span>Ab</span><span>Korrekturfaktor</span></div>' +
       rows.map(row => {
         const start = Number(row.start_minute);
         const hh = String(Math.floor(start / 60)).padStart(2, "0");
         const mm = String(start % 60).padStart(2, "0");
-        return '<div class="isf-readonly-row"><span>' + hh + ':' + mm + '</span><strong>' +
-          escapeHTML(num(row.mgdl_per_unit, 3)) + ' <small>mg/dL je IE</small></strong></div>';
+        return '<label class="ic-row"><span>' + hh + ':' + mm + '</span><input type="number" min="0.001" max="1000" step="any" required data-start-minute="' +
+          escapeHTML(start) + '" value="' + escapeHTML(row.mgdl_per_unit) + '" aria-label="Korrekturfaktor ab ' + hh + ':' + mm + ' in mg/dL je IE"></label>';
       }).join("") + '</div>';
   }
   const source = profile
@@ -568,14 +618,14 @@ async function loadSummary() {
       .sort((a, b) => b.at.localeCompare(a.at));
     $("#calculation-count").textContent = calculations.length + (calculations.length === 1 ? " Mahlzeit" : " Mahlzeiten");
     $("#calculations").innerHTML = calculations.length
-      ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Uhrzeit</th><th>Mahlzeit</th><th>Insulinfaktor</th><th>KH</th><th>Insulin</th><th>Glukoseänderung</th><th>Endpunkt</th><th>Ausklammern</th><th></th></tr></thead><tbody>' +
+      ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Uhrzeit</th><th>Mahlzeit</th><th>Insulinfaktor</th><th>KH</th><th>Insulin</th><th>Gemessen</th><th>Erwartet</th><th>Delta</th><th>Endpunkt</th><th>Ausklammern</th><th></th></tr></thead><tbody>' +
         (() => {
           let previousDay = "";
           return calculations.map(item => {
             const newDay = item.day !== previousDay;
             previousDay = item.day;
             const dayHeading = newDay
-              ? '<tr class="analysis-day-row"><th colspan="9" scope="colgroup">' +
+              ? '<tr class="analysis-day-row"><th colspan="11" scope="colgroup">' +
                 escapeHTML(new Date(item.day + "T12:00:00").toLocaleDateString("de-DE", {
                   weekday: "long", day: "numeric", month: "long", year: "numeric",
                 })) + ' <label class="day-type-label">Tag: <select class="day-type" data-day="' +
@@ -594,7 +644,9 @@ async function loadSummary() {
             '<td>' + escapeHTML(names[item.kind]) + '</td><td><b>' + factor + '</b></td>' +
             '<td>' + (item.carbs_total == null ? "—" : escapeHTML(num(item.carbs_total)) + ' g') + '</td>' +
             '<td>' + (item.rapid_units_in_window == null ? "—" : escapeHTML(num(item.rapid_units_in_window)) + ' IE') + '</td>' +
-            '<td>' + escapeHTML(signedChange(item.delta_mgdl)) + '</td>' +
+            '<td>' + glucoseChangeHTML(item.delta_mgdl) + '</td>' +
+            '<td>' + glucoseChangeHTML(item.expected_delta_mgdl) + '</td>' +
+            '<td>' + glucoseChangeHTML(item.deviation_mgdl) + '</td>' +
             '<td>' + (item.end ? escapeHTML(timeOnly(item.end)) : "—") + '</td>' +
             '<td>' + (item.units_per_ke == null ? "—" : '<label class="exclude-label"><input type="checkbox" class="exclude-meal" data-meal-id="' +
               escapeHTML(item.id) + '" data-day="' + escapeHTML(item.day) + '"' + (excluded ? " checked" : "") +
@@ -698,6 +750,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#diary-view").addEventListener("click", deleteTreatment);
   $("#sport-kind").addEventListener("change", setSportDuration);
   $("#settings-form").addEventListener("submit", saveSettings);
+  $("#save-ic").addEventListener("click", () => saveProfileSchedule("ic"));
+  $("#save-isf").addEventListener("click", () => saveProfileSchedule("isf"));
+  for (const kind of ["ic", "isf"]) {
+    $("#" + kind + "-rows").addEventListener("keydown", event => {
+      if (event.key === "Enter" && event.target.matches("input")) {
+        event.preventDefault();
+        saveProfileSchedule(kind);
+      }
+    });
+  }
   $("#sync-profile").addEventListener("click", async event => {
     const button = event.currentTarget;
     button.disabled = true;

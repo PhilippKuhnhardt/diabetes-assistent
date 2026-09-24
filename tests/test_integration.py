@@ -7,6 +7,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
@@ -30,6 +31,10 @@ class FakeNightscout(BaseHTTPRequestHandler):
             "sens": [
                 {"time": "00:00", "timeAsSeconds": 0, "value": 50},
                 {"time": "12:00", "timeAsSeconds": 43200, "value": 45},
+            ],
+            "carbratio": [
+                {"time": "00:00", "timeAsSeconds": 0, "value": 10},
+                {"time": "12:00", "timeAsSeconds": 43200, "value": 20},
             ],
         }},
     }
@@ -74,6 +79,20 @@ class FakeNightscout(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
 
+    def do_PUT(self):
+        parsed = urllib.parse.urlparse(self.path)
+        assert urllib.parse.parse_qs(parsed.query)["token"] == ["test-raw-token"]
+        if parsed.path.rstrip("/") != "/api/v1/profile":
+            self.send_error(404)
+            return
+        self.__class__.profile = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        raw = json.dumps(self.profile).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(raw)))
+        self.end_headers()
+        self.wfile.write(raw)
+
     def do_DELETE(self):
         parsed = urllib.parse.urlparse(self.path)
         assert urllib.parse.parse_qs(parsed.query)["token"] == ["test-raw-token"]
@@ -88,6 +107,9 @@ class FakeNightscout(BaseHTTPRequestHandler):
         self.end_headers()
 
 
+INITIAL_PROFILE = json.loads(json.dumps(FakeNightscout.profile))
+
+
 class IntegrationTests(unittest.TestCase):
     def setUp(self):
         self.old_env = dict(os.environ)
@@ -96,6 +118,7 @@ class IntegrationTests(unittest.TestCase):
         storage.DB_PATH = Path(self.temp.name) / "app.sqlite3"
         storage.init()
         FakeNightscout.treatments = []
+        FakeNightscout.profile = json.loads(json.dumps(INITIAL_PROFILE))
         FakeNightscout.entries = [
             {"_id": "glucose-start", "date": 1790157600000, "type": "sgv", "sgv": 100},
             {"_id": "glucose-end", "date": 1790168400000, "type": "sgv", "sgv": 120},
@@ -162,6 +185,66 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/profile/sync", method="POST", body={})
             _, settings = storage.get_settings()
             self.assertEqual(settings["isf_schedule"][0]["mgdl_per_unit"], "50.45096")
+        finally:
+            FakeNightscout.profile = original
+
+    def test_ic_and_sensitivity_changes_are_saved_to_nightscout(self):
+        original = json.loads(json.dumps(FakeNightscout.profile))
+        profile_id = original["_id"]
+        try:
+            ic = self.request("/api/profile/ic", method="POST", body={
+                "profile_id": profile_id,
+                "ic_schedule": [
+                    {"start_minute": 0, "grams_per_unit": "12"},
+                    {"start_minute": 720, "grams_per_unit": "18"},
+                ],
+            })
+            self.assertEqual(Decimal(ic["settings"]["ic_schedule"][0]["grams_per_unit"]), Decimal("12"))
+            self.assertEqual(FakeNightscout.profile["store"]["Default"]["carbratio"][1]["value"], 18)
+            self.assertEqual(FakeNightscout.profile["store"]["Default"]["sens"], original["store"]["Default"]["sens"])
+
+            isf = self.request("/api/profile/isf", method="POST", body={
+                "profile_id": profile_id,
+                "isf_schedule": [
+                    {"start_minute": 0, "mgdl_per_unit": "48"},
+                    {"start_minute": 720, "mgdl_per_unit": "42"},
+                ],
+            })
+            self.assertEqual(Decimal(isf["settings"]["isf_schedule"][1]["mgdl_per_unit"]), Decimal("42"))
+            self.assertEqual(FakeNightscout.profile["store"]["Default"]["carbratio"][0]["value"], 12)
+            self.assertEqual(FakeNightscout.profile["store"]["Default"]["timezone"], "Europe/Berlin")
+        finally:
+            FakeNightscout.profile = original
+
+    def test_expected_change_uses_current_time_specific_nightscout_profile(self):
+        meal = {"id": "lunch-with-snack", "meal": "lunch", "at": "2026-09-23T10:00:00+02:00",
+                "calculation": {
+                    "factor_units_per_ke": "1", "ratio_g_per_unit": "10",
+                    "delta_mgdl": "40", "insulin_effect_mgdl": "45",
+                    "carb_events": [
+                        {"at": "2026-09-23T10:00:00+02:00", "carbs": "10", "isf": "50"},
+                        {"at": "2026-09-23T13:00:00+02:00", "carbs": "10", "isf": "45"},
+                    ],
+                }}
+        with patch("app.server.day_payload", side_effect=[{"meals": [meal]}] + [{"meals": []}] * 6):
+            row = self.request("/api/summary?days=7")["groups"]["lunch"]["calculations"][0]
+        self.assertEqual(Decimal(row["expected_delta_mgdl"]), Decimal("27.5"))
+        self.assertEqual(Decimal(row["deviation_mgdl"]), Decimal("12.5"))
+
+    def test_sensitivity_write_converts_to_nightscout_mmol_units(self):
+        original = FakeNightscout.profile
+        FakeNightscout.profile = json.loads(json.dumps(original))
+        FakeNightscout.profile["store"]["Default"]["units"] = "mmol/L"
+        try:
+            result = self.request("/api/profile/isf", method="POST", body={
+                "profile_id": original["_id"],
+                "isf_schedule": [
+                    {"start_minute": 0, "mgdl_per_unit": "54.0546"},
+                    {"start_minute": 720, "mgdl_per_unit": "36.0364"},
+                ],
+            })
+            self.assertEqual(FakeNightscout.profile["store"]["Default"]["sens"][0]["value"], 3)
+            self.assertEqual(Decimal(result["settings"]["isf_schedule"][1]["mgdl_per_unit"]), Decimal("36.0364"))
         finally:
             FakeNightscout.profile = original
 
@@ -294,9 +377,15 @@ class IntegrationTests(unittest.TestCase):
         saturday = (today - timedelta(days=(today.weekday() - 5) % 7)).isoformat()
         meals_by_day = {
             monday: [{"id": "work-breakfast", "meal": "breakfast", "at": monday + "T08:00:00+02:00",
-                      "calculation": {"factor_units_per_ke": "1", "ratio_g_per_unit": "10"}}],
+                      "calculation": {"factor_units_per_ke": "1", "ratio_g_per_unit": "10",
+                                      "carbs_times_isf_total": "500", "insulin_effect_mgdl": "0",
+                                      "delta_mgdl": "50", "carb_events": [
+                                          {"at": monday + "T08:00:00+02:00", "carbs": "10", "isf": "50"}]}}],
             saturday: [{"id": "free-breakfast", "meal": "breakfast", "at": saturday + "T08:00:00+02:00",
-                        "calculation": {"factor_units_per_ke": "2", "ratio_g_per_unit": "5"}}],
+                        "calculation": {"factor_units_per_ke": "2", "ratio_g_per_unit": "5",
+                                        "carbs_times_isf_total": "500", "insulin_effect_mgdl": "0",
+                                        "delta_mgdl": "100", "carb_events": [
+                                            {"at": saturday + "T08:00:00+02:00", "carbs": "10", "isf": "50"}]}}],
         }
 
         def payload(day, refresh=False):
@@ -312,6 +401,8 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(changed["by_day_type"]["work"]["count"], 0)
             self.assertEqual(changed["by_day_type"]["free"]["mean_units_per_ke"], "1.5")
             self.assertEqual(changed["count"], 2)
+            self.assertEqual([item["expected_delta_mgdl"] for item in changed["calculations"]], ["50", "50"])
+            self.assertEqual([item["deviation_mgdl"] for item in changed["calculations"]], ["0", "50"])
             self.assertEqual(storage.analysis_day_types()[monday], "free")
             self.request("/api/analysis/exclusion", method="POST", body={
                 "meal_id": "work-breakfast", "day": monday, "excluded": True,
@@ -320,6 +411,7 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(filtered["by_day_type"]["free"]["count"], 1)
             self.assertEqual(filtered["by_day_type"]["free"]["excluded_count"], 1)
             self.assertEqual(filtered["by_day_type"]["free"]["mean_units_per_ke"], "2")
+            self.assertEqual([item["expected_delta_mgdl"] for item in filtered["calculations"]], ["50", "50"])
 
     def test_summary_shows_median_middle_half_and_full_range(self):
         factors = ["1", "1.1", "1.2", "1.3", "5"]
