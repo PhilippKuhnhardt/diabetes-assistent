@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from app import calculation
 
@@ -49,23 +49,23 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         "units_per_ke": str(Decimal(10) / ratio), "carb_units": str(carb_units),
         "isf_mgdl_per_unit": str(isf),
     })
-    target_schedule = settings.get("target_schedule", [])
-    if not target_schedule:
-        result["reason"] = "Nightscout-Zielbereich fehlt"
-        return result
-    target_low = calculation.schedule_value_at(
-        now, target_schedule, timezone_name, "low_mgdl")
-    target_high = calculation.schedule_value_at(
-        now, target_schedule, timezone_name, "high_mgdl")
-    target = (target_low + target_high) / 2
+    target = calculation.dec(settings.get("dose_target_mgdl", 100))
+    cautious_target = Decimal(140)
     result.update({
-        "target_low_mgdl": str(target_low), "target_high_mgdl": str(target_high),
         "target_mgdl": str(target),
+        "cautious_target_mgdl": str(cautious_target),
     })
     if fresh:
         correction_units = (latest[1] - target) / isf
+        cautious_correction_units = (latest[1] - cautious_target) / isf
+        total = max(Decimal(0), carb_units + correction_units)
+        cautious_total = max(Decimal(0), carb_units + cautious_correction_units)
         result["correction_units"] = str(correction_units)
-        result["total_units"] = str(max(Decimal(0), carb_units + correction_units))
+        result["total_units"] = str(total)
+        result["entry_units"] = str(total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+        result["cautious_correction_units"] = str(cautious_correction_units)
+        result["cautious_total_units"] = str(cautious_total)
+        result["cautious_entry_units"] = str(cautious_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
     else:
         result["reason"] = "Kein aktueller CGM-Wert innerhalb von 15 Minuten"
     return result

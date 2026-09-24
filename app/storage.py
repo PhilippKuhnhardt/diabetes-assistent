@@ -95,6 +95,7 @@ def default_settings() -> dict:
     return {
         "timezone": os.environ.get("APP_TIMEZONE", "Europe/Berlin"),
         "window_minutes": 180,
+        "dose_target_mgdl": 100,
         "peak_minutes": 60,
         "duration_minutes": 180,
         "breakfast_end_minute": 660,
@@ -130,6 +131,7 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result["ic_schedule"] = profile["ic_schedule"] if profile else []
     result["target_schedule"] = profile["target_schedule"] if profile else []
     result.setdefault("breakfast_end_minute", 660)
+    result.setdefault("dose_target_mgdl", 100)
     result.setdefault("lunch_end_minute", 1020)
     result.setdefault("sport_lookback_minutes", 360)
     result.setdefault("sport_effects_mgdl", {"jogging": 40, "gym": 40, "light_cardio": 20})

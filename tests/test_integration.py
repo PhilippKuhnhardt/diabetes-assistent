@@ -170,6 +170,48 @@ class IntegrationTests(unittest.TestCase):
         with urllib.request.urlopen(req) as response:
             return json.loads(response.read())
 
+    def test_local_dose_target_is_saved_without_changing_nightscout_profile(self):
+        initial = self.request("/api/settings")
+        self.assertEqual(Decimal(str(initial["settings"]["dose_target_mgdl"])), Decimal(100))
+        profile_before = json.loads(json.dumps(FakeNightscout.profile))
+        updated = self.request("/api/settings", method="POST", body={"dose_target_mgdl": "115"})
+        self.assertEqual(Decimal(updated["settings"]["dose_target_mgdl"]), Decimal(115))
+        self.assertEqual(FakeNightscout.profile, profile_before)
+        self.assertEqual(Decimal(self.request("/api/settings")["settings"]["dose_target_mgdl"]), Decimal(115))
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            self.request("/api/settings", method="POST", body={"dose_target_mgdl": "NaN"})
+        self.assertEqual(error.exception.code, 400)
+        error.exception.close()
+        with self.assertRaises(urllib.error.HTTPError) as high:
+            self.request("/api/settings", method="POST", body={"dose_target_mgdl": "141"})
+        self.assertEqual(high.exception.code, 400)
+        high.exception.close()
+
+    def test_dose_help_suggestion_can_be_written_once_to_nightscout(self):
+        self.request("/api/settings")  # Sync the current Nightscout I:C and KF schedules.
+        now = datetime.now(timezone.utc)
+        current_day = {
+            "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 150}],
+            "treatments": [],
+        }
+        with patch("app.server.day_payload", return_value=current_day):
+            suggestion = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
+        self.assertEqual(Decimal(suggestion["target_mgdl"]), Decimal(100))
+        self.assertEqual(Decimal(suggestion["cautious_target_mgdl"]), Decimal(140))
+        self.assertGreater(Decimal(suggestion["entry_units"]),
+                           Decimal(suggestion["cautious_entry_units"]))
+        event = {
+            "kind": "meal", "at": now.isoformat(), "carbs": suggestion["carbs_g"],
+            "insulin": suggestion["entry_units"],
+            "event_id": "c19ff4d0-6aa7-4f2e-a17b-73966761c29e",
+        }
+        self.request("/api/treatment", method="POST", body=event)
+        self.request("/api/treatment", method="POST", body=event)
+        self.assertEqual(len(FakeNightscout.treatments), 1)
+        self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["insulin"])),
+                         Decimal(suggestion["entry_units"]))
+        self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["carbs"])), Decimal(20))
+
     def test_standalone_carb_and_correction_entries_can_be_edited(self):
         at = "2026-09-23T10:30:00Z"
         self.request("/api/treatment", method="POST", body={

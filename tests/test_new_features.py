@@ -17,7 +17,7 @@ class DosingTests(unittest.TestCase):
             "target_schedule": [{"start_minute": 0, "low_mgdl": "100", "high_mgdl": "120"}],
         }
 
-    def test_ie_per_ke_and_correction_use_current_target_midpoint(self):
+    def test_normal_and_cautious_targets(self):
         entries = [
             {"at": self.now - timedelta(minutes=15), "sgv": 130},
             {"at": self.now - timedelta(minutes=5), "sgv": 150},
@@ -25,24 +25,38 @@ class DosingTests(unittest.TestCase):
         result = dosing.suggest("20", self.settings, entries, [], self.now)
         self.assertAlmostEqual(float(result["units_per_ke"]), 1.4)
         self.assertAlmostEqual(float(result["carb_units"]), 2.8)
-        self.assertEqual(Decimal(result["correction_units"]), Decimal(1))
-        self.assertAlmostEqual(float(result["total_units"]), 3.8)
+        self.assertEqual(Decimal(result["target_mgdl"]), Decimal(100))
+        self.assertEqual(Decimal(result["correction_units"]), Decimal("1.25"))
+        self.assertAlmostEqual(float(result["total_units"]), 4.05)
+        self.assertEqual(Decimal(result["entry_units"]), Decimal("4.05"))
+        self.assertEqual(Decimal(result["cautious_target_mgdl"]), Decimal(140))
+        self.assertEqual(Decimal(result["cautious_correction_units"]), Decimal("0.25"))
+        self.assertAlmostEqual(float(result["cautious_total_units"]), 3.05)
         self.assertEqual(Decimal(result["trend_delta_mgdl"]), Decimal(20))
+
+    def test_configured_target_and_zero_floor(self):
+        settings = {**self.settings, "dose_target_mgdl": "120"}
+        result = dosing.suggest("0", settings,
+                                [{"at": self.now, "sgv": 100}], [], self.now)
+        self.assertEqual(Decimal(result["target_mgdl"]), Decimal(120))
+        self.assertEqual(Decimal(result["correction_units"]), Decimal("-0.5"))
+        self.assertEqual(Decimal(result["total_units"]), Decimal(0))
+        self.assertEqual(Decimal(result["cautious_total_units"]), Decimal(0))
 
     def test_stale_glucose_has_no_correction(self):
         entries = [{"at": self.now - timedelta(minutes=16), "sgv": 150}]
         result = dosing.suggest("20", self.settings, entries, [], self.now)
         self.assertIn("carb_units", result)
         self.assertNotIn("total_units", result)
+        self.assertNotIn("cautious_total_units", result)
         self.assertFalse(result["glucose_fresh"])
 
-    def test_missing_target_still_shows_glucose(self):
+    def test_missing_nightscout_target_does_not_block_local_target(self):
         settings = {**self.settings, "target_schedule": []}
         result = dosing.suggest("10", settings,
                                 [{"at": self.now, "sgv": 135}], [], self.now)
         self.assertEqual(result["glucose_mgdl"], "135")
-        self.assertIn("carb_units", result)
-        self.assertNotIn("total_units", result)
+        self.assertIn("total_units", result)
 
 
 class ProfileTargetTests(unittest.TestCase):

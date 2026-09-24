@@ -140,6 +140,7 @@ async function loadSettings() {
   $("#logout-form").hidden = !data.login_required;
   const form = $("#settings-form");
   form.elements.window_minutes.value = data.settings.window_minutes;
+  form.elements.dose_target_mgdl.value = data.settings.dose_target_mgdl;
   form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
   form.elements.lunch_end.value = minuteClock(data.settings.lunch_end_minute);
   form.elements.sport_lookback_minutes.value = data.settings.sport_lookback_minutes;
@@ -423,41 +424,117 @@ async function loadDay() {
 }
 
 let helpTimer;
+let helpRequestId = 0;
+let doseHelp = null;
+let doseSaving = false;
+let pendingDoseEventId = null;
+let pendingDoseKey = null;
+
 function scheduleDoseHelp() {
   clearTimeout(helpTimer);
   helpTimer = setTimeout(updateDoseHelp, 350);
 }
 
 async function updateDoseHelp() {
+  const requestId = ++helpRequestId;
   const output = $("#dose-result");
   output.textContent = "Berechne …";
+  doseHelp = null;
   try {
     const data = await api("/api/dose-help", { method: "POST",
       body: JSON.stringify({ carbs: $("#help-carbs").value || 0 }) });
+    if (requestId !== helpRequestId) return null;
+    doseHelp = data;
     const glucose = data.glucose_mgdl == null ? "Kein CGM-Wert" :
       num(data.glucose_mgdl, 0) + " mg/dL um " + timeOnly(data.glucose_at) +
       (data.trend_delta_mgdl == null ? "" : " · " +
        (Number(data.trend_delta_mgdl) > 0 ? "↗ " : Number(data.trend_delta_mgdl) < 0 ? "↘ " : "→ ") +
        signedChange(data.trend_delta_mgdl, 0) + " in " + num(data.trend_minutes, 0) + " min");
+    const today = new Date().toLocaleDateString("sv-SE", { timeZone: state.settings?.timezone || "Europe/Berlin" });
+    const canRecord = state.day === today;
+    const option = (label, variant, target, correction, total, units) => {
+      if (total == null) return "";
+      const valid = Number(units) > 0 || Number(data.carbs_g) > 0;
+      const allowed = valid && Number(units) <= 100 && canRecord;
+      return '<div class="dose-option"><span>' + escapeHTML(label) + ' · Ziel ' + escapeHTML(num(target, 0)) +
+        ' mg/dL</span><small>Korrektur: (' + escapeHTML(num(data.glucose_mgdl, 0)) + ' − ' +
+        escapeHTML(num(target, 0)) + ') ÷ ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' = ' +
+        escapeHTML(num(correction, 2)) + ' IE</small><strong>Gesamt: ' + escapeHTML(num(total, 2)) +
+        ' IE</strong><button type="button" class="record-dose" data-variant="' + variant + '"' +
+        (allowed && !doseSaving ? '' : ' disabled') + '>' +
+        (Number(units) > 0 ? escapeHTML(num(units, 2)) + ' IE jetzt in Nightscout eintragen' :
+          'KH ohne Insulin jetzt in Nightscout eintragen') + '</button></div>';
+    };
     output.innerHTML = '<div class="dose-glucose"><span>Aktueller Blutzucker</span><strong>' +
       escapeHTML(glucose) + '</strong></div><div class="dose-math">' +
       (data.carb_units == null ? '' : '<span>KH: ' + escapeHTML(num(data.carbs_g)) + ' g × ' +
       escapeHTML(num(data.units_per_ke, 3)) + ' IE/KE = <b>' +
-      escapeHTML(num(data.carb_units, 2)) + ' IE</b></span>') +
-      (data.correction_units == null ? '' : '<span>Korrektur: (' + escapeHTML(num(data.glucose_mgdl, 0)) +
-      ' − ' + escapeHTML(num(data.target_mgdl, 0)) + ') ÷ ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) +
-      ' = <b>' + escapeHTML(num(data.correction_units, 2)) + ' IE</b></span>') +
-      (data.total_units == null ? '' : '<strong>Rechnerisch gesamt: ' + escapeHTML(num(data.total_units, 2)) +
-      ' IE</strong>') + '</div>' +
-      (data.target_mgdl == null ? '' : '<p class="hint">Nightscout-Zielbereich ' +
-      escapeHTML(num(data.target_low_mgdl, 0)) + '–' + escapeHTML(num(data.target_high_mgdl, 0)) +
-      ' mg/dL; gerechnet mit der Mitte.</p>') +
+      escapeHTML(num(data.carb_units, 2)) + ' IE</b></span>') + '</div>' +
+      '<div class="dose-options">' +
+      option("Normal", "normal", data.target_mgdl, data.correction_units, data.total_units, data.entry_units) +
+      option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_correction_units,
+        data.cautious_total_units, data.cautious_entry_units) + '</div>' +
+      (!canRecord ? '<p class="hint">Direktes Eintragen ist nur für den heutigen Tag möglich.</p>' : '') +
       (data.recent_rapid_doses?.length ? '<p class="hint">Schnell wirksame Dosen in den letzten 3 h: ' +
       data.recent_rapid_doses.map(row => escapeHTML(timeOnly(row.at) + " · " + num(row.units) + " IE")).join(", ") +
       '. Nicht abgezogen.</p>' : '') +
       (data.reason ? '<p class="hint">' + escapeHTML(data.reason) + '</p>' : '');
+    return data;
   } catch (error) {
-    output.textContent = error.message;
+    if (requestId === helpRequestId) output.textContent = error.message;
+    return null;
+  }
+}
+
+async function saveDoseSuggestion(event) {
+  const button = event.target.closest(".record-dose");
+  if (!button || doseSaving || !doseHelp) return;
+  const variant = button.dataset.variant;
+  const previous = doseHelp;
+  doseSaving = true;
+  $$(".record-dose").forEach(item => item.disabled = true);
+  try {
+    clearTimeout(helpTimer);
+    const current = await updateDoseHelp();
+    if (!current) throw new Error("Vorschlag konnte nicht aktualisiert werden");
+    const keys = ["carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl",
+      "cautious_target_mgdl", "entry_units", "cautious_entry_units"];
+    if (keys.some(key => previous[key] !== current[key]) ||
+        JSON.stringify(previous.recent_rapid_doses) !== JSON.stringify(current.recent_rapid_doses)) {
+      pendingDoseEventId = null;
+      pendingDoseKey = null;
+      toast("Vorschlag geändert. Bitte den neuen Wert prüfen und erneut klicken.", true);
+      return;
+    }
+    const units = variant === "cautious" ? current.cautious_entry_units : current.entry_units;
+    if (units == null || Number(units) > 100 || (Number(units) <= 0 && Number(current.carbs_g) <= 0))
+      throw new Error("Kein gültiger Eintrag aus diesem Vorschlag möglich");
+    const today = new Date().toLocaleDateString("sv-SE", { timeZone: state.settings?.timezone || "Europe/Berlin" });
+    if (state.day !== today) throw new Error("Zum direkten Eintragen den heutigen Tag öffnen");
+    if (Number($("#help-carbs").value || 0) !== Number(current.carbs_g))
+      throw new Error("Kohlenhydrate geändert. Bitte neuen Vorschlag prüfen");
+    const doseKey = JSON.stringify([variant, current.carbs_g, current.glucose_at,
+      current.glucose_mgdl, current.isf_mgdl_per_unit, current.target_mgdl, units]);
+    if (pendingDoseKey !== doseKey) {
+      pendingDoseKey = doseKey;
+      pendingDoseEventId = crypto.randomUUID();
+    }
+    const result = await api("/api/treatment", { method: "POST", body: JSON.stringify({
+      kind: Number(current.carbs_g) > 0 ? (Number(units) > 0 ? "meal" : "carbs") : "correction",
+      at: new Date().toISOString(), carbs: current.carbs_g, insulin: units,
+      event_id: pendingDoseEventId,
+    }) });
+    pendingDoseEventId = null;
+    pendingDoseKey = null;
+    state.day = result.day;
+    updateLocation(true);
+    toast("Vorschlag in Nightscout eingetragen");
+    await loadDay();
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    doseSaving = false;
+    await updateDoseHelp();
   }
 }
 
@@ -564,6 +641,7 @@ async function saveSettings(event) {
   const form = event.currentTarget;
   const payload = {
     window_minutes: Number(form.elements.window_minutes.value),
+    dose_target_mgdl: form.elements.dose_target_mgdl.value,
     breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),
     lunch_end_minute: clockMinute(form.elements.lunch_end.value),
     sport_lookback_minutes: Number(form.elements.sport_lookback_minutes.value),
@@ -822,6 +900,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#entry-kind").addEventListener("change", updateEntryFields);
   $("#cancel-edit").addEventListener("click", resetEntryForm);
   $("#help-carbs").addEventListener("input", scheduleDoseHelp);
+  $("#dose-result").addEventListener("click", saveDoseSuggestion);
   $("#entry-form").elements.carbs.addEventListener("input", event => {
     if (["meal", "snack", "carbs"].includes($("#entry-kind").value)) {
       $("#help-carbs").value = event.target.value || 0;
