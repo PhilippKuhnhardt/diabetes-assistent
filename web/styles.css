@@ -28,6 +28,16 @@ button:focus-visible, .tab:focus-visible, input:focus-visible, select:focus-visi
 .brand small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
 .status { font-size: 12px; font-weight: 650; color: var(--amber); background: var(--amber-light); border-radius: 999px; padding: 8px 13px; white-space: nowrap; }
 .status.connected { color: var(--green); background: var(--green-light); }
+.topbar { position: sticky; top: 0; z-index: 20; background: var(--canvas); }
+.glucose-widget { min-width: 230px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 11px; background: #edf1ee; color: #44564d; }
+.glucose-caption, .glucose-widget small { display: block; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+.glucose-main { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.glucose-main strong { font-size: 22px; letter-spacing: -.04em; white-space: nowrap; }
+.glucose-main span { font-size: 12px; font-weight: 700; }
+.glucose-widget[data-status="in_range"] { background: #e0f3e7; border-color: #acd9ba; color: #145c38; }
+.glucose-widget[data-status="outside"] { background: #fff3ce; border-color: #e9d782; color: #70510b; }
+.glucose-widget[data-status="low"] { background: #fde8e7; border-color: #edb4b1; color: #9a2925; }
+.glucose-widget[data-status="high"] { background: #ffeddb; border-color: #edc09b; color: #9b4d11; }
 .tabs { display: flex; gap: 28px; height: 58px; border-bottom: 1px solid var(--line); }
 .tab { display: inline-flex; align-items: center; text-decoration: none; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); font-size: 14px; font-weight: 600; }
 .tab.active { color: var(--green-dark); border-bottom-color: var(--green); }
@@ -54,6 +64,10 @@ label { display: block; font-size: 12px; font-weight: 650; margin-bottom: 16px; 
 label span { color: var(--muted); font-weight: 450; }
 label input, label select { display: block; margin-top: 7px; }
 .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.entry-info { margin: 0 0 18px; padding: 12px 14px; border-radius: 9px; background: var(--green-light); color: var(--green-dark); font-size: 12px; line-height: 1.5; }
+.entry-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.entry-switch button.entry-mode { min-height: 44px; padding: 9px 10px; background: var(--canvas); border: 1px solid var(--line); border-radius: 9px; color: var(--ink); font-size: 12px; font-weight: 700; }
+.entry-switch button.entry-mode[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: white; }
 .primary { background: var(--green); border: 1px solid var(--green); color: #fff; border-radius: 9px; min-height: 43px; padding: 10px 15px; font-weight: 650; }
 .primary:hover { background: var(--green-dark); }
 .primary span { font-size: 11px; opacity: .7; margin-left: 12px; }
@@ -116,7 +130,8 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 }
 @media (max-width: 650px) {
   .shell { padding: 0 16px; }
-  .topbar { min-height: 76px; }
+  .topbar { min-height: 76px; flex-wrap: wrap; padding: 10px 0; gap: 10px; }
+  .glucose-widget { order: 3; flex: 1 1 100%; }
   .brand strong { font-size: 15px; }
   .status { max-width: 125px; white-space: normal; text-align: center; }
   .page-head { display: block; }
@@ -212,15 +227,12 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .topbar-actions { display: flex; align-items: center; gap: 10px; }
 .topbar-actions form { margin: 0; }
 .topbar-actions button { font-size: 12px; }
-.dose-helper { margin-bottom: 20px; border-color: #bddac6; background: #f9fdf9; }
-.dose-helper .section-head { margin-bottom: 12px; }
-.help-layout { display: grid; grid-template-columns: minmax(120px, 210px) minmax(0, 1fr); gap: 24px; align-items: start; }
-.help-layout label { margin: 0; }
-.help-result { min-width: 0; }
+.help-result:not(:empty) { margin: 0 0 18px; padding: 12px; border: 1px solid #bddac6; border-radius: 9px; background: #f9fdf9; font-size: 12px; }
+.dose-heading { color: var(--green-dark); font-weight: 750; margin-bottom: 10px; }
 .dose-glucose { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
 .dose-glucose span { font-size: 12px; color: var(--muted); }
 .dose-glucose strong { color: var(--green-dark); font-size: 19px; }
-.dose-helper .hint { margin: 9px 0 0; }
+.help-result .hint { margin: 9px 0 0; }
 .dose-options { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
 .dose-option { flex: 1 1 180px; display: grid; gap: 7px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: white; }
 .dose-option strong { color: var(--green-dark); font-size: 19px; }
@@ -256,7 +268,6 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .login-card .primary { width: 100%; }
 .login-card .form-error { color: #9b3c33; }
 @media (max-width: 700px) {
-  .help-layout { grid-template-columns: 1fr; gap: 14px; }
   .timeline-item { grid-template-columns: 50px minmax(0, 1fr); }
   .timeline-actions { grid-column: 2; }
   .topbar-actions { flex-direction: column; gap: 5px; }
