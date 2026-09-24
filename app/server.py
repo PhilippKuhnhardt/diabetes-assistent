@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
 
-from app import calculation, episodes, nightscout, storage
+from app import calculation, episodes, nightscout, sensitivity, storage
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 MAX_BODY = 64 * 1024
@@ -381,6 +381,7 @@ class Handler(BaseHTTPRequestHandler):
                                  "blocked_count": 0, "values": [], "nightscout_values": [],
                                  "calculations": [], "multi_carb_count": 0, "shortened_count": 0}
                           for name in MEALS}
+                sensitivity_meals = []
                 night_records = []
                 night_start_values = []
                 night_end_values = []
@@ -418,6 +419,8 @@ class Handler(BaseHTTPRequestHandler):
                             group["multi_carb_count"] += 1
                         factor_text = result.get("factor_units_per_ke")
                         excluded = meal["id"] in excluded_ids
+                        sensitivity_meals.append({"at": meal["at"], "calculation": result,
+                                                  "excluded": excluded})
                         group["calculations"].append({
                             "id": meal["id"], "day": day, "at": meal["at"],
                             "day_type": day_type, "units_per_ke": factor_text,
@@ -431,7 +434,8 @@ class Handler(BaseHTTPRequestHandler):
                         item = group["calculations"][-1]
                         item["expected_delta_mgdl"] = None
                         item["deviation_mgdl"] = None
-                        if (settings["ic_schedule"] and result.get("carb_events") is not None
+                        if (factor_text is not None and settings["ic_schedule"]
+                                and result.get("carb_events") is not None
                                 and result.get("insulin_effect_mgdl") is not None
                                 and result.get("delta_mgdl") is not None):
                             carb_effect = sum((
@@ -497,6 +501,9 @@ class Handler(BaseHTTPRequestHandler):
                     }
                 self._response(200, {
                     "days": days, "groups": groups, "profile_sync_error": profile_sync_error,
+                    "sensitivity_comparison": sensitivity.compare_schedule(
+                        sensitivity_meals, settings["isf_schedule"], settings["ic_schedule"],
+                        settings["timezone"]),
                     "night": {
                         "count": len(night_start_values),
                         "unavailable_count": days - len(night_start_values),
@@ -602,6 +609,18 @@ class Handler(BaseHTTPRequestHandler):
                 schedule = payload.get("ic_schedule" if is_ic else "isf_schedule")
                 if not isinstance(profile_id, str) or not profile_id or not isinstance(schedule, list):
                     raise ValueError("Ungültiger Profil-Zeitplan")
+                if is_ic:
+                    converted = []
+                    for row in schedule:
+                        if "units_per_ke" in row:
+                            factor = calculation.dec(row["units_per_ke"])
+                            if not factor.is_finite() or factor <= 0:
+                                raise ValueError("Insulinfaktor muss positiv sein")
+                            converted.append({"start_minute": row["start_minute"],
+                                              "grams_per_unit": str(Decimal(10) / factor)})
+                        else:
+                            converted.append(row)
+                    schedule = converted
                 profiles = nightscout.update_profile_schedule("carbratio" if is_ic else "sens", schedule, profile_id)
                 storage.mirror_nightscout_profiles(profiles)
                 version, settings = storage.get_settings()

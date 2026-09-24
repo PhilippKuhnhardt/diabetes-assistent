@@ -110,6 +110,11 @@
         </div>
         <div id="summary" class="summary-grid"></div>
         <section class="analysis-list panel">
+          <div class="section-head"><h2>Korrekturfaktor im Vergleich</h2></div>
+          <p class="subtle">Der I:C-Zeitplan bleibt fest. Für jeden Zeitabschnitt wird ein Vergleichswert aus den älteren Mahlzeiten berechnet und an den neueren Mahlzeiten geprüft. Angezeigt wird die mittlere absolute Abweichung in mg/dL. Mindestens 6 Mahlzeiten mit ausreichend KH-Insulin-Differenz sind nötig. Ein unpassender I:C-Faktor oder nicht erfasste Einflüsse können das Ergebnis verfälschen. Das Nightscout-Profil wird nicht geändert.</p>
+          <div id="sensitivity-comparison"></div>
+        </section>
+        <section class="analysis-list panel">
           <div class="section-head"><h2>Alle Kalkulationen</h2><span id="calculation-count" class="hint"></span></div>
           <p class="subtle">Markiere einzelne Mahlzeiten als Ausreißer. Sie bleiben im Tagebuch und in Nightscout erhalten, gehen aber nicht in die Kennzahlen ein. Die Auswahl kannst du jederzeit ändern. „Stark abweichend“ ist ein Hinweis und klammert keinen Wert automatisch aus.</p>
           <p class="subtle">Erwartet = Σ(KH ÷ aktuellem Nightscout-I:C × zeitabhängigem KF) − rechnerischer Insulineffekt. Delta = gemessen − erwartet. Die Farben zeigen das Vorzeichen: <span class="glucose-change rising">positiv</span>, <span class="glucose-change falling">negativ</span>, <span class="glucose-change steady">null</span>. Ein positives Delta liegt über der Erwartung. Die Farben bewerten keine Dosis.</p>
@@ -142,10 +147,10 @@
             <button type="button" id="save-isf">Korrekturfaktor in Nightscout speichern</button>
             <button type="button" id="sync-profile">Nightscout-Profil synchronisieren</button>
             <p id="isf-sync-status" class="hint"></p>
-            <h2 class="spaced">Insulin-Kohlenhydrat-Verhältnis aus Nightscout</h2>
-            <p class="subtle">Nightscout speichert I:C in g je IE. Daraus folgt für 1 KE = 10 g: IE/KE = 10 ÷ I:C. Der aktuelle Zeitplan wird für alle Analysen verwendet.</p>
+            <h2 class="spaced">Insulinfaktor je KE aus Nightscout</h2>
+            <p class="subtle">Hier gibst du IE je KE ein (1 KE = 10 g). Nightscout speichert I:C in g je IE: 0,8 IE/KE werden dort als 12,5 g/IE gespeichert. Der aktuelle Zeitplan wird für alle Analysen verwendet.</p>
             <div id="ic-rows"></div>
-            <button type="button" id="save-ic">I:C in Nightscout speichern</button>
+            <button type="button" id="save-ic">Insulinfaktor in Nightscout speichern</button>
             <p id="ic-status" class="hint"></p>
             <h2 class="spaced">Mahlzeitenfenster</h2>
             <p class="subtle">Standard: 180 Minuten. Alle dokumentierten KH und alle schnell wirksamen Injektionen im Fenster gehen vollständig in einen gemeinsamen Insulinfaktor ein. Das ist eine Rechenannahme, keine Aussage über den tatsächlichen Wirkverlauf.</p>
