@@ -235,6 +235,7 @@ function calculationHTML(result) {
 }
 
 function mealHTML(meal, entries) {
+  const mealLocal = localInputTime(new Date(meal.at));
   const eventName = event => event.eventType === "Snack Bolus" ? "Zwischenmahlzeit"
     : event.role === "meal" || event.eventType === "Meal Bolus" && !event.role ? "Mahlzeit"
     : event.role === "meal-dose" ? "Mahlzeitenbolus"
@@ -251,9 +252,8 @@ function mealHTML(meal, entries) {
     chartFor(meal, entries) +
     '<ul class="events">' + events + '</ul>' +
     (meal.imported ? '' : '<button type="button" class="add-dose" data-episode="' + escapeHTML(meal.id) + '">+ Bolus oder Snack ergänzen</button>') +
-    '<form class="dose-form" data-episode="' + escapeHTML(meal.id) + '" data-meal="' + escapeHTML(meal.meal) + '" hidden>' +
+    '<form class="dose-form" data-episode="' + escapeHTML(meal.id) + '" data-meal="' + escapeHTML(meal.meal) + '" data-date="' + mealLocal.slice(0, 10) + '" data-meal-time="' + mealLocal.slice(11, 16) + '" hidden>' +
     '<label>Art <select name="role"><option value="meal-dose">Mahlzeitenbolus</option><option value="correction">Korrektur</option><option value="snack">Zwischenmahlzeit mit Bolus</option></select></label>' +
-    '<label>Datum <input type="date" name="date" required></label>' +
     '<label>Uhrzeit (HH:MM, 24 h)<input type="time" name="at" step="60" required></label>' +
     '<label>Insulin <span>IE</span><input type="number" name="insulin" min="0.01" max="100" step="0.01" required></label>' +
     '<label class="snack-carbs" hidden>Kohlenhydrate <span>g</span><input type="number" name="carbs" min="0.1" max="500" step="0.1" inputmode="decimal"></label>' +
@@ -344,8 +344,8 @@ function renderDay(data) {
     form.hidden = !form.hidden;
     if (!form.hidden) {
       const current = localInputTime(new Date());
-      form.elements.date.value = current.slice(0, 10);
-      form.elements.at.value = current.slice(11, 16);
+      form.elements.at.value = current.slice(0, 10) === form.dataset.date && current.slice(11, 16) >= form.dataset.mealTime
+        ? current.slice(11, 16) : form.dataset.mealTime;
       form.elements.insulin.focus();
     }
   }));
@@ -440,7 +440,7 @@ async function saveDose(event) {
     episode_id: form.dataset.episode, meal: form.dataset.meal,
     role: form.elements.role.value, insulin: form.elements.insulin.value,
     carbs: form.elements.role.value === "snack" ? form.elements.carbs.value : "0",
-    at: toInstant(form.elements.date.value, form.elements.at.value),
+    at: toInstant(form.dataset.date, form.elements.at.value),
     event_id: form.dataset.pendingId || crypto.randomUUID(),
   };
   form.dataset.pendingId = payload.event_id;
