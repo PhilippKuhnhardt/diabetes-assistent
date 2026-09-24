@@ -78,7 +78,7 @@ def validate_settings(value: dict) -> dict:
     result = dict(old)
     for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes",
                 "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
-                "sport_effects_mgdl"):
+                "sport_effects_mgdl", "dose_target_mgdl"):
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
@@ -95,6 +95,9 @@ def validate_settings(value: dict) -> dict:
     breakfast_end = int(result["breakfast_end_minute"])
     lunch_end = int(result["lunch_end_minute"])
     lookback = int(result["sport_lookback_minutes"])
+    dose_target = calculation.dec(result["dose_target_mgdl"])
+    if not dose_target.is_finite() or not 60 <= dose_target <= 140:
+        raise ValueError("Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen")
     effects = result["sport_effects_mgdl"]
     if not (0 < breakfast_end < lunch_end < 1440 and 0 <= lookback <= 1440):
         raise ValueError("Ungültige Mahlzeiten- oder Sportzeiten")
@@ -110,6 +113,7 @@ def validate_settings(value: dict) -> dict:
         "window_minutes": window, "peak_minutes": peak, "duration_minutes": duration,
         "breakfast_end_minute": breakfast_end, "lunch_end_minute": lunch_end,
         "sport_lookback_minutes": lookback, "sport_effects_mgdl": clean_effects,
+        "dose_target_mgdl": str(dose_target),
     })
     return result
 

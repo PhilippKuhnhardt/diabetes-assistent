@@ -248,6 +248,12 @@ footer { border-top: 1px solid var(--line); color: var(--muted); padding: 20px 0
 .dose-math { display: flex; flex-wrap: wrap; gap: 9px 20px; font-size: 13px; }
 .dose-math > strong { color: var(--green-dark); font-size: 17px; }
 .dose-helper .hint { margin: 9px 0 0; }
+.dose-options { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+.dose-option { flex: 1 1 180px; display: grid; gap: 7px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: white; }
+.dose-option strong { color: var(--green-dark); font-size: 19px; }
+.dose-option small { color: var(--muted); font-size: 11px; }
+.dose-option button { width: 100%; }
+
 .records > .panel { margin-bottom: 18px; }
 .timeline-item { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 13px 0; border-top: 1px solid var(--line); }
 .timeline-item:first-child { border-top: 0; }
