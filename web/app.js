@@ -101,21 +101,33 @@ function changeDay(day, options = {}) {
 }
 
 function setDefaultMealTime() {
-  const current = new Date();
-  const selected = state.day;
-  const today = current.toLocaleDateString("sv-SE");
-  $("#meal-time").value = selected === today ? localInputTime(current).slice(11, 16) : "12:00";
+  const now = new Date();
+  $("#entry-time").value = state.day === now.toLocaleDateString("sv-SE")
+    ? localInputTime(now).slice(11, 16) : "12:00";
 }
 
-function setDefaultSportTime() {
-  const current = new Date();
-  const today = current.toLocaleDateString("sv-SE");
-  $("#sport-time").value = state.day === today ? localInputTime(current).slice(11, 16) : "12:00";
+function setDefaultSportTime() {}
+function setSportDuration() {}
+
+function minuteClock(minute) {
+  return String(Math.floor(minute / 60)).padStart(2, "0") + ":" + String(minute % 60).padStart(2, "0");
 }
 
-function setSportDuration() {
-  const kind = $("#sport-kind").value;
-  $("#sport-duration").value = kind === "gym" ? "60" : "30";
+function clockMinute(value) {
+  const [hours, minutes] = value.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function updateEntryFields() {
+  const kind = $("#entry-kind").value;
+  const form = $("#entry-form");
+  $("#entry-carbs-field").hidden = !["meal", "snack", "carbs"].includes(kind);
+  $("#entry-insulin-field").hidden = ["carbs", "exercise"].includes(kind);
+  $("#entry-sport-field").hidden = kind !== "exercise";
+  $("#entry-duration-field").hidden = kind !== "exercise";
+  form.elements.carbs.required = ["meal", "snack", "carbs"].includes(kind);
+  form.elements.insulin.required = kind === "correction";
+  form.elements.duration_minutes.required = kind === "exercise";
 }
 
 async function loadSettings() {
@@ -123,12 +135,30 @@ async function loadSettings() {
   state.settings = data.settings;
   $("#connection").textContent = data.connected ? "Nightscout konfiguriert" : "Nightscout einrichten";
   $("#connection").classList.toggle("connected", data.connected);
-  $("#nightscout-location").textContent = data.connected ? "Verbindung über .env konfiguriert" : "NIGHTSCOUT_URL und NIGHTSCOUT_CREDENTIAL in .env eintragen";
+  $("#nightscout-location").textContent = data.connected ? "Verbindung über Umgebungsvariablen konfiguriert" : "NIGHTSCOUT_URL und NIGHTSCOUT_CREDENTIAL als Umgebungsvariablen setzen";
   $("#settings-version").textContent = "Einstellungsversion " + data.version;
+  $("#logout-form").hidden = !data.login_required;
   const form = $("#settings-form");
   form.elements.window_minutes.value = data.settings.window_minutes;
+  form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
+  form.elements.lunch_end.value = minuteClock(data.settings.lunch_end_minute);
+  form.elements.sport_lookback_minutes.value = data.settings.sport_lookback_minutes;
+  for (const kind of ["jogging", "gym", "light_cardio"]) {
+    form.elements["sport_" + kind].value = data.settings.sport_effects_mgdl[kind];
+  }
   renderIsfRows(data.settings.isf_schedule, data.settings.nightscout_profile, data.profile_sync_at, data.profile_sync_error);
   renderIcRows(data.settings.ic_schedule || []);
+  renderTargetRows(data.settings.target_schedule || []);
+}
+
+function renderTargetRows(rows) {
+  $("#target-rows").innerHTML = rows.length
+    ? '<div class="isf-table"><div class="isf-table-head"><span>Ab</span><span>Zielbereich</span></div>' +
+      rows.map(row => '<div class="isf-readonly-row"><span>' +
+        escapeHTML(minuteClock(Number(row.start_minute))) + '</span><strong>' +
+        escapeHTML(num(row.low_mgdl, 0)) + '–' + escapeHTML(num(row.high_mgdl, 0)) +
+        ' mg/dL</strong></div>').join("") + '</div>'
+    : '<p class="hint">Kein Zielbereich im aktuellen Nightscout-Profil verfügbar.</p>';
 }
 
 function renderIcRows(rows) {
@@ -250,8 +280,9 @@ function calculationHTML(result) {
     (result.extra_carb_count ? 'Σ(KH × KF) = ' : escapeHTML(num(result.carbs_total)) + ' g × ' + escapeHTML(num(result.meal_isf)) + ' mg/dL/IE = ') +
     escapeHTML(num(result.carbs_times_isf_total, 3)) + '</b></div>';
   const formula = valid
-    ? '<p class="formula">IE/KE = 10 × (' + escapeHTML(num(result.delta_mgdl, 3)) + ' + ' +
-      escapeHTML(num(result.insulin_effect_mgdl, 3)) + ') ÷ ' +
+    ? '<p class="formula">IE/KE = 10 × (' + escapeHTML(num(result.delta_mgdl, 3)) +
+      (Number(result.sport_effect_mgdl) ? ' + ' + escapeHTML(num(result.sport_effect_mgdl, 3)) + ' Sport' : '') +
+      ' + ' + escapeHTML(num(result.insulin_effect_mgdl, 3)) + ') ÷ ' +
       escapeHTML(num(result.carbs_times_isf_total, 3)) + ' = ' + escapeHTML(num(result.factor_units_per_ke, 3)) + '</p>'
     : '';
   const profileInfo = result.nightscout_profile
@@ -274,7 +305,10 @@ function calculationHTML(result) {
     '<details class="math"><summary>Alle Dosen, KH und Rohwerte anzeigen</summary>' +
     '<h4>KH-Ereignisse</h4><div class="table-wrap"><table><thead><tr><th>Zeit</th><th>Art</th><th>KH</th><th>KF mg/dL/IE</th><th>KH × KF</th></tr></thead><tbody>' + carbRows + '</tbody></table></div>' +
     '<h4>Insulineffekt</h4><div class="table-wrap"><table><thead><tr><th>Zeit</th><th>Art</th><th>Dosis</th><th>KF mg/dL/IE</th><th>mg/dL</th></tr></thead><tbody>' + doseRows + '</tbody></table></div>' +
-    '<p class="hint">Rohwerte: Δ ' + escapeHTML(result.delta_mgdl) + ' mg/dL · rechnerischer Insulineffekt ' +
+    '<p class="hint">Rohwerte: gemessenes Δ ' + escapeHTML(result.delta_mgdl) +
+      ' mg/dL · bestätigte Sport-Senkung ' + escapeHTML(result.sport_effect_mgdl || "0") +
+      ' mg/dL · bereinigtes Δ ' + escapeHTML(result.adjusted_delta_mgdl || result.delta_mgdl) +
+      ' mg/dL · rechnerischer Insulineffekt ' +
       escapeHTML(result.insulin_effect_mgdl) + ' mg/dL · Summe ' + escapeHTML(result.denominator_mgdl) +
       ' mg/dL' + (valid ? ' · IE/KE ' + escapeHTML(result.factor_units_per_ke) + ' · Nightscout-I:C ' +
       escapeHTML(result.ratio_g_per_unit) + ' g/IE' : '') + '.</p>' +
@@ -285,29 +319,25 @@ function calculationHTML(result) {
 }
 
 function mealHTML(meal, entries) {
-  const mealLocal = localInputTime(new Date(meal.at));
-  const eventName = event => event.eventType === "Snack Bolus" ? "Zwischenmahlzeit"
-    : event.role === "meal" || event.eventType === "Meal Bolus" && !event.role ? "Mahlzeit"
-    : event.role === "meal-dose" ? "Mahlzeitenbolus"
-    : event.role === "correction" || event.eventType === "Correction Bolus" ? "Korrektur"
-    : Number(event.carbs) ? "Weitere KH" : "Weiterer Bolus";
-  const events = meal.events.map(event => '<li><span>' + escapeHTML(timeOnly(event.at)) + '</span><b>' + escapeHTML(eventName(event)) + '</b><span>' + (Number(event.carbs) ? escapeHTML(num(event.carbs)) + ' g KH ' : '') + (Number(event.insulin) ? escapeHTML(num(event.insulin)) + ' E' : '') + '</span>' + deleteButton(event.id, eventName(event), event.at) + '</li>').join("");
-  const totalCarbs = meal.calculation?.blockers?.length ? null : meal.calculation?.carbs_total;
-  const carbLabel = totalCarbs != null ? num(totalCarbs) + " g KH im Fenster" : num(meal.carbs) + " g KH";
+  const sport = meal.sport || {};
+  const status = sport.status || "auto";
+  const suggested = sport.suggested
+    ? "Sport zuvor · Vorschlag " + num(sport.suggested_effect_mgdl, 0) + " mg/dL Senkung"
+    : "Kein Sport im eingestellten Zeitraum erkannt";
   return '<article class="meal-card">' +
-    '<div class="meal-top"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span><h3>' + escapeHTML(timeOnly(meal.at)) + ' <small>· ' + escapeHTML(carbLabel) + '</small></h3></div></div>' +
-    calculationHTML(meal.calculation) +
-    (meal.imported ? '<p class="hint">Aus Nightscout übernommen · Mahlzeitenart nach Uhrzeit zugeordnet</p>' : '') +
+    '<div class="meal-top"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) +
+    '</span><h3>' + escapeHTML(timeOnly(meal.at)) + ' <small>· ' + escapeHTML(num(meal.carbs)) + ' g KH</small></h3></div></div>' +
+    '<div class="sport-review"><span>' + escapeHTML(suggested) + '</span>' +
+    '<label>Einfluss <select class="sport-status" data-meal-id="' + escapeHTML(meal.id) +
+    '" data-day="' + escapeHTML(state.day) + '">' +
+    '<option value="auto"' + (status === "auto" ? " selected" : "") + '>Noch nicht bewertet</option>' +
+    '<option value="affected"' + (status === "affected" ? " selected" : "") + '>Sport wirkte mit</option>' +
+    '<option value="unaffected"' + (status === "unaffected" ? " selected" : "") + '>Kein Einfluss</option></select></label>' +
+    '<label>Senkung im Fenster <span>mg/dL</span><input class="sport-effect" type="number" min="0" max="500" step="1" value="' +
+    escapeHTML(status === "affected" ? sport.effect_mgdl : sport.suggested_effect_mgdl || 0) + '"></label>' +
+    '<button type="button" class="save-sport quiet">Übernehmen</button></div>' +
+    calculationHTML(meal.calculation) + chartFor(meal, entries) +
     (meal.notes ? '<p class="meal-note">' + escapeHTML(meal.notes) + '</p>' : '') +
-    chartFor(meal, entries) +
-    '<ul class="events">' + events + '</ul>' +
-    (meal.imported ? '' : '<button type="button" class="add-dose" data-episode="' + escapeHTML(meal.id) + '">+ Bolus oder Snack ergänzen</button>') +
-    '<form class="dose-form" data-episode="' + escapeHTML(meal.id) + '" data-meal="' + escapeHTML(meal.meal) + '" data-date="' + mealLocal.slice(0, 10) + '" data-meal-time="' + mealLocal.slice(11, 16) + '" hidden>' +
-    '<label>Art <select name="role"><option value="meal-dose">Mahlzeitenbolus</option><option value="correction">Korrektur</option><option value="snack">Zwischenmahlzeit mit Bolus</option></select></label>' +
-    '<label>Uhrzeit (HH:MM, 24 h)<input type="time" name="at" step="60" required></label>' +
-    '<label>Insulin <span>IE</span><input type="number" name="insulin" min="0.01" max="100" step="0.01" required></label>' +
-    '<label class="snack-carbs" hidden>Kohlenhydrate <span>g</span><input type="number" name="carbs" min="0.1" max="500" step="0.1" inputmode="decimal"></label>' +
-    '<button type="submit" class="primary">In Nightscout speichern</button></form>' +
     '</article>';
 }
 
@@ -342,163 +372,146 @@ function renderNight(night) {
 
 function renderDay(data) {
   state.dayData = data;
-  $("#record-count").textContent = data.meals.length + (data.meals.length === 1 ? " Eintrag" : " Einträge");
+  $("#record-count").textContent = data.timeline.length + (data.timeline.length === 1 ? " Eintrag" : " Einträge");
   renderNight(data.night || { reason: "Nachtanalyse nicht verfügbar." });
   const banner = $("#banner");
-  if (!data.connected) {
-    banner.hidden = false;
-    banner.textContent = "Nightscout ist noch nicht verbunden. Trage URL und Zugang in .env ein und starte den Server neu.";
-  } else if (data.sync_error || data.profile_sync_error) {
-    banner.hidden = false;
-    banner.textContent = "Nightscout konnte nicht vollständig aktualisiert werden: " +
-      [data.sync_error, data.profile_sync_error].filter(Boolean).join(" · ") + ". Lokale Daten werden angezeigt.";
-  } else if (!state.settings.isf_schedule.length) {
-    banner.hidden = false;
-    banner.textContent = "Für die Analyse fehlt ein Korrekturfaktor-Profil aus Nightscout. Synchronisiere es in den Einstellungen.";
-  } else {
-    banner.hidden = true;
-  }
+  const errors = [data.sync_error, data.profile_sync_error].filter(Boolean);
+  banner.hidden = data.connected && !errors.length;
+  banner.textContent = !data.connected
+    ? "Nightscout ist noch nicht verbunden. Setze NIGHTSCOUT_URL und NIGHTSCOUT_CREDENTIAL im Deployment."
+    : errors.length ? "Nightscout konnte nicht vollständig aktualisiert werden: " + errors.join(" · ") + ". Lokale Daten werden angezeigt." : "";
+  const labels = { meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur / Bolus", exercise: "Sport", other: "Weiterer Eintrag" };
+  $("#timeline").innerHTML = data.timeline.length
+    ? data.timeline.map(item => {
+      const details = [
+        Number(item.carbs) ? num(item.carbs) + " g KH" : "",
+        Number(item.insulin) ? num(item.insulin) + " IE" : "",
+        item.kind === "exercise" ? num(item.duration_minutes, 0) + " min" : "",
+        item.glucose_mgdl != null
+          ? (item.glucose_at === item.at ? "BZ beim Eintrag " : "Letzter BZ um " + timeOnly(item.glucose_at) + ": ") +
+            num(item.glucose_mgdl, 0) + " mg/dL" : "",
+      ].filter(Boolean).join(" · ");
+      const label = item.kind === "exercise"
+        ? ({ jogging: "Joggen", gym: "Gym", light_cardio: "Leichtes Cardio" })[item.sport_kind] || "Sport"
+        : item.kind === "meal" ? (data.meals.find(meal => meal.source_id === item.id)?.meal
+          ? names[data.meals.find(meal => meal.source_id === item.id).meal] : "Mahlzeit") : labels[item.kind];
+      const actions = item.kind === "other" ? "" :
+        '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '">Bearbeiten</button>' +
+        deleteButton(item.id, label, item.at);
+      return '<article class="timeline-item"><time>' + escapeHTML(timeOnly(item.at)) +
+        '</time><div><strong>' + escapeHTML(label) + '</strong><p>' + escapeHTML(details || item.eventType) +
+        '</p>' + (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') +
+        '</div><div class="timeline-actions">' + actions + '</div></article>';
+    }).join("")
+    : '<div class="empty">Für diesen Tag liegen noch keine Einträge vor.</div>';
   $("#meals").innerHTML = data.meals.length
     ? data.meals.map(meal => mealHTML(meal, data.entries)).join("")
-    : '<div class="empty"><strong>Keine erfassten Mahlzeiten</strong><p>Trage links eine Mahlzeit ein oder wähle einen anderen Tag.</p></div>';
-  const sportEvents = $("#sport-events");
-  sportEvents.hidden = !data.exercises?.length;
-  if (!sportEvents.hidden) {
-    const rows = data.exercises.map(item => {
-      const start = new Date(item.at);
-      const end = new Date(start.getTime() + Number(item.duration_minutes || 0) * 60000);
-      const dayOffset = end.toLocaleDateString("sv-SE") !== start.toLocaleDateString("sv-SE");
-      const endLabel = timeOnly(end.toISOString()) + (dayOffset ? " (+1 Tag)" : "");
-      const duration = Number(item.duration_minutes) > 0 ? num(item.duration_minutes, 0) + " min" : "Dauer unbekannt";
-      return '<li><time>' + escapeHTML(timeOnly(item.at)) + '</time><strong>' + escapeHTML(item.label) + '</strong><span>' +
-        escapeHTML(duration + (Number(item.duration_minutes) > 0 ? " · bis " + endLabel : "")) +
-        (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') + '</span>' + deleteButton(item.id, item.label, item.at) + '</li>';
-    }).join("");
-    sportEvents.innerHTML = '<div class="section-head"><h2>Sport an diesem Tag</h2></div><ul>' + rows + '</ul>';
-  }
-  const other = $("#other-events");
-  other.hidden = !data.other_events?.length;
-  if (!other.hidden) {
-    const rows = data.other_events.map(event => {
-      const basal = Number(event.basal_units);
-      const carbs = Number(event.carbs);
-      const rapid = Number(event.insulin);
-      const kind = basal ? "Basalinsulin" : event.eventType === "Snack Bolus" ? "Zwischenmahlzeit" : event.eventType === "Correction Bolus" ? "Korrektur" : "Weiterer Eintrag";
-      const detail = [carbs ? num(carbs) + " g KH" : "", rapid ? num(rapid) + " IE schnell wirksam" : "", basal ? num(basal) + " IE lang wirksam" : ""].filter(Boolean).join(" · ");
-      return '<li><time>' + escapeHTML(timeOnly(event.at)) + '</time><strong>' + escapeHTML(kind) + '</strong><span>' + escapeHTML(detail || event.notes) + '</span>' + deleteButton(event.id, kind, event.at) + '</li>';
-    }).join("");
-    other.innerHTML = '<h3>Weitere Einträge</h3><ul>' + rows + '</ul>';
-  }
-  $$(".add-dose").forEach(button => button.addEventListener("click", () => {
-    const form = $('.dose-form[data-episode="' + button.dataset.episode + '"]');
-    form.hidden = !form.hidden;
-    if (!form.hidden) {
-      const current = localInputTime(new Date());
-      form.elements.at.value = current.slice(0, 10) === form.dataset.date && current.slice(11, 16) >= form.dataset.mealTime
-        ? current.slice(11, 16) : form.dataset.mealTime;
-      form.elements.insulin.focus();
-    }
-  }));
-  $$(".dose-form").forEach(form => {
-    form.elements.role.addEventListener("change", () => {
-      const snack = form.elements.role.value === "snack";
-      form.elements.carbs.closest("label").hidden = !snack;
-      form.elements.carbs.required = snack;
-      if (!snack) form.elements.carbs.value = "";
-    });
-    form.addEventListener("submit", saveDose);
-  });
+    : '<div class="empty">Noch keine Hauptmahlzeit für diesen Tag.</div>';
 }
 
 async function loadDay() {
   $("#selected-day").value = state.day;
-  $("#meals").innerHTML = '<div class="empty">Nightscout-Daten werden geladen …</div>';
+  $("#timeline").innerHTML = '<div class="empty">Nightscout-Daten werden geladen …</div>';
   $("#night-card").hidden = true;
   try {
     renderDay(await api("/api/day?date=" + encodeURIComponent(state.day)));
+    await updateDoseHelp();
   } catch (error) {
-    $("#meals").innerHTML = '<div class="empty">Daten konnten nicht geladen werden.</div>';
-    $("#night-card").hidden = true;
+    $("#timeline").innerHTML = '<div class="empty">Daten konnten nicht geladen werden.</div>';
     toast(error.message, true);
   }
 }
 
-async function saveMeal(event) {
+let helpTimer;
+function scheduleDoseHelp() {
+  clearTimeout(helpTimer);
+  helpTimer = setTimeout(updateDoseHelp, 350);
+}
+
+async function updateDoseHelp() {
+  const output = $("#dose-result");
+  output.textContent = "Berechne …";
+  try {
+    const data = await api("/api/dose-help", { method: "POST",
+      body: JSON.stringify({ carbs: $("#help-carbs").value || 0 }) });
+    const glucose = data.glucose_mgdl == null ? "Kein CGM-Wert" :
+      num(data.glucose_mgdl, 0) + " mg/dL um " + timeOnly(data.glucose_at) +
+      (data.trend_delta_mgdl == null ? "" : " · " +
+       (Number(data.trend_delta_mgdl) > 0 ? "↗ " : Number(data.trend_delta_mgdl) < 0 ? "↘ " : "→ ") +
+       signedChange(data.trend_delta_mgdl, 0) + " in " + num(data.trend_minutes, 0) + " min");
+    output.innerHTML = '<div class="dose-glucose"><span>Aktueller Blutzucker</span><strong>' +
+      escapeHTML(glucose) + '</strong></div><div class="dose-math">' +
+      (data.carb_units == null ? '' : '<span>KH: ' + escapeHTML(num(data.carbs_g)) + ' g × ' +
+      escapeHTML(num(data.units_per_ke, 3)) + ' IE/KE = <b>' +
+      escapeHTML(num(data.carb_units, 2)) + ' IE</b></span>') +
+      (data.correction_units == null ? '' : '<span>Korrektur: (' + escapeHTML(num(data.glucose_mgdl, 0)) +
+      ' − ' + escapeHTML(num(data.target_mgdl, 0)) + ') ÷ ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) +
+      ' = <b>' + escapeHTML(num(data.correction_units, 2)) + ' IE</b></span>') +
+      (data.total_units == null ? '' : '<strong>Rechnerisch gesamt: ' + escapeHTML(num(data.total_units, 2)) +
+      ' IE</strong>') + '</div>' +
+      (data.target_mgdl == null ? '' : '<p class="hint">Nightscout-Zielbereich ' +
+      escapeHTML(num(data.target_low_mgdl, 0)) + '–' + escapeHTML(num(data.target_high_mgdl, 0)) +
+      ' mg/dL; gerechnet mit der Mitte.</p>') +
+      (data.recent_rapid_doses?.length ? '<p class="hint">Schnell wirksame Dosen in den letzten 3 h: ' +
+      data.recent_rapid_doses.map(row => escapeHTML(timeOnly(row.at) + " · " + num(row.units) + " IE")).join(", ") +
+      '. Nicht abgezogen.</p>' : '') +
+      (data.reason ? '<p class="hint">' + escapeHTML(data.reason) + '</p>' : '');
+  } catch (error) {
+    output.textContent = error.message;
+  }
+}
+
+function resetEntryForm() {
+  state.editing = null;
+  state.pendingEventId = null;
+  const form = $("#entry-form");
+  form.reset();
+  setDefaultMealTime();
+  updateEntryFields();
+  $("#entry-title").textContent = "Eintrag hinzufügen";
+  $("#cancel-edit").hidden = true;
+}
+
+function editEntry(id) {
+  const item = state.dayData?.timeline.find(row => row.id === id);
+  if (!item || item.kind === "other") return;
+  state.editing = item;
+  const form = $("#entry-form");
+  form.elements.kind.value = item.kind;
+  form.elements.at.value = timeOnly(item.at);
+  form.elements.carbs.value = Number(item.carbs) || "";
+  form.elements.insulin.value = Number(item.insulin) || "";
+  form.elements.sport_kind.value = item.sport_kind || "jogging";
+  form.elements.duration_minutes.value = Number(item.duration_minutes) || "";
+  form.elements.notes.value = item.notes || "";
+  updateEntryFields();
+  $("#entry-title").textContent = "Eintrag bearbeiten";
+  $("#cancel-edit").hidden = false;
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function saveEntry(event) {
   event.preventDefault();
   const form = event.currentTarget;
+  const kind = form.elements.kind.value;
   const payload = {
-    meal: form.elements.meal.value,
-    at: toInstant(state.day, form.elements.at.value),
-    carbs: form.elements.carbs.value,
-    insulin: form.elements.insulin.value,
+    kind, at: toInstant(state.day, form.elements.at.value),
+    carbs: ["meal", "snack", "carbs"].includes(kind) ? form.elements.carbs.value : 0,
+    insulin: ["meal", "snack", "correction"].includes(kind) ? form.elements.insulin.value || 0 : 0,
+    sport_kind: form.elements.sport_kind.value,
+    duration_minutes: form.elements.duration_minutes.value || 0,
     notes: form.elements.notes.value,
-    event_id: state.pendingMealId || crypto.randomUUID(),
+    id: state.editing?.id || null, original_day: state.day,
+    event_id: state.pendingEventId || crypto.randomUUID(),
   };
-  state.pendingMealId = payload.event_id;
+  state.pendingEventId = payload.event_id;
   const button = $('button[type="submit"]', form);
   button.disabled = true;
   try {
-    const result = await api("/api/episode", { method: "POST", body: JSON.stringify(payload) });
-    state.pendingMealId = null;
+    const result = await api("/api/treatment", { method: "POST", body: JSON.stringify(payload) });
+    resetEntryForm();
     state.day = result.day;
     updateLocation(true);
-    form.elements.carbs.value = "";
-    form.elements.insulin.value = "";
-    form.elements.notes.value = "";
-    toast("Mahlzeit in Nightscout gespeichert");
-    await loadDay();
-    form.elements.carbs.focus();
-  } catch (error) {
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
-}
-
-async function saveSport(event) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const payload = {
-    kind: form.elements.kind.value,
-    at: toInstant(state.day, form.elements.at.value),
-    duration_minutes: form.elements.duration_minutes.value,
-    notes: form.elements.notes.value,
-    event_id: state.pendingSportId || crypto.randomUUID(),
-  };
-  state.pendingSportId = payload.event_id;
-  const button = $('button[type="submit"]', form);
-  button.disabled = true;
-  try {
-    const result = await api("/api/exercise", { method: "POST", body: JSON.stringify(payload) });
-    state.pendingSportId = null;
-    state.day = result.day;
-    updateLocation(true);
-    form.elements.notes.value = "";
-    toast("Sporteintrag in Nightscout gespeichert");
-    await loadDay();
-  } catch (error) {
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
-}
-
-async function saveDose(event) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const payload = {
-    episode_id: form.dataset.episode, meal: form.dataset.meal,
-    role: form.elements.role.value, insulin: form.elements.insulin.value,
-    carbs: form.elements.role.value === "snack" ? form.elements.carbs.value : "0",
-    at: toInstant(form.dataset.date, form.elements.at.value),
-    event_id: form.dataset.pendingId || crypto.randomUUID(),
-  };
-  form.dataset.pendingId = payload.event_id;
-  const button = $('button[type="submit"]', form);
-  button.disabled = true;
-  try {
-    await api("/api/dose", { method: "POST", body: JSON.stringify(payload) });
-    delete form.dataset.pendingId;
     toast("Eintrag in Nightscout gespeichert");
     await loadDay();
   } catch (error) {
@@ -524,11 +537,38 @@ async function deleteTreatment(event) {
   }
 }
 
+async function saveSportMark(event) {
+  const block = event.target.closest(".sport-review");
+  if (!block) return;
+  const select = $(".sport-status", block);
+  const effect = $(".sport-effect", block);
+  const button = event.target;
+  button.disabled = true;
+  try {
+    await api("/api/analysis/sport", { method: "POST", body: JSON.stringify({
+      meal_id: select.dataset.mealId, day: select.dataset.day,
+      status: select.value, effect_mgdl: effect.value || 0,
+    }) });
+    toast("Sporteinfluss gespeichert");
+    await loadDay();
+    if (state.view === "analysis") await loadSummary();
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
 async function saveSettings(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const payload = {
     window_minutes: Number(form.elements.window_minutes.value),
+    breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),
+    lunch_end_minute: clockMinute(form.elements.lunch_end.value),
+    sport_lookback_minutes: Number(form.elements.sport_lookback_minutes.value),
+    sport_effects_mgdl: Object.fromEntries(["jogging", "gym", "light_cardio"]
+      .map(kind => [kind, form.elements["sport_" + kind].value])),
     effective_at: form.elements.effective_date.value ? toInstant(form.elements.effective_date.value, form.elements.effective_time.value || "00:00") : null,
   };
   try {
@@ -605,10 +645,16 @@ async function loadSummary() {
         ? '<p class="summary-range">Berücksichtigter Bereich: ' + escapeHTML(num(row.min_units_per_ke, 3)) +
           '–' + escapeHTML(num(row.max_units_per_ke, 3)) + ' IE/KE</p>'
         : '';
+      const trend = row.trend_units_per_ke == null ? '' :
+        '<p class="summary-range">Letzte 3 vs. vorherige 3 · Median ' +
+        escapeHTML(num(row.recent_median_units_per_ke, 3)) + ' statt ' +
+        escapeHTML(num(row.previous_median_units_per_ke, 3)) + ' IE/KE · Änderung ' +
+        escapeHTML((Number(row.trend_units_per_ke) > 0 ? '+' : '') + num(row.trend_units_per_ke, 3)) +
+        ' IE/KE</p>';
       return '<div class="summary-card"><span class="meal-type">' + escapeHTML(names[kind]) + '</span>' +
         '<div class="summary-primary"><span>Durchschnitt</span><strong>' + value("mean_units_per_ke") + '</strong></div>' +
         '<div class="summary-metric"><span>Median</span><strong>' + value("median_units_per_ke") + '</strong></div>' +
-        (hasValues ? typical : '') + range +
+        (hasValues ? typical : '') + range + trend +
         '<p>' + row.count + ' von ' + row.valid_count + ' berechenbaren Mahlzeiten berücksichtigt · ' +
         row.excluded_count + ' ausgeklammert · ' + row.blocked_count + ' nicht berechenbar</p>' +
         (kind === "breakfast" ? breakfastSubcards() : '') + '</div>';
@@ -632,14 +678,14 @@ async function loadSummary() {
       .sort((a, b) => b.at.localeCompare(a.at));
     $("#calculation-count").textContent = calculations.length + (calculations.length === 1 ? " Mahlzeit" : " Mahlzeiten");
     $("#calculations").innerHTML = calculations.length
-      ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Uhrzeit</th><th>Mahlzeit</th><th>Insulinfaktor</th><th>KH</th><th>Insulin</th><th>Gemessen</th><th>Erwartet</th><th>Delta</th><th>Endpunkt</th><th>Ausklammern</th><th></th></tr></thead><tbody>' +
+      ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Uhrzeit</th><th>Mahlzeit</th><th>Insulinfaktor</th><th>KH</th><th>Insulin</th><th>Gemessen</th><th>Erwartet</th><th>Delta</th><th>Endpunkt</th><th>Sporteffekt</th><th>Ausklammern</th><th></th></tr></thead><tbody>' +
         (() => {
           let previousDay = "";
           return calculations.map(item => {
             const newDay = item.day !== previousDay;
             previousDay = item.day;
             const dayHeading = newDay
-              ? '<tr class="analysis-day-row"><th colspan="11" scope="colgroup">' +
+              ? '<tr class="analysis-day-row"><th colspan="12" scope="colgroup">' +
                 escapeHTML(new Date(item.day + "T12:00:00").toLocaleDateString("de-DE", {
                   weekday: "long", day: "numeric", month: "long", year: "numeric",
                 })) + ' <label class="day-type-label">Tag: <select class="day-type" data-day="' +
@@ -652,6 +698,17 @@ async function loadSummary() {
                 (item.strong_outlier ? ' <span class="outlier-badge">Stark abweichend</span>' : '')
               : '<span class="summary-unavailable">Nicht berechenbar: ' + escapeHTML(item.reason || "Kein Faktor") + '</span>';
             const excluded = item.units_per_ke != null && item.excluded;
+            const sport = item.sport || {};
+            const status = sport.status || "auto";
+            const sportReview = '<div class="sport-review sport-review-table">' +
+              (sport.suggested ? '<small>Vorschlag: ' + escapeHTML(num(sport.suggested_effect_mgdl, 0)) + ' mg/dL</small>' : '') +
+              '<select class="sport-status" data-meal-id="' + escapeHTML(item.id) + '" data-day="' + escapeHTML(item.day) + '">' +
+              '<option value="auto"' + (status === "auto" ? " selected" : "") + '>Offen</option>' +
+              '<option value="affected"' + (status === "affected" ? " selected" : "") + '>Wirkte mit</option>' +
+              '<option value="unaffected"' + (status === "unaffected" ? " selected" : "") + '>Kein Einfluss</option></select>' +
+              '<input class="sport-effect" type="number" min="0" max="500" step="1" aria-label="Sporteinfluss in mg/dL" value="' +
+              escapeHTML(status === "affected" ? sport.effect_mgdl : sport.suggested_effect_mgdl || 0) + '">' +
+              '<button type="button" class="save-sport quiet">Übernehmen</button></div>';
             return dayHeading + '<tr class="' + (excluded ? "analysis-excluded " : "") +
               (item.strong_outlier ? "analysis-outlier" : "") + '">' +
               '<td>' + escapeHTML(timeOnly(item.at)) + '</td>' +
@@ -662,6 +719,7 @@ async function loadSummary() {
             '<td>' + glucoseChangeHTML(item.expected_delta_mgdl) + '</td>' +
             '<td>' + glucoseChangeHTML(item.deviation_mgdl) + '</td>' +
             '<td>' + (item.end ? escapeHTML(timeOnly(item.end)) : "—") + '</td>' +
+            '<td>' + sportReview + '</td>' +
             '<td>' + (item.units_per_ke == null ? "—" : '<label class="exclude-label"><input type="checkbox" class="exclude-meal" data-meal-id="' +
               escapeHTML(item.id) + '" data-day="' + escapeHTML(item.day) + '"' + (excluded ? " checked" : "") +
               '> <span>Ausklammern</span></label>') + '</td>' +
@@ -760,10 +818,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#next-day").addEventListener("click", () => { const d = new Date(state.day + "T12:00"); d.setDate(d.getDate() + 1); changeDay(d.toLocaleDateString("sv-SE")); });
   $("#selected-day").addEventListener("change", event => changeDay(event.target.value));
   $("#refresh-day").addEventListener("click", loadDay);
-  $("#meal-form").addEventListener("submit", saveMeal);
-  $("#sport-form").addEventListener("submit", saveSport);
-  $("#diary-view").addEventListener("click", deleteTreatment);
-  $("#sport-kind").addEventListener("change", setSportDuration);
+  $("#entry-form").addEventListener("submit", saveEntry);
+  $("#entry-kind").addEventListener("change", updateEntryFields);
+  $("#cancel-edit").addEventListener("click", resetEntryForm);
+  $("#help-carbs").addEventListener("input", scheduleDoseHelp);
+  $("#entry-form").elements.carbs.addEventListener("input", event => {
+    if (["meal", "snack", "carbs"].includes($("#entry-kind").value)) {
+      $("#help-carbs").value = event.target.value || 0;
+      scheduleDoseHelp();
+    }
+  });
+  $("#diary-view").addEventListener("click", event => {
+    if (event.target.closest(".delete-treatment")) deleteTreatment(event);
+    const edit = event.target.closest(".edit-entry");
+    if (edit) editEntry(edit.dataset.id);
+    if (event.target.closest(".save-sport")) saveSportMark(event);
+  });
+  updateEntryFields();
   $("#settings-form").addEventListener("submit", saveSettings);
   $("#save-ic").addEventListener("click", () => saveProfileSchedule("ic"));
   $("#save-isf").addEventListener("click", () => saveProfileSchedule("isf"));
@@ -796,6 +867,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#calculations").addEventListener("change", saveAnalysisExclusion);
   $("#calculations").addEventListener("change", saveDayType);
   $("#calculations").addEventListener("click", event => {
+    if (event.target.closest(".save-sport")) {
+      saveSportMark(event);
+      return;
+    }
     const button = event.target.closest(".open-meal-day");
     if (!button) return;
     state.day = button.dataset.day;
@@ -809,15 +884,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     catch (error) { $("#test-result").textContent = error.message; }
   });
   document.addEventListener("keydown", event => {
-    if (event.altKey && ["f", "m", "a"].includes(event.key.toLowerCase())) {
-      event.preventDefault();
-      view("diary");
-      $("#meal-kind").value = ({ f: "breakfast", m: "lunch", a: "dinner" })[event.key.toLowerCase()];
-      $("#meal-time").focus();
-    }
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !$("#diary-view").hidden) {
       event.preventDefault();
-      $("#meal-form").requestSubmit();
+      $("#entry-form").requestSubmit();
     }
   });
   try {

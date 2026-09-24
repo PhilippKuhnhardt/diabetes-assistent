@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#11261e">
-  <title>Mahlzeitenanalyse</title>
+  <title>Diabetes-Tagebuch</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="/app.js" defer></script>
 </head>
@@ -13,9 +13,9 @@
     <header class="topbar">
       <div class="brand">
         <span class="brand-mark" aria-hidden="true">∑</span>
-        <div><strong>Mahlzeitenanalyse</strong><small>Nightscout · Fiasp · mg/dL</small></div>
+        <div><strong>Diabetes-Tagebuch</strong><small>Nightscout · Fiasp · mg/dL</small></div>
       </div>
-      <div id="connection" class="status">Verbinde …</div>
+      <div class="topbar-actions"><div id="connection" class="status">Verbinde …</div><form id="logout-form" action="/logout" method="post" hidden><button class="quiet" type="submit">Abmelden</button></form></div>
     </header>
 
     <nav class="tabs" aria-label="Bereiche">
@@ -27,7 +27,7 @@
     <main>
       <section id="diary-view" class="view">
         <div class="page-head">
-          <div><p class="eyebrow">Tagebuch</p><h1>Mahlzeiten, Insulin &amp; Sport</h1><p class="lead">Einträge zum tatsächlichen Zeitpunkt erfassen. Nightscout bleibt die Datenquelle.</p></div>
+          <div><p class="eyebrow">Tagebuch</p><h1>Dein Tag</h1><p class="lead">Alle Einträge in Nightscout pflegen und den Glukoseverlauf im Blick behalten.</p></div>
           <div class="day-nav">
             <button type="button" id="prev-day" aria-label="Vorheriger Tag">←</button>
             <input id="selected-day" type="date" aria-label="Datum">
@@ -36,69 +36,56 @@
           </div>
         </div>
         <div id="banner" class="banner" hidden></div>
+        <section class="panel dose-helper">
+          <div class="section-head"><h2>KH- und Korrekturhilfe</h2><span class="hint">Aktuelles Nightscout-Profil · IE/KE</span></div>
+          <div class="help-layout">
+            <label>Kohlenhydrate <span>g</span><input id="help-carbs" type="number" min="0" max="500" step="0.1" inputmode="decimal" value="0"></label>
+            <div id="dose-result" class="help-result" aria-live="polite">Berechnung wird geladen …</div>
+          </div>
+          <p class="form-note">Rechnung: KH ÷ g/IE + (aktueller CGM-Wert − Mitte des Nightscout-Zielbereichs) ÷ KF. Frühere Dosen und Glukosetrend werden angezeigt, aber nicht automatisch verrechnet.</p>
+        </section>
         <div class="diary-grid">
           <section class="panel entry-panel">
-            <div class="section-head"><h2>Neue Mahlzeit</h2><span class="hint">Alt+F / M / A</span></div>
-            <form id="meal-form">
-              <label>Mahlzeit
-                <select name="meal" id="meal-kind" required>
-                  <option value="breakfast">Frühstück</option>
-                  <option value="lunch">Mittagessen</option>
-                  <option value="dinner">Abendessen</option>
+            <div class="section-head"><h2 id="entry-title">Eintrag hinzufügen</h2></div>
+            <form id="entry-form">
+              <label>Art
+                <select name="kind" id="entry-kind">
+                  <option value="meal">Mahlzeit</option>
+                  <option value="snack">Snack</option>
+                  <option value="carbs">Nur Kohlenhydrate</option>
+                  <option value="correction">Korrektur / Bolus</option>
+                  <option value="exercise">Sport</option>
                 </select>
               </label>
-              <label>Zeitpunkt (HH:MM, 24 h)
-                <input type="time" name="at" id="meal-time" step="60" required>
-              </label>
+              <label>Zeitpunkt (HH:MM, 24 h)<input type="time" name="at" id="entry-time" step="60" required></label>
               <div class="field-pair">
-                <label>Kohlenhydrate <span>g</span>
-                  <input type="number" name="carbs" min="0.1" max="500" step="0.1" inputmode="decimal" required placeholder="z. B. 65">
-                </label>
-                <label>Erster Bolus <span>E</span>
-                  <input type="number" name="insulin" min="0" max="100" step="0.01" inputmode="decimal" required placeholder="z. B. 5,5">
-                </label>
+                <label id="entry-carbs-field">Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="0.1" inputmode="decimal"></label>
+                <label id="entry-insulin-field">Insulin <span>IE</span><input name="insulin" type="number" min="0" max="100" step="0.01" inputmode="decimal"></label>
               </div>
-              <label>Notiz <span>optional</span>
-                <input type="text" name="notes" maxlength="500" placeholder="z. B. Pizza, Sport …">
+              <label id="entry-sport-field" hidden>Sportart
+                <select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option></select>
               </label>
-              <button class="primary" type="submit">In Nightscout speichern <span>⌘/Strg+Enter</span></button>
-              <p class="form-note">Weitere Mahlzeitenboli und Korrekturen können anschließend ergänzt werden.</p>
+              <label id="entry-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
+              <label>Notiz <span>optional</span><input name="notes" type="text" maxlength="500" placeholder="Was möchtest du festhalten?"></label>
+              <div class="form-actions"><button class="primary" type="submit">In Nightscout speichern</button><button id="cancel-edit" type="button" class="quiet" hidden>Abbrechen</button></div>
             </form>
-            <div class="sport-entry">
-              <div class="section-head"><h2>Sport erfassen</h2></div>
-              <form id="sport-form">
-                <label>Sportart
-                  <select name="kind" id="sport-kind" required>
-                    <option value="jogging">Joggen</option>
-                    <option value="gym">Gym</option>
-                    <option value="light_cardio">Leichtes Cardio</option>
-                  </select>
-                </label>
-                <label>Startzeit (HH:MM, 24 h)
-                  <input type="time" name="at" id="sport-time" step="60" required>
-                </label>
-                <label>Dauer <span>Minuten</span>
-                  <input type="number" name="duration_minutes" id="sport-duration" min="1" max="1440" step="1" required>
-                </label>
-                <label>Notiz <span>optional</span>
-                  <input type="text" name="notes" maxlength="400" placeholder="z. B. draußen, Laufband …">
-                </label>
-                <button class="primary" type="submit">Sport in Nightscout speichern</button>
-              </form>
-            </div>
           </section>
           <section class="records">
-            <div class="section-head"><h2>Mahlzeiten an diesem Tag</h2><span id="record-count" class="hint"></span></div>
+            <section class="panel">
+              <div class="section-head"><h2>Einträge</h2><span id="record-count" class="hint"></span></div>
+              <div id="timeline" class="timeline" aria-live="polite"></div>
+            </section>
             <section id="night-card" class="night-card" aria-live="polite" hidden>
               <div class="section-head"><h2>Nacht</h2><span id="night-window" class="hint"></span></div>
               <div id="night-values" class="night-values"></div>
               <p id="night-reason" class="hint" hidden></p>
             </section>
-            <div id="meals" class="meal-list"></div>
-            <div id="sport-events" class="sport-events" hidden></div>
-            <div id="other-events" class="other-events" hidden></div>
           </section>
         </div>
+        <section class="panel diary-analysis">
+          <div class="section-head"><h2>Mahlzeitenfaktoren</h2><span class="hint">Aus den Einträgen dynamisch berechnet</span></div>
+          <div id="meals" class="meal-list"></div>
+        </section>
       </section>
 
       <section id="analysis-view" class="view" hidden>
@@ -111,8 +98,8 @@
         <div id="summary" class="summary-grid"></div>
         <section class="analysis-list panel">
           <div class="section-head"><h2>Alle Kalkulationen</h2><span id="calculation-count" class="hint"></span></div>
-          <p class="subtle">Markiere einzelne Mahlzeiten als Ausreißer. Sie bleiben im Tagebuch und in Nightscout erhalten, gehen aber nicht in die Kennzahlen ein. Die Auswahl kannst du jederzeit ändern. „Stark abweichend“ ist ein Hinweis und klammert keinen Wert automatisch aus.</p>
-          <p class="subtle">Erwartet = Σ(KH ÷ aktuellem Nightscout-I:C × zeitabhängigem KF) − rechnerischer Insulineffekt. Delta = gemessen − erwartet. Die Farben zeigen das Vorzeichen: <span class="glucose-change rising">positiv</span>, <span class="glucose-change falling">negativ</span>, <span class="glucose-change steady">null</span>. Ein positives Delta liegt über der Erwartung. Die Farben bewerten keine Dosis.</p>
+          <p class="subtle">Sport vor einer Mahlzeit wird als möglicher Einfluss angezeigt. Bestätige und bearbeite den rechnerischen Glukoseeffekt je Mahlzeit; nur dann wird er im Faktor berücksichtigt. Markiere einzelne Mahlzeiten als Ausreißer. Sie bleiben im Tagebuch und in Nightscout erhalten, gehen aber nicht in die Kennzahlen ein. Die Auswahl kannst du jederzeit ändern. „Stark abweichend“ ist ein Hinweis und klammert keinen Wert automatisch aus.</p>
+          <p class="subtle">Erwartet = Σ(KH ÷ aktuellem Nightscout-I:C × zeitabhängigem KF) − rechnerischer Insulineffekt − bestätigte Sport-Senkung. Delta = gemessen − erwartet. Die Farben zeigen das Vorzeichen: <span class="glucose-change rising">positiv</span>, <span class="glucose-change falling">negativ</span>, <span class="glucose-change steady">null</span>. Ein positives Delta liegt über der Erwartung. Die Farben bewerten keine Dosis.</p>
           <details class="outlier-explain"><summary>Wie entsteht die Markierung?</summary><p>Verglichen werden berechenbare Faktoren derselben Mahlzeitenart im gewählten Zeitraum, beim Frühstück getrennt nach Arbeit und Frei, auch bereits ausgeklammerte. Ab drei Werten erscheint der Hinweis, wenn ein Wert mehr als 50 % vom Median entfernt ist und sein Abstand zugleich mehr als dreimal so groß ist wie der Median der absoluten Abweichungen. Bei wenigen Werten ist die Einordnung unsicher.</p></details>
           <div id="calculations"></div>
         </section>
@@ -131,12 +118,12 @@
       </section>
 
       <section id="settings-view" class="view" hidden>
-        <div class="page-head"><div><p class="eyebrow">Einstellungen</p><h1>Berechnungsmodell</h1><p class="lead">Änderungen am Modell werden versioniert. Der Nightscout-Zugang liegt in der lokalen, nicht eingecheckten .env.</p></div></div>
+        <div class="page-head"><div><p class="eyebrow">Einstellungen</p><h1>Profil &amp; Modell</h1><p class="lead">Änderungen am Modell werden versioniert. Der Nightscout-Zugang wird beim Deployment über Umgebungsvariablen gesetzt.</p></div></div>
         <div class="settings-grid">
           <section class="panel">
             <h2>Nightscout-Verbindung</h2>
             <p id="nightscout-location" class="mono"></p>
-            <p>URL, Anmeldemethode und Zugangswert stehen in <code>.env</code>. Nach Änderungen den Server neu starten. Der Zugangswert wird hier nie angezeigt.</p>
+            <p>URL, Anmeldemethode und Zugangswert kommen aus Umgebungsvariablen. Nach Änderungen den Container neu erstellen. Der Zugangswert wird hier nie angezeigt.</p>
             <button id="test-connection" type="button">Verbindung prüfen</button>
             <p id="test-result" class="hint"></p>
           </section>
@@ -152,6 +139,19 @@
             <div id="ic-rows"></div>
             <button type="button" id="save-ic">Insulinfaktor in Nightscout speichern</button>
             <p id="ic-status" class="hint"></p>
+            <h2 class="spaced">Zielbereich aus Nightscout</h2>
+            <p class="subtle">Die KH- und Korrekturhilfe rechnet mit der Mitte des aktuellen Zielbereichs. Änderungen am Zielbereich erfolgen in Nightscout.</p>
+            <div id="target-rows"></div>
+            <h2 class="spaced">Tagebuch und Sport</h2>
+            <p class="subtle">Hauptmahlzeiten werden anhand der Uhrzeit zugeordnet. Ein bestätigter Sporteffekt ist die geschätzte zusätzliche Senkung zwischen Mahlzeitenbeginn und Endpunkt. Er wird zum gemessenen Glukose-Delta addiert.</p>
+            <label>Frühstück endet um <input name="breakfast_end" type="time" step="60" required></label>
+            <label>Mittagessen endet um <input name="lunch_end" type="time" step="60" required></label>
+            <label>Sport vor Mahlzeit berücksichtigen bis <span>Minuten</span><input name="sport_lookback_minutes" type="number" min="0" max="1440" step="1" required></label>
+            <div class="field-pair">
+              <label>Joggen · Vorschlag Senkung <span>mg/dL</span><input name="sport_jogging" type="number" min="0" max="500" step="1" required></label>
+              <label>Gym · Vorschlag Senkung <span>mg/dL</span><input name="sport_gym" type="number" min="0" max="500" step="1" required></label>
+              <label>Cardio · Vorschlag Senkung <span>mg/dL</span><input name="sport_light_cardio" type="number" min="0" max="500" step="1" required></label>
+            </div>
             <h2 class="spaced">Mahlzeitenfenster</h2>
             <p class="subtle">Standard: 180 Minuten. Alle dokumentierten KH und alle schnell wirksamen Injektionen im Fenster gehen vollständig in einen gemeinsamen Insulinfaktor ein. Das ist eine Rechenannahme, keine Aussage über den tatsächlichen Wirkverlauf.</p>
             <label>Auswertung nach <span>min</span><input name="window_minutes" type="number" min="60" max="360" step="1" required></label>

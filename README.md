@@ -1,35 +1,61 @@
-# Mahlzeitenanalyse (PoC)
+# Diabetes-Tagebuch und Faktorenanalyse
 
-German keyboard-first web app for reviewing meals, manual Fiasp injections and Nightscout CGM data. Nightscout is authoritative for glucose, treatment records and correction-factor profiles. SQLite is a local mirror and stores the current profile cache plus versioned calculation settings; calculated factors are recomputed from the mirrored source records.
+Private, deutschsprachige Web-App für FreeStyle Libre 3 Plus über Nightscout und manuell erfasstes Fiasp. Nightscout ist die maßgebliche Quelle für CGM, Kohlenhydrate, Injektionen, Sport und das aktuelle Profil. SQLite spiegelt diese Daten und speichert lokale Analyseentscheidungen sowie versionierte Einstellungen. Berechnete Faktoren werden nie nach Nightscout geschrieben.
 
-## Start locally
+## Deployment mit Umgebungsvariablen
 
-1. Copy `.env.example` to `.env`. Set `NIGHTSCOUT_URL` to your HTTPS Nightscout root URL.
-2. For a Nightscout access token, set `NIGHTSCOUT_AUTH_MODE=token` and put the **raw token** in `NIGHTSCOUT_CREDENTIAL`. For an API secret, set `NIGHTSCOUT_AUTH_MODE=secret` and put the **raw API_SECRET** in `NIGHTSCOUT_CREDENTIAL`; the app sends its SHA-1 digest in the `api-secret` header.
-3. Set `APP_PASSWORD` if you want browser Basic authentication. Any username works; the password is the `APP_PASSWORD` value. The app binds to `127.0.0.1` on the host. Keep `.env` out of version control.
-4. Run `docker compose up -d --build`, then open <http://127.0.0.1:8765/>. If you edit `.env`, run `docker compose up -d --force-recreate`.
-5. Set the time-specific **Korrekturfaktor** (Nightscout ISF / `sens`, mg/dL per IE) in the Nightscout Profile Editor. The app automatically caches the current profile and also offers a manual sync in **Einstellungen**. Nightscout remains the only source of truth; the current schedule is used for all local analyses, including older meals.
-6. In **Tagebuch**, select a day and record a meal with carbohydrates in grams and the first injection. Enter times explicitly as 24-hour HH:MM. Use **+ Injektion ergänzen** on that meal for split injections or corrections, including their actual times. A follow-up injection is not a new zero-carb meal. Alt+F/M/A chooses breakfast/lunch/dinner; Ctrl/Cmd+Enter saves the meal.
-7. **Analyse** can synchronize 7, 14 or 30 days into the local mirror. Previously recorded Nightscout `Meal Bolus` treatments with carbs appear as imported meals, with a meal category inferred from time of day. Breakfast also has separate **Arbeit** and **Frei** summaries. Days default to Arbeit Monday–Friday and Frei Saturday–Sunday; change a day's label in the analysis table for holidays or irregular workdays. The label is stored locally in SQLite and does not change Nightscout.
+Compose liest alle Zugangsdaten direkt aus der Umgebung des Deployment-Prozesses. Es gibt kein `env_file` und keine erforderliche `.env`-Datei.
 
-The persistent SQLite file is `data/app.sqlite3`. The `data/` folder and `.env` are gitignored. For VPS use, terminate HTTPS and restrict access at a reverse proxy, set `APP_PASSWORD`, and keep the published port loopback-bound as in `compose.yaml`. Back up `.env` and `data/` securely.
+| Variable | Bedeutung |
+| --- | --- |
+| `NIGHTSCOUT_URL` | HTTPS-Basisadresse von Nightscout |
+| `NIGHTSCOUT_CREDENTIAL` | Roher Nightscout-Zugangstoken oder rohe `API_SECRET` |
+| `APP_PASSWORD` | Eigenes Passwort für die App-Anmeldung |
+| `NIGHTSCOUT_AUTH_MODE` | `secret` (Standard) oder `token` |
 
-## Calculation
+Bei `secret` sendet die App den SHA-1-Hash der rohen `API_SECRET` im `api-secret`-Header. Bei `token` wird der rohe Zugangstoken verwendet. Die drei Zugangswerte müssen im Deployment als Umgebungsvariablen gesetzt werden; fehlende Werte stoppen Compose mit einer Fehlermeldung. Gib sie in der Secret-/Environment-Konfiguration deines Hosters an oder exportiere sie in der Shell.
 
-The displayed **Insulinfaktor** is insulin units per KE (IE/KE; one KE is 10 g carbohydrate). The profile editor accepts IE/KE and converts it to Nightscout's `carbratio` in grams per IE when saving: `g/IE = 10 / (IE/KE)`, so 0.8 IE/KE is stored as 12.5 g/IE. The separate **Korrekturfaktor** is read from the current Nightscout profile (`sens`) and cached in SQLite for local analysis. Values in mmol/L profiles are converted to mg/dL per IE. The current time-specific schedule is applied to all analyses; historical Nightscout profiles are not reconstructed.
+```sh
+docker compose --env-file /dev/null up -d --build
+```
 
-For a meal window with carbohydrate events Cⱼ, glucose change ΔG from meal time to the endpoint, and correction factor Sⱼ at each carbohydrate time, the app solves one factor:
+`--env-file /dev/null` sorgt bei einem lokalen Aufruf dafür, dass eine eventuell noch vorhandene alte `.env`-Datei nicht geladen wird. Nach einer Änderung der Variablen: `docker compose --env-file /dev/null up -d --force-recreate`.
 
-IE/KE = 10 × (ΔG + Σ [Uᵢ × Sᵢ]) / Σ(Cⱼ × Sⱼ)
+Optional sind `APP_BIND_ADDRESS` (Standard `127.0.0.1`), `APP_PORT` (`8765`), `APP_TIMEZONE` (`Europe/Berlin`), `APP_UID`/`APP_GID` (`1000`) und `APP_DATA_DIR` (`./data`). Die App bindet standardmäßig nur an <http://127.0.0.1:8765/>. Für einen Reverse Proxy kann die Bind-Adresse passend gesetzt werden; der externe Zugriff sollte über HTTPS erfolgen.
 
-Here Uᵢ is the **full** amount of each rapid insulin injection inside the window, Sᵢ is the scheduled correction factor at its injection time, and Cⱼ is each carbohydrate event in grams. Injections before the meal or at/after the endpoint are excluded. The default endpoint is meal time +180 minutes. Each later rapid injection reached by the current window extends the endpoint to at least 180 minutes after that injection. A following main meal bounds this extension: when it starts more than 120 minutes after the first meal and before the endpoint, the endpoint uses the last valid CGM reading within 15 minutes before that meal; otherwise the factor is blocked. The actual interval is displayed. The night analysis starts three hours after the last recorded rapid injection between dinner and the next breakfast, and reports the signed glucose change from that start to breakfast. Glucose at the two exact times is linearly interpolated from CGM readings when the surrounding readings are at most 15 minutes apart. Decimal arithmetic is used for the reported raw value; rounded numbers are only for display.
+Die SQLite-Datei bleibt im gemounteten Verzeichnis `APP_DATA_DIR` als `app.sqlite3` über Container-Neustarts erhalten. Der Standard `./data` bewahrt den bisherigen Datenpfad bei. Das Verzeichnis muss für `APP_UID`/`APP_GID` schreibbar sein. Sichere das Datenverzeichnis und die Secrets deines Deployment-Systems. Im Browser meldest du dich einmal mit `APP_PASSWORD` an; die Sitzung bleibt als Cookie für ein Jahr bestehen und kann über **Abmelden** beendet werden.
 
-This value is mathematically exact **for the stated endpoint model and its input data**, not a physiological ground truth. The model assumes full carb effect by the endpoint, the full mathematical effect of every rapid injection in the window even when given shortly before the endpoint, zero unrelated glucose drift, and the configured time-specific sensitivity. It does not estimate absorption, exercise, illness, sensor lag or other factors. Logged sport sessions are currently displayed only and excluded from this calculation. Every recorded carbohydrate event inside the meal window contributes to the one factor. A second main meal is not silently folded into the first: the endpoint is shortened to the last nearby CGM reading before it when the meal separation exceeds two hours, otherwise the factor is suppressed. An unknown insulin treatment type, a CGM gap, a missing correction-factor schedule, or a nonpositive solved effect also suppresses the factor with an explicit reason. The analysis lists every meal calculation in the chosen period, including blocked calculations. Users can mark individual valid meals as excluded from the analysis; this local SQLite choice survives reloads and never changes Nightscout. The mean, median, observed minimum and maximum, and (from five included meals) the interpolated middle 50% are recomputed from the remaining factors. These are descriptive values, not confidence or dosing intervals. The calculation list is grouped by local day. Breakfast summaries recompute the same descriptive statistics separately for Arbeit and Frei, using the local day label and respecting meal exclusions. A non-excluding review marker flags factors from meal types with at least three valid values (breakfast is compared separately within Arbeit and Frei) when their distance from the median exceeds both three times the median absolute deviation and 50% of the median; all valid values, including manually excluded ones, form this reference. The UI shows the full equation, contributing doses, endpoint values, and settings version for audit. Legacy peak/duration fields in existing settings records are ignored by this model.
+In **Einstellungen** kannst du prüfen, ob Nightscouts aktuelles Profil inklusive I:C, Korrekturfaktor und Zielbereich geladen wurde.
 
-The analysis also compares each current `sens` schedule slot against a retrospective candidate while keeping Nightscout I:C fixed. It reuses the displayed glucose deviations of valid, non-excluded meals. For each slot, the candidate minimizes mean absolute deviation across all meals whose deviation changes with that slot. Other schedule slots remain at their current values. This describes the selected data and is not an independent validation or dosing recommendation; no candidate is written to Nightscout.
+## Tagebuch
 
-## Development
+Mahlzeit, Snack, reine Kohlenhydrate, Korrektur/Bolus und Sport können unabhängig voneinander erfasst, bearbeitet und gelöscht werden. Jeder Eintrag wird in Nightscout gespeichert. Die Tagesliste zeigt alle Einträge und, wo ein passender CGM-Wert vorliegt, den Glukosewert zum Ereignis. Bestehende Nightscout-Behandlungen werden ebenfalls angezeigt. Hauptmahlzeiten werden anhand einstellbarer Uhrzeitgrenzen als Frühstück, Mittag- oder Abendessen erkannt; die Kategorien müssen beim Eintragen nicht gewählt werden. Legacy-Einträge mit alter Kategorie bleiben lesbar.
 
-Python standard library serves the API and static site; there are no runtime package dependencies. Run `python3 -m unittest discover -s tests -v` and `node --check web/app.js`. The Nightscout integration test uses a local fake server; it does not write test treatments to your Nightscout instance.
+Die KH- und Korrekturhilfe verwendet das **aktuelle Nightscout-Profil**. Der Insulinfaktor wird in der App immer als **IE/KE** angezeigt: 1,4 IE/KE bedeutet 1,4 IE für 10 g KH. Nightscout speichert stattdessen I:C in g/IE; die Schnittstelle rechnet mit `g/IE = 10 / (IE/KE)` um. Die Hilfe zeigt `KH ÷ g/IE` sowie bei einem höchstens 15 Minuten alten CGM-Wert `(CGM − Mitte des Nightscout-Zielbereichs) ÷ zeitabhängigem KF`. Die Summe wird bei null begrenzt. CGM-Trend und schnell wirksame Dosen der letzten drei Stunden werden angezeigt, aber nicht automatisch in diese Rechnung eingerechnet. Fehlen aktuelle CGM-Werte oder Profilwerte, zeigt die App die verfügbaren Eingaben und einen Grund statt einer vollständigen Summe.
 
-API endpoints: `GET /api/day?date=YYYY-MM-DD`, `GET /api/summary?days=14`, `POST /api/analysis/exclusion`, `POST /api/analysis/day-type`, `POST /api/sync`, `GET/POST /api/settings`, `GET /api/settings/history`, `POST /api/profile/sync`, `GET /api/test-connection`, `POST /api/episode`, `POST /api/dose`, `POST /api/exercise`, `POST /api/treatment/delete` (JSON: `id`, `day`). Sport entries are stored as Nightscout Exercise treatments with duration and a versioned sport marker in the notes, so the local sport type can be restored after sync. Treatment writes include stable app IDs in Nightscout notes for retry checks. Deleting a diary entry deletes that treatment in Nightscout and removes its local mirror; linked entries remain separate. Nightscout reads refresh the SQLite mirror; a failed read shows cached data with a sync error.
+## Analyse
+
+Für jede automatisch erkannte Hauptmahlzeit wird ein Faktor aus allen Kohlenhydraten und allen vollen schnell wirksamen IE im Auswertungsfenster berechnet:
+
+`IE/KE = 10 × (gemessenes ΔG + bestätigte Sport-Senkung + Σ[IE × KF]) / Σ[KH in g × KF]`
+
+Der Standardendpunkt liegt 180 Minuten nach Beginn. Jede weitere Injektion innerhalb des Fensters verlängert es bis 180 Minuten nach dieser Injektion. Eine nächste Hauptmahlzeit kann den Endpunkt ab zwei Stunden auf den letzten geeigneten CGM-Wert davor begrenzen; wenn eine Trennung nicht möglich ist, wird der Faktor blockiert. CGM-Werte an exakten Endpunkten werden nur bei einer Lücke von höchstens 15 Minuten interpoliert. Die Annahmen des Modells, Einzelereignisse, Rechenweg und Gründe für blockierte Werte sind im Tagebuch sichtbar.
+
+Sport vor einer Mahlzeit wird anhand einer einstellbaren Rückblickzeit vorgeschlagen. In den Einstellungen stehen Vorschlagswerte je Sportart, etwa 40 mg/dL Senkung für Gym. Erst eine Bestätigung an der einzelnen Mahlzeit aktiviert den editierbaren Effekt. Eine bestätigte Senkung um 40 mg/dL **zwischen Mahlzeitenbeginn und Endpunkt** addiert **40 mg/dL zum gemessenen ΔG** und bereinigt so rechnerisch den Faktor. Sport schließt die Mahlzeit nicht aus. Die manuelle Ausklammerung bleibt unabhängig davon verfügbar.
+
+Die Analyse zeigt Einzelwerte, Mittelwert, Median, beobachteten Bereich, bei mindestens fünf Werten die mittleren 50 %, und ab sechs berücksichtigten Mahlzeiten einen Vergleich der letzten drei mit den vorherigen drei Faktoren. Frühstück wird zusätzlich nach Arbeit/Frei getrennt. Korrekturfaktorvergleich und Nachtübersicht bleiben erhalten. Das aktuelle Nightscout-Profil gilt auch für ältere Auswertungen; frühere Profile werden nicht rekonstruiert.
+
+Die Berechnung setzt vollständige KH-Wirkung bis zum Endpunkt, vollständige rechnerische Wirkung auch später IE, keinen weiteren Hintergrundtrend und den bestätigten Sporteffekt voraus. Diese Annahmen sind keine Beschreibung des tatsächlichen Wirkverlaufs.
+
+## Entwicklung
+
+Laufzeit: Python-Standardbibliothek, HTML/CSS/JavaScript, SQLite. Relevante Module: `app/nightscout.py` für die Nightscout-Schnittstelle, `app/storage.py` für Persistenz, `app/episodes.py` für Ereignisse und Mahlzeitenerkennung, `app/calculation.py` für Faktoren, `app/dosing.py` für die KH-/Korrekturhilfe, `app/auth.py` für die Browser-Anmeldung. `app/server.py` stellt API und statische Dateien bereit.
+
+Prüfen mit:
+
+```sh
+python3 -m unittest discover -s tests -v
+node --check web/app.js
+```
+
+Die Integrationstests verwenden einen lokalen Fake-Nightscout-Server und schreiben nichts in das persönliche Nightscout.

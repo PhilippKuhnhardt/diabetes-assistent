@@ -82,11 +82,23 @@ class FakeNightscout(BaseHTTPRequestHandler):
     def do_PUT(self):
         parsed = urllib.parse.urlparse(self.path)
         assert urllib.parse.parse_qs(parsed.query)["token"] == ["test-raw-token"]
-        if parsed.path.rstrip("/") != "/api/v1/profile":
+        value = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        if parsed.path.rstrip("/") == "/api/v1/treatments":
+            record_id = value.get("_id")
+            for index, existing in enumerate(self.treatments):
+                if existing.get("_id") == record_id:
+                    self.treatments[index] = value
+                    break
+            else:
+                self.send_error(404)
+                return
+            raw = json.dumps(value).encode()
+        elif parsed.path.rstrip("/") == "/api/v1/profile":
+            self.__class__.profile = value
+            raw = json.dumps(self.profile).encode()
+        else:
             self.send_error(404)
             return
-        self.__class__.profile = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        raw = json.dumps(self.profile).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(raw)))
@@ -157,6 +169,54 @@ class IntegrationTests(unittest.TestCase):
         req = urllib.request.Request(self.base + path, data=raw, headers=headers, method=method)
         with urllib.request.urlopen(req) as response:
             return json.loads(response.read())
+
+    def test_standalone_carb_and_correction_entries_can_be_edited(self):
+        at = "2026-09-23T10:30:00Z"
+        self.request("/api/treatment", method="POST", body={
+            "kind": "carbs", "at": at, "carbs": "16", "notes": "Saft",
+        })
+        self.request("/api/treatment", method="POST", body={
+            "kind": "correction", "at": "2026-09-23T11:00:00Z", "insulin": "1.5",
+        })
+        day = self.request("/api/day?date=2026-09-23")
+        carb = next(item for item in day["timeline"] if item["kind"] == "carbs")
+        self.assertEqual(Decimal(str(carb["carbs"])), Decimal(16))
+        self.assertTrue(any(item["kind"] == "correction" for item in day["timeline"]))
+        self.request("/api/treatment", method="POST", body={
+            "id": carb["id"], "original_day": "2026-09-23", "kind": "snack",
+            "at": at, "carbs": "20", "insulin": "1", "notes": "Apfel",
+        })
+        updated = self.request("/api/day?date=2026-09-23")
+        snack = next(item for item in updated["timeline"] if item["id"] == carb["id"])
+        self.assertEqual(snack["kind"], "snack")
+        self.assertEqual(Decimal(str(snack["carbs"])), Decimal(20))
+        self.assertEqual(Decimal(str(snack["insulin"])), Decimal(1))
+        self.assertEqual(snack["notes"], "Apfel")
+
+    def test_sport_effect_is_confirmed_per_meal_and_does_not_exclude_it(self):
+        meal_at = "2026-09-23T10:00:00Z"
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": meal_at, "carbs": "40", "insulin": "4",
+        })
+        self.request("/api/treatment", method="POST", body={
+            "kind": "exercise", "at": "2026-09-23T08:00:00Z",
+            "sport_kind": "gym", "duration_minutes": 60,
+        })
+        before = self.request("/api/day?date=2026-09-23")["meals"][0]
+        self.assertTrue(before["sport"]["suggested"])
+        self.assertEqual(Decimal(before["sport"]["suggested_effect_mgdl"]), Decimal(40))
+        self.assertEqual(Decimal(before["calculation"]["sport_effect_mgdl"]), Decimal(0))
+        self.request("/api/analysis/sport", method="POST", body={
+            "meal_id": before["id"], "day": "2026-09-23", "status": "affected",
+            "effect_mgdl": "35",
+        })
+        after = self.request("/api/day?date=2026-09-23")["meals"][0]
+        self.assertEqual(Decimal(after["calculation"]["sport_effect_mgdl"]), Decimal(35))
+        self.assertEqual(
+            Decimal(after["calculation"]["adjusted_delta_mgdl"]),
+            Decimal(after["calculation"]["delta_mgdl"]) + 35,
+        )
+        self.assertEqual(storage.analysis_exclusions(), set())
 
     def test_current_nightscout_profile_is_the_only_isf_source(self):
         data = self.request("/api/settings")

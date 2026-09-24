@@ -1,4 +1,4 @@
-"""Small Nightscout v1 adapter. Credentials come from the server's .env."""
+"""Small Nightscout v1 adapter. Credentials come from the server environment."""
 from __future__ import annotations
 
 import hashlib
@@ -24,7 +24,7 @@ def _request(method: str, path: str, query: dict | None = None, body: object | N
     base = os.environ.get("NIGHTSCOUT_URL", "").strip().rstrip("/")
     credential = os.environ.get("NIGHTSCOUT_CREDENTIAL", "").strip()
     if not base or not credential:
-        raise NightscoutError("Nightscout-Zugang in .env fehlt")
+        raise NightscoutError("Nightscout-Zugang in Umgebungsvariablen fehlt")
     parsed = urllib.parse.urlparse(base)
     if parsed.scheme != "https" and parsed.hostname not in ("localhost", "127.0.0.1"):
         raise NightscoutError("Nightscout muss per HTTPS erreichbar sein")
@@ -177,6 +177,39 @@ def fetch_profiles() -> list[dict]:
         if ratio_schedule and 0 not in ratio_seen:
             raise ValueError
         ratio_schedule.sort(key=lambda item: item["start_minute"])
+        targets = {}
+        for field in ("target_low", "target_high"):
+            rows = profile.get(field, [])
+            if not isinstance(rows, list) or len(rows) > 48:
+                raise ValueError
+            values = {}
+            for row in rows:
+                seconds = row.get("timeAsSeconds")
+                if seconds is None:
+                    hour, minute = map(int, str(row["time"]).split(":"))
+                    minute_of_day = hour * 60 + minute
+                else:
+                    seconds = int(seconds)
+                    if seconds % 60:
+                        raise ValueError
+                    minute_of_day = seconds // 60
+                value = Decimal(str(row["value"])) * conversion
+                if not 0 <= minute_of_day < 1440 or not 0 < value <= 1000 or minute_of_day in values:
+                    raise ValueError
+                values[minute_of_day] = value
+            targets[field] = values
+        target_schedule = []
+        low, high = targets["target_low"], targets["target_high"]
+        if low and high:
+            if 0 not in low or 0 not in high:
+                raise ValueError
+            for minute_of_day in sorted(low.keys() | high.keys()):
+                lower = low[max(key for key in low if key <= minute_of_day)]
+                upper = high[max(key for key in high if key <= minute_of_day)]
+                if lower > upper:
+                    raise ValueError
+                target_schedule.append({"start_minute": minute_of_day,
+                                        "low_mgdl": str(lower), "high_mgdl": str(upper)})
         return [{
             "start_at": start_at,
             "profile_id": str(record.get("_id", "")),
@@ -184,6 +217,7 @@ def fetch_profiles() -> list[dict]:
             "timezone": profile_timezone,
             "isf_schedule": schedule,
             "ic_schedule": ratio_schedule,
+            "target_schedule": target_schedule,
         }]
     except (AttributeError, KeyError, TypeError, ValueError, InvalidOperation, ZoneInfoNotFoundError):
         raise NightscoutError("Nightscout lieferte ein ungültiges Profil") from None
@@ -259,3 +293,10 @@ def write_treatment(record: dict) -> None:
 def delete_treatment(record_id: str) -> None:
     safe_id = urllib.parse.quote(record_id, safe="")
     _request("DELETE", f"/api/v1/treatments/{safe_id}")
+
+
+def update_treatment(record_id: str, record: dict) -> None:
+    """Update a Nightscout v1 treatment by its authoritative ID."""
+    if not record_id or record.get("_id") != record_id:
+        raise NightscoutError("Eintrag-ID stimmt nicht überein")
+    _request("PUT", "/api/v1/treatments", body=record)

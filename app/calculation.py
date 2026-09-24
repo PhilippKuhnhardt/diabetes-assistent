@@ -67,7 +67,8 @@ def interpolate_glucose(entries: list[dict], moment: datetime, max_gap_minutes: 
     return {"value": value, "before": before[0], "after": after[0]}
 
 
-def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[dict], settings: dict) -> dict:
+def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[dict], settings: dict,
+                      sport_effect_mgdl: Decimal = Decimal(0)) -> dict:
     """Solve one endpoint balance for every carb and rapid dose in a meal window."""
     start = episode["at"]
     window = timedelta(minutes=int(settings["window_minutes"]))
@@ -160,7 +161,11 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
             "event_type": treatment.get("eventType") or "",
             "isf": str(sensitivity), "effect_mgdl": str(effect),
         })
-    denominator = delta + insulin_effect
+    sport_effect_mgdl = dec(sport_effect_mgdl)
+    if not sport_effect_mgdl.is_finite() or sport_effect_mgdl < 0 or sport_effect_mgdl > 500:
+        raise ValueError("Ungültiger Sporteffekt")
+    adjusted_delta = delta + sport_effect_mgdl
+    denominator = adjusted_delta + insulin_effect
     all_carb_events = carb_events + extra_carbs
     carbs_total = sum((dec(item["carbs"]) for item in all_carb_events), Decimal(0))
     carbs_times_isf_total = sum((dec(item["carbs_times_isf"]) for item in all_carb_events), Decimal(0))
@@ -186,11 +191,12 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         "extra_carb_count": len(extra_carbs), "g0": str(g0["value"]), "g3": str(g1["value"]),
         "g0_sources": [g0["before"].isoformat(), g0["after"].isoformat()],
         "g3_sources": [g1["before"].isoformat(), g1["after"].isoformat()],
-        "delta_mgdl": str(delta), "meal_isf": str(meal_isf),
+        "delta_mgdl": str(delta), "adjusted_delta_mgdl": str(adjusted_delta),
+        "sport_effect_mgdl": str(sport_effect_mgdl), "meal_isf": str(meal_isf),
         "rapid_units_in_window": str(rapid_units_in_window),
         "insulin_effect_mgdl": str(insulin_effect), "denominator_mgdl": str(denominator),
         "doses": effects, "carb_events": all_carb_events,
         "blockers": blockers,
         "ratio_g_per_unit": ratio, "factor_units_per_ke": factor, "reason": reason,
-        "assumptions": ["alle KH im Fenster wirken bis zum Endpunkt vollständig", "volle IE jeder schnell wirksamen Injektion im Fenster", "alle KH im Fenster teilen einen Insulinfaktor", "kein zusätzlicher Hintergrundtrend"],
+        "assumptions": ["alle KH im Fenster wirken bis zum Endpunkt vollständig", "volle IE jeder schnell wirksamen Injektion im Fenster", "alle KH im Fenster teilen einen Insulinfaktor", "kein zusätzlicher Hintergrundtrend", "bestätigter Sporteffekt als additive Korrektur der Glukoseänderung"],
     }

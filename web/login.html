@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11261e">
+  <title>Anmelden · Tagebuch</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="login-page">
+  <main class="login-card panel">
+    <p class="eyebrow">Privates Tagebuch</p>
+    <h1>Anmelden</h1>
+    <p>Mit dem App-Passwort aus deiner lokalen Einrichtung anmelden.</p>
+    <form action="/login" method="post">
+      <label>Benutzername
+        <input name="username" autocomplete="username" value="privat" required>
+      </label>
+      <label>Passwort
+        <input name="password" type="password" autocomplete="current-password" required autofocus>
+      </label>
+      <p id="login-error" class="form-error" hidden>Passwort stimmt nicht.</p>
+      <button class="primary" type="submit">Anmelden</button>
+    </form>
+  </main>
+  <script>document.getElementById("login-error").hidden = !location.search.includes("error=1");</script>
+</body>
+</html>

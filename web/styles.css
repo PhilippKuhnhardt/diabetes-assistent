@@ -232,3 +232,57 @@ footer { border-top: 1px solid var(--line); color: var(--muted); padding: 20px 0
 #night-records { margin-top: 16px; }
 #night-records .night-error { color: var(--muted); font-size: 11px; }
 @media (max-width: 650px) { .night-values { grid-template-columns: 1fr; } }
+
+/* Rebuilt diary */
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.topbar-actions form { margin: 0; }
+.topbar-actions button { font-size: 12px; }
+.dose-helper { margin-bottom: 20px; border-color: #bddac6; background: #f9fdf9; }
+.dose-helper .section-head { margin-bottom: 12px; }
+.help-layout { display: grid; grid-template-columns: minmax(120px, 210px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.help-layout label { margin: 0; }
+.help-result { min-width: 0; }
+.dose-glucose { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+.dose-glucose span { font-size: 12px; color: var(--muted); }
+.dose-glucose strong { color: var(--green-dark); font-size: 19px; }
+.dose-math { display: flex; flex-wrap: wrap; gap: 9px 20px; font-size: 13px; }
+.dose-math > strong { color: var(--green-dark); font-size: 17px; }
+.dose-helper .hint { margin: 9px 0 0; }
+.records > .panel { margin-bottom: 18px; }
+.timeline-item { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 13px 0; border-top: 1px solid var(--line); }
+.timeline-item:first-child { border-top: 0; }
+.timeline-item time { color: var(--muted); font-size: 12px; padding-top: 2px; }
+.timeline-item strong { font-size: 14px; }
+.timeline-item p { margin: 4px 0; color: var(--ink); font-size: 12px; line-height: 1.45; }
+.timeline-item small { display: block; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.timeline-actions { display: flex; gap: 5px; }
+.timeline-actions button { font-size: 11px; padding: 6px 8px !important; }
+.form-actions { display: flex; gap: 8px; }
+.form-actions .primary { flex: 1; }
+.diary-analysis { margin-top: 24px; }
+.diary-analysis .meal-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr)); }
+.sport-review { display: flex; flex-wrap: wrap; align-items: end; gap: 9px; margin-top: 15px; padding: 12px; border-radius: 9px; background: var(--canvas); }
+.sport-review > span { flex-basis: 100%; font-size: 12px; color: var(--muted); }
+.sport-review label { margin: 0; }
+.sport-review label input { width: 110px; }
+.sport-review label select { min-width: 140px; }
+.sport-review button { height: 42px; }
+.sport-review-table { margin: 0; padding: 0; background: none; display: grid; grid-template-columns: 120px 70px auto; gap: 4px; }
+.sport-review-table small { grid-column: 1 / -1; }
+.sport-review-table select, .sport-review-table input { min-height: 31px; padding: 4px; font-size: 11px; }
+.sport-review-table button { height: 31px; }
+.login-page { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+.login-card { width: min(100%, 400px); }
+.login-card h1 { margin-bottom: 8px; }
+.login-card p { color: var(--muted); font-size: 13px; }
+.login-card form { margin-top: 22px; }
+.login-card .primary { width: 100%; }
+.login-card .form-error { color: #9b3c33; }
+@media (max-width: 700px) {
+  .help-layout { grid-template-columns: 1fr; gap: 14px; }
+  .timeline-item { grid-template-columns: 50px minmax(0, 1fr); }
+  .timeline-actions { grid-column: 2; }
+  .topbar-actions { flex-direction: column; gap: 5px; }
+  .topbar-actions button { padding: 5px 8px !important; }
+  .diary-analysis .meal-list { grid-template-columns: 1fr; }
+}

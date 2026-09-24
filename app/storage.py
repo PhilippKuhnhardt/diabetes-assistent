@@ -60,6 +60,11 @@ def init() -> None:
             day TEXT PRIMARY KEY,
             day_type TEXT NOT NULL CHECK(day_type IN ('work', 'free'))
         );
+        CREATE TABLE IF NOT EXISTS analysis_sport_marks (
+            meal_id TEXT PRIMARY KEY,
+            status TEXT NOT NULL CHECK(status IN ('affected', 'unaffected')),
+            effect_mgdl TEXT NOT NULL DEFAULT '0'
+        );
         CREATE TABLE IF NOT EXISTS nightscout_profiles (
             start_at TEXT PRIMARY KEY,
             profile_id TEXT NOT NULL,
@@ -67,7 +72,8 @@ def init() -> None:
             timezone TEXT NOT NULL,
             isf_schedule TEXT NOT NULL,
             ic_schedule TEXT NOT NULL DEFAULT '[]',
-            synced_at TEXT NOT NULL
+            synced_at TEXT NOT NULL,
+            target_schedule TEXT NOT NULL DEFAULT '[]'
         );
         CREATE TABLE IF NOT EXISTS nightscout_profile_sync (
             id INTEGER PRIMARY KEY CHECK(id = 1),
@@ -78,6 +84,11 @@ def init() -> None:
         columns = {row["name"] for row in db.execute("PRAGMA table_info(nightscout_profiles)")}
         if "ic_schedule" not in columns:
             db.execute("ALTER TABLE nightscout_profiles ADD COLUMN ic_schedule TEXT NOT NULL DEFAULT '[]'")
+        if "target_schedule" not in columns:
+            db.execute("ALTER TABLE nightscout_profiles ADD COLUMN target_schedule TEXT NOT NULL DEFAULT '[]'")
+        mark_columns = {row["name"] for row in db.execute("PRAGMA table_info(analysis_sport_marks)")}
+        if "effect_mgdl" not in mark_columns:
+            db.execute("ALTER TABLE analysis_sport_marks ADD COLUMN effect_mgdl TEXT NOT NULL DEFAULT '0'")
 
 
 def default_settings() -> dict:
@@ -86,6 +97,10 @@ def default_settings() -> dict:
         "window_minutes": 180,
         "peak_minutes": 60,
         "duration_minutes": 180,
+        "breakfast_end_minute": 660,
+        "lunch_end_minute": 1020,
+        "sport_lookback_minutes": 360,
+        "sport_effects_mgdl": {"jogging": 40, "gym": 40, "light_cardio": 20},
     }
 
 
@@ -93,7 +108,7 @@ def current_nightscout_profile() -> dict | None:
     """Return the one cached Nightscout profile used for all local analyses."""
     with connect() as db:
         row = db.execute(
-            "SELECT start_at,profile_id,profile_name,timezone,isf_schedule,ic_schedule,synced_at "
+            "SELECT start_at,profile_id,profile_name,timezone,isf_schedule,ic_schedule,target_schedule,synced_at "
             "FROM nightscout_profiles ORDER BY start_at DESC LIMIT 1"
         ).fetchone()
     if not row:
@@ -102,7 +117,8 @@ def current_nightscout_profile() -> dict | None:
         "start_at": row["start_at"], "profile_id": row["profile_id"],
         "profile_name": row["profile_name"], "timezone": row["timezone"],
         "isf_schedule": json.loads(row["isf_schedule"]),
-        "ic_schedule": json.loads(row["ic_schedule"]), "synced_at": row["synced_at"],
+        "ic_schedule": json.loads(row["ic_schedule"]),
+        "target_schedule": json.loads(row["target_schedule"]), "synced_at": row["synced_at"],
     }
 
 
@@ -112,6 +128,11 @@ def _with_nightscout_profile(settings: dict) -> dict:
     profile = current_nightscout_profile()
     result["isf_schedule"] = profile["isf_schedule"] if profile else []
     result["ic_schedule"] = profile["ic_schedule"] if profile else []
+    result["target_schedule"] = profile["target_schedule"] if profile else []
+    result.setdefault("breakfast_end_minute", 660)
+    result.setdefault("lunch_end_minute", 1020)
+    result.setdefault("sport_lookback_minutes", 360)
+    result.setdefault("sport_effects_mgdl", {"jogging": 40, "gym": 40, "light_cardio": 20})
     result["nightscout_profile"] = ({
         "start_at": profile["start_at"], "profile_id": profile["profile_id"],
         "profile_name": profile["profile_name"], "timezone": profile["timezone"],
@@ -133,6 +154,7 @@ def save_settings(payload: dict, effective_at: datetime | None = None) -> int:
     stored = dict(payload)
     stored.pop("isf_schedule", None)
     stored.pop("ic_schedule", None)
+    stored.pop("target_schedule", None)
     stored.pop("nightscout_profile", None)
     now = datetime.now(timezone.utc).isoformat()
     with connect() as db:
@@ -194,11 +216,12 @@ def mirror_nightscout_profiles(profiles: list[dict]) -> None:
         db.execute("DELETE FROM nightscout_profiles")
         for profile in profiles:
             db.execute(
-                "INSERT INTO nightscout_profiles(start_at,profile_id,profile_name,timezone,isf_schedule,ic_schedule,synced_at) "
-                "VALUES(?,?,?,?,?,?,?)",
+                "INSERT INTO nightscout_profiles(start_at,profile_id,profile_name,timezone,isf_schedule,ic_schedule,target_schedule,synced_at) "
+                "VALUES(?,?,?,?,?,?,?,?)",
                 (profile["start_at"], profile["profile_id"], profile["profile_name"], profile["timezone"],
                  json.dumps(profile["isf_schedule"], separators=(",", ":")),
-                 json.dumps(profile["ic_schedule"], separators=(",", ":")), now),
+                 json.dumps(profile["ic_schedule"], separators=(",", ":")),
+                 json.dumps(profile.get("target_schedule", []), separators=(",", ":")), now),
             )
         db.execute(
             "INSERT INTO nightscout_profile_sync(id,attempted_at,synced_at) VALUES(1,?,?) "
@@ -285,3 +308,20 @@ def set_analysis_day_type(day: str, day_type: str) -> None:
             "ON CONFLICT(day) DO UPDATE SET day_type=excluded.day_type",
             (day, day_type),
         )
+
+
+def analysis_sport_marks() -> dict[str, dict]:
+    with connect() as db:
+        rows = db.execute("SELECT meal_id,status,effect_mgdl FROM analysis_sport_marks").fetchall()
+    return {row["meal_id"]: {"status": row["status"], "effect_mgdl": row["effect_mgdl"]}
+            for row in rows}
+
+
+def set_analysis_sport_mark(meal_id: str, status: str, effect_mgdl: str = "0") -> None:
+    with connect() as db:
+        if status == "auto":
+            db.execute("DELETE FROM analysis_sport_marks WHERE meal_id=?", (meal_id,))
+        else:
+            db.execute("INSERT INTO analysis_sport_marks(meal_id,status,effect_mgdl) VALUES(?,?,?) "
+                       "ON CONFLICT(meal_id) DO UPDATE SET status=excluded.status,effect_mgdl=excluded.effect_mgdl",
+                       (meal_id, status, effect_mgdl))
