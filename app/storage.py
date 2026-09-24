@@ -66,6 +66,7 @@ def init() -> None:
             profile_name TEXT NOT NULL,
             timezone TEXT NOT NULL,
             isf_schedule TEXT NOT NULL,
+            ic_schedule TEXT NOT NULL DEFAULT '[]',
             synced_at TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS nightscout_profile_sync (
@@ -74,6 +75,9 @@ def init() -> None:
             synced_at TEXT
         );
         """)
+        columns = {row["name"] for row in db.execute("PRAGMA table_info(nightscout_profiles)")}
+        if "ic_schedule" not in columns:
+            db.execute("ALTER TABLE nightscout_profiles ADD COLUMN ic_schedule TEXT NOT NULL DEFAULT '[]'")
 
 
 def default_settings() -> dict:
@@ -89,7 +93,7 @@ def current_nightscout_profile() -> dict | None:
     """Return the one cached Nightscout profile used for all local analyses."""
     with connect() as db:
         row = db.execute(
-            "SELECT start_at,profile_id,profile_name,timezone,isf_schedule,synced_at "
+            "SELECT start_at,profile_id,profile_name,timezone,isf_schedule,ic_schedule,synced_at "
             "FROM nightscout_profiles ORDER BY start_at DESC LIMIT 1"
         ).fetchone()
     if not row:
@@ -97,7 +101,8 @@ def current_nightscout_profile() -> dict | None:
     return {
         "start_at": row["start_at"], "profile_id": row["profile_id"],
         "profile_name": row["profile_name"], "timezone": row["timezone"],
-        "isf_schedule": json.loads(row["isf_schedule"]), "synced_at": row["synced_at"],
+        "isf_schedule": json.loads(row["isf_schedule"]),
+        "ic_schedule": json.loads(row["ic_schedule"]), "synced_at": row["synced_at"],
     }
 
 
@@ -106,6 +111,7 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result = dict(settings)
     profile = current_nightscout_profile()
     result["isf_schedule"] = profile["isf_schedule"] if profile else []
+    result["ic_schedule"] = profile["ic_schedule"] if profile else []
     result["nightscout_profile"] = ({
         "start_at": profile["start_at"], "profile_id": profile["profile_id"],
         "profile_name": profile["profile_name"], "timezone": profile["timezone"],
@@ -126,6 +132,7 @@ def save_settings(payload: dict, effective_at: datetime | None = None) -> int:
     # ISF values are always read from Nightscout; never copy them into a local settings version.
     stored = dict(payload)
     stored.pop("isf_schedule", None)
+    stored.pop("ic_schedule", None)
     stored.pop("nightscout_profile", None)
     now = datetime.now(timezone.utc).isoformat()
     with connect() as db:
@@ -187,10 +194,11 @@ def mirror_nightscout_profiles(profiles: list[dict]) -> None:
         db.execute("DELETE FROM nightscout_profiles")
         for profile in profiles:
             db.execute(
-                "INSERT INTO nightscout_profiles(start_at,profile_id,profile_name,timezone,isf_schedule,synced_at) "
-                "VALUES(?,?,?,?,?,?)",
+                "INSERT INTO nightscout_profiles(start_at,profile_id,profile_name,timezone,isf_schedule,ic_schedule,synced_at) "
+                "VALUES(?,?,?,?,?,?,?)",
                 (profile["start_at"], profile["profile_id"], profile["profile_name"], profile["timezone"],
-                 json.dumps(profile["isf_schedule"], separators=(",", ":")), now),
+                 json.dumps(profile["isf_schedule"], separators=(",", ":")),
+                 json.dumps(profile["ic_schedule"], separators=(",", ":")), now),
             )
         db.execute(
             "INSERT INTO nightscout_profile_sync(id,attempted_at,synced_at) VALUES(1,?,?) "

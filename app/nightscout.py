@@ -90,8 +90,7 @@ def fetch_range(start: datetime, end: datetime) -> tuple[list[dict], list[dict]]
     return entries, treatments
 
 
-def fetch_profiles() -> list[dict]:
-    """Read only Nightscout's current profile and normalize its ISF schedule."""
+def fetch_current_profile() -> dict | None:
     try:
         record = _request("GET", "/api/v1/profile/current")
     except NightscoutError as error:
@@ -103,11 +102,17 @@ def fetch_profiles() -> list[dict]:
             raise NightscoutError("Nightscout lieferte ein ungültiges Profil") from None
         record = records[0] if records else None
     if record is None:
-        return []
+        return None
     if isinstance(record, list):
         record = record[0] if record else None
-        if record is None:
-            return []
+    return record
+
+
+def fetch_profiles() -> list[dict]:
+    """Read Nightscout's current profile and normalize its ISF and I:C schedules."""
+    record = fetch_current_profile()
+    if record is None:
+        return []
     try:
         start = datetime.fromisoformat(str(record["startDate"]).replace("Z", "+00:00"))
         if start.tzinfo is None:
@@ -149,15 +154,88 @@ def fetch_profiles() -> list[dict]:
         if 0 not in seen:
             raise ValueError
         schedule.sort(key=lambda item: item["start_minute"])
+        ratio_schedule = []
+        ratio_seen = set()
+        source_ratios = profile.get("carbratio", [])
+        if not isinstance(source_ratios, list) or len(source_ratios) > 48:
+            raise ValueError
+        for row in source_ratios:
+            time_text = row.get("time")
+            if isinstance(time_text, str) and len(time_text) == 5 and time_text[2:3] == ":":
+                hour, minute = int(time_text[:2]), int(time_text[3:5])
+            else:
+                seconds = int(row["timeAsSeconds"])
+                if not 0 <= seconds < 86400 or seconds % 60:
+                    raise ValueError
+                hour, minute = divmod(seconds // 60, 60)
+            start_minute = hour * 60 + minute
+            value = Decimal(str(row["value"]))
+            if not (0 <= hour < 24 and 0 <= minute < 60 and 0 < value <= 1000) or start_minute in ratio_seen:
+                raise ValueError
+            ratio_seen.add(start_minute)
+            ratio_schedule.append({"start_minute": start_minute, "grams_per_unit": str(value)})
+        if ratio_schedule and 0 not in ratio_seen:
+            raise ValueError
+        ratio_schedule.sort(key=lambda item: item["start_minute"])
         return [{
             "start_at": start_at,
             "profile_id": str(record.get("_id", "")),
             "profile_name": profile_name,
             "timezone": profile_timezone,
             "isf_schedule": schedule,
+            "ic_schedule": ratio_schedule,
         }]
     except (AttributeError, KeyError, TypeError, ValueError, InvalidOperation, ZoneInfoNotFoundError):
-        raise NightscoutError("Nightscout lieferte ein ungültiges Korrekturfaktor-Profil") from None
+        raise NightscoutError("Nightscout lieferte ein ungültiges Profil") from None
+
+
+def update_profile_schedule(field: str, values: list[dict], expected_profile_id: str) -> list[dict]:
+    """Update one schedule on the current Nightscout profile, preserving other fields."""
+    if field not in ("carbratio", "sens"):
+        raise ValueError("Unbekannter Profil-Zeitplan")
+    value_key = "grams_per_unit" if field == "carbratio" else "mgdl_per_unit"
+    record = fetch_current_profile()
+    if not isinstance(record, dict) or not record.get("_id") or str(record["_id"]) != expected_profile_id:
+        raise NightscoutError("Nightscout-Profil hat sich geändert. Bitte neu synchronisieren")
+    try:
+        profile = record["store"][record["defaultProfile"]]
+        rows = profile[field]
+        if len(rows) != len(values):
+            raise ValueError
+        units = str(profile.get("units", "mg/dl")).strip().lower().replace(" ", "")
+        conversion = Decimal("18.0182") if field == "sens" and units in ("mmol", "mmol/l", "mmoll") else Decimal(1)
+        if field == "sens" and units not in ("mmol", "mmol/l", "mmoll", "mg/dl", "mgdl"):
+            raise ValueError
+        new_values = {}
+        for item in values:
+            minute = int(item["start_minute"])
+            value = Decimal(str(item[value_key]))
+            if minute in new_values or not (0 < value <= 1000):
+                raise ValueError
+            new_values[minute] = value
+        for row in rows:
+            seconds = int(row.get("timeAsSeconds", -1))
+            if seconds < 0 and isinstance(row.get("time"), str):
+                hour, minute_text = row["time"].split(":")
+                seconds = (int(hour) * 60 + int(minute_text)) * 60
+            minute = seconds // 60
+            if seconds % 60 or minute not in new_values:
+                raise ValueError
+            row["value"] = float(new_values.pop(minute) / conversion)
+        if new_values:
+            raise ValueError
+    except (KeyError, TypeError, ValueError, InvalidOperation):
+        raise NightscoutError("Ungültiger Profil-Zeitplan") from None
+    _request("PUT", "/api/v1/profile/", body=record)
+    profiles = fetch_profiles()
+    actual = profiles[0]["ic_schedule" if field == "carbratio" else "isf_schedule"] if profiles else []
+    requested = {int(item["start_minute"]): Decimal(str(item[value_key])) for item in values}
+    if len(actual) != len(requested) or any(
+        requested.get(item["start_minute"]) is None or
+        abs(requested[item["start_minute"]] - Decimal(item[value_key])) > Decimal("0.001") for item in actual
+    ):
+        raise NightscoutError("Nightscout hat den Profil-Zeitplan nicht bestätigt")
+    return profiles
 
 def write_treatment(record: dict) -> None:
     response = _request("POST", "/api/v1/treatments.json", body=[record])

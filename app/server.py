@@ -82,6 +82,7 @@ def validate_settings(value: dict) -> dict:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
     result.pop("isf_schedule", None)
+    result.pop("ic_schedule", None)
     result.pop("nightscout_profile", None)
     ZoneInfo(result["timezone"])
     window = int(result["window_minutes"])
@@ -427,6 +428,21 @@ class Handler(BaseHTTPRequestHandler):
                             "reason": result.get("reason"),
                             "excluded": excluded,
                         })
+                        item = group["calculations"][-1]
+                        item["expected_delta_mgdl"] = None
+                        item["deviation_mgdl"] = None
+                        if (settings["ic_schedule"] and result.get("carb_events") is not None
+                                and result.get("insulin_effect_mgdl") is not None
+                                and result.get("delta_mgdl") is not None):
+                            carb_effect = sum((
+                                Decimal(event["carbs"]) * Decimal(event["isf"]) /
+                                calculation.schedule_value_at(
+                                    datetime.fromisoformat(event["at"]), settings["ic_schedule"],
+                                    settings["timezone"], "grams_per_unit")
+                                for event in result["carb_events"]), Decimal(0))
+                            expected = carb_effect - Decimal(result["insulin_effect_mgdl"])
+                            item["expected_delta_mgdl"] = str(expected)
+                            item["deviation_mgdl"] = str(Decimal(result["delta_mgdl"]) - expected)
                         if factor_text is None:
                             group["blocked_count"] += 1
                         else:
@@ -579,6 +595,19 @@ class Handler(BaseHTTPRequestHandler):
                     "message": ("Nightscout-Profil synchronisiert" if profile else
                                 "Nightscout hat kein Korrekturfaktor-Profil geliefert"),
                 })
+                return
+            if path in ("/api/profile/ic", "/api/profile/isf"):
+                profile_id = payload.get("profile_id")
+                is_ic = path.endswith("/ic")
+                schedule = payload.get("ic_schedule" if is_ic else "isf_schedule")
+                if not isinstance(profile_id, str) or not profile_id or not isinstance(schedule, list):
+                    raise ValueError("Ungültiger Profil-Zeitplan")
+                profiles = nightscout.update_profile_schedule("carbratio" if is_ic else "sens", schedule, profile_id)
+                storage.mirror_nightscout_profiles(profiles)
+                version, settings = storage.get_settings()
+                self._response(200, {"version": version, "settings": settings,
+                                     "message": ("I:C-Zeitplan" if is_ic else "Korrekturfaktor-Zeitplan") +
+                                                " in Nightscout gespeichert"})
                 return
             if path == "/api/treatment/delete":
                 if not nightscout.is_configured():

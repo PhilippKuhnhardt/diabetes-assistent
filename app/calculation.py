@@ -16,22 +16,26 @@ def dec(value: object) -> Decimal:
     return Decimal(str(value))
 
 
-def isf_at(moment: datetime, schedule: list[dict], timezone: str) -> Decimal:
+def schedule_value_at(moment: datetime, schedule: list[dict], timezone: str, key: str) -> Decimal:
     local = moment.astimezone(ZoneInfo(timezone))
     minute = local.hour * 60 + local.minute
     candidates = sorted(schedule, key=lambda row: int(row["start_minute"]))
     if not candidates:
-        raise ValueError("ISF-Zeitplan fehlt")
+        raise ValueError("Profil-Zeitplan fehlt")
     chosen = candidates[-1]
     for row in candidates:
         if int(row["start_minute"]) <= minute:
             chosen = row
         else:
             break
-    value = dec(chosen["mgdl_per_unit"])
+    value = dec(chosen[key])
     if value <= 0:
-        raise ValueError("ISF muss positiv sein")
+        raise ValueError("Profilwert muss positiv sein")
     return value
+
+
+def isf_at(moment: datetime, schedule: list[dict], timezone: str) -> Decimal:
+    return schedule_value_at(moment, schedule, timezone, "mgdl_per_unit")
 
 
 def minutes_between(later: datetime, earlier: datetime) -> Decimal:

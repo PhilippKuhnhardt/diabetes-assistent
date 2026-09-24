@@ -181,6 +181,10 @@ footer { border-top: 1px solid var(--line); color: var(--muted); padding: 20px 0
 .analysis-list { margin-top: 20px; }
 .analysis-list .subtle { margin: -5px 0 18px; }
 .analysis-table { min-width: 900px; }
+.glucose-change { display: inline-block; padding: 3px 7px; border-radius: 6px; font-weight: 650; white-space: nowrap; }
+.glucose-change.rising { color: #8a3b16; background: #fff0e5; }
+.glucose-change.falling { color: #145c78; background: #e5f3f9; }
+.glucose-change.steady { color: #4f625b; background: #eaf0ec; }
 .analysis-table td { vertical-align: middle; }
 .analysis-table td small { color: var(--muted); }
 .analysis-table td b { font-weight: 650; }
@@ -213,6 +217,8 @@ footer { border-top: 1px solid var(--line); color: var(--muted); padding: 20px 0
 .isf-readonly-row { font-size: 13px; }
 .isf-readonly-row strong { font-weight: 650; }
 .isf-readonly-row small { color: var(--muted); font-size: 11px; font-weight: 450; }
+.ic-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; margin: 0; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.ic-row input { max-width: 150px; }
 
 .night-card { margin: 0 0 18px; padding: 18px; background: white; border: 1px solid var(--line); border-radius: 13px; }
 .night-card .section-head { margin-bottom: 12px; }
