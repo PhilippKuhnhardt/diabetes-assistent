@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Diabetes-Tagebuch</title>
+  <rect width="64" height="64" rx="17" fill="#183229"/>
+  <path d="M11 43 C20 43 22 21 32 21 S44 43 53 43" fill="none" stroke="#f7fbf7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

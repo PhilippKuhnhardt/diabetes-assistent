@@ -507,8 +507,8 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/health":
             self._response(200, {"ok": True})
             return
-        if path == "/login" or path == "/styles.css":
-            target = WEB / ("login.html" if path == "/login" else "styles.css")
+        if path in ("/login", "/styles.css", "/logo.svg"):
+            target = WEB / ("login.html" if path == "/login" else path.lstrip("/"))
             data = target.read_bytes()
             self.send_response(200)
             self.send_header("Content-Type", mimetypes.guess_type(target)[0] or "text/html")
