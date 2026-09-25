@@ -195,7 +195,6 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .analysis-table .quiet { font-size: 11px; padding: 6px 9px; }
 
 .analysis-day-row th { padding: 12px 11px; background: var(--green-light); color: var(--green-dark); font-size: 12px; font-weight: 750; text-align: left; text-transform: capitalize; white-space: normal; border-top: 2px solid #c8dfd1; }
-.analysis-table .analysis-outlier td:nth-child(3) { color: var(--amber); }
 .outlier-badge { display: inline-block; margin-left: 7px; padding: 3px 6px; border-radius: 5px; background: var(--amber-light); color: var(--amber); font-size: 11px; font-weight: 750; white-space: nowrap; }
 
 .breakfast-subcards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 17px; }
@@ -258,16 +257,6 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .form-actions .primary { flex: 1; }
 .diary-analysis { margin-top: 24px; }
 .diary-analysis .meal-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr)); }
-.sport-review { display: flex; flex-wrap: wrap; align-items: end; gap: 9px; margin-top: 15px; padding: 12px; border-radius: 9px; background: var(--canvas); }
-.sport-review > span { flex-basis: 100%; font-size: 12px; color: var(--muted); }
-.sport-review label { margin: 0; }
-.sport-review label input { width: 110px; }
-.sport-review label select { min-width: 140px; }
-.sport-review button { height: 42px; }
-.sport-review-table { margin: 0; padding: 0; background: none; display: grid; grid-template-columns: 120px 70px auto; gap: 4px; }
-.sport-review-table small { grid-column: 1 / -1; }
-.sport-review-table select, .sport-review-table input { min-height: 31px; padding: 4px; font-size: 11px; }
-.sport-review-table button { height: 31px; }
 .login-page { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
 .login-card { width: min(100%, 400px); }
 .login-card h1 { margin-bottom: 8px; }
@@ -289,5 +278,43 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 #edit-dialog .primary { flex: 1; }
 .dose-factor { margin: 8px 0 0; color: var(--ink); }
 .dose-option small { color: var(--muted); font-size: 11px; }
-.sport-review .sport-applied { flex-basis: 100%; color: var(--green-dark); font-size: 12px; }
-.sport-review-table .sport-applied { grid-column: 1 / -1; white-space: normal; }
+
+
+/* Compact analysis controls */
+.summary-card .summary-primary { margin-top: 14px; }
+.summary-card .summary-primary strong { margin-top: 3px; }
+.summary-card .summary-metric { margin-top: 13px; padding-top: 11px; }
+.summary-card .summary-metric strong { font-size: 20px; }
+.summary-card > p { margin: 12px 0 0; }
+.breakfast-subcard > small { font-size: 11px; }
+.analysis-ic-rows { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-bottom: 16px; }
+.analysis-ic-row { display: flex; align-items: center; gap: 8px; margin: 0; }
+.analysis-ic-row input { width: 86px; min-height: 36px; margin: 0; padding: 6px 8px; }
+.analysis-ic-row > span:last-child { color: var(--muted); font-weight: 500; }
+.analysis-ic-panel #analysis-ic-status { margin-left: 10px; }
+
+.ui-icon { width: 16px; height: 16px; flex: none; vertical-align: middle; }
+.analysis-table .icon-button { display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 5px; color: var(--green-dark); }
+.analysis-table .icon-button .ui-icon { width: 18px; height: 18px; }
+.analysis-table .exclude-meal { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 5px 8px; border-color: #bdd8c5; background: var(--green-light); color: var(--green-dark); font-size: 11px; white-space: nowrap; }
+.analysis-table .exclude-meal.is-excluded { background: #f3f4f1; border-color: var(--line); color: var(--muted); }
+.analysis-table .analysis-outlier td:nth-child(2) { color: var(--amber); }
+
+.sport-review { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 15px; padding: 11px; border-radius: 9px; background: var(--canvas); font-size: 12px; }
+.sport-state { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-weight: 650; }
+.sport-state.is-applied { color: var(--green-dark); }
+.sport-review .sport-remove { padding: 4px 7px; min-height: 28px; height: 28px; }
+.sport-review .sport-suggestion { display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px; min-height: 31px; color: var(--green-dark); border-color: #bdd8c5; background: var(--green-light); font-size: 11px; }
+.sport-custom { flex-basis: 100%; }
+.sport-custom summary { width: fit-content; color: var(--green); font-size: 11px; font-weight: 650; cursor: pointer; }
+.sport-custom-fields { display: flex; align-items: end; gap: 7px; margin-top: 9px; }
+.sport-custom-fields label { margin: 0; }
+.sport-custom-fields label span { display: block; font-size: 11px; }
+.sport-custom-fields input { width: 100px; min-height: 32px; margin-top: 4px; padding: 5px 7px; }
+.sport-custom-fields button { min-height: 32px; padding: 5px 9px; }
+.sport-review-table { margin: 0; padding: 0; min-width: 195px; background: transparent; white-space: normal; }
+.sport-review-table .sport-custom-fields input { width: 78px; }
+.sport-review-table .sport-suggestion { white-space: normal; text-align: left; }
+@media (max-width: 650px) {
+  .analysis-ic-panel #analysis-ic-status { display: block; margin: 9px 0 0; }
+}
