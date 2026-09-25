@@ -147,6 +147,44 @@ function setDefaultMealTime() {
 function setDefaultSportTime() {}
 function setSportDuration() {}
 
+function updateEntrySportOption() {
+  const form = $("#entry-form");
+  const option = $("#entry-sport-option");
+  const effectField = $("#entry-sport-effect-field");
+  const checkbox = form.elements.consider_sport;
+  let eligible = [];
+  try {
+    const at = new Date(toInstant(state.day, form.elements.at.value));
+    const settings = state.settings;
+    if (form.elements.kind.value === "meal" && Number(form.elements.carbs.value) > 0 && settings && state.dayData?.day === state.day) {
+      const minute = clockMinute(form.elements.at.value);
+      const meal = minute < settings.breakfast_end_minute ? "breakfast" : minute < settings.lunch_end_minute ? "lunch" : "dinner";
+      const continuation = state.dayData.meals.some(item => item.meal === meal &&
+        new Date(item.at) < at && at < new Date(item.calculation?.end ||
+          new Date(item.at).getTime() + settings.window_minutes * 60000));
+      if (!continuation) {
+        eligible = state.dayData.treatments.filter(item => {
+          if (item.eventType !== "Exercise" || !item.sport_type) return false;
+          const end = new Date(item.at).getTime() + Number(item.duration || 0) * 60000;
+          return end <= at.getTime() && end >= at.getTime() - settings.sport_lookback_minutes * 60000;
+        });
+      }
+    }
+  } catch (_) { /* The time field is incomplete. */ }
+  option.hidden = !eligible.length;
+  if (!eligible.length) {
+    checkbox.checked = false;
+    effectField.hidden = true;
+    return;
+  }
+  const suggested = eligible.reduce((total, item) => total + Number(state.settings.sport_effects_mgdl[item.sport_type] || 0), 0);
+  $("#entry-sport-hint").textContent = eligible.map(item =>
+    ({ jogging: "Joggen", gym: "Gym", light_cardio: "Cardio" })[item.sport_type] + " um " + timeOnly(item.at)).join(", ") +
+    " · Vorschlag: " + num(suggested, 0) + " mg/dL Senkung";
+  if (!checkbox.checked) form.elements.sport_effect_mgdl.value = suggested;
+  effectField.hidden = !checkbox.checked;
+}
+
 function minuteClock(minute) {
   return String(Math.floor(minute / 60)).padStart(2, "0") + ":" + String(minute % 60).padStart(2, "0");
 }
@@ -170,6 +208,7 @@ function updateEntryFields() {
   form.elements.duration_minutes.disabled = mode !== "exercise";
   form.elements.duration_minutes.required = mode === "exercise";
   scheduleDoseHelp();
+  updateEntrySportOption();
 }
 
 async function loadSettings() {
@@ -374,6 +413,7 @@ function renderNight(night) {
 
 function renderDay(data) {
   state.dayData = data;
+  updateEntrySportOption();
   $("#record-count").textContent = data.timeline.length + (data.timeline.length === 1 ? " Eintrag" : " Einträge");
   renderNight(data.night || { reason: "Nachtanalyse nicht verfügbar." });
   const banner = $("#banner");
@@ -624,6 +664,8 @@ async function saveEntry(event) {
   let at;
   try { at = toInstant(state.day, form.elements.at.value); }
   catch (error) { toast(error.message, true); return; }
+  const considerSport = mode === "meal" && form.elements.consider_sport.checked && !$("#entry-sport-option").hidden;
+  const sportEffect = form.elements.sport_effect_mgdl.value;
   const payload = {
     kind, at,
     carbs, insulin,
@@ -637,11 +679,20 @@ async function saveEntry(event) {
   button.disabled = true;
   try {
     const result = await api("/api/treatment", { method: "POST", body: JSON.stringify(payload) });
-    resetEntryForm();
     state.day = result.day;
     updateLocation(true);
-    toast("Eintrag in Nightscout gespeichert");
     await loadDay();
+    if (considerSport) {
+      const saved = state.dayData?.treatments.find(item => item.notes.includes("[DAE:" + payload.event_id + "]"));
+      const meal = state.dayData?.meals.find(item => item.source_id === saved?.id);
+      if (!meal) throw new Error("Eintrag gespeichert, aber die Sportzuordnung konnte nicht gefunden werden. Bitte im Mahlzeitenfaktor prüfen.");
+      await api("/api/analysis/sport", { method: "POST", body: JSON.stringify({
+        meal_id: meal.id, day: result.day, status: "affected", effect_mgdl: sportEffect,
+      }) });
+      await loadDay();
+    }
+    resetEntryForm();
+    toast("Eintrag in Nightscout gespeichert" + (considerSport ? " · Sport berücksichtigt" : ""));
   } catch (error) {
     toast(error.message, true);
   } finally {
@@ -949,6 +1000,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#selected-day").addEventListener("change", event => changeDay(event.target.value));
   $("#refresh-day").addEventListener("click", loadDay);
   $("#entry-form").addEventListener("submit", saveEntry);
+  $("#entry-time").addEventListener("change", updateEntrySportOption);
+  $("#entry-form").elements.carbs.addEventListener("input", updateEntrySportOption);
+  $("#entry-form").elements.consider_sport.addEventListener("change", updateEntrySportOption);
   $$(".entry-mode").forEach(button => button.addEventListener("click", () => {
     $("#entry-kind").value = button.dataset.entryMode;
     updateEntryFields();

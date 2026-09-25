@@ -205,6 +205,7 @@ def day_payload(day: str, refresh: bool = True) -> dict:
     raw_entries, raw_treatments = storage.cached_between(start, end)
     entries = episodes.normalize_entries(raw_entries)
     treatments = episodes.normalize_treatments(raw_treatments)
+    episodes.group_diary_followups(treatments, settings)
     meals = episodes.meals_for_day(treatments, day, settings["timezone"], settings)
     sport_marks = storage.analysis_sport_marks()
     rendered = []
@@ -420,6 +421,15 @@ def save_diary_treatment(payload: dict) -> dict:
         "notes": notes, "enteredBy": "Diabetes Diary", "identifier": event_id,
         "carbs": float(carbs), "insulin": float(units),
     })
+    if kind == "meal" and not existing:
+        start, end = local_day_range(day, settings["timezone"])
+        _, nearby = nightscout.fetch_range(start, end)
+        classified = episodes.normalize_treatments(nearby + [record])
+        episodes.group_diary_followups(classified, settings)
+        candidate = next(item for item in classified if f"[DAE:{event_id}]" in item["notes"])
+        if candidate["eventType"] != "Meal Bolus":
+            record["eventType"] = candidate["eventType"]
+            record["notes"] = (note + " [DA2:snack]" + f" [DAE:{event_id}]").strip()
     if "date" in record:
         record["date"] = int(at.timestamp() * 1000)
     if kind == "exercise":
