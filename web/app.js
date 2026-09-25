@@ -256,9 +256,19 @@ function renderIcRows(rows) {
     rows.map(row => {
       const start = Number(row.start_minute);
       const time = String(Math.floor(start / 60)).padStart(2, "0") + ':' + String(start % 60).padStart(2, "0");
+      const display = Number((10 / Number(row.grams_per_unit)).toFixed(2));
       return '<label class="ic-row"><span>' + time + '</span><input type="number" min="0.001" max="1000" step="any" required data-start-minute="' +
-        escapeHTML(start) + '" value="' + escapeHTML(10 / Number(row.grams_per_unit)) + '" aria-label="Insulinfaktor ab ' + time + ' in IE je KE"></label>';
+        escapeHTML(start) + '" data-grams-per-unit="' + escapeHTML(row.grams_per_unit) +
+        '" data-original-display="' + escapeHTML(display) + '" value="' + escapeHTML(display) +
+        '" aria-label="Insulinfaktor ab ' + time + ' in IE je KE"></label>';
     }).join("") + '</div>';
+}
+
+function icScheduleRow(input) {
+  const start_minute = Number(input.dataset.startMinute);
+  return Number(input.value) === Number(input.dataset.originalDisplay)
+    ? { start_minute, grams_per_unit: input.dataset.gramsPerUnit }
+    : { start_minute, units_per_ke: input.value };
 }
 
 async function saveProfileSchedule(kind) {
@@ -274,7 +284,9 @@ async function saveProfileSchedule(kind) {
   try {
     const result = await api("/api/profile/" + kind, { method: "POST", body: JSON.stringify({
       profile_id: state.settings.nightscout_profile.profile_id,
-      [isIc ? "ic_schedule" : "isf_schedule"]: inputs.map(input => ({ start_minute: Number(input.dataset.startMinute), [key]: input.value })),
+      [isIc ? "ic_schedule" : "isf_schedule"]: inputs.map(input => isIc
+        ? icScheduleRow(input)
+        : { start_minute: Number(input.dataset.startMinute), [key]: input.value }),
     }) });
     await loadSettings();
     if (state.view === "analysis") await loadSummary();
@@ -347,36 +359,43 @@ function calculationHTML(result) {
     "Ende " + timeOnly(result.end),
   ].join(" · ");
   return '<div class="calc-block"><div class="factor' + (valid ? '' : ' unavailable') + '"><span>Insulinfaktor</span><strong>' +
-    (valid ? escapeHTML(num(result.factor_units_per_ke, 3)) + ' <small>IE/KE</small>' : '—') +
+    (valid ? escapeHTML(num(result.factor_units_per_ke, 2)) + ' <small>IE/KE</small>' : '—') +
     '</strong><small>' + escapeHTML(summary) + '</small>' +
     (result.reason ? '<small>' + escapeHTML(result.reason) + '</small>' : '') + '</div></div>';
 }
 
-function sportEffectLabel(sport) {
-  if (sport.status === "affected") return "Im Faktor berücksichtigt: " + num(sport.effect_mgdl, 0) + " mg/dL Senkung";
-  if (sport.status === "unaffected") return "Sport bestätigt ohne Einfluss · 0 mg/dL berücksichtigt";
-  if (sport.suggested) return "Sport noch nicht bestätigt · 0 mg/dL berücksichtigt";
-  return "Kein Sporteffekt angesetzt · 0 mg/dL berücksichtigt";
+function icon(name) {
+  const paths = {
+    diary: '<path d="M4 4h14a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V4Z"/><path d="M8 4v16M11 9h6M11 13h6"/>',
+    check: '<path d="m4 12 5 5L20 6"/>',
+    exclude: '<circle cx="12" cy="12" r="9"/><path d="m8 8 8 8"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    remove: '<path d="M5 12h14"/>',
+  };
+  return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths[name] + '</svg>';
+}
+
+function sportReviewHTML(sport, mealId, day, compact = false) {
+  const applied = sport.status === "affected";
+  const effect = applied ? num(sport.effect_mgdl, 0) : "";
+  const suggestion = sport.suggested ? num(sport.suggested_effect_mgdl, 0) : "";
+  return '<div class="sport-review' + (compact ? ' sport-review-table' : '') + '" data-meal-id="' + escapeHTML(mealId) +
+    '" data-day="' + escapeHTML(day) + '" data-suggestion="' + escapeHTML(sport.suggested_effect_mgdl || 0) + '">' +
+    '<div class="sport-state' + (applied ? ' is-applied' : '') + '">' +
+    (applied ? icon("check") + '<span>Sport −' + escapeHTML(effect) + ' mg/dL</span>' : '<span>Kein Sporteffekt</span>') + '</div>' +
+    (applied ? '<button type="button" class="sport-remove icon-button" aria-label="Sporteinfluss entfernen" title="Sporteinfluss entfernen">' + icon("remove") + '</button>' : '') +
+    (!applied && sport.suggested && Number(sport.suggested_effect_mgdl) > 0 ? '<button type="button" class="sport-suggestion">' + icon("plus") + ' Vorschlag −' + escapeHTML(suggestion) + ' mg/dL übernehmen</button>' : '') +
+    '<details class="sport-custom"><summary>' + (applied ? 'Wert ändern' : 'Eigenen Wert setzen') + '</summary>' +
+    '<div class="sport-custom-fields"><label><span>Senkung in mg/dL</span><input class="sport-effect" type="number" min="1" max="500" step="1" inputmode="numeric" value="' +
+    escapeHTML(applied ? sport.effect_mgdl : (Number(sport.suggested_effect_mgdl) > 0 ? sport.suggested_effect_mgdl : "")) +
+    '"></label><button type="button" class="sport-save">' + (applied ? 'Ändern' : 'Setzen') + '</button></div></details></div>';
 }
 
 function mealHTML(meal, entries) {
-  const sport = meal.sport || {};
-  const status = sport.status || "auto";
-  const suggested = sport.suggested
-    ? "Sport zuvor · Vorschlag " + num(sport.suggested_effect_mgdl, 0) + " mg/dL Senkung"
-    : "";
   return '<article class="meal-card">' +
     '<div class="meal-top"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) +
     '</span><h3>' + escapeHTML(timeOnly(meal.at)) + ' <small>· ' + escapeHTML(num(meal.carbs)) + ' g KH</small></h3></div></div>' +
-    '<div class="sport-review"><strong class="sport-applied">' + escapeHTML(sportEffectLabel(sport)) + '</strong>' + (suggested ? '<span>' + escapeHTML(suggested) + '</span>' : '') +
-    '<label>Einfluss <select class="sport-status" data-meal-id="' + escapeHTML(meal.id) +
-    '" data-day="' + escapeHTML(state.day) + '">' +
-    '<option value="auto"' + (status === "auto" ? " selected" : "") + '>Noch nicht bewertet</option>' +
-    '<option value="affected"' + (status === "affected" ? " selected" : "") + '>Sport wirkte mit</option>' +
-    '<option value="unaffected"' + (status === "unaffected" ? " selected" : "") + '>Kein Einfluss</option></select></label>' +
-    '<label>Senkung im Fenster <span>mg/dL</span><input class="sport-effect" type="number" min="0" max="500" step="1" value="' +
-    escapeHTML(status === "affected" ? sport.effect_mgdl : sport.suggested_effect_mgdl || 0) + '"></label>' +
-    '<button type="button" class="save-sport quiet">Übernehmen</button></div>' +
+    sportReviewHTML(meal.sport || {}, meal.id, state.day) +
     calculationHTML(meal.calculation) + chartFor(meal, entries) +
     (meal.notes ? '<p class="meal-note">' + escapeHTML(meal.notes) + '</p>' : '') +
     '</article>';
@@ -519,7 +538,7 @@ async function updateDoseHelp() {
     };
     output.innerHTML = '<div class="dose-heading">Aktuelle Empfehlung</div><div class="dose-glucose"><span>Aktueller Blutzucker</span><strong>' +
       escapeHTML(glucose) + '</strong></div>' +
-      (data.units_per_ke != null ? '<p class="dose-factor">Verwendeter Insulinfaktor: <strong>' + escapeHTML(num(data.units_per_ke, 3)) + ' IE/KE</strong> · Korrekturfaktor: ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' mg/dL je IE</p>' : '') +
+      (data.units_per_ke != null ? '<p class="dose-factor">Verwendeter Insulinfaktor: <strong>' + escapeHTML(num(data.units_per_ke, 2)) + ' IE/KE</strong> · Korrekturfaktor: ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' mg/dL je IE</p>' : '') +
       '<div class="dose-options">' +
       option("Normal", "normal", data.target_mgdl, data.entry_units, data.total_units, data.expected_glucose_mgdl) +
       option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_entry_units, data.cautious_total_units, data.cautious_expected_glucose_mgdl) + '</div>' +
@@ -717,18 +736,26 @@ async function deleteTreatment(event) {
 }
 
 async function saveSportMark(event) {
-  const block = event.target.closest(".sport-review");
+  const button = event.target.closest(".sport-save, .sport-suggestion, .sport-remove");
+  const block = button?.closest(".sport-review");
   if (!block) return;
-  const select = $(".sport-status", block);
+  const remove = button.matches(".sport-remove");
+  const suggestion = button.matches(".sport-suggestion");
   const effect = $(".sport-effect", block);
-  const button = event.target;
+  const amount = remove ? 0 : Number(suggestion ? block.dataset.suggestion : effect.value);
+  if (!remove && (!Number.isInteger(amount) || amount < 1 || amount > 500)) {
+    effect.setCustomValidity("Bitte eine Senkung zwischen 1 und 500 mg/dL eingeben.");
+    effect.reportValidity();
+    return;
+  }
+  effect.setCustomValidity("");
   button.disabled = true;
   try {
     await api("/api/analysis/sport", { method: "POST", body: JSON.stringify({
-      meal_id: select.dataset.mealId, day: select.dataset.day,
-      status: select.value, effect_mgdl: effect.value || 0,
+      meal_id: block.dataset.mealId, day: block.dataset.day,
+      status: remove ? "unaffected" : "affected", effect_mgdl: amount,
     }) });
-    toast("Sporteinfluss gespeichert");
+    toast(remove ? "Sporteinfluss entfernt" : "Sporteinfluss gespeichert");
     await loadDay();
     if (state.view === "analysis") await loadSummary();
   } catch (error) {
@@ -792,6 +819,45 @@ function renderNightSummary(night) {
     : '<div class="empty">Für diesen Zeitraum liegen keine Nächte vor.</div>';
 }
 
+function renderAnalysisIc() {
+  const rows = state.settings?.ic_schedule || [];
+  $("#analysis-ic-rows").innerHTML = rows.length
+    ? rows.map(row => {
+      const time = minuteClock(Number(row.start_minute));
+      const display = Number((10 / Number(row.grams_per_unit)).toFixed(2));
+      return '<label class="analysis-ic-row"><span>Ab ' + escapeHTML(time) + '</span>' +
+        '<input type="number" min="0.001" max="1000" step="any" required data-start-minute="' +
+        escapeHTML(row.start_minute) + '" data-grams-per-unit="' + escapeHTML(row.grams_per_unit) +
+        '" data-original-display="' + escapeHTML(display) + '" value="' + escapeHTML(display) +
+        '" aria-label="Aktueller Insulinfaktor ab ' + escapeHTML(time) + ' in IE je KE"><span>IE/KE</span></label>';
+    }).join("")
+    : '<p class="hint">Kein Insulinfaktor im aktuellen Nightscout-Profil verfügbar.</p>';
+  $("#save-analysis-ic").disabled = !rows.length || !state.settings?.nightscout_profile?.profile_id;
+}
+
+async function saveAnalysisIc() {
+  const button = $("#save-analysis-ic");
+  const inputs = $$("#analysis-ic-rows input");
+  if (!inputs.length || !inputs.every(input => input.reportValidity())) return;
+  button.disabled = true;
+  $("#analysis-ic-status").textContent = "Wird in Nightscout gespeichert …";
+  try {
+    const result = await api("/api/profile/ic", { method: "POST", body: JSON.stringify({
+      profile_id: state.settings.nightscout_profile.profile_id,
+      ic_schedule: inputs.map(icScheduleRow),
+    }) });
+    await loadSettings();
+    await loadSummary();
+    $("#analysis-ic-status").textContent = result.message;
+    toast(result.message);
+  } catch (error) {
+    $("#analysis-ic-status").textContent = error.message;
+    toast(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
 async function loadSummary() {
   $("#summary").innerHTML = '<div class="empty">Analyse wird geladen …</div>';
   $("#night-summary-cards").innerHTML = '<div class="empty">Nachtübersicht wird geladen …</div>';
@@ -800,6 +866,8 @@ async function loadSummary() {
   try {
     const days = $("#summary-days").value;
     const data = await api("/api/summary?days=" + days);
+    // The summary endpoint may refresh the Nightscout profile before calculating.
+    state.settings = (await api("/api/settings")).settings;
     renderNightSummary(data.night || { count: 0, unavailable_count: Number(days), nights: [] });
     if (data.profile_sync_error) {
       $("#sync-progress").textContent = "Korrekturfaktor-Profil nicht aktualisiert: " + data.profile_sync_error;
@@ -807,38 +875,25 @@ async function loadSummary() {
     const breakfastSubcards = () => '<div class="breakfast-subcards">' + ["work", "free"].map(dayType => {
       const subset = data.groups.breakfast.by_day_type[dayType];
       return '<div class="breakfast-subcard"><span>' + (dayType === "work" ? "Arbeit" : "Frei") + '</span>' +
-        '<strong>' + (subset.count ? escapeHTML(num(subset.mean_units_per_ke, 3)) : '—') +
-        ' <small>IE/KE</small></strong>' +
-        '<small>Median: ' + (subset.count ? escapeHTML(num(subset.median_units_per_ke, 3)) + ' IE/KE' : '—') +
-        ' · ' + subset.count + ' Werte</small></div>';
+        '<strong>' + (subset.count ? escapeHTML(num(subset.median_units_per_ke, 2)) + ' <small>IE/KE</small>' : '—') +
+        '</strong><small>' + subset.count + ' Mahlzeiten</small></div>';
     }).join("") + '</div>';
     $("#summary").innerHTML = ["breakfast", "lunch", "dinner"].map(kind => {
       const row = data.groups[kind];
       const hasValues = row.count > 0;
-      const value = field => hasValues ? escapeHTML(num(row[field], 3)) + ' <small>IE/KE</small>' : "—";
       const typical = row.q1_units_per_ke != null
-        ? '<div class="summary-metric"><span>Mittlere 50 % der berücksichtigten Werte</span><strong>' +
-          escapeHTML(num(row.q1_units_per_ke, 3)) + '–' + escapeHTML(num(row.q3_units_per_ke, 3)) +
+        ? '<div class="summary-metric"><span>Mittlere 50 %</span><strong>' +
+          escapeHTML(num(row.q1_units_per_ke, 2)) + '–' + escapeHTML(num(row.q3_units_per_ke, 2)) +
           ' <small>IE/KE</small></strong></div>'
         : '';
-      const range = hasValues
-        ? '<p class="summary-range">Berücksichtigter Bereich: ' + escapeHTML(num(row.min_units_per_ke, 3)) +
-          '–' + escapeHTML(num(row.max_units_per_ke, 3)) + ' IE/KE</p>'
-        : '';
-      const trend = row.trend_units_per_ke == null ? '' :
-        '<p class="summary-range">Letzte 3 vs. vorherige 3 · Median ' +
-        escapeHTML(num(row.recent_median_units_per_ke, 3)) + ' statt ' +
-        escapeHTML(num(row.previous_median_units_per_ke, 3)) + ' IE/KE · Änderung ' +
-        escapeHTML((Number(row.trend_units_per_ke) > 0 ? '+' : '') + num(row.trend_units_per_ke, 3)) +
-        ' IE/KE</p>';
       return '<div class="summary-card"><span class="meal-type">' + escapeHTML(names[kind]) + '</span>' +
-        '<div class="summary-primary"><span>Durchschnitt</span><strong>' + value("mean_units_per_ke") + '</strong></div>' +
-        '<div class="summary-metric"><span>Median</span><strong>' + value("median_units_per_ke") + '</strong></div>' +
-        (hasValues ? typical : '') + range + trend +
-        '<p>' + row.count + ' von ' + row.valid_count + ' berechenbaren Mahlzeiten berücksichtigt · ' +
-        row.excluded_count + ' ausgeklammert · ' + row.blocked_count + ' nicht berechenbar</p>' +
+        '<div class="summary-primary"><span>Median</span><strong>' +
+        (hasValues ? escapeHTML(num(row.median_units_per_ke, 2)) + ' <small>IE/KE</small>' : '—') +
+        '</strong></div>' + typical +
+        '<p>' + row.count + (row.count === 1 ? ' Mahlzeit' : ' Mahlzeiten') + '</p>' +
         (kind === "breakfast" ? breakfastSubcards() : '') + '</div>';
     }).join("");
+    renderAnalysisIc();
     const comparisons = data.sensitivity_comparison || [];
     $("#sensitivity-comparison").innerHTML = comparisons.length
       ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Ab</th><th>Aktuell</th><th>Mathematisch bester Korrekturfaktor</th></tr></thead><tbody>' +
@@ -858,14 +913,14 @@ async function loadSummary() {
       .sort((a, b) => b.at.localeCompare(a.at));
     $("#calculation-count").textContent = calculations.length + (calculations.length === 1 ? " Mahlzeit" : " Mahlzeiten");
     $("#calculations").innerHTML = calculations.length
-      ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Uhrzeit</th><th>Mahlzeit</th><th>Insulinfaktor</th><th>KH</th><th>Insulin</th><th>Gemessen</th><th>Erwartet</th><th>Delta</th><th>Endpunkt</th><th>Sporteffekt</th><th>Ausklammern</th><th></th></tr></thead><tbody>' +
+      ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Mahlzeit</th><th>Insulinfaktor</th><th>KH</th><th>Insulin</th><th>Gemessen</th><th>Erwartet</th><th>Delta</th><th>Sport</th><th>Wertung</th><th></th></tr></thead><tbody>' +
         (() => {
           let previousDay = "";
           return calculations.map(item => {
             const newDay = item.day !== previousDay;
             previousDay = item.day;
             const dayHeading = newDay
-              ? '<tr class="analysis-day-row"><th colspan="12" scope="colgroup">' +
+              ? '<tr class="analysis-day-row"><th colspan="10" scope="colgroup">' +
                 escapeHTML(new Date(item.day + "T12:00:00").toLocaleDateString("de-DE", {
                   weekday: "long", day: "numeric", month: "long", year: "numeric",
                 })) + ' <label class="day-type-label">Tag: <select class="day-type" data-day="' +
@@ -874,36 +929,30 @@ async function loadSummary() {
                 '>Frei</option></select></label></th></tr>'
               : '';
             const factor = item.units_per_ke != null
-              ? escapeHTML(num(item.units_per_ke, 3)) + ' IE/KE' +
+              ? escapeHTML(num(item.units_per_ke, 2)) + ' IE/KE' +
                 (item.strong_outlier ? ' <span class="outlier-badge">Stark abweichend</span>' : '')
               : '<span class="summary-unavailable">Nicht berechenbar: ' + escapeHTML(item.reason || "Kein Faktor") + '</span>';
             const excluded = item.units_per_ke != null && item.excluded;
-            const sport = item.sport || {};
-            const status = sport.status || "auto";
-            const sportReview = '<div class="sport-review sport-review-table"><strong class="sport-applied">' + escapeHTML(sportEffectLabel(sport)) + '</strong>' +
-              (sport.suggested ? '<small>Vorschlag: ' + escapeHTML(num(sport.suggested_effect_mgdl, 0)) + ' mg/dL</small>' : '') +
-              '<select class="sport-status" data-meal-id="' + escapeHTML(item.id) + '" data-day="' + escapeHTML(item.day) + '">' +
-              '<option value="auto"' + (status === "auto" ? " selected" : "") + '>Offen</option>' +
-              '<option value="affected"' + (status === "affected" ? " selected" : "") + '>Wirkte mit</option>' +
-              '<option value="unaffected"' + (status === "unaffected" ? " selected" : "") + '>Kein Einfluss</option></select>' +
-              '<input class="sport-effect" type="number" min="0" max="500" step="1" aria-label="Sporteinfluss in mg/dL" value="' +
-              escapeHTML(status === "affected" ? sport.effect_mgdl : sport.suggested_effect_mgdl || 0) + '">' +
-              '<button type="button" class="save-sport quiet">Übernehmen</button></div>';
+            const sportReview = sportReviewHTML(item.sport || {}, item.id, item.day, true);
             return dayHeading + '<tr class="' + (excluded ? "analysis-excluded " : "") +
               (item.strong_outlier ? "analysis-outlier" : "") + '">' +
-              '<td>' + escapeHTML(timeOnly(item.at)) + '</td>' +
             '<td>' + escapeHTML(names[item.kind]) + '</td><td><b>' + factor + '</b></td>' +
             '<td>' + (item.carbs_total == null ? "—" : escapeHTML(num(item.carbs_total)) + ' g') + '</td>' +
             '<td>' + (item.rapid_units_in_window == null ? "—" : escapeHTML(num(item.rapid_units_in_window)) + ' IE') + '</td>' +
             '<td>' + glucoseChangeHTML(item.delta_mgdl) + '</td>' +
             '<td>' + glucoseChangeHTML(item.expected_delta_mgdl) + '</td>' +
             '<td>' + glucoseChangeHTML(item.deviation_mgdl) + '</td>' +
-            '<td>' + (item.end ? escapeHTML(timeOnly(item.end)) : "—") + '</td>' +
             '<td>' + sportReview + '</td>' +
-            '<td>' + (item.units_per_ke == null ? "—" : '<label class="exclude-label"><input type="checkbox" class="exclude-meal" data-meal-id="' +
-              escapeHTML(item.id) + '" data-day="' + escapeHTML(item.day) + '"' + (excluded ? " checked" : "") +
-              '> <span>Ausklammern</span></label>') + '</td>' +
-              '<td><button type="button" class="quiet open-meal-day" data-day="' + escapeHTML(item.day) + '">Tagebuch</button></td></tr>';
+            '<td>' + (item.units_per_ke == null ? "—" :
+              '<button type="button" class="exclude-meal' + (excluded ? ' is-excluded' : '') +
+              '" data-meal-id="' + escapeHTML(item.id) + '" data-day="' + escapeHTML(item.day) +
+              '" data-excluded="' + excluded + '" aria-pressed="' + excluded + '" aria-label="' +
+              (excluded ? 'Mahlzeit wieder berücksichtigen' : 'Mahlzeit ausklammern') + '" title="' +
+              (excluded ? 'Mahlzeit wieder berücksichtigen' : 'Mahlzeit ausklammern') + '">' +
+              icon(excluded ? "exclude" : "check") + '<span>' +
+              (excluded ? 'Ausgeklammert' : 'Berücksichtigt') + '</span></button>') + '</td>' +
+            '<td><button type="button" class="icon-button open-meal-day" data-day="' + escapeHTML(item.day) +
+              '" aria-label="Tagebuch öffnen" title="Tagebuch öffnen">' + icon("diary") + '</button></td></tr>';
           }).join("");
         })() + '</tbody></table></div>'
       : '<div class="empty">Für diesen Zeitraum sind keine Mahlzeiten im lokalen Datenbestand.</div>';
@@ -918,18 +967,17 @@ async function loadSummary() {
 }
 
 async function saveAnalysisExclusion(event) {
-  const input = event.target;
-  if (!input.matches(".exclude-meal")) return;
-  input.disabled = true;
+  const button = event.target.closest(".exclude-meal");
+  if (!button) return;
+  button.disabled = true;
   try {
     await api("/api/analysis/exclusion", {
       method: "POST",
-      body: JSON.stringify({ meal_id: input.dataset.mealId, day: input.dataset.day, excluded: input.checked }),
+      body: JSON.stringify({ meal_id: button.dataset.mealId, day: button.dataset.day, excluded: button.dataset.excluded !== "true" }),
     });
     await loadSummary();
   } catch (error) {
-    input.checked = !input.checked;
-    input.disabled = false;
+    button.disabled = false;
     toast(error.message, true);
   }
 }
@@ -1025,7 +1073,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (event.target.closest(".delete-treatment")) deleteTreatment(event);
     const edit = event.target.closest(".edit-entry");
     if (edit) editEntry(edit.dataset.id);
-    if (event.target.closest(".save-sport")) saveSportMark(event);
+    if (event.target.closest(".sport-save, .sport-suggestion, .sport-remove")) saveSportMark(event);
   });
   updateEntryFields();
   $("#settings-form").addEventListener("submit", saveSettings);
@@ -1056,11 +1104,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
   $("#summary-days").addEventListener("change", loadSummary);
+  $("#save-analysis-ic").addEventListener("click", saveAnalysisIc);
   $("#sync-range").addEventListener("click", syncRange);
-  $("#calculations").addEventListener("change", saveAnalysisExclusion);
+  $("#calculations").addEventListener("click", saveAnalysisExclusion);
   $("#calculations").addEventListener("change", saveDayType);
   $("#calculations").addEventListener("click", event => {
-    if (event.target.closest(".save-sport")) {
+    if (event.target.closest(".exclude-meal")) return;
+    if (event.target.closest(".sport-save, .sport-suggestion, .sport-remove")) {
       saveSportMark(event);
       return;
     }
