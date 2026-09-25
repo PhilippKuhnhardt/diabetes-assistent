@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import patch
 
-from app import auth, dosing, episodes, nightscout
+from app import auth, dosing, episodes, nightscout, server
 
 
 class DosingTests(unittest.TestCase):
@@ -107,6 +107,13 @@ class MealClassificationTests(unittest.TestCase):
 
 
 class AuthTests(unittest.TestCase):
+    def test_server_refuses_to_start_without_password(self):
+        with patch.dict(os.environ, {"APP_PASSWORD": ""}):
+            with patch.object(server.storage, "init") as init:
+                with self.assertRaisesRegex(SystemExit, "APP_PASSWORD"):
+                    server.main()
+                init.assert_not_called()
+
     def test_browser_cookie_survives_calls_and_changes_with_password(self):
         with patch.dict(os.environ, {"APP_PASSWORD": "private-pass"}):
             cookie = auth.cookie_header()
