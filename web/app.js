@@ -2,7 +2,7 @@
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
-const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", settings: null, dayData: null, pendingMealId: null, pendingSportId: null };
+const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", settings: null, dayData: null, pendingMealId: null, pendingSportId: null, entryTimeTouched: false };
 const views = new Set(["diary", "analysis", "settings"]);
 const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 const num = (value, digits = 2) => Number(value).toLocaleString("de-DE", { maximumFractionDigits: digits, minimumFractionDigits: 0 });
@@ -137,6 +137,7 @@ function view(name, options = {}) {
   $$(".view").forEach(section => section.hidden = section.id !== name + "-view");
   if (changed && options.updateHistory !== false) updateLocation();
   if (name === "analysis") loadSummary();
+  if (name === "diary") setDefaultMealTime();
 }
 
 function changeDay(day, options = {}) {
@@ -151,9 +152,9 @@ function changeDay(day, options = {}) {
 }
 
 function setDefaultMealTime() {
-  const now = new Date();
-  $("#entry-time").value = state.day === now.toLocaleDateString("sv-SE")
-    ? localInputTime(now).slice(11, 16) : "12:00";
+  if (state.entryTimeTouched) return;
+  $("#entry-time").value = localInputTime(new Date()).slice(11, 16);
+  updateEntrySportOption();
 }
 
 function setDefaultSportTime() {}
@@ -602,6 +603,7 @@ function resetEntryForm() {
   const form = $("#entry-form");
   form.reset();
   form.elements.carbs.setCustomValidity("");
+  state.entryTimeTouched = false;
   setDefaultMealTime();
   updateEntryFields();
   if ($("#edit-dialog").open) closeEditDialog();
@@ -1062,7 +1064,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#selected-day").addEventListener("change", event => changeDay(event.target.value));
   $("#refresh-day").addEventListener("click", loadDay);
   $("#entry-form").addEventListener("submit", saveEntry);
-  $("#entry-time").addEventListener("change", updateEntrySportOption);
+  $("#entry-time").addEventListener("change", () => {
+    state.entryTimeTouched = true;
+    updateEntrySportOption();
+  });
+  $("#entry-form").addEventListener("focusin", setDefaultMealTime);
   $("#entry-form").elements.carbs.addEventListener("input", updateEntrySportOption);
   $("#entry-form").elements.consider_sport.addEventListener("change", updateEntrySportOption);
   $$(".entry-mode").forEach(button => button.addEventListener("click", () => {
