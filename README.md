@@ -27,13 +27,13 @@ Die SQLite-Datei bleibt im gemounteten Verzeichnis `APP_DATA_DIR` als `app.sqlit
 
 ### Deployment auf Coolify
 
-Für Coolify die Git-Quelle als **Dockerfile-Anwendung** anlegen (Build-Kontext im Projektverzeichnis, Dockerfile `Dockerfile`). `compose.yaml` bleibt für den lokalen Start. In Coolify den internen Port **8765** als „Ports Exposes“ und eine HTTPS-Domain konfigurieren; keinen Host-Port veröffentlichen. Das Docker-Image setzt `APP_HOST=0.0.0.0` und `APP_DB=/data/app.sqlite3` bereits selbst.
+Für Coolify die Git-Quelle als **Dockerfile-Anwendung** anlegen (Build-Kontext im Projektverzeichnis, Dockerfile `Dockerfile`). `compose.yaml` bleibt für den lokalen Start. In Coolify den internen Port **8765** als „Ports Exposes“ und die Domain beispielsweise als `https://tagebuch.example.de:8765` konfigurieren. Der Port im Domain-Feld ist das interne Proxy-Ziel; im Browser wird die Domain über HTTPS-Port 443 aufgerufen. Keinen Host-Port veröffentlichen. Das Docker-Image setzt `APP_HOST=0.0.0.0` und `APP_DB=/data/app.sqlite3` bereits selbst.
 
 Unter **Environment Variables** `NIGHTSCOUT_URL`, `NIGHTSCOUT_CREDENTIAL` und ein starkes `APP_PASSWORD` als Laufzeitvariablen setzen. Optional: `NIGHTSCOUT_AUTH_MODE=token` statt `secret` und `APP_TIMEZONE=Europe/Berlin`. Zugangsdaten gehören nicht ins Repository oder in Build-Argumente.
 
 Unter **Configuration → Persistent Storage** einen **Volume Mount** mit einem Namen wie `app-data`, leerem „Source Path“ und „Destination Path“ `/data` anlegen. So bleiben `app.sqlite3` und die zu SQLite-WAL gehörenden Dateien bei einem Redeploy zusammen erhalten. Nur eine laufende App-Instanz soll dieses Verzeichnis beschreiben. Nach dem ersten Deploy im Container prüfen, dass `/data/app.sqlite3` existiert und beschreibbar ist; nach einem weiteren Deploy muss die lokale Einstellungshistorie noch vorhanden sein.
 
-Der Volume Mount schützt vor Container-Austausch, ist aber kein Backup. Für eine Sicherung im laufenden Betrieb die SQLite-Backup-API verwenden und die resultierende Datei außerhalb des Servers aufbewahren; einen einfachen Datei- oder Volume-Snapshot während laufender Schreibzugriffe nicht als konsistentes Datenbank-Backup voraussetzen.
+Der Volume Mount schützt vor Container-Austausch, ist aber kein Backup. Die einfachste konsistente Sicherung in Coolify: Unter **Backups → Scheduled Backups** das Volume wählen, `daily` einstellen und **Stop containers while creating the archive** aktivieren. Während des kurzen Backups ist die App nicht erreichbar. Zusätzlich eine Kopie in S3-kompatiblem Speicher oder außerhalb des Servers aufbewahren und eine Wiederherstellung testen. Für Backups ohne Unterbrechung stattdessen die SQLite-Backup-API verwenden.
 
 In **Einstellungen** kannst du prüfen, ob Nightscouts aktuelles Profil inklusive I:C, Korrekturfaktor und Zielbereich geladen wurde.
 
