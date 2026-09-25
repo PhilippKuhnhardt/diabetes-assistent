@@ -81,6 +81,37 @@ def normalize_treatments(raw: list[dict]) -> list[dict]:
     return sorted(result, key=lambda x: x["at"])
 
 
+def group_diary_followups(treatments: list[dict], settings: dict) -> None:
+    """Group later diary carb entries within a main meal's analysis window.
+
+    Imported Nightscout meals and explicitly tagged roots remain distinct, so
+    a second main meal can still block an overlapping analysis.
+    """
+    zone = ZoneInfo(settings["timezone"])
+    breakfast_end = int(settings.get("breakfast_end_minute", 660))
+    lunch_end = int(settings.get("lunch_end_minute", 1020))
+    window = timedelta(minutes=int(settings.get("window_minutes", 180)))
+    roots = {}
+    for item in treatments:
+        local = item["at"].astimezone(zone)
+        minute = local.hour * 60 + local.minute
+        meal = "breakfast" if minute < breakfast_end else "lunch" if minute < lunch_end else "dinner"
+        key = (local.date(), meal)
+        root = roots.get(key)
+        event_type = item.get("eventType")
+        if event_type == "Meal Bolus" and float(item.get("carbs") or 0) > 0:
+            diary_entry = EVENT_TAG.search(item.get("notes") or "") and not item.get("episode_id")
+            if diary_entry and root is not None and item["at"] < root["end"]:
+                item["eventType"] = "Snack Bolus" if float(item.get("insulin") or 0) > 0 else "Carb Correction"
+            else:
+                roots[key] = {"end": item["at"] + window}
+                root = roots[key]
+        if (root is not None and item["at"] < root["end"]
+                and float(item.get("insulin") or 0) > 0
+                and event_type in {"Meal Bolus", "Snack Bolus", "Correction Bolus", "Bolus"}):
+            root["end"] = max(root["end"], item["at"] + window)
+
+
 def meals_for_day(treatments: list[dict], day: str, timezone_name: str,
                   settings: dict | None = None) -> list[dict]:
     zone = ZoneInfo(timezone_name)

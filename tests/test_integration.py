@@ -229,6 +229,47 @@ class IntegrationTests(unittest.TestCase):
                          Decimal(suggestion["entry_units"]))
         self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["carbs"])), Decimal(20))
 
+    def test_diary_additions_join_one_meal_and_keep_full_carbs_and_doses(self):
+        FakeNightscout.entries = [
+            {"_id": "meal-start", "date": int(datetime(2026, 9, 23, 9, 17, tzinfo=timezone.utc).timestamp() * 1000),
+             "type": "sgv", "sgv": 100},
+            {"_id": "meal-end", "date": int(datetime(2026, 9, 23, 13, 38, tzinfo=timezone.utc).timestamp() * 1000),
+             "type": "sgv", "sgv": 120},
+        ]
+        records = [
+            ("2026-09-23T09:17:00Z", "10", "0"),
+            ("2026-09-23T10:38:00Z", "95", "6"),
+            ("2026-09-23T12:03:00Z", "5", "0"),
+            ("2026-09-23T12:36:00Z", "17", "0"),
+        ]
+        for at, carbs, insulin in records:
+            self.request("/api/treatment", method="POST", body={
+                "kind": "meal", "at": at, "carbs": carbs, "insulin": insulin,
+            })
+        self.assertEqual([item["eventType"] for item in FakeNightscout.treatments],
+                         ["Meal Bolus", "Snack Bolus", "Carb Correction", "Carb Correction"])
+        day = self.request("/api/day?date=2026-09-23")
+        self.assertEqual(len(day["meals"]), 1)
+        self.assertEqual([item["kind"] for item in day["timeline"]],
+                         ["meal", "snack", "snack", "snack"])
+        self.assertEqual([item["id"] for item in day["meals"][0]["events"]],
+                         ["ns-1", "ns-2", "ns-3", "ns-4"])
+        self.assertEqual(Decimal(day["meals"][0]["calculation"]["carbs_total"]), Decimal(127))
+        self.assertEqual(Decimal(day["meals"][0]["calculation"]["rapid_units_in_window"]), Decimal(6))
+
+    def test_existing_diary_meal_boluses_are_grouped_without_rewriting_nightscout(self):
+        FakeNightscout.treatments = [
+            {"_id": "root", "created_at": MEAL_AT, "eventType": "Meal Bolus",
+             "carbs": 50, "insulin": 4, "notes": "[DAE:00000000-0000-0000-0000-000000000001]"},
+            {"_id": "more", "created_at": "2026-09-23T11:00:00Z", "eventType": "Meal Bolus",
+             "carbs": 10, "insulin": 1, "notes": "[DAE:00000000-0000-0000-0000-000000000002]"},
+        ]
+        day = self.request("/api/day?date=2026-09-23")
+        self.assertEqual(len(day["meals"]), 1)
+        self.assertEqual([item["kind"] for item in day["timeline"]], ["meal", "snack"])
+        self.assertEqual(Decimal(day["meals"][0]["calculation"]["carbs_total"]), Decimal(60))
+        self.assertEqual(FakeNightscout.treatments[1]["eventType"], "Meal Bolus")
+
     def test_meal_without_insulin_and_insulin_without_carbs_are_separate_entries(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": MEAL_AT, "carbs": "30", "insulin": 0,
