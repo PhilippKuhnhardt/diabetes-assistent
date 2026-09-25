@@ -1021,6 +1021,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
+    if not auth.password():
+        raise SystemExit("APP_PASSWORD muss gesetzt sein")
     storage.init()
     host = os.environ.get("APP_HOST", "127.0.0.1")
     port = int(os.environ.get("APP_PORT", "8765"))
