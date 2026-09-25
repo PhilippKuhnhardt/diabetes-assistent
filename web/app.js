@@ -12,6 +12,18 @@ const glucoseChangeHTML = value => value == null ? '—' :
   escapeHTML(signedChange(value)) + '</span>';
 const timeOnly = (value) => new Date(value).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+// Keep an existing fractional value valid while number-input arrows use the requested step.
+function pickerMinimum(value, step, positive = false) {
+  const remainder = Number((((value % step) + step) % step).toFixed(2));
+  return positive && remainder === 0 ? step : remainder;
+}
+
+function setPickerBase(input, step, positive = false) {
+  const value = Number(input.value);
+  input.min = String(input.value && Number.isFinite(value)
+    ? pickerMinimum(value, step, positive) : positive ? step : 0);
+}
+
 const localInputTime = date => {
   const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
   return d.toISOString().slice(0, 16);
@@ -257,7 +269,7 @@ function renderIcRows(rows) {
       const start = Number(row.start_minute);
       const time = String(Math.floor(start / 60)).padStart(2, "0") + ':' + String(start % 60).padStart(2, "0");
       const display = Number((10 / Number(row.grams_per_unit)).toFixed(2));
-      return '<label class="ic-row"><span>' + time + '</span><input type="number" min="0.001" max="1000" step="any" required data-start-minute="' +
+      return '<label class="ic-row"><span>' + time + '</span><input type="number" min="' + escapeHTML(pickerMinimum(display, 0.1, true)) + '" max="1000" step="0.1" required data-start-minute="' +
         escapeHTML(start) + '" data-grams-per-unit="' + escapeHTML(row.grams_per_unit) +
         '" data-original-display="' + escapeHTML(display) + '" value="' + escapeHTML(display) +
         '" aria-label="Insulinfaktor ab ' + time + ' in IE je KE"></label>';
@@ -604,6 +616,8 @@ function editEntry(id) {
   form.elements.at.value = timeOnly(item.at);
   form.elements.carbs.value = Number(item.carbs) || "";
   form.elements.insulin.value = Number(item.insulin) || "";
+  setPickerBase(form.elements.carbs, 1);
+  setPickerBase(form.elements.insulin, 0.5);
   form.elements.sport_kind.value = item.sport_kind || "jogging";
   form.elements.duration_minutes.value = Number(item.duration_minutes) || "";
   form.elements.notes.value = item.notes || "";
@@ -826,7 +840,7 @@ function renderAnalysisIc() {
       const time = minuteClock(Number(row.start_minute));
       const display = Number((10 / Number(row.grams_per_unit)).toFixed(2));
       return '<label class="analysis-ic-row"><span>Ab ' + escapeHTML(time) + '</span>' +
-        '<input type="number" min="0.001" max="1000" step="any" required data-start-minute="' +
+        '<input type="number" min="' + escapeHTML(pickerMinimum(display, 0.1, true)) + '" max="1000" step="0.1" required data-start-minute="' +
         escapeHTML(row.start_minute) + '" data-grams-per-unit="' + escapeHTML(row.grams_per_unit) +
         '" data-original-display="' + escapeHTML(display) + '" value="' + escapeHTML(display) +
         '" aria-label="Aktueller Insulinfaktor ab ' + escapeHTML(time) + ' in IE je KE"><span>IE/KE</span></label>';
@@ -1056,8 +1070,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateEntryFields();
   }));
   $("#edit-form").addEventListener("submit", saveEditedEntry);
-  $("#edit-form").elements.carbs.addEventListener("input", event => event.target.setCustomValidity(""));
-  $("#edit-form").elements.insulin.addEventListener("input", () => $("#edit-form").elements.carbs.setCustomValidity(""));
+  $("#edit-form").elements.carbs.addEventListener("input", event => {
+    setPickerBase(event.target, 1);
+    event.target.setCustomValidity("");
+  });
+  $("#edit-form").elements.insulin.addEventListener("input", event => {
+    setPickerBase(event.target, 0.5);
+    $("#edit-form").elements.carbs.setCustomValidity("");
+  });
+  for (const selector of ["#ic-rows", "#analysis-ic-rows"]) {
+    $(selector).addEventListener("input", event => {
+      if (event.target.matches("input")) setPickerBase(event.target, 0.1, true);
+    });
+  }
   $("#cancel-edit").addEventListener("click", closeEditDialog);
   $("#close-edit").addEventListener("click", closeEditDialog);
   $("#edit-dialog").addEventListener("close", () => { state.editing = null; });
