@@ -2,7 +2,7 @@
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
-const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", settings: null, dayData: null, pendingMealId: null, pendingSportId: null, entryTimeTouched: false };
+const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", persistDay: false, settings: null, dayData: null, pendingMealId: null, pendingSportId: null, entryTimeTouched: false };
 const views = new Set(["diary", "analysis", "settings"]);
 const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 const num = (value, digits = 2) => Number(value).toLocaleString("de-DE", { maximumFractionDigits: digits, minimumFractionDigits: 0 });
@@ -101,17 +101,22 @@ function locationState() {
   const params = new URLSearchParams(window.location.search);
   const requestedView = params.get("view");
   const requestedDay = params.get("date");
+  const currentView = views.has(requestedView) ? requestedView : "diary";
+  const urlDay = currentView === "diary" && validDay(requestedDay) ? requestedDay : null;
+  const historyDay = currentView !== "diary" && validDay(window.history.state?.day) ? window.history.state.day : null;
   return {
-    view: views.has(requestedView) ? requestedView : "diary",
-    day: validDay(requestedDay) ? requestedDay : new Date().toLocaleDateString("sv-SE"),
+    view: currentView,
+    day: urlDay || historyDay || new Date().toLocaleDateString("sv-SE"),
+    persistDay: Boolean(urlDay || (historyDay && window.history.state?.persistDay)),
   };
 }
 
 function syncTabLinks(url = new URL(window.location.href)) {
-  url.searchParams.set("date", state.day);
   $$(".tab").forEach(link => {
     const linkURL = new URL(url);
     linkURL.searchParams.set("view", link.dataset.view);
+    if (link.dataset.view === "diary" && state.persistDay) linkURL.searchParams.set("date", state.day);
+    else linkURL.searchParams.delete("date");
     link.href = linkURL.href;
   });
 }
@@ -119,9 +124,10 @@ function syncTabLinks(url = new URL(window.location.href)) {
 function updateLocation(replace = false) {
   const url = new URL(window.location.href);
   url.searchParams.set("view", state.view);
-  url.searchParams.set("date", state.day);
+  if (state.view === "diary" && state.persistDay) url.searchParams.set("date", state.day);
+  else url.searchParams.delete("date");
   syncTabLinks(url);
-  window.history[replace ? "replaceState" : "pushState"]({ view: state.view, day: state.day }, "", url);
+  window.history[replace ? "replaceState" : "pushState"]({ view: state.view, day: state.day, persistDay: state.persistDay }, "", url);
 }
 
 function view(name, options = {}) {
@@ -144,6 +150,7 @@ function changeDay(day, options = {}) {
   if (!validDay(day) || day === state.day) return;
   resetEntryForm();
   state.day = day;
+  if (day < new Date().toLocaleDateString("sv-SE")) state.persistDay = true;
   $("#selected-day").value = day;
   setDefaultMealTime();
   setDefaultSportTime();
@@ -1036,6 +1043,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const initialLocation = locationState();
   state.day = initialLocation.day;
   state.view = initialLocation.view;
+  state.persistDay = initialLocation.persistDay;
   $("#selected-day").value = state.day;
   setDefaultMealTime();
   setDefaultSportTime();
@@ -1052,6 +1060,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const dayChanged = state.day !== nextLocation.day;
     if (dayChanged) resetEntryForm();
     state.day = nextLocation.day;
+    state.persistDay = nextLocation.persistDay;
     syncTabLinks();
     $("#selected-day").value = state.day;
     setDefaultMealTime();
