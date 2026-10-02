@@ -364,29 +364,478 @@ function renderIsfRows(rows, profile, syncedAt, syncError) {
   $("#isf-sync-status").textContent = (syncError ? syncError + ' · ' : '') + source + synced;
 }
 
-function chartFor(meal, entries) {
-  const start = new Date(meal.at).getTime();
-  const end = meal.calculation?.end ? new Date(meal.calculation.end).getTime() : start + Number(state.settings.window_minutes) * 60000;
-  const points = entries.filter(point => {
-    const at = new Date(point.at).getTime();
-    return at >= start - 30 * 60000 && at <= end + 30 * 60000;
-  }).map(point => ({ t: new Date(point.at).getTime(), g: Number(point.sgv) }));
-  if (points.length < 2) return '<p class="hint">Keine CGM-Kurve verfügbar.</p>';
-  const min = Math.min(...points.map(point => point.g)) - 15;
-  const max = Math.max(...points.map(point => point.g)) + 15;
-  const x = t => 24 + (t - (start - 30 * 60000)) / (end - start + 60 * 60000) * 472;
-  const y = g => 104 - (g - min) / (max - min) * 80;
-  const line = points.map(point => x(point.t).toFixed(1) + "," + y(point.g).toFixed(1)).join(" ");
-  const x0 = x(start).toFixed(1);
-  const x3 = x(end).toFixed(1);
-  return '<svg class="glucose-chart" viewBox="0 0 520 130" role="img" aria-label="Glukoseverlauf um die Mahlzeit">' +
-    '<line x1="24" y1="104" x2="496" y2="104" class="axis"/>' +
-    '<line x1="' + x0 + '" y1="14" x2="' + x0 + '" y2="104" class="marker"/>' +
-    '<line x1="' + x3 + '" y1="14" x2="' + x3 + '" y2="104" class="marker"/>' +
-    '<polyline points="' + line + '" class="curve"/>' +
-    '<text x="' + x0 + '" y="122" text-anchor="middle">Mahlzeit</text>' +
-    '<text x="' + x3 + '" y="122" text-anchor="middle">+' + escapeHTML(meal.calculation?.actual_window_minutes || state.settings.window_minutes) + ' min</text>' +
+const MINUTE = 60000;
+const RAPID_TYPES = new Set(["Meal Bolus", "Correction Bolus", "Snack Bolus", "Bolus"]);
+// Mirrors the server-side limits for a manual meal window.
+const WINDOW_LEAD = 120 * MINUTE;
+const WINDOW_MIN = 30 * MINUTE;
+const WINDOW_MAX = 600 * MINUTE;
+const SNAP_PIXELS = 16;
+let CHART = chartLayout(600);
+
+// Chart units equal CSS pixels at the measured width, so text and touch targets keep their size.
+function chartLayout(width) {
+  const clamped = Math.max(300, Math.min(900, Math.round(width || 600)));
+  return { width: clamped, left: 36, right: clamped - 12, plotTop: 70, plotBottom: 258 };
+}
+let windowEditor = null;
+
+function localMinute(at) {
+  const clock = new Date(at).toLocaleTimeString("de-DE", { timeZone: state.settings?.timezone || undefined, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  return clockMinute(clock);
+}
+
+function targetAt(at) {
+  const minute = localMinute(at);
+  const row = (state.settings?.target_schedule || [])
+    .filter(item => Number(item.start_minute) <= minute)
+    .sort((a, b) => Number(a.start_minute) - Number(b.start_minute)).pop();
+  return row ? { low: Number(row.low_mgdl), high: Number(row.high_mgdl) } : null;
+}
+
+function glucoseTone(value, at) {
+  if (value == null) return "none";
+  if (value < 70) return "low";
+  if (value > 250) return "high";
+  const target = targetAt(at);
+  if (!target) return "neutral";
+  return value >= target.low && value <= target.high ? "in-range" : "outside";
+}
+
+function glucosePoints(entries) {
+  return entries.map(point => ({ t: new Date(point.at).getTime(), g: Number(point.sgv) }))
+    .filter(point => Number.isFinite(point.g)).sort((a, b) => a.t - b.t);
+}
+
+// Same rule as the server: linear interpolation, at most 15 minutes between readings.
+function glucoseAt(points, t) {
+  let before = null;
+  for (const point of points) {
+    if (point.t === t) return point.g;
+    if (point.t > t) {
+      if (!before || point.t - before.t > 15 * MINUTE) return null;
+      return before.g + (point.g - before.g) * (t - before.t) / (point.t - before.t);
+    }
+    before = point;
+  }
+  return null;
+}
+
+function trendArrow(points, t) {
+  const now = glucoseAt(points, t);
+  const earlier = glucoseAt(points, t - 15 * MINUTE);
+  if (now == null || earlier == null) return "";
+  const perMinute = (now - earlier) / 15;
+  return perMinute > 2 ? "↑" : perMinute > 1 ? "↗" : perMinute < -2 ? "↓" : perMinute < -1 ? "↘" : "→";
+}
+
+function mealWindow(meal) {
+  const calc = meal.calculation || {};
+  const fallback = new Date(meal.at).getTime() + Number(state.settings?.window_minutes || 180) * MINUTE;
+  const time = value => value ? new Date(value).getTime() : null;
+  return {
+    mealAt: new Date(meal.at).getTime(),
+    start: time(calc.start || calc.window_start) ?? new Date(meal.at).getTime(),
+    end: time(calc.end || calc.window_end) ?? fallback,
+    autoStart: time(calc.auto_start) ?? new Date(meal.at).getTime(),
+    autoEnd: time(calc.auto_end) ?? fallback,
+    manual: Boolean(calc.manual_window),
+  };
+}
+
+function chartEvents(treatments) {
+  return treatments.flatMap(item => {
+    const t = new Date(item.at).getTime();
+    if (item.eventType === "Exercise") {
+      return [{ kind: "sport", t, end: t + Number(item.duration || 0) * MINUTE, label: sportNames[item.sport_type] || "Sport" }];
+    }
+    const result = [];
+    if (Number(item.insulin) > 0) result.push({ kind: "insulin", t, amount: Number(item.insulin), rapid: RAPID_TYPES.has(item.eventType) || Boolean(item.role) });
+    if (Number(item.carbs) > 0) result.push({ kind: "carbs", t, amount: Number(item.carbs) });
+    return result;
+  });
+}
+
+function chartView(range) {
+  const from = Math.min(range.start, range.autoStart) - 45 * MINUTE;
+  const to = Math.max(range.end, range.autoEnd, range.mealAt + 240 * MINUTE) + 75 * MINUTE;
+  return {
+    from: Math.max(from, range.mealAt - WINDOW_LEAD - 30 * MINUTE),
+    to: Math.min(to, range.mealAt + WINDOW_MAX + 60 * MINUTE),
+  };
+}
+
+function chartScales(view, points) {
+  const visible = points.filter(point => point.t >= view.from && point.t <= view.to).map(point => point.g);
+  const top = Math.max(300, Math.ceil((Math.max(0, ...visible) + 20) / 50) * 50);
+  const bottom = Math.min(40, Math.floor((Math.min(400, ...visible) - 10) / 10) * 10);
+  return {
+    x: t => CHART.left + (t - view.from) / (view.to - view.from) * (CHART.right - CHART.left),
+    y: g => CHART.plotBottom - (g - bottom) / (top - bottom) * (CHART.plotBottom - CHART.plotTop),
+    top, bottom,
+  };
+}
+
+const chartIcons = {
+  insulin: '<path d="M-5 5l3-3m-1-1 6-6 3 3-6 6zM4-7l3 3M5-8l3 3"/>',
+  carbs: '<path d="M0-3c-2-2-6-1-6 3s3 7 6 7 6-3 6-7-4-5-6-3zM0-3c0-2 1-4 3-5"/>',
+};
+
+function eventLanes(events, scales, view, range) {
+  const inside = event => event.t >= range.start && event.t < range.end;
+  return events.filter(event => (event.end || event.t) >= view.from && event.t <= view.to).map(event => {
+    const x = scales.x(Math.max(event.t, view.from));
+    const included = inside(event) ? " is-included" : "";
+    if (event.kind === "sport") {
+      const width = Math.max(4, scales.x(Math.min(event.end, view.to)) - x);
+      return '<g class="chart-event sport' + included + '" data-t="' + event.t + '"><rect x="' + x.toFixed(1) +
+        '" y="46" width="' + width.toFixed(1) + '" height="14" rx="4"/><text x="' + (x + 4).toFixed(1) +
+        '" y="57">' + escapeHTML(event.label) + '</text></g>';
+    }
+    const y = event.kind === "insulin" ? 14 : 34;
+    const label = event.kind === "insulin" ? num(event.amount, 1) + " IE" : num(event.amount, 0) + " g";
+    return '<g class="chart-event ' + event.kind + (event.rapid === false ? ' non-rapid' : '') + included +
+      '" data-t="' + event.t + '"><line x1="' + x.toFixed(1) + '" y1="' + (y + 9) + '" x2="' + x.toFixed(1) + '" y2="' + CHART.plotBottom + '" class="event-guide"/>' +
+      '<g transform="translate(' + x.toFixed(1) + ' ' + y + ')">' + chartIcons[event.kind] + '</g>' +
+      '<text x="' + (x + 10).toFixed(1) + '" y="' + (y + 4) + '">' + escapeHTML(label) + '</text></g>';
+  }).join("");
+}
+
+function targetBand(view, scales) {
+  const parts = [];
+  for (let t = view.from; t < view.to; t += 15 * MINUTE) {
+    const target = targetAt(t);
+    const last = parts[parts.length - 1];
+    if (last && target && last.low === target.low && last.high === target.high) last.to = t + 15 * MINUTE;
+    else if (target) parts.push({ ...target, from: t, to: t + 15 * MINUTE });
+  }
+  return parts.map(part => {
+    const high = Math.min(part.high, scales.top);
+    const low = Math.max(part.low, scales.bottom);
+    if (high <= low) return "";
+    return '<rect class="target-band" x="' + scales.x(part.from).toFixed(1) + '" y="' + scales.y(high).toFixed(1) +
+      '" width="' + (scales.x(Math.min(part.to, view.to)) - scales.x(part.from)).toFixed(1) + '" height="' + (scales.y(low) - scales.y(high)).toFixed(1) + '"/>';
+  }).join("");
+}
+
+function handleSVG(name, t, points, scales, interactive) {
+  const x = scales.x(t);
+  const value = glucoseAt(points, t);
+  const dotY = value == null ? CHART.plotBottom : scales.y(value);
+  const label = name === "start" ? "Beginn" : "Ende";
+  return '<g class="window-handle" data-handle="' + name + '" transform="translate(' + x.toFixed(1) + ' 0)"' +
+    (interactive ? ' tabindex="0" role="slider" aria-label="' + label + ' des Zeitraums" aria-valuetext="' + escapeHTML(timeOnly(t)) + ' Uhr"' : '') + '>' +
+    '<line class="handle-line" x1="0" y1="64" x2="0" y2="' + (interactive ? 290 : CHART.plotBottom) + '"/>' +
+    '<circle class="handle-dot" data-tone="' + glucoseTone(value, t) + '" cx="0" cy="' + dotY.toFixed(1) + '" r="' + (interactive ? 7 : 4.5) + '"' + (value == null ? ' hidden' : '') + '/>' +
+    (interactive
+      ? '<rect class="handle-hit" x="-24" y="62" width="48" height="262"/>' +
+        '<g class="handle-knob"><rect x="-21" y="288" width="42" height="30" rx="15"/><path d="M-5 297v12M0 297v12M5 297v12"/></g>'
+      : '') +
+    '</g>';
+}
+
+function windowChartSVG(range, entries, treatments, options = {}) {
+  const interactive = Boolean(options.interactive);
+  const view = options.view || chartView(range);
+  const points = glucosePoints(entries);
+  const scales = chartScales(view, points);
+  const visible = points.filter(point => point.t >= view.from - 10 * MINUTE && point.t <= view.to + 10 * MINUTE);
+  const height = interactive ? 324 : 284;
+  const grid = [];
+  const yLabels = [];
+  for (let g = Math.ceil(scales.bottom / 50) * 50; g <= scales.top; g += 50) {
+    grid.push('<line class="grid" x1="' + CHART.left + '" x2="' + CHART.right + '" y1="' + scales.y(g).toFixed(1) + '" y2="' + scales.y(g).toFixed(1) + '"/>');
+    yLabels.push('<text class="y-label" x="' + (CHART.left - 6) + '" y="' + (scales.y(g) + 4).toFixed(1) + '" text-anchor="end">' + g + '</text>');
+  }
+  const ticks = [];
+  const hour = 60 * MINUTE;
+  const step = (view.to - view.from) / hour * 48 > CHART.right - CHART.left ? 2 * hour : hour;
+  for (let t = Math.ceil(view.from / step) * step; t <= view.to; t += step) {
+    ticks.push('<line class="tick" x1="' + scales.x(t).toFixed(1) + '" x2="' + scales.x(t).toFixed(1) + '" y1="' + CHART.plotBottom + '" y2="' + (CHART.plotBottom + 5) + '"/>' +
+      '<text class="x-label" x="' + scales.x(t).toFixed(1) + '" y="' + (CHART.plotBottom + 19) + '" text-anchor="middle">' + escapeHTML(timeOnly(t)) + '</text>');
+  }
+  const limit = (g, className) => g > scales.bottom && g < scales.top
+    ? '<line class="' + className + '" x1="' + CHART.left + '" x2="' + CHART.right + '" y1="' + scales.y(g).toFixed(1) + '" y2="' + scales.y(g).toFixed(1) + '"/>' : '';
+  const segments = [];
+  let segment = [];
+  visible.forEach((point, index) => {
+    if (index && point.t - visible[index - 1].t > 15 * MINUTE) { segments.push(segment); segment = []; }
+    segment.push(scales.x(point.t).toFixed(1) + "," + scales.y(point.g).toFixed(1));
+  });
+  segments.push(segment);
+  const curve = segments.filter(item => item.length > 1).map(item => '<polyline class="curve" points="' + item.join(" ") + '"/>').join("");
+  const shadeX = scales.x(range.start);
+  return '<svg class="window-chart-svg' + (interactive ? ' is-interactive' : '') + '" viewBox="0 0 ' + CHART.width + ' ' + height +
+    '" role="img" aria-label="Glukoseverlauf mit Auswertungszeitraum ' + escapeHTML(timeOnly(range.start) + ' bis ' + timeOnly(range.end)) + ' Uhr">' +
+    '<defs><clipPath id="' + (interactive ? 'editor-clip' : 'chart-clip-' + range.mealAt) + '"><rect x="' + CHART.left + '" y="0" width="' + (CHART.right - CHART.left) + '" height="' + height + '"/></clipPath></defs>' +
+    '<rect class="plot-bg" x="' + CHART.left + '" y="' + CHART.plotTop + '" width="' + (CHART.right - CHART.left) + '" height="' + (CHART.plotBottom - CHART.plotTop) + '"/>' +
+    '<g clip-path="url(#' + (interactive ? 'editor-clip' : 'chart-clip-' + range.mealAt) + ')">' +
+    targetBand(view, scales) + grid.join("") + limit(250, "limit-high") + limit(70, "limit-low") +
+    '<rect class="window-shade" x="' + shadeX.toFixed(1) + '" y="' + (CHART.plotTop - 6) + '" width="' + (scales.x(range.end) - shadeX).toFixed(1) + '" height="' + (CHART.plotBottom - CHART.plotTop + 6) + '"/>' +
+    ((range.manual || interactive) && (range.autoStart !== range.start || range.autoEnd !== range.end)
+      ? '<line class="auto-marker" x1="' + scales.x(range.autoStart).toFixed(1) + '" x2="' + scales.x(range.autoStart).toFixed(1) + '" y1="' + CHART.plotTop + '" y2="' + CHART.plotBottom + '"/>' +
+        '<line class="auto-marker" x1="' + scales.x(range.autoEnd).toFixed(1) + '" x2="' + scales.x(range.autoEnd).toFixed(1) + '" y1="' + CHART.plotTop + '" y2="' + CHART.plotBottom + '"/>'
+      : '') +
+    eventLanes(chartEvents(treatments), scales, view, range) + curve +
+    handleSVG("start", range.start, points, scales, interactive) + handleSVG("end", range.end, points, scales, interactive) +
+    '</g>' + '<line class="axis" x1="' + CHART.left + '" x2="' + CHART.right + '" y1="' + CHART.plotBottom + '" y2="' + CHART.plotBottom + '"/>' + ticks.join("") + yLabels.join("") +
+    '<text class="y-unit" x="2" y="' + (CHART.plotTop - 16) + '">mg/dL</text>' +
     '</svg>';
+}
+
+function chartFor(meal, entries) {
+  const range = mealWindow(meal);
+  if (!entries.some(point => {
+    const t = new Date(point.at).getTime();
+    return t >= range.start - 30 * MINUTE && t <= range.end + 30 * MINUTE;
+  })) return '<p class="hint">Keine CGM-Kurve verfügbar.</p>';
+  return '<div class="meal-chart"><div class="meal-chart-plot" data-meal-id="' + escapeHTML(meal.id) + '"></div>' +
+    '<div class="meal-chart-foot"><span>' + escapeHTML(timeOnly(range.start) + '–' + timeOnly(range.end)) + ' Uhr' +
+    (range.manual ? ' · <b>manuell</b>' : '') + '</span>' +
+    '<button type="button" class="open-window-editor" data-meal-id="' + escapeHTML(meal.id) + '">Zeitraum anpassen</button></div></div>';
+}
+
+// Charts are drawn after insertion so their geometry matches the rendered card width.
+function renderMealCharts() {
+  for (const node of $$(".meal-chart-plot")) {
+    const meal = state.dayData?.meals.find(item => item.id === node.dataset.mealId);
+    if (!meal) continue;
+    CHART = chartLayout(node.clientWidth);
+    node.innerHTML = windowChartSVG(mealWindow(meal), state.dayData.entries, state.dayData.treatments);
+  }
+}
+
+// --- Interactive window editor -------------------------------------------
+
+function windowBounds(handle) {
+  const editor = windowEditor;
+  if (handle === "start") return { min: Math.max(editor.mealAt - WINDOW_LEAD, editor.view.from), max: editor.mealAt };
+  return { min: editor.mealAt + WINDOW_MIN, max: Math.min(editor.start + WINDOW_MAX, editor.view.to) };
+}
+
+function snapTargets() {
+  const editor = windowEditor;
+  const targets = [{ t: editor.autoStart, label: "Standardbeginn" }, { t: editor.autoEnd, label: "Standardende" }];
+  for (const event of editor.events) {
+    if (event.kind === "insulin") targets.push({ t: event.t, label: num(event.amount, 1) + " IE" });
+    if (event.kind === "carbs") targets.push({ t: event.t, label: num(event.amount, 0) + " g KH" });
+    if (event.kind === "sport") {
+      targets.push({ t: event.t, label: event.label + " Beginn" }, { t: event.end, label: event.label + " Ende" });
+    }
+  }
+  return targets;
+}
+
+function placeHandle(handle, raw, options = {}) {
+  const editor = windowEditor;
+  const bounds = windowBounds(handle);
+  const clamp = value => Math.min(bounds.max, Math.max(bounds.min, value));
+  let t = clamp(raw);
+  let snapped = null;
+  if (options.snapTolerance) {
+    for (const target of snapTargets()) {
+      const distance = Math.abs(target.t - t);
+      if (target.t >= bounds.min && target.t <= bounds.max && distance <= options.snapTolerance &&
+          (!snapped || distance < Math.abs(snapped.t - t))) snapped = target;
+    }
+  }
+  t = snapped ? snapped.t : clamp(Math.round(t / MINUTE) * MINUTE);
+  if (snapped && editor.snapped[handle]?.t !== snapped.t) navigator.vibrate?.(8);
+  editor.snapped[handle] = snapped;
+  editor[handle] = t;
+  if (handle === "start") editor.end = Math.min(Math.max(editor.end, editor.mealAt + WINDOW_MIN), editor.start + WINDOW_MAX);
+}
+
+function editorSummary() {
+  const editor = windowEditor;
+  const inside = event => event.t >= editor.start && event.t < editor.end;
+  const included = editor.events.filter(inside);
+  const carbs = included.filter(event => event.kind === "carbs").reduce((sum, event) => sum + event.amount, 0);
+  const insulin = included.filter(event => event.kind === "insulin" && event.rapid).reduce((sum, event) => sum + event.amount, 0);
+  const g0 = glucoseAt(editor.points, editor.start);
+  const g1 = glucoseAt(editor.points, editor.end);
+  const minutes = Math.round((editor.end - editor.start) / MINUTE);
+  const changed = editor.start !== editor.savedStart || editor.end !== editor.savedEnd;
+  const isDefault = editor.start === editor.autoStart && editor.end === editor.autoEnd;
+  const cell = (label, value, detail = "") => '<div><span>' + label + '</span><strong>' + value + '</strong>' + (detail ? '<small>' + detail + '</small>' : '') + '</div>';
+  return '<div class="window-facts">' +
+    cell("Beginn", escapeHTML(timeOnly(editor.start)), g0 == null ? "kein CGM-Wert" : escapeHTML(num(g0, 0)) + " mg/dL") +
+    cell("Ende <small>(exkl.)</small>", escapeHTML(timeOnly(editor.end)), g1 == null ? "kein CGM-Wert" : escapeHTML(num(g1, 0)) + " mg/dL") +
+    cell("ΔG", g0 == null || g1 == null ? "—" : escapeHTML(signedChange(g1 - g0, 0))) +
+    cell("Dauer", escapeHTML(Math.floor(minutes / 60) + " h " + String(minutes % 60).padStart(2, "0") + " min")) +
+    cell("KH im Fenster", escapeHTML(num(carbs, 0)) + " g") +
+    cell("Schnelles Insulin", escapeHTML(num(insulin, 1)) + " IE") +
+    '</div><p class="window-state">' +
+    (isDefault ? "Automatischer Standardzeitraum" : "Manueller Zeitraum") +
+    (changed ? " · <b>nicht gespeichert</b>" : "") +
+    (g0 == null || g1 == null ? ' · <span class="window-warning">An Beginn und Ende wird ein CGM-Wert benötigt.</span>' : "") + '</p>';
+}
+
+function updateWindowReadout() {
+  const editor = windowEditor;
+  const t = editor[editor.active];
+  const value = glucoseAt(editor.points, t);
+  const snapped = editor.snapped[editor.active];
+  const readout = $("#window-readout");
+  readout.dataset.tone = glucoseTone(value, t);
+  readout.innerHTML = '<span class="readout-label">' + (editor.active === "start" ? "Beginn" : "Ende") + ' · ' + escapeHTML(timeOnly(t)) + ' Uhr' +
+    (snapped ? ' · eingerastet: ' + escapeHTML(snapped.label) : '') + '</span>' +
+    '<span class="readout-value"><strong>' + (value == null ? "—" : escapeHTML(num(value, 0))) + '</strong>' +
+    '<span class="readout-trend">' + escapeHTML(trendArrow(editor.points, t)) + '</span><small>mg/dL</small></span>';
+}
+
+function updateWindowEditor() {
+  const editor = windowEditor;
+  const svg = $("#window-chart svg");
+  if (!svg) return;
+  CHART = editor.layout;
+  const scales = chartScales(editor.view, editor.points);
+  for (const name of ["start", "end"]) {
+    const group = $('.window-handle[data-handle="' + name + '"]', svg);
+    const t = editor[name];
+    const value = glucoseAt(editor.points, t);
+    group.setAttribute("transform", "translate(" + scales.x(t).toFixed(1) + " 0)");
+    group.setAttribute("aria-valuetext", timeOnly(t) + " Uhr");
+    group.classList.toggle("is-active", editor.active === name);
+    group.classList.toggle("is-snapped", Boolean(editor.snapped[name]));
+    const dot = $(".handle-dot", group);
+    dot.toggleAttribute("hidden", value == null);
+    dot.dataset.tone = glucoseTone(value, t);
+    if (value != null) dot.setAttribute("cy", scales.y(value).toFixed(1));
+  }
+  const shade = $(".window-shade", svg);
+  shade.setAttribute("x", scales.x(editor.start).toFixed(1));
+  shade.setAttribute("width", (scales.x(editor.end) - scales.x(editor.start)).toFixed(1));
+  $$(".chart-event", svg).forEach(node => {
+    const t = Number(node.dataset.t);
+    node.classList.toggle("is-included", t >= editor.start && t < editor.end);
+  });
+  $$("[data-window-handle]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.windowHandle === editor.active)));
+  updateWindowReadout();
+  $("#window-summary").innerHTML = editorSummary();
+}
+
+function renderWindowEditor(focus) {
+  const editor = windowEditor;
+  editor.view = chartView(editor);
+  CHART = editor.layout = chartLayout($("#window-chart").clientWidth - 12);
+  $("#window-chart").innerHTML = windowChartSVG(editor, state.dayData.entries, state.dayData.treatments,
+    { interactive: true, view: editor.view });
+  updateWindowEditor();
+  if (focus) $('#window-chart .window-handle[data-handle="' + focus + '"]')?.focus();
+}
+
+function openWindowEditor(mealId) {
+  const meal = state.dayData?.meals.find(item => item.id === mealId);
+  if (!meal) return;
+  const range = mealWindow(meal);
+  windowEditor = {
+    ...range, mealId, day: state.day, active: "end", snapped: {}, drag: null, tap: null,
+    savedStart: range.start, savedEnd: range.end,
+    points: glucosePoints(state.dayData.entries), events: chartEvents(state.dayData.treatments),
+  };
+  $("#window-meal-type").textContent = names[meal.meal] + " · " + timeOnly(meal.at) + " Uhr · " + num(meal.carbs) + " g KH";
+  $("#window-dialog").showModal();
+  renderWindowEditor();
+}
+
+function pointerTime(event) {
+  const svg = $("#window-chart svg");
+  const rect = svg.getBoundingClientRect();
+  CHART = windowEditor.layout;
+  const unitsPerPixel = CHART.width / rect.width;
+  const x = (event.clientX - rect.left) * unitsPerPixel;
+  const { from, to } = windowEditor.view;
+  const msPerUnit = (to - from) / (CHART.right - CHART.left);
+  return { t: from + (x - CHART.left) * msPerUnit, msPerPixel: msPerUnit * unitsPerPixel };
+}
+
+function windowPointerDown(event) {
+  if (!windowEditor || (event.pointerType === "mouse" && event.button !== 0)) return;
+  const { t, msPerPixel } = pointerTime(event);
+  let handle = event.target.closest(".window-handle")?.dataset.handle;
+  if (!handle) {
+    const distance = name => Math.abs(windowEditor[name] - t) / msPerPixel;
+    const nearest = distance("start") <= distance("end") ? "start" : "end";
+    if (distance(nearest) <= 28) handle = nearest;
+  }
+  if (!handle) {
+    windowEditor.tap = { x: event.clientX, y: event.clientY };
+    return;
+  }
+  event.preventDefault();
+  windowEditor.active = handle;
+  windowEditor.drag = { handle, pointerId: event.pointerId };
+  event.currentTarget.setPointerCapture(event.pointerId);
+  event.currentTarget.classList.add("is-dragging");
+  updateWindowEditor();
+}
+
+function windowPointerMove(event) {
+  const drag = windowEditor?.drag;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+  event.preventDefault();
+  const { t, msPerPixel } = pointerTime(event);
+  placeHandle(drag.handle, t, { snapTolerance: SNAP_PIXELS * msPerPixel });
+  updateWindowEditor();
+}
+
+function windowPointerUp(event) {
+  if (!windowEditor) return;
+  const target = event.currentTarget;
+  if (windowEditor.drag) {
+    windowEditor.drag = null;
+    target.classList.remove("is-dragging");
+    renderWindowEditor();
+    return;
+  }
+  const tap = windowEditor.tap;
+  windowEditor.tap = null;
+  if (event.type !== "pointerup" || !tap || Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 8) return;
+  // A tap moves the selected handle, which works well on small touch screens.
+  const { t, msPerPixel } = pointerTime(event);
+  placeHandle(windowEditor.active, t, { snapTolerance: SNAP_PIXELS * msPerPixel });
+  renderWindowEditor();
+}
+
+function nudgeWindow(handle, minutes, focus) {
+  placeHandle(handle, windowEditor[handle] + minutes * MINUTE);
+  windowEditor.snapped[handle] = null;
+  renderWindowEditor(focus ? handle : null);
+}
+
+function windowKeydown(event) {
+  const handle = event.target.closest?.(".window-handle")?.dataset.handle;
+  if (!handle || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+  event.preventDefault();
+  windowEditor.active = handle;
+  nudgeWindow(handle, (event.key === "ArrowLeft" ? -1 : 1) * (event.shiftKey ? 5 : 1), true);
+}
+
+async function saveWindow(reset = false) {
+  const editor = windowEditor;
+  if (!editor) return;
+  const button = $("#save-window");
+  const isDefault = editor.start === editor.autoStart && editor.end === editor.autoEnd;
+  if (!reset && !isDefault && (glucoseAt(editor.points, editor.start) == null || glucoseAt(editor.points, editor.end) == null)) {
+    toast("An Beginn und Ende wird ein CGM-Wert benötigt.", true);
+    return;
+  }
+  button.disabled = true;
+  try {
+    const body = reset || isDefault
+      ? { meal_id: editor.mealId, day: editor.day, reset: true }
+      : { meal_id: editor.mealId, day: editor.day, start: new Date(editor.start).toISOString(), end: new Date(editor.end).toISOString() };
+    await api("/api/analysis/window", { method: "POST", body: JSON.stringify(body) });
+    $("#window-dialog").close();
+    toast(body.reset ? "Standardzeitraum wiederhergestellt" : "Zeitraum gespeichert");
+    await loadDay();
+    if (state.view === "analysis") await loadSummary();
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function calculationHTML(result) {
@@ -395,7 +844,7 @@ function calculationHTML(result) {
   const summary = [
     num(result.carbs_total) + " g KH",
     num(result.rapid_units_in_window, 2) + " IE",
-    "Ende " + timeOnly(result.end),
+    "Ende " + timeOnly(result.end) + (result.manual_window ? " (manuell)" : ""),
   ].join(" · ");
   return '<div class="calc-block"><div class="factor' + (valid ? '' : ' unavailable') + '"><span>Insulinfaktor</span><strong>' +
     (valid ? escapeHTML(num(result.factor_units_per_ke, 2)) + ' <small>IE/KE</small>' : '—') +
@@ -507,6 +956,7 @@ function renderDay(data) {
   $("#meals").innerHTML = data.meals.length
     ? data.meals.map(meal => mealHTML(meal, data.entries)).join("")
     : '<div class="empty">Noch keine Hauptmahlzeit für diesen Tag.</div>';
+  renderMealCharts();
 }
 
 async function loadDay() {
@@ -1032,7 +1482,8 @@ async function loadSummary() {
               : '';
             const factor = item.units_per_ke != null
               ? escapeHTML(num(item.units_per_ke, 2)) + ' IE/KE' +
-                (item.strong_outlier ? ' <span class="outlier-badge">Stark abweichend</span>' : '')
+                (item.strong_outlier ? ' <span class="outlier-badge">Stark abweichend</span>' : '') +
+                (item.manual_window ? ' <span class="manual-badge">Zeitraum manuell</span>' : '')
               : '<span class="summary-unavailable">Nicht berechenbar: ' + escapeHTML(item.reason || "Kein Faktor") + '</span>';
             const excluded = item.units_per_ke != null && item.excluded;
             const sportReview = sportReviewHTML(item.sport || {}, item.id, item.day, true);
@@ -1199,6 +1650,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     const edit = event.target.closest(".edit-entry");
     if (edit) editEntry(edit.dataset.id);
     if (event.target.closest(".sport-save, .sport-suggestion, .sport-remove")) saveSportMark(event);
+    const windowButton = event.target.closest(".open-window-editor");
+    if (windowButton) openWindowEditor(windowButton.dataset.mealId);
+  });
+  const windowChart = $("#window-chart");
+  windowChart.addEventListener("pointerdown", windowPointerDown);
+  windowChart.addEventListener("pointermove", windowPointerMove);
+  windowChart.addEventListener("pointerup", windowPointerUp);
+  windowChart.addEventListener("pointercancel", windowPointerUp);
+  windowChart.addEventListener("keydown", windowKeydown);
+  // iOS Safari may still scroll during a handle drag without a non-passive touch listener.
+  windowChart.addEventListener("touchmove", event => { if (windowEditor?.drag) event.preventDefault(); }, { passive: false });
+  $$("[data-window-handle]").forEach(button => button.addEventListener("click", () => {
+    windowEditor.active = button.dataset.windowHandle;
+    updateWindowEditor();
+  }));
+  $$("[data-nudge]").forEach(button => button.addEventListener("click", () =>
+    nudgeWindow(windowEditor.active, Number(button.dataset.nudge))));
+  $("#save-window").addEventListener("click", () => saveWindow());
+  $("#default-window").addEventListener("click", () => {
+    windowEditor.start = windowEditor.autoStart;
+    windowEditor.end = windowEditor.autoEnd;
+    windowEditor.snapped = {};
+    renderWindowEditor();
+  });
+  for (const id of ["#cancel-window", "#close-window"]) $(id).addEventListener("click", () => $("#window-dialog").close());
+  $("#window-dialog").addEventListener("close", () => { windowEditor = null; });
+  let resizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (state.dayData) renderMealCharts();
+      if (windowEditor && !windowEditor.drag) renderWindowEditor();
+    }, 150);
   });
   updateEntryFields();
   $("#settings-form").addEventListener("submit", saveSettings);
