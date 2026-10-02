@@ -57,6 +57,22 @@ class DosingTests(unittest.TestCase):
         self.assertEqual(Decimal(result["total_units"]), Decimal(0))
         self.assertEqual(Decimal(result["cautious_total_units"]), Decimal(0))
 
+    def test_sport_glucose_change_shifts_dose_through_correction_factor(self):
+        entries = [{"at": self.now, "sgv": 150}]
+        base = dosing.suggest("20", self.settings, entries, [], self.now)
+        lowered = dosing.suggest("20", self.settings, entries, [], self.now, activity_change="-40")
+        self.assertEqual(Decimal(lowered["activity_change_mgdl"]), Decimal(-40))
+        self.assertEqual(Decimal(lowered["activity_units"]), Decimal(-1))
+        self.assertEqual(Decimal(base["total_units"]) - Decimal(lowered["total_units"]), Decimal(1))
+        self.assertEqual(Decimal(lowered["entry_units"]), Decimal("3"))
+        self.assertEqual(Decimal(lowered["cautious_entry_units"]), Decimal("2"))
+        self.assertEqual(Decimal(lowered["expected_glucose_mgdl"]), Decimal("102"))
+        raised = dosing.suggest("20", self.settings, entries, [], self.now, activity_change="40")
+        self.assertEqual(Decimal(raised["entry_units"]), Decimal("5"))
+        for invalid in ("NaN", "-501", "501"):
+            with self.assertRaises(ValueError):
+                dosing.suggest("20", self.settings, entries, [], self.now, activity_change=invalid)
+
     def test_stale_glucose_has_no_correction(self):
         entries = [{"at": self.now - timedelta(minutes=16), "sgv": 150}]
         result = dosing.suggest("20", self.settings, entries, [], self.now)

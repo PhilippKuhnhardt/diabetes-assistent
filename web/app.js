@@ -173,6 +173,7 @@ function updateEntrySportOption() {
   const effectField = $("#entry-sport-effect-field");
   const checkbox = form.elements.consider_sport;
   let eligible = [];
+  let available = false;
   try {
     const at = new Date(toInstant(state.day, form.elements.at.value));
     const settings = state.settings;
@@ -183,6 +184,7 @@ function updateEntrySportOption() {
         new Date(item.at) < at && at < new Date(item.calculation?.end ||
           new Date(item.at).getTime() + settings.window_minutes * 60000));
       if (!continuation) {
+        available = true;
         eligible = state.dayData.treatments.filter(item => {
           if (item.eventType !== "Exercise" || !item.sport_type) return false;
           const end = new Date(item.at).getTime() + Number(item.duration || 0) * 60000;
@@ -191,18 +193,31 @@ function updateEntrySportOption() {
       }
     }
   } catch (_) { /* The time field is incomplete. */ }
-  option.hidden = !eligible.length;
-  if (!eligible.length) {
+  const wasHidden = option.hidden;
+  option.hidden = !available;
+  if (!available) {
     checkbox.checked = false;
     effectField.hidden = true;
+    if (!wasHidden) scheduleDoseHelp();
     return;
   }
   const suggested = eligible.reduce((total, item) => total + Number(state.settings.sport_effects_mgdl[item.sport_type] || 0), 0);
-  $("#entry-sport-hint").textContent = eligible.map(item =>
+  $("#entry-sport-hint").textContent = (eligible.length ? eligible.map(item =>
     ({ jogging: "Joggen", gym: "Gym", light_cardio: "Cardio" })[item.sport_type] + " um " + timeOnly(item.at)).join(", ") +
-    " · Vorschlag: " + num(suggested, 0) + " mg/dL Senkung";
-  if (!checkbox.checked) form.elements.sport_effect_mgdl.value = suggested;
+    " · Vorschlag: " + num(suggested, 0) + " mg/dL Senkung" : "Kein Sport vor der Mahlzeit erfasst · Wirkung selbst schätzen, z. B. für Sport danach") +
+    " · fließt über den Korrekturfaktor in die empfohlenen IE ein";
+  if (!checkbox.checked) form.elements.sport_effect_mgdl.value = eligible.length ? suggested : "";
   effectField.hidden = !checkbox.checked;
+}
+
+function entrySportChange() {
+  const form = $("#entry-form");
+  if (form.elements.kind.value !== "meal" || $("#entry-sport-option").hidden || !form.elements.consider_sport.checked) return 0;
+  const input = form.elements.sport_effect_mgdl;
+  const value = Number(input.value || 0);
+  if (!Number.isFinite(value) || value < Number(input.min) || value > Number(input.max)) return null;
+  // A field allowing negative values holds the signed BG change; otherwise it holds a drop.
+  return Number(input.min) < 0 ? value : -value;
 }
 
 function minuteClock(minute) {
@@ -537,10 +552,15 @@ async function updateDoseHelp() {
     output.textContent = "Eine aktuelle Empfehlung gibt es nur für den heutigen Tag.";
     return null;
   }
+  const activityChange = entrySportChange();
+  if (activityChange == null) {
+    output.textContent = "Der geschätzte Sporteinfluss liegt außerhalb des erlaubten Bereichs.";
+    return null;
+  }
   output.textContent = "Empfehlung wird berechnet …";
   try {
     const data = await api("/api/dose-help", { method: "POST",
-      body: JSON.stringify({ carbs: form.elements.carbs.value }) });
+      body: JSON.stringify({ carbs: form.elements.carbs.value, activity_change_mgdl: activityChange }) });
     if (requestId !== helpRequestId) return null;
     doseHelp = data;
     const glucose = data.glucose_mgdl == null ? "Kein CGM-Wert" :
@@ -554,15 +574,17 @@ async function updateDoseHelp() {
         ' mg/dL</span><strong>' + escapeHTML(num(units, 2)) +
         ' IE</strong><small>Berechnet: ' + escapeHTML(num(exact, 2)) + ' IE · auf 0,5 IE gerundet</small>' +
         '<span class="dose-expected">Erwarteter BG (Modell): <strong>' + escapeHTML(num(expectedGlucose, 0)) + ' mg/dL</strong></span><button type="button" class="apply-dose" data-variant="' + variant + '"' +
-        (Number(units) > 100 ? ' disabled' : '') + '>IE übernehmen</button></div>';
+        (Number(units) > 100 ? ' disabled' : '') + '>' + escapeHTML(num(units, 2)) + ' IE speichern</button></div>';
     };
     output.innerHTML = '<div class="dose-heading">Aktuelle Empfehlung</div><div class="dose-glucose"><span>Aktueller Blutzucker</span><strong>' +
       escapeHTML(glucose) + '</strong></div>' +
       (data.units_per_ke != null ? '<p class="dose-factor">Verwendeter Insulinfaktor: <strong>' + escapeHTML(num(data.units_per_ke, 2)) + ' IE/KE</strong> · Korrekturfaktor: ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' mg/dL je IE</p>' : '') +
+      (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport eingerechnet: <strong>' +
+        escapeHTML(signedChange(data.activity_change_mgdl, 0)) + '</strong> · ' + escapeHTML((Number(data.activity_units) > 0 ? "+" : "") + num(data.activity_units, 2)) + ' IE</p>' : '') +
       '<div class="dose-options">' +
       option("Normal", "normal", data.target_mgdl, data.entry_units, data.total_units, data.expected_glucose_mgdl) +
       option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_entry_units, data.cautious_total_units, data.cautious_expected_glucose_mgdl) + '</div>' +
-      (data.expected_glucose_mgdl != null ? '<p class="hint">Modellwert bei voller Wirkung der eingegebenen KH und der angezeigten IE. Trend, frühere Dosen und weitere Einflüsse sind nicht eingerechnet.</p>' : '') +
+      (data.expected_glucose_mgdl != null ? '<p class="hint">Modellwert bei voller Wirkung der eingegebenen KH und der angezeigten IE. Trend, frühere Dosen und weitere Einflüsse' + (Number(data.activity_change_mgdl) !== 0 ? ' außer dem angegebenen Sport' : '') + ' sind nicht eingerechnet.</p>' : '') +
       (data.recent_rapid_doses?.length ? '<p class="hint">Schnell wirksame Dosen in den letzten 3 h: ' +
       data.recent_rapid_doses.map(row => escapeHTML(timeOnly(row.at) + " · " + num(row.units) + " IE")).join(", ") +
       '.</p>' : '') +
@@ -584,19 +606,23 @@ async function applyDoseSuggestion(event) {
     const current = await updateDoseHelp();
     if (!current) throw new Error("Empfehlung konnte nicht aktualisiert werden");
     const keys = ["carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl",
-      "cautious_target_mgdl", "units_per_ke", "total_units", "cautious_total_units", "entry_units", "cautious_entry_units", "expected_glucose_mgdl", "cautious_expected_glucose_mgdl"];
+      "cautious_target_mgdl", "units_per_ke", "activity_change_mgdl", "total_units", "cautious_total_units", "entry_units", "cautious_entry_units", "expected_glucose_mgdl", "cautious_expected_glucose_mgdl"];
     if (keys.some(key => previous[key] !== current[key]) ||
         JSON.stringify(previous.recent_rapid_doses) !== JSON.stringify(current.recent_rapid_doses)) {
-      toast("Empfehlung geändert. Bitte den neuen Wert prüfen und erneut übernehmen.", true);
+      toast("Empfehlung geändert. Bitte den neuen Wert prüfen und erneut speichern.", true);
       return;
     }
     const units = variant === "cautious" ? current.cautious_entry_units : current.entry_units;
     if (units == null || Number(units) > 100 || Number($("#entry-form").elements.carbs.value) !== Number(current.carbs_g))
       throw new Error("Kohlenhydrate geändert. Bitte neue Empfehlung prüfen");
-    $("#entry-form").elements.insulin.value = units;
-    toast(num(units, 2) + " IE ins Formular übernommen");
+    const form = $("#entry-form");
+    form.elements.insulin.value = units;
+    if (!form.reportValidity()) return;
+    await saveEntry({ preventDefault() {}, currentTarget: form });
   } catch (error) {
     toast(error.message, true);
+  } finally {
+    button.disabled = false;
   }
 }
 
@@ -1079,7 +1105,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   $("#entry-form").addEventListener("focusin", setDefaultMealTime);
   $("#entry-form").elements.carbs.addEventListener("input", updateEntrySportOption);
-  $("#entry-form").elements.consider_sport.addEventListener("change", updateEntrySportOption);
+  $("#entry-form").elements.consider_sport.addEventListener("change", () => {
+    updateEntrySportOption();
+    scheduleDoseHelp();
+  });
+  $("#entry-form").elements.sport_effect_mgdl.addEventListener("input", scheduleDoseHelp);
   $$(".entry-mode").forEach(button => button.addEventListener("click", () => {
     $("#entry-kind").value = button.dataset.entryMode;
     updateEntryFields();
