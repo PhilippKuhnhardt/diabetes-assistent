@@ -132,6 +132,31 @@ def validate_manual_window(meal_at: datetime, start: datetime, end: datetime) ->
         raise ValueError("Zeitraum darf höchstens zehn Stunden lang sein")
 
 
+BREAKFAST_FACTOR_DAYS = 28
+BREAKFAST_FACTOR_MIN_MEALS = 3
+
+
+def breakfast_factor(day_type: str, today: date, overrides: dict[str, str], periods: list[dict]) -> dict:
+    """Median breakfast IE/KE of earlier days with the same day type (excluded meals left out)."""
+    excluded = storage.analysis_exclusions()
+    values = []
+    for offset in range(1, BREAKFAST_FACTOR_DAYS + 1):
+        day = (today - timedelta(days=offset)).isoformat()
+        if storage.day_type_for(day, overrides, periods)[0] != day_type:
+            continue
+        for meal in day_payload(day, refresh=False).get("meals", []):
+            factor = (meal.get("calculation") or {}).get("factor_units_per_ke")
+            if meal.get("meal") == "breakfast" and meal["id"] not in excluded and factor is not None:
+                values.append(Decimal(factor))
+    return {"count": len(values), "days": BREAKFAST_FACTOR_DAYS,
+            "median_units_per_ke": median(sorted(values)) if values else None}
+
+
+def vacation_state() -> dict:
+    current = next((period for period in storage.vacation_periods() if period["end_day"] is None), None)
+    return {"active": bool(current), "since": current["start_day"] if current else None}
+
+
 def sync_profile_cache(force: bool = False) -> None:
     if not nightscout.is_configured():
         raise nightscout.NightscoutError("Nightscout-Zugang in Umgebungsvariablen fehlt")
@@ -351,8 +376,10 @@ def day_payload(day: str, refresh: bool = True) -> dict:
             "sport_kind": item.get("sport_type"), "notes": note,
             "glucose_mgdl": glucose, "glucose_at": glucose_at,
         })
+    day_type, day_type_source = storage.day_type_for(day, storage.analysis_day_types(), storage.vacation_periods())
     return json_safe({
         "day": day, "connected": nightscout.is_configured(),
+        "day_type": day_type, "day_type_source": day_type_source,
         "synced_at": storage.synced_at(day), "sync_error": sync_error,
         "profile_sync_error": profile_sync_error,
         "settings_version": settings_id, "meals": rendered, "exercises": exercises, "other_events": other_events,
@@ -560,6 +587,7 @@ class Handler(BaseHTTPRequestHandler):
                     "version": version, "settings": settings, "connected": nightscout.is_configured(),
                     "login_required": bool(auth.password()),
                     "profile_sync_at": profile_sync["synced_at"], "profile_sync_error": profile_sync_error,
+                    "vacation": vacation_state(),
                 })
                 return
             if path == "/api/glucose/current":
@@ -619,6 +647,7 @@ class Handler(BaseHTTPRequestHandler):
                 today = datetime.now(ZoneInfo(settings["timezone"])).date()
                 excluded_ids = storage.analysis_exclusions()
                 day_types = storage.analysis_day_types()
+                vacations = storage.vacation_periods()
                 groups = {name: {"total": 0, "count": 0, "valid_count": 0, "excluded_count": 0,
                                  "blocked_count": 0, "values": [], "nightscout_values": [],
                                  "calculations": [], "multi_carb_count": 0, "shortened_count": 0}
@@ -652,7 +681,7 @@ class Handler(BaseHTTPRequestHandler):
                         night_end_values.append(Decimal(night_item["end_glucose"]))
                         night_minimum_values.append(Decimal(night_item["minimum_glucose"]))
                         night_delta_values.append(Decimal(night_item["delta_mgdl"]))
-                    day_type = day_types.get(day, "free" if date.fromisoformat(day).weekday() >= 5 else "work")
+                    day_type, _ = storage.day_type_for(day, day_types, vacations)
                     sport_sessions.extend(
                         {"id": item["id"], "at": item["at"], "duration_minutes": item["duration_minutes"],
                          "kind": item["sport_kind"], "notes": item["notes"]}
@@ -853,9 +882,37 @@ class Handler(BaseHTTPRequestHandler):
                            for row in current_day["entries"]]
                 treatments = [{"at": parse_instant(row["at"]), **{k: v for k, v in row.items() if k != "at"}}
                               for row in current_day["treatments"]]
-                self._response(200, dosing.suggest(payload.get("carbs", 0),
-                                                   current_settings, entries, treatments,
-                                                   activity_change=payload.get("activity_change_mgdl", 0)))
+                now = datetime.now(timezone.utc)
+                local_now = now.astimezone(ZoneInfo(current_settings["timezone"]))
+                overrides, periods = storage.analysis_day_types(), storage.vacation_periods()
+                day_type, day_type_source = storage.day_type_for(today, overrides, periods)
+                is_breakfast = local_now.hour * 60 + local_now.minute < int(current_settings["breakfast_end_minute"])
+                factor = (breakfast_factor(day_type, local_now.date(), overrides, periods)
+                          if is_breakfast else None)
+                use_factor = bool(factor and factor["count"] >= BREAKFAST_FACTOR_MIN_MEALS
+                                  and factor["median_units_per_ke"] > 0)
+                result = dosing.suggest(payload.get("carbs", 0), current_settings, entries, treatments, now,
+                                        activity_change=payload.get("activity_change_mgdl", 0),
+                                        units_per_ke=factor["median_units_per_ke"] if use_factor else None)
+                result.update({
+                    "day_type": day_type, "day_type_source": day_type_source, "breakfast": is_breakfast,
+                    "factor_source": "breakfast_day_type" if use_factor else "nightscout",
+                    "breakfast_factor_count": factor["count"] if factor else None,
+                    "breakfast_factor_days": factor["days"] if factor else None,
+                    "breakfast_factor_min_meals": BREAKFAST_FACTOR_MIN_MEALS,
+                    "breakfast_factor_units_per_ke": (str(factor["median_units_per_ke"])
+                                                      if factor and factor["median_units_per_ke"] is not None else None),
+                })
+                self._response(200, result)
+                return
+            if path == "/api/vacation":
+                active = payload.get("active")
+                if not isinstance(active, bool):
+                    raise ValueError("Ungültige Urlaubsauswahl")
+                _, current_settings = storage.get_settings()
+                today = datetime.now(ZoneInfo(current_settings["timezone"])).date().isoformat()
+                storage.set_vacation(active, today)
+                self._response(200, vacation_state())
                 return
             if path == "/api/treatment":
                 self._response(200, save_diary_treatment(payload))

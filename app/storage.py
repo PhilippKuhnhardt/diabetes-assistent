@@ -6,7 +6,7 @@ import os
 import sqlite3
 from contextlib import contextmanager
 from collections.abc import Iterator
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 DB_PATH = Path(os.environ.get("APP_DB", "data/app.sqlite3"))
@@ -59,6 +59,11 @@ def init() -> None:
         CREATE TABLE IF NOT EXISTS analysis_day_types (
             day TEXT PRIMARY KEY,
             day_type TEXT NOT NULL CHECK(day_type IN ('work', 'free'))
+        );
+        CREATE TABLE IF NOT EXISTS vacation_periods (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            start_day TEXT NOT NULL,
+            end_day TEXT
         );
         CREATE TABLE IF NOT EXISTS analysis_sport_marks (
             meal_id TEXT PRIMARY KEY,
@@ -322,6 +327,37 @@ def set_analysis_day_type(day: str, day_type: str) -> None:
             "ON CONFLICT(day) DO UPDATE SET day_type=excluded.day_type",
             (day, day_type),
         )
+
+
+def vacation_periods() -> list[dict]:
+    """Local vacation periods; end_day is None while a vacation is switched on."""
+    with connect() as db:
+        rows = db.execute("SELECT start_day,end_day FROM vacation_periods ORDER BY start_day").fetchall()
+    return [{"start_day": row["start_day"], "end_day": row["end_day"]} for row in rows]
+
+
+def set_vacation(active: bool, today: str) -> None:
+    """Switching on opens a period from today; switching off closes it before today."""
+    yesterday = (date.fromisoformat(today) - timedelta(days=1)).isoformat()
+    with connect() as db:
+        open_row = db.execute("SELECT id,start_day FROM vacation_periods WHERE end_day IS NULL").fetchone()
+        if active and not open_row:
+            db.execute("INSERT INTO vacation_periods(start_day,end_day) VALUES(?,NULL)", (today,))
+        elif not active and open_row:
+            if open_row["start_day"] >= today:
+                db.execute("DELETE FROM vacation_periods WHERE id=?", (open_row["id"],))
+            else:
+                db.execute("UPDATE vacation_periods SET end_day=? WHERE id=?", (yesterday, open_row["id"]))
+
+
+def day_type_for(day: str, overrides: dict[str, str], periods: list[dict]) -> tuple[str, str]:
+    """Return (day_type, source): a manual choice wins, then vacation, then Mon–Fri work."""
+    if day in overrides:
+        return overrides[day], "manual"
+    if any(period["start_day"] <= day and (period["end_day"] is None or day <= period["end_day"])
+           for period in periods):
+        return "free", "vacation"
+    return ("free" if date.fromisoformat(day).weekday() >= 5 else "work"), "weekday"
 
 
 def analysis_sport_marks() -> dict[str, dict]:
