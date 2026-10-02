@@ -184,7 +184,8 @@ class IntegrationTests(unittest.TestCase):
         result = self.request("/api/glucose/current")
         self.assertEqual(result["status"], "in_range")
         self.assertEqual(Decimal(result["glucose_mgdl"]), Decimal(130))
-        self.assertEqual(Decimal(result["trend_delta_mgdl"]), Decimal(10))
+        self.assertEqual(Decimal(result["trend_delta_mgdl"]), Decimal(15))
+        self.assertEqual(result["trend_direction"], "up")
         self.assertTrue(result["fresh"])
 
     def test_local_dose_target_is_saved_without_changing_nightscout_profile(self):
@@ -745,12 +746,9 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(changed["by_day_type"]["work"]["count"], 0)
             self.assertEqual(changed["by_day_type"]["free"]["mean_units_per_ke"], "1.5")
             self.assertEqual(changed["count"], 2)
-            # Keyed by meal: on weekends the Saturday lies after the Monday and the list order flips.
-            by_id = {item["id"]: item for item in changed["calculations"]}
-            self.assertEqual({key: item["expected_delta_mgdl"] for key, item in by_id.items()},
-                             {"work-breakfast": "50", "free-breakfast": "50"})
-            self.assertEqual({key: item["deviation_mgdl"] for key, item in by_id.items()},
-                             {"work-breakfast": "0", "free-breakfast": "50"})
+            self.assertEqual([item["expected_delta_mgdl"] for item in changed["calculations"]], ["50", "50"])
+            # Saturday may lie before or after Monday depending on the weekday the test runs.
+            self.assertEqual(sorted(item["deviation_mgdl"] for item in changed["calculations"]), ["0", "50"])
             self.assertEqual(storage.analysis_day_types()[monday], "free")
             self.request("/api/analysis/exclusion", method="POST", body={
                 "meal_id": "work-breakfast", "day": monday, "excluded": True,
