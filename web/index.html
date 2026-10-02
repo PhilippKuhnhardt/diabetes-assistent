@@ -44,6 +44,17 @@
         <div id="banner" class="banner" hidden></div>
         <div class="diary-grid">
           <section class="panel entry-panel">
+            <div id="day-overview" class="day-overview">
+              <div class="section-head"><h2>Tagesübersicht</h2>
+                <div class="overview-span" role="group" aria-label="Zeitraum der Tagesübersicht">
+                  <button type="button" data-overview-hours="3" aria-pressed="false">3 h</button>
+                  <button type="button" data-overview-hours="6" aria-pressed="true">6 h</button>
+                  <button type="button" data-overview-hours="24" aria-pressed="false">Tag</button>
+                </div>
+              </div>
+              <div id="day-overview-chart" class="day-overview-chart"></div>
+              <p id="day-overview-note" class="hint"></p>
+            </div>
             <div class="section-head"><h2 id="entry-title">Eintrag hinzufügen</h2></div>
             <form id="entry-form">
               <div class="entry-switch" role="group" aria-label="Eintragsart">
