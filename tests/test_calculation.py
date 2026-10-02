@@ -191,12 +191,30 @@ class CalculationTests(unittest.TestCase):
         self.assertEqual(Decimal(result["delta_mgdl"]), Decimal(20))
         self.assertEqual(Decimal(result["factor_units_per_ke"]), Decimal("1.3"))
 
-    def test_manual_window_must_contain_meal_start(self):
+    def test_manual_window_may_start_after_recorded_meal_time(self):
+        meal_at = moment(10)
+        entries = [{"at": meal_at, "sgv": 90}, {"at": moment(10, 20), "sgv": 100},
+                   {"at": moment(13, 15), "sgv": 120}, {"at": moment(13, 25), "sgv": 120}]
+        meal = {"id": "meal", "source_id": "meal", "at": meal_at, "carbs": 50}
+        treatments = [
+            {"id": "meal", "at": meal_at, "carbs": 50, "insulin": 4, "eventType": "Meal Bolus"},
+            {"id": "early", "at": moment(10, 10), "insulin": 1, "eventType": "Correction Bolus"},
+        ]
+        manual = {"start": moment(10, 20), "end": moment(13, 20)}
+        result = calculate_episode(meal, treatments, entries, self.settings, manual_window=manual)
+        # The meal's own carbs and bolus count; a separate dose before the start does not.
+        self.assertEqual([dose["id"] for dose in result["doses"]], ["meal"])
+        self.assertEqual(Decimal(result["carbs_total"]), Decimal(50))
+        self.assertEqual(Decimal(result["g0"]), Decimal(100))
+        # 10 × (ΔG 20 + 4 × 40) / (50 × 40)
+        self.assertEqual(Decimal(result["factor_units_per_ke"]), Decimal("0.9"))
+
+    def test_manual_window_must_end_after_meal_start(self):
         start = moment(10)
-        entries = [{"at": start, "sgv": 100}, {"at": moment(13), "sgv": 120}]
+        entries = [{"at": moment(8), "sgv": 100}, {"at": start, "sgv": 120}]
         with self.assertRaisesRegex(ValueError, "Mahlzeitbeginn"):
             calculate_episode({"at": start, "carbs": 30}, [], entries, self.settings,
-                              manual_window={"start": moment(10, 5), "end": moment(12)})
+                              manual_window={"start": moment(8), "end": start})
 
     def test_cgm_gap_rejected(self):
         entries = [{"at": moment(10), "sgv": 100}, {"at": moment(10, 20), "sgv": 120}]

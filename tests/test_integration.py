@@ -411,7 +411,8 @@ class IntegrationTests(unittest.TestCase):
         before = self.request("/api/day?date=2026-09-23")["meals"][0]
         self.assertFalse(before["calculation"]["manual_window"])
         self.assertEqual(before["calculation"]["end"], "2026-09-23T13:00:00+00:00")
-        for start, end in (("2026-09-23T10:05:00Z", "2026-09-23T14:00:00Z"),
+        for start, end in (("2026-09-23T12:05:00Z", "2026-09-23T14:00:00Z"),
+                           ("2026-09-23T10:40:00Z", "2026-09-23T11:00:00Z"),
                            ("2026-09-23T07:00:00Z", "2026-09-23T14:00:00Z"),
                            ("2026-09-23T10:00:00Z", "2026-09-23T10:10:00Z")):
             with self.assertRaises(urllib.error.HTTPError) as error:
