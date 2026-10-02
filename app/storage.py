@@ -91,6 +91,11 @@ def init() -> None:
             db.execute("ALTER TABLE analysis_sport_marks ADD COLUMN effect_mgdl TEXT NOT NULL DEFAULT '0'")
 
 
+# Suggested glucose drop per sport type in mg/dL; negative values raise glucose
+# (racing adrenaline).
+DEFAULT_SPORT_EFFECTS = {"jogging": 40, "gym": 40, "light_cardio": 20, "racing": -40}
+
+
 def default_settings() -> dict:
     return {
         "timezone": os.environ.get("APP_TIMEZONE", "Europe/Berlin"),
@@ -101,7 +106,7 @@ def default_settings() -> dict:
         "breakfast_end_minute": 660,
         "lunch_end_minute": 1020,
         "sport_lookback_minutes": 360,
-        "sport_effects_mgdl": {"jogging": 40, "gym": 40, "light_cardio": 20},
+        "sport_effects_mgdl": dict(DEFAULT_SPORT_EFFECTS),
     }
 
 
@@ -134,7 +139,8 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result.setdefault("dose_target_mgdl", 100)
     result.setdefault("lunch_end_minute", 1020)
     result.setdefault("sport_lookback_minutes", 360)
-    result.setdefault("sport_effects_mgdl", {"jogging": 40, "gym": 40, "light_cardio": 20})
+    # Older settings versions predate newer sport types such as racing.
+    result["sport_effects_mgdl"] = {**DEFAULT_SPORT_EFFECTS, **result.get("sport_effects_mgdl", {})}
     result["nightscout_profile"] = ({
         "start_at": profile["start_at"], "profile_id": profile["profile_id"],
         "profile_name": profile["profile_name"], "timezone": profile["timezone"],

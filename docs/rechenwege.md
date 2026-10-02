@@ -36,14 +36,14 @@ Alle KH-Ereignisse und alle **vollen** schnell wirksamen IE im halboffenen Fenst
 ΔG = CGM(Endpunkt) - CGM(t₀)
 C  = Σ(KHᵢ in g × KFᵢ)
 I  = Σ(schnell wirksame IEⱼ × KFⱼ)
-S  = bestätigte Sport-Senkung in mg/dL, sonst 0
+S  = bestätigte Sport-Senkung in mg/dL (negativ bei BZ-Anstieg, z. B. Adrenalin beim Rennsport), sonst 0
 
 Insulinfaktor in IE/KE = 10 × (ΔG + S + I) / C
 ```
 
 Sport wird je Mahlzeit bestätigt und bearbeitet; ein Vorschlag allein ändert den Faktor nicht. Ein unbekannter Insulintyp im Fenster oder ein nicht positiver Zähler blockiert den Faktor. Ein positiver KH-Nenner ist erforderlich.
 
-Das Modell setzt voraus, dass alle KH und alle erfassten schnell wirksamen IE bis zum Endpunkt vollständig wirken, auch bei späten Ereignissen. Es setzt einen gemeinsamen Insulinfaktor für alle KH im Fenster und keinen zusätzlichen Hintergrundtrend voraus. Die bestätigte Sport-Senkung wird additiv auf `ΔG` angewendet. Das sind Rechenannahmen, keine Aussagen über den tatsächlichen Wirkverlauf oder eine Dosierungsempfehlung.
+Das Modell setzt voraus, dass alle KH und alle erfassten schnell wirksamen IE bis zum Endpunkt vollständig wirken, auch bei späten Ereignissen. Es setzt einen gemeinsamen Insulinfaktor für alle KH im Fenster und keinen zusätzlichen Hintergrundtrend voraus. Die bestätigte Sport-Senkung wird additiv auf `ΔG` angewendet; ein bestätigter Anstieg (Rennsport) wird abgezogen. Das sind Rechenannahmen, keine Aussagen über den tatsächlichen Wirkverlauf oder eine Dosierungsempfehlung.
 
 ## Analyse
 

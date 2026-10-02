@@ -7,8 +7,8 @@ from zoneinfo import ZoneInfo
 
 TAG = re.compile(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction|snack)\]")
 EVENT_TAG = re.compile(r"\[DAE:[a-f0-9-]{36}\]")
-SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio)\]")
-SPORT_LABELS = {"jogging": "Joggen", "gym": "Gym", "light_cardio": "Leichtes Cardio"}
+SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio|racing)\]")
+SPORT_LABELS = {"jogging": "Joggen", "gym": "Gym", "light_cardio": "Leichtes Cardio", "racing": "Rennsport"}
 
 
 def parse_at(value: dict) -> datetime:

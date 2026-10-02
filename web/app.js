@@ -10,6 +10,10 @@ const signedChange = (value, digits = 1) => value == null ? "—" : (Number(valu
 const glucoseChangeHTML = value => value == null ? '—' :
   '<span class="glucose-change ' + (Number(value) > 0 ? 'rising' : Number(value) < 0 ? 'falling' : 'steady') + '">' +
   escapeHTML(signedChange(value)) + '</span>';
+const sportKinds = ["jogging", "gym", "light_cardio", "racing"];
+const sportNames = { jogging: "Joggen", gym: "Gym", light_cardio: "Leichtes Cardio", racing: "Rennsport" };
+// The API stores a sport effect as glucose drop; the UI shows the signed glucose change.
+const sportChange = effect => -Number(effect || 0);
 const timeOnly = (value) => new Date(value).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
 // Keep an existing fractional value valid while number-input arrows use the requested step.
@@ -201,10 +205,10 @@ function updateEntrySportOption() {
     if (!wasHidden) scheduleDoseHelp();
     return;
   }
-  const suggested = eligible.reduce((total, item) => total + Number(state.settings.sport_effects_mgdl[item.sport_type] || 0), 0);
+  const suggested = eligible.reduce((total, item) => total + sportChange(state.settings.sport_effects_mgdl[item.sport_type]), 0);
   $("#entry-sport-hint").textContent = (eligible.length ? eligible.map(item =>
-    ({ jogging: "Joggen", gym: "Gym", light_cardio: "Cardio" })[item.sport_type] + " um " + timeOnly(item.at)).join(", ") +
-    " · Vorschlag: " + num(suggested, 0) + " mg/dL Senkung" : "Kein Sport vor der Mahlzeit erfasst · Wirkung selbst schätzen, z. B. für Sport danach") +
+    sportNames[item.sport_type] + " um " + timeOnly(item.at)).join(", ") +
+    " · Vorschlag: " + signedChange(suggested, 0) : "Kein Sport vor der Mahlzeit erfasst · Wirkung selbst schätzen, z. B. für Sport danach") +
     " · fließt über den Korrekturfaktor in die empfohlenen IE ein";
   if (!checkbox.checked) form.elements.sport_effect_mgdl.value = eligible.length ? suggested : "";
   effectField.hidden = !checkbox.checked;
@@ -261,8 +265,8 @@ async function loadSettings() {
   form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
   form.elements.lunch_end.value = minuteClock(data.settings.lunch_end_minute);
   form.elements.sport_lookback_minutes.value = data.settings.sport_lookback_minutes;
-  for (const kind of ["jogging", "gym", "light_cardio"]) {
-    form.elements["sport_" + kind].value = data.settings.sport_effects_mgdl[kind];
+  for (const kind of sportKinds) {
+    form.elements["sport_" + kind].value = sportChange(data.settings.sport_effects_mgdl[kind]);
   }
   renderIsfRows(data.settings.isf_schedule, data.settings.nightscout_profile, data.profile_sync_at, data.profile_sync_error);
   renderIcRows(data.settings.ic_schedule || []);
@@ -412,17 +416,17 @@ function icon(name) {
 
 function sportReviewHTML(sport, mealId, day, compact = false) {
   const applied = sport.status === "affected";
-  const effect = applied ? num(sport.effect_mgdl, 0) : "";
-  const suggestion = sport.suggested ? num(sport.suggested_effect_mgdl, 0) : "";
+  const effect = applied ? sportChange(sport.effect_mgdl) : 0;
+  const suggestion = sport.suggested ? sportChange(sport.suggested_effect_mgdl) : 0;
   return '<div class="sport-review' + (compact ? ' sport-review-table' : '') + '" data-meal-id="' + escapeHTML(mealId) +
-    '" data-day="' + escapeHTML(day) + '" data-suggestion="' + escapeHTML(sport.suggested_effect_mgdl || 0) + '">' +
+    '" data-day="' + escapeHTML(day) + '" data-suggestion="' + escapeHTML(suggestion) + '">' +
     '<div class="sport-state' + (applied ? ' is-applied' : '') + '">' +
-    (applied ? icon("check") + '<span>Sport −' + escapeHTML(effect) + ' mg/dL</span>' : '<span>Kein Sporteffekt</span>') + '</div>' +
+    (applied ? icon("check") + '<span>Sport ' + escapeHTML(signedChange(effect, 0)) + '</span>' : '<span>Kein Sporteffekt</span>') + '</div>' +
     (applied ? '<button type="button" class="sport-remove icon-button" aria-label="Sporteinfluss entfernen" title="Sporteinfluss entfernen">' + icon("remove") + '</button>' : '') +
-    (!applied && sport.suggested && Number(sport.suggested_effect_mgdl) > 0 ? '<button type="button" class="sport-suggestion">' + icon("plus") + ' Vorschlag −' + escapeHTML(suggestion) + ' mg/dL übernehmen</button>' : '') +
+    (!applied && suggestion ? '<button type="button" class="sport-suggestion">' + icon("plus") + ' Vorschlag ' + escapeHTML(signedChange(suggestion, 0)) + ' übernehmen</button>' : '') +
     '<details class="sport-custom"><summary>' + (applied ? 'Wert ändern' : 'Eigenen Wert setzen') + '</summary>' +
-    '<div class="sport-custom-fields"><label><span>Senkung in mg/dL</span><input class="sport-effect" type="number" min="1" max="500" step="1" inputmode="numeric" value="' +
-    escapeHTML(applied ? sport.effect_mgdl : (Number(sport.suggested_effect_mgdl) > 0 ? sport.suggested_effect_mgdl : "")) +
+    '<div class="sport-custom-fields"><label><span>BZ-Wirkung in mg/dL (− senkt, + hebt)</span><input class="sport-effect" type="number" min="-500" max="500" step="1" value="' +
+    escapeHTML(applied ? effect : (suggestion || "")) +
     '"></label><button type="button" class="sport-save">' + (applied ? 'Ändern' : 'Setzen') + '</button></div></details></div>';
 }
 
@@ -488,7 +492,7 @@ function renderDay(data) {
             num(item.glucose_mgdl, 0) + " mg/dL" : "",
       ].filter(Boolean).join(" · ");
       const label = item.kind === "exercise"
-        ? ({ jogging: "Joggen", gym: "Gym", light_cardio: "Leichtes Cardio" })[item.sport_kind] || "Sport"
+        ? sportNames[item.sport_kind] || "Sport"
         : item.kind === "meal" ? (data.meals.find(meal => meal.source_id === item.id)?.meal
           ? names[data.meals.find(meal => meal.source_id === item.id).meal] : "Mahlzeit") : labels[item.kind];
       const actions = item.kind === "other" ? "" :
@@ -755,7 +759,7 @@ async function saveEntry(event) {
       const meal = state.dayData?.meals.find(item => item.source_id === saved?.id);
       if (!meal) throw new Error("Eintrag gespeichert, aber die Sportzuordnung konnte nicht gefunden werden. Bitte im Mahlzeitenfaktor prüfen.");
       await api("/api/analysis/sport", { method: "POST", body: JSON.stringify({
-        meal_id: meal.id, day: result.day, status: "affected", effect_mgdl: sportEffect,
+        meal_id: meal.id, day: result.day, status: "affected", effect_mgdl: sportChange(sportEffect),
       }) });
       await loadDay();
     }
@@ -792,8 +796,8 @@ async function saveSportMark(event) {
   const suggestion = button.matches(".sport-suggestion");
   const effect = $(".sport-effect", block);
   const amount = remove ? 0 : Number(suggestion ? block.dataset.suggestion : effect.value);
-  if (!remove && (!Number.isInteger(amount) || amount < 1 || amount > 500)) {
-    effect.setCustomValidity("Bitte eine Senkung zwischen 1 und 500 mg/dL eingeben.");
+  if (!remove && (!Number.isInteger(amount) || amount === 0 || Math.abs(amount) > 500)) {
+    effect.setCustomValidity("Bitte eine BZ-Wirkung zwischen −500 und +500 mg/dL eingeben, nicht 0.");
     effect.reportValidity();
     return;
   }
@@ -802,7 +806,7 @@ async function saveSportMark(event) {
   try {
     await api("/api/analysis/sport", { method: "POST", body: JSON.stringify({
       meal_id: block.dataset.mealId, day: block.dataset.day,
-      status: remove ? "unaffected" : "affected", effect_mgdl: amount,
+      status: remove ? "unaffected" : "affected", effect_mgdl: sportChange(amount),
     }) });
     toast(remove ? "Sporteinfluss entfernt" : "Sporteinfluss gespeichert");
     await loadDay();
@@ -823,8 +827,8 @@ async function saveSettings(event) {
     breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),
     lunch_end_minute: clockMinute(form.elements.lunch_end.value),
     sport_lookback_minutes: Number(form.elements.sport_lookback_minutes.value),
-    sport_effects_mgdl: Object.fromEntries(["jogging", "gym", "light_cardio"]
-      .map(kind => [kind, form.elements["sport_" + kind].value])),
+    sport_effects_mgdl: Object.fromEntries(sportKinds
+      .map(kind => [kind, sportChange(form.elements["sport_" + kind].value)])),
     effective_at: form.elements.effective_date.value ? toInstant(form.elements.effective_date.value, form.elements.effective_time.value || "00:00") : null,
   };
   try {
