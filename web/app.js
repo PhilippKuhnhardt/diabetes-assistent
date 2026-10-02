@@ -331,6 +331,8 @@ async function loadSettings() {
   const form = $("#settings-form");
   form.elements.window_minutes.value = data.settings.window_minutes;
   form.elements.dose_target_mgdl.value = data.settings.dose_target_mgdl;
+  form.elements.dose_cautious_target_mgdl.value = data.settings.dose_cautious_target_mgdl;
+  form.elements.auto_percentile.value = data.settings.auto_percentile;
   form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
   form.elements.lunch_end.value = minuteClock(data.settings.lunch_end_minute);
   form.elements.sport_lookback_minutes.value = data.settings.sport_lookback_minutes;
@@ -1118,7 +1120,9 @@ async function updateDoseHelp() {
         escapeHTML(signedChange(data.activity_change_mgdl, 0)) + '</strong> · ' + escapeHTML((Number(data.activity_units) > 0 ? "+" : "") + num(data.activity_units, 2)) + ' IE</p>' : '') +
       '<div class="dose-options">' +
       option("Normal", "normal", data.target_mgdl, data.entry_units, data.total_units, data.expected_glucose_mgdl) +
-      option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_entry_units, data.cautious_total_units, data.cautious_expected_glucose_mgdl) + '</div>' +
+      option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_entry_units, data.cautious_total_units, data.cautious_expected_glucose_mgdl) +
+      option("Automatik", "auto", data.target_mgdl, data.auto_entry_units, data.auto_total_units, data.auto_expected_glucose_mgdl) + '</div>' +
+      (data.carb_units != null ? '<p class="hint">' + escapeHTML(autoFactorNote(data)) + '</p>' : '') +
       (data.expected_glucose_mgdl != null ? '<p class="hint">Modellwert bei voller Wirkung der eingegebenen KH und der angezeigten IE. Trend, frühere Dosen und weitere Einflüsse' + (Number(data.activity_change_mgdl) !== 0 ? ' außer dem angegebenen Sport' : '') + ' sind nicht eingerechnet.</p>' : '') +
       (data.recent_rapid_doses?.length ? '<p class="hint">Schnell wirksame Dosen in den letzten 3 h: ' +
       data.recent_rapid_doses.map(row => escapeHTML(timeOnly(row.at) + " · " + num(row.units) + " IE")).join(", ") +
@@ -1129,6 +1133,21 @@ async function updateDoseHelp() {
     if (requestId === helpRequestId) output.textContent = error.message;
     return null;
   }
+}
+
+const mealNames = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
+
+function autoFactorNote(data) {
+  const scope = mealNames[data.auto_meal] + (data.auto_meal === "breakfast" ?
+    (data.day_type === "free" ? " an freien Tagen" : " an Arbeitstagen") : "");
+  if (data.auto_units_per_ke == null) {
+    return "Automatik: Für " + scope + " gibt es erst " + data.auto_factor_count + " von " + data.auto_factor_min_meals +
+      " nötigen berechneten Mahlzeiten (letzte " + data.auto_factor_days + " Tage).";
+  }
+  return "Automatik: " + num(data.auto_units_per_ke, 2) + " IE/KE = " + num(data.auto_percentile, 1) +
+    "-%-Perzentil aus " + data.auto_factor_count + " berechneten Mahlzeiten (" + scope + ", letzte " +
+    data.auto_factor_days + " Tage; unteres Quartil " + num(data.auto_q1_units_per_ke, 2) + ", Median " +
+    num(data.auto_median_units_per_ke, 2) + " IE/KE). Korrektur auf den normalen Zielwert.";
 }
 
 function breakfastFactorNote(data) {
@@ -1153,13 +1172,14 @@ async function applyDoseSuggestion(event) {
     const current = await updateDoseHelp();
     if (!current) throw new Error("Empfehlung konnte nicht aktualisiert werden");
     const keys = ["carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl",
-      "cautious_target_mgdl", "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "total_units", "cautious_total_units", "entry_units", "cautious_entry_units", "expected_glucose_mgdl", "cautious_expected_glucose_mgdl"];
+      "cautious_target_mgdl", "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "total_units", "cautious_total_units", "entry_units", "cautious_entry_units", "expected_glucose_mgdl", "cautious_expected_glucose_mgdl",
+      "auto_units_per_ke", "auto_total_units", "auto_entry_units", "auto_expected_glucose_mgdl"];
     if (keys.some(key => previous[key] !== current[key]) ||
         JSON.stringify(previous.recent_rapid_doses) !== JSON.stringify(current.recent_rapid_doses)) {
       toast("Empfehlung geändert. Bitte den neuen Wert prüfen und erneut speichern.", true);
       return;
     }
-    const units = variant === "cautious" ? current.cautious_entry_units : current.entry_units;
+    const units = { normal: current.entry_units, cautious: current.cautious_entry_units, auto: current.auto_entry_units }[variant];
     if (units == null || Number(units) > 100 || Number($("#entry-form").elements.carbs.value) !== Number(current.carbs_g))
       throw new Error("Kohlenhydrate geändert. Bitte neue Empfehlung prüfen");
     const form = $("#entry-form");
@@ -1367,6 +1387,8 @@ async function saveSettings(event) {
   const payload = {
     window_minutes: Number(form.elements.window_minutes.value),
     dose_target_mgdl: form.elements.dose_target_mgdl.value,
+    dose_cautious_target_mgdl: form.elements.dose_cautious_target_mgdl.value,
+    auto_percentile: form.elements.auto_percentile.value,
     breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),
     lunch_end_minute: clockMinute(form.elements.lunch_end.value),
     sport_lookback_minutes: Number(form.elements.sport_lookback_minutes.value),
