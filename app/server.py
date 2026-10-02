@@ -826,7 +826,8 @@ class Handler(BaseHTTPRequestHandler):
                 treatments = [{"at": parse_instant(row["at"]), **{k: v for k, v in row.items() if k != "at"}}
                               for row in current_day["treatments"]]
                 self._response(200, dosing.suggest(payload.get("carbs", 0),
-                                                   current_settings, entries, treatments))
+                                                   current_settings, entries, treatments,
+                                                   activity_change=payload.get("activity_change_mgdl", 0)))
                 return
             if path == "/api/treatment":
                 self._response(200, save_diary_treatment(payload))
