@@ -176,6 +176,22 @@
       <div class="form-actions"><button class="primary" type="submit">Änderung in Nightscout speichern</button><button id="cancel-edit" type="button" class="quiet">Abbrechen</button></div>
     </form>
   </dialog>
+  <dialog id="window-dialog" aria-labelledby="window-dialog-title">
+    <div class="section-head"><div><span id="window-meal-type" class="meal-type"></span><h2 id="window-dialog-title">Zeitraum anpassen</h2></div><button id="close-window" type="button" class="quiet" aria-label="Schließen">×</button></div>
+    <div id="window-readout" class="window-readout" data-tone="none" aria-live="polite"></div>
+    <div class="window-handle-switch" role="group" aria-label="Griff auswählen">
+      <button type="button" data-window-handle="start" aria-pressed="false">Beginn</button>
+      <button type="button" data-window-handle="end" aria-pressed="true">Ende</button>
+    </div>
+    <div id="window-chart" class="window-chart"></div>
+    <div class="window-nudge" role="group" aria-label="Ausgewählten Griff verschieben">
+      <button type="button" data-nudge="-5">−5 min</button><button type="button" data-nudge="-1">−1 min</button>
+      <button type="button" data-nudge="1">+1 min</button><button type="button" data-nudge="5">+5 min</button>
+    </div>
+    <div id="window-summary" class="window-summary" aria-live="polite"></div>
+    <p class="hint">Griffe ziehen oder auf die Kurve tippen, um den ausgewählten Griff zu setzen. Sie rasten an Insulin, Kohlenhydraten, Sport und am Standardzeitraum ein. Gezählt wird ab Beginn bis ausschließlich Ende; der Zeitraum wird nur lokal gespeichert, nicht in Nightscout.</p>
+    <div class="form-actions"><button id="save-window" class="primary" type="button">Zeitraum speichern</button><button id="default-window" type="button" class="quiet">Standard</button><button id="cancel-window" type="button" class="quiet">Abbrechen</button></div>
+  </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

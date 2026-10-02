@@ -367,6 +367,63 @@ class IntegrationTests(unittest.TestCase):
         )
         self.assertEqual(storage.analysis_exclusions(), set())
 
+    def test_manual_meal_window_is_persisted_validated_and_resettable(self):
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",
+        })
+        before = self.request("/api/day?date=2026-09-23")["meals"][0]
+        self.assertFalse(before["calculation"]["manual_window"])
+        self.assertEqual(before["calculation"]["end"], "2026-09-23T13:00:00+00:00")
+        for start, end in (("2026-09-23T10:05:00Z", "2026-09-23T14:00:00Z"),
+                           ("2026-09-23T07:00:00Z", "2026-09-23T14:00:00Z"),
+                           ("2026-09-23T10:00:00Z", "2026-09-23T10:10:00Z")):
+            with self.assertRaises(urllib.error.HTTPError) as error:
+                self.request("/api/analysis/window", method="POST", body={
+                    "meal_id": before["id"], "day": "2026-09-23", "start": start, "end": end,
+                })
+            self.assertEqual(error.exception.code, 400)
+        self.request("/api/analysis/window", method="POST", body={
+            "meal_id": before["id"], "day": "2026-09-23",
+            "start": MEAL_AT, "end": "2026-09-23T14:00:00Z",
+        })
+        manual = self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]
+        self.assertTrue(manual["manual_window"])
+        self.assertEqual(manual["end"], "2026-09-23T14:00:00+00:00")
+        self.assertEqual(manual["auto_end"], "2026-09-23T13:00:00+00:00")
+        self.assertEqual(manual["end_reason"], "manual")
+        summary = self.request("/api/summary?days=30")
+        self.assertTrue(any(item["manual_window"] for group in summary["groups"].values()
+                            for item in group["calculations"]))
+        self.request("/api/analysis/window", method="POST", body={
+            "meal_id": before["id"], "day": "2026-09-23", "reset": True,
+        })
+        reset = self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]
+        self.assertFalse(reset["manual_window"])
+        self.assertEqual(reset["end"], "2026-09-23T13:00:00+00:00")
+        self.assertEqual(storage.analysis_windows(), {})
+
+    def test_blocked_calculation_still_exposes_editable_window(self):
+        FakeNightscout.entries = FakeNightscout.entries[:1] + [
+            {"_id": "glucose-1405", "date": int(datetime(2026, 9, 23, 14, 5, tzinfo=timezone.utc).timestamp() * 1000),
+             "type": "sgv", "sgv": 130},
+            {"_id": "glucose-1355", "date": int(datetime(2026, 9, 23, 13, 55, tzinfo=timezone.utc).timestamp() * 1000),
+             "type": "sgv", "sgv": 130},
+        ]
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",
+        })
+        meal = self.request("/api/day?date=2026-09-23")["meals"][0]
+        self.assertIn("CGM", meal["calculation"]["reason"])
+        self.assertEqual(meal["calculation"]["window_end"], "2026-09-23T13:00:00+00:00")
+        self.assertFalse(meal["calculation"]["manual_window"])
+        self.request("/api/analysis/window", method="POST", body={
+            "meal_id": meal["id"], "day": "2026-09-23",
+            "start": MEAL_AT, "end": "2026-09-23T14:00:00Z",
+        })
+        fixed = self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]
+        self.assertIsNotNone(fixed["factor_units_per_ke"])
+        self.assertEqual(Decimal(fixed["g3"]), Decimal(130))
+
     def test_current_nightscout_profile_is_the_only_isf_source(self):
         data = self.request("/api/settings")
         self.assertEqual(data["settings"]["isf_schedule"], [

@@ -117,6 +117,21 @@ def validate_settings(value: dict) -> dict:
     })
     return result
 
+MANUAL_WINDOW_LEAD = timedelta(hours=2)
+MANUAL_WINDOW_MIN = timedelta(minutes=30)
+MANUAL_WINDOW_MAX = timedelta(hours=10)
+
+
+def validate_manual_window(meal_at: datetime, start: datetime, end: datetime) -> None:
+    """A manual window must contain the meal start and stay within loaded day data."""
+    if not meal_at - MANUAL_WINDOW_LEAD <= start <= meal_at:
+        raise ValueError("Beginn muss zwischen zwei Stunden vor und dem Mahlzeitbeginn liegen")
+    if end < meal_at + MANUAL_WINDOW_MIN:
+        raise ValueError("Ende muss mindestens 30 Minuten nach Mahlzeitbeginn liegen")
+    if end - start > MANUAL_WINDOW_MAX:
+        raise ValueError("Zeitraum darf höchstens zehn Stunden lang sein")
+
+
 def sync_profile_cache(force: bool = False) -> None:
     if not nightscout.is_configured():
         raise nightscout.NightscoutError("Nightscout-Zugang in Umgebungsvariablen fehlt")
@@ -208,6 +223,7 @@ def day_payload(day: str, refresh: bool = True) -> dict:
     episodes.group_diary_followups(treatments, settings)
     meals = episodes.meals_for_day(treatments, day, settings["timezone"], settings)
     sport_marks = storage.analysis_sport_marks()
+    manual_windows = storage.analysis_windows()
     rendered = []
     main_meal_ids = {item["id"] for item in treatments
                      if (item.get("role") == "meal" or item.get("eventType") == "Meal Bolus")
@@ -242,11 +258,22 @@ def day_payload(day: str, refresh: bool = True) -> dict:
         else:
             try:
                 output["calculation"] = calculation.calculate_episode(
-                    meal, treatments, entries, meal_settings, confirmed_effect)
+                    meal, treatments, entries, meal_settings, confirmed_effect,
+                    manual_windows.get(meal["id"]))
                 output["calculation"]["settings_version"] = meal_settings_id
                 output["calculation"]["nightscout_profile"] = meal_settings.get("nightscout_profile")
             except ValueError as error:
                 output["calculation"] = {"reason": str(error)}
+        if "auto_end" not in output["calculation"]:
+            # Keep the window editable when the calculation itself is blocked.
+            manual = manual_windows.get(meal["id"])
+            automatic = calculation.automatic_window(meal, treatments, entries, meal_settings)
+            output["calculation"].update({
+                "auto_start": automatic["start"].isoformat(), "auto_end": automatic["end"].isoformat(),
+                "manual_window": bool(manual),
+                "window_start": (manual or automatic)["start"].isoformat(),
+                "window_end": (manual or automatic)["end"].isoformat(),
+            })
         calculation_events = output["calculation"]
         included_ids = {item["id"] for key in ("carb_events", "doses")
                         for item in calculation_events.get(key, [])
@@ -641,6 +668,7 @@ class Handler(BaseHTTPRequestHandler):
                             "rapid_units_in_window": result.get("rapid_units_in_window"),
                             "delta_mgdl": result.get("delta_mgdl"),
                             "end": result.get("end"),
+                            "manual_window": bool(result.get("manual_window")),
                             "reason": result.get("reason"),
                             "excluded": excluded,
                             "sport": meal.get("sport", {}),
@@ -831,6 +859,27 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("Ungültiger Sporteffekt")
                 storage.set_analysis_sport_mark(meal_id, status, str(effect))
                 self._response(200, {"meal_id": meal_id, "status": status, "effect_mgdl": str(effect)})
+                return
+            if path == "/api/analysis/window":
+                meal_id = payload.get("meal_id")
+                day = str(payload.get("day", ""))
+                date.fromisoformat(day)
+                if not isinstance(meal_id, str) or not 0 < len(meal_id) <= 200:
+                    raise ValueError("Ungültige Mahlzeit")
+                meal = next((row for row in day_payload(day, refresh=False)["meals"] if row["id"] == meal_id), None)
+                if meal is None:
+                    raise ValueError("Mahlzeit nicht gefunden")
+                if payload.get("reset"):
+                    storage.set_analysis_window(meal_id, None, None)
+                    self._response(200, {"meal_id": meal_id, "manual": False})
+                    return
+                meal_at = parse_instant(meal["at"])
+                start = parse_instant(str(payload["start"]))
+                end = parse_instant(str(payload["end"]))
+                validate_manual_window(meal_at, start, end)
+                storage.set_analysis_window(meal_id, start, end)
+                self._response(200, {"meal_id": meal_id, "manual": True,
+                                     "start": start.isoformat(), "end": end.isoformat()})
                 return
             if path == "/api/analysis/day-type":
                 day = payload.get("day")

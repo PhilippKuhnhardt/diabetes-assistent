@@ -160,6 +160,44 @@ class CalculationTests(unittest.TestCase):
         self.assertIsNone(result["factor_units_per_ke"])
         self.assertEqual(result["end_reason"], "fixed_window")
 
+    def test_manual_window_includes_prebolus_and_ends_before_next_meal(self):
+        start = moment(10)
+        entries = [{"at": moment(9, 45), "sgv": 110}, {"at": start, "sgv": 100},
+                   {"at": moment(11, 25), "sgv": 130}, {"at": moment(11, 35), "sgv": 130},
+                   {"at": moment(13, 55), "sgv": 150}, {"at": moment(14, 5), "sgv": 150}]
+        meal = {"id": "meal", "source_id": "meal", "at": start, "carbs": 50}
+        treatments = [
+            {"id": "pre", "at": moment(9, 50), "insulin": 4, "eventType": "Correction Bolus"},
+            {"id": "meal", "at": start, "carbs": 50, "insulin": 0, "eventType": "Meal Bolus"},
+            {"id": "late", "at": moment(11), "insulin": 1, "eventType": "Correction Bolus"},
+            {"id": "next", "at": moment(11, 30), "carbs": 80, "insulin": 6, "eventType": "Meal Bolus"},
+        ]
+        automatic = calculate_episode(meal, treatments, entries, self.settings)
+        self.assertIsNone(automatic["factor_units_per_ke"])
+        manual = {"start": moment(9, 45), "end": moment(11, 30)}
+        result = calculate_episode(meal, treatments, entries, self.settings, manual_window=manual)
+        self.assertTrue(result["manual_window"])
+        self.assertEqual(result["end_reason"], "manual")
+        self.assertEqual(result["start"], moment(9, 45).isoformat())
+        self.assertEqual(result["auto_start"], start.isoformat())
+        self.assertEqual(result["auto_end"], automatic["end"])
+        # The next meal starts exactly at the half-open endpoint and is excluded.
+        self.assertEqual([dose["id"] for dose in result["doses"]], ["pre", "late"])
+        self.assertEqual(result["blockers"], [])
+        self.assertEqual(Decimal(result["g0"]), Decimal(110))
+        self.assertEqual(Decimal(result["carb_events"][0]["isf"]), Decimal(40))
+        self.assertEqual(result["carb_events"][0]["at"], start.isoformat())
+        # 10 × (ΔG 20 + 4 × 50 + 1 × 40) / (50 × 40)
+        self.assertEqual(Decimal(result["delta_mgdl"]), Decimal(20))
+        self.assertEqual(Decimal(result["factor_units_per_ke"]), Decimal("1.3"))
+
+    def test_manual_window_must_contain_meal_start(self):
+        start = moment(10)
+        entries = [{"at": start, "sgv": 100}, {"at": moment(13), "sgv": 120}]
+        with self.assertRaisesRegex(ValueError, "Mahlzeitbeginn"):
+            calculate_episode({"at": start, "carbs": 30}, [], entries, self.settings,
+                              manual_window={"start": moment(10, 5), "end": moment(12)})
+
     def test_cgm_gap_rejected(self):
         entries = [{"at": moment(10), "sgv": 100}, {"at": moment(10, 20), "sgv": 120}]
         with self.assertRaisesRegex(ValueError, "CGM-Lücke"):
