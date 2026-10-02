@@ -8,11 +8,17 @@ from app import calculation
 
 
 def suggest(carbs: object, settings: dict, entries: list[dict],
-            treatments: list[dict], now: datetime | None = None) -> dict:
+            treatments: list[dict], now: datetime | None = None,
+            activity_change: object = 0) -> dict:
+    """activity_change is a signed, user-estimated BG change in mg/dL from sport
+    (negative lowers BG and therefore the dose; positive, e.g. adrenaline, raises it)."""
     now = now or datetime.now(timezone.utc)
     grams = calculation.dec(carbs)
     if not grams.is_finite() or not 0 <= grams <= 500:
         raise ValueError("Kohlenhydrate müssen zwischen 0 und 500 g liegen")
+    activity = calculation.dec(activity_change if activity_change not in (None, "") else 0)
+    if not activity.is_finite() or not -500 <= activity <= 500:
+        raise ValueError("Sporteinfluss muss zwischen -500 und 500 mg/dL liegen")
     timezone_name = settings["timezone"]
     points = sorted((entry["at"], calculation.dec(entry["sgv"])) for entry in entries
                     if entry.get("sgv") is not None and entry["at"] <= now)
@@ -36,6 +42,7 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         "trend_delta_mgdl": str(latest[1] - prior[1]) if prior else None,
         "trend_minutes": str(calculation.minutes_between(latest[0], prior[0])) if prior else None,
         "recent_rapid_doses": recent,
+        "activity_change_mgdl": str(activity),
     }
     try:
         ratio = calculation.schedule_value_at(
@@ -48,6 +55,7 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     result.update({
         "units_per_ke": str(Decimal(10) / ratio), "carb_units": str(carb_units),
         "isf_mgdl_per_unit": str(isf),
+        "activity_units": str(activity / isf),
     })
     target = calculation.dec(settings.get("dose_target_mgdl", 100))
     cautious_target = Decimal(140)
@@ -56,8 +64,10 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         "cautious_target_mgdl": str(cautious_target),
     })
     if fresh:
-        correction_units = (latest[1] - target) / isf
-        cautious_correction_units = (latest[1] - cautious_target) / isf
+        # Sport shifts the modelled start glucose, so its effect flows through the correction factor.
+        start = latest[1] + activity
+        correction_units = (start - target) / isf
+        cautious_correction_units = (start - cautious_target) / isf
         total = max(Decimal(0), carb_units + correction_units)
         cautious_total = max(Decimal(0), carb_units + cautious_correction_units)
         entry_units = (total * 2).quantize(Decimal("1"), rounding=ROUND_HALF_UP) / 2
@@ -65,11 +75,11 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         result["correction_units"] = str(correction_units)
         result["total_units"] = str(total)
         result["entry_units"] = str(entry_units)
-        result["expected_glucose_mgdl"] = str(latest[1] + (carb_units - entry_units) * isf)
+        result["expected_glucose_mgdl"] = str(start + (carb_units - entry_units) * isf)
         result["cautious_correction_units"] = str(cautious_correction_units)
         result["cautious_total_units"] = str(cautious_total)
         result["cautious_entry_units"] = str(cautious_entry_units)
-        result["cautious_expected_glucose_mgdl"] = str(latest[1] + (carb_units - cautious_entry_units) * isf)
+        result["cautious_expected_glucose_mgdl"] = str(start + (carb_units - cautious_entry_units) * isf)
     else:
         result["reason"] = "Kein aktueller CGM-Wert innerhalb von 15 Minuten"
     return result
