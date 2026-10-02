@@ -108,8 +108,9 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
                       sport_effect_mgdl: Decimal = Decimal(0), manual_window: dict | None = None) -> dict:
     """Solve one endpoint balance for every carb and rapid dose in a meal window.
 
-    A user-confirmed manual window replaces the automatic start and endpoint;
-    the meal's own carbs always count because the window must contain them.
+    A user-confirmed manual window replaces the automatic start and endpoint.
+    Its start may lie after the recorded meal time (e.g. eating began later);
+    the meal's own entry, carbs and bolus, always counts in full.
     """
     meal_at = episode["at"]
     automatic = automatic_window(episode, all_treatments, entries, settings)
@@ -120,8 +121,8 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
     auto_end = end
     if manual_window:
         start, end = manual_window["start"], manual_window["end"]
-        if not start <= meal_at < end:
-            raise ValueError("Manueller Zeitraum muss den Mahlzeitbeginn enthalten")
+        if not meal_at < end or not start < end:
+            raise ValueError("Manueller Zeitraum muss nach dem Mahlzeitbeginn enden")
     g0 = interpolate_glucose(entries, start)
     g1 = interpolate_glucose(entries, end)
     delta = g1["value"] - g0["value"]
@@ -165,7 +166,8 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
             continue
         units = dec(treatment.get("insulin") or 0)
         at = treatment["at"]
-        if units <= 0 or not (start <= at < end):
+        own_entry = bool(episode.get("source_id")) and treatment.get("id") == episode["source_id"]
+        if units <= 0 or not (own_entry or start <= at < end):
             continue
         if not is_rapid_insulin(treatment):
             local_time = at.astimezone(ZoneInfo(settings["timezone"])).strftime("%H:%M")
