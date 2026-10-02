@@ -756,6 +756,76 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(filtered["by_day_type"]["free"]["mean_units_per_ke"], "2")
             self.assertEqual([item["expected_delta_mgdl"] for item in filtered["calculations"]], ["50", "50"])
 
+    def test_vacation_marks_every_day_free_until_switched_off(self):
+        today = datetime.now(ZoneInfo("Europe/Berlin")).date()
+        monday = (today - timedelta(days=today.weekday())).isoformat()
+        self.assertFalse(self.request("/api/settings")["vacation"]["active"])
+        state = self.request("/api/vacation", method="POST", body={"active": True})
+        self.assertEqual(state, {"active": True, "since": today.isoformat()})
+        self.assertEqual(storage.day_type_for(today.isoformat(), {}, storage.vacation_periods()),
+                         ("free", "vacation"))
+        self.assertEqual(storage.day_type_for("2020-01-06", {}, storage.vacation_periods()),
+                         ("work", "weekday"))
+        self.assertEqual(storage.day_type_for(today.isoformat(), {today.isoformat(): "work"},
+                                              storage.vacation_periods()), ("work", "manual"))
+        day = self.request("/api/day?date=" + today.isoformat())
+        self.assertEqual((day["day_type"], day["day_type_source"]), ("free", "vacation"))
+        # Switching off on the day it was switched on leaves no vacation behind.
+        self.request("/api/vacation", method="POST", body={"active": False})
+        self.assertEqual(storage.vacation_periods(), [])
+        self.assertEqual(storage.day_type_for(monday, {}, []), ("work", "weekday"))
+        # An older vacation ends the day before it is switched off.
+        storage.set_vacation(True, "2026-08-01")
+        storage.set_vacation(False, "2026-08-10")
+        periods = storage.vacation_periods()
+        self.assertEqual(periods, [{"start_day": "2026-08-01", "end_day": "2026-08-09"}])
+        self.assertEqual(storage.day_type_for("2026-08-03", {}, periods)[0], "free")
+        self.assertEqual(storage.day_type_for("2026-08-10", {}, periods)[0], "work")
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            self.request("/api/vacation", method="POST", body={"active": "yes"})
+        self.assertEqual(error.exception.code, 400)
+        error.exception.close()
+
+    def test_breakfast_dose_help_uses_median_factor_of_selected_day_type(self):
+        self.request("/api/settings")
+        zone = ZoneInfo("Europe/Berlin")
+        now = datetime.now(timezone.utc)
+        local_today = now.astimezone(zone).date()
+        # Make every time of day count as breakfast for this test.
+        _, settings = storage.get_settings()
+        storage.save_settings({**settings, "breakfast_end_minute": 1439, "lunch_end_minute": 1439})
+        current_day = {
+            "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 100}],
+            "treatments": [],
+        }
+        past = [(local_today - timedelta(days=offset)).isoformat() for offset in range(1, 29)]
+        free_days = [day for day in past if storage.day_type_for(day, {}, [])[0] == "free"][:3]
+        factors = dict(zip(free_days, ["2", "3", "4"]))
+
+        def payload(day, refresh=True):
+            if day == local_today.isoformat():
+                return {**current_day, "meals": []}
+            factor = factors.get(day)
+            return {"meals": [{"id": "b-" + day, "meal": "breakfast",
+                               "calculation": {"factor_units_per_ke": factor}}] if factor else []}
+
+        with patch("app.server.day_payload", side_effect=payload):
+            self.request("/api/analysis/day-type", method="POST",
+                         body={"day": local_today.isoformat(), "day_type": "work"})
+            work = self.request("/api/dose-help", method="POST", body={"carbs": "30"})
+            self.assertEqual(work["day_type"], "work")
+            self.assertEqual(work["factor_source"], "nightscout")
+            self.assertEqual(work["breakfast_factor_count"], 0)
+            self.request("/api/analysis/day-type", method="POST",
+                         body={"day": local_today.isoformat(), "day_type": "free"})
+            free = self.request("/api/dose-help", method="POST", body={"carbs": "30"})
+        self.assertEqual(free["day_type_source"], "manual")
+        self.assertEqual(free["factor_source"], "breakfast_day_type")
+        self.assertEqual(free["breakfast_factor_count"], 3)
+        self.assertEqual(Decimal(free["units_per_ke"]), Decimal(3))
+        self.assertEqual(Decimal(free["carb_units"]), Decimal(9))
+        self.assertEqual(Decimal(free["nightscout_units_per_ke"]), Decimal(work["units_per_ke"]))
+
     def test_summary_shows_median_middle_half_and_full_range(self):
         factors = ["1", "1.1", "1.2", "1.3", "5"]
         meals = [{
