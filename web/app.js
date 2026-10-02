@@ -438,6 +438,7 @@ const MINUTE = 60000;
 const RAPID_TYPES = new Set(["Meal Bolus", "Correction Bolus", "Snack Bolus", "Bolus"]);
 // Mirrors the server-side limits for a manual meal window.
 const WINDOW_LEAD = 120 * MINUTE;
+const WINDOW_LAG = 120 * MINUTE;
 const WINDOW_MIN = 30 * MINUTE;
 const WINDOW_MAX = 600 * MINUTE;
 const SNAP_PIXELS = 16;
@@ -510,6 +511,7 @@ function mealWindow(meal) {
     autoStart: time(calc.auto_start) ?? new Date(meal.at).getTime(),
     autoEnd: time(calc.auto_end) ?? fallback,
     manual: Boolean(calc.manual_window),
+    sourceId: meal.source_id || null,
   };
 }
 
@@ -520,8 +522,8 @@ function chartEvents(treatments) {
       return [{ kind: "sport", t, end: t + Number(item.duration || 0) * MINUTE, label: sportNames[item.sport_type] || "Sport" }];
     }
     const result = [];
-    if (Number(item.insulin) > 0) result.push({ kind: "insulin", t, amount: Number(item.insulin), rapid: RAPID_TYPES.has(item.eventType) || Boolean(item.role) });
-    if (Number(item.carbs) > 0) result.push({ kind: "carbs", t, amount: Number(item.carbs) });
+    if (Number(item.insulin) > 0) result.push({ kind: "insulin", id: item.id, t, amount: Number(item.insulin), rapid: RAPID_TYPES.has(item.eventType) || Boolean(item.role) });
+    if (Number(item.carbs) > 0) result.push({ kind: "carbs", id: item.id, t, amount: Number(item.carbs) });
     return result;
   });
 }
@@ -552,10 +554,9 @@ const chartIcons = {
 };
 
 function eventLanes(events, scales, view, range) {
-  const inside = event => event.t >= range.start && event.t < range.end;
   return events.filter(event => (event.end || event.t) >= view.from && event.t <= view.to).map(event => {
     const x = scales.x(Math.max(event.t, view.from));
-    const included = inside(event) ? " is-included" : "";
+    const included = windowIncludes(range, event) ? " is-included" : "";
     if (event.kind === "sport") {
       const width = Math.max(4, scales.x(Math.min(event.end, view.to)) - x);
       return '<g class="chart-event sport' + included + '" data-t="' + event.t + '"><rect x="' + x.toFixed(1) +
@@ -565,7 +566,7 @@ function eventLanes(events, scales, view, range) {
     const y = event.kind === "insulin" ? 14 : 34;
     const label = event.kind === "insulin" ? num(event.amount, 1) + " IE" : num(event.amount, 0) + " g";
     return '<g class="chart-event ' + event.kind + (event.rapid === false ? ' non-rapid' : '') + included +
-      '" data-t="' + event.t + '"><line x1="' + x.toFixed(1) + '" y1="' + (y + 9) + '" x2="' + x.toFixed(1) + '" y2="' + CHART.plotBottom + '" class="event-guide"/>' +
+      '" data-t="' + event.t + '" data-id="' + escapeHTML(event.id || "") + '"><line x1="' + x.toFixed(1) + '" y1="' + (y + 9) + '" x2="' + x.toFixed(1) + '" y2="' + CHART.plotBottom + '" class="event-guide"/>' +
       '<g transform="translate(' + x.toFixed(1) + ' ' + y + ')">' + chartIcons[event.kind] + '</g>' +
       '<text x="' + (x + 10).toFixed(1) + '" y="' + (y + 4) + '">' + escapeHTML(label) + '</text></g>';
   }).join("");
@@ -679,8 +680,17 @@ function renderMealCharts() {
 
 function windowBounds(handle) {
   const editor = windowEditor;
-  if (handle === "start") return { min: Math.max(editor.mealAt - WINDOW_LEAD, editor.view.from), max: editor.mealAt };
-  return { min: editor.mealAt + WINDOW_MIN, max: Math.min(editor.start + WINDOW_MAX, editor.view.to) };
+  if (handle === "start") return { min: Math.max(editor.mealAt - WINDOW_LEAD, editor.view.from), max: editor.mealAt + WINDOW_LAG };
+  return { min: minWindowEnd(editor.start), max: Math.min(editor.start + WINDOW_MAX, editor.view.to) };
+}
+
+function minWindowEnd(start) {
+  return Math.max(start, windowEditor.mealAt) + WINDOW_MIN;
+}
+
+// The meal's own entry (carbs and bolus) always counts, even when the start was moved after it.
+function windowIncludes(range, event) {
+  return (range.sourceId && event.id === range.sourceId) || (event.t >= range.start && event.t < range.end);
 }
 
 function snapTargets() {
@@ -713,13 +723,12 @@ function placeHandle(handle, raw, options = {}) {
   if (snapped && editor.snapped[handle]?.t !== snapped.t) navigator.vibrate?.(8);
   editor.snapped[handle] = snapped;
   editor[handle] = t;
-  if (handle === "start") editor.end = Math.min(Math.max(editor.end, editor.mealAt + WINDOW_MIN), editor.start + WINDOW_MAX);
+  if (handle === "start") editor.end = Math.min(Math.max(editor.end, minWindowEnd(editor.start)), editor.start + WINDOW_MAX);
 }
 
 function editorSummary() {
   const editor = windowEditor;
-  const inside = event => event.t >= editor.start && event.t < editor.end;
-  const included = editor.events.filter(inside);
+  const included = editor.events.filter(event => windowIncludes(editor, event));
   const carbs = included.filter(event => event.kind === "carbs").reduce((sum, event) => sum + event.amount, 0);
   const insulin = included.filter(event => event.kind === "insulin" && event.rapid).reduce((sum, event) => sum + event.amount, 0);
   const g0 = glucoseAt(editor.points, editor.start);
@@ -778,7 +787,7 @@ function updateWindowEditor() {
   shade.setAttribute("width", (scales.x(editor.end) - scales.x(editor.start)).toFixed(1));
   $$(".chart-event", svg).forEach(node => {
     const t = Number(node.dataset.t);
-    node.classList.toggle("is-included", t >= editor.start && t < editor.end);
+    node.classList.toggle("is-included", windowIncludes(editor, { t, id: node.dataset.id }));
   });
   $$("[data-window-handle]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.windowHandle === editor.active)));
   updateWindowReadout();

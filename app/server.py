@@ -118,16 +118,17 @@ def validate_settings(value: dict) -> dict:
     return result
 
 MANUAL_WINDOW_LEAD = timedelta(hours=2)
+MANUAL_WINDOW_LAG = timedelta(hours=2)
 MANUAL_WINDOW_MIN = timedelta(minutes=30)
 MANUAL_WINDOW_MAX = timedelta(hours=10)
 
 
 def validate_manual_window(meal_at: datetime, start: datetime, end: datetime) -> None:
-    """A manual window must contain the meal start and stay within loaded day data."""
-    if not meal_at - MANUAL_WINDOW_LEAD <= start <= meal_at:
-        raise ValueError("Beginn muss zwischen zwei Stunden vor und dem Mahlzeitbeginn liegen")
-    if end < meal_at + MANUAL_WINDOW_MIN:
-        raise ValueError("Ende muss mindestens 30 Minuten nach Mahlzeitbeginn liegen")
+    """A manual window starts within two hours around the meal and ends after it."""
+    if not meal_at - MANUAL_WINDOW_LEAD <= start <= meal_at + MANUAL_WINDOW_LAG:
+        raise ValueError("Beginn muss höchstens zwei Stunden vor oder nach dem Mahlzeitbeginn liegen")
+    if end < max(start, meal_at) + MANUAL_WINDOW_MIN:
+        raise ValueError("Ende muss mindestens 30 Minuten nach Mahlzeit- und Fensterbeginn liegen")
     if end - start > MANUAL_WINDOW_MAX:
         raise ValueError("Zeitraum darf höchstens zehn Stunden lang sein")
 
