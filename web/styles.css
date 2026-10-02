@@ -325,6 +325,13 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 
 /* Meal window chart and editor */
 .meal-chart { margin: 15px 0 5px; }
+.day-overview { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+.day-overview .section-head { gap: 10px; }
+.day-overview-chart { margin: 8px 0 4px; min-height: 120px; }
+.day-overview p.hint { margin: 0; }
+.overview-span { display: inline-flex; gap: 4px; }
+.overview-span button { min-height: 32px; padding: 5px 10px; background: var(--canvas); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); font-size: 12px; font-weight: 700; }
+.overview-span button[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: #fff; }
 .window-chart-svg { --plot: #fbfcfa; --grid: #e3ebe5; --label: var(--muted); --curve: #267855; --band: #dff0e5; --shade: #17674614; --handle: #0e4b32; --event: #50645b;
   display: block; width: 100%; height: auto; overflow: visible; font-family: inherit; }
 .window-chart-svg .plot-bg { fill: var(--plot); }
