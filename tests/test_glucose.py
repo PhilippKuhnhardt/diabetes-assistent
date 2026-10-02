@@ -34,13 +34,42 @@ class CurrentGlucoseTests(unittest.TestCase):
                                                     "target_schedule": []})["status"], "no_target")
         self.assertEqual(glucose.current_status([], self.settings, self.now)["status"], "unavailable")
 
-    def test_trend_uses_previous_measurement(self):
+    def test_trend_uses_course_of_last_15_minutes(self):
         entries = [
             {"at": self.now - timedelta(minutes=12), "sgv": 100},
             {"at": self.now - timedelta(minutes=2), "sgv": 110},
         ]
         result = glucose.current_status(entries, self.settings, self.now)
-        self.assertEqual(Decimal(result["trend_delta_mgdl"]), Decimal(10))
-        self.assertEqual(Decimal(result["trend_minutes"]), Decimal(10))
+        self.assertEqual(Decimal(result["trend_delta_mgdl"]), Decimal(15))
+        self.assertEqual(Decimal(result["trend_minutes"]), Decimal(15))
+        self.assertEqual(result["trend_direction"], "up")
         stale = glucose.current_status(entries, self.settings, self.now + timedelta(minutes=20))
         self.assertIsNone(stale["trend_delta_mgdl"])
+        self.assertIsNone(stale["trend_direction"])
+
+    def test_trend_ignores_single_outlier_and_older_values(self):
+        start = self.now - timedelta(minutes=15)
+        values = [180, 120, 121, 120, 119, 125]  # 180 lies 20 min back, outside the window
+        entries = [{"at": start - timedelta(minutes=5), "sgv": values[0]}] + [
+            {"at": start + timedelta(minutes=5 * index), "sgv": value}
+            for index, value in enumerate(values[2:])]
+        entries.insert(1, {"at": start - timedelta(minutes=1), "sgv": values[1]})
+        result = glucose.trend(sorted((item["at"], Decimal(item["sgv"])) for item in entries))
+        self.assertEqual(result["trend_direction"], "flat")
+        self.assertLess(abs(Decimal(result["trend_delta_mgdl"])), Decimal(5))
+
+    def test_trend_direction_thresholds(self):
+        def direction(change):
+            points = [(self.now - timedelta(minutes=15), Decimal(150)),
+                      (self.now, Decimal(150) + Decimal(change))]
+            return glucose.trend(points)["trend_direction"]
+        self.assertEqual(direction("4.9"), "flat")
+        self.assertEqual(direction("-4.9"), "flat")
+        self.assertEqual(direction(5), "up")
+        self.assertEqual(direction(-5), "down")
+        self.assertEqual(direction(30), "up_fast")
+        self.assertEqual(direction(-30), "down_fast")
+
+    def test_trend_needs_five_minutes_of_course(self):
+        points = [(self.now - timedelta(minutes=3), Decimal(100)), (self.now, Decimal(120))]
+        self.assertIsNone(glucose.trend(points))

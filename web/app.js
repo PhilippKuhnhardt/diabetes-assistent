@@ -75,9 +75,8 @@ function loadCurrentGlucose() {
       $("#glucose-value").textContent = data.glucose_mgdl == null
         ? "—" : num(data.glucose_mgdl, 1) + " mg/dL";
       const delta = data.trend_delta_mgdl;
-      const arrow = Number(delta) > 0 ? "↗" : Number(delta) < 0 ? "↘" : "→";
       $("#glucose-trend").textContent = data.fresh && delta != null
-        ? arrow + " " + (Number(delta) > 0 ? "+" : "") + num(delta, 0) +
+        ? trendSymbol(data.trend_direction) + " " + (Number(delta) > 0 ? "+" : "") + num(delta, 0) +
           " mg/dL / " + num(data.trend_minutes, 0) + " min"
         : data.status === "stale" ? "Trend veraltet" : "Trend nicht verfügbar";
       const measured = data.glucose_at ? " · " + timeOnly(data.glucose_at) + " Uhr" : "";
@@ -494,12 +493,35 @@ function glucoseAt(points, t) {
   return null;
 }
 
+const trendSymbols = { up_fast: "↑", up: "↗", flat: "→", down: "↘", down_fast: "↓" };
+
+function trendSymbol(direction) {
+  return trendSymbols[direction] || "";
+}
+
+// Same rule as app/glucose.py: least-squares slope over the last 15 minutes, as change per 15 minutes;
+// below 5 mg/dL flat, from 30 mg/dL fast.
+function trendDirection(delta) {
+  if (Math.abs(delta) < 5) return "flat";
+  if (delta > 0) return delta >= 30 ? "up_fast" : "up";
+  return delta <= -30 ? "down_fast" : "down";
+}
+
 function trendArrow(points, t) {
-  const now = glucoseAt(points, t);
-  const earlier = glucoseAt(points, t - 15 * MINUTE);
-  if (now == null || earlier == null) return "";
-  const perMinute = (now - earlier) / 15;
-  return perMinute > 2 ? "↑" : perMinute > 1 ? "↗" : perMinute < -2 ? "↓" : perMinute < -1 ? "↘" : "→";
+  const current = glucoseAt(points, t);
+  if (current == null) return "";
+  const window = points.filter(point => point.t < t && point.t >= t - 16 * MINUTE);
+  window.push({ t, g: current });
+  if (window.length < 2 || window[window.length - 1].t - window[0].t < 5 * MINUTE) return "";
+  const xs = window.map(point => (point.t - t) / MINUTE);
+  const meanX = xs.reduce((sum, x) => sum + x, 0) / xs.length;
+  const meanY = window.reduce((sum, point) => sum + point.g, 0) / window.length;
+  let numerator = 0, denominator = 0;
+  window.forEach((point, index) => {
+    numerator += (xs[index] - meanX) * (point.g - meanY);
+    denominator += (xs[index] - meanX) ** 2;
+  });
+  return trendSymbol(trendDirection(numerator / denominator * 15));
 }
 
 function mealWindow(meal) {
@@ -1102,7 +1124,7 @@ async function updateDoseHelp() {
     const glucose = data.glucose_mgdl == null ? "Kein CGM-Wert" :
       num(data.glucose_mgdl, 0) + " mg/dL um " + timeOnly(data.glucose_at) +
       (data.trend_delta_mgdl == null ? "" : " · " +
-       (Number(data.trend_delta_mgdl) > 0 ? "↗ " : Number(data.trend_delta_mgdl) < 0 ? "↘ " : "→ ") +
+       trendSymbol(data.trend_direction) + " " +
        signedChange(data.trend_delta_mgdl, 0) + " in " + num(data.trend_minutes, 0) + " min");
     const option = (label, variant, target, units, exact, expectedGlucose) => {
       if (units == null) return "";
