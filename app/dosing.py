@@ -9,9 +9,10 @@ from app import calculation
 
 def suggest(carbs: object, settings: dict, entries: list[dict],
             treatments: list[dict], now: datetime | None = None,
-            activity_change: object = 0) -> dict:
+            activity_change: object = 0, units_per_ke: Decimal | None = None) -> dict:
     """activity_change is a signed, user-estimated BG change in mg/dL from sport
-    (negative lowers BG and therefore the dose; positive, e.g. adrenaline, raises it)."""
+    (negative lowers BG and therefore the dose; positive, e.g. adrenaline, raises it).
+    units_per_ke replaces Nightscout's current I:C, e.g. with the breakfast factor of the day type."""
     now = now or datetime.now(timezone.utc)
     grams = calculation.dec(carbs)
     if not grams.is_finite() or not 0 <= grams <= 500:
@@ -51,9 +52,10 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     except ValueError:
         result["reason"] = "I:C- oder Korrekturfaktor-Profil aus Nightscout fehlt"
         return result
-    carb_units = grams / ratio
+    result["nightscout_units_per_ke"] = str(Decimal(10) / ratio)
+    carb_units = grams / ratio if units_per_ke is None else grams * units_per_ke / 10
     result.update({
-        "units_per_ke": str(Decimal(10) / ratio), "carb_units": str(carb_units),
+        "units_per_ke": str(Decimal(10) / ratio if units_per_ke is None else units_per_ke), "carb_units": str(carb_units),
         "isf_mgdl_per_unit": str(isf),
         "activity_units": str(activity / isf),
     })
