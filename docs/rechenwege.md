@@ -41,6 +41,10 @@ S  = bestätigte Sport-Senkung in mg/dL (negativ bei BZ-Anstieg, z. B. Adrenalin
 Insulinfaktor in IE/KE = 10 × (ΔG + S + I) / C
 ```
 
+### Manueller Zeitraum
+
+Im Tagebuch lässt sich der Zeitraum je Mahlzeit grafisch anpassen, um Tagebuchdaten zu bereinigen. Beginn und Endpunkt ersetzen dann die automatische Regel; ein späterer Abruf berechnet den Faktor mit diesem Zeitraum neu. Der Beginn darf höchstens zwei Stunden vor `t₀` und nicht nach `t₀` liegen, damit die KH der Mahlzeit immer im Fenster liegen (z. B. für einen Spritz-Ess-Abstand). Der Endpunkt liegt mindestens 30 Minuten nach `t₀`, das Fenster ist höchstens zehn Stunden lang. Es gilt weiterhin das halboffene Fenster `[Beginn, Endpunkt)` mit vollen IE und allen KH; ΔG wird zwischen den CGM-Werten an Beginn und Endpunkt gebildet. Eine weitere Hauptmahlzeit im manuellen Fenster blockiert weiterhin. Der Zeitraum wird nur in SQLite gespeichert, nicht in Nightscout, und kann auf den Standard zurückgesetzt werden.
+
 Sport wird je Mahlzeit bestätigt und bearbeitet; ein Vorschlag allein ändert den Faktor nicht. Ein unbekannter Insulintyp im Fenster oder ein nicht positiver Zähler blockiert den Faktor. Ein positiver KH-Nenner ist erforderlich.
 
 Das Modell setzt voraus, dass alle KH und alle erfassten schnell wirksamen IE bis zum Endpunkt vollständig wirken, auch bei späten Ereignissen. Es setzt einen gemeinsamen Insulinfaktor für alle KH im Fenster und keinen zusätzlichen Hintergrundtrend voraus. Die bestätigte Sport-Senkung wird additiv auf `ΔG` angewendet; ein bestätigter Anstieg (Rennsport) wird abgezogen. Das sind Rechenannahmen, keine Aussagen über den tatsächlichen Wirkverlauf oder eine Dosierungsempfehlung.

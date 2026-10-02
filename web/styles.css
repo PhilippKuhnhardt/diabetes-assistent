@@ -91,11 +91,6 @@ h3 small { font-size: 13px; color: var(--muted); font-weight: 500; letter-spacin
 .factor.unavailable strong { color: var(--muted); }
 .factor.unavailable small { max-width: 210px; }
 .meal-note { font-size: 13px; margin: 16px 0 0; color: var(--muted); }
-.glucose-chart { display: block; width: 100%; height: auto; margin: 15px 0 5px; }
-.glucose-chart .curve { fill: none; stroke: #267855; stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
-.glucose-chart .axis { stroke: #c9d8ce; stroke-width: 1; }
-.glucose-chart .marker { stroke: #b6cbbd; stroke-width: 1; stroke-dasharray: 3 3; }
-.glucose-chart text { fill: var(--muted); font-size: 11px; }
 .events { list-style: none; margin: 12px 0 10px; padding: 0; border-top: 1px solid var(--line); }
 .events li { display: grid; grid-template-columns: 62px minmax(80px, 1fr) auto auto; align-items: center; gap: 9px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
 .events li span { color: var(--muted); }
@@ -319,4 +314,92 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .sport-review-table .sport-suggestion { white-space: normal; text-align: left; }
 @media (max-width: 650px) {
   .analysis-ic-panel #analysis-ic-status { display: block; margin: 9px 0 0; }
+}
+
+/* Meal window chart and editor */
+.meal-chart { margin: 15px 0 5px; }
+.window-chart-svg { --plot: #fbfcfa; --grid: #e3ebe5; --label: var(--muted); --curve: #267855; --band: #dff0e5; --shade: #17674614; --handle: #0e4b32; --event: #50645b;
+  display: block; width: 100%; height: auto; overflow: visible; font-family: inherit; }
+.window-chart-svg .plot-bg { fill: var(--plot); }
+.window-chart-svg .grid { stroke: var(--grid); stroke-width: 1; }
+.window-chart-svg .axis, .window-chart-svg .tick { stroke: var(--label); stroke-width: 1; opacity: .6; }
+.window-chart-svg text { fill: var(--label); font-size: 11px; }
+.window-chart-svg .y-unit { font-size: 10px; }
+.window-chart-svg .target-band { fill: var(--band); }
+.window-chart-svg .limit-high { stroke: #d87a2a; stroke-width: 1.6; stroke-dasharray: 7 5; }
+.window-chart-svg .limit-low { stroke: #cf3b32; stroke-width: 1.6; stroke-dasharray: 7 5; }
+.window-chart-svg .curve { fill: none; stroke: var(--curve); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.window-chart-svg .window-shade { fill: var(--shade); }
+.window-chart-svg .auto-marker { stroke: var(--label); stroke-width: 1; stroke-dasharray: 2 4; opacity: .8; }
+.window-chart-svg .chart-event { opacity: .38; }
+.window-chart-svg .chart-event.is-included { opacity: 1; }
+.window-chart-svg .chart-event path { fill: none; stroke: var(--event); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.window-chart-svg .chart-event.carbs path { stroke: #a1600f; }
+.window-chart-svg .chart-event.insulin path { stroke: #1f6d9a; }
+.window-chart-svg .chart-event.non-rapid path { stroke: var(--label); }
+.window-chart-svg .chart-event text { font-size: 10px; font-weight: 650; fill: var(--event); }
+.window-chart-svg .event-guide { stroke: var(--event); stroke-width: 1; stroke-dasharray: 1 3; opacity: .45; }
+.window-chart-svg .chart-event.sport rect { fill: #7c5cc433; stroke: #7c5cc4; stroke-width: 1; }
+.window-chart-svg .handle-line { stroke: var(--handle); stroke-width: 2; }
+.window-chart-svg .handle-dot { fill: #f4c042; stroke: #fff; stroke-width: 2; }
+.window-chart-svg .handle-dot[data-tone="in-range"] { fill: #6fbf73; }
+.window-chart-svg .handle-dot[data-tone="low"] { fill: #e2463c; }
+.window-chart-svg .handle-dot[data-tone="high"] { fill: #f08a2c; }
+.window-chart-svg .handle-dot[data-tone="neutral"] { fill: #c9d3cd; }
+.meal-chart-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 6px; font-size: 12px; color: var(--muted); }
+.meal-chart-foot b { color: var(--amber); font-weight: 700; }
+.meal-chart-foot button { font-size: 12px; padding: 7px 11px !important; }
+.manual-badge { display: inline-block; margin-left: 7px; padding: 3px 6px; border-radius: 5px; background: #ece7f8; color: #5a3f9c; font-size: 11px; font-weight: 750; white-space: nowrap; }
+
+#window-dialog { width: min(760px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); overflow-y: auto; border: 1px solid var(--line); border-radius: 15px; padding: 20px; color: var(--ink); box-shadow: 0 18px 70px #10281840; }
+#window-dialog::backdrop { background: #0c2419a8; }
+#window-dialog .section-head { align-items: start; margin-bottom: 12px; }
+#window-dialog .section-head h2 { margin-top: 4px; }
+#window-dialog .section-head button { font-size: 22px; line-height: 1; padding: 3px 9px; }
+.window-readout { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 14px 10px; border-radius: 12px 12px 0 0; background: #2b3530; color: #fff; text-align: center; }
+.window-readout[data-tone="outside"] { background: #f4c042; color: #1d1708; }
+.window-readout[data-tone="in-range"] { background: #4e8c4f; }
+.window-readout[data-tone="low"] { background: #c8362e; }
+.window-readout[data-tone="high"] { background: #e07a22; color: #1d1104; }
+.readout-label { font-size: 12px; font-weight: 650; opacity: .85; }
+.readout-value { display: inline-flex; align-items: baseline; gap: 6px; }
+.readout-value strong { font-size: 52px; line-height: 1; font-weight: 800; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.readout-trend { font-size: 34px; font-weight: 700; }
+.readout-value small { font-size: 14px; font-weight: 600; }
+.window-handle-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 0; background: #111614; padding: 8px 8px 0; }
+.window-handle-switch button { border: 0 !important; border-radius: 8px 8px 0 0 !important; background: transparent !important; color: #9fb0a8 !important; min-height: 40px; }
+.window-handle-switch button[aria-pressed="true"] { background: #232b27 !important; color: #fff !important; }
+.window-chart { background: #111614; border-radius: 0 0 12px 12px; padding: 4px 6px 6px; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.window-chart .window-chart-svg { --plot: #111614; --grid: #2f3833; --label: #b9c6bf; --curve: #fff; --band: #3e5a2e; --shade: #ffffff12; --handle: #e9efe9; --event: #c9d3cd; }
+.window-chart .chart-event.carbs path { stroke: #f1b04f; }
+.window-chart .chart-event.insulin path { stroke: #7cc5f0; }
+.window-chart .window-handle { cursor: ew-resize; outline: none; }
+.window-chart .handle-hit { fill: transparent; touch-action: none; }
+.window-chart .handle-line { opacity: .7; }
+.window-chart .window-handle.is-active .handle-line { opacity: 1; stroke-width: 2.5; }
+.window-chart .handle-knob rect { fill: #3a4540; stroke: #8b9a93; stroke-width: 1.5; }
+.window-chart .handle-knob path { stroke: #e9efe9; stroke-width: 1.6; stroke-linecap: round; }
+.window-chart .window-handle.is-active .handle-knob rect { fill: #f4c042; stroke: #f4c042; }
+.window-chart .window-handle.is-active .handle-knob path { stroke: #1d1708; }
+.window-chart .window-handle.is-snapped .handle-line { stroke: #f4c042; }
+.window-chart .window-handle:focus-visible .handle-knob rect { stroke: #7bb995; stroke-width: 3; }
+.window-chart .is-dragging, .window-chart.is-dragging { cursor: ew-resize; }
+.window-nudge { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
+.window-nudge button { min-height: 44px; font-size: 13px; padding: 6px !important; }
+.window-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.window-facts > div { min-width: 0; padding: 9px 10px; border-radius: 8px; background: var(--canvas); }
+.window-facts span, .window-facts small { display: block; color: var(--muted); font-size: 11px; }
+.window-facts span small { display: inline; }
+.window-facts strong { display: block; margin: 2px 0; font-size: 18px; color: var(--green-dark); letter-spacing: -.02em; }
+.window-state { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+.window-state b { color: var(--amber); }
+.window-warning { color: #9b3c33; }
+#window-dialog .form-actions { flex-wrap: wrap; }
+@media (max-width: 650px) {
+  #window-dialog { padding: 14px; width: calc(100vw - 12px); max-height: calc(100dvh - 12px); }
+  .window-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .readout-value strong { font-size: 44px; }
+  .window-chart { padding: 2px 0 4px; }
+  #window-dialog .form-actions .primary { flex-basis: 100%; }
+  #window-dialog .form-actions button.quiet { flex: 1; }
 }

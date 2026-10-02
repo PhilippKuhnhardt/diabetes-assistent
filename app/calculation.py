@@ -67,9 +67,8 @@ def interpolate_glucose(entries: list[dict], moment: datetime, max_gap_minutes: 
     return {"value": value, "before": before[0], "after": after[0]}
 
 
-def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[dict], settings: dict,
-                      sport_effect_mgdl: Decimal = Decimal(0)) -> dict:
-    """Solve one endpoint balance for every carb and rapid dose in a meal window."""
+def automatic_window(episode: dict, all_treatments: list[dict], entries: list[dict], settings: dict) -> dict:
+    """Default meal endpoint: fixed window, extended by doses, bounded by the next main meal."""
     start = episode["at"]
     window = timedelta(minutes=int(settings["window_minutes"]))
     nominal_end = start + window
@@ -101,16 +100,38 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         ]
         if candidates:
             end = max(candidates)
+    return {"start": start, "end": end, "nominal_end": nominal_end,
+            "extended_end": extended_end, "next_main_meal_at": next_main_meal_at}
+
+
+def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[dict], settings: dict,
+                      sport_effect_mgdl: Decimal = Decimal(0), manual_window: dict | None = None) -> dict:
+    """Solve one endpoint balance for every carb and rapid dose in a meal window.
+
+    A user-confirmed manual window replaces the automatic start and endpoint;
+    the meal's own carbs always count because the window must contain them.
+    """
+    meal_at = episode["at"]
+    automatic = automatic_window(episode, all_treatments, entries, settings)
+    nominal_end = automatic["nominal_end"]
+    extended_end = automatic["extended_end"]
+    next_main_meal_at = automatic["next_main_meal_at"]
+    start, end = meal_at, automatic["end"]
+    auto_end = end
+    if manual_window:
+        start, end = manual_window["start"], manual_window["end"]
+        if not start <= meal_at < end:
+            raise ValueError("Manueller Zeitraum muss den Mahlzeitbeginn enthalten")
     g0 = interpolate_glucose(entries, start)
     g1 = interpolate_glucose(entries, end)
     delta = g1["value"] - g0["value"]
     carbs = dec(episode["carbs"])
     if carbs <= 0:
         raise ValueError("Kohlenhydrate müssen positiv sein")
-    meal_isf = isf_at(start, settings["isf_schedule"], settings["timezone"])
+    meal_isf = isf_at(meal_at, settings["isf_schedule"], settings["timezone"])
     meal_carb_effect = carbs * meal_isf
     carb_events = [{
-        "id": episode.get("source_id"), "at": start.isoformat(), "carbs": str(carbs),
+        "id": episode.get("source_id"), "at": meal_at.isoformat(), "carbs": str(carbs),
         "isf": str(meal_isf), "carbs_times_isf": str(meal_carb_effect), "kind": "meal",
     }]
     extra_carbs = []
@@ -184,7 +205,10 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         "nominal_end": nominal_end.isoformat(), "window_minutes": int(settings["window_minutes"]),
         "actual_window_minutes": str(minutes_between(end, start)),
         "extended_end": extended_end.isoformat(),
-        "end_reason": "before_next_meal" if end < extended_end else "after_last_injection" if extended_end > nominal_end else "fixed_window",
+        "end_reason": ("manual" if manual_window else "before_next_meal" if end < extended_end
+                       else "after_last_injection" if extended_end > nominal_end else "fixed_window"),
+        "manual_window": bool(manual_window),
+        "auto_start": meal_at.isoformat(), "auto_end": auto_end.isoformat(),
         "next_main_meal_at": next_main_meal_at.isoformat() if next_main_meal_at else None,
         "carbs": str(carbs), "carbs_total": str(carbs_total),
         "carbs_times_isf_total": str(carbs_times_isf_total),
@@ -198,5 +222,6 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         "doses": effects, "carb_events": all_carb_events,
         "blockers": blockers,
         "ratio_g_per_unit": ratio, "factor_units_per_ke": factor, "reason": reason,
-        "assumptions": ["alle KH im Fenster wirken bis zum Endpunkt vollständig", "volle IE jeder schnell wirksamen Injektion im Fenster", "alle KH im Fenster teilen einen Insulinfaktor", "kein zusätzlicher Hintergrundtrend", "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"],
+        "assumptions": ["alle KH im Fenster wirken bis zum Endpunkt vollständig", "volle IE jeder schnell wirksamen Injektion im Fenster", "alle KH im Fenster teilen einen Insulinfaktor", "kein zusätzlicher Hintergrundtrend", "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"]
+        + (["manuell gewählter Zeitraum statt automatischem Endpunkt"] if manual_window else []),
     }

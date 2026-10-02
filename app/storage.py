@@ -65,6 +65,12 @@ def init() -> None:
             status TEXT NOT NULL CHECK(status IN ('affected', 'unaffected')),
             effect_mgdl TEXT NOT NULL DEFAULT '0'
         );
+        CREATE TABLE IF NOT EXISTS analysis_windows (
+            meal_id TEXT PRIMARY KEY,
+            start_at TEXT NOT NULL,
+            end_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        );
         CREATE TABLE IF NOT EXISTS nightscout_profiles (
             start_at TEXT PRIMARY KEY,
             profile_id TEXT NOT NULL,
@@ -333,3 +339,26 @@ def set_analysis_sport_mark(meal_id: str, status: str, effect_mgdl: str = "0") -
             db.execute("INSERT INTO analysis_sport_marks(meal_id,status,effect_mgdl) VALUES(?,?,?) "
                        "ON CONFLICT(meal_id) DO UPDATE SET status=excluded.status,effect_mgdl=excluded.effect_mgdl",
                        (meal_id, status, effect_mgdl))
+
+
+def analysis_windows() -> dict[str, dict]:
+    """Manually chosen meal windows; local analysis cleanup, never sent to Nightscout."""
+    with connect() as db:
+        rows = db.execute("SELECT meal_id,start_at,end_at FROM analysis_windows").fetchall()
+    return {row["meal_id"]: {"start": datetime.fromisoformat(row["start_at"]),
+                             "end": datetime.fromisoformat(row["end_at"])}
+            for row in rows}
+
+
+def set_analysis_window(meal_id: str, start: datetime | None, end: datetime | None) -> None:
+    with connect() as db:
+        if start is None or end is None:
+            db.execute("DELETE FROM analysis_windows WHERE meal_id=?", (meal_id,))
+        else:
+            db.execute(
+                "INSERT INTO analysis_windows(meal_id,start_at,end_at,updated_at) VALUES(?,?,?,?) "
+                "ON CONFLICT(meal_id) DO UPDATE SET start_at=excluded.start_at,end_at=excluded.end_at,"
+                "updated_at=excluded.updated_at",
+                (meal_id, start.astimezone(timezone.utc).isoformat(), end.astimezone(timezone.utc).isoformat(),
+                 datetime.now(timezone.utc).isoformat()),
+            )
