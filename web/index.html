@@ -59,13 +59,13 @@
                 </div>
                 <div id="dose-result" class="help-result" aria-live="polite"></div>
                 <div id="entry-sport-option" class="entry-sport-option" hidden>
-                  <label class="check-label"><input type="checkbox" name="consider_sport"> Sport bei dieser Mahlzeit berücksichtigen</label>
+                  <label class="check-label"><input type="checkbox" name="consider_sport"> Sport/Rennsport bei dieser Mahlzeit berücksichtigen</label>
                   <p id="entry-sport-hint" class="hint"></p>
-                  <label id="entry-sport-effect-field" hidden>Geschätzte Senkung <span>mg/dL</span><input name="sport_effect_mgdl" type="number" min="0" max="500" step="1"></label>
+                  <label id="entry-sport-effect-field" hidden>Geschätzte BZ-Wirkung <span>mg/dL, − senkt, + hebt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1"></label>
                 </div>
               </div>
               <label id="entry-sport-field" hidden>Sportart
-                <select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option></select>
+                <select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select>
               </label>
               <label id="entry-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
               <label>Notiz <span>optional</span><input name="notes" type="text" maxlength="500"></label>
@@ -145,11 +145,13 @@
             <h2 class="spaced">Tagebuch und Sport</h2>
             <label>Frühstück endet um (24 h)<input name="breakfast_end" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM" required></label>
             <label>Mittagessen endet um (24 h)<input name="lunch_end" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM" required></label>
+            <p class="hint">BZ-Wirkung je Sportart: negativ senkt den Blutzucker (z. B. −40 für Gym), positiv hebt ihn (z. B. +40 für Adrenalin beim Rennsport).</p>
             <label>Sport vor Mahlzeit berücksichtigen bis <span>Minuten</span><input name="sport_lookback_minutes" type="number" min="0" max="1440" step="1" required></label>
             <div class="field-pair">
-              <label>Joggen · Vorschlag Senkung <span>mg/dL</span><input name="sport_jogging" type="number" min="0" max="500" step="1" required></label>
-              <label>Gym · Vorschlag Senkung <span>mg/dL</span><input name="sport_gym" type="number" min="0" max="500" step="1" required></label>
-              <label>Cardio · Vorschlag Senkung <span>mg/dL</span><input name="sport_light_cardio" type="number" min="0" max="500" step="1" required></label>
+              <label>Joggen · BZ-Wirkung <span>mg/dL</span><input name="sport_jogging" type="number" min="-500" max="500" step="1" required></label>
+              <label>Gym · BZ-Wirkung <span>mg/dL</span><input name="sport_gym" type="number" min="-500" max="500" step="1" required></label>
+              <label>Cardio · BZ-Wirkung <span>mg/dL</span><input name="sport_light_cardio" type="number" min="-500" max="500" step="1" required></label>
+              <label>Rennsport · BZ-Wirkung <span>mg/dL</span><input name="sport_racing" type="number" min="-500" max="500" step="1" required></label>
             </div>
             <h2 class="spaced">Mahlzeitenfenster</h2>
             <label>Auswertung nach <span>min</span><input name="window_minutes" type="number" min="60" max="360" step="1" required></label>
@@ -170,7 +172,7 @@
         <label>Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"></label>
         <label>Insulin <span>IE</span><input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
       </div>
-      <label id="edit-sport-field" hidden>Sportart<select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option></select></label>
+      <label id="edit-sport-field" hidden>Sportart<select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select></label>
       <label id="edit-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
       <label>Notiz <span>optional</span><input name="notes" type="text" maxlength="500"></label>
       <div class="form-actions"><button class="primary" type="submit">Änderung in Nightscout speichern</button><button id="cancel-edit" type="button" class="quiet">Abbrechen</button></div>

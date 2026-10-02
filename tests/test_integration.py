@@ -367,6 +367,43 @@ class IntegrationTests(unittest.TestCase):
         )
         self.assertEqual(storage.analysis_exclusions(), set())
 
+    def test_racing_raises_glucose_and_is_subtracted_from_delta(self):
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": "2026-09-23T10:00:00Z", "carbs": "40", "insulin": "4",
+        })
+        self.request("/api/treatment", method="POST", body={
+            "kind": "exercise", "at": "2026-09-23T08:00:00Z",
+            "sport_kind": "racing", "duration_minutes": 90,
+        })
+        self.assertIn("[DAS1:racing]", FakeNightscout.treatments[-1]["notes"])
+        day = self.request("/api/day?date=2026-09-23")
+        racing = next(item for item in day["timeline"] if item["kind"] == "exercise")
+        self.assertEqual(racing["sport_kind"], "racing")
+        meal = day["meals"][0]
+        self.assertEqual(Decimal(meal["sport"]["suggested_effect_mgdl"]), Decimal(-40))
+        self.request("/api/analysis/sport", method="POST", body={
+            "meal_id": meal["id"], "day": "2026-09-23", "status": "affected",
+            "effect_mgdl": "-30",
+        })
+        after = self.request("/api/day?date=2026-09-23")["meals"][0]
+        self.assertEqual(Decimal(after["calculation"]["sport_effect_mgdl"]), Decimal(-30))
+        self.assertEqual(
+            Decimal(after["calculation"]["adjusted_delta_mgdl"]),
+            Decimal(after["calculation"]["delta_mgdl"]) - 30,
+        )
+
+    def test_settings_without_racing_get_its_default_and_stay_editable(self):
+        _, current = storage.get_settings()
+        legacy = {**current, "sport_effects_mgdl": {"jogging": 40, "gym": 40, "light_cardio": 20}}
+        storage.save_settings(legacy)
+        effects = self.request("/api/settings")["settings"]["sport_effects_mgdl"]
+        self.assertEqual(Decimal(effects["racing"]), Decimal(-40))
+        self.request("/api/settings", method="POST", body={
+            "sport_effects_mgdl": {**effects, "racing": "-60"},
+        })
+        effects = self.request("/api/settings")["settings"]["sport_effects_mgdl"]
+        self.assertEqual(Decimal(effects["racing"]), Decimal(-60))
+
     def test_current_nightscout_profile_is_the_only_isf_source(self):
         data = self.request("/api/settings")
         self.assertEqual(data["settings"]["isf_schedule"], [
