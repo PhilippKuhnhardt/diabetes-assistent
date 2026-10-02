@@ -162,7 +162,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
             "isf": str(sensitivity), "effect_mgdl": str(effect),
         })
     sport_effect_mgdl = dec(sport_effect_mgdl)
-    if not sport_effect_mgdl.is_finite() or sport_effect_mgdl < 0 or sport_effect_mgdl > 500:
+    if not sport_effect_mgdl.is_finite() or not -500 <= sport_effect_mgdl <= 500:
         raise ValueError("Ungültiger Sporteffekt")
     adjusted_delta = delta + sport_effect_mgdl
     denominator = adjusted_delta + insulin_effect
@@ -198,5 +198,5 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         "doses": effects, "carb_events": all_carb_events,
         "blockers": blockers,
         "ratio_g_per_unit": ratio, "factor_units_per_ke": factor, "reason": reason,
-        "assumptions": ["alle KH im Fenster wirken bis zum Endpunkt vollständig", "volle IE jeder schnell wirksamen Injektion im Fenster", "alle KH im Fenster teilen einen Insulinfaktor", "kein zusätzlicher Hintergrundtrend", "bestätigter Sporteffekt als additive Korrektur der Glukoseänderung"],
+        "assumptions": ["alle KH im Fenster wirken bis zum Endpunkt vollständig", "volle IE jeder schnell wirksamen Injektion im Fenster", "alle KH im Fenster teilen einen Insulinfaktor", "kein zusätzlicher Hintergrundtrend", "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"],
     }

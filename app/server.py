@@ -106,7 +106,7 @@ def validate_settings(value: dict) -> dict:
     clean_effects = {}
     for kind, amount in effects.items():
         effect = calculation.dec(amount)
-        if not effect.is_finite() or not 0 <= effect <= 500:
+        if not effect.is_finite() or not -500 <= effect <= 500:
             raise ValueError("Ungültiger Sporteffekt")
         clean_effects[kind] = str(effect)
     result.update({
@@ -828,7 +828,7 @@ class Handler(BaseHTTPRequestHandler):
                 if meal_id not in {meal["id"] for meal in day_payload(day, refresh=False)["meals"]}:
                     raise ValueError("Mahlzeit nicht gefunden")
                 effect = calculation.dec(payload.get("effect_mgdl", 0))
-                if not effect.is_finite() or not 0 <= effect <= 500:
+                if not effect.is_finite() or not -500 <= effect <= 500:
                     raise ValueError("Ungültiger Sporteffekt")
                 storage.set_analysis_sport_mark(meal_id, status, str(effect))
                 self._response(200, {"meal_id": meal_id, "status": status, "effect_mgdl": str(effect)})
