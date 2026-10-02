@@ -881,6 +881,54 @@ async function saveAnalysisIc() {
   }
 }
 
+function renderSportAnalysis(analysis) {
+  const sessions = analysis?.sessions || [];
+  const kinds = analysis?.kinds || [];
+  $("#sport-analysis-count").textContent = sessions.length + (sessions.length === 1 ? " Einheit" : " Einheiten");
+  $("#sport-analysis-kinds").innerHTML = kinds.map(group =>
+    '<div class="summary-card"><span class="meal-type">' + escapeHTML(group.label) + '</span>' +
+    '<div class="summary-primary"><span>Median Sportwirkung</span><strong>' +
+    (group.median_effect_mgdl == null ? '—' : glucoseChangeHTML(group.median_effect_mgdl)) + '</strong></div>' +
+    (group.effect_count > 1 ? '<p>Spanne ' + escapeHTML(signedChange(group.min_effect_mgdl)) + ' bis ' +
+      escapeHTML(signedChange(group.max_effect_mgdl)) + '</p>' : '') +
+    '<p>' + group.session_count + (group.session_count === 1 ? ' Einheit' : ' Einheiten') + ' · ' +
+    group.effect_count + ' von ' + group.meal_count + (group.meal_count === 1 ? ' Mahlzeit' : ' Mahlzeiten') + ' auswertbar</p></div>'
+  ).join("");
+  const dateTime = value => new Date(value).toLocaleString("de-DE", {
+    weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const period = session => session.end
+    ? escapeHTML(dateTime(session.start)) + '–' + escapeHTML(timeOnly(session.end)) +
+      ' <small>(' + escapeHTML(session.duration_minutes) + ' min)</small>'
+    : '—';
+  const mealCells = meal => {
+    if (!meal) return '<td colspan="6"><span class="hint">Keine Mahlzeit im Einflussbereich (' +
+      escapeHTML(analysis.lookback_minutes) + ' min davor bis Mahlzeitende)</span></td>';
+    const baseline = meal.baseline_units_per_ke == null ? '' :
+      '<br><small>Vergleich ' + escapeHTML(num(meal.baseline_units_per_ke, 2)) + ' IE/KE</small>';
+    const effect = meal.effect_mgdl == null
+      ? '<span class="summary-unavailable">' + escapeHTML(meal.reason || "Nicht berechenbar") + '</span>'
+      : '<b>' + glucoseChangeHTML(meal.effect_mgdl) + '</b>' +
+        (meal.shared ? ' <span class="outlier-badge">Mehrere Einheiten</span>' : '') +
+        (meal.excluded ? ' <span class="outlier-badge">Ausgeklammert</span>' : '');
+    return '<td>' + escapeHTML(names[meal.meal]) + '<br><small>' + escapeHTML(dateTime(meal.start)) + '–' +
+      escapeHTML(timeOnly(meal.end)) + '</small></td>' +
+      '<td>' + (meal.factor_without_sport_units_per_ke == null ? '—' :
+        escapeHTML(num(meal.factor_without_sport_units_per_ke, 2)) + ' IE/KE') + baseline + '</td>' +
+      '<td>' + glucoseChangeHTML(meal.delta_mgdl) + '</td>' +
+      '<td>' + glucoseChangeHTML(meal.expected_delta_mgdl) + '</td>' +
+      '<td>' + effect + '</td>' +
+      '<td>' + (meal.confirmed_effect_mgdl == null ? '—' : escapeHTML(signedChange(-Number(meal.confirmed_effect_mgdl), 0))) + '</td>';
+  };
+  $("#sport-analysis-sessions").innerHTML = sessions.length
+    ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Sport</th><th>Zeitraum</th><th>Mahlzeit</th><th>Faktor ohne Sport</th><th>Gemessen</th><th>Erwartet ohne Sport</th><th>Sportwirkung</th><th>Bestätigt</th></tr></thead><tbody>' +
+      sessions.flatMap(session => (session.meals.length ? session.meals : [null]).map(meal =>
+        '<tr><td><b>' + escapeHTML(session.label) + '</b>' +
+        (session.notes ? '<br><small>' + escapeHTML(session.notes) + '</small>' : '') + '</td>' +
+        '<td>' + period(session) + '</td>' + mealCells(meal) + '</tr>')).join("") +
+      '</tbody></table></div>'
+    : '<div class="empty">Im Zeitraum sind keine Sport- oder Rennsport-Einträge im lokalen Datenbestand.</div>';
+}
+
 async function loadSummary() {
   $("#summary").innerHTML = '<div class="empty">Analyse wird geladen …</div>';
   $("#night-summary-cards").innerHTML = '<div class="empty">Nachtübersicht wird geladen …</div>';
@@ -917,6 +965,7 @@ async function loadSummary() {
         (kind === "breakfast" ? breakfastSubcards() : '') + '</div>';
     }).join("");
     renderAnalysisIc();
+    renderSportAnalysis(data.sport_analysis);
     const comparisons = data.sensitivity_comparison || [];
     $("#sensitivity-comparison").innerHTML = comparisons.length
       ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Ab</th><th>Aktuell</th><th>Mathematisch bester Korrekturfaktor</th></tr></thead><tbody>' +
@@ -985,6 +1034,8 @@ async function loadSummary() {
     $("#night-records").innerHTML = "";
     $("#calculations").innerHTML = "";
     $("#sensitivity-comparison").innerHTML = "";
+    $("#sport-analysis-kinds").innerHTML = "";
+    $("#sport-analysis-sessions").innerHTML = "";
       toast(error.message, true);
   }
 }

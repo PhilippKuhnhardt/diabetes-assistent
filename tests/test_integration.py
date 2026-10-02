@@ -441,6 +441,7 @@ class IntegrationTests(unittest.TestCase):
         with patch("app.server.day_payload", return_value={"meals": []}):
             summary = self.request("/api/summary?days=1")
         self.assertEqual(summary["days"], 1)
+        self.assertEqual(summary["sport_analysis"]["sessions"], [])
 
     def test_expected_change_uses_current_time_specific_nightscout_profile(self):
         meal = {"id": "lunch-with-snack", "meal": "lunch", "at": "2026-09-23T10:00:00+02:00",
