@@ -166,6 +166,74 @@ function setDefaultMealTime() {
   if (state.entryTimeTouched) return;
   $("#entry-time").value = localInputTime(new Date()).slice(11, 16);
   updateEntrySportOption();
+  updateEntryDayType();
+}
+
+const dayTypeSources = {
+  weekday: "Standard nach Wochentag",
+  vacation: "Urlaub ist aktiv",
+  manual: "Für diesen Tag manuell gewählt",
+};
+
+function updateEntryDayType() {
+  const form = $("#entry-form");
+  const box = $("#entry-day-type");
+  const time = clockMinute(form.elements.at.value);
+  const breakfastEnd = Number(state.settings?.breakfast_end_minute ?? 660);
+  const visible = form.elements.kind.value === "meal" && Boolean(state.dayData?.day_type) &&
+    Number.isFinite(time) && time < breakfastEnd;
+  box.hidden = !visible;
+  if (!visible) return;
+  $$(".day-type-option").forEach(button =>
+    button.setAttribute("aria-pressed", String(button.dataset.dayType === state.dayData.day_type)));
+  $("#entry-day-type-hint").textContent = (dayTypeSources[state.dayData.day_type_source] || "") +
+    ". Bestimmt den Frühstücksfaktor in Empfehlung und Analyse.";
+}
+
+async function saveEntryDayType(event) {
+  const button = event.target.closest(".day-type-option");
+  if (!button || !state.dayData) return;
+  const day = state.dayData.day;
+  $$(".day-type-option").forEach(item => { item.disabled = true; });
+  try {
+    await api("/api/analysis/day-type", {
+      method: "POST", body: JSON.stringify({ day, day_type: button.dataset.dayType }),
+    });
+    if (state.dayData?.day === day) {
+      state.dayData.day_type = button.dataset.dayType;
+      state.dayData.day_type_source = "manual";
+    }
+    updateEntryDayType();
+    await updateDoseHelp();
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    $$(".day-type-option").forEach(item => { item.disabled = false; });
+  }
+}
+
+async function saveVacation(event) {
+  const input = event.target;
+  input.disabled = true;
+  try {
+    const data = await api("/api/vacation", { method: "POST", body: JSON.stringify({ active: input.checked }) });
+    renderVacation(data);
+    toast(data.active ? "Urlaub aktiviert: jeder Tag zählt als frei" : "Urlaub beendet");
+    await loadDay();
+  } catch (error) {
+    input.checked = !input.checked;
+    toast(error.message, true);
+  } finally {
+    input.disabled = false;
+  }
+}
+
+function renderVacation(vacation) {
+  $("#vacation-toggle").checked = Boolean(vacation?.active);
+  $("#vacation-status").textContent = vacation?.active
+    ? "Aktiv seit " + new Date(vacation.since + "T12:00").toLocaleDateString("de-DE") +
+      ". Jeder Tag zählt als freier Tag, bis du Urlaub ausschaltest. Einzelne Tage lassen sich im Tagebuch weiterhin umstellen."
+    : "Solange Urlaub aktiv ist, zählt jeder Tag als freier Tag. Ohne Urlaub gilt Montag bis Freitag als Arbeitstag.";
 }
 
 function setDefaultSportTime() {}
@@ -248,6 +316,7 @@ function updateEntryFields() {
   form.elements.duration_minutes.required = mode === "exercise";
   scheduleDoseHelp();
   updateEntrySportOption();
+  updateEntryDayType();
 }
 
 async function loadSettings() {
@@ -271,6 +340,7 @@ async function loadSettings() {
   renderIsfRows(data.settings.isf_schedule, data.settings.nightscout_profile, data.profile_sync_at, data.profile_sync_error);
   renderIcRows(data.settings.ic_schedule || []);
   renderTargetRows(data.settings.target_schedule || []);
+  renderVacation(data.vacation);
 }
 
 function renderTargetRows(rows) {
@@ -921,6 +991,7 @@ function renderNight(night) {
 function renderDay(data) {
   state.dayData = data;
   updateEntrySportOption();
+  updateEntryDayType();
   $("#record-count").textContent = data.timeline.length + (data.timeline.length === 1 ? " Eintrag" : " Einträge");
   renderNight(data.night || { reason: "Nachtanalyse nicht verfügbar." });
   const banner = $("#banner");
@@ -1033,6 +1104,7 @@ async function updateDoseHelp() {
     output.innerHTML = '<div class="dose-heading">Aktuelle Empfehlung</div><div class="dose-glucose"><span>Aktueller Blutzucker</span><strong>' +
       escapeHTML(glucose) + '</strong></div>' +
       (data.units_per_ke != null ? '<p class="dose-factor">Verwendeter Insulinfaktor: <strong>' + escapeHTML(num(data.units_per_ke, 2)) + ' IE/KE</strong> · Korrekturfaktor: ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' mg/dL je IE</p>' : '') +
+      (data.units_per_ke != null && data.breakfast ? '<p class="hint">' + escapeHTML(breakfastFactorNote(data)) + '</p>' : '') +
       (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport eingerechnet: <strong>' +
         escapeHTML(signedChange(data.activity_change_mgdl, 0)) + '</strong> · ' + escapeHTML((Number(data.activity_units) > 0 ? "+" : "") + num(data.activity_units, 2)) + ' IE</p>' : '') +
       '<div class="dose-options">' +
@@ -1050,6 +1122,18 @@ async function updateDoseHelp() {
   }
 }
 
+function breakfastFactorNote(data) {
+  const kind = data.day_type === "free" ? "freien Tagen" : "Arbeitstagen";
+  if (data.factor_source === "breakfast_day_type") {
+    return "Frühstücksfaktor an " + kind + ": Median aus " + data.breakfast_factor_count +
+      " berechneten Frühstücken der letzten " + data.breakfast_factor_days + " Tage. Nightscout-Profil: " +
+      num(data.nightscout_units_per_ke, 2) + " IE/KE.";
+  }
+  return "Für Frühstück an " + kind + " gibt es erst " + (data.breakfast_factor_count || 0) + " von " +
+    data.breakfast_factor_min_meals + " nötigen berechneten Mahlzeiten (letzte " + data.breakfast_factor_days +
+    " Tage), daher gilt der Insulinfaktor aus Nightscout.";
+}
+
 async function applyDoseSuggestion(event) {
   const button = event.target.closest(".apply-dose");
   if (!button || !doseHelp) return;
@@ -1060,7 +1144,7 @@ async function applyDoseSuggestion(event) {
     const current = await updateDoseHelp();
     if (!current) throw new Error("Empfehlung konnte nicht aktualisiert werden");
     const keys = ["carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl",
-      "cautious_target_mgdl", "units_per_ke", "activity_change_mgdl", "total_units", "cautious_total_units", "entry_units", "cautious_entry_units", "expected_glucose_mgdl", "cautious_expected_glucose_mgdl"];
+      "cautious_target_mgdl", "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "total_units", "cautious_total_units", "entry_units", "cautious_entry_units", "expected_glucose_mgdl", "cautious_expected_glucose_mgdl"];
     if (keys.some(key => previous[key] !== current[key]) ||
         JSON.stringify(previous.recent_rapid_doses) !== JSON.stringify(current.recent_rapid_doses)) {
       toast("Empfehlung geändert. Bitte den neuen Wert prüfen und erneut speichern.", true);
@@ -1608,6 +1692,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#entry-time").addEventListener("change", () => {
     state.entryTimeTouched = true;
     updateEntrySportOption();
+    updateEntryDayType();
   });
   $("#entry-form").addEventListener("focusin", setDefaultMealTime);
   $("#entry-form").elements.carbs.addEventListener("input", updateEntrySportOption);
@@ -1638,6 +1723,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#close-edit").addEventListener("click", closeEditDialog);
   $("#edit-dialog").addEventListener("close", () => { state.editing = null; });
   $("#dose-result").addEventListener("click", applyDoseSuggestion);
+  $("#entry-day-type").addEventListener("click", saveEntryDayType);
+  $("#vacation-toggle").addEventListener("change", saveVacation);
   $("#entry-form").elements.carbs.addEventListener("input", event => {
     event.target.setCustomValidity("");
     scheduleDoseHelp();

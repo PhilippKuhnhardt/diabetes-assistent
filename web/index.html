@@ -62,6 +62,13 @@
                   <p id="entry-sport-hint" class="hint"></p>
                   <label id="entry-sport-effect-field" hidden>Geschätzte BZ-Wirkung <span>mg/dL, − senkt, + hebt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1"></label>
                 </div>
+                <div id="entry-day-type" class="entry-day-type" hidden>
+                  <div class="entry-switch" role="group" aria-label="Tagesart für das Frühstück">
+                    <button type="button" class="day-type-option" data-day-type="work" aria-pressed="false">Arbeitstag</button>
+                    <button type="button" class="day-type-option" data-day-type="free" aria-pressed="false">Freier Tag</button>
+                  </div>
+                  <p id="entry-day-type-hint" class="hint"></p>
+                </div>
                 <div id="dose-result" class="help-result" aria-live="polite"></div>
               </div>
               <label id="entry-sport-field" hidden>Sportart
@@ -133,6 +140,11 @@
             <p id="nightscout-location" class="mono"></p>
             <button id="test-connection" type="button">Verbindung prüfen</button>
             <p id="test-result" class="hint"></p>
+          </section>
+          <section class="panel">
+            <h2>Urlaub</h2>
+            <label class="check-label"><input type="checkbox" id="vacation-toggle"> Urlaub aktiv</label>
+            <p id="vacation-status" class="hint">Solange Urlaub aktiv ist, zählt jeder Tag als freier Tag. Einzelne Tage lassen sich im Tagebuch weiterhin umstellen.</p>
           </section>
           <form id="settings-form" class="panel">
             <h2>Korrekturfaktor aus Nightscout</h2>
