@@ -204,8 +204,8 @@ function updateEntrySportOption() {
   const suggested = eligible.reduce((total, item) => total + Number(state.settings.sport_effects_mgdl[item.sport_type] || 0), 0);
   $("#entry-sport-hint").textContent = (eligible.length ? eligible.map(item =>
     ({ jogging: "Joggen", gym: "Gym", light_cardio: "Cardio" })[item.sport_type] + " um " + timeOnly(item.at)).join(", ") +
-    " · Vorschlag: " + num(suggested, 0) + " mg/dL Senkung" : "Kein Sport vor der Mahlzeit erfasst · Senkung selbst schätzen, z. B. für Sport danach") +
-    " · senkt die empfohlenen IE über den Korrekturfaktor";
+    " · Vorschlag: " + num(suggested, 0) + " mg/dL Senkung" : "Kein Sport vor der Mahlzeit erfasst · Wirkung selbst schätzen, z. B. für Sport danach") +
+    " · fließt über den Korrekturfaktor in die empfohlenen IE ein";
   if (!checkbox.checked) form.elements.sport_effect_mgdl.value = eligible.length ? suggested : "";
   effectField.hidden = !checkbox.checked;
 }
@@ -213,8 +213,11 @@ function updateEntrySportOption() {
 function entrySportChange() {
   const form = $("#entry-form");
   if (form.elements.kind.value !== "meal" || $("#entry-sport-option").hidden || !form.elements.consider_sport.checked) return 0;
-  const drop = Number(form.elements.sport_effect_mgdl.value || 0);
-  return Number.isFinite(drop) && drop >= 0 && drop <= 500 ? -drop : null;
+  const input = form.elements.sport_effect_mgdl;
+  const value = Number(input.value || 0);
+  if (!Number.isFinite(value) || value < Number(input.min) || value > Number(input.max)) return null;
+  // A field allowing negative values holds the signed BG change; otherwise it holds a drop.
+  return Number(input.min) < 0 ? value : -value;
 }
 
 function minuteClock(minute) {
@@ -551,7 +554,7 @@ async function updateDoseHelp() {
   }
   const activityChange = entrySportChange();
   if (activityChange == null) {
-    output.textContent = "Die geschätzte Senkung durch Sport muss zwischen 0 und 500 mg/dL liegen.";
+    output.textContent = "Der geschätzte Sporteinfluss liegt außerhalb des erlaubten Bereichs.";
     return null;
   }
   output.textContent = "Empfehlung wird berechnet …";
