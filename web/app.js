@@ -556,7 +556,11 @@ const chartIcons = {
 };
 
 function eventLanes(events, scales, view, range) {
-  return events.filter(event => (event.end || event.t) >= view.from && event.t <= view.to).map(event => {
+  const labelEnds = {};
+  const shown = events.filter(event => (event.end || event.t) >= view.from && event.t <= view.to).sort((a, b) => a.t - b.t);
+  const iconsCovered = (kind, from, to, own) => shown.some(other => other !== own && other.kind === kind &&
+    scales.x(other.t) + 8 > from && scales.x(other.t) - 8 < to);
+  return shown.map(event => {
     const x = scales.x(Math.max(event.t, view.from));
     const included = windowIncludes(range, event) ? " is-included" : "";
     if (event.kind === "sport") {
@@ -567,10 +571,17 @@ function eventLanes(events, scales, view, range) {
     }
     const y = event.kind === "insulin" ? 14 : 34;
     const label = event.kind === "insulin" ? num(event.amount, 1) + " IE" : num(event.amount, 0) + " g";
+    // Labels near the right edge flip left; a label that would overlap its lane neighbour is left out.
+    const labelWidth = label.length * 6;
+    const flip = x + 10 + labelWidth > CHART.right;
+    const textStart = flip ? x - 10 - labelWidth : x + 10;
+    const showLabel = textStart >= (labelEnds[event.kind] ?? -Infinity) &&
+      !iconsCovered(event.kind, textStart, textStart + labelWidth, event);
+    if (showLabel) labelEnds[event.kind] = textStart + labelWidth + 4;
     return '<g class="chart-event ' + event.kind + (event.rapid === false ? ' non-rapid' : '') + included +
       '" data-t="' + event.t + '" data-id="' + escapeHTML(event.id || "") + '"><line x1="' + x.toFixed(1) + '" y1="' + (y + 9) + '" x2="' + x.toFixed(1) + '" y2="' + CHART.plotBottom + '" class="event-guide"/>' +
       '<g transform="translate(' + x.toFixed(1) + ' ' + y + ')">' + chartIcons[event.kind] + '</g>' +
-      '<text x="' + (x + 10).toFixed(1) + '" y="' + (y + 4) + '">' + escapeHTML(label) + '</text></g>';
+      (showLabel ? '<text x="' + (flip ? x - 10 : x + 10).toFixed(1) + '" y="' + (y + 4) + '"' + (flip ? ' text-anchor="end"' : '') + '>' + escapeHTML(label) + '</text>' : '') + '</g>';
   }).join("");
 }
 
@@ -609,7 +620,9 @@ function handleSVG(name, t, points, scales, interactive) {
 
 function windowChartSVG(range, entries, treatments, options = {}) {
   const interactive = Boolean(options.interactive);
+  const overview = Boolean(options.overview);
   const view = options.view || chartView(range);
+  const clipId = overview ? "overview-clip" : interactive ? "editor-clip" : "chart-clip-" + range.mealAt;
   const points = glucosePoints(entries);
   const scales = chartScales(view, points);
   const visible = points.filter(point => point.t >= view.from - 10 * MINUTE && point.t <= view.to + 10 * MINUTE);
@@ -622,7 +635,8 @@ function windowChartSVG(range, entries, treatments, options = {}) {
   }
   const ticks = [];
   const hour = 60 * MINUTE;
-  const step = (view.to - view.from) / hour * 48 > CHART.right - CHART.left ? 2 * hour : hour;
+  const step = [1, 2, 3, 6].map(hours => hours * hour)
+    .find(candidate => (view.to - view.from) / candidate * 48 <= CHART.right - CHART.left) || 6 * hour;
   for (let t = Math.ceil(view.from / step) * step; t <= view.to; t += step) {
     ticks.push('<line class="tick" x1="' + scales.x(t).toFixed(1) + '" x2="' + scales.x(t).toFixed(1) + '" y1="' + CHART.plotBottom + '" y2="' + (CHART.plotBottom + 5) + '"/>' +
       '<text class="x-label" x="' + scales.x(t).toFixed(1) + '" y="' + (CHART.plotBottom + 19) + '" text-anchor="middle">' + escapeHTML(timeOnly(t)) + '</text>');
@@ -638,19 +652,25 @@ function windowChartSVG(range, entries, treatments, options = {}) {
   segments.push(segment);
   const curve = segments.filter(item => item.length > 1).map(item => '<polyline class="curve" points="' + item.join(" ") + '"/>').join("");
   const shadeX = scales.x(range.start);
+  const last = visible.filter(point => point.t <= view.to).pop();
+  const label = overview
+    ? 'Glukoseverlauf mit Ereignissen von ' + timeOnly(view.from) + ' bis ' + timeOnly(view.to) + ' Uhr'
+    : 'Glukoseverlauf mit Auswertungszeitraum ' + timeOnly(range.start) + ' bis ' + timeOnly(range.end) + ' Uhr';
   return '<svg class="window-chart-svg' + (interactive ? ' is-interactive' : '') + '" viewBox="0 0 ' + CHART.width + ' ' + height +
-    '" role="img" aria-label="Glukoseverlauf mit Auswertungszeitraum ' + escapeHTML(timeOnly(range.start) + ' bis ' + timeOnly(range.end)) + ' Uhr">' +
-    '<defs><clipPath id="' + (interactive ? 'editor-clip' : 'chart-clip-' + range.mealAt) + '"><rect x="' + CHART.left + '" y="0" width="' + (CHART.right - CHART.left) + '" height="' + height + '"/></clipPath></defs>' +
+    '" role="img" aria-label="' + escapeHTML(label) + '">' +
+    '<defs><clipPath id="' + clipId + '"><rect x="' + CHART.left + '" y="0" width="' + (CHART.right - CHART.left) + '" height="' + height + '"/></clipPath></defs>' +
     '<rect class="plot-bg" x="' + CHART.left + '" y="' + CHART.plotTop + '" width="' + (CHART.right - CHART.left) + '" height="' + (CHART.plotBottom - CHART.plotTop) + '"/>' +
-    '<g clip-path="url(#' + (interactive ? 'editor-clip' : 'chart-clip-' + range.mealAt) + ')">' +
+    '<g clip-path="url(#' + clipId + ')">' +
     targetBand(view, scales) + grid.join("") + limit(250, "limit-high") + limit(70, "limit-low") +
-    '<rect class="window-shade" x="' + shadeX.toFixed(1) + '" y="' + (CHART.plotTop - 6) + '" width="' + (scales.x(range.end) - shadeX).toFixed(1) + '" height="' + (CHART.plotBottom - CHART.plotTop + 6) + '"/>' +
-    ((range.manual || interactive) && (range.autoStart !== range.start || range.autoEnd !== range.end)
+    (overview ? '' : '<rect class="window-shade" x="' + shadeX.toFixed(1) + '" y="' + (CHART.plotTop - 6) + '" width="' + (scales.x(range.end) - shadeX).toFixed(1) + '" height="' + (CHART.plotBottom - CHART.plotTop + 6) + '"/>') +
+    (!overview && (range.manual || interactive) && (range.autoStart !== range.start || range.autoEnd !== range.end)
       ? '<line class="auto-marker" x1="' + scales.x(range.autoStart).toFixed(1) + '" x2="' + scales.x(range.autoStart).toFixed(1) + '" y1="' + CHART.plotTop + '" y2="' + CHART.plotBottom + '"/>' +
         '<line class="auto-marker" x1="' + scales.x(range.autoEnd).toFixed(1) + '" x2="' + scales.x(range.autoEnd).toFixed(1) + '" y1="' + CHART.plotTop + '" y2="' + CHART.plotBottom + '"/>'
       : '') +
     eventLanes(chartEvents(treatments), scales, view, range) + curve +
-    handleSVG("start", range.start, points, scales, interactive) + handleSVG("end", range.end, points, scales, interactive) +
+    (overview
+      ? (last ? '<circle class="handle-dot" data-tone="' + glucoseTone(last.g, last.t) + '" cx="' + scales.x(last.t).toFixed(1) + '" cy="' + scales.y(last.g).toFixed(1) + '" r="4.5"/>' : '')
+      : handleSVG("start", range.start, points, scales, interactive) + handleSVG("end", range.end, points, scales, interactive)) +
     '</g>' + '<line class="axis" x1="' + CHART.left + '" x2="' + CHART.right + '" y1="' + CHART.plotBottom + '" y2="' + CHART.plotBottom + '"/>' + ticks.join("") + yLabels.join("") +
     '<text class="y-unit" x="2" y="' + (CHART.plotTop - 16) + '">mg/dL</text>' +
     '</svg>';
@@ -676,6 +696,42 @@ function renderMealCharts() {
     CHART = chartLayout(node.clientWidth);
     node.innerHTML = windowChartSVG(mealWindow(meal), state.dayData.entries, state.dayData.treatments);
   }
+}
+
+// Overview above the entry form: today the last hours up to now, other days the whole day.
+function overviewHours() {
+  try { return Number(localStorage.getItem("overviewHours")) || 6; } catch { return 6; }
+}
+
+function renderDayOverview() {
+  const node = $("#day-overview-chart");
+  const data = state.dayData;
+  if (!node || !data) return;
+  const hours = overviewHours();
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: state.settings?.timezone || "Europe/Berlin" });
+  const isToday = state.day === today;
+  $$("[data-overview-hours]").forEach(button => {
+    button.setAttribute("aria-pressed", String(Number(button.dataset.overviewHours) === hours));
+    button.hidden = !isToday;
+  });
+  const dayStart = new Date(state.day + "T00:00:00").getTime();
+  const next = new Date(dayStart + 36 * 60 * MINUTE);
+  const dayEnd = new Date(next.toLocaleDateString("sv-SE") + "T00:00:00").getTime();
+  let view = { from: dayStart, to: dayEnd };
+  if (isToday) {
+    const to = Math.max(Date.now() + 10 * MINUTE, dayStart + 60 * MINUTE);
+    view = { from: Math.max(dayStart, to - hours * 60 * MINUTE), to };
+  }
+  const clipped = isToday && hours < 24 && view.from === dayStart && view.to - view.from < hours * 60 * MINUTE;
+  const points = glucosePoints(data.entries).filter(point => point.t >= view.from && point.t <= view.to);
+  const last = points[points.length - 1];
+  CHART = chartLayout(node.clientWidth);
+  node.innerHTML = windowChartSVG({ start: -Infinity, end: Infinity, mealAt: dayStart }, data.entries, data.treatments,
+    { overview: true, view });
+  $("#day-overview-note").textContent = (last
+    ? "Letzter CGM-Wert: " + num(last.g, 0) + " mg/dL um " + timeOnly(last.t) + " Uhr."
+    : "Keine CGM-Werte in diesem Zeitraum.") +
+    (clipped ? " Werte vor Mitternacht stehen beim Vortag." : "");
 }
 
 // --- Interactive window editor -------------------------------------------
@@ -1035,6 +1091,7 @@ function renderDay(data) {
         '</div><div class="timeline-actions">' + actions + '</div></article>';
     }).join("")
     : '<div class="empty">Für diesen Tag liegen noch keine Einträge vor.</div>';
+  renderDayOverview();
   $("#meals").innerHTML = data.meals.length
     ? data.meals.map(meal => mealHTML(meal, data.entries)).join("")
     : '<div class="empty">Noch keine Hauptmahlzeit für diesen Tag.</div>';
@@ -1792,13 +1849,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     windowEditor.snapped = {};
     renderWindowEditor();
   });
+  $$("[data-overview-hours]").forEach(button => button.addEventListener("click", () => {
+    try { localStorage.setItem("overviewHours", button.dataset.overviewHours); } catch {}
+    renderDayOverview();
+  }));
   for (const id of ["#cancel-window", "#close-window"]) $(id).addEventListener("click", () => $("#window-dialog").close());
   $("#window-dialog").addEventListener("close", () => { windowEditor = null; });
   let resizeTimer;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-      if (state.dayData) renderMealCharts();
+      if (state.dayData) { renderMealCharts(); renderDayOverview(); }
       if (windowEditor && !windowEditor.drag) renderWindowEditor();
     }, 150);
   });
