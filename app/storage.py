@@ -112,6 +112,8 @@ def default_settings() -> dict:
         "timezone": os.environ.get("APP_TIMEZONE", "Europe/Berlin"),
         "window_minutes": 180,
         "dose_target_mgdl": 100,
+        "dose_cautious_target_mgdl": 140,
+        "auto_percentile": "37.5",
         "peak_minutes": 60,
         "duration_minutes": 180,
         "breakfast_end_minute": 660,
@@ -148,6 +150,8 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result["target_schedule"] = profile["target_schedule"] if profile else []
     result.setdefault("breakfast_end_minute", 660)
     result.setdefault("dose_target_mgdl", 100)
+    result.setdefault("dose_cautious_target_mgdl", 140)
+    result.setdefault("auto_percentile", "37.5")
     result.setdefault("lunch_end_minute", 1020)
     result.setdefault("sport_lookback_minutes", 360)
     # Older settings versions predate newer sport types such as racing.
