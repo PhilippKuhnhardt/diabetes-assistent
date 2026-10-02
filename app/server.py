@@ -78,7 +78,7 @@ def validate_settings(value: dict) -> dict:
     result = dict(old)
     for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes",
                 "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
-                "sport_effects_mgdl", "dose_target_mgdl"):
+                "sport_effects_mgdl", "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile"):
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
@@ -98,6 +98,12 @@ def validate_settings(value: dict) -> dict:
     dose_target = calculation.dec(result["dose_target_mgdl"])
     if not dose_target.is_finite() or not 60 <= dose_target <= 140:
         raise ValueError("Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen")
+    cautious_target = calculation.dec(result["dose_cautious_target_mgdl"])
+    if not cautious_target.is_finite() or not dose_target <= cautious_target <= 250:
+        raise ValueError("Vorsichtiger Zielwert muss zwischen dem Zielwert und 250 mg/dL liegen")
+    auto_percentile = calculation.dec(result["auto_percentile"])
+    if not auto_percentile.is_finite() or not 25 <= auto_percentile <= 50:
+        raise ValueError("Perzentil der Automatik muss zwischen 25 und 50 % liegen")
     effects = result["sport_effects_mgdl"]
     if not (0 < breakfast_end < lunch_end < 1440 and 0 <= lookback <= 1440):
         raise ValueError("Ungültige Mahlzeiten- oder Sportzeiten")
@@ -114,6 +120,8 @@ def validate_settings(value: dict) -> dict:
         "breakfast_end_minute": breakfast_end, "lunch_end_minute": lunch_end,
         "sport_lookback_minutes": lookback, "sport_effects_mgdl": clean_effects,
         "dose_target_mgdl": str(dose_target),
+        "dose_cautious_target_mgdl": str(cautious_target),
+        "auto_percentile": str(auto_percentile),
     })
     return result
 
@@ -134,22 +142,32 @@ def validate_manual_window(meal_at: datetime, start: datetime, end: datetime) ->
 
 BREAKFAST_FACTOR_DAYS = 28
 BREAKFAST_FACTOR_MIN_MEALS = 3
+AUTO_FACTOR_MIN_MEALS = 5
 
 
-def breakfast_factor(day_type: str, today: date, overrides: dict[str, str], periods: list[dict]) -> dict:
-    """Median breakfast IE/KE of earlier days with the same day type (excluded meals left out)."""
+def meal_factor_values(meal_kind: str, day_type: str | None, today: date,
+                       overrides: dict[str, str], periods: list[dict]) -> list[Decimal]:
+    """Sorted IE/KE of one meal kind over the past 28 days (excluded meals left out).
+    A day_type restricts the days to work or free days, as used for breakfast."""
     excluded = storage.analysis_exclusions()
     values = []
     for offset in range(1, BREAKFAST_FACTOR_DAYS + 1):
         day = (today - timedelta(days=offset)).isoformat()
-        if storage.day_type_for(day, overrides, periods)[0] != day_type:
+        if day_type is not None and storage.day_type_for(day, overrides, periods)[0] != day_type:
             continue
         for meal in day_payload(day, refresh=False).get("meals", []):
             factor = (meal.get("calculation") or {}).get("factor_units_per_ke")
-            if meal.get("meal") == "breakfast" and meal["id"] not in excluded and factor is not None:
+            if meal.get("meal") == meal_kind and meal["id"] not in excluded and factor is not None:
                 values.append(Decimal(factor))
-    return {"count": len(values), "days": BREAKFAST_FACTOR_DAYS,
-            "median_units_per_ke": median(sorted(values)) if values else None}
+    return sorted(values)
+
+
+def auto_factor(values: list[Decimal], percentile: Decimal) -> Decimal | None:
+    """Cautious factor: a percentile between Q1 and the median of recent meal factors.
+    A lower IE/KE means less insulin, so it sits below the median but inside the middle half."""
+    if len(values) < AUTO_FACTOR_MIN_MEALS:
+        return None
+    return quartile(values, percentile / 100)
 
 
 def vacation_state() -> dict:
@@ -886,15 +904,32 @@ class Handler(BaseHTTPRequestHandler):
                 local_now = now.astimezone(ZoneInfo(current_settings["timezone"]))
                 overrides, periods = storage.analysis_day_types(), storage.vacation_periods()
                 day_type, day_type_source = storage.day_type_for(today, overrides, periods)
-                is_breakfast = local_now.hour * 60 + local_now.minute < int(current_settings["breakfast_end_minute"])
-                factor = (breakfast_factor(day_type, local_now.date(), overrides, periods)
+                minute = local_now.hour * 60 + local_now.minute
+                is_breakfast = minute < int(current_settings["breakfast_end_minute"])
+                meal_kind = ("breakfast" if is_breakfast else
+                             "lunch" if minute < int(current_settings["lunch_end_minute"]) else "dinner")
+                meal_values = meal_factor_values(meal_kind, day_type if is_breakfast else None,
+                                                 local_now.date(), overrides, periods)
+                factor = ({"count": len(meal_values), "days": BREAKFAST_FACTOR_DAYS,
+                           "median_units_per_ke": median(meal_values) if meal_values else None}
                           if is_breakfast else None)
                 use_factor = bool(factor and factor["count"] >= BREAKFAST_FACTOR_MIN_MEALS
                                   and factor["median_units_per_ke"] > 0)
+                auto_percentile = Decimal(str(current_settings["auto_percentile"]))
+                auto_value = auto_factor(meal_values, auto_percentile)
+                if auto_value is not None and auto_value <= 0:
+                    auto_value = None
                 result = dosing.suggest(payload.get("carbs", 0), current_settings, entries, treatments, now,
                                         activity_change=payload.get("activity_change_mgdl", 0),
-                                        units_per_ke=factor["median_units_per_ke"] if use_factor else None)
+                                        units_per_ke=factor["median_units_per_ke"] if use_factor else None,
+                                        auto_units_per_ke=auto_value)
                 result.update({
+                    "auto_meal": meal_kind, "auto_factor_count": len(meal_values),
+                    "auto_factor_min_meals": AUTO_FACTOR_MIN_MEALS, "auto_percentile": str(auto_percentile),
+                    "auto_factor_days": BREAKFAST_FACTOR_DAYS,
+                    "auto_median_units_per_ke": str(median(meal_values)) if meal_values else None,
+                    "auto_q1_units_per_ke": (str(quartile(meal_values, Decimal("0.25")))
+                                             if len(meal_values) >= AUTO_FACTOR_MIN_MEALS else None),
                     "day_type": day_type, "day_type_source": day_type_source, "breakfast": is_breakfast,
                     "factor_source": "breakfast_day_type" if use_factor else "nightscout",
                     "breakfast_factor_count": factor["count"] if factor else None,

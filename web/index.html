@@ -156,8 +156,11 @@
             <div id="ic-rows"></div>
             <button type="button" id="save-ic">Insulinfaktor in Nightscout speichern</button>
             <p id="ic-status" class="hint"></p>
-            <h2 class="spaced">Zielwert der Spritzhilfe</h2>
+            <h2 class="spaced">Zielwerte der Spritzhilfe</h2>
             <label>Zielwert <span>mg/dL</span><input name="dose_target_mgdl" type="number" min="60" max="140" step="1" required></label>
+            <label>Vorsichtiger Zielwert <span>mg/dL</span><input name="dose_cautious_target_mgdl" type="number" min="60" max="250" step="1" required></label>
+            <label>Automatik · Perzentil der Faktoren <span>%</span><input name="auto_percentile" type="number" min="25" max="50" step="0.5" required></label>
+            <p class="hint">Automatik: Insulinfaktor aus den berechneten Mahlzeiten der letzten 28 Tage (Frühstück je Tagestyp), ab 5 Mahlzeiten. 25 % ist das untere Quartil, 50 % der Median; kleinere Werte bedeuten weniger Insulin. Korrigiert wird auf den normalen Zielwert.</p>
             <h2 class="spaced">Zielbereich aus Nightscout</h2>
             <div id="target-rows"></div>
             <h2 class="spaced">Tagebuch und Sport</h2>

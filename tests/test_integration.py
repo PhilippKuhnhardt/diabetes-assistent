@@ -826,6 +826,55 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(Decimal(free["carb_units"]), Decimal(9))
         self.assertEqual(Decimal(free["nightscout_units_per_ke"]), Decimal(work["units_per_ke"]))
 
+    def test_dose_help_auto_value_uses_cautious_percentile_of_current_meal(self):
+        self.request("/api/settings")
+        updated = self.request("/api/settings", method="POST",
+                               body={"dose_cautious_target_mgdl": "150", "auto_percentile": "37.5"})
+        self.assertEqual(Decimal(updated["settings"]["dose_cautious_target_mgdl"]), Decimal(150))
+        for invalid in ({"dose_cautious_target_mgdl": "90"}, {"dose_cautious_target_mgdl": "251"},
+                        {"auto_percentile": "24"}, {"auto_percentile": "51"}, {"auto_percentile": "NaN"}):
+            with self.assertRaises(urllib.error.HTTPError) as error:
+                self.request("/api/settings", method="POST", body=invalid)
+            self.assertEqual(error.exception.code, 400)
+            error.exception.close()
+        zone = ZoneInfo("Europe/Berlin")
+        now = datetime.now(timezone.utc)
+        local_today = now.astimezone(zone).date()
+        # Make every time of day count as dinner for this test.
+        _, settings = storage.get_settings()
+        storage.save_settings({**settings, "breakfast_end_minute": 1, "lunch_end_minute": 2})
+        current_day = {
+            "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 100}],
+            "treatments": [],
+        }
+        past = [(local_today - timedelta(days=offset)).isoformat() for offset in range(1, 6)]
+        factors = dict(zip(past, ["1.5", "0.8", "1.2", "1.0", "1.1"]))
+
+        def payload(day, refresh=True):
+            if day == local_today.isoformat():
+                return {**current_day, "meals": []}
+            factor = factors.get(day)
+            return {"meals": [
+                {"id": "d-" + day, "meal": "dinner", "calculation": {"factor_units_per_ke": factor}},
+                {"id": "l-" + day, "meal": "lunch", "calculation": {"factor_units_per_ke": "9"}},
+            ] if factor else []}
+
+        with patch("app.server.day_payload", side_effect=payload):
+            result = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
+            storage.set_analysis_exclusion("d-" + past[0], True)
+            too_few = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
+        self.assertEqual(result["auto_meal"], "dinner")
+        self.assertEqual(result["auto_factor_count"], 5)
+        self.assertEqual(Decimal(result["auto_units_per_ke"]), Decimal("1.05"))
+        self.assertEqual(Decimal(result["auto_median_units_per_ke"]), Decimal("1.1"))
+        self.assertEqual(Decimal(result["auto_q1_units_per_ke"]), Decimal("1.0"))
+        self.assertEqual(Decimal(result["cautious_target_mgdl"]), Decimal(150))
+        self.assertEqual(Decimal(result["auto_total_units"]), Decimal("2.1"))
+        self.assertEqual(Decimal(result["auto_entry_units"]), Decimal("2"))
+        self.assertEqual(result["factor_source"], "nightscout")
+        self.assertEqual(too_few["auto_factor_count"], 4)
+        self.assertNotIn("auto_entry_units", too_few)
+
     def test_summary_shows_median_middle_half_and_full_range(self):
         factors = ["1", "1.1", "1.2", "1.3", "5"]
         meals = [{

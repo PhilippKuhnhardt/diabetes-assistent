@@ -73,6 +73,26 @@ class DosingTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 dosing.suggest("20", self.settings, entries, [], self.now, activity_change=invalid)
 
+    def test_configured_cautious_target_and_auto_factor_correct_separately(self):
+        settings = {**self.settings, "dose_cautious_target_mgdl": "160"}
+        entries = [{"at": self.now, "sgv": 150}]
+        result = dosing.suggest("20", settings, entries, [], self.now, auto_units_per_ke=Decimal("1.05"))
+        self.assertEqual(Decimal(result["cautious_target_mgdl"]), Decimal(160))
+        self.assertEqual(Decimal(result["cautious_correction_units"]), Decimal("-0.25"))
+        # 2 KE × 1.05 IE/KE + (150 − 100) / 40 = 2.1 + 1.25
+        self.assertEqual(Decimal(result["auto_carb_units"]), Decimal("2.1"))
+        self.assertEqual(Decimal(result["auto_total_units"]), Decimal("3.35"))
+        self.assertEqual(Decimal(result["auto_entry_units"]), Decimal("3.5"))
+        self.assertEqual(Decimal(result["auto_expected_glucose_mgdl"]), Decimal("94"))
+        self.assertNotIn("auto_entry_units", dosing.suggest("20", settings, entries, [], self.now))
+
+    def test_auto_factor_is_cautious_percentile_inside_middle_half(self):
+        values = [Decimal(value) for value in ("0.8", "1.0", "1.1", "1.2", "1.5")]
+        self.assertEqual(server.auto_factor(values, Decimal("37.5")), Decimal("1.05"))
+        self.assertEqual(server.auto_factor(values, Decimal("25")), Decimal("1.0"))
+        self.assertEqual(server.auto_factor(values, Decimal("50")), Decimal("1.1"))
+        self.assertIsNone(server.auto_factor(values[:4], Decimal("37.5")))
+
     def test_stale_glucose_has_no_correction(self):
         entries = [{"at": self.now - timedelta(minutes=16), "sgv": 150}]
         result = dosing.suggest("20", self.settings, entries, [], self.now)
