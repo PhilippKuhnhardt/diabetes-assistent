@@ -35,7 +35,8 @@ class DosingTests(unittest.TestCase):
         self.assertEqual(Decimal(result["cautious_target_mgdl"]), Decimal(140))
         self.assertEqual(Decimal(result["cautious_correction_units"]), Decimal("0.25"))
         self.assertAlmostEqual(float(result["cautious_total_units"]), 3.05)
-        self.assertEqual(Decimal(result["trend_delta_mgdl"]), Decimal(20))
+        self.assertEqual(Decimal(result["trend_delta_mgdl"]), Decimal(30))
+        self.assertEqual(result["trend_direction"], "up_fast")
 
     def test_half_unit_tie_rounds_to_next_injectable_amount(self):
         entries = [{"at": self.now, "sgv": 190}]

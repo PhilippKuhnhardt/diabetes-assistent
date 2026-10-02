@@ -7,6 +7,40 @@ from zoneinfo import ZoneInfo
 
 from app import calculation
 
+TREND_WINDOW_MINUTES = Decimal(15)
+TREND_FLAT_MGDL = Decimal(5)
+TREND_FAST_MGDL = Decimal(30)
+
+
+def trend(points: list[tuple[datetime, Decimal]]) -> dict | None:
+    """Least-squares slope over the CGM values of the last 15 minutes up to the latest value,
+    expressed as the change per 15 minutes. Needs at least 5 minutes of course; a change below
+    5 mg/dL per 15 minutes counts as flat, from 30 mg/dL (2 mg/dL/min) as fast."""
+    if not points:
+        return None
+    latest_at = points[-1][0]
+    window = [(-calculation.minutes_between(latest_at, at), value) for at, value in points
+              if latest_at - at <= timedelta(minutes=16)]
+    span = -window[0][0] if window else Decimal(0)
+    if len(window) < 2 or span < 5:
+        return None
+    mean_x = sum(x for x, _ in window) / len(window)
+    mean_y = sum(y for _, y in window) / len(window)
+    slope = (sum((x - mean_x) * (y - mean_y) for x, y in window)
+             / sum((x - mean_x) ** 2 for x, _ in window))
+    delta = (slope * TREND_WINDOW_MINUTES).quantize(Decimal("0.1"))
+    if abs(delta) < TREND_FLAT_MGDL:
+        direction = "flat"
+    elif delta > 0:
+        direction = "up_fast" if delta >= TREND_FAST_MGDL else "up"
+    else:
+        direction = "down_fast" if delta <= -TREND_FAST_MGDL else "down"
+    return {"trend_delta_mgdl": str(delta), "trend_minutes": str(TREND_WINDOW_MINUTES),
+            "trend_direction": direction}
+
+
+NO_TREND = {"trend_delta_mgdl": None, "trend_minutes": None, "trend_direction": None}
+
 
 def current_status(entries: list[dict], settings: dict, now: datetime | None = None) -> dict:
     now = now or datetime.now(timezone.utc)
@@ -17,13 +51,12 @@ def current_status(entries: list[dict], settings: dict, now: datetime | None = N
     )
     if not points:
         return {"glucose_mgdl": None, "glucose_at": None, "fresh": False,
-                "status": "unavailable", "trend_delta_mgdl": None, "trend_minutes": None,
+                "status": "unavailable", **NO_TREND,
                 "target_low_mgdl": None, "target_high_mgdl": None}
 
     latest_at, value = points[-1]
     fresh = now - latest_at <= timedelta(minutes=15)
-    prior = next(((at, glucose) for at, glucose in reversed(points[:-1])
-                  if timedelta(minutes=5) <= latest_at - at <= timedelta(minutes=20)), None)
+    course = (trend(points) if fresh else None) or NO_TREND
     schedule = settings.get("target_schedule") or []
     local = now.astimezone(ZoneInfo(settings["timezone"]))
     minute = local.hour * 60 + local.minute
@@ -46,8 +79,7 @@ def current_status(entries: list[dict], settings: dict, now: datetime | None = N
     return {
         "glucose_mgdl": str(value), "glucose_at": latest_at.isoformat(),
         "fresh": fresh, "status": status,
-        "trend_delta_mgdl": str(value - prior[1]) if fresh and prior else None,
-        "trend_minutes": str(calculation.minutes_between(latest_at, prior[0])) if fresh and prior else None,
+        **course,
         "target_low_mgdl": str(low) if low is not None else None,
         "target_high_mgdl": str(high) if high is not None else None,
     }

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
-from app import calculation
+from app import calculation, glucose
 
 
 def suggest(carbs: object, settings: dict, entries: list[dict],
@@ -29,8 +29,6 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     latest = points[-1] if points else None
     glucose_at = latest[0] if latest else None
     fresh = bool(latest and now - latest[0] <= timedelta(minutes=15))
-    prior = next(((at, value) for at, value in reversed(points[:-1])
-                  if timedelta(minutes=5) <= latest[0] - at <= timedelta(minutes=20)), None) if latest else None
     recent = [
         {"at": item["at"].isoformat(), "units": str(item["insulin"])}
         for item in treatments
@@ -43,8 +41,7 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         "glucose_mgdl": str(latest[1]) if latest else None,
         "glucose_at": glucose_at.isoformat() if glucose_at else None,
         "glucose_fresh": fresh,
-        "trend_delta_mgdl": str(latest[1] - prior[1]) if prior else None,
-        "trend_minutes": str(calculation.minutes_between(latest[0], prior[0])) if prior else None,
+        **(glucose.trend(points) or glucose.NO_TREND),
         "recent_rapid_doses": recent,
         "activity_change_mgdl": str(activity),
     }
