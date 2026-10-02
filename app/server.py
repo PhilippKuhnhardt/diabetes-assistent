@@ -14,7 +14,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
 
-from app import auth, calculation, dosing, episodes, glucose, nightscout, sensitivity, storage
+from app import auth, calculation, dosing, episodes, glucose, nightscout, sensitivity, sport_analysis, storage
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 MAX_BODY = 64 * 1024
@@ -602,6 +602,8 @@ class Handler(BaseHTTPRequestHandler):
                 night_end_values = []
                 night_minimum_values = []
                 night_delta_values = []
+                sport_meals = []
+                sport_sessions = []
                 for offset in range(days):
                     day = (today - timedelta(days=offset)).isoformat()
                     payload = day_payload(day, refresh=False)
@@ -624,6 +626,15 @@ class Handler(BaseHTTPRequestHandler):
                         night_minimum_values.append(Decimal(night_item["minimum_glucose"]))
                         night_delta_values.append(Decimal(night_item["delta_mgdl"]))
                     day_type = day_types.get(day, "free" if date.fromisoformat(day).weekday() >= 5 else "work")
+                    sport_sessions.extend(
+                        {"id": item["id"], "at": item["at"], "duration_minutes": item["duration_minutes"],
+                         "kind": item["sport_kind"], "notes": item["notes"]}
+                        for item in payload.get("timeline", []) if item["kind"] == "exercise")
+                    sport_meals.extend(
+                        {"id": meal["id"], "day": day, "meal": meal["meal"], "at": meal["at"],
+                         "excluded": meal["id"] in excluded_ids, "calculation": meal.get("calculation") or {},
+                         "sport": meal.get("sport") or {}}
+                        for meal in payload["meals"])
                     for meal in payload["meals"]:
                         group = groups[meal["meal"]]
                         group["total"] += 1
@@ -731,6 +742,9 @@ class Handler(BaseHTTPRequestHandler):
                     }
                 self._response(200, {
                     "days": days, "groups": groups, "profile_sync_error": profile_sync_error,
+                    "sport_analysis": sport_analysis.analyze(
+                        sport_meals, sport_sessions, settings["sport_lookback_minutes"],
+                        settings["window_minutes"], episodes.SPORT_LABELS),
                     "sensitivity_comparison": sensitivity.compare_schedule(
                         sensitivity_meals, settings["isf_schedule"], settings["ic_schedule"],
                         settings["timezone"]),
