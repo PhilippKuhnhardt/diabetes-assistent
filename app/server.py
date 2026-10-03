@@ -163,6 +163,37 @@ def meal_factor_values(meal_kind: str, day_type: str | None, today: date,
     return sorted(values)
 
 
+def recent_meal_factor_values(today: date, overrides: dict[str, str], periods: list[dict],
+                              loaded: dict[str, dict] | None = None) -> dict[tuple[str, str | None], list[Decimal]]:
+    """meal_factor_values for every meal kind in one pass; breakfast is keyed by day type."""
+    excluded = storage.analysis_exclusions()
+    values: dict[tuple[str, str | None], list[Decimal]] = {
+        key: [] for key in (("breakfast", "work"), ("breakfast", "free"), ("lunch", None), ("dinner", None))}
+    for offset in range(1, BREAKFAST_FACTOR_DAYS + 1):
+        day = (today - timedelta(days=offset)).isoformat()
+        day_type = storage.day_type_for(day, overrides, periods)[0]
+        payload = (loaded or {}).get(day) or day_payload(day, refresh=False)
+        for meal in payload.get("meals", []):
+            factor = (meal.get("calculation") or {}).get("factor_units_per_ke")
+            key = (meal.get("meal"), day_type if meal.get("meal") == "breakfast" else None)
+            if key in values and meal["id"] not in excluded and factor is not None:
+                values[key].append(Decimal(factor))
+    return {key: sorted(items) for key, items in values.items()}
+
+
+def suggestion_factor(values: list[Decimal], percentile: Decimal) -> dict:
+    """The auto factor the dose help uses, with the meals it is based on."""
+    value = auto_factor(values, percentile)
+    return {
+        "auto_units_per_ke": str(value) if value is not None and value > 0 else None,
+        "count": len(values), "days": BREAKFAST_FACTOR_DAYS, "min_meals": AUTO_FACTOR_MIN_MEALS,
+        "percentile": str(percentile),
+        "median_units_per_ke": str(median(values)) if values else None,
+        "min_units_per_ke": str(values[0]) if values else None,
+        "max_units_per_ke": str(values[-1]) if values else None,
+    }
+
+
 def auto_factor(values: list[Decimal], percentile: Decimal) -> Decimal | None:
     """Cautious factor: a percentile between Q1 and the median of recent meal factors.
     A lower IE/KE means less insulin, so it sits below the median but inside the middle half."""
@@ -679,9 +710,10 @@ class Handler(BaseHTTPRequestHandler):
                 night_delta_values = []
                 sport_meals = []
                 sport_sessions = []
+                loaded_days = {}
                 for offset in range(days):
                     day = (today - timedelta(days=offset)).isoformat()
-                    payload = day_payload(day, refresh=False)
+                    payload = loaded_days[day] = day_payload(day, refresh=False)
                     night = payload.get("night") or {}
                     night_item = {
                         "day": day, "start": night.get("start"), "end": night.get("end"),
@@ -816,6 +848,22 @@ class Handler(BaseHTTPRequestHandler):
                         "q1_units_per_ke": str(quartile(values, Decimal("0.25"))) if len(values) >= 5 else None,
                         "q3_units_per_ke": str(quartile(values, Decimal("0.75"))) if len(values) >= 5 else None,
                     }
+                percentile = Decimal(str(settings["auto_percentile"]))
+                recent = recent_meal_factor_values(today, day_types, vacations, loaded_days)
+                for kind in ("work", "free"):
+                    breakfast["by_day_type"][kind]["suggestion"] = suggestion_factor(
+                        recent[("breakfast", kind)], percentile)
+                for name in ("lunch", "dinner"):
+                    groups[name]["suggestion"] = suggestion_factor(recent[(name, None)], percentile)
+                for name, group in groups.items():
+                    current = set()
+                    if settings["ic_schedule"]:
+                        for item in group["calculations"]:
+                            grams = calculation.schedule_value_at(
+                                datetime.fromisoformat(item["at"]), settings["ic_schedule"],
+                                settings["timezone"], "grams_per_unit")
+                            current.add(Decimal(10) / grams)
+                    group["nightscout_units_per_ke"] = [str(value) for value in sorted(current)]
                 self._response(200, {
                     "days": days, "groups": groups, "profile_sync_error": profile_sync_error,
                     "sport_analysis": sport_analysis.analyze(

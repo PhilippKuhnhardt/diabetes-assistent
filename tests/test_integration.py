@@ -20,6 +20,12 @@ from app.server import Handler, night_analysis
 MEAL_AT = "2026-09-23T10:00:00Z"
 
 
+def then_empty(payloads):
+    """day_payload stand-in: the given days first, then empty days."""
+    remaining = iter(payloads)
+    return lambda *args, **kwargs: next(remaining, {"meals": []})
+
+
 class FakeNightscout(BaseHTTPRequestHandler):
     treatments = []
     profile = {
@@ -549,7 +555,7 @@ class IntegrationTests(unittest.TestCase):
                         {"at": "2026-09-23T13:00:00+02:00", "carbs": "10", "isf": "45"},
                     ],
                 }}
-        with patch("app.server.day_payload", side_effect=[{"meals": [meal]}] + [{"meals": []}] * 6):
+        with patch("app.server.day_payload", side_effect=then_empty([{"meals": [meal]}])):
             row = self.request("/api/summary?days=7")["groups"]["lunch"]["calculations"][0]
         self.assertEqual(Decimal(row["expected_delta_mgdl"]), Decimal("27.5"))
         self.assertEqual(Decimal(row["deviation_mgdl"]), Decimal("12.5"))
@@ -569,8 +575,7 @@ class IntegrationTests(unittest.TestCase):
         blocked = {"id": "blocked", "meal": "dinner", "at": at,
                    "calculation": {**calculated["calculation"], "factor_units_per_ke": None,
                                    "reason": "CGM-Lücke"}}
-        with patch("app.server.day_payload", side_effect=[{"meals": [calculated, blocked]}] +
-                   [{"meals": []}] * 6):
+        with patch("app.server.day_payload", side_effect=then_empty([{"meals": [calculated, blocked]}])):
             rows = self.request("/api/summary?days=7")["groups"]["dinner"]["calculations"]
         self.assertEqual(Decimal(rows[0]["expected_delta_mgdl"]), Decimal("-3"))
         self.assertEqual(Decimal(rows[0]["deviation_mgdl"]), Decimal("39.8"))
@@ -879,6 +884,31 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(too_few["auto_factor_count"], 3)
         self.assertNotIn("auto_entry_units", too_few)
 
+    def test_summary_shows_factor_used_for_dose_suggestion(self):
+        FakeNightscout.profile["store"]["Default"]["carbratio"] = [
+            {"time": "00:00", "timeAsSeconds": 0, "value": 12.5}]
+        self.request("/api/profile/sync", method="POST", body={})
+        local_today = datetime.now(timezone.utc).astimezone(ZoneInfo("Europe/Berlin")).date()
+        past = [(local_today - timedelta(days=offset)).isoformat() for offset in range(1, 6)]
+        factors = dict(zip(past, ["1.5", "0.8", "1.2", "1.0", "1.1"]))
+
+        def payload(day, refresh=True):
+            factor = "9" if day == local_today.isoformat() else factors.get(day)
+            return {"meals": [{"id": "d-" + day, "meal": "dinner", "at": day + "T18:00:00+02:00",
+                               "calculation": {"factor_units_per_ke": factor,
+                                               "ratio_g_per_unit": "10"}}] if factor else []}
+
+        with patch("app.server.day_payload", side_effect=payload):
+            summary = self.request("/api/summary?days=3")
+        dinner = summary["groups"]["dinner"]
+        self.assertEqual(Decimal(dinner["suggestion"]["auto_units_per_ke"]), Decimal("1.05"))
+        self.assertEqual(dinner["suggestion"]["count"], 5)
+        self.assertEqual(dinner["suggestion"]["days"], 28)
+        self.assertEqual([Decimal(value) for value in dinner["nightscout_units_per_ke"]], [Decimal("0.8")])
+        self.assertIsNone(summary["groups"]["lunch"]["suggestion"]["auto_units_per_ke"])
+        for kind in ("work", "free"):
+            self.assertIn("suggestion", summary["groups"]["breakfast"]["by_day_type"][kind])
+
     def test_summary_shows_median_middle_half_and_full_range(self):
         factors = ["1", "1.1", "1.2", "1.3", "5"]
         meals = [{
@@ -890,7 +920,7 @@ class IntegrationTests(unittest.TestCase):
                 "ratio_g_per_unit": str(10 / float(factor)),
             },
         } for index, factor in enumerate(factors)]
-        with patch("app.server.day_payload", side_effect=[{"meals": meals}] + [{"meals": []}] * 13):
+        with patch("app.server.day_payload", side_effect=then_empty([{"meals": meals}])):
             group = self.request("/api/summary?days=14")["groups"]["lunch"]
         self.assertEqual(group["count"], 5)
         self.assertEqual(group["median_units_per_ke"], "1.2")
@@ -909,7 +939,7 @@ class IntegrationTests(unittest.TestCase):
             })
         self.assertTrue(response["excluded"])
         self.assertIn("meal-4", storage.analysis_exclusions())
-        with patch("app.server.day_payload", side_effect=[{"meals": meals}] + [{"meals": []}] * 13):
+        with patch("app.server.day_payload", side_effect=then_empty([{"meals": meals}])):
             filtered = self.request("/api/summary?days=14")["groups"]["lunch"]
         self.assertEqual(filtered["count"], 4)
         self.assertEqual(filtered["excluded_count"], 1)
@@ -925,13 +955,13 @@ class IntegrationTests(unittest.TestCase):
             })
         self.assertNotIn("meal-4", storage.analysis_exclusions())
 
-        with patch("app.server.day_payload", side_effect=[{"meals": meals[:4]}] + [{"meals": []}] * 13):
+        with patch("app.server.day_payload", side_effect=then_empty([{"meals": meals[:4]}])):
             small_group = self.request("/api/summary?days=14")["groups"]["lunch"]
         self.assertIsNone(small_group["q1_units_per_ke"])
         self.assertIsNone(small_group["q3_units_per_ke"])
         self.assertEqual(float(small_group["median_units_per_ke"]), 1.15)
 
-        with patch("app.server.day_payload", side_effect=[{"meals": meals[:2]}] + [{"meals": []}] * 13):
+        with patch("app.server.day_payload", side_effect=then_empty([{"meals": meals[:2]}])):
             sparse_group = self.request("/api/summary?days=14")["groups"]["lunch"]
         self.assertEqual(sparse_group["strong_outlier_count"], 0)
 

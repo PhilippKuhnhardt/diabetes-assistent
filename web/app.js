@@ -1771,25 +1771,37 @@ async function loadSummary() {
     if (data.profile_sync_error) {
       $("#sync-progress").textContent = "Korrekturfaktor-Profil nicht aktualisiert: " + data.profile_sync_error;
     }
+    const span = (low, high) => low == null ? '—'
+      : Number(low) === Number(high) ? num(low, 2) : num(low, 2) + '–' + num(high, 2);
+    const fact = (label, value, key = false) =>
+      '<div' + (key ? ' class="key"' : '') + '><dt>' + label + '</dt><dd>' + escapeHTML(value) + '</dd></div>';
+    const suggestion = s => s.auto_units_per_ke != null ? num(s.auto_units_per_ke, 2) : '—';
+    const suggestionNote = s => 'Vorschlag aus ' + s.count + ' (' + s.days + ' T.)';
+    const mealsText = count => count + (count === 1 ? ' Mahlzeit' : ' Mahlzeiten');
     const breakfastSubcards = () => '<div class="breakfast-subcards">' + ["work", "free"].map(dayType => {
       const subset = data.groups.breakfast.by_day_type[dayType];
+      const s = subset.suggestion;
       return '<div class="breakfast-subcard"><span>' + (dayType === "work" ? "Arbeit" : "Frei") + '</span>' +
         '<strong>' + (subset.count ? escapeHTML(num(subset.median_units_per_ke, 2)) + ' <small>IE/KE</small>' : '—') +
-        '</strong><small>' + subset.count + ' Mahlzeiten</small></div>';
+        '</strong><dl class="factor-facts compact">' +
+        fact("Vorschlag", suggestion(s), true) +
+        fact("Spanne", span(subset.min_units_per_ke, subset.max_units_per_ke)) +
+        '</dl><small>' + mealsText(subset.count) + ' · ' + escapeHTML(suggestionNote(s)) + '</small></div>';
     }).join("") + '</div>';
     $("#summary").innerHTML = ["breakfast", "lunch", "dinner"].map(kind => {
       const row = data.groups[kind];
       const hasValues = row.count > 0;
-      const typical = row.q1_units_per_ke != null
-        ? '<div class="summary-metric"><span>Mittlere 50 %</span><strong>' +
-          escapeHTML(num(row.q1_units_per_ke, 2)) + '–' + escapeHTML(num(row.q3_units_per_ke, 2)) +
-          ' <small>IE/KE</small></strong></div>'
-        : '';
+      const current = (row.nightscout_units_per_ke || []).map(value => num(value, 2)).join(' / ') || '—';
+      const facts = (kind === "breakfast" ? '' : fact("Vorschlag", suggestion(row.suggestion), true)) +
+        fact("Aktuell", current) +
+        fact("Spanne", span(row.min_units_per_ke, row.max_units_per_ke)) +
+        (row.q1_units_per_ke != null ? fact("Mittlere 50 %", span(row.q1_units_per_ke, row.q3_units_per_ke)) : '');
       return '<div class="summary-card"><span class="meal-type">' + escapeHTML(names[kind]) + '</span>' +
         '<div class="summary-primary"><span>Median</span><strong>' +
         (hasValues ? escapeHTML(num(row.median_units_per_ke, 2)) + ' <small>IE/KE</small>' : '—') +
-        '</strong></div>' + typical +
-        '<p>' + row.count + (row.count === 1 ? ' Mahlzeit' : ' Mahlzeiten') + '</p>' +
+        '</strong></div><dl class="factor-facts">' + facts + '</dl>' +
+        '<p>' + mealsText(row.count) +
+        (kind === "breakfast" ? '' : ' · ' + escapeHTML(suggestionNote(row.suggestion))) + '</p>' +
         (kind === "breakfast" ? breakfastSubcards() : '') + '</div>';
     }).join("");
     renderAnalysisIc();
