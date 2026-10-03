@@ -413,7 +413,6 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .help-result[aria-busy="true"] { opacity: .65; }
 .dose-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; }
 .dose-heading { color: var(--green-dark); font-weight: 750; }
-.dose-basis { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .dose-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 7px; margin-top: 10px; }
 .help-result .dose-option { display: grid; justify-items: center; gap: 2px; min-width: 0; padding: 8px 4px; border: 1.5px solid var(--line); border-radius: 10px; background: white; color: var(--ink); text-align: center; font-weight: 600; }
 .dose-option .dose-label { color: var(--muted); font-size: 11px; font-weight: 650; }
