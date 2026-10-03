@@ -1830,6 +1830,7 @@ async function loadSummary() {
         '<strong>' + (subset.count ? escapeHTML(factorNum(subset.median_units_per_ke)) + ' <small>IE/KE</small>' : '—') +
         '</strong><dl class="factor-facts compact">' +
         fact("Vorschlag", suggestion(s), true) +
+        (subset.q1_units_per_ke != null ? fact("Mittlere 50 %", span(subset.q1_units_per_ke, subset.q3_units_per_ke)) : '') +
         '</dl><small>' + mealsText(subset.count) + ' · ' + escapeHTML(suggestionNote(s)) + '</small></div>';
     }).join("") + '</div>';
     $("#summary").innerHTML = ["breakfast", "lunch", "dinner"].map(kind => {
