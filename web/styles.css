@@ -21,13 +21,11 @@ button { cursor: pointer; }
 button:disabled { opacity: .55; cursor: wait; }
 button:focus-visible, .tab:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid #7bb995; outline-offset: 2px; }
 .shell { max-width: 1380px; margin: 0 auto; padding: 0 32px; }
-.topbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; min-height: 88px; border-bottom: 1px solid var(--line); }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; min-height: 72px; border-bottom: 1px solid var(--line); }
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-mark { display: block; width: 40px; height: 40px; flex: none; }
 .brand strong { display: block; font-size: 17px; letter-spacing: -.02em; }
-.brand small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
 .status { font-size: 12px; font-weight: 650; color: var(--amber); background: var(--amber-light); border-radius: 999px; padding: 8px 13px; white-space: nowrap; }
-.status.connected { color: var(--green); background: var(--green-light); }
 .topbar { position: sticky; top: 0; z-index: 20; background: var(--canvas); }
 .glucose-widget { min-width: 230px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 11px; background: #edf1ee; color: #44564d; }
 .glucose-caption, .glucose-widget small { display: block; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
@@ -454,8 +452,6 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .recent-chip time { color: var(--muted); font-weight: 650; }
 .day-overview p.hint:empty { display: none; }
 @media (max-width: 650px) {
-  .status.connected { display: none; }
-  .brand small { display: none; }
   .brand-mark { width: 32px; height: 32px; }
   .topbar { min-height: 0; padding: 8px 0; gap: 8px; }
   #diary-view.view { padding-top: 14px; }

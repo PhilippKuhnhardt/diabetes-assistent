@@ -14,14 +14,14 @@
     <header class="topbar">
       <div class="brand">
         <img class="brand-mark" src="/logo.svg" width="40" height="40" alt="">
-        <div><strong>Diabetes-Tagebuch</strong><small>Nightscout · Fiasp · mg/dL</small></div>
+        <strong>Diabetes-Tagebuch</strong>
       </div>
       <div id="current-glucose" class="glucose-widget" data-status="unavailable" role="status" aria-live="polite">
         <span class="glucose-caption">Aktueller Blutzucker</span>
         <div class="glucose-main"><strong id="glucose-value">—</strong><span id="glucose-trend">Trend nicht verfügbar</span></div>
-        <small id="glucose-meta">Wird geladen …</small>
+        <small id="glucose-meta" hidden></small>
       </div>
-      <div class="topbar-actions"><div id="connection" class="status">Verbinde …</div><form id="logout-form" action="/logout" method="post" hidden><button class="quiet" type="submit">Abmelden</button></form></div>
+      <div class="topbar-actions"><div id="connection" class="status" hidden></div><form id="logout-form" action="/logout" method="post" hidden><button class="quiet" type="submit">Abmelden</button></form></div>
     </header>
 
     <nav class="tabs" aria-label="Bereiche">
