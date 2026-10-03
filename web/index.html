@@ -58,36 +58,39 @@
             <div class="section-head"><h2 id="entry-title">Eintrag hinzufügen</h2></div>
             <form id="entry-form">
               <div class="entry-switch" role="group" aria-label="Eintragsart">
-                <button type="button" class="entry-mode" data-entry-mode="meal" aria-pressed="true">Mahlzeit &amp; Insulin</button>
+                <button type="button" class="entry-mode" data-entry-mode="meal" aria-pressed="true">Essen &amp; Insulin</button>
                 <button type="button" class="entry-mode" data-entry-mode="exercise" aria-pressed="false">Sport</button>
               </div>
               <input type="hidden" name="kind" id="entry-kind" value="meal">
-              <label>Zeitpunkt (24 h)<input type="time" name="at" id="entry-time" step="60" required></label>
               <div id="entry-meal-fields">
                 <div class="field-pair">
                   <label id="entry-carbs-field">Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"></label>
                   <label id="entry-insulin-field">Insulin <span>IE</span><input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
                 </div>
-                <div id="entry-sport-option" class="entry-sport-option" hidden>
-                  <label class="check-label"><input type="checkbox" name="consider_sport"> Sport/Rennsport in Empfehlung und Analyse berücksichtigen</label>
-                  <p id="entry-sport-hint" class="hint"></p>
-                  <label id="entry-sport-effect-field" hidden>Geschätzte BZ-Wirkung <span>mg/dL, − senkt, + hebt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1"></label>
-                </div>
-                <div id="entry-day-type" class="entry-day-type" hidden>
-                  <div class="entry-switch" role="group" aria-label="Tagesart für das Frühstück">
-                    <button type="button" class="day-type-option" data-day-type="work" aria-pressed="false">Arbeitstag</button>
-                    <button type="button" class="day-type-option" data-day-type="free" aria-pressed="false">Freier Tag</button>
-                  </div>
-                  <p id="entry-day-type-hint" class="hint"></p>
-                </div>
-                <div id="dose-result" class="help-result" aria-live="polite"></div>
               </div>
               <label id="entry-sport-field" hidden>Sportart
                 <select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select>
               </label>
               <label id="entry-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
-              <label>Notiz <span>optional</span><input name="notes" type="text" maxlength="500"></label>
-              <div class="form-actions"><button class="primary" type="submit">In Nightscout speichern</button></div>
+              <div class="entry-chips">
+                <button type="button" id="entry-time-chip" class="chip" aria-controls="entry-time-field" aria-expanded="false">Zeit: jetzt</button>
+                <button type="button" id="entry-note-chip" class="chip" aria-controls="entry-note-field" aria-expanded="false">+ Notiz</button>
+                <div id="entry-sport-option" class="entry-sport-option" hidden>
+                  <label class="chip chip-toggle"><input type="checkbox" name="consider_sport"> <span id="entry-sport-hint"></span></label>
+                </div>
+              </div>
+              <label id="entry-time-field" hidden>Zeitpunkt (24 h)<input type="time" name="at" id="entry-time" step="60" required></label>
+              <label id="entry-sport-effect-field" hidden>Geschätzte BZ-Wirkung durch Sport <span>mg/dL, − senkt, + hebt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1"></label>
+              <div id="entry-day-type" class="entry-day-type" hidden>
+                <div class="entry-switch" role="group" aria-label="Tagesart für das Frühstück">
+                  <button type="button" class="day-type-option" data-day-type="work" aria-pressed="false">Arbeitstag</button>
+                  <button type="button" class="day-type-option" data-day-type="free" aria-pressed="false">Freier Tag</button>
+                </div>
+                <p id="entry-day-type-hint" class="hint"></p>
+              </div>
+              <div id="dose-result" class="help-result" aria-live="polite"></div>
+              <label id="entry-note-field" hidden>Notiz <span>optional</span><input name="notes" type="text" maxlength="500"></label>
+              <div class="form-actions entry-actions"><button class="primary" type="submit" id="entry-submit">In Nightscout speichern</button></div>
             </form>
           </section>
           <section class="records">

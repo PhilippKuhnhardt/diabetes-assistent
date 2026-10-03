@@ -78,11 +78,6 @@ label input, label select { display: block; margin-top: 7px; }
 .entry-day-type .hint { margin: 6px 0 0; }
 .panel > .check-label { display: flex; align-items: center; gap: 9px; font-size: 14px; }
 .panel > .check-label input { width: 18px; height: 18px; min-height: 18px; margin: 0; accent-color: var(--green); }
-.entry-sport-option { margin: 5px 0 16px; padding: 13px; border: 1px solid var(--line); border-radius: 9px; background: var(--canvas); }
-.entry-sport-option .check-label { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 13px; }
-.entry-sport-option .check-label input { width: 18px; height: 18px; min-height: 18px; margin: 0; accent-color: var(--green); }
-.entry-sport-option .hint { margin: 7px 0 0 27px; }
-.entry-sport-option label:last-child { margin: 12px 0 0; }
 
 .banner { background: var(--amber-light); color: #69410a; border: 1px solid #f3dfa9; padding: 12px 15px; border-radius: 9px; margin: 0 0 23px; font-size: 13px; }
 .meal-list { display: grid; gap: 16px; }
@@ -233,18 +228,6 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .topbar-actions { display: flex; align-items: center; gap: 10px; }
 .topbar-actions form { margin: 0; }
 .topbar-actions button { font-size: 12px; }
-.help-result:not(:empty) { margin: 0 0 18px; padding: 12px; border: 1px solid #bddac6; border-radius: 9px; background: #f9fdf9; font-size: 12px; }
-.dose-heading { color: var(--green-dark); font-weight: 750; margin-bottom: 10px; }
-.dose-glucose { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
-.dose-glucose span { font-size: 12px; color: var(--muted); }
-.dose-glucose strong { color: var(--green-dark); font-size: 19px; }
-.help-result .hint { margin: 9px 0 0; }
-.dose-options { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
-.dose-option { flex: 1 1 180px; display: grid; gap: 7px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: white; }
-.dose-option strong { color: var(--green-dark); font-size: 19px; }
-.dose-option button { width: 100%; }
-.dose-expected { font-size: 12px; }
-.dose-expected strong { display: inline; font-size: 14px; }
 
 .records > .panel { margin-bottom: 18px; }
 .timeline-item { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 13px 0; border-top: 1px solid var(--line); }
@@ -280,8 +263,6 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 #edit-dialog .section-head { align-items: center; }
 #edit-dialog .section-head button { font-size: 22px; line-height: 1; padding: 3px 9px; }
 #edit-dialog .primary { flex: 1; }
-.dose-factor { margin: 8px 0 0; color: var(--ink); }
-.dose-option small { color: var(--muted); font-size: 11px; }
 
 
 /* Compact analysis controls */
@@ -417,3 +398,35 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
   #window-dialog .form-actions .primary { flex-basis: 100%; }
   #window-dialog .form-actions button.quiet { flex: 1; }
 }
+
+/* Compact entry: chips for time, sport and note; tappable dose suggestions; one save button. */
+.entry-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 14px; }
+.entry-chips .entry-sport-option { display: contents; }
+.entry-chips button.chip, .entry-chips label.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; margin: 0; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--canvas); color: var(--ink); font-size: 12px; font-weight: 650; cursor: pointer; }
+label.chip span { color: inherit; font-weight: inherit; }
+label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accent-color: var(--green); }
+.entry-chips label.chip:has(input:checked) { background: var(--amber-light); border-color: #e0c27a; color: var(--amber); }
+.entry-switch { margin-bottom: 14px; }
+.entry-switch button.entry-mode { min-height: 38px; }
+.entry-day-type .entry-switch button.day-type-option { min-height: 36px; }
+.help-result:not(:empty) { margin: 0 0 14px; padding: 11px; border: 1px solid #bddac6; border-radius: 10px; background: #f9fdf9; font-size: 12px; }
+.help-result[aria-busy="true"] { opacity: .65; }
+.dose-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; }
+.dose-heading { color: var(--green-dark); font-weight: 750; }
+.dose-basis { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.dose-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 7px; margin-top: 10px; }
+.help-result .dose-option { display: grid; justify-items: center; gap: 2px; min-width: 0; padding: 8px 4px; border: 1.5px solid var(--line); border-radius: 10px; background: white; color: var(--ink); text-align: center; font-weight: 600; }
+.dose-option .dose-label { color: var(--muted); font-size: 11px; font-weight: 650; }
+.dose-option strong { color: var(--green-dark); font-size: 21px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.dose-option strong small { font-size: 12px; font-weight: 650; }
+.dose-option .dose-expected { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.help-result .dose-option[aria-pressed="true"] { border-color: var(--green); background: var(--green-light); box-shadow: inset 0 0 0 1px var(--green); }
+.dose-option.is-off { opacity: .6; }
+.dose-option.is-off strong { color: var(--muted); }
+.dose-factor { margin: 9px 0 0; color: var(--ink); }
+.dose-warning { margin: 9px 0 0; padding: 6px 9px; border-radius: 7px; background: var(--amber-light); color: var(--amber); font-weight: 600; }
+.help-result .hint { margin: 9px 0 0; }
+.dose-details { margin-top: 9px; color: var(--muted); }
+.dose-details summary { cursor: pointer; color: var(--green-dark); font-weight: 700; }
+.dose-details p { margin: 6px 0 0; line-height: 1.5; }
+.entry-actions { border-radius: 0 0 15px 15px; position: sticky; bottom: 0; z-index: 5; margin: 0 -24px -24px; padding: 10px 24px calc(14px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to bottom, rgba(255,255,255,0), #fff 30%); }
