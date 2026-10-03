@@ -453,3 +453,41 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
   .panel { padding: 18px; }
   .entry-actions { margin: 0 -18px -18px; padding: 10px 18px calc(12px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* Diary modes: "Jetzt" (entry) and "Tag durchgehen" (review); side by side on wide screens. */
+.diary-mode { display: none; }
+@media (max-width: 950px) {
+  .diary-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin: 0 0 14px; padding: 3px; border-radius: 11px; background: var(--line); }
+  .diary-mode button { min-height: 36px; border: 0 !important; border-radius: 9px !important; background: transparent !important; color: var(--muted) !important; font-size: 13px; font-weight: 700; }
+  .diary-mode button[aria-pressed="true"] { background: var(--surface) !important; color: var(--ink) !important; box-shadow: 0 1px 3px rgba(24, 50, 41, .12); }
+  #diary-view[data-mode="now"] .review-panel { display: none; }
+  #diary-view[data-mode="review"] .entry-panel { display: none; }
+}
+@media (min-width: 951px) { .review-chart { display: none; } }
+.review-chart { margin: 4px 0 8px; }
+.review-summary { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.review-summary:empty { display: none; }
+.review-chip { padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--canvas); color: var(--ink); font-size: 12px; font-weight: 650; text-decoration: none; }
+.review-chip.needs-check { background: var(--amber-light); border-color: #e0c27a; color: var(--amber); }
+.records .night-card { margin: 0 0 12px; background: var(--canvas); border: 0; }
+.day-list { display: grid; gap: 10px; }
+.day-list > .timeline-item { padding: 8px 0; border-top: 0; }
+.day-meal { padding: 4px 13px 10px; border: 1px solid var(--line); border-left: 4px solid var(--green); border-radius: 11px; background: var(--surface); scroll-margin-top: 170px; }
+.day-meal.needs-check { border-left-color: #d9a441; }
+.day-meal-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 9px 0 4px; }
+.day-meal-head .meal-type { margin-right: 8px; }
+.day-meal-window { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.day-meal-factor { color: var(--green-dark); font-size: 18px; font-weight: 750; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.day-meal-factor small { font-size: 11px; font-weight: 600; }
+.day-meal-status { max-width: 55%; color: var(--amber); font-size: 12px; font-weight: 650; text-align: right; }
+.day-meal .timeline-item { padding: 8px 0; }
+.day-meal .timeline-item:first-of-type { border-top: 1px solid var(--line); }
+.day-meal-details { margin-top: 4px; border-top: 1px solid var(--line); padding-top: 8px; }
+.day-meal-details summary { cursor: pointer; color: var(--green-dark); font-size: 12px; font-weight: 700; padding: 2px 0 4px; }
+.day-meal-details[open] summary { margin-bottom: 8px; }
+#delete-edit { margin-top: 12px; width: 100%; }
+.day-list .timeline-item { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.day-list .timeline-item p { margin: 2px 0 0; }
+.day-list .timeline-actions { grid-column: auto; }
+@media (max-width: 650px) { .records .night-values { grid-template-columns: 1fr 1fr; } .records .night-card .section-head { display: block; } }
+@media (max-width: 650px) { .day-meal-head { flex-wrap: wrap; } .day-meal-status { flex-basis: 100%; max-width: none; text-align: left; } }

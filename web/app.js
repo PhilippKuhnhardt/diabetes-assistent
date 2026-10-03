@@ -676,7 +676,7 @@ function windowChartSVG(range, entries, treatments, options = {}) {
   const interactive = Boolean(options.interactive);
   const overview = Boolean(options.overview);
   const view = options.view || chartView(range);
-  const clipId = overview ? "overview-clip" : interactive ? "editor-clip" : "chart-clip-" + range.mealAt;
+  const clipId = options.clipId || (overview ? "overview-clip" : interactive ? "editor-clip" : "chart-clip-" + range.mealAt);
   const points = glucosePoints(entries);
   const scales = chartScales(view, points);
   const visible = points.filter(point => point.t >= view.from - 10 * MINUTE && point.t <= view.to + 10 * MINUTE);
@@ -746,7 +746,7 @@ function chartFor(meal, entries) {
 function renderMealCharts() {
   for (const node of $$(".meal-chart-plot")) {
     const meal = state.dayData?.meals.find(item => item.id === node.dataset.mealId);
-    if (!meal) continue;
+    if (!meal || !node.clientWidth) continue;
     CHART = chartLayout(node.clientWidth);
     node.innerHTML = windowChartSVG(mealWindow(meal), state.dayData.entries, state.dayData.treatments);
   }
@@ -788,6 +788,37 @@ function renderDayOverview() {
     clipped ? "Werte vor Mitternacht stehen beim Vortag." : "",
   ].filter(Boolean).join(" ");
   $("#day-overview-recent").innerHTML = isToday ? recentEntriesHTML(data.treatments) : "";
+}
+
+// The whole day for "Tag durchgehen"; drawn only while visible so its width is known.
+function renderReviewChart() {
+  const node = $("#review-chart");
+  const data = state.dayData;
+  if (!node || !data || !node.clientWidth) return;
+  const dayStart = new Date(state.day + "T00:00:00").getTime();
+  const next = new Date(dayStart + 36 * 60 * MINUTE);
+  const view = { from: dayStart, to: new Date(next.toLocaleDateString("sv-SE") + "T00:00:00").getTime() };
+  CHART = chartLayout(node.clientWidth);
+  node.innerHTML = windowChartSVG({ start: -Infinity, end: Infinity, mealAt: dayStart }, data.entries, data.treatments,
+    { overview: true, view, clipId: "review-clip" });
+}
+
+// Today opens "Jetzt", other days open "Tag durchgehen"; a tap on the switch overrides it for that day.
+function applyDiaryMode() {
+  if (state.modeDay !== state.day) {
+    state.modeDay = state.day;
+    state.diaryMode = state.day === todayDay() ? "now" : "review";
+  }
+  $("#diary-view").dataset.mode = state.diaryMode;
+  $$("[data-diary-mode]").forEach(button =>
+    button.setAttribute("aria-pressed", String(button.dataset.diaryMode === state.diaryMode)));
+}
+
+function renderVisibleCharts() {
+  if (!state.dayData) return;
+  renderDayOverview();
+  renderReviewChart();
+  renderMealCharts();
 }
 
 // What happened in the last three hours, newest first, as context for the next decision.
@@ -1088,23 +1119,6 @@ function sportReviewHTML(sport, mealId, day, compact = false) {
     '"></label><button type="button" class="sport-save">' + (applied ? 'Ändern' : 'Setzen') + '</button></div></details></div>';
 }
 
-function mealHTML(meal, entries) {
-  return '<article class="meal-card">' +
-    '<div class="meal-top"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) +
-    '</span><h3>' + escapeHTML(timeOnly(meal.at)) + ' <small>· ' + escapeHTML(num(meal.carbs)) + ' g KH</small></h3></div></div>' +
-    sportReviewHTML(meal.sport || {}, meal.id, state.day) +
-    calculationHTML(meal.calculation) + chartFor(meal, entries) +
-    (meal.notes ? '<p class="meal-note">' + escapeHTML(meal.notes) + '</p>' : '') +
-    '</article>';
-}
-
-function deleteButton(id, label, at) {
-  if (!id) return "";
-  return '<button type="button" class="delete-treatment" data-id="' + escapeHTML(id) +
-    '" data-label="' + escapeHTML(label) + '" data-at="' + escapeHTML(at) +
-    '" aria-label="' + escapeHTML(label + " um " + timeOnly(at) + " löschen") + '">Löschen</button>';
-}
-
 function renderNight(night) {
   const card = $("#night-card");
   card.hidden = false;
@@ -1122,6 +1136,7 @@ function renderNight(night) {
     metric("Endwert", night.end_glucose, endTime ? "Beginn Frühstück · " + endTime : "Beginn Frühstück") +
     '<div class="night-metric"><span>Veränderung</span><strong>' + escapeHTML(signedChange(night.delta_mgdl)) + '</strong></div>' +
     metric("Minimalwert", night.minimum_glucose, night.minimum_at ? "um " + timeOnly(night.minimum_at) : "im Nachtfenster");
+  $("#night-values").hidden = [night.start_glucose, night.end_glucose, night.minimum_glucose].every(value => value == null);
   const reason = $("#night-reason");
   reason.hidden = !night.reason;
   reason.textContent = night.reason || "";
@@ -1132,7 +1147,6 @@ function renderDay(data) {
   updateEntrySportOption();
   updateEntryDayType();
   updateEntryChips();
-  $("#record-count").textContent = data.timeline.length + (data.timeline.length === 1 ? " Eintrag" : " Einträge");
   renderNight(data.night || { reason: "Nachtanalyse nicht verfügbar." });
   const banner = $("#banner");
   const errors = [data.sync_error, data.profile_sync_error].filter(Boolean);
@@ -1140,35 +1154,89 @@ function renderDay(data) {
   banner.textContent = !data.connected
     ? "Nightscout ist noch nicht verbunden. Setze NIGHTSCOUT_URL und NIGHTSCOUT_CREDENTIAL im Deployment."
     : errors.length ? "Nightscout konnte nicht vollständig aktualisiert werden: " + errors.join(" · ") + ". Lokale Daten werden angezeigt." : "";
-  const labels = { meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur / Bolus", exercise: "Sport", other: "Weiterer Eintrag" };
-  $("#timeline").innerHTML = data.timeline.length
-    ? data.timeline.map(item => {
-      const details = [
-        Number(item.carbs) ? num(item.carbs) + " g KH" : "",
-        Number(item.insulin) ? num(item.insulin) + " IE" : "",
-        item.kind === "exercise" ? num(item.duration_minutes, 0) + " min" : "",
-        item.glucose_mgdl != null
-          ? (item.glucose_at === item.at ? "BZ beim Eintrag " : "Letzter BZ um " + timeOnly(item.glucose_at) + ": ") +
-            num(item.glucose_mgdl, 0) + " mg/dL" : "",
-      ].filter(Boolean).join(" · ");
-      const label = item.kind === "exercise"
-        ? sportNames[item.sport_kind] || "Sport"
-        : item.kind === "meal" ? (data.meals.find(meal => meal.source_id === item.id)?.meal
-          ? names[data.meals.find(meal => meal.source_id === item.id).meal] : "Mahlzeit") : labels[item.kind];
-      const actions = item.kind === "other" ? "" :
-        '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '">Bearbeiten</button>' +
-        deleteButton(item.id, label, item.at);
-      return '<article class="timeline-item"><time>' + escapeHTML(timeOnly(item.at)) +
-        '</time><div><strong>' + escapeHTML(label) + '</strong><p>' + escapeHTML(details || item.eventType) +
-        '</p>' + (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') +
-        '</div><div class="timeline-actions">' + actions + '</div></article>';
-    }).join("")
-    : '<div class="empty">Für diesen Tag liegen noch keine Einträge vor.</div>';
-  renderDayOverview();
-  $("#meals").innerHTML = data.meals.length
-    ? data.meals.map(meal => mealHTML(meal, data.entries)).join("")
-    : '<div class="empty">Noch keine Hauptmahlzeit für diesen Tag.</div>';
-  renderMealCharts();
+  applyDiaryMode();
+  $("#timeline").innerHTML = dayListHTML(data);
+  renderReviewSummary(data);
+  renderVisibleCharts();
+}
+
+const entryLabels = { meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur / Bolus", exercise: "Sport", other: "Weiterer Eintrag" };
+
+function entryLabel(item, data) {
+  if (item.kind === "exercise") return sportNames[item.sport_kind] || "Sport";
+  const meal = item.kind === "meal" ? data.meals.find(row => row.source_id === item.id) : null;
+  return meal ? names[meal.meal] : entryLabels[item.kind];
+}
+
+function entryRowHTML(item, data) {
+  const details = [
+    Number(item.carbs) ? num(item.carbs) + " g KH" : "",
+    Number(item.insulin) ? num(item.insulin) + " IE" : "",
+    item.kind === "exercise" ? num(item.duration_minutes, 0) + " min" : "",
+    item.glucose_mgdl != null
+      ? (item.glucose_at === item.at ? "BZ " : "BZ um " + timeOnly(item.glucose_at) + ": ") + num(item.glucose_mgdl, 0) + " mg/dL" : "",
+  ].filter(Boolean).join(" · ");
+  const label = entryLabel(item, data);
+  const action = item.kind === "other" ? "" :
+    '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '" aria-label="' +
+    escapeHTML(label + " um " + timeOnly(item.at) + " bearbeiten") + '">Bearbeiten</button>';
+  return '<article class="timeline-item"><time>' + escapeHTML(timeOnly(item.at)) +
+    '</time><div><strong>' + escapeHTML(label) + '</strong><p>' + escapeHTML(details || item.eventType) +
+    '</p>' + (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') +
+    '</div><div class="timeline-actions">' + action + '</div></article>';
+}
+
+// One chronological list: each main meal as a block holding the entries inside its window.
+function dayBlocks(data) {
+  const blocks = data.meals.map(meal => ({ meal, range: mealWindow(meal), items: [] }));
+  const rows = [];
+  for (const item of data.timeline) {
+    const t = new Date(item.at).getTime();
+    const block = blocks.find(row => row.meal.source_id === item.id) ||
+      blocks.find(row => t >= row.range.start && t < row.range.end);
+    if (block) block.items.push(item);
+    else rows.push({ t, item });
+  }
+  return [...blocks.map(block => ({ t: new Date(block.meal.at).getTime(), block })), ...rows].sort((a, b) => a.t - b.t);
+}
+
+function mealNeedsCheck(meal) {
+  return meal.calculation?.factor_units_per_ke == null;
+}
+
+function mealBlockHTML(block, data) {
+  const { meal, range, items } = block;
+  const calc = meal.calculation || {};
+  const check = mealNeedsCheck(meal);
+  const status = check
+    ? '<span class="day-meal-status">' + escapeHTML(calc.reason || "Noch keine Berechnung") + '</span>'
+    : '<span class="day-meal-factor">' + escapeHTML(num(calc.factor_units_per_ke, 2)) + ' <small>IE/KE</small></span>';
+  return '<article class="day-meal' + (check ? ' needs-check' : '') + '" id="meal-' + escapeHTML(meal.id) + '">' +
+    '<div class="day-meal-head"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' +
+    '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") +
+    '</span></div>' + status + '</div>' +
+    items.map(item => entryRowHTML(item, data)).join("") +
+    '<details class="day-meal-details" data-meal-id="' + escapeHTML(meal.id) + '"' + (check ? ' open' : '') +
+    '><summary>Kurve, Zeitraum und Sport</summary>' +
+    sportReviewHTML(meal.sport || {}, meal.id, state.day) + calculationHTML(meal.calculation) + chartFor(meal, data.entries) +
+    (meal.notes ? '<p class="meal-note">' + escapeHTML(meal.notes) + '</p>' : '') + '</details></article>';
+}
+
+function dayListHTML(data) {
+  if (!data.timeline.length) return '<div class="empty">Für diesen Tag liegen noch keine Einträge vor.</div>';
+  return dayBlocks(data).map(entry => entry.block ? mealBlockHTML(entry.block, data) : entryRowHTML(entry.item, data)).join("");
+}
+
+function renderReviewSummary(data) {
+  $("#record-count").textContent = data.timeline.length + (data.timeline.length === 1 ? " Eintrag" : " Einträge");
+  const open = data.meals.filter(mealNeedsCheck);
+  const done = data.meals.length - open.length;
+  const chips = [
+    open.length ? '<a class="review-chip needs-check" href="#meal-' + escapeHTML(open[0].id) + '">' +
+      (open.length === 1 ? "1 Mahlzeit braucht Prüfung" : open.length + " Mahlzeiten brauchen Prüfung") + '</a>' : "",
+    done ? '<span class="review-chip">' + (done === 1 ? "1 Faktor berechnet" : done + " Faktoren berechnet") + '</span>' : "",
+  ].filter(Boolean);
+  $("#review-summary").innerHTML = chips.join("");
 }
 
 async function loadDay() {
@@ -1388,6 +1456,10 @@ function editEntry(id) {
   form.elements.sport_kind.disabled = !sport;
   form.elements.duration_minutes.disabled = !sport;
   form.elements.duration_minutes.required = sport;
+  const remove = $("#delete-edit");
+  remove.dataset.id = item.id;
+  remove.dataset.label = entryLabel(item, state.dayData);
+  remove.dataset.at = item.at;
   $("#edit-date").textContent = new Date(state.day + "T12:00:00").toLocaleDateString("de-DE", {day: "numeric", month: "long", year: "numeric"});
   $("#edit-dialog").showModal();
   form.elements.at.focus();
@@ -1511,6 +1583,8 @@ async function deleteTreatment(event) {
   try {
     await api("/api/treatment/delete", { method: "POST", body: JSON.stringify({ id: button.dataset.id, day: state.day }) });
     toast("Eintrag aus Nightscout gelöscht");
+    button.disabled = false;
+    if ($("#edit-dialog").open) closeEditDialog();
     await loadDay();
   } catch (error) {
     button.disabled = false;
@@ -1919,6 +1993,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
   $("#cancel-edit").addEventListener("click", closeEditDialog);
+  $("#delete-edit").addEventListener("click", deleteTreatment);
+  $$("[data-diary-mode]").forEach(button => button.addEventListener("click", () => {
+    state.modeDay = state.day;
+    state.diaryMode = button.dataset.diaryMode;
+    applyDiaryMode();
+    renderVisibleCharts();
+  }));
+  // Charts inside folded meal blocks are drawn when the block opens.
+  $("#timeline").addEventListener("toggle", event => {
+    if (event.target.matches(".day-meal-details") && event.target.open) renderMealCharts();
+  }, true);
   $("#close-edit").addEventListener("click", closeEditDialog);
   $("#edit-dialog").addEventListener("close", () => { state.editing = null; });
   $("#dose-result").addEventListener("click", selectDoseSuggestion);
@@ -1984,7 +2069,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-      if (state.dayData) { renderMealCharts(); renderDayOverview(); }
+      renderVisibleCharts();
       if (windowEditor && !windowEditor.drag) renderWindowEditor();
     }, 150);
   });
