@@ -1821,7 +1821,7 @@ async function loadSummary() {
     const fact = (label, value, key = false) =>
       '<div' + (key ? ' class="key"' : '') + '><dt>' + label + '</dt><dd>' + escapeHTML(value) + '</dd></div>';
     const suggestion = s => s.auto_units_per_ke != null ? factorNum(s.auto_units_per_ke) : '—';
-    const suggestionNote = s => 'Vorschlag aus ' + s.count + ' (' + s.days + ' T.)';
+    const suggestionNote = s => 'Vorschlag aus ' + s.count + '\u00a0(' + s.days + '\u00a0T.)';
     const mealsText = count => count + (count === 1 ? ' Mahlzeit' : ' Mahlzeiten');
     const breakfastSubcards = () => '<div class="breakfast-subcards">' + ["work", "free"].map(dayType => {
       const subset = data.groups.breakfast.by_day_type[dayType];
@@ -1831,7 +1831,7 @@ async function loadSummary() {
         '</strong><dl class="factor-facts compact">' +
         fact("Vorschlag", suggestion(s), true) +
         (subset.q1_units_per_ke != null ? fact("Mittlere 50 %", span(subset.q1_units_per_ke, subset.q3_units_per_ke)) : '') +
-        '</dl><small>' + mealsText(subset.count) + ' · ' + escapeHTML(suggestionNote(s)) + '</small></div>';
+        '</dl><small>' + mealsText(subset.count) + '<br>' + escapeHTML(suggestionNote(s)) + '</small></div>';
     }).join("") + '</div>';
     $("#summary").innerHTML = ["breakfast", "lunch", "dinner"].map(kind => {
       const row = data.groups[kind];
