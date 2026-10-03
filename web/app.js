@@ -263,9 +263,8 @@ async function saveVacation(event) {
 function renderVacation(vacation) {
   $("#vacation-toggle").checked = Boolean(vacation?.active);
   $("#vacation-status").textContent = vacation?.active
-    ? "Aktiv seit " + new Date(vacation.since + "T12:00").toLocaleDateString("de-DE") +
-      ". Jeder Tag zählt als freier Tag, bis du Urlaub ausschaltest. Einzelne Tage lassen sich im Tagebuch weiterhin umstellen."
-    : "Solange Urlaub aktiv ist, zählt jeder Tag als freier Tag. Ohne Urlaub gilt Montag bis Freitag als Arbeitstag.";
+    ? "Aktiv seit " + new Date(vacation.since + "T12:00").toLocaleDateString("de-DE") + ". Jeder Tag zählt als frei."
+    : "Mo–Fr zählt als Arbeitstag.";
 }
 
 function setDefaultSportTime() {}
