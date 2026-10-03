@@ -509,5 +509,4 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .factor-facts dd { margin: 1px 0 0; font-size: 17px; font-weight: 700; color: var(--green-dark); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .factor-facts .key dd { color: var(--green); }
 .factor-facts.compact { grid-template-columns: 1fr; gap: 4px; margin-top: 8px; padding-top: 7px; }
-.factor-facts.compact > div { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
-.factor-facts.compact dd { font-size: 13px; }
+.factor-facts.compact dd { font-size: 14px; white-space: nowrap; }
