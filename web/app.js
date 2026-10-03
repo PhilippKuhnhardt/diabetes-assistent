@@ -754,7 +754,7 @@ function renderMealCharts() {
 
 // Overview above the entry form: today the last hours up to now, other days the whole day.
 function overviewHours() {
-  try { return Number(localStorage.getItem("overviewHours")) || 6; } catch { return 6; }
+  try { return Number(localStorage.getItem("overviewHours")) || 3; } catch { return 3; }
 }
 
 function renderDayOverview() {
@@ -782,10 +782,28 @@ function renderDayOverview() {
   CHART = chartLayout(node.clientWidth);
   node.innerHTML = windowChartSVG({ start: -Infinity, end: Infinity, mealAt: dayStart }, data.entries, data.treatments,
     { overview: true, view });
-  $("#day-overview-note").textContent = (last
-    ? "Letzter CGM-Wert: " + num(last.g, 0) + " mg/dL um " + timeOnly(last.t) + " Uhr."
-    : "Keine CGM-Werte in diesem Zeitraum.") +
-    (clipped ? " Werte vor Mitternacht stehen beim Vortag." : "");
+  // The current value is in the header; the note only explains gaps.
+  $("#day-overview-note").textContent = [
+    last ? "" : "Keine CGM-Werte in diesem Zeitraum.",
+    clipped ? "Werte vor Mitternacht stehen beim Vortag." : "",
+  ].filter(Boolean).join(" ");
+  $("#day-overview-recent").innerHTML = isToday ? recentEntriesHTML(data.treatments) : "";
+}
+
+// What happened in the last three hours, newest first, as context for the next decision.
+function recentEntriesHTML(treatments) {
+  const now = Date.now();
+  const items = treatments
+    .filter(item => { const t = new Date(item.at).getTime(); return t <= now && t >= now - 180 * MINUTE; })
+    .sort((a, b) => new Date(b.at) - new Date(a.at))
+    .map(item => {
+      const parts = item.eventType === "Exercise"
+        ? [(sportNames[item.sport_type] || "Sport") + (Number(item.duration) ? " " + num(item.duration, 0) + " min" : "")]
+        : [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 2) + " IE" : ""].filter(Boolean);
+      return parts.length ? '<span class="recent-chip"><time>' + escapeHTML(timeOnly(item.at)) + '</time> ' + escapeHTML(parts.join(" + ")) + '</span>' : "";
+    }).filter(Boolean);
+  return items.length ? '<span class="recent-label">Letzte 3 h</span>' + items.join("")
+    : '<span class="recent-label">Letzte 3 h: keine Einträge</span>';
 }
 
 // --- Interactive window editor -------------------------------------------
