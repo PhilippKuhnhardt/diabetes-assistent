@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 from app import calculation
 
 TREND_WINDOW_MINUTES = Decimal(15)
-TREND_FLAT_MGDL = Decimal(5)
+TREND_FLAT_MGDL = Decimal(10)
 TREND_FAST_MGDL = Decimal(30)
 
 

@@ -288,12 +288,12 @@ function updateEntrySportOption() {
         new Date(item.at) < at && at < new Date(item.calculation?.end ||
           new Date(item.at).getTime() + settings.window_minutes * 60000));
       if (!continuation) {
-        available = true;
         eligible = state.dayData.treatments.filter(item => {
           if (item.eventType !== "Exercise" || !item.sport_type) return false;
           const end = new Date(item.at).getTime() + Number(item.duration || 0) * 60000;
           return end <= at.getTime() && end >= at.getTime() - settings.sport_lookback_minutes * 60000;
         });
+        available = eligible.length > 0;
       }
     }
   } catch (_) { /* The time field is incomplete. */ }
@@ -306,10 +306,9 @@ function updateEntrySportOption() {
     return;
   }
   const suggested = eligible.reduce((total, item) => total + sportChange(state.settings.sport_effects_mgdl[item.sport_type]), 0);
-  $("#entry-sport-hint").textContent = eligible.length ? eligible.map(item =>
-    sportNames[item.sport_type] + " " + timeOnly(item.at)).join(", ") + " einrechnen · " + signedChange(suggested, 0)
-    : "Sport-Wirkung schätzen";
-  if (!checkbox.checked) form.elements.sport_effect_mgdl.value = eligible.length ? suggested : "";
+  $("#entry-sport-hint").textContent = eligible.map(item =>
+    sportNames[item.sport_type] + " " + timeOnly(item.at)).join(", ") + " einrechnen · " + signedChange(suggested, 0);
+  if (!checkbox.checked) form.elements.sport_effect_mgdl.value = suggested;
   effectField.hidden = !checkbox.checked;
 }
 
@@ -535,7 +534,7 @@ function trendSymbol(direction) {
 // Same rule as app/glucose.py: least-squares slope over the last 15 minutes, as change per 15 minutes;
 // below 5 mg/dL flat, from 30 mg/dL fast.
 function trendDirection(delta) {
-  if (Math.abs(delta) < 5) return "flat";
+  if (Math.abs(delta) < 10) return "flat";
   if (delta > 0) return delta >= 30 ? "up_fast" : "up";
   return delta <= -30 ? "down_fast" : "down";
 }
@@ -1244,8 +1243,7 @@ function doseChanged(previous, current) {
 
 function trendText(data) {
   if (data.trend_delta_mgdl == null) return "";
-  const delta = Number(data.trend_delta_mgdl);
-  return (delta > 0 ? "↗ " : delta < 0 ? "↘ " : "→ ") + signedChange(data.trend_delta_mgdl, 0) + " in " + num(data.trend_minutes, 0) + " min";
+  return trendSymbol(data.trend_direction) + " " + signedChange(data.trend_delta_mgdl, 0) + " in " + num(data.trend_minutes, 0) + " min";
 }
 
 function doseHelpHTML(data) {
@@ -1263,26 +1261,15 @@ function doseHelpHTML(data) {
   const options = option("Normal", "normal", data.target_mgdl, data.entry_units, data.expected_glucose_mgdl) +
     option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_entry_units, data.cautious_expected_glucose_mgdl) +
     (withCarbs ? option("Automatik", "auto", data.target_mgdl, data.auto_entry_units, data.auto_expected_glucose_mgdl) || autoMissing : "");
-  const exact = [["Normal", data.total_units], ["Vorsichtig", data.cautious_total_units], ["Automatik", withCarbs ? data.auto_total_units : null]]
-    .filter(([, value]) => value != null).map(([label, value]) => label + " " + num(value, 2) + " IE");
-  const details = [
-    exact.length ? "Berechnet: " + exact.join(" · ") + ", auf 0,5 IE gerundet. Pfeil: erwarteter BG laut Modell." : "",
-    data.units_per_ke != null ? "Insulinfaktor " + num(data.units_per_ke, 2) + " IE/KE · Korrekturfaktor " + num(data.isf_mgdl_per_unit, 1) + " mg/dL je IE." : "",
-    data.units_per_ke != null && data.breakfast ? breakfastFactorNote(data) : "",
-    withCarbs && data.carb_units != null ? autoFactorNote(data) : "",
-    data.expected_glucose_mgdl != null ? "Modellwert bei voller Wirkung der eingegebenen KH und der angezeigten IE. Trend, frühere Dosen und weitere Einflüsse" +
-      (Number(data.activity_change_mgdl) !== 0 ? " außer dem angegebenen Sport" : "") + " sind nicht eingerechnet." : "",
-  ].filter(Boolean);
   return '<div class="dose-head"><span class="dose-heading">' + (withCarbs ? "Empfehlung" : "Korrektur ohne Essen") +
     '</span><span class="dose-basis">' + escapeHTML(glucose) + '</span></div>' +
+    factorLine(data) +
     (options ? '<div class="dose-options">' + options + '</div>' : '') +
-    (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport eingerechnet: <strong>' +
+    (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport <strong>' +
       escapeHTML(signedChange(data.activity_change_mgdl, 0)) + '</strong> · ' + escapeHTML((Number(data.activity_units) > 0 ? "+" : "") + num(data.activity_units, 2)) + ' IE</p>' : '') +
-    (data.recent_rapid_doses?.length ? '<p class="dose-warning">Nicht eingerechnet, schnell wirksame Dosen der letzten 3 h: ' +
+    (data.recent_rapid_doses?.length ? '<p class="dose-warning">Dosen letzte 3 h: ' +
       data.recent_rapid_doses.map(row => escapeHTML(timeOnly(row.at) + " · " + num(row.units) + " IE")).join(", ") + '</p>' : '') +
-    (data.reason ? '<p class="hint">' + escapeHTML(data.reason) + '</p>' : '') +
-    (details.length ? '<details class="dose-details"><summary>Rechenweg und Hinweise</summary>' +
-      details.map(text => '<p>' + escapeHTML(text) + '</p>').join("") + '</details>' : '');
+    (data.reason ? '<p class="hint">' + escapeHTML(data.reason) + '</p>' : '');
 }
 
 async function updateDoseHelp() {
@@ -1309,9 +1296,7 @@ async function updateDoseHelp() {
       body: JSON.stringify({ carbs: String(carbs), activity_change_mgdl: activityChange }) });
     if (requestId !== helpRequestId) return null;
     doseHelp = data;
-    const open = output.querySelector(".dose-details")?.open;
     output.innerHTML = doseHelpHTML(data);
-    if (open) output.querySelector(".dose-details").open = true;
     finish(null);
     return data;
   } catch (error) {
@@ -1322,29 +1307,25 @@ async function updateDoseHelp() {
 
 const mealNames = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 
-function autoFactorNote(data) {
-  const scope = mealNames[data.auto_meal] + (data.auto_meal === "breakfast" ?
-    (data.day_type === "free" ? " an freien Tagen" : " an Arbeitstagen") : "");
-  if (data.auto_units_per_ke == null) {
-    return "Automatik: Für " + scope + " gibt es erst " + data.auto_factor_count + " von " + data.auto_factor_min_meals +
-      " nötigen berechneten Mahlzeiten (letzte " + data.auto_factor_days + " Tage).";
+// Set (Nightscout) and calculated (breakfast median, auto percentile) factors in one line.
+function factorLine(data) {
+  if (data.units_per_ke == null) return "";
+  const kf = 'KF ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' mg/dL/IE';
+  if (!(Number(data.carbs_g) > 0)) return '<p class="dose-factor">' + kf + '</p>';
+  const factor = value => escapeHTML(num(value, 2)) + ' IE/KE';
+  const parts = ['Gesetzt (Nightscout) <strong>' + factor(data.nightscout_units_per_ke) + '</strong>'];
+  if (data.breakfast) {
+    const kind = data.day_type === "free" ? "frei" : "Arbeit";
+    parts.push('Frühstück ' + kind + ' ' + (data.breakfast_factor_units_per_ke != null
+      ? '<strong>' + factor(data.breakfast_factor_units_per_ke) + '</strong>' : '–') +
+      ' (' + (data.breakfast_factor_count || 0) + '/' + data.breakfast_factor_min_meals + ')' +
+      (data.factor_source === "breakfast_day_type" ? ' ✓' : ''));
   }
-  return "Automatik: " + num(data.auto_units_per_ke, 2) + " IE/KE = " + num(data.auto_percentile, 1) +
-    "-%-Perzentil aus " + data.auto_factor_count + " berechneten Mahlzeiten (" + scope + ", letzte " +
-    data.auto_factor_days + " Tage; unteres Quartil " + num(data.auto_q1_units_per_ke, 2) + ", Median " +
-    num(data.auto_median_units_per_ke, 2) + " IE/KE). Korrektur auf den normalen Zielwert.";
-}
-
-function breakfastFactorNote(data) {
-  const kind = data.day_type === "free" ? "freien Tagen" : "Arbeitstagen";
-  if (data.factor_source === "breakfast_day_type") {
-    return "Frühstücksfaktor an " + kind + ": Median aus " + data.breakfast_factor_count +
-      " berechneten Frühstücken der letzten " + data.breakfast_factor_days + " Tage. Nightscout-Profil: " +
-      num(data.nightscout_units_per_ke, 2) + " IE/KE.";
-  }
-  return "Für Frühstück an " + kind + " gibt es erst " + (data.breakfast_factor_count || 0) + " von " +
-    data.breakfast_factor_min_meals + " nötigen berechneten Mahlzeiten (letzte " + data.breakfast_factor_days +
-    " Tage), daher gilt der Insulinfaktor aus Nightscout.";
+  parts.push('Automatik ' + (data.auto_units_per_ke != null ? '<strong>' + factor(data.auto_units_per_ke) + '</strong>' : '–') +
+    ' (' + data.auto_factor_count + '/' + data.auto_factor_min_meals + ')');
+  if (!data.breakfast && data.auto_median_units_per_ke != null) parts.push('Median ' + factor(data.auto_median_units_per_ke));
+  parts.push(kf);
+  return '<p class="dose-factor">' + parts.join(' · ') + '</p>';
 }
 
 function closeEditDialog() {

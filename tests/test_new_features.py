@@ -92,7 +92,7 @@ class DosingTests(unittest.TestCase):
         self.assertEqual(server.auto_factor(values, Decimal("37.5")), Decimal("1.05"))
         self.assertEqual(server.auto_factor(values, Decimal("25")), Decimal("1.0"))
         self.assertEqual(server.auto_factor(values, Decimal("50")), Decimal("1.1"))
-        self.assertIsNone(server.auto_factor(values[:4], Decimal("37.5")))
+        self.assertIsNone(server.auto_factor(values[:3], Decimal("37.5")))
 
     def test_stale_glucose_has_no_correction(self):
         entries = [{"at": self.now - timedelta(minutes=16), "sgv": 150}]

@@ -143,7 +143,7 @@ def validate_manual_window(meal_at: datetime, start: datetime, end: datetime) ->
 
 BREAKFAST_FACTOR_DAYS = 28
 BREAKFAST_FACTOR_MIN_MEALS = 3
-AUTO_FACTOR_MIN_MEALS = 5
+AUTO_FACTOR_MIN_MEALS = 4
 
 
 def meal_factor_values(meal_kind: str, day_type: str | None, today: date,
