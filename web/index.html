@@ -41,6 +41,10 @@
             <button type="button" id="refresh-day" class="quiet" aria-label="Aktualisieren" title="Aktualisieren"><span aria-hidden="true">↻</span><span class="refresh-label">Aktualisieren</span></button>
           </div>
         </div>
+        <div class="diary-mode" role="group" aria-label="Ansicht im Tagebuch">
+          <button type="button" data-diary-mode="now" aria-pressed="true">Jetzt</button>
+          <button type="button" data-diary-mode="review" aria-pressed="false">Tag durchgehen</button>
+        </div>
         <div id="banner" class="banner" hidden></div>
         <div class="diary-grid">
           <section class="panel entry-panel">
@@ -94,22 +98,20 @@
               <div class="form-actions entry-actions"><button class="primary" type="submit" id="entry-submit">In Nightscout speichern</button></div>
             </form>
           </section>
-          <section class="records">
+          <section class="records review-panel">
             <section class="panel">
-              <div class="section-head"><h2>Einträge</h2><span id="record-count" class="hint"></span></div>
-              <div id="timeline" class="timeline" aria-live="polite"></div>
-            </section>
-            <section id="night-card" class="night-card" aria-live="polite" hidden>
-              <div class="section-head"><h2>Nacht</h2><span id="night-window" class="hint"></span></div>
-              <div id="night-values" class="night-values"></div>
-              <p id="night-reason" class="hint" hidden></p>
+              <div class="section-head"><h2>Tag durchgehen</h2><span id="record-count" class="hint"></span></div>
+              <div id="review-chart" class="day-overview-chart review-chart"></div>
+              <div id="review-summary" class="review-summary" aria-live="polite"></div>
+              <section id="night-card" class="night-card" aria-live="polite" hidden>
+                <div class="section-head"><h2>Nacht</h2><span id="night-window" class="hint"></span></div>
+                <div id="night-values" class="night-values"></div>
+                <p id="night-reason" class="hint" hidden></p>
+              </section>
+              <div id="timeline" class="day-list" aria-live="polite"></div>
             </section>
           </section>
         </div>
-        <section class="panel diary-analysis">
-          <div class="section-head"><h2>Mahlzeitenfaktoren</h2></div>
-          <div id="meals" class="meal-list"></div>
-        </section>
       </section>
 
       <section id="analysis-view" class="view" hidden>
@@ -212,6 +214,7 @@
       <label id="edit-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
       <label>Notiz <span>optional</span><input name="notes" type="text" maxlength="500"></label>
       <div class="form-actions"><button class="primary" type="submit">Änderung in Nightscout speichern</button><button id="cancel-edit" type="button" class="quiet">Abbrechen</button></div>
+      <button id="delete-edit" type="button" class="delete-treatment">Eintrag löschen</button>
     </form>
   </dialog>
   <dialog id="window-dialog" aria-labelledby="window-dialog-title">
