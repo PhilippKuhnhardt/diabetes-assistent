@@ -57,11 +57,7 @@ function toast(message, error = false) {
   toastTimeout = setTimeout(() => node.classList.remove("visible"), 4500);
 }
 
-const glucoseStatusLabels = {
-  in_range: "Im Zielbereich", outside: "Außerhalb des Zielbereichs",
-  low: "Unter 70", high: "Über 250", stale: "Messwert veraltet",
-  no_target: "Zielbereich fehlt", unavailable: "Kein aktueller Messwert",
-};
+const glucoseStatuses = new Set(["in_range", "outside", "low", "high", "stale", "no_target", "unavailable"]);
 let glucoseRefresh = null;
 
 function loadCurrentGlucose() {
@@ -70,7 +66,7 @@ function loadCurrentGlucose() {
     const widget = $("#current-glucose");
     try {
       const data = await api("/api/glucose/current");
-      const status = glucoseStatusLabels[data.status] ? data.status : "unavailable";
+      const status = glucoseStatuses.has(data.status) ? data.status : "unavailable";
       widget.dataset.status = status;
       $("#glucose-value").textContent = data.glucose_mgdl == null
         ? "—" : num(data.glucose_mgdl, 1) + " mg/dL";
@@ -79,15 +75,17 @@ function loadCurrentGlucose() {
         ? trendSymbol(data.trend_direction) + " " + (Number(delta) > 0 ? "+" : "") + num(delta, 0) +
           " mg/dL / " + num(data.trend_minutes, 0) + " min"
         : data.status === "stale" ? "Trend veraltet" : "Trend nicht verfügbar";
-      const measured = data.glucose_at ? " · " + timeOnly(data.glucose_at) + " Uhr" : "";
-      const target = data.target_low_mgdl != null && data.target_high_mgdl != null
-        ? " · Ziel " + num(data.target_low_mgdl, 1) + "–" + num(data.target_high_mgdl, 1) + " mg/dL" : "";
-      $("#glucose-meta").textContent = glucoseStatusLabels[status] + measured + target;
+      const meta = status === "stale"
+        ? "Messwert veraltet" + (data.glucose_at ? " · " + timeOnly(data.glucose_at) + " Uhr" : "")
+        : data.glucose_mgdl == null ? "Kein aktueller Messwert" : "";
+      $("#glucose-meta").textContent = meta;
+      $("#glucose-meta").hidden = !meta;
     } catch (error) {
       widget.dataset.status = "unavailable";
       $("#glucose-value").textContent = "—";
       $("#glucose-trend").textContent = "Trend nicht verfügbar";
       $("#glucose-meta").textContent = "CGM derzeit nicht verfügbar";
+      $("#glucose-meta").hidden = false;
     }
   })().finally(() => { glucoseRefresh = null; });
   return glucoseRefresh;
@@ -396,8 +394,8 @@ function updateEntryFields() {
 async function loadSettings() {
   const data = await api("/api/settings");
   state.settings = data.settings;
-  $("#connection").textContent = data.connected ? "Nightscout konfiguriert" : "Nightscout einrichten";
-  $("#connection").classList.toggle("connected", data.connected);
+  $("#connection").textContent = data.connected ? "" : "Nightscout einrichten";
+  $("#connection").hidden = data.connected;
   $("#nightscout-location").hidden = data.connected;
   $("#nightscout-location").textContent = data.connected ? "" : "NIGHTSCOUT_URL und NIGHTSCOUT_CREDENTIAL setzen";
   $("#settings-version").textContent = "Einstellungsversion " + data.version;
