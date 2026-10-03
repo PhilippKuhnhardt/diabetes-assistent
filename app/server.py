@@ -514,7 +514,9 @@ def save_diary_treatment(payload: dict) -> dict:
     else:
         event_type = {"meal": "Meal Bolus", "snack": "Snack Bolus" if units > 0 else "Carb Correction",
                       "carbs": "Carb Correction", "correction": "Correction Bolus"}[kind]
-        marker = " [DA2:snack]" if kind == "snack" else ""
+        main_meal = kind == "meal" and (bool(payload.get("main_meal"))
+                                         or "[DA2:meal]" in str((existing or {}).get("notes") or ""))
+        marker = " [DA2:snack]" if kind == "snack" else " [DA2:meal]" if main_meal else ""
         notes = (note + marker + f" [DAE:{event_id}]").strip()
         legacy = episodes.TAG.search(str((existing or {}).get("notes") or ""))
         if kind == "meal" and legacy and legacy.group(3) == "meal":
@@ -525,7 +527,7 @@ def save_diary_treatment(payload: dict) -> dict:
         "notes": notes, "enteredBy": "Diabetes Diary", "identifier": event_id,
         "carbs": float(carbs), "insulin": float(units),
     })
-    if kind == "meal" and not existing:
+    if kind == "meal" and not existing and "[DA2:meal]" not in notes:
         start, end = local_day_range(day, settings["timezone"])
         _, nearby = nightscout.fetch_range(start, end)
         classified = episodes.normalize_treatments(nearby + [record])

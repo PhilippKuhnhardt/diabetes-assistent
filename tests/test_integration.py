@@ -277,6 +277,37 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(Decimal(day["meals"][0]["calculation"]["carbs_total"]), Decimal(60))
         self.assertEqual(FakeNightscout.treatments[1]["eventType"], "Meal Bolus")
 
+    def test_diary_entry_within_two_hours_is_snack_across_meal_kinds(self):
+        # 09:33 breakfast, 11:07 after breakfast end (11:00), 12:05 > 2 h later.
+        FakeNightscout.treatments = [
+            {"_id": "root", "created_at": "2026-09-23T07:33:00Z", "eventType": "Meal Bolus",
+             "carbs": 77, "insulin": 8.5, "notes": "[DAE:00000000-0000-0000-0000-000000000001]"},
+            {"_id": "late", "created_at": "2026-09-23T09:07:00Z", "eventType": "Meal Bolus",
+             "carbs": 10, "insulin": 0, "notes": "[DAE:00000000-0000-0000-0000-000000000002]"},
+            {"_id": "lunch", "created_at": "2026-09-23T10:05:00Z", "eventType": "Meal Bolus",
+             "carbs": 40, "insulin": 3, "notes": "[DAE:00000000-0000-0000-0000-000000000003]"},
+        ]
+        day = self.request("/api/day?date=2026-09-23")
+        self.assertEqual([item["kind"] for item in day["timeline"]], ["meal", "snack", "meal"])
+        self.assertEqual([item["meal"] for item in day["meals"]], ["breakfast", "lunch"])
+        self.assertEqual(day["timeline"][1]["notes"], "")
+
+    def test_new_entry_can_be_kept_as_main_meal(self):
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": "2026-09-23T07:33:00Z", "carbs": "50", "insulin": "4",
+        })
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": "2026-09-23T09:07:00Z", "carbs": "30", "insulin": "2", "main_meal": True,
+        })
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": "2026-09-23T09:20:00Z", "carbs": "10", "insulin": "0",
+        })
+        self.assertEqual([item["eventType"] for item in FakeNightscout.treatments],
+                         ["Meal Bolus", "Meal Bolus", "Carb Correction"])
+        day = self.request("/api/day?date=2026-09-23")
+        self.assertEqual([item["kind"] for item in day["timeline"]], ["meal", "meal", "snack"])
+        self.assertEqual(len(day["meals"]), 2)
+
     def test_meal_without_insulin_and_insulin_without_carbs_are_separate_entries(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": MEAL_AT, "carbs": "30", "insulin": 0,

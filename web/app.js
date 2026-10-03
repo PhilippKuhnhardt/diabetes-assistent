@@ -263,15 +263,63 @@ async function saveVacation(event) {
 function renderVacation(vacation) {
   $("#vacation-toggle").checked = Boolean(vacation?.active);
   $("#vacation-status").textContent = vacation?.active
-    ? "Aktiv seit " + new Date(vacation.since + "T12:00").toLocaleDateString("de-DE") +
-      ". Jeder Tag zählt als freier Tag, bis du Urlaub ausschaltest. Einzelne Tage lassen sich im Tagebuch weiterhin umstellen."
-    : "Solange Urlaub aktiv ist, zählt jeder Tag als freier Tag. Ohne Urlaub gilt Montag bis Freitag als Arbeitstag.";
+    ? "Aktiv seit " + new Date(vacation.since + "T12:00").toLocaleDateString("de-DE") + ". Jeder Tag zählt als frei."
+    : "Mo–Fr zählt als Arbeitstag.";
 }
 
 function setDefaultSportTime() {}
 function setSportDuration() {}
 
+// Mirrors episodes.preceding_meal: a carb entry < 2 h after the previous main meal,
+// or inside the window of a main meal of the same kind, counts as that meal's snack.
+function mealKindAt(date, settings) {
+  const minute = date.getHours() * 60 + date.getMinutes();
+  return minute < settings.breakfast_end_minute ? "breakfast" : minute < settings.lunch_end_minute ? "lunch" : "dinner";
+}
+
+function precedingMeal(at) {
+  const settings = state.settings;
+  if (!settings || state.dayData?.day !== state.day) return null;
+  const windowMs = settings.window_minutes * 60000;
+  let root = null;
+  for (const item of [...state.dayData.treatments].sort((a, b) => new Date(a.at) - new Date(b.at))) {
+    const t = new Date(item.at).getTime();
+    if (t > at.getTime()) break;
+    if (item.eventType === "Meal Bolus" && Number(item.carbs) > 0) {
+      root = { t, end: t + windowMs, meal: item.meal || mealKindAt(new Date(t), settings) };
+    } else if (root && t < root.end && Number(item.insulin) > 0 &&
+               ["Snack Bolus", "Correction Bolus", "Bolus"].includes(item.eventType)) {
+      root.end = Math.max(root.end, t + windowMs);
+    }
+  }
+  if (!root || root.t === at.getTime()) return null;
+  const sameKind = mealKindAt(new Date(root.t), settings) === mealKindAt(at, settings);
+  return at - root.t < 120 * 60000 || (sameKind && at < root.end) ? root : null;
+}
+
+// Returns { root, snack } for a new carb entry, or null when nothing needs deciding.
+function entryAssignment() {
+  const form = $("#entry-form");
+  if (form.elements.kind.value !== "meal" || !(Number(form.elements.carbs.value) > 0)) return null;
+  let at;
+  try { at = new Date(toInstant(state.day, form.elements.at.value)); } catch (_) { return null; }
+  const root = precedingMeal(at);
+  if (!root) return null;
+  return { root, at, snack: state.entryAs ? state.entryAs === "snack" : true };
+}
+
+function updateEntryAssignment() {
+  const chip = $("#entry-assign-chip");
+  const assignment = entryAssignment();
+  chip.hidden = !assignment;
+  if (!assignment) return;
+  chip.textContent = "Zählt als: " + (assignment.snack
+    ? "Snack zu " + names[assignment.root.meal] + " " + timeOnly(assignment.root.t)
+    : "eigenes " + names[mealKindAt(assignment.at, state.settings)]) + " ⇄";
+}
+
 function updateEntrySportOption() {
+  updateEntryAssignment();
   const form = $("#entry-form");
   const option = $("#entry-sport-option");
   const effectField = $("#entry-sport-effect-field");
@@ -282,12 +330,7 @@ function updateEntrySportOption() {
     const at = new Date(toInstant(state.day, form.elements.at.value));
     const settings = state.settings;
     if (form.elements.kind.value === "meal" && Number(form.elements.carbs.value) > 0 && settings && state.dayData?.day === state.day) {
-      const minute = clockMinute(form.elements.at.value);
-      const meal = minute < settings.breakfast_end_minute ? "breakfast" : minute < settings.lunch_end_minute ? "lunch" : "dinner";
-      const continuation = state.dayData.meals.some(item => item.meal === meal &&
-        new Date(item.at) < at && at < new Date(item.calculation?.end ||
-          new Date(item.at).getTime() + settings.window_minutes * 60000));
-      if (!continuation) {
+      if (!entryAssignment()?.snack) {
         eligible = state.dayData.treatments.filter(item => {
           if (item.eventType !== "Exercise" || !item.sport_type) return false;
           const end = new Date(item.at).getTime() + Number(item.duration || 0) * 60000;
@@ -1420,6 +1463,7 @@ function resetEntryForm() {
   state.entryTimeOpen = false;
   state.entryNoteOpen = false;
   state.doseChoice = null;
+  state.entryAs = null;
   setDefaultMealTime();
   updateEntryFields();
   if ($("#edit-dialog").open) closeEditDialog();
@@ -1515,7 +1559,8 @@ async function saveEntry(event) {
     form.elements.carbs.reportValidity();
     return;
   }
-  const kind = mode === "exercise" ? "exercise" : carbs > 0 ? "meal" : "correction";
+  const assignment = mode === "meal" ? entryAssignment() : null;
+  const kind = mode === "exercise" ? "exercise" : carbs > 0 ? (assignment?.snack ? "snack" : "meal") : "correction";
   let at;
   try { at = toInstant(state.day, form.elements.at.value); }
   catch (error) { toast(error.message, true); return; }
@@ -1527,6 +1572,7 @@ async function saveEntry(event) {
     sport_kind: form.elements.sport_kind.value,
     duration_minutes: form.elements.duration_minutes.value || 0,
     notes: form.elements.notes.value,
+    main_meal: Boolean(assignment && !assignment.snack),
     event_id: state.pendingEventId || crypto.randomUUID(),
   };
   state.pendingEventId = payload.event_id;
@@ -1973,6 +2019,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   $("#entry-form").addEventListener("focusin", setDefaultMealTime);
   $("#entry-form").elements.carbs.addEventListener("input", updateEntrySportOption);
+  $("#entry-assign-chip").addEventListener("click", () => {
+    state.entryAs = entryAssignment()?.snack ? "meal" : "snack";
+    updateEntrySportOption();
+  });
   $("#entry-form").elements.consider_sport.addEventListener("change", () => {
     updateEntrySportOption();
     scheduleDoseHelp();

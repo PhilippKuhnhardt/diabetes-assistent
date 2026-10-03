@@ -79,6 +79,7 @@
               <label id="entry-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
               <div class="entry-chips">
                 <button type="button" id="entry-time-chip" class="chip" aria-controls="entry-time-field" aria-expanded="false">Zeit: jetzt</button>
+                <button type="button" id="entry-assign-chip" class="chip" title="Zuordnung umschalten" hidden></button>
                 <button type="button" id="entry-note-chip" class="chip" aria-controls="entry-note-field" aria-expanded="false">+ Notiz</button>
                 <div id="entry-sport-option" class="entry-sport-option" hidden>
                   <label class="chip chip-toggle"><input type="checkbox" name="consider_sport"> <span id="entry-sport-hint"></span></label>
@@ -151,53 +152,76 @@
 
       <section id="settings-view" class="view" hidden>
         <div class="page-head"><div><h1>Profil &amp; Modell</h1></div></div>
-        <div class="settings-grid">
+        <div class="settings-grid settings-top">
           <section class="panel">
-            <h2>Nightscout-Verbindung</h2>
+            <h2>Nightscout</h2>
             <p id="nightscout-location" class="mono"></p>
-            <button id="test-connection" type="button">Verbindung prüfen</button>
+            <div class="button-row">
+              <button id="test-connection" type="button">Verbindung prüfen</button>
+              <button type="button" id="sync-profile">Profil synchronisieren</button>
+            </div>
             <p id="test-result" class="hint"></p>
+            <p id="isf-sync-status" class="hint"></p>
           </section>
           <section class="panel">
             <h2>Urlaub</h2>
             <label class="check-label"><input type="checkbox" id="vacation-toggle"> Urlaub aktiv</label>
-            <p id="vacation-status" class="hint">Solange Urlaub aktiv ist, zählt jeder Tag als freier Tag. Einzelne Tage lassen sich im Tagebuch weiterhin umstellen.</p>
+            <p id="vacation-status" class="hint"></p>
           </section>
-          <form id="settings-form" class="panel">
-            <h2>Korrekturfaktor aus Nightscout</h2>
+        </div>
+        <h2 class="settings-heading">Nightscout-Profil</h2>
+        <div class="settings-grid settings-cols">
+          <section class="panel">
+            <h2>Korrekturfaktor <span class="unit">mg/dL je IE</span></h2>
             <div id="isf-rows" aria-live="polite"></div>
-            <button type="button" id="save-isf">Korrekturfaktor in Nightscout speichern</button>
-            <button type="button" id="sync-profile">Nightscout-Profil synchronisieren</button>
-            <p id="isf-sync-status" class="hint"></p>
-            <h2 class="spaced">Insulinfaktor je KE aus Nightscout</h2>
+            <button type="button" id="save-isf">In Nightscout speichern</button>
+          </section>
+          <section class="panel">
+            <h2>Insulinfaktor <span class="unit">IE je KE</span></h2>
             <div id="ic-rows"></div>
-            <button type="button" id="save-ic">Insulinfaktor in Nightscout speichern</button>
+            <button type="button" id="save-ic">In Nightscout speichern</button>
             <p id="ic-status" class="hint"></p>
-            <h2 class="spaced">Zielwerte der Spritzhilfe</h2>
-            <label>Zielwert <span>mg/dL</span><input name="dose_target_mgdl" type="number" min="60" max="140" step="1" required></label>
-            <label>Vorsichtiger Zielwert <span>mg/dL</span><input name="dose_cautious_target_mgdl" type="number" min="60" max="250" step="1" required></label>
-            <label>Automatik · Perzentil der Faktoren <span>%</span><input name="auto_percentile" type="number" min="25" max="50" step="0.5" required></label>
-            <p class="hint">Automatik: Insulinfaktor aus den berechneten Mahlzeiten der letzten 28 Tage (Frühstück je Tagestyp), ab 5 Mahlzeiten. 25 % ist das untere Quartil, 50 % der Median; kleinere Werte bedeuten weniger Insulin. Korrigiert wird auf den normalen Zielwert.</p>
-            <h2 class="spaced">Zielbereich aus Nightscout</h2>
+          </section>
+          <section class="panel">
+            <h2>Zielbereich</h2>
             <div id="target-rows"></div>
-            <h2 class="spaced">Tagebuch und Sport</h2>
-            <label>Frühstück endet um (24 h)<input name="breakfast_end" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM" required></label>
-            <label>Mittagessen endet um (24 h)<input name="lunch_end" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM" required></label>
-            <p class="hint">BZ-Wirkung je Sportart: negativ senkt den Blutzucker (z. B. −40 für Gym), positiv hebt ihn (z. B. +40 für Adrenalin beim Rennsport).</p>
-            <label>Sport vor Mahlzeit berücksichtigen bis <span>Minuten</span><input name="sport_lookback_minutes" type="number" min="0" max="1440" step="1" required></label>
-            <div class="field-pair">
-              <label>Joggen · BZ-Wirkung <span>mg/dL</span><input name="sport_jogging" type="number" min="-500" max="500" step="1" required></label>
-              <label>Gym · BZ-Wirkung <span>mg/dL</span><input name="sport_gym" type="number" min="-500" max="500" step="1" required></label>
-              <label>Cardio · BZ-Wirkung <span>mg/dL</span><input name="sport_light_cardio" type="number" min="-500" max="500" step="1" required></label>
-              <label>Rennsport · BZ-Wirkung <span>mg/dL</span><input name="sport_racing" type="number" min="-500" max="500" step="1" required></label>
-            </div>
-            <h2 class="spaced">Mahlzeitenfenster</h2>
-            <label>Auswertung nach <span>min</span><input name="window_minutes" type="number" min="60" max="360" step="1" required></label>
-            <div class="field-pair"><label>Gültig ab <span>optional</span><input name="effective_date" type="date"></label><label>Uhrzeit (24 h)<input name="effective_time" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM"></label></div>
+          </section>
+        </div>
+        <h2 class="settings-heading">Modell</h2>
+        <form id="settings-form">
+          <div class="settings-grid settings-cols">
+            <section class="panel">
+              <h2>Spritzhilfe</h2>
+              <label>Zielwert <span>mg/dL</span><input name="dose_target_mgdl" type="number" min="60" max="140" step="1" required></label>
+              <label>Vorsichtiger Zielwert <span>mg/dL</span><input name="dose_cautious_target_mgdl" type="number" min="60" max="250" step="1" required></label>
+              <label>Automatik-Perzentil <span>%</span><input name="auto_percentile" type="number" min="25" max="50" step="0.5" required></label>
+              <p class="hint">25 % unteres Quartil, 50 % Median. Kleiner bedeutet weniger Insulin.</p>
+            </section>
+            <section class="panel">
+              <h2>Mahlzeiten</h2>
+              <label>Frühstück endet um <span>24 h</span><input name="breakfast_end" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM" required></label>
+              <label>Mittagessen endet um <span>24 h</span><input name="lunch_end" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM" required></label>
+              <label>Auswertung nach <span>min</span><input name="window_minutes" type="number" min="60" max="360" step="1" required></label>
+            </section>
+            <section class="panel">
+              <h2>Sport <span class="unit">BZ-Wirkung in mg/dL</span></h2>
+              <div class="field-pair">
+                <label>Joggen<input name="sport_jogging" type="number" min="-500" max="500" step="1" required></label>
+                <label>Gym<input name="sport_gym" type="number" min="-500" max="500" step="1" required></label>
+                <label>Cardio<input name="sport_light_cardio" type="number" min="-500" max="500" step="1" required></label>
+                <label>Rennsport<input name="sport_racing" type="number" min="-500" max="500" step="1" required></label>
+              </div>
+              <label>Berücksichtigen bis vor Mahlzeit <span>min</span><input name="sport_lookback_minutes" type="number" min="0" max="1440" step="1" required></label>
+              <p class="hint">Negativ senkt, positiv hebt den Blutzucker.</p>
+            </section>
+          </div>
+          <div class="panel settings-save">
+            <label>Gültig ab <span>optional</span><input name="effective_date" type="date"></label>
+            <label>Uhrzeit <span>24 h</span><input name="effective_time" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM"></label>
             <button type="submit" class="primary">Einstellungen speichern</button>
             <p id="settings-version" class="hint"></p>
-          </form>
-        </div>
+          </div>
+        </form>
       </section>
     </main>
   </div>
