@@ -32,13 +32,13 @@
 
     <main>
       <section id="diary-view" class="view">
-        <div class="page-head">
+        <div class="page-head diary-head">
           <div><h1>Dein Tag</h1></div>
           <div class="day-nav">
             <button type="button" id="prev-day" aria-label="Vorheriger Tag">←</button>
             <input id="selected-day" type="date" aria-label="Datum">
             <button type="button" id="next-day" aria-label="Nächster Tag">→</button>
-            <button type="button" id="refresh-day" class="quiet">Aktualisieren</button>
+            <button type="button" id="refresh-day" class="quiet" aria-label="Aktualisieren" title="Aktualisieren"><span aria-hidden="true">↻</span><span class="refresh-label">Aktualisieren</span></button>
           </div>
         </div>
         <div id="banner" class="banner" hidden></div>
@@ -47,12 +47,13 @@
             <div id="day-overview" class="day-overview">
               <div class="section-head"><h2>Tagesübersicht</h2>
                 <div class="overview-span" role="group" aria-label="Zeitraum der Tagesübersicht">
-                  <button type="button" data-overview-hours="3" aria-pressed="false">3 h</button>
-                  <button type="button" data-overview-hours="6" aria-pressed="true">6 h</button>
+                  <button type="button" data-overview-hours="3" aria-pressed="true">3 h</button>
+                  <button type="button" data-overview-hours="6" aria-pressed="false">6 h</button>
                   <button type="button" data-overview-hours="24" aria-pressed="false">Tag</button>
                 </div>
               </div>
               <div id="day-overview-chart" class="day-overview-chart"></div>
+              <div id="day-overview-recent" class="overview-recent" aria-label="Einträge der letzten 3 Stunden"></div>
               <p id="day-overview-note" class="hint"></p>
             </div>
             <div class="section-head"><h2 id="entry-title">Eintrag hinzufügen</h2></div>
