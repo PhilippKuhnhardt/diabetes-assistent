@@ -166,6 +166,39 @@ function setDefaultMealTime() {
   $("#entry-time").value = localInputTime(new Date()).slice(11, 16);
   updateEntrySportOption();
   updateEntryDayType();
+  updateEntryChips();
+}
+
+// Time and note stay folded behind chips while the entry is "now"; other days always show the time.
+function updateEntryChips() {
+  const form = $("#entry-form");
+  const timeOpen = Boolean(state.entryTimeOpen) || state.day !== todayDay();
+  const timeChip = $("#entry-time-chip");
+  $("#entry-time-field").hidden = !timeOpen;
+  timeChip.hidden = timeOpen;
+  timeChip.setAttribute("aria-expanded", String(timeOpen));
+  timeChip.textContent = "Zeit: " + (state.entryTimeTouched ? "" : "jetzt · ") + (form.elements.at.value || "—");
+  const noteOpen = Boolean(state.entryNoteOpen) || Boolean(form.elements.notes.value);
+  $("#entry-note-field").hidden = !noteOpen;
+  $("#entry-note-chip").hidden = noteOpen;
+  $("#entry-note-chip").setAttribute("aria-expanded", String(noteOpen));
+  updateEntrySubmitLabel();
+}
+
+function updateEntrySubmitLabel() {
+  const form = $("#entry-form");
+  const button = $("#entry-submit");
+  if (form.elements.kind.value === "exercise") {
+    button.textContent = "Sport in Nightscout speichern";
+    return;
+  }
+  const carbs = Number(form.elements.carbs.value);
+  const insulin = Number(form.elements.insulin.value);
+  const parts = [
+    Number.isFinite(carbs) && carbs > 0 ? num(carbs, 0) + " g" : "",
+    Number.isFinite(insulin) && insulin > 0 ? num(insulin, 2) + " IE" : "",
+  ].filter(Boolean);
+  button.textContent = parts.length ? parts.join(" + ") + " speichern" : "In Nightscout speichern";
 }
 
 const dayTypeSources = {
@@ -186,7 +219,7 @@ function updateEntryDayType() {
   $$(".day-type-option").forEach(button =>
     button.setAttribute("aria-pressed", String(button.dataset.dayType === state.dayData.day_type)));
   $("#entry-day-type-hint").textContent = (dayTypeSources[state.dayData.day_type_source] || "") +
-    ". Bestimmt den Frühstücksfaktor in Empfehlung und Analyse.";
+    " · bestimmt den Frühstücksfaktor";
 }
 
 async function saveEntryDayType(event) {
@@ -274,7 +307,7 @@ function updateEntrySportOption() {
   }
   const suggested = eligible.reduce((total, item) => total + sportChange(state.settings.sport_effects_mgdl[item.sport_type]), 0);
   $("#entry-sport-hint").textContent = eligible.map(item =>
-    sportNames[item.sport_type] + " um " + timeOnly(item.at)).join(", ") + " · Vorschlag: " + signedChange(suggested, 0);
+    sportNames[item.sport_type] + " " + timeOnly(item.at)).join(", ") + " einrechnen · " + signedChange(suggested, 0);
   if (!checkbox.checked) form.elements.sport_effect_mgdl.value = suggested;
   effectField.hidden = !checkbox.checked;
 }
@@ -311,6 +344,7 @@ function updateEntryFields() {
   form.elements.sport_kind.disabled = mode !== "exercise";
   form.elements.duration_minutes.disabled = mode !== "exercise";
   form.elements.duration_minutes.required = mode === "exercise";
+  updateEntryChips();
   scheduleDoseHelp();
   updateEntrySportOption();
   updateEntryDayType();
@@ -1079,6 +1113,7 @@ function renderDay(data) {
   state.dayData = data;
   updateEntrySportOption();
   updateEntryDayType();
+  updateEntryChips();
   $("#record-count").textContent = data.timeline.length + (data.timeline.length === 1 ? " Eintrag" : " Einträge");
   renderNight(data.night || { reason: "Nachtanalyse nicht verfügbar." });
   const banner = $("#banner");
@@ -1135,76 +1170,137 @@ let helpTimer;
 let helpRequestId = 0;
 let doseHelp = null;
 
+function todayDay() {
+  return new Date().toLocaleDateString("sv-SE", { timeZone: state.settings?.timezone || "Europe/Berlin" });
+}
+
+// Empty carbohydrates mean a correction without food; invalid input yields null.
+function entryCarbs() {
+  const raw = $("#entry-form").elements.carbs.value;
+  if (raw === "") return 0;
+  const carbs = Number(raw);
+  return Number.isFinite(carbs) && carbs >= 0 && carbs <= 500 ? carbs : null;
+}
+
 function scheduleDoseHelp() {
   clearTimeout(helpTimer);
   helpRequestId++;
   doseHelp = null;
   const form = $("#entry-form");
-  const carbs = Number(form.elements.carbs.value);
-  if (form.elements.kind.value !== "meal" || !Number.isFinite(carbs) || carbs <= 0 || carbs > 500) {
-    $("#dose-result").textContent = "";
+  const output = $("#dose-result");
+  if (form.elements.kind.value !== "meal" || entryCarbs() == null) {
+    output.textContent = "";
     return;
   }
-  $("#dose-result").textContent = "Empfehlung wird berechnet …";
+  output.setAttribute("aria-busy", "true");
   helpTimer = setTimeout(updateDoseHelp, 350);
+}
+
+const doseVariants = {
+  normal: data => data.entry_units,
+  cautious: data => data.cautious_entry_units,
+  auto: data => data.auto_entry_units,
+};
+
+function doseUnits(data, variant) {
+  return data && doseVariants[variant] ? doseVariants[variant](data) : null;
+}
+
+// A tapped suggestion fills the insulin field and follows later recalculations until the field is edited.
+function applyDoseChoice() {
+  const form = $("#entry-form");
+  const units = doseUnits(doseHelp, state.doseChoice);
+  if (state.doseChoice && doseHelp && (units == null || Number(units) > 100)) state.doseChoice = null;
+  if (state.doseChoice && units != null) form.elements.insulin.value = String(Number(units));
+  $$(".apply-dose").forEach(button =>
+    button.setAttribute("aria-pressed", String(button.dataset.variant === state.doseChoice)));
+  updateEntrySubmitLabel();
+}
+
+function selectDoseSuggestion(event) {
+  const button = event.target.closest(".apply-dose");
+  if (!button || !doseHelp) return;
+  const form = $("#entry-form");
+  if (state.doseChoice === button.dataset.variant) {
+    if (Number(form.elements.insulin.value) === Number(doseUnits(doseHelp, state.doseChoice))) form.elements.insulin.value = "";
+    state.doseChoice = null;
+  } else {
+    state.doseChoice = button.dataset.variant;
+  }
+  form.elements.carbs.setCustomValidity("");
+  applyDoseChoice();
+}
+
+const doseKeys = ["carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl",
+  "cautious_target_mgdl", "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "total_units",
+  "cautious_total_units", "entry_units", "cautious_entry_units", "expected_glucose_mgdl", "cautious_expected_glucose_mgdl",
+  "auto_units_per_ke", "auto_total_units", "auto_entry_units", "auto_expected_glucose_mgdl"];
+
+function doseChanged(previous, current) {
+  return doseKeys.some(key => previous[key] !== current[key]) ||
+    JSON.stringify(previous.recent_rapid_doses) !== JSON.stringify(current.recent_rapid_doses);
+}
+
+function trendText(data) {
+  if (data.trend_delta_mgdl == null) return "";
+  return trendSymbol(data.trend_direction) + " " + signedChange(data.trend_delta_mgdl, 0) + " in " + num(data.trend_minutes, 0) + " min";
+}
+
+function doseHelpHTML(data) {
+  const withCarbs = Number(data.carbs_g) > 0;
+  const glucose = data.glucose_mgdl == null ? "Kein CGM-Wert" :
+    num(data.glucose_mgdl, 0) + " mg/dL um " + timeOnly(data.glucose_at) + (data.trend_delta_mgdl == null ? "" : " · " + trendText(data));
+  const option = (label, variant, target, units, expected) => units == null ? "" :
+    '<button type="button" class="dose-option apply-dose" data-variant="' + variant + '" aria-pressed="false"' +
+    (Number(units) > 100 ? ' disabled' : '') + '><span class="dose-label">' + escapeHTML(label) + '</span><strong>' +
+    escapeHTML(num(units, 2)) + ' <small>IE</small></strong><span class="dose-expected">Ziel ' + escapeHTML(num(target, 0)) +
+    ' → ' + escapeHTML(num(expected, 0)) + '</span></button>';
+  const autoMissing = withCarbs && data.entry_units != null && data.auto_entry_units == null && data.auto_factor_min_meals
+    ? '<div class="dose-option is-off"><span class="dose-label">Automatik</span><strong>–</strong><span class="dose-expected">' +
+      escapeHTML((data.auto_factor_count || 0) + " von " + data.auto_factor_min_meals + " Mahlzeiten") + '</span></div>' : "";
+  const options = option("Normal", "normal", data.target_mgdl, data.entry_units, data.expected_glucose_mgdl) +
+    option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_entry_units, data.cautious_expected_glucose_mgdl) +
+    (withCarbs ? option("Automatik", "auto", data.target_mgdl, data.auto_entry_units, data.auto_expected_glucose_mgdl) || autoMissing : "");
+  return '<div class="dose-head"><span class="dose-heading">' + (withCarbs ? "Empfehlung" : "Korrektur ohne Essen") +
+    '</span><span class="dose-basis">' + escapeHTML(glucose) + '</span></div>' +
+    factorLine(data) +
+    (options ? '<div class="dose-options">' + options + '</div>' : '') +
+    (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport <strong>' +
+      escapeHTML(signedChange(data.activity_change_mgdl, 0)) + '</strong> · ' + escapeHTML((Number(data.activity_units) > 0 ? "+" : "") + num(data.activity_units, 2)) + ' IE</p>' : '') +
+    (data.recent_rapid_doses?.length ? '<p class="dose-warning">Dosen letzte 3 h: ' +
+      data.recent_rapid_doses.map(row => escapeHTML(timeOnly(row.at) + " · " + num(row.units) + " IE")).join(", ") + '</p>' : '') +
+    (data.reason ? '<p class="hint">' + escapeHTML(data.reason) + '</p>' : '');
 }
 
 async function updateDoseHelp() {
   clearTimeout(helpTimer);
   const form = $("#entry-form");
-  const carbs = Number(form.elements.carbs.value);
+  const carbs = entryCarbs();
   const output = $("#dose-result");
   const requestId = ++helpRequestId;
   doseHelp = null;
-  if (form.elements.kind.value !== "meal" || !Number.isFinite(carbs) || carbs <= 0 || carbs > 500) {
-    output.textContent = "";
+  const finish = text => {
+    output.removeAttribute("aria-busy");
+    if (text != null) output.textContent = text;
+    applyDoseChoice();
     return null;
-  }
-  const today = new Date().toLocaleDateString("sv-SE", { timeZone: state.settings?.timezone || "Europe/Berlin" });
-  if (state.day !== today) {
-    output.textContent = "Eine aktuelle Empfehlung gibt es nur für den heutigen Tag.";
-    return null;
-  }
+  };
+  if (form.elements.kind.value !== "meal" || carbs == null) return finish("");
+  if (state.day !== todayDay()) return finish(carbs > 0 ? "Eine aktuelle Empfehlung gibt es nur für den heutigen Tag." : "");
   const activityChange = entrySportChange();
-  if (activityChange == null) {
-    output.textContent = "Der geschätzte Sporteinfluss liegt außerhalb des erlaubten Bereichs.";
-    return null;
-  }
-  output.textContent = "Empfehlung wird berechnet …";
+  if (activityChange == null) return finish("Der geschätzte Sporteinfluss liegt außerhalb des erlaubten Bereichs.");
+  if (!output.innerHTML) output.textContent = "Empfehlung wird berechnet …";
+  output.setAttribute("aria-busy", "true");
   try {
     const data = await api("/api/dose-help", { method: "POST",
-      body: JSON.stringify({ carbs: form.elements.carbs.value, activity_change_mgdl: activityChange }) });
+      body: JSON.stringify({ carbs: String(carbs), activity_change_mgdl: activityChange }) });
     if (requestId !== helpRequestId) return null;
     doseHelp = data;
-    const glucose = data.glucose_mgdl == null ? "Kein CGM-Wert" :
-      num(data.glucose_mgdl, 0) + " mg/dL um " + timeOnly(data.glucose_at) +
-      (data.trend_delta_mgdl == null ? "" : " · " +
-       trendSymbol(data.trend_direction) + " " +
-       signedChange(data.trend_delta_mgdl, 0) + " in " + num(data.trend_minutes, 0) + " min");
-    const option = (label, variant, target, units, exact, expectedGlucose) => {
-      if (units == null) return "";
-      return '<div class="dose-option"><span>' + escapeHTML(label) + ' · Ziel ' + escapeHTML(num(target, 0)) +
-        ' mg/dL</span><strong>' + escapeHTML(num(units, 2)) +
-        ' IE</strong><small>Berechnet ' + escapeHTML(num(exact, 2)) + ' IE</small>' +
-        '<span class="dose-expected">Erwarteter BG <strong>' + escapeHTML(num(expectedGlucose, 0)) + ' mg/dL</strong></span><button type="button" class="apply-dose" data-variant="' + variant + '"' +
-        (Number(units) > 100 ? ' disabled' : '') + '>' + escapeHTML(num(units, 2)) + ' IE speichern</button></div>';
-    };
-    output.innerHTML = '<div class="dose-heading">Aktuelle Empfehlung</div><div class="dose-glucose"><span>Aktueller Blutzucker</span><strong>' +
-      escapeHTML(glucose) + '</strong></div>' +
-      factorLine(data) +
-      (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport <strong>' +
-        escapeHTML(signedChange(data.activity_change_mgdl, 0)) + '</strong> · ' + escapeHTML((Number(data.activity_units) > 0 ? "+" : "") + num(data.activity_units, 2)) + ' IE</p>' : '') +
-      '<div class="dose-options">' +
-      option("Normal", "normal", data.target_mgdl, data.entry_units, data.total_units, data.expected_glucose_mgdl) +
-      option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_entry_units, data.cautious_total_units, data.cautious_expected_glucose_mgdl) +
-      option("Automatik", "auto", data.target_mgdl, data.auto_entry_units, data.auto_total_units, data.auto_expected_glucose_mgdl) + '</div>' +
-      (data.recent_rapid_doses?.length ? '<p class="hint">Dosen letzte 3 h: ' +
-      data.recent_rapid_doses.map(row => escapeHTML(timeOnly(row.at) + " · " + num(row.units) + " IE")).join(", ") +
-      '</p>' : '') +
-      (data.reason ? '<p class="hint">' + escapeHTML(data.reason) + '</p>' : '');
+    output.innerHTML = doseHelpHTML(data);
+    finish(null);
     return data;
   } catch (error) {
-    if (requestId === helpRequestId) output.textContent = error.message;
+    if (requestId === helpRequestId) finish(error.message);
     return null;
   }
 }
@@ -1214,6 +1310,8 @@ const mealNames = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abe
 // Set (Nightscout) and calculated (breakfast median, auto percentile) factors in one line.
 function factorLine(data) {
   if (data.units_per_ke == null) return "";
+  const kf = 'KF ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' mg/dL/IE';
+  if (!(Number(data.carbs_g) > 0)) return '<p class="dose-factor">' + kf + '</p>';
   const factor = value => escapeHTML(num(value, 2)) + ' IE/KE';
   const parts = ['Gesetzt (Nightscout) <strong>' + factor(data.nightscout_units_per_ke) + '</strong>'];
   if (data.breakfast) {
@@ -1226,39 +1324,8 @@ function factorLine(data) {
   parts.push('Automatik ' + (data.auto_units_per_ke != null ? '<strong>' + factor(data.auto_units_per_ke) + '</strong>' : '–') +
     ' (' + data.auto_factor_count + '/' + data.auto_factor_min_meals + ')');
   if (!data.breakfast && data.auto_median_units_per_ke != null) parts.push('Median ' + factor(data.auto_median_units_per_ke));
-  parts.push('KF ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' mg/dL/IE');
+  parts.push(kf);
   return '<p class="dose-factor">' + parts.join(' · ') + '</p>';
-}
-
-async function applyDoseSuggestion(event) {
-  const button = event.target.closest(".apply-dose");
-  if (!button || !doseHelp) return;
-  const previous = doseHelp;
-  const variant = button.dataset.variant;
-  button.disabled = true;
-  try {
-    const current = await updateDoseHelp();
-    if (!current) throw new Error("Empfehlung konnte nicht aktualisiert werden");
-    const keys = ["carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl",
-      "cautious_target_mgdl", "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "total_units", "cautious_total_units", "entry_units", "cautious_entry_units", "expected_glucose_mgdl", "cautious_expected_glucose_mgdl",
-      "auto_units_per_ke", "auto_total_units", "auto_entry_units", "auto_expected_glucose_mgdl"];
-    if (keys.some(key => previous[key] !== current[key]) ||
-        JSON.stringify(previous.recent_rapid_doses) !== JSON.stringify(current.recent_rapid_doses)) {
-      toast("Empfehlung geändert. Bitte den neuen Wert prüfen und erneut speichern.", true);
-      return;
-    }
-    const units = { normal: current.entry_units, cautious: current.cautious_entry_units, auto: current.auto_entry_units }[variant];
-    if (units == null || Number(units) > 100 || Number($("#entry-form").elements.carbs.value) !== Number(current.carbs_g))
-      throw new Error("Kohlenhydrate geändert. Bitte neue Empfehlung prüfen");
-    const form = $("#entry-form");
-    form.elements.insulin.value = units;
-    if (!form.reportValidity()) return;
-    await saveEntry({ preventDefault() {}, currentTarget: form });
-  } catch (error) {
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
 }
 
 function closeEditDialog() {
@@ -1272,6 +1339,9 @@ function resetEntryForm() {
   form.reset();
   form.elements.carbs.setCustomValidity("");
   state.entryTimeTouched = false;
+  state.entryTimeOpen = false;
+  state.entryNoteOpen = false;
+  state.doseChoice = null;
   setDefaultMealTime();
   updateEntryFields();
   if ($("#edit-dialog").open) closeEditDialog();
@@ -1381,6 +1451,17 @@ async function saveEntry(event) {
   const button = $('button[type="submit"]', form);
   button.disabled = true;
   try {
+    // A saved suggestion must still match the current recommendation (new CGM value, new dose, profile change).
+    const chosen = mode === "meal" && state.doseChoice && doseHelp ? doseUnits(doseHelp, state.doseChoice) : null;
+    if (chosen != null && Number(chosen) === insulin) {
+      const previous = doseHelp;
+      const current = await updateDoseHelp();
+      if (!current) throw new Error("Empfehlung konnte nicht aktualisiert werden");
+      if (doseChanged(previous, current)) {
+        toast("Empfehlung geändert. Bitte den neuen Wert prüfen und erneut speichern.", true);
+        return;
+      }
+    }
     const result = await api("/api/treatment", { method: "POST", body: JSON.stringify(payload) });
     state.day = result.day;
     updateLocation(true);
@@ -1792,6 +1873,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     state.entryTimeTouched = true;
     updateEntrySportOption();
     updateEntryDayType();
+    updateEntryChips();
   });
   $("#entry-form").addEventListener("focusin", setDefaultMealTime);
   $("#entry-form").elements.carbs.addEventListener("input", updateEntrySportOption);
@@ -1821,15 +1903,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#cancel-edit").addEventListener("click", closeEditDialog);
   $("#close-edit").addEventListener("click", closeEditDialog);
   $("#edit-dialog").addEventListener("close", () => { state.editing = null; });
-  $("#dose-result").addEventListener("click", applyDoseSuggestion);
+  $("#dose-result").addEventListener("click", selectDoseSuggestion);
   $("#entry-day-type").addEventListener("click", saveEntryDayType);
   $("#vacation-toggle").addEventListener("change", saveVacation);
   $("#entry-form").elements.carbs.addEventListener("input", event => {
     event.target.setCustomValidity("");
+    updateEntrySubmitLabel();
     scheduleDoseHelp();
   });
   $("#entry-form").elements.insulin.addEventListener("input", () => {
     $("#entry-form").elements.carbs.setCustomValidity("");
+    state.doseChoice = null;
+    applyDoseChoice();
+  });
+  $("#entry-form").elements.notes.addEventListener("input", updateEntryChips);
+  $("#entry-time-chip").addEventListener("click", () => {
+    state.entryTimeOpen = true;
+    updateEntryChips();
+    $("#entry-time").focus();
+  });
+  $("#entry-note-chip").addEventListener("click", () => {
+    state.entryNoteOpen = true;
+    updateEntryChips();
+    $("#entry-form").elements.notes.focus();
   });
   $("#diary-view").addEventListener("click", event => {
     if (event.target.closest(".delete-treatment")) deleteTreatment(event);
