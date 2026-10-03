@@ -6,6 +6,7 @@ const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", pers
 const views = new Set(["diary", "analysis", "settings"]);
 const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 const num = (value, digits = 2) => Number(value).toLocaleString("de-DE", { maximumFractionDigits: digits, minimumFractionDigits: 0 });
+const factorNum = value => Number(value).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 const signedChange = (value, digits = 1) => value == null ? "—" : (Number(value) > 0 ? "+" : "") + num(value, digits) + " mg/dL";
 const glucoseChangeHTML = value => value == null ? '—' :
   '<span class="glucose-change ' + (Number(value) > 0 ? 'rising' : Number(value) < 0 ? 'falling' : 'steady') + '">' +
@@ -1128,7 +1129,7 @@ function calculationHTML(result) {
     "Ende " + timeOnly(result.end) + (result.manual_window ? " (manuell)" : ""),
   ].join(" · ");
   return '<div class="calc-block"><div class="factor' + (valid ? '' : ' unavailable') + '"><span>Insulinfaktor</span><strong>' +
-    (valid ? escapeHTML(num(result.factor_units_per_ke, 2)) + ' <small>IE/KE</small>' : '—') +
+    (valid ? escapeHTML(factorNum(result.factor_units_per_ke)) + ' <small>IE/KE</small>' : '—') +
     '</strong><small>' + escapeHTML(summary) + '</small>' +
     (result.reason ? '<small>' + escapeHTML(result.reason) + '</small>' : '') + '</div></div>';
 }
@@ -1251,7 +1252,7 @@ function mealBlockHTML(block, data) {
   const check = mealNeedsCheck(meal);
   const status = check
     ? '<span class="day-meal-status">' + escapeHTML(calc.reason || "Noch keine Berechnung") + '</span>'
-    : '<span class="day-meal-factor">' + escapeHTML(num(calc.factor_units_per_ke, 2)) + ' <small>IE/KE</small></span>';
+    : '<span class="day-meal-factor">' + escapeHTML(factorNum(calc.factor_units_per_ke)) + ' <small>IE/KE</small></span>';
   return '<article class="day-meal' + (check ? ' needs-check' : '') + '" id="meal-' + escapeHTML(meal.id) + '">' +
     '<div class="day-meal-head"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' +
     '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") +
@@ -1431,7 +1432,7 @@ function factorLine(data) {
   if (data.units_per_ke == null) return "";
   const kf = 'KF ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' mg/dL/IE';
   if (!(Number(data.carbs_g) > 0)) return '<p class="dose-factor">' + kf + '</p>';
-  const factor = value => escapeHTML(num(value, 2)) + ' IE/KE';
+  const factor = value => escapeHTML(factorNum(value)) + ' IE/KE';
   const parts = ['Gesetzt (Nightscout) <strong>' + factor(data.nightscout_units_per_ke) + '</strong>'];
   if (data.breakfast) {
     const kind = data.day_type === "free" ? "frei" : "Arbeit";
@@ -1776,7 +1777,7 @@ function renderSportAnalysis(analysis) {
     if (!meal) return '<td colspan="6"><span class="hint">Keine Mahlzeit im Einflussbereich (' +
       escapeHTML(analysis.lookback_minutes) + ' min davor bis Mahlzeitende)</span></td>';
     const baseline = meal.baseline_units_per_ke == null ? '' :
-      '<br><small>Vergleich ' + escapeHTML(num(meal.baseline_units_per_ke, 2)) + ' IE/KE</small>';
+      '<br><small>Vergleich ' + escapeHTML(factorNum(meal.baseline_units_per_ke)) + ' IE/KE</small>';
     const effect = meal.effect_mgdl == null
       ? '<span class="summary-unavailable">' + escapeHTML(meal.reason || "Nicht berechenbar") + '</span>'
       : '<b>' + glucoseChangeHTML(meal.effect_mgdl) + '</b>' +
@@ -1785,7 +1786,7 @@ function renderSportAnalysis(analysis) {
     return '<td>' + escapeHTML(names[meal.meal]) + '<br><small>' + escapeHTML(dateTime(meal.start)) + '–' +
       escapeHTML(timeOnly(meal.end)) + '</small></td>' +
       '<td>' + (meal.factor_without_sport_units_per_ke == null ? '—' :
-        escapeHTML(num(meal.factor_without_sport_units_per_ke, 2)) + ' IE/KE') + baseline + '</td>' +
+        escapeHTML(factorNum(meal.factor_without_sport_units_per_ke)) + ' IE/KE') + baseline + '</td>' +
       '<td>' + glucoseChangeHTML(meal.delta_mgdl) + '</td>' +
       '<td>' + glucoseChangeHTML(meal.expected_delta_mgdl) + '</td>' +
       '<td>' + effect + '</td>' +
@@ -1816,33 +1817,32 @@ async function loadSummary() {
       $("#sync-progress").textContent = "Korrekturfaktor-Profil nicht aktualisiert: " + data.profile_sync_error;
     }
     const span = (low, high) => low == null ? '—'
-      : Number(low) === Number(high) ? num(low, 2) : num(low, 2) + '–' + num(high, 2);
+      : Number(low) === Number(high) ? factorNum(low) : factorNum(low) + '–' + factorNum(high);
     const fact = (label, value, key = false) =>
       '<div' + (key ? ' class="key"' : '') + '><dt>' + label + '</dt><dd>' + escapeHTML(value) + '</dd></div>';
-    const suggestion = s => s.auto_units_per_ke != null ? num(s.auto_units_per_ke, 2) : '—';
-    const suggestionNote = s => 'Vorschlag aus ' + s.count + ' (' + s.days + ' T.)';
+    const suggestion = s => s.auto_units_per_ke != null ? factorNum(s.auto_units_per_ke) : '—';
+    const suggestionNote = s => 'Vorschlag aus ' + s.count + '\u00a0(' + s.days + '\u00a0T.)';
     const mealsText = count => count + (count === 1 ? ' Mahlzeit' : ' Mahlzeiten');
     const breakfastSubcards = () => '<div class="breakfast-subcards">' + ["work", "free"].map(dayType => {
       const subset = data.groups.breakfast.by_day_type[dayType];
       const s = subset.suggestion;
       return '<div class="breakfast-subcard"><span>' + (dayType === "work" ? "Arbeit" : "Frei") + '</span>' +
-        '<strong>' + (subset.count ? escapeHTML(num(subset.median_units_per_ke, 2)) + ' <small>IE/KE</small>' : '—') +
+        '<strong>' + (subset.count ? escapeHTML(factorNum(subset.median_units_per_ke)) + ' <small>IE/KE</small>' : '—') +
         '</strong><dl class="factor-facts compact">' +
         fact("Vorschlag", suggestion(s), true) +
-        fact("Spanne", span(subset.min_units_per_ke, subset.max_units_per_ke)) +
-        '</dl><small>' + mealsText(subset.count) + ' · ' + escapeHTML(suggestionNote(s)) + '</small></div>';
+        (subset.q1_units_per_ke != null ? fact("Mittlere 50 %", span(subset.q1_units_per_ke, subset.q3_units_per_ke)) : '') +
+        '</dl><small>' + mealsText(subset.count) + '<br>' + escapeHTML(suggestionNote(s)) + '</small></div>';
     }).join("") + '</div>';
     $("#summary").innerHTML = ["breakfast", "lunch", "dinner"].map(kind => {
       const row = data.groups[kind];
       const hasValues = row.count > 0;
-      const current = (row.nightscout_units_per_ke || []).map(value => num(value, 2)).join(' / ') || '—';
+      const current = (row.nightscout_units_per_ke || []).map(value => factorNum(value)).join(' / ') || '—';
       const facts = (kind === "breakfast" ? '' : fact("Vorschlag", suggestion(row.suggestion), true)) +
         fact("Aktuell", current) +
-        fact("Spanne", span(row.min_units_per_ke, row.max_units_per_ke)) +
         (row.q1_units_per_ke != null ? fact("Mittlere 50 %", span(row.q1_units_per_ke, row.q3_units_per_ke)) : '');
       return '<div class="summary-card"><span class="meal-type">' + escapeHTML(names[kind]) + '</span>' +
         '<div class="summary-primary"><span>Median</span><strong>' +
-        (hasValues ? escapeHTML(num(row.median_units_per_ke, 2)) + ' <small>IE/KE</small>' : '—') +
+        (hasValues ? escapeHTML(factorNum(row.median_units_per_ke)) + ' <small>IE/KE</small>' : '—') +
         '</strong></div><dl class="factor-facts">' + facts + '</dl>' +
         '<p>' + mealsText(row.count) +
         (kind === "breakfast" ? '' : ' · ' + escapeHTML(suggestionNote(row.suggestion))) + '</p>' +
@@ -1885,7 +1885,7 @@ async function loadSummary() {
                 '>Frei</option></select></label></th></tr>'
               : '';
             const factor = item.units_per_ke != null
-              ? escapeHTML(num(item.units_per_ke, 2)) + ' IE/KE' +
+              ? escapeHTML(factorNum(item.units_per_ke)) + ' IE/KE' +
                 (item.strong_outlier ? ' <span class="outlier-badge">Stark abweichend</span>' : '') +
                 (item.manual_window ? ' <span class="manual-badge">Zeitraum manuell</span>' : '')
               : '<span class="summary-unavailable">Nicht berechenbar: ' + escapeHTML(item.reason || "Kein Faktor") + '</span>';
