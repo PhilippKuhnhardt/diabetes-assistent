@@ -505,3 +505,13 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .day-list .timeline-actions { grid-column: auto; }
 @media (max-width: 650px) { .records .night-values { grid-template-columns: 1fr 1fr; } .records .night-card .section-head { display: block; } }
 @media (max-width: 650px) { .day-meal-head { flex-wrap: wrap; } .day-meal-status { flex-basis: 100%; max-width: none; text-align: left; } }
+
+/* Factor facts in the analysis summary cards */
+.factor-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 13px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
+.factor-facts > div { min-width: 0; }
+.factor-facts dt { color: var(--muted); font-size: 11px; }
+.factor-facts dd { margin: 1px 0 0; font-size: 17px; font-weight: 700; color: var(--green-dark); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.factor-facts .key dd { color: var(--green); }
+.factor-facts.compact { grid-template-columns: 1fr; gap: 4px; margin-top: 8px; padding-top: 7px; }
+.factor-facts.compact > div { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.factor-facts.compact dd { font-size: 13px; }
