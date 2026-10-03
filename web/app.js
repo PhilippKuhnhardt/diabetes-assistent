@@ -1829,7 +1829,6 @@ async function loadSummary() {
         '<strong>' + (subset.count ? escapeHTML(num(subset.median_units_per_ke, 2)) + ' <small>IE/KE</small>' : '—') +
         '</strong><dl class="factor-facts compact">' +
         fact("Vorschlag", suggestion(s), true) +
-        fact("Spanne", span(subset.min_units_per_ke, subset.max_units_per_ke)) +
         '</dl><small>' + mealsText(subset.count) + ' · ' + escapeHTML(suggestionNote(s)) + '</small></div>';
     }).join("") + '</div>';
     $("#summary").innerHTML = ["breakfast", "lunch", "dinner"].map(kind => {
@@ -1838,7 +1837,6 @@ async function loadSummary() {
       const current = (row.nightscout_units_per_ke || []).map(value => num(value, 2)).join(' / ') || '—';
       const facts = (kind === "breakfast" ? '' : fact("Vorschlag", suggestion(row.suggestion), true)) +
         fact("Aktuell", current) +
-        fact("Spanne", span(row.min_units_per_ke, row.max_units_per_ke)) +
         (row.q1_units_per_ke != null ? fact("Mittlere 50 %", span(row.q1_units_per_ke, row.q3_units_per_ke)) : '');
       return '<div class="summary-card"><span class="meal-type">' + escapeHTML(names[kind]) + '</span>' +
         '<div class="summary-primary"><span>Median</span><strong>' +
