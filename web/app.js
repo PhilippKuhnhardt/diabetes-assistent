@@ -1327,28 +1327,20 @@ function doseChanged(previous, current) {
     JSON.stringify(previous.recent_rapid_doses) !== JSON.stringify(current.recent_rapid_doses);
 }
 
-function trendText(data) {
-  if (data.trend_delta_mgdl == null) return "";
-  return trendSymbol(data.trend_direction) + " " + signedChange(data.trend_delta_mgdl, 0) + " in " + num(data.trend_minutes, 0) + " min";
-}
-
 function doseHelpHTML(data) {
   const withCarbs = Number(data.carbs_g) > 0;
-  const glucose = data.glucose_mgdl == null ? "Kein CGM-Wert" :
-    num(data.glucose_mgdl, 0) + " mg/dL um " + timeOnly(data.glucose_at) + (data.trend_delta_mgdl == null ? "" : " · " + trendText(data));
-  const option = (label, variant, target, units, expected) => units == null ? "" :
+  const option = (label, variant, units, expected) => units == null ? "" :
     '<button type="button" class="dose-option apply-dose" data-variant="' + variant + '" aria-pressed="false"' +
     (Number(units) > 100 ? ' disabled' : '') + '><span class="dose-label">' + escapeHTML(label) + '</span><strong>' +
-    escapeHTML(num(units, 2)) + ' <small>IE</small></strong><span class="dose-expected">Ziel ' + escapeHTML(num(target, 0)) +
-    ' → ' + escapeHTML(num(expected, 0)) + '</span></button>';
+    escapeHTML(num(units, 2)) + ' <small>IE</small></strong><span class="dose-expected">→ ' + escapeHTML(num(expected, 0)) + ' mg/dL</span></button>';
   const autoMissing = withCarbs && data.entry_units != null && data.auto_entry_units == null && data.auto_factor_min_meals
     ? '<div class="dose-option is-off"><span class="dose-label">Automatik</span><strong>–</strong><span class="dose-expected">' +
       escapeHTML((data.auto_factor_count || 0) + " von " + data.auto_factor_min_meals + " Mahlzeiten") + '</span></div>' : "";
-  const options = option("Normal", "normal", data.target_mgdl, data.entry_units, data.expected_glucose_mgdl) +
-    option("Vorsichtig", "cautious", data.cautious_target_mgdl, data.cautious_entry_units, data.cautious_expected_glucose_mgdl) +
-    (withCarbs ? option("Automatik", "auto", data.target_mgdl, data.auto_entry_units, data.auto_expected_glucose_mgdl) || autoMissing : "");
+  const options = option("Normal", "normal", data.entry_units, data.expected_glucose_mgdl) +
+    option("Vorsichtig", "cautious", data.cautious_entry_units, data.cautious_expected_glucose_mgdl) +
+    (withCarbs ? option("Automatik", "auto", data.auto_entry_units, data.auto_expected_glucose_mgdl) || autoMissing : "");
   return '<div class="dose-head"><span class="dose-heading">' + (withCarbs ? "Empfehlung" : "Korrektur ohne Essen") +
-    '</span><span class="dose-basis">' + escapeHTML(glucose) + '</span></div>' +
+    '</span></div>' +
     factorLine(data) +
     (options ? '<div class="dose-options">' + options + '</div>' : '') +
     (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport <strong>' +
