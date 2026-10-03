@@ -865,6 +865,7 @@ class IntegrationTests(unittest.TestCase):
         with patch("app.server.day_payload", side_effect=payload):
             result = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
             storage.set_analysis_exclusion("d-" + past[0], True)
+            storage.set_analysis_exclusion("d-" + past[1], True)
             too_few = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
         self.assertEqual(result["auto_meal"], "dinner")
         self.assertEqual(result["auto_factor_count"], 5)
@@ -875,7 +876,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(Decimal(result["auto_total_units"]), Decimal("2.1"))
         self.assertEqual(Decimal(result["auto_entry_units"]), Decimal("2"))
         self.assertEqual(result["factor_source"], "nightscout")
-        self.assertEqual(too_few["auto_factor_count"], 4)
+        self.assertEqual(too_few["auto_factor_count"], 3)
         self.assertNotIn("auto_entry_units", too_few)
 
     def test_summary_shows_median_middle_half_and_full_range(self):

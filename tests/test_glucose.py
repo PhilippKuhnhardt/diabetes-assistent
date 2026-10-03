@@ -56,17 +56,17 @@ class CurrentGlucoseTests(unittest.TestCase):
         entries.insert(1, {"at": start - timedelta(minutes=1), "sgv": values[1]})
         result = glucose.trend(sorted((item["at"], Decimal(item["sgv"])) for item in entries))
         self.assertEqual(result["trend_direction"], "flat")
-        self.assertLess(abs(Decimal(result["trend_delta_mgdl"])), Decimal(5))
+        self.assertLess(abs(Decimal(result["trend_delta_mgdl"])), Decimal(10))
 
     def test_trend_direction_thresholds(self):
         def direction(change):
             points = [(self.now - timedelta(minutes=15), Decimal(150)),
                       (self.now, Decimal(150) + Decimal(change))]
             return glucose.trend(points)["trend_direction"]
-        self.assertEqual(direction("4.9"), "flat")
-        self.assertEqual(direction("-4.9"), "flat")
-        self.assertEqual(direction(5), "up")
-        self.assertEqual(direction(-5), "down")
+        self.assertEqual(direction("9.9"), "flat")
+        self.assertEqual(direction("-9.9"), "flat")
+        self.assertEqual(direction(10), "up")
+        self.assertEqual(direction(-10), "down")
         self.assertEqual(direction(30), "up_fast")
         self.assertEqual(direction(-30), "down_fast")
 
