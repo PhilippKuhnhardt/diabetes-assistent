@@ -6,7 +6,8 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 TAG = re.compile(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction|snack)\]")
-EVENT_TAG = re.compile(r"\[DAE:[a-f0-9-]{36}\]")
+EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal))\]")
+SNACK_GAP = timedelta(minutes=120)
 SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio|racing)\]")
 SPORT_LABELS = {"jogging": "Joggen", "gym": "Gym", "light_cardio": "Leichtes Cardio", "racing": "Rennsport"}
 
@@ -82,34 +83,62 @@ def normalize_treatments(raw: list[dict]) -> list[dict]:
 
 
 def group_diary_followups(treatments: list[dict], settings: dict) -> None:
-    """Group later diary carb entries within a main meal's analysis window.
+    """Group later diary carb entries as snacks of the preceding main meal.
 
-    Imported Nightscout meals and explicitly tagged roots remain distinct, so
-    a second main meal can still block an overlapping analysis.
+    A diary entry becomes a snack when it starts less than 2 h after the
+    previous main meal, or inside the analysis window of a main meal of the
+    same clock-based meal kind. Imported Nightscout meals, explicitly tagged
+    roots and entries the user marked as main meal ([DA2:meal]) remain distinct,
+    so a second main meal can still block an overlapping analysis.
     """
-    zone = ZoneInfo(settings["timezone"])
+    for item in treatments:
+        classify_diary_entry(item, treatments, settings)
+
+
+def classify_diary_entry(item: dict, treatments: list[dict], settings: dict) -> dict | None:
+    """Reclassify one diary main meal in place; return the meal it joins as snack."""
+    if item.get("eventType") != "Meal Bolus" or float(item.get("carbs") or 0) <= 0:
+        return None
+    notes = item.get("notes") or ""
+    if not EVENT_TAG.search(notes) or item.get("episode_id") or "[DA2:meal]" in notes:
+        return None
+    root = preceding_meal(item["at"], [other for other in treatments if other is not item], settings)
+    if root is None:
+        return None
+    item["eventType"] = "Snack Bolus" if float(item.get("insulin") or 0) > 0 else "Carb Correction"
+    item["notes"] = (notes + " [DA2:snack]").strip()
+    return root
+
+
+def meal_kind_at(at: datetime, settings: dict) -> tuple:
+    local = at.astimezone(ZoneInfo(settings["timezone"]))
+    minute = local.hour * 60 + local.minute
     breakfast_end = int(settings.get("breakfast_end_minute", 660))
     lunch_end = int(settings.get("lunch_end_minute", 1020))
+    return local.date(), "breakfast" if minute < breakfast_end else "lunch" if minute < lunch_end else "dinner"
+
+
+def preceding_meal(at: datetime, treatments: list[dict], settings: dict) -> dict | None:
+    """Return the main meal a new carb entry at `at` would count as a snack for."""
     window = timedelta(minutes=int(settings.get("window_minutes", 180)))
-    roots = {}
-    for item in treatments:
-        local = item["at"].astimezone(zone)
-        minute = local.hour * 60 + local.minute
-        meal = "breakfast" if minute < breakfast_end else "lunch" if minute < lunch_end else "dinner"
-        key = (local.date(), meal)
-        root = roots.get(key)
-        event_type = item.get("eventType")
-        if event_type == "Meal Bolus" and float(item.get("carbs") or 0) > 0:
-            diary_entry = EVENT_TAG.search(item.get("notes") or "") and not item.get("episode_id")
-            if diary_entry and root is not None and item["at"] < root["end"]:
-                item["eventType"] = "Snack Bolus" if float(item.get("insulin") or 0) > 0 else "Carb Correction"
-            else:
-                roots[key] = {"end": item["at"] + window}
-                root = roots[key]
-        if (root is not None and item["at"] < root["end"]
+    kind = meal_kind_at(at, settings)
+    root = None
+    for item in sorted(treatments, key=lambda x: x["at"]):
+        if item["at"] > at:
+            break
+        if item.get("eventType") == "Meal Bolus" and float(item.get("carbs") or 0) > 0:
+            root = {"id": item.get("id"), "at": item["at"], "end": item["at"] + window,
+                    "meal": item.get("meal") or meal_kind_at(item["at"], settings)[1],
+                    "same_kind": meal_kind_at(item["at"], settings) == kind}
+        elif (root is not None and item["at"] < root["end"]
                 and float(item.get("insulin") or 0) > 0
-                and event_type in {"Meal Bolus", "Snack Bolus", "Correction Bolus", "Bolus"}):
+                and item.get("eventType") in {"Snack Bolus", "Correction Bolus", "Bolus"}):
             root["end"] = max(root["end"], item["at"] + window)
+    if root is None or root["at"] == at:
+        return None
+    if at - root["at"] < SNACK_GAP or (root["same_kind"] and at < root["end"]):
+        return root
+    return None
 
 
 def meals_for_day(treatments: list[dict], day: str, timezone_name: str,
