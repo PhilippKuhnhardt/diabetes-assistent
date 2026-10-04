@@ -123,6 +123,10 @@
           <span id="sync-progress" class="hint"></span>
         </div>
         <div id="summary" class="summary-grid"></div>
+        <section class="analysis-list panel">
+          <div class="section-head"><h2>Vorschlagsfaktor · Herleitung</h2><span id="suggestion-method" class="hint"></span></div>
+          <div id="suggestion-derivation"></div>
+        </section>
         <section class="analysis-list panel analysis-ic-panel">
           <div class="section-head"><h2>Aktueller Insulinfaktor · Nightscout</h2></div>
           <div id="analysis-ic-rows" class="analysis-ic-rows"></div>
@@ -196,6 +200,13 @@
               <label>Vorsichtiger Zielwert <span>mg/dL</span><input name="dose_cautious_target_mgdl" type="number" min="60" max="250" step="1" required></label>
               <label>Automatik-Perzentil <span>%</span><input name="auto_percentile" type="number" min="25" max="50" step="0.5" required></label>
               <p class="hint">25 % unteres Quartil, 50 % Median. Kleiner bedeutet weniger Insulin.</p>
+              <label>Automatik-Methode<select name="auto_method">
+                <option value="weighted_shift">Gewichtet + Tageslage</option>
+                <option value="weighted">Gewichtet</option>
+                <option value="flat">28 Tage gleich</option>
+              </select></label>
+              <label>Halbwertszeit <span>Tage</span><input name="auto_half_life_days" type="number" min="2" max="28" step="0.5" required></label>
+              <p class="hint">Nach der Halbwertszeit zählt eine Mahlzeit nur noch halb.</p>
             </section>
             <section class="panel">
               <h2>Mahlzeiten</h2>

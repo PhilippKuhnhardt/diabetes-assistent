@@ -26,6 +26,22 @@ Der normale Vorschlag verwendet den lokalen Zielwert (Standard 100 mg/dL), der v
 
 Vor dem Ende des Frühstücksfensters hängt `R` von der Tagesart ab (Arbeitstag oder freier Tag). Liegen in den letzten 28 Tagen vor heute mindestens drei berechnete, nicht ausgeklammerte Frühstücke derselben Tagesart vor, gilt `KH-Anteil = KH × F / 10` mit `F` = Median dieser Frühstücksfaktoren in IE/KE; sonst bleibt der Nightscout-Wert. Die Tagesart ist standardmäßig Montag bis Freitag Arbeitstag, Samstag und Sonntag frei. Ist in den Einstellungen Urlaub aktiv, zählt jeder Tag ab dem Einschalten als frei; beim Ausschalten endet der Urlaub am Vortag. Eine manuelle Auswahl für einen Tag hat immer Vorrang. Die Tagesart wird nur lokal gespeichert, nicht in Nightscout.
 
+## Automatik-Faktor (Vorschlagsfaktor)
+
+Der dritte Vorschlag verwendet einen Faktor `A` aus den berechneten, nicht ausgeklammerten Faktoren derselben Mahlzeit (Frühstück nur derselben Tagesart) der 28 Tage vor heute, ab vier Mahlzeiten. Drei Methoden sind wählbar:
+
+```text
+28 Tage gleich         A = Perzentil p der Faktoren, alle gleich gewichtet
+Gewichtet              A = gewichtetes Perzentil p, Gewicht = 0,5 ^ (Alter in Tagen / Halbwertszeit)
+Gewichtet + Tageslage  A = gewichtetes Perzentil p × Tageslage
+```
+
+`p` ist das Automatik-Perzentil (Standard 37,5 %), die Halbwertszeit standardmäßig 7 Tage. Beim gewichteten Perzentil steht jeder Faktor in der Mitte seines kumulierten Gewichts, so dass sich bei gleichen Gewichten genau die lineare Interpolation an `(n − 1) × p` ergibt. Ein Perzentil hängt von der Reihenfolge ab, nicht vom Betrag: Ein einzelner extremer Faktor verschiebt es höchstens um seinen Gewichtsanteil.
+
+Tageslage: Die letzten drei abgeschlossenen Mahlzeiten beliebiger Art (Endpunkt vor jetzt, Beginn höchstens 48 h zurück) werden je mit dem gewichteten Median ihrer eigenen Mahlzeit verglichen (`r = Faktor / Median`). Liegen alle drei `r` über 1 oder alle unter 1, ist die Tageslage das `r` mit der kleinsten Abweichung von 1, begrenzt auf 0,85 bis 1,15; sonst 1.
+
+Rückblick-Test: Für jede Mahlzeit im Analysezeitraum rechnet die App mit den Daten davor aus, was jede Methode vorgeschlagen hätte, und vergleicht mit dem berechneten Faktor. Treffer: Abweichung höchstens ±10 %; „zu viel Insulin“: Vorschlag mehr als 10 % über dem Faktor. Methode, Gewichtung und Tageslage sind Modellannahmen zum Ausprobieren, keine Dosierempfehlung.
+
 ## Faktor je Hauptmahlzeit
 
 Eine Mahlzeit beginnt bei `t₀`. Der Standardendpunkt ist `t₀ + window_minutes` (Standard 180 Minuten). Jede schnell wirksame Injektion, die innerhalb des aktuellen Fensters und vor der nächsten Hauptmahlzeit liegt, kann den Endpunkt bis `Injektion + window_minutes` verlängern. Liegt die nächste Hauptmahlzeit mehr als 120 Minuten nach `t₀`, aber vor dem Endpunkt, wird der letzte geeignete CGM-Wert innerhalb von 15 Minuten davor als Endpunkt verwendet. Kann die nächste Hauptmahlzeit nicht getrennt werden, wird der Faktor blockiert.
