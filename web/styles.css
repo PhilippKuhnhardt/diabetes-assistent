@@ -135,6 +135,9 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 #toast { position: fixed; right: 24px; bottom: 22px; max-width: min(360px, calc(100vw - 36px)); background: var(--ink); color: #fff; border-radius: 9px; padding: 13px 17px; font-size: 13px; box-shadow: 0 12px 28px #10281833; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s; }
 #toast.visible { opacity: 1; transform: translateY(0); }
 #toast.error { background: #8e372e; }
+#toast.has-action { pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.toast-action { flex: none; border: 1px solid #ffffff66; border-radius: 7px; background: transparent; color: #fff; padding: 6px 11px; font: inherit; font-weight: 700; cursor: pointer; }
+.toast-action:hover { background: #ffffff1f; }
 @media (max-width: 950px) {
   .diary-grid, .settings-top, .settings-cols { grid-template-columns: 1fr; }
   .settings-save { grid-template-columns: 1fr 1fr; }
@@ -429,6 +432,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .help-result[aria-busy="true"] { opacity: .65; }
 .dose-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; }
 .dose-heading { color: var(--green-dark); font-weight: 750; }
+.dose-hint { color: var(--muted); font-size: 11px; }
 .dose-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 7px; margin-top: 10px; }
 .help-result .dose-option { display: grid; justify-items: center; gap: 2px; min-width: 0; padding: 8px 4px; border: 1.5px solid var(--line); border-radius: 10px; background: white; color: var(--ink); text-align: center; font-weight: 600; }
 .dose-option .dose-label { color: var(--muted); font-size: 11px; font-weight: 650; }
