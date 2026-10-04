@@ -406,6 +406,8 @@ async function loadSettings() {
   form.elements.dose_target_mgdl.value = data.settings.dose_target_mgdl;
   form.elements.dose_cautious_target_mgdl.value = data.settings.dose_cautious_target_mgdl;
   form.elements.auto_percentile.value = data.settings.auto_percentile;
+  form.elements.auto_method.value = data.settings.auto_method;
+  form.elements.auto_half_life_days.value = data.settings.auto_half_life_days;
   form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
   form.elements.lunch_end.value = minuteClock(data.settings.lunch_end_minute);
   form.elements.sport_lookback_minutes.value = data.settings.sport_lookback_minutes;
@@ -1667,6 +1669,8 @@ async function saveSettings(event) {
     dose_target_mgdl: form.elements.dose_target_mgdl.value,
     dose_cautious_target_mgdl: form.elements.dose_cautious_target_mgdl.value,
     auto_percentile: form.elements.auto_percentile.value,
+    auto_method: form.elements.auto_method.value,
+    auto_half_life_days: form.elements.auto_half_life_days.value,
     breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),
     lunch_end_minute: clockMinute(form.elements.lunch_end.value),
     sport_lookback_minutes: Number(form.elements.sport_lookback_minutes.value),
@@ -1802,6 +1806,69 @@ function renderSportAnalysis(analysis) {
     : '<div class="empty">Im Zeitraum sind keine Sport- oder Rennsport-Einträge im lokalen Datenbestand.</div>';
 }
 
+const suggestionMethods = { flat: "28 Tage gleich", weighted: "Gewichtet", weighted_shift: "Gewichtet + Tageslage" };
+
+// Derivation of the Automatik factor: weighted baseline, day shift and the backtest of all methods.
+function renderSuggestionDerivation(d) {
+  const output = $("#suggestion-derivation");
+  if (!d) { output.innerHTML = ""; return; }
+  const pct = value => (Number(value) > 0 ? "+" : Number(value) < 0 ? "−" : "") + num(Math.abs(Number(value)) * 100, 0) + " %";
+  const ie = value => value == null ? "—" : escapeHTML(factorNum(value));
+  const dateTime = value => new Date(value).toLocaleString("de-DE", {
+    weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const label = item => names[item.meal] + (item.day_type ? (item.day_type === "work" ? " Arbeit" : " frei") : "");
+  const shiftOn = d.method === "weighted_shift";
+  $("#suggestion-method").textContent = suggestionMethods[d.method] + " · Halbwertszeit " + num(d.half_life_days, 1) +
+    " T. · Perzentil " + num(d.percentile, 1) + " %";
+  const shiftText = item => !shiftOn ? "aus" : item.shift.applied ? pct(Number(item.shift.factor) - 1) : "keine";
+  const current = '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Mahlzeit</th><th>Grundwert</th>' +
+    '<th>Tageslage</th><th>Vorschlag</th><th>Basis</th></tr></thead><tbody>' +
+    d.current.map(item => '<tr><td>' + escapeHTML(label(item)) + '</td><td>' + ie(item.baseline_units_per_ke) + '</td><td>' +
+      escapeHTML(shiftText(item)) + '</td><td><b>' + ie(item.units_per_ke) + '</b></td><td><small>' +
+      escapeHTML(item.count + " in " + d.days + " T." + (item.count < d.min_meals ? ", mind. " + d.min_meals : "")) +
+      '</small></td></tr>').join("") + '</tbody></table></div>';
+  const shift = d.shift;
+  const reasons = {
+    higher: "Alle drei lagen höher als üblich: Vorschläge " + pct(Number(shift.factor) - 1) + ".",
+    lower: "Alle drei lagen niedriger als üblich: Vorschläge " + pct(Number(shift.factor) - 1) + ".",
+    mixed: "Uneinheitlich: keine Anpassung.",
+    too_few: "Zu wenige abgeschlossene Mahlzeiten in den letzten 48 h: keine Anpassung.",
+  };
+  const shiftMeals = '<p class="hint derivation-note"><b>Tageslage</b> aus den letzten drei abgeschlossenen Mahlzeiten (48 h), ' +
+    'verglichen mit ihrem gewichteten Median, begrenzt auf ±' + num(Number(d.shift_cap) * 100, 0) + ' %. ' +
+    escapeHTML(reasons[shift.reason] || "") + (shiftOn ? "" : " (Methode ohne Tageslage)") + '</p>' +
+    (shift.meals.length ? '<ul class="hint">' + shift.meals.map(meal => '<li>' + escapeHTML(label(meal) + " " + dateTime(meal.at)) +
+      ': ' + ie(meal.units_per_ke) + ' statt ' + ie(meal.reference_units_per_ke) + ' IE/KE' +
+      (meal.ratio != null ? ' (' + escapeHTML(pct(Number(meal.ratio) - 1)) + ')' : '') + '</li>').join("") + '</ul>' : '');
+  const test = d.backtest;
+  const methods = ["flat", "weighted", "weighted_shift"];
+  const tolerance = num(Number(d.hit_tolerance) * 100, 0);
+  const stats = test.rows.length
+    ? '<p class="hint derivation-note"><b>Rückblick-Test</b>: Was hätte jede Methode vor der Mahlzeit vorgeschlagen, ' +
+      'verglichen mit dem später berechneten Faktor. Treffer = höchstens ±' + tolerance + ' %.</p>' +
+      '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Methode</th><th>Treffer</th>' +
+      '<th>Zu viel Insulin</th><th>Zu wenig</th><th>Typisch daneben</th></tr></thead><tbody>' +
+      methods.map(method => {
+        const row = test.stats[method];
+        return '<tr><td>' + escapeHTML(suggestionMethods[method]) +
+          (method === d.method ? '<span class="derivation-active">aktiv</span>' : '') + '</td><td><b>' +
+          row.hits + '</b> / ' + row.count + '</td><td>' + row.too_much + '</td><td>' + row.too_little + '</td><td>' +
+          (row.median_abs_deviation == null ? '—' : '±' + escapeHTML(num(Number(row.median_abs_deviation) * 100, 0)) + ' %') +
+          '</td></tr>';
+      }).join("") + '</tbody></table></div>' +
+      '<details class="summary-details"><summary>Einzelne Mahlzeiten</summary><div class="table-wrap">' +
+      '<table class="analysis-table compact"><thead><tr><th>Mahlzeit</th><th>Berechnet</th>' +
+      methods.map(method => '<th>' + escapeHTML(suggestionMethods[method]) + '</th>').join("") + '</tr></thead><tbody>' +
+      test.rows.slice().reverse().map(row => '<tr><td>' + escapeHTML(label(row)) + '<br><small>' + escapeHTML(dateTime(row.at)) +
+        '</small></td><td><b>' + ie(row.units_per_ke) + '</b></td>' + methods.map(method => {
+          const value = row.predictions[method];
+          return '<td>' + ie(value) + ' <small>' + escapeHTML(pct(Number(value) / Number(row.units_per_ke) - 1)) + '</small></td>';
+        }).join("") + '</tr>').join("") + '</tbody></table></div></details>'
+    : '<p class="hint derivation-note"><b>Rückblick-Test</b>: Im Zeitraum fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
+      d.min_meals + ' Faktoren derselben Mahlzeit aus den 28 Tagen davor).</p>';
+  output.innerHTML = current + shiftMeals + stats;
+}
+
 async function loadSummary() {
   $("#summary").innerHTML = '<div class="empty">Analyse wird geladen …</div>';
   $("#night-summary-cards").innerHTML = '<div class="empty">Nachtübersicht wird geladen …</div>';
@@ -1850,6 +1917,7 @@ async function loadSummary() {
     }).join("");
     renderAnalysisIc();
     renderSportAnalysis(data.sport_analysis);
+    renderSuggestionDerivation(data.suggestion_derivation);
     const comparisons = data.sensitivity_comparison || [];
     $("#sensitivity-comparison").innerHTML = comparisons.length
       ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Ab</th><th>Aktuell</th><th>Mathematisch bester Korrekturfaktor</th></tr></thead><tbody>' +

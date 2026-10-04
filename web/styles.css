@@ -190,6 +190,9 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 
 .analysis-list { margin-top: 20px; }
 .analysis-table { min-width: 900px; }
+.analysis-table.compact { min-width: 520px; }
+.derivation-note { margin: 14px 0 6px; }
+.derivation-active { color: var(--green); font-size: 11px; font-weight: 700; margin-left: 6px; }
 .glucose-change { display: inline-block; padding: 3px 7px; border-radius: 6px; font-weight: 650; white-space: nowrap; }
 .glucose-change.rising { color: #8a3b16; background: #fff0e5; }
 .glucose-change.falling { color: #145c78; background: #e5f3f9; }
