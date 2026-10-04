@@ -14,7 +14,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
 
-from app import auth, calculation, dosing, episodes, glucose, nightscout, sensitivity, sport_analysis, storage
+from app import auth, calculation, dosing, episodes, forecast, glucose, nightscout, sensitivity, sport_analysis, storage
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 MAX_BODY = 64 * 1024
@@ -78,7 +78,8 @@ def validate_settings(value: dict) -> dict:
     result = dict(old)
     for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes",
                 "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
-                "sport_effects_mgdl", "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile"):
+                "sport_effects_mgdl", "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile",
+                "auto_method", "auto_half_life_days"):
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
@@ -104,6 +105,11 @@ def validate_settings(value: dict) -> dict:
     auto_percentile = calculation.dec(result["auto_percentile"])
     if not auto_percentile.is_finite() or not 25 <= auto_percentile <= 50:
         raise ValueError("Perzentil der Automatik muss zwischen 25 und 50 % liegen")
+    if result["auto_method"] not in forecast.METHODS:
+        raise ValueError("Ungültige Methode der Automatik")
+    half_life = calculation.dec(result["auto_half_life_days"])
+    if not half_life.is_finite() or not 2 <= half_life <= 28:
+        raise ValueError("Halbwertszeit der Automatik muss zwischen 2 und 28 Tagen liegen")
     effects = result["sport_effects_mgdl"]
     if not (0 < breakfast_end < lunch_end < 1440 and 0 <= lookback <= 1440):
         raise ValueError("Ungültige Mahlzeiten- oder Sportzeiten")
@@ -122,6 +128,7 @@ def validate_settings(value: dict) -> dict:
         "dose_target_mgdl": str(dose_target),
         "dose_cautious_target_mgdl": str(cautious_target),
         "auto_percentile": str(auto_percentile),
+        "auto_half_life_days": str(half_life),
     })
     return result
 
@@ -143,7 +150,7 @@ def validate_manual_window(meal_at: datetime, start: datetime, end: datetime) ->
 
 BREAKFAST_FACTOR_DAYS = 28
 BREAKFAST_FACTOR_MIN_MEALS = 3
-AUTO_FACTOR_MIN_MEALS = 4
+AUTO_FACTOR_MIN_MEALS = forecast.MIN_MEALS
 
 
 def meal_factor_values(meal_kind: str, day_type: str | None, today: date,
@@ -163,43 +170,56 @@ def meal_factor_values(meal_kind: str, day_type: str | None, today: date,
     return sorted(values)
 
 
-def recent_meal_factor_values(today: date, overrides: dict[str, str], periods: list[dict],
-                              loaded: dict[str, dict] | None = None) -> dict[tuple[str, str | None], list[Decimal]]:
-    """meal_factor_values for every meal kind in one pass; breakfast is keyed by day type."""
-    excluded = storage.analysis_exclusions()
-    values: dict[tuple[str, str | None], list[Decimal]] = {
-        key: [] for key in (("breakfast", "work"), ("breakfast", "free"), ("lunch", None), ("dinner", None))}
-    for offset in range(1, BREAKFAST_FACTOR_DAYS + 1):
-        day = (today - timedelta(days=offset)).isoformat()
-        day_type = storage.day_type_for(day, overrides, periods)[0]
-        payload = (loaded or {}).get(day) or day_payload(day, refresh=False)
-        for meal in payload.get("meals", []):
-            factor = (meal.get("calculation") or {}).get("factor_units_per_ke")
-            key = (meal.get("meal"), day_type if meal.get("meal") == "breakfast" else None)
-            if key in values and meal["id"] not in excluded and factor is not None:
-                values[key].append(Decimal(factor))
-    return {key: sorted(items) for key, items in values.items()}
-
-
-def suggestion_factor(values: list[Decimal], percentile: Decimal) -> dict:
-    """The auto factor the dose help uses, with the meals it is based on."""
-    value = auto_factor(values, percentile)
+def suggestion_factor(prediction: dict, percentile: Decimal) -> dict:
+    """The auto factor the dose help uses, with the number of meals it is based on."""
+    value = prediction["units_per_ke"]
     return {
-        "auto_units_per_ke": str(value) if value is not None and value > 0 else None,
-        "count": len(values), "days": BREAKFAST_FACTOR_DAYS, "min_meals": AUTO_FACTOR_MIN_MEALS,
-        "percentile": str(percentile),
-        "median_units_per_ke": str(median(values)) if values else None,
-        "min_units_per_ke": str(values[0]) if values else None,
-        "max_units_per_ke": str(values[-1]) if values else None,
+        "auto_units_per_ke": str(value) if value is not None else None,
+        "count": prediction["count"], "days": BREAKFAST_FACTOR_DAYS, "min_meals": AUTO_FACTOR_MIN_MEALS,
+        "percentile": str(percentile), "method": prediction["method"],
     }
 
 
 def auto_factor(values: list[Decimal], percentile: Decimal) -> Decimal | None:
-    """Cautious factor: a percentile between Q1 and the median of recent meal factors.
+    """Cautious factor: a percentile between Q1 and the median of recent meal factors, equally weighted.
     A lower IE/KE means less insulin, so it sits below the median but inside the middle half."""
     if len(values) < AUTO_FACTOR_MIN_MEALS:
         return None
     return quartile(values, percentile / 100)
+
+
+def meal_points(today: date, days_back: int, overrides: dict[str, str], periods: list[dict],
+                loaded: dict[str, dict] | None = None) -> list[dict]:
+    """Valid, non-excluded meal factors from today back to days_back days, for the suggestion.
+    Breakfast is keyed by the day type of its day."""
+    excluded = storage.analysis_exclusions()
+    points = []
+    for offset in range(days_back + 1):
+        day = today - timedelta(days=offset)
+        text = day.isoformat()
+        payload = loaded[text] if loaded is not None and text in loaded else day_payload(text, refresh=False)
+        if loaded is not None:
+            loaded[text] = payload
+        day_type = storage.day_type_for(text, overrides, periods)[0]
+        for meal in payload.get("meals", []):
+            result = meal.get("calculation") or {}
+            factor = result.get("factor_units_per_ke")
+            if meal.get("meal") not in MEALS or meal["id"] in excluded or factor is None:
+                continue
+            at = (parse_instant(meal["at"]) if meal.get("at")
+                  else datetime.combine(day, time(hour=12), tzinfo=timezone.utc))
+            points.append({
+                "id": meal["id"], "day": day, "at": at,
+                "end": parse_instant(result["end"]) if result.get("end") else None,
+                "key": (meal["meal"], day_type if meal["meal"] == "breakfast" else None),
+                "value": Decimal(factor),
+            })
+    return points
+
+
+def forecast_settings(settings: dict) -> tuple[Decimal, str, Decimal]:
+    return (Decimal(str(settings["auto_percentile"])), settings["auto_method"],
+            Decimal(str(settings["auto_half_life_days"])))
 
 
 def vacation_state() -> dict:
@@ -850,13 +870,27 @@ class Handler(BaseHTTPRequestHandler):
                         "q1_units_per_ke": str(quartile(values, Decimal("0.25"))) if len(values) >= 5 else None,
                         "q3_units_per_ke": str(quartile(values, Decimal("0.75"))) if len(values) >= 5 else None,
                     }
-                percentile = Decimal(str(settings["auto_percentile"]))
-                recent = recent_meal_factor_values(today, day_types, vacations, loaded_days)
+                percentile, method, half_life = forecast_settings(settings)
+                points = meal_points(today, max(days - 1, 0) + forecast.LOOKBACK_DAYS + 2,
+                                     day_types, vacations, loaded_days)
+                now = datetime.now(timezone.utc)
+                predictions = {key: forecast.predict(points, key, now, today, percentile, method, half_life)
+                               for key in (("breakfast", "work"), ("breakfast", "free"),
+                                           ("lunch", None), ("dinner", None))}
                 for kind in ("work", "free"):
                     breakfast["by_day_type"][kind]["suggestion"] = suggestion_factor(
-                        recent[("breakfast", kind)], percentile)
+                        predictions[("breakfast", kind)], percentile)
                 for name in ("lunch", "dinner"):
-                    groups[name]["suggestion"] = suggestion_factor(recent[(name, None)], percentile)
+                    groups[name]["suggestion"] = suggestion_factor(predictions[(name, None)], percentile)
+                test = forecast.backtest(points, today - timedelta(days=days - 1), percentile, half_life)
+                suggestion_derivation = {
+                    "method": method, "percentile": str(percentile), "half_life_days": str(half_life),
+                    "days": forecast.LOOKBACK_DAYS, "min_meals": forecast.MIN_MEALS,
+                    "shift_cap": str(forecast.SHIFT_CAP), "hit_tolerance": str(forecast.HIT_TOLERANCE),
+                    "current": [{"meal": key[0], "day_type": key[1], **predictions[key]} for key in predictions],
+                    "shift": forecast.day_shift(points, now, half_life),
+                    "backtest": test,
+                }
                 for name, group in groups.items():
                     current = set()
                     if settings["ic_schedule"]:
@@ -868,6 +902,7 @@ class Handler(BaseHTTPRequestHandler):
                     group["nightscout_units_per_ke"] = [str(value) for value in sorted(current)]
                 self._response(200, {
                     "days": days, "groups": groups, "profile_sync_error": profile_sync_error,
+                    "suggestion_derivation": json_safe(suggestion_derivation),
                     "sport_analysis": sport_analysis.analyze(
                         sport_meals, sport_sessions, settings["sport_lookback_minutes"],
                         settings["window_minutes"], episodes.SPORT_LABELS),
@@ -966,17 +1001,22 @@ class Handler(BaseHTTPRequestHandler):
                           if is_breakfast else None)
                 use_factor = bool(factor and factor["count"] >= BREAKFAST_FACTOR_MIN_MEALS
                                   and factor["median_units_per_ke"] > 0)
-                auto_percentile = Decimal(str(current_settings["auto_percentile"]))
-                auto_value = auto_factor(meal_values, auto_percentile)
-                if auto_value is not None and auto_value <= 0:
-                    auto_value = None
+                auto_percentile, auto_method, half_life = forecast_settings(current_settings)
+                points = meal_points(local_now.date(), forecast.LOOKBACK_DAYS + 2, overrides, periods)
+                prediction = forecast.predict(points, (meal_kind, day_type if is_breakfast else None),
+                                              now, local_now.date(), auto_percentile, auto_method, half_life)
+                auto_value = prediction["units_per_ke"]
                 result = dosing.suggest(payload.get("carbs", 0), current_settings, entries, treatments, now,
                                         activity_change=payload.get("activity_change_mgdl", 0),
                                         units_per_ke=factor["median_units_per_ke"] if use_factor else None,
                                         auto_units_per_ke=auto_value)
                 result.update({
-                    "auto_meal": meal_kind, "auto_factor_count": len(meal_values),
+                    "auto_meal": meal_kind, "auto_factor_count": prediction["count"],
                     "auto_factor_min_meals": AUTO_FACTOR_MIN_MEALS, "auto_percentile": str(auto_percentile),
+                    "auto_method": auto_method,
+                    "auto_baseline_units_per_ke": (str(prediction["baseline_units_per_ke"])
+                                                   if prediction["baseline_units_per_ke"] is not None else None),
+                    "auto_shift_factor": str(prediction["shift"]["factor"]) if prediction["shift"] else None,
                     "auto_factor_days": BREAKFAST_FACTOR_DAYS,
                     "auto_median_units_per_ke": str(median(meal_values)) if meal_values else None,
                     "auto_q1_units_per_ke": (str(quartile(meal_values, Decimal("0.25")))

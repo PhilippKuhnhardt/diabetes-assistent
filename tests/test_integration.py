@@ -881,7 +881,9 @@ class IntegrationTests(unittest.TestCase):
         local_today = now.astimezone(zone).date()
         # Make every time of day count as dinner for this test.
         _, settings = storage.get_settings()
-        storage.save_settings({**settings, "breakfast_end_minute": 1, "lunch_end_minute": 2})
+        # The equally weighted method keeps the original percentile arithmetic visible.
+        storage.save_settings({**settings, "breakfast_end_minute": 1, "lunch_end_minute": 2,
+                               "auto_method": "flat"})
         current_day = {
             "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 100}],
             "treatments": [],
@@ -919,6 +921,7 @@ class IntegrationTests(unittest.TestCase):
         FakeNightscout.profile["store"]["Default"]["carbratio"] = [
             {"time": "00:00", "timeAsSeconds": 0, "value": 12.5}]
         self.request("/api/profile/sync", method="POST", body={})
+        self.request("/api/settings", method="POST", body={"auto_method": "flat"})
         local_today = datetime.now(timezone.utc).astimezone(ZoneInfo("Europe/Berlin")).date()
         past = [(local_today - timedelta(days=offset)).isoformat() for offset in range(1, 6)]
         factors = dict(zip(past, ["1.5", "0.8", "1.2", "1.0", "1.1"]))
@@ -939,6 +942,11 @@ class IntegrationTests(unittest.TestCase):
         self.assertIsNone(summary["groups"]["lunch"]["suggestion"]["auto_units_per_ke"])
         for kind in ("work", "free"):
             self.assertIn("suggestion", summary["groups"]["breakfast"]["by_day_type"][kind])
+        derivation = summary["suggestion_derivation"]
+        self.assertEqual(derivation["method"], "flat")
+        dinner_now = next(item for item in derivation["current"] if item["meal"] == "dinner")
+        self.assertEqual(Decimal(dinner_now["units_per_ke"]), Decimal("1.05"))
+        self.assertEqual(set(derivation["backtest"]["stats"]), {"flat", "weighted", "weighted_shift"})
 
     def test_summary_shows_median_middle_half_and_full_range(self):
         factors = ["1", "1.1", "1.2", "1.3", "5"]
