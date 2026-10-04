@@ -49,13 +49,26 @@ async function api(path, options = {}) {
 }
 
 let toastTimeout;
-function toast(message, error = false) {
+// An optional action (e.g. "Rückgängig") adds a button and keeps the toast visible longer.
+function toast(message, error = false, action = null) {
   const node = $("#toast");
   node.textContent = message;
+  if (action) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "toast-action";
+    button.textContent = action.label;
+    button.addEventListener("click", () => {
+      node.classList.remove("visible", "has-action");
+      action.run();
+    }, { once: true });
+    node.append(" ", button);
+  }
   node.classList.toggle("error", error);
+  node.classList.toggle("has-action", Boolean(action));
   node.classList.add("visible");
   clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => node.classList.remove("visible"), 4500);
+  toastTimeout = setTimeout(() => node.classList.remove("visible", "has-action"), action ? 12000 : 4500);
 }
 
 const glucoseStatuses = new Set(["in_range", "outside", "low", "high", "stale", "no_target", "unavailable"]);
@@ -1336,7 +1349,7 @@ function doseUnits(data, variant) {
   return data && doseVariants[variant] ? doseVariants[variant](data) : null;
 }
 
-// A tapped suggestion fills the insulin field and follows later recalculations until the field is edited.
+// A chosen suggestion fills the insulin field and follows later recalculations until the field is edited.
 function applyDoseChoice() {
   const form = $("#entry-form");
   const units = doseUnits(doseHelp, state.doseChoice);
@@ -1347,18 +1360,17 @@ function applyDoseChoice() {
   updateEntrySubmitLabel();
 }
 
+// A tapped suggestion saves carbs and that dose directly in Nightscout; the toast offers undo.
 function selectDoseSuggestion(event) {
   const button = event.target.closest(".apply-dose");
-  if (!button || !doseHelp) return;
+  if (!button || button.disabled || !doseHelp) return;
   const form = $("#entry-form");
-  if (state.doseChoice === button.dataset.variant) {
-    if (Number(form.elements.insulin.value) === Number(doseUnits(doseHelp, state.doseChoice))) form.elements.insulin.value = "";
-    state.doseChoice = null;
-  } else {
-    state.doseChoice = button.dataset.variant;
-  }
+  if ($("#entry-submit").disabled) return;
+  state.doseChoice = button.dataset.variant;
   form.elements.carbs.setCustomValidity("");
   applyDoseChoice();
+  if (form.elements.insulin.value === "") return;
+  form.requestSubmit($("#entry-submit"));
 }
 
 const doseKeys = ["carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl",
@@ -1375,6 +1387,7 @@ function doseHelpHTML(data) {
   const withCarbs = Number(data.carbs_g) > 0;
   const option = (label, variant, units, expected) => units == null ? "" :
     '<button type="button" class="dose-option apply-dose" data-variant="' + variant + '" aria-pressed="false"' +
+    ' title="' + escapeHTML(label + ": " + num(units, 2) + " IE direkt in Nightscout speichern") + '"' +
     (Number(units) > 100 ? ' disabled' : '') + '><span class="dose-label">' + escapeHTML(label) + '</span><strong>' +
     escapeHTML(num(units, 2)) + ' <small>IE</small></strong><span class="dose-expected">→ ' + escapeHTML(num(expected, 0)) + ' mg/dL</span></button>';
   const autoMissing = withCarbs && data.entry_units != null && data.auto_entry_units == null && data.auto_factor_min_meals
@@ -1384,7 +1397,7 @@ function doseHelpHTML(data) {
     option("Vorsichtig", "cautious", data.cautious_entry_units, data.cautious_expected_glucose_mgdl) +
     (withCarbs ? option("Automatik", "auto", data.auto_entry_units, data.auto_expected_glucose_mgdl) || autoMissing : "");
   return '<div class="dose-head"><span class="dose-heading">' + (withCarbs ? "Empfehlung" : "Korrektur ohne Essen") +
-    '</span></div>' +
+    '</span>' + (options.includes("apply-dose") ? '<span class="dose-hint">Antippen speichert direkt</span>' : '') + '</div>' +
     factorLine(data) +
     (options ? '<div class="dose-options">' + options + '</div>' : '') +
     (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport <strong>' +
@@ -1604,12 +1617,39 @@ async function saveEntry(event) {
       }) });
       await loadDay();
     }
+    const saved = state.dayData?.treatments.find(item => item.notes.includes("[DAE:" + payload.event_id + "]"));
+    const restore = { day: result.day, time: form.elements.at.value, carbs: form.elements.carbs.value,
+      insulin: form.elements.insulin.value, notes: form.elements.notes.value };
     resetEntryForm();
-    toast("Eintrag in Nightscout gespeichert" + (considerSport ? " · Sport berücksichtigt" : ""));
+    const message = (kind === "exercise" ? "Sport" : [carbs > 0 ? num(carbs, 0) + " g" : "", insulin > 0 ? num(insulin, 2) + " IE" : ""]
+      .filter(Boolean).join(" + ")) + " in Nightscout gespeichert" + (considerSport ? " · Sport berücksichtigt" : "");
+    toast(message, false, saved ? { label: "Rückgängig", run: () => undoEntry(saved.id, restore) } : null);
   } catch (error) {
     toast(error.message, true);
   } finally {
     button.disabled = false;
+  }
+}
+
+// Undo deletes the just-saved Nightscout entry and puts its values back into the form for correction.
+async function undoEntry(id, restore) {
+  try {
+    await api("/api/treatment/delete", { method: "POST", body: JSON.stringify({ id, day: restore.day }) });
+    if (state.day === restore.day) await loadDay();
+    const form = $("#entry-form");
+    if (state.day === restore.day && form.elements.kind.value === "meal" &&
+        !form.elements.carbs.value && !form.elements.insulin.value) {
+      form.elements.at.value = restore.time;
+      state.entryTimeTouched = true;
+      form.elements.carbs.value = restore.carbs;
+      form.elements.insulin.value = restore.insulin;
+      form.elements.notes.value = restore.notes;
+      updateEntryFields();
+      await updateDoseHelp();
+    }
+    toast("Eintrag aus Nightscout entfernt");
+  } catch (error) {
+    toast(error.message, true);
   }
 }
 
