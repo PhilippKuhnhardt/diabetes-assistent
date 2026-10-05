@@ -29,6 +29,8 @@ GLUCOSE_HIGH = Decimal(160)
 # Work-stress surcharge: last 30 days, each free-day meal against the two nearest work-day meals
 # before and the two after it, searched at most 7 days away.
 RATIO_DAYS = 30
+# The backtest matrix always replays the last 90 days, whatever period the analysis page shows.
+BACKTEST_DAYS = 90
 RATIO_NEIGHBOURS = 2
 RATIO_REFERENCE_DAYS = 7
 
@@ -73,7 +75,10 @@ def weight(age: int, half_life: Decimal) -> Decimal:
 def predict(points: list[dict], key: tuple, day: date, percentile: Decimal,
             half_life: Decimal, lookback: int) -> dict:
     """Weighted percentile of the meal key's factors before day; None below MIN_MEALS meals."""
-    values = history(points, key, day, lookback)
+    return predict_from(history(points, key, day, lookback), percentile, half_life)
+
+
+def predict_from(values: list[tuple[Decimal, int]], percentile: Decimal, half_life: Decimal) -> dict:
     value = (weighted_quantile([(factor, weight(age, half_life)) for factor, age in values], percentile / 100)
              if len(values) >= MIN_MEALS else None)
     return {"count": len(values), "units_per_ke": value if value is not None and value > 0 else None}
@@ -126,10 +131,16 @@ def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal,
     """Simulate each (lookback, half-life, percentile) variant on the meals since `since`.
     Only meals every variant can predict count, so all cells compare the same meals."""
     rows = []
+    by_key: dict[tuple, list[dict]] = {}
+    for point in points:
+        by_key.setdefault(point["key"], []).append(point)
+    longest = max((lookback for lookback, _, _ in variants), default=0)
     for target in sorted(points, key=lambda point: point["at"]):
         if target["day"] < since or target["value"] <= 0:
             continue
-        predictions = [predict(points, target["key"], target["day"], percentile, half_life, lookback)["units_per_ke"]
+        # The history for the longest lookback once per meal; each variant takes its own slice.
+        known = history(by_key[target["key"]], target["key"], target["day"], longest)
+        predictions = [predict_from([item for item in known if item[1] <= lookback], percentile, half_life)["units_per_ke"]
                        for lookback, half_life, percentile in variants]
         if None in predictions:
             continue

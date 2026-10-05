@@ -872,7 +872,7 @@ class Handler(BaseHTTPRequestHandler):
                     }
                 configured = forecast_settings(settings)
                 percentile, half_life, lookback = configured
-                points = meal_points(today, max(max(days - 1, 0) + forecast.MAX_LOOKBACK + 1,
+                points = meal_points(today, max(max(days - 1, forecast.BACKTEST_DAYS - 1) + forecast.MAX_LOOKBACK + 1,
                                                  forecast.RATIO_DAYS + forecast.RATIO_REFERENCE_DAYS),
                                      day_types, vacations, loaded_days)
                 predictions = {key: forecast.predict(points, key, today, percentile, half_life, lookback)
@@ -884,17 +884,18 @@ class Handler(BaseHTTPRequestHandler):
                 for name in ("lunch", "dinner"):
                     groups[name]["suggestion"] = suggestion_factor(predictions[(name, None)], configured)
                 # Backtest matrix: every lookback × half-life (plus the configured ones), each at 25 %,
-                # the configured percentile and 50 %, all evaluated on the same meals.
+                # the configured percentile and 50 %, all evaluated on the same meals of the last 90 days.
                 percentiles = sorted({Decimal(25), percentile, Decimal(50)})
                 rows = [(days_back, strength) for days_back in sorted({*forecast.LOOKBACKS, lookback})
                         for strength in sorted({*forecast.HALF_LIVES, half_life})]
-                test = forecast.backtest(points, today - timedelta(days=days - 1),
+                test = forecast.backtest(points, today - timedelta(days=forecast.BACKTEST_DAYS - 1),
                                          [(days_back, strength, value) for days_back, strength in rows
                                           for value in percentiles])
                 cells = iter(test["stats"])
                 suggestion_derivation = {
                     "percentile": str(percentile), "half_life_days": str(half_life), "lookback_days": lookback,
                     "min_meals": forecast.MIN_MEALS, "meal_count": len(test["rows"]),
+                    "backtest_days": forecast.BACKTEST_DAYS,
                     "variants": [{"lookback_days": days_back, "half_life_days": strength,
                                   "cells": [{"percentile": value, "stats": next(cells)} for value in percentiles]}
                                  for days_back, strength in rows],
