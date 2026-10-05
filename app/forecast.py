@@ -89,13 +89,13 @@ def median(values: list[Decimal]) -> Decimal | None:
 
 def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
                     reference_days: int = RATIO_REFERENCE_DAYS, neighbours: int = RATIO_NEIGHBOURS) -> dict:
-    """Stress surcharge of work days over free days, per meal kind, over the last `days` days.
+    """Stress surcharge of work days over free days at breakfast, over the last `days` days.
     Free days are the base: work = free × (1 + surcharge). Overall: median work factor / median free
     factor − 1. Per free-day meal: the median of the same meal kind on the `neighbours` nearest work
     days before and after it (at most `reference_days` away; needs two) divided by its factor − 1, so a
     stable surcharge shows up as tightly grouped single values. For information only."""
     result = {}
-    for kind in ("breakfast", "lunch", "dinner"):
+    for kind in ("breakfast",):
         recent = [point for point in points if point["key"][0] == kind and 0 <= (today - point["day"]).days < days]
         work = sorted(point["value"] for point in recent if point["day_type"] == "work")
         free = sorted(point["value"] for point in recent if point["day_type"] == "free")
