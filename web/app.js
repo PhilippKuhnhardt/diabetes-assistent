@@ -1875,7 +1875,9 @@ function renderSuggestionDerivation(d) {
       cell.stats.median_abs_deviation == null ? '' : '±' + num(Number(cell.stats.median_abs_deviation) * 100, 0) + ' %'];
     return '<td class="matrix-cell' + (active ? ' is-active' : '') + (isBest ? ' is-best' : '') + '">' + bar +
       '<span class="range-nums"><span class="range-low">' + num(below, 0) + '</span> · <b class="range-ok">' + num(inRange, 0) +
-      ' %</b> · <span class="range-high">' + num(above, 0) + '</span></span><small>' +
+      ' %</b> · <span class="range-high">' + num(above, 0) + '</span></span>' +
+      (cell.stats.mean_glucose == null ? '' : '<span class="range-glucose">Ø ' + num(cell.stats.mean_glucose, 0) +
+        ' · Median ' + num(cell.stats.median_glucose, 0) + ' mg/dL</span>') + '<small>' +
       escapeHTML(notes.filter(Boolean).join(' · ')) + '</small></td>';
   };
   const rows = variants.map((variant, index) => {
@@ -1885,7 +1887,7 @@ function renderSuggestionDerivation(d) {
   });
   const legend = '<p class="hint derivation-note range-legend"><span class="range-low">■ &lt; ' + num(low, 0) + '</span> ' +
     '<span class="range-ok">■ ' + num(low, 0) + '–' + num(high, 0) + '</span> <span class="range-high">■ &gt; ' + num(high, 0) +
-    '</span> · Anteil der Mahlzeiten mit BZ am Endpunkt in diesem Bereich, dazu typische Abweichung des Faktors.</p>';
+    '</span> · Anteil der Mahlzeiten mit BZ am Endpunkt in diesem Bereich, darunter Durchschnitt und Median dieses BZ, dazu typische Abweichung des Faktors.</p>';
   output.innerHTML = total
     ? legend + '<div class="table-wrap"><table class="analysis-table compact matrix"><thead><tr><th>Zeitraum</th><th>Halbwertszeit</th>' +
       percentiles.map(value => '<th>' + escapeHTML(num(value, 1)) + ' %' + (Number(value) === 50 ? ' <small>Median</small>' : '') + '</th>').join("") +
