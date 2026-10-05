@@ -1919,8 +1919,9 @@ function renderDayTypeRatio(d) {
   output.innerHTML = '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Mahlzeit</th>' +
     '<th>Arbeit <small>Median IE/KE</small></th><th>Frei <small>Median IE/KE</small></th><th>Frei ÷ Arbeit</th>' +
     '<th>Je freiem Tag</th></tr></thead><tbody>' + rows.join("") + '</tbody></table></div>' +
-    '<p class="hint derivation-note">„Je freiem Tag“ teilt jeden Faktor eines freien Tages durch den Median der Arbeitstage ' +
-    'derselben Mahlzeit in den ' + d.reference_days + ' Tagen davor (mind. 2). Liegen diese Einzelwerte eng beieinander, ' +
+    '<p class="hint derivation-note">„Je freiem Tag“ teilt jeden Faktor eines freien Tages durch den Median derselben Mahlzeit an den ' +
+    d.neighbours + ' Arbeitstagen davor und den ' + d.neighbours + ' danach (höchstens ' + d.reference_days +
+    ' Tage entfernt, mind. 2 Werte). Liegen diese Einzelwerte eng beieinander, ' +
     'ist frei ein stabiles Vielfaches von Arbeit. Nur zur Info, der Vorschlag bleibt unverändert.</p>';
 }
 

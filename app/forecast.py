@@ -26,8 +26,10 @@ HALF_LIVES = (Decimal(1), Decimal(2), Decimal(3), Decimal(5), Decimal(7), Decima
 # Nightscout target range (80–180), which also covers the post-meal rise.
 GLUCOSE_LOW = Decimal(80)
 GLUCOSE_HIGH = Decimal(160)
-# Free-day vs. work-day comparison: last 30 days, each free-day meal against the 7 days before it.
+# Free-day vs. work-day comparison: last 30 days, each free-day meal against the two nearest work-day
+# meals before and the two after it, searched at most 7 days away.
 RATIO_DAYS = 30
+RATIO_NEIGHBOURS = 2
 RATIO_REFERENCE_DAYS = 7
 
 
@@ -86,11 +88,12 @@ def median(values: list[Decimal]) -> Decimal | None:
 
 
 def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
-                    reference_days: int = RATIO_REFERENCE_DAYS) -> dict:
+                    reference_days: int = RATIO_REFERENCE_DAYS, neighbours: int = RATIO_NEIGHBOURS) -> dict:
     """How the factor on free days relates to work days, per meal kind, over the last `days` days.
     Overall: median free factor / median work factor. Per free-day meal: its factor divided by the
-    median work-day factor of the same meal kind in the `reference_days` days before it (needs two),
-    so a stable ratio shows up as tightly grouped single ratios. For information only."""
+    median of the same meal kind on the `neighbours` nearest work days before and after it (at most
+    `reference_days` away; needs two), so a stable ratio shows up as tightly grouped single ratios.
+    For information only."""
     result = {}
     for kind in ("breakfast", "lunch", "dinner"):
         recent = [point for point in points if point["key"][0] == kind and 0 <= (today - point["day"]).days < days]
@@ -100,11 +103,14 @@ def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
         for point in sorted(recent, key=lambda item: item["at"]):
             if point["day_type"] != "free":
                 continue
-            before = sorted(item["value"] for item in points
-                            if item["key"][0] == kind and item["day_type"] == "work"
-                            and 1 <= (point["day"] - item["day"]).days <= reference_days)
-            if len(before) >= 2:
-                singles.append({"day": point["day"].isoformat(), "ratio": point["value"] / median(before)})
+            work_days = sorted((item for item in points if item["key"][0] == kind and item["day_type"] == "work"),
+                               key=lambda item: item["at"])
+            before = [item for item in work_days if 1 <= (point["day"] - item["day"]).days <= reference_days]
+            after = [item for item in work_days if 1 <= (item["day"] - point["day"]).days <= reference_days]
+            reference = sorted(item["value"] for item in before[-neighbours:] + after[:neighbours])
+            if len(reference) >= 2:
+                singles.append({"day": point["day"].isoformat(), "ratio": point["value"] / median(reference),
+                                "before": len(before[-neighbours:]), "after": len(after[:neighbours])})
         ratios = sorted(item["ratio"] for item in singles)
         result[kind] = {
             "work_count": len(work), "work_median": median(work),
@@ -113,7 +119,7 @@ def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
             "singles": singles, "single_median": median(ratios),
             "single_min": ratios[0] if ratios else None, "single_max": ratios[-1] if ratios else None,
         }
-    return {"days": days, "reference_days": reference_days, "meals": result}
+    return {"days": days, "reference_days": reference_days, "neighbours": neighbours, "meals": result}
 
 
 def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal, Decimal]]) -> dict:

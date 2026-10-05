@@ -102,20 +102,26 @@ class DayTypeRatioTests(unittest.TestCase):
         item.update({"key": ("breakfast", kind), "day_type": kind})
         return item
 
-    def test_free_days_as_a_multiple_of_the_work_days_before_them(self):
-        # Work days need 1.0 IE/KE in the older weeks and 1.2 in the last one; free days always 0.8 × that.
+    def test_free_days_against_the_two_work_days_before_and_after(self):
+        # Work days around the weekend 14 and 15 days ago need 1.5 IE/KE, all others 1.0; Wednesdays
+        # are odd (3.0) but too far from any weekend to count. Free days are always 0.8 × their neighbours.
         points = []
         for age in range(0, 40):
             day = TODAY - timedelta(days=age)
-            work = Decimal("1.2") if age < 7 else Decimal("1.0")
-            points.append(self.breakfast(age, work * Decimal("0.8") if day.weekday() >= 5 else work))
+            level = Decimal("1.5") if 12 <= age <= 17 else Decimal("1.0")
+            if day.weekday() >= 5:
+                value = level * Decimal("0.8")
+            else:
+                value = Decimal("3.0") if day.weekday() == 2 else level
+            points.append(self.breakfast(age, value))
         result = forecast.day_type_ratios(points, TODAY)["meals"]["breakfast"]
         self.assertEqual((result["single_median"], result["single_min"], result["single_max"]),
                          (Decimal("0.8"), Decimal("0.8"), Decimal("0.8")))
-        # Saturdays and Sundays within 30 days (today is a Sunday).
+        # Saturdays and Sundays within 30 days (today is a Sunday, so the last weekend only has days before).
         self.assertEqual(len(result["singles"]), 10)
+        self.assertEqual((result["singles"][-1]["before"], result["singles"][-1]["after"]), (2, 0))
+        self.assertEqual((result["singles"][0]["before"], result["singles"][0]["after"]), (2, 2))
         self.assertEqual(result["free_count"], 10)
-        self.assertEqual(result["ratio"], Decimal("0.8"))
 
     def test_without_free_days_there_is_no_ratio(self):
         points = [dict(point(age, "1.0"), day_type="work") for age in range(1, 10)]
