@@ -108,6 +108,28 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual(result["stats"]["flat"]["too_little"], 4)
         self.assertEqual(result["stats"]["flat"]["too_much"], 0)
 
+    def test_counts_where_the_endpoint_glucose_would_have_landed(self):
+        points = [point(age, "1.0") for age in range(2, 20)]
+        target = point(1, "1.0")
+        # 40 g at KF 50: Σ[g × KF] = 2000, so 0.1 IE/KE more lowers the endpoint by 20 mg/dL.
+        target.update({"end_glucose": Decimal(150), "carbs_isf": Decimal(2000)})
+        for item, value in zip(points[:4], ("1.2", "1.3", "1.4", "1.5")):
+            item["value"] = Decimal(value)
+        result = forecast.backtest(points + [target], TODAY - timedelta(days=1), Decimal("100"), Decimal(7))
+        row = result["rows"][0]
+        prediction = row["predictions"]["flat"]
+        self.assertEqual(prediction, Decimal("1.5"))
+        # 0.5 IE/KE too much: 150 − 0.5 × 2000 / 10 = 50 mg/dL, below the range.
+        self.assertEqual(row["glucose"]["flat"], Decimal(50))
+        stats = result["stats"]["flat"]
+        self.assertEqual((stats["below"], stats["in_range"], stats["above"], stats["glucose_count"]), (1, 0, 0, 1))
+
+    def test_rows_without_endpoint_glucose_are_left_out_of_the_ranges(self):
+        points = [point(age, "1.0") for age in range(1, 20)]
+        stats = forecast.backtest(points, TODAY - timedelta(days=2), Decimal("50"), Decimal(7))["stats"]["flat"]
+        self.assertEqual(stats["count"], 2)
+        self.assertEqual(stats["glucose_count"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
