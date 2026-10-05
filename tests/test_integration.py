@@ -962,6 +962,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(list(ratio["meals"]), ["breakfast"])
         derivation = summary["suggestion_derivation"]
         self.assertEqual((derivation["lookback_days"], Decimal(derivation["half_life_days"])), (30, Decimal(28)))
+        self.assertEqual(derivation["backtest_days"], 90)
         variants = derivation["variants"]
         self.assertEqual([(item["lookback_days"], Decimal(item["half_life_days"])) for item in variants],
                          [(days, Decimal(half)) for days in (8, 15, 30) for half in (1, 2, 3, 5, 7, 14, 28)])
