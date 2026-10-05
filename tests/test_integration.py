@@ -950,6 +950,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual([Decimal(item["percentile"]) for item in derivation["percentile_comparison"]],
                          [Decimal(25), Decimal("37.5"), Decimal(50)])
         self.assertEqual(derivation["percentile_comparison"][1]["stats"], derivation["backtest"]["stats"])
+        self.assertEqual((derivation["glucose_low_mgdl"], derivation["glucose_high_mgdl"]), ("80", "160"))
 
     def test_summary_shows_median_middle_half_and_full_range(self):
         factors = ["1", "1.1", "1.2", "1.3", "5"]

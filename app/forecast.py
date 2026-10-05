@@ -10,7 +10,9 @@ Three methods can be compared:
   median; it then uses the smallest of the three deviations, capped at ±15 %.
 
 The backtest recomputes, for every past meal, what each method would have suggested from the
-meals before it, so the methods can be compared against the factor that was actually calculated.
+meals before it, so the methods can be compared against the factor that was actually calculated,
+and estimates where the endpoint glucose would have landed with that factor (below, inside or
+above 80–160 mg/dL).
 These are model choices for experimentation, not dosing advice.
 """
 from __future__ import annotations
@@ -26,6 +28,10 @@ SHIFT_HOURS = 48
 SHIFT_CAP = Decimal("0.15")
 HIT_TOLERANCE = Decimal("0.10")
 HALF = Decimal("0.5")
+# Range for the endpoint glucose three hours after a meal; deliberately tighter than the
+# Nightscout target range (80–180), which also covers the post-meal rise.
+GLUCOSE_LOW = Decimal(80)
+GLUCOSE_HIGH = Decimal(160)
 
 
 def weighted_quantile(pairs: list[tuple[Decimal, Decimal]], fraction: Decimal) -> Decimal:
@@ -126,9 +132,15 @@ def backtest(points: list[dict], since: date, percentile: Decimal, half_life: De
                        for method in METHODS}
         if any(value is None for value in predictions.values()):
             continue
-        rows.append({"id": target["id"], "at": target["at"], "meal": target["key"][0],
-                     "day_type": target["key"][1], "units_per_ke": target["value"],
-                     "predictions": predictions})
+        row = {"id": target["id"], "at": target["at"], "meal": target["key"][0],
+               "day_type": target["key"][1], "units_per_ke": target["value"],
+               "predictions": predictions, "end_glucose": target.get("end_glucose"), "glucose": None}
+        if target.get("end_glucose") is not None and target.get("carbs_isf"):
+            # Under the meal model, (P − F) IE/KE more for Σ[g × KF] / 10 shifts the endpoint
+            # by −(P − F) × Σ[g × KF] / 10 mg/dL; all other doses stay as they were.
+            row["glucose"] = {method: target["end_glucose"] - (value - target["value"]) * target["carbs_isf"] / 10
+                              for method, value in predictions.items()}
+        rows.append(row)
     stats = {}
     for method in METHODS:
         deviations = sorted((row["predictions"][method] - row["units_per_ke"]) / row["units_per_ke"]
@@ -139,6 +151,13 @@ def backtest(points: list[dict], since: date, percentile: Decimal, half_life: De
             "hits": sum(abs(value) <= HIT_TOLERANCE for value in deviations),
             "too_much": sum(value > HIT_TOLERANCE for value in deviations),
             "too_little": sum(value < -HIT_TOLERANCE for value in deviations),
+            "glucose_count": sum(row["glucose"] is not None for row in rows),
+            "below": sum(row["glucose"] is not None and row["glucose"][method] < GLUCOSE_LOW
+                         for row in rows),
+            "in_range": sum(row["glucose"] is not None
+                            and GLUCOSE_LOW <= row["glucose"][method] <= GLUCOSE_HIGH for row in rows),
+            "above": sum(row["glucose"] is not None and row["glucose"][method] > GLUCOSE_HIGH
+                         for row in rows),
             "median_abs_deviation": (absolute[len(absolute) // 2] if len(absolute) % 2 else
                                      (absolute[len(absolute) // 2 - 1] + absolute[len(absolute) // 2]) / 2)
                                     if absolute else None,

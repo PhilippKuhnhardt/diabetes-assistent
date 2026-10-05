@@ -1848,7 +1848,8 @@ function renderSportAnalysis(analysis) {
 
 const suggestionMethods = { flat: "28 Tage gleich", weighted: "Gewichtet", weighted_shift: "Gewichtet + Tageslage" };
 
-// Derivation of the Automatik factor: weighted baseline, day shift and the backtest of all methods.
+// Backtest matrix: where the endpoint glucose would have landed with each method and percentile,
+// plus the current day shift.
 function renderSuggestionDerivation(d) {
   const output = $("#suggestion-derivation");
   if (!d) { output.innerHTML = ""; return; }
@@ -1857,74 +1858,45 @@ function renderSuggestionDerivation(d) {
   const dateTime = value => new Date(value).toLocaleString("de-DE", {
     weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
   const label = item => names[item.meal] + (item.day_type ? (item.day_type === "work" ? " Arbeit" : " frei") : "");
-  const shiftOn = d.method === "weighted_shift";
-  $("#suggestion-method").textContent = suggestionMethods[d.method] + " · Halbwertszeit " + num(d.half_life_days, 1) +
-    " T. · Perzentil " + num(d.percentile, 1) + " %";
-  const shiftText = item => !shiftOn ? "aus" : item.shift.applied ? pct(Number(item.shift.factor) - 1) : "keine";
-  const current = '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Mahlzeit</th><th>Grundwert</th>' +
-    '<th>Tageslage</th><th>Vorschlag</th><th>Basis</th></tr></thead><tbody>' +
-    d.current.map(item => '<tr><td>' + escapeHTML(label(item)) + '</td><td>' + ie(item.baseline_units_per_ke) + '</td><td>' +
-      escapeHTML(shiftText(item)) + '</td><td><b>' + ie(item.units_per_ke) + '</b></td><td><small>' +
-      escapeHTML(item.count + " in " + d.days + " T." + (item.count < d.min_meals ? ", mind. " + d.min_meals : "")) +
-      '</small></td></tr>').join("") + '</tbody></table></div>';
+  $("#suggestion-method").textContent = suggestionMethods[d.method] + " · " + num(d.percentile, 1) + " % · Halbwertszeit " +
+    num(d.half_life_days, 1) + " T.";
+  const low = Number(d.glucose_low_mgdl), high = Number(d.glucose_high_mgdl);
+  const heads = ["< " + num(low, 0), num(low, 0) + "–" + num(high, 0), "> " + num(high, 0)];
+  const columns = d.percentile_comparison || [];
+  const total = columns.length ? columns[0].stats[d.method].glucose_count : 0;
+  const share = (value, count) => '<b>' + (count ? num(value / count * 100, 0) : 0) + ' %</b> <small>' + value + '</small>';
+  const rows = ["flat", "weighted", "weighted_shift"].flatMap(method => columns.map((column, index) => {
+    const row = column.stats[method];
+    const active = method === d.method && Number(column.percentile) === Number(d.percentile);
+    return '<tr' + (index === 0 ? ' class="matrix-group"' : '') + '><td>' + (index === 0 ? escapeHTML(suggestionMethods[method]) : '') +
+      '</td><td>' + escapeHTML(num(column.percentile, 1)) + ' %' + (active ? '<span class="derivation-active">aktiv</span>' : '') +
+      '</td><td>' + share(row.below, row.glucose_count) + '</td><td>' + share(row.in_range, row.glucose_count) +
+      '</td><td>' + share(row.above, row.glucose_count) + '</td><td>' +
+      (row.median_abs_deviation == null ? '—' : '±' + escapeHTML(num(Number(row.median_abs_deviation) * 100, 0)) + ' %') +
+      '</td></tr>';
+  }));
+  const matrix = total
+    ? '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Methode</th><th>Perzentil</th>' +
+      heads.map(head => '<th>' + escapeHTML(head) + '</th>').join("") + '<th>Typisch daneben</th></tr></thead><tbody>' +
+      rows.join("") + '</tbody></table></div>' +
+      '<p class="hint derivation-note">Rückblick über ' + total + (total === 1 ? ' Mahlzeit' : ' Mahlzeiten') +
+      ': BZ am Endpunkt, wenn mit dem Faktor der Methode gespritzt worden wäre (Modellrechnung, übrige Dosen unverändert)' +
+'.</p>'
+    : '<p class="hint derivation-note">Im Zeitraum fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
+      d.min_meals + ' Faktoren derselben Mahlzeit aus den 28 Tagen davor).</p>';
   const shift = d.shift;
   const reasons = {
-    higher: "Alle drei lagen höher als üblich: Vorschläge " + pct(Number(shift.factor) - 1) + ".",
-    lower: "Alle drei lagen niedriger als üblich: Vorschläge " + pct(Number(shift.factor) - 1) + ".",
-    mixed: "Uneinheitlich: keine Anpassung.",
-    too_few: "Zu wenige abgeschlossene Mahlzeiten in den letzten 48 h: keine Anpassung.",
+    higher: "alle drei höher als üblich, Vorschläge " + pct(Number(shift.factor) - 1),
+    lower: "alle drei niedriger als üblich, Vorschläge " + pct(Number(shift.factor) - 1),
+    mixed: "uneinheitlich, keine Anpassung",
+    too_few: "zu wenige abgeschlossene Mahlzeiten in 48 h, keine Anpassung",
   };
-  const shiftMeals = '<p class="hint derivation-note"><b>Tageslage</b> aus den letzten drei abgeschlossenen Mahlzeiten (48 h), ' +
-    'verglichen mit ihrem gewichteten Median, begrenzt auf ±' + num(Number(d.shift_cap) * 100, 0) + ' %. ' +
-    escapeHTML(reasons[shift.reason] || "") + (shiftOn ? "" : " (Methode ohne Tageslage)") + '</p>' +
+  const shiftBlock = '<p class="hint derivation-note"><b>Tageslage</b>: ' + escapeHTML(reasons[shift.reason] || "") +
+    (d.method === "weighted_shift" ? '' : ' (aktive Methode ohne Tageslage)') + '.</p>' +
     (shift.meals.length ? '<ul class="hint">' + shift.meals.map(meal => '<li>' + escapeHTML(label(meal) + " " + dateTime(meal.at)) +
       ': ' + ie(meal.units_per_ke) + ' statt ' + ie(meal.reference_units_per_ke) + ' IE/KE' +
       (meal.ratio != null ? ' (' + escapeHTML(pct(Number(meal.ratio) - 1)) + ')' : '') + '</li>').join("") + '</ul>' : '');
-  const test = d.backtest;
-  const methods = ["flat", "weighted", "weighted_shift"];
-  const tolerance = num(Number(d.hit_tolerance) * 100, 0);
-  // Same backtest at other percentiles: hits, too much insulin and typical deviation per method.
-  const percentileTable = () => {
-    const columns = d.percentile_comparison || [];
-    if (columns.length < 2) return '';
-    return '<p class="hint derivation-note"><b>Perzentile im Vergleich</b>: Treffer / Mahlzeiten, darunter zu viel Insulin ' +
-      'und typische Abweichung. Höheres Perzentil = mehr Insulin.</p>' +
-      '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Methode</th>' +
-      columns.map(column => '<th>' + escapeHTML(num(column.percentile, 1)) + ' %' +
-        (Number(column.percentile) === Number(d.percentile) ? '<span class="derivation-active">aktiv</span>' : '') +
-        (Number(column.percentile) === 50 ? ' <small>Median</small>' : '') + '</th>').join("") +
-      '</tr></thead><tbody>' + methods.map(method => '<tr><td>' + escapeHTML(suggestionMethods[method]) + '</td>' +
-        columns.map(column => {
-          const row = column.stats[method];
-          return '<td><b>' + row.hits + '</b> / ' + row.count + '<br><small>zu viel ' + row.too_much +
-            (row.median_abs_deviation == null ? '' : ' · ±' + escapeHTML(num(Number(row.median_abs_deviation) * 100, 0)) + ' %') +
-            '</small></td>';
-        }).join("") + '</tr>').join("") + '</tbody></table></div>';
-  };
-  const stats = test.rows.length
-    ? '<p class="hint derivation-note"><b>Rückblick-Test</b>: Was hätte jede Methode vor der Mahlzeit vorgeschlagen, ' +
-      'verglichen mit dem später berechneten Faktor. Treffer = höchstens ±' + tolerance + ' %.</p>' +
-      '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Methode</th><th>Treffer</th>' +
-      '<th>Zu viel Insulin</th><th>Zu wenig</th><th>Typisch daneben</th></tr></thead><tbody>' +
-      methods.map(method => {
-        const row = test.stats[method];
-        return '<tr><td>' + escapeHTML(suggestionMethods[method]) +
-          (method === d.method ? '<span class="derivation-active">aktiv</span>' : '') + '</td><td><b>' +
-          row.hits + '</b> / ' + row.count + '</td><td>' + row.too_much + '</td><td>' + row.too_little + '</td><td>' +
-          (row.median_abs_deviation == null ? '—' : '±' + escapeHTML(num(Number(row.median_abs_deviation) * 100, 0)) + ' %') +
-          '</td></tr>';
-      }).join("") + '</tbody></table></div>' + percentileTable() +
-      '<details class="summary-details"><summary>Einzelne Mahlzeiten</summary><div class="table-wrap">' +
-      '<table class="analysis-table compact"><thead><tr><th>Mahlzeit</th><th>Berechnet</th>' +
-      methods.map(method => '<th>' + escapeHTML(suggestionMethods[method]) + '</th>').join("") + '</tr></thead><tbody>' +
-      test.rows.slice().reverse().map(row => '<tr><td>' + escapeHTML(label(row)) + '<br><small>' + escapeHTML(dateTime(row.at)) +
-        '</small></td><td><b>' + ie(row.units_per_ke) + '</b></td>' + methods.map(method => {
-          const value = row.predictions[method];
-          return '<td>' + ie(value) + ' <small>' + escapeHTML(pct(Number(value) / Number(row.units_per_ke) - 1)) + '</small></td>';
-        }).join("") + '</tr>').join("") + '</tbody></table></div></details>'
-    : '<p class="hint derivation-note"><b>Rückblick-Test</b>: Im Zeitraum fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
-      d.min_meals + ' Faktoren derselben Mahlzeit aus den 28 Tagen davor).</p>';
-  output.innerHTML = current + shiftMeals + stats;
+  output.innerHTML = matrix + shiftBlock;
 }
 
 async function loadSummary() {
