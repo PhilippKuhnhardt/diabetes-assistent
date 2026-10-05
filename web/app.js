@@ -1890,12 +1890,15 @@ function renderSuggestionDerivation(d) {
     '</span> · Anteil der Mahlzeiten mit BZ am Endpunkt in diesem Bereich, darunter Durchschnitt und Median dieses BZ, dazu typische Abweichung des Faktors.</p>';
   output.innerHTML = total
     ? legend + '<div class="table-wrap"><table class="analysis-table compact matrix"><thead><tr><th>Zeitraum</th><th>Halbwertszeit</th>' +
-      percentiles.map(value => '<th>' + escapeHTML(num(value, 1)) + ' %' + (Number(value) === 50 ? ' <small>Median</small>' : '') + '</th>').join("") +
+      percentiles.map(value => '<th>' + (value === "band" ? 'Zielband <small>max. ' + num(low, 0) + '–' + num(high, 0) + '</small>'
+        : escapeHTML(num(value, 1)) + ' %' + (Number(value) === 50 ? ' <small>Median</small>' : '')) + '</th>').join("") +
       '</tr></thead><tbody>' + rows.join("") + '</tbody></table></div>' +
       '<p class="hint derivation-note">Getestet werden dieselben ' + total + (total === 1 ? ' Mahlzeit' : ' Mahlzeiten') +
       ' der letzten ' + d.backtest_days + ' Tage für alle Felder, unabhängig vom Zeitraum oben. Jede Mahlzeit bekommt den Vorschlag, ' +
       'den das Feld aus den Tagen davor berechnet hätte; gezeigt wird der BZ am Endpunkt mit diesem Faktor (Modellrechnung, übrige Dosen unverändert). ' +
-      'Kürzere Halbwertszeit = neue Werte zählen stärker.</p>'
+      'Kürzere Halbwertszeit = neue Werte zählen stärker. Zielband (nur Test, kein Vorschlag): der Faktor, mit dem die meisten ' +
+      'gewichteten früheren Mahlzeiten bei Korrektur auf ' + num(d.dose_target_mgdl, 0) + ' mg/dL zwischen ' + num(low, 0) + ' und ' +
+      num(high, 0) + ' gelandet wären, passend zur Größe der jeweiligen Mahlzeit.</p>'
     : '<p class="hint derivation-note">In den letzten ' + d.backtest_days + ' Tagen fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
       d.min_meals + ' Faktoren derselben Mahlzeit in jedem Zeitraum davor, also auch in den letzten 8 Tagen).</p>';
 }
