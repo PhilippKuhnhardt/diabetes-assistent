@@ -1861,27 +1861,46 @@ function renderSuggestionDerivation(d) {
   $("#suggestion-method").textContent = suggestionMethods[d.method] + " · " + num(d.percentile, 1) + " % · Halbwertszeit " +
     num(d.half_life_days, 1) + " T.";
   const low = Number(d.glucose_low_mgdl), high = Number(d.glucose_high_mgdl);
-  const heads = ["< " + num(low, 0), num(low, 0) + "–" + num(high, 0), "> " + num(high, 0)];
-  const columns = d.percentile_comparison || [];
-  const total = columns.length ? columns[0].stats[d.method].glucose_count : 0;
-  const share = (value, count) => '<b>' + (count ? num(value / count * 100, 0) : 0) + ' %</b> <small>' + value + '</small>';
-  const rows = ["flat", "weighted", "weighted_shift"].flatMap(method => columns.map((column, index) => {
-    const row = column.stats[method];
-    const active = method === d.method && Number(column.percentile) === Number(d.percentile);
-    return '<tr' + (index === 0 ? ' class="matrix-group"' : '') + '><td>' + (index === 0 ? escapeHTML(suggestionMethods[method]) : '') +
-      '</td><td>' + escapeHTML(num(column.percentile, 1)) + ' %' + (active ? '<span class="derivation-active">aktiv</span>' : '') +
-      '</td><td>' + share(row.below, row.glucose_count) + '</td><td>' + share(row.in_range, row.glucose_count) +
-      '</td><td>' + share(row.above, row.glucose_count) + '</td><td>' +
-      (row.median_abs_deviation == null ? '—' : '±' + escapeHTML(num(Number(row.median_abs_deviation) * 100, 0)) + ' %') +
-      '</td></tr>';
-  }));
+  const variants = d.variants || [];
+  const percentiles = variants.length ? variants[0].cells.map(cell => cell.percentile) : [];
+  const total = variants.length ? variants[0].cells[0].stats.glucose_count : 0;
+  const shares = stats => ["below", "in_range", "above"].map(key => stats.glucose_count ? stats[key] / stats.glucose_count * 100 : 0);
+  // Best cell: most endpoints in range, then fewest below 80.
+  const cells = variants.flatMap(variant => variant.cells.map(cell => ({ variant, cell, s: shares(cell.stats) })));
+  const best = cells.reduce((top, item) => !top || item.s[1] > top.s[1] || (item.s[1] === top.s[1] && item.s[0] < top.s[0]) ? item : top, null);
+  const strength = days => { const diff = Number(days) - 7; return num(days, 1) + ' T.' + (diff < 0 ? ' <small>stärker</small>' : diff > 0 ? ' <small>schwächer</small>' : ''); };
+  const cellHTML = (variant, cell) => {
+    const [below, inRange, above] = shares(cell.stats);
+    const active = variant.method === d.method && Number(cell.percentile) === Number(d.percentile) &&
+      (variant.half_life_days == null || Number(variant.half_life_days) === Number(d.half_life_days));
+    const isBest = best && best.cell === cell;
+    const bar = '<svg class="range-bar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">' +
+      '<rect class="range-low" x="0" width="' + below.toFixed(2) + '" height="8"/>' +
+      '<rect class="range-ok" x="' + below.toFixed(2) + '" width="' + inRange.toFixed(2) + '" height="8"/>' +
+      '<rect class="range-high" x="' + (below + inRange).toFixed(2) + '" width="' + above.toFixed(2) + '" height="8"/></svg>';
+    const notes = [isBest ? 'bestes' : '', active ? 'aktiv' : '',
+      cell.stats.median_abs_deviation == null ? '' : '±' + num(Number(cell.stats.median_abs_deviation) * 100, 0) + ' %'];
+    return '<td class="matrix-cell' + (active ? ' is-active' : '') + (isBest ? ' is-best' : '') + '">' + bar +
+      '<span class="range-nums"><span class="range-low">' + num(below, 0) + '</span> · <b class="range-ok">' + num(inRange, 0) +
+      ' %</b> · <span class="range-high">' + num(above, 0) + '</span></span><small>' +
+      escapeHTML(notes.filter(Boolean).join(' · ')) + '</small></td>';
+  };
+  const rows = variants.map((variant, index) => {
+    const first = index === 0 || variants[index - 1].method !== variant.method;
+    return '<tr' + (first ? ' class="matrix-group"' : '') + '><td>' + (first ? escapeHTML(suggestionMethods[variant.method]) : '') +
+      '</td><td>' + (variant.half_life_days == null ? '—' : strength(variant.half_life_days)) + '</td>' +
+      variant.cells.map(cell => cellHTML(variant, cell)).join("") + '</tr>';
+  });
+  const legend = '<p class="hint derivation-note range-legend"><span class="range-low">■ &lt; ' + num(low, 0) + '</span> ' +
+    '<span class="range-ok">■ ' + num(low, 0) + '–' + num(high, 0) + '</span> <span class="range-high">■ &gt; ' + num(high, 0) +
+    '</span> · Anteil der Mahlzeiten mit BZ am Endpunkt in diesem Bereich, dazu typische Abweichung des Faktors.</p>';
   const matrix = total
-    ? '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Methode</th><th>Perzentil</th>' +
-      heads.map(head => '<th>' + escapeHTML(head) + '</th>').join("") + '<th>Typisch daneben</th></tr></thead><tbody>' +
-      rows.join("") + '</tbody></table></div>' +
+    ? legend + '<div class="table-wrap"><table class="analysis-table compact matrix"><thead><tr><th>Methode</th><th>Halbwertszeit</th>' +
+      percentiles.map(value => '<th>' + escapeHTML(num(value, 1)) + ' %' + (Number(value) === 50 ? ' <small>Median</small>' : '') + '</th>').join("") +
+      '</tr></thead><tbody>' + rows.join("") + '</tbody></table></div>' +
       '<p class="hint derivation-note">Rückblick über ' + total + (total === 1 ? ' Mahlzeit' : ' Mahlzeiten') +
-      ': BZ am Endpunkt, wenn mit dem Faktor der Methode gespritzt worden wäre (Modellrechnung, übrige Dosen unverändert)' +
-'.</p>'
+      ': BZ am Endpunkt, wenn mit dem Faktor der Methode gespritzt worden wäre (Modellrechnung, übrige Dosen unverändert). ' +
+      'Kürzere Halbwertszeit = neue Werte zählen stärker.</p>'
     : '<p class="hint derivation-note">Im Zeitraum fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
       d.min_meals + ' Faktoren derselben Mahlzeit aus den 28 Tagen davor).</p>';
   const shift = d.shift;
