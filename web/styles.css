@@ -217,6 +217,8 @@ span.range-high { color: #9a6410; font-weight: 650; }
 .glucose-change.falling { color: #145c78; background: #e5f3f9; }
 .glucose-change.steady { color: #4f625b; background: #eaf0ec; }
 .analysis-table td { vertical-align: middle; }
+.analysis-table td.surcharge-cell { white-space: normal; min-width: 320px; }
+.surcharge-days { display: block; line-height: 1.5; }
 .analysis-table td small { color: var(--muted); }
 .analysis-table td b { font-weight: 650; }
 .analysis-table .summary-unavailable { color: var(--muted); font-weight: 400; white-space: normal; }

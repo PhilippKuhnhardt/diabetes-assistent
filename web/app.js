@@ -1899,6 +1899,31 @@ function renderSuggestionDerivation(d) {
       d.min_meals + ' Faktoren derselben Mahlzeit in jedem Zeitraum davor, also auch in den letzten 8 Tagen).</p>';
 }
 
+// Information only: how much more insulin per KE work days need than free days (stress surcharge).
+function renderDayTypeRatio(d) {
+  const output = $("#day-type-ratio");
+  if (!d) { output.innerHTML = ""; return; }
+  $("#day-type-ratio-range").textContent = "Letzte " + d.days + " Tage";
+  const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
+  const pct = number => (Number(number) >= 0 ? '+' : '−') + Math.abs(Number(number) * 100).toLocaleString("de-DE", { maximumFractionDigits: 0 }) + ' %';
+  const value = (median, count) => median == null ? '—' : factorNum(median) + ' <small>(' + count + ')</small>';
+  const rows = Object.entries(d.meals).map(([kind, m]) => {
+    const singles = m.singles.length
+      ? pct(m.single_median) + ' <small>(' + m.singles.length + ', ' + pct(m.single_min) + ' bis ' + pct(m.single_max) + ')</small>' +
+        '<br><small class="surcharge-days">' + m.singles.map(item => escapeHTML(new Date(item.day + "T12:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" })) + ' ' + pct(item.surcharge)).join(' · ') + '</small>'
+      : '—';
+    return '<tr><td>' + names[kind] + '</td><td>' + value(m.free_median, m.free_count) + '</td><td>' +
+      value(m.work_median, m.work_count) + '</td><td><b>' + (m.surcharge == null ? '—' : pct(m.surcharge)) + '</b></td><td class="surcharge-cell">' + singles + '</td></tr>';
+  });
+  output.innerHTML = '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Mahlzeit</th>' +
+    '<th>Frei <small>Median IE/KE</small></th><th>Arbeit <small>Median IE/KE</small></th><th>Stressaufschlag</th>' +
+    '<th>Je freiem Tag</th></tr></thead><tbody>' + rows.join("") + '</tbody></table></div>' +
+    '<p class="hint derivation-note">Frei ist die Basis: Arbeit = Frei × (1 + Stressaufschlag). „Je freiem Tag“ vergleicht jeden ' +
+    'freien Tag mit derselben Mahlzeit an den ' + d.neighbours + ' Arbeitstagen davor und den ' + d.neighbours +
+    ' danach (Median, höchstens ' + d.reference_days + ' Tage entfernt, mind. 2 Werte). Liegen diese Einzelwerte eng beieinander, ' +
+    'ist der Aufschlag stabil. Nur zur Info, der Vorschlag bleibt unverändert.</p>';
+}
+
 async function loadSummary() {
   $("#summary").innerHTML = '<div class="empty">Analyse wird geladen …</div>';
   $("#night-summary-cards").innerHTML = '<div class="empty">Nachtübersicht wird geladen …</div>';
@@ -1948,6 +1973,7 @@ async function loadSummary() {
     renderAnalysisIc();
     renderSportAnalysis(data.sport_analysis);
     renderSuggestionDerivation(data.suggestion_derivation);
+    renderDayTypeRatio(data.day_type_ratio);
     const comparisons = data.sensitivity_comparison || [];
     $("#sensitivity-comparison").innerHTML = comparisons.length
       ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Ab</th><th>Aktuell</th><th>Mathematisch bester Korrekturfaktor</th></tr></thead><tbody>' +
