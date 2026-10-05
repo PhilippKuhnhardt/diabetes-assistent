@@ -1895,7 +1895,7 @@ function renderSuggestionDerivation(d) {
       '</tr></thead><tbody>' + rows.join("") + '</tbody></table></div>' +
       '<p class="hint derivation-note">Getestet werden dieselben ' + total + (total === 1 ? ' Mahlzeit' : ' Mahlzeiten') +
       ' der letzten ' + d.backtest_days + ' Tage für alle Felder, unabhängig vom Zeitraum oben. Jede Mahlzeit bekommt den Vorschlag, ' +
-      'den das Feld aus den Tagen davor berechnet hätte; gezeigt wird der BZ am Endpunkt mit diesem Faktor (Modellrechnung, übrige Dosen unverändert). ' +
+      'den das Feld aus den Tagen davor berechnet hätte; gezeigt wird der BZ am Endpunkt mit diesem Faktor bei Korrektur auf den Zielwert (Modellrechnung: Ziel + (tatsächlicher − vorgeschlagener Faktor) × Σ[KH × KF] / 10, nur der Faktorfehler zählt). ' +
       'Kürzere Halbwertszeit = neue Werte zählen stärker. Zielband (nur Test, kein Vorschlag): der Faktor, mit dem die meisten ' +
       'gewichteten früheren Mahlzeiten bei Korrektur auf ' + num(d.dose_target_mgdl, 0) + ' mg/dL zwischen ' + num(low, 0) + ' und ' +
       num(high, 0) + ' gelandet wären, passend zur Größe der jeweiligen Mahlzeit.</p>'

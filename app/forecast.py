@@ -7,7 +7,8 @@ by at most its weight share, however extreme it is.
 
 The backtest recomputes, for every past meal, what each combination of lookback, half-life and
 percentile would have suggested from the meals before it, and estimates where the endpoint
-glucose would have landed with that factor (below, inside or above 80–160 mg/dL).
+glucose would have landed with that factor and a dose corrected to the target (below, inside or
+above 80–160 mg/dL): target + (F − P) × Σ[g × KF] / 10.
 The backtest also tests a target-band method ("band" instead of a percentile): the factor that the
 largest weighted share of earlier meals would have tolerated with an endpoint inside 80–160 mg/dL,
 given the size Σ[g × KF] of the meal being predicted. It is only a matrix column, not a suggestion.
@@ -191,10 +192,11 @@ def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal,
         if None in predictions:
             continue
         glucose = None
-        if target.get("end_glucose") is not None and target.get("carbs_isf"):
-            # Under the meal model, (P − F) IE/KE more for Σ[g × KF] / 10 shifts the endpoint
-            # by −(P − F) × Σ[g × KF] / 10 mg/dL; all other doses stay as they were.
-            glucose = [target["end_glucose"] - (value - target["value"]) * target["carbs_isf"] / 10
+        if target.get("carbs_isf"):
+            # The dose help corrects to the target at the meal, so a dose with factor P ends at
+            # target + (F − P) × Σ[g × KF] / 10 under the meal model; F already contains the measured
+            # course, so the measured endpoint must not be added again. Only the factor error counts.
+            glucose = [target_glucose + (target["value"] - value) * target["carbs_isf"] / 10
                        for value in predictions]
         rows.append({"units_per_ke": target["value"], "predictions": predictions, "glucose": glucose})
     stats = []
