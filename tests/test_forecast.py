@@ -125,8 +125,12 @@ class DayTypeRatioTests(unittest.TestCase):
         self.assertEqual(result["free_count"], 10)
 
     def test_without_free_days_there_is_no_surcharge(self):
-        points = [dict(point(age, "1.0"), day_type="work") for age in range(1, 10)]
-        result = forecast.day_type_ratios(points, TODAY)["meals"]["dinner"]
+        points = [dict(point(age, "1.0", meal="breakfast"), day_type="work") for age in range(1, 10)]
+        points.append(dict(point(1, "0.5"), day_type="free"))
+        meals = forecast.day_type_ratios(points, TODAY)["meals"]
+        # Only breakfast is evaluated; the free dinner does not count.
+        self.assertEqual(list(meals), ["breakfast"])
+        result = meals["breakfast"]
         self.assertEqual((result["work_count"], result["free_count"]), (9, 0))
         self.assertIsNone(result["surcharge"])
         self.assertEqual(result["singles"], [])
