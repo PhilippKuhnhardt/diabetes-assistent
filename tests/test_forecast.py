@@ -112,8 +112,7 @@ class BacktestTests(unittest.TestCase):
         points = [point(age, "1.0") for age in range(2, 20)]
         target = point(1, "1.0")
         # 40 g at KF 50: Σ[g × KF] = 2000, so 0.1 IE/KE more lowers the endpoint by 20 mg/dL.
-        target.update({"end_glucose": Decimal(150), "carbs_isf": Decimal(2000),
-                       "target_low": Decimal(80), "target_high": Decimal(160)})
+        target.update({"end_glucose": Decimal(150), "carbs_isf": Decimal(2000)})
         for item, value in zip(points[:4], ("1.2", "1.3", "1.4", "1.5")):
             item["value"] = Decimal(value)
         result = forecast.backtest(points + [target], TODAY - timedelta(days=1), Decimal("100"), Decimal(7))

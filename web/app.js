@@ -1860,10 +1860,8 @@ function renderSuggestionDerivation(d) {
   const label = item => names[item.meal] + (item.day_type ? (item.day_type === "work" ? " Arbeit" : " frei") : "");
   $("#suggestion-method").textContent = suggestionMethods[d.method] + " · " + num(d.percentile, 1) + " % · Halbwertszeit " +
     num(d.half_life_days, 1) + " T.";
-  const ranges = d.target_ranges || [];
-  const [low, high] = ranges.length === 1 ? ranges[0].map(Number) : [null, null];
-  const heads = low == null ? ["unter Ziel", "im Ziel", "über Ziel"]
-    : ["< " + num(low, 0), num(low, 0) + "–" + num(high, 0), "> " + num(high, 0)];
+  const low = Number(d.glucose_low_mgdl), high = Number(d.glucose_high_mgdl);
+  const heads = ["< " + num(low, 0), num(low, 0) + "–" + num(high, 0), "> " + num(high, 0)];
   const columns = d.percentile_comparison || [];
   const total = columns.length ? columns[0].stats[d.method].glucose_count : 0;
   const share = (value, count) => '<b>' + (count ? num(value / count * 100, 0) : 0) + ' %</b> <small>' + value + '</small>';
@@ -1883,7 +1881,7 @@ function renderSuggestionDerivation(d) {
       rows.join("") + '</tbody></table></div>' +
       '<p class="hint derivation-note">Rückblick über ' + total + (total === 1 ? ' Mahlzeit' : ' Mahlzeiten') +
       ': BZ am Endpunkt, wenn mit dem Faktor der Methode gespritzt worden wäre (Modellrechnung, übrige Dosen unverändert)' +
-      (d.target_from_nightscout ? ', Zielbereich aus Nightscout' : ', Standard 80–160 mg/dL (kein Zielbereich in Nightscout)') + '.</p>'
+'.</p>'
     : '<p class="hint derivation-note">Im Zeitraum fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
       d.min_meals + ' Faktoren derselben Mahlzeit aus den 28 Tagen davor).</p>';
   const shift = d.shift;

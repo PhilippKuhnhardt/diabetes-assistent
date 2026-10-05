@@ -12,7 +12,7 @@ Three methods can be compared:
 The backtest recomputes, for every past meal, what each method would have suggested from the
 meals before it, so the methods can be compared against the factor that was actually calculated,
 and estimates where the endpoint glucose would have landed with that factor (below, inside or
-above the Nightscout target range).
+above 80–160 mg/dL).
 These are model choices for experimentation, not dosing advice.
 """
 from __future__ import annotations
@@ -28,8 +28,10 @@ SHIFT_HOURS = 48
 SHIFT_CAP = Decimal("0.15")
 HIT_TOLERANCE = Decimal("0.10")
 HALF = Decimal("0.5")
-# Fallback target range when the Nightscout profile has no target schedule.
-DEFAULT_TARGET = (Decimal(80), Decimal(160))
+# Range for the endpoint glucose three hours after a meal; deliberately tighter than the
+# Nightscout target range (80–180), which also covers the post-meal rise.
+GLUCOSE_LOW = Decimal(80)
+GLUCOSE_HIGH = Decimal(160)
 
 
 def weighted_quantile(pairs: list[tuple[Decimal, Decimal]], fraction: Decimal) -> Decimal:
@@ -138,7 +140,6 @@ def backtest(points: list[dict], since: date, percentile: Decimal, half_life: De
             # by −(P − F) × Σ[g × KF] / 10 mg/dL; all other doses stay as they were.
             row["glucose"] = {method: target["end_glucose"] - (value - target["value"]) * target["carbs_isf"] / 10
                               for method, value in predictions.items()}
-            row["target_low"], row["target_high"] = target["target_low"], target["target_high"]
         rows.append(row)
     stats = {}
     for method in METHODS:
@@ -151,11 +152,11 @@ def backtest(points: list[dict], since: date, percentile: Decimal, half_life: De
             "too_much": sum(value > HIT_TOLERANCE for value in deviations),
             "too_little": sum(value < -HIT_TOLERANCE for value in deviations),
             "glucose_count": sum(row["glucose"] is not None for row in rows),
-            "below": sum(row["glucose"] is not None and row["glucose"][method] < row["target_low"]
+            "below": sum(row["glucose"] is not None and row["glucose"][method] < GLUCOSE_LOW
                          for row in rows),
             "in_range": sum(row["glucose"] is not None
-                            and row["target_low"] <= row["glucose"][method] <= row["target_high"] for row in rows),
-            "above": sum(row["glucose"] is not None and row["glucose"][method] > row["target_high"]
+                            and GLUCOSE_LOW <= row["glucose"][method] <= GLUCOSE_HIGH for row in rows),
+            "above": sum(row["glucose"] is not None and row["glucose"][method] > GLUCOSE_HIGH
                          for row in rows),
             "median_abs_deviation": (absolute[len(absolute) // 2] if len(absolute) % 2 else
                                      (absolute[len(absolute) // 2 - 1] + absolute[len(absolute) // 2]) / 2)
