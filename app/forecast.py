@@ -26,6 +26,9 @@ HALF_LIVES = (Decimal(1), Decimal(2), Decimal(3), Decimal(5), Decimal(7), Decima
 # Nightscout target range (80–180), which also covers the post-meal rise.
 GLUCOSE_LOW = Decimal(80)
 GLUCOSE_HIGH = Decimal(160)
+# Free-day vs. work-day comparison: last 30 days, each free-day meal against the 7 days before it.
+RATIO_DAYS = 30
+RATIO_REFERENCE_DAYS = 7
 
 
 def weighted_quantile(pairs: list[tuple[Decimal, Decimal]], fraction: Decimal) -> Decimal:
@@ -80,6 +83,37 @@ def median(values: list[Decimal]) -> Decimal | None:
         return None
     middle = len(values) // 2
     return values[middle] if len(values) % 2 else (values[middle - 1] + values[middle]) / 2
+
+
+def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
+                    reference_days: int = RATIO_REFERENCE_DAYS) -> dict:
+    """How the factor on free days relates to work days, per meal kind, over the last `days` days.
+    Overall: median free factor / median work factor. Per free-day meal: its factor divided by the
+    median work-day factor of the same meal kind in the `reference_days` days before it (needs two),
+    so a stable ratio shows up as tightly grouped single ratios. For information only."""
+    result = {}
+    for kind in ("breakfast", "lunch", "dinner"):
+        recent = [point for point in points if point["key"][0] == kind and 0 <= (today - point["day"]).days < days]
+        work = sorted(point["value"] for point in recent if point["day_type"] == "work")
+        free = sorted(point["value"] for point in recent if point["day_type"] == "free")
+        singles = []
+        for point in sorted(recent, key=lambda item: item["at"]):
+            if point["day_type"] != "free":
+                continue
+            before = sorted(item["value"] for item in points
+                            if item["key"][0] == kind and item["day_type"] == "work"
+                            and 1 <= (point["day"] - item["day"]).days <= reference_days)
+            if len(before) >= 2:
+                singles.append({"day": point["day"].isoformat(), "ratio": point["value"] / median(before)})
+        ratios = sorted(item["ratio"] for item in singles)
+        result[kind] = {
+            "work_count": len(work), "work_median": median(work),
+            "free_count": len(free), "free_median": median(free),
+            "ratio": median(free) / median(work) if work and free else None,
+            "singles": singles, "single_median": median(ratios),
+            "single_min": ratios[0] if ratios else None, "single_max": ratios[-1] if ratios else None,
+        }
+    return {"days": days, "reference_days": reference_days, "meals": result}
 
 
 def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal, Decimal]]) -> dict:

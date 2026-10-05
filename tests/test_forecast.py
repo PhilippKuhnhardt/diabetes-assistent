@@ -95,5 +95,35 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual((stats["mean_glucose"], stats["median_glucose"]), (Decimal(140), Decimal(120)))
 
 
+class DayTypeRatioTests(unittest.TestCase):
+    def breakfast(self, days_ago, value):
+        item = point(days_ago, value, meal="breakfast", hour=8)
+        kind = "free" if item["day"].weekday() >= 5 else "work"
+        item.update({"key": ("breakfast", kind), "day_type": kind})
+        return item
+
+    def test_free_days_as_a_multiple_of_the_work_days_before_them(self):
+        # Work days need 1.0 IE/KE in the older weeks and 1.2 in the last one; free days always 0.8 × that.
+        points = []
+        for age in range(0, 40):
+            day = TODAY - timedelta(days=age)
+            work = Decimal("1.2") if age < 7 else Decimal("1.0")
+            points.append(self.breakfast(age, work * Decimal("0.8") if day.weekday() >= 5 else work))
+        result = forecast.day_type_ratios(points, TODAY)["meals"]["breakfast"]
+        self.assertEqual((result["single_median"], result["single_min"], result["single_max"]),
+                         (Decimal("0.8"), Decimal("0.8"), Decimal("0.8")))
+        # Saturdays and Sundays within 30 days (today is a Sunday).
+        self.assertEqual(len(result["singles"]), 10)
+        self.assertEqual(result["free_count"], 10)
+        self.assertEqual(result["ratio"], Decimal("0.8"))
+
+    def test_without_free_days_there_is_no_ratio(self):
+        points = [dict(point(age, "1.0"), day_type="work") for age in range(1, 10)]
+        result = forecast.day_type_ratios(points, TODAY)["meals"]["dinner"]
+        self.assertEqual((result["work_count"], result["free_count"]), (9, 0))
+        self.assertIsNone(result["ratio"])
+        self.assertEqual(result["singles"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

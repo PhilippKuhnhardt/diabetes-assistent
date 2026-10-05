@@ -80,3 +80,7 @@ Die Markierung „Stark abweichend“ erscheint ab drei berechenbaren Werten der
 Der Korrekturfaktorvergleich betrachtet je Zeitabschnitt nur nicht ausgeklammerte Mahlzeiten mit einer berechenbaren Abweichung. Die Exposition eines Abschnitts ist `Σ(KH / I:C) - Σ(IE)`. Der angezeigte Kandidat minimiert die Summe der absoluten modellierten Abweichungen: gewichteter Median von `aktueller KF + Delta / Exposition` mit Gewicht `|Exposition|`. Der I:C-Zeitplan bleibt dabei fest. Der Kandidat wird nicht nach Nightscout geschrieben.
 
 Für die Nachtübersicht beginnt das Fenster drei Stunden nach der letzten erfassten schnell wirksamen Injektion zwischen Abendessen und folgendem Frühstück. Es endet beim Frühstück. `Veränderung = CGM(Ende) - CGM(Start)`; der Minimalwert ist das Minimum der Messwerte im Fenster einschließlich interpolierter Randwerte. Drei Stunden sind nur die Auswertungsgrenze des Modells.
+
+## Freie Tage im Verhältnis zu Arbeitstagen (nur Info)
+
+Die Analyse vergleicht für jede Hauptmahlzeit der letzten 30 Tage die Faktoren an freien Tagen mit denen an Arbeitstagen (Tagesart wie beim Frühstück). `Frei ÷ Arbeit` ist der Median der freien Tage geteilt durch den Median der Arbeitstage. „Je freiem Tag“ teilt jeden Faktor eines freien Tages durch den Median der Arbeitstag-Faktoren derselben Mahlzeit in den 7 Tagen davor (mindestens 2); liegen diese Einzelwerte eng beieinander, ist frei ein stabiles Vielfaches von Arbeit. Die Kachel ändert keinen Vorschlag.

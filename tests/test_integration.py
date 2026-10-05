@@ -957,6 +957,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIsNone(summary["groups"]["lunch"]["suggestion"]["auto_units_per_ke"])
         for kind in ("work", "free"):
             self.assertIn("suggestion", summary["groups"]["breakfast"]["by_day_type"][kind])
+        ratio = summary["day_type_ratio"]
+        self.assertEqual((ratio["days"], ratio["reference_days"]), (30, 7))
+        self.assertEqual(ratio["meals"]["dinner"]["work_count"] + ratio["meals"]["dinner"]["free_count"], 6)
         derivation = summary["suggestion_derivation"]
         self.assertEqual((derivation["lookback_days"], Decimal(derivation["half_life_days"])), (30, Decimal(28)))
         variants = derivation["variants"]
