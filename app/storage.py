@@ -114,7 +114,7 @@ def default_settings() -> dict:
         "dose_target_mgdl": 100,
         "dose_cautious_target_mgdl": 140,
         "auto_percentile": "37.5",
-        "auto_method": "weighted_shift",
+        "auto_lookback_days": 28,
         "auto_half_life_days": "7",
         "peak_minutes": 60,
         "duration_minutes": 180,
@@ -154,7 +154,8 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result.setdefault("dose_target_mgdl", 100)
     result.setdefault("dose_cautious_target_mgdl", 140)
     result.setdefault("auto_percentile", "37.5")
-    result.setdefault("auto_method", "weighted_shift")
+    result.pop("auto_method", None)
+    result.setdefault("auto_lookback_days", 28)
     result.setdefault("auto_half_life_days", "7")
     result.setdefault("lunch_end_minute", 1020)
     result.setdefault("sport_lookback_minutes", 360)
