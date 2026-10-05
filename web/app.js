@@ -1883,6 +1883,24 @@ function renderSuggestionDerivation(d) {
   const test = d.backtest;
   const methods = ["flat", "weighted", "weighted_shift"];
   const tolerance = num(Number(d.hit_tolerance) * 100, 0);
+  // Same backtest at other percentiles: hits, too much insulin and typical deviation per method.
+  const percentileTable = () => {
+    const columns = d.percentile_comparison || [];
+    if (columns.length < 2) return '';
+    return '<p class="hint derivation-note"><b>Perzentile im Vergleich</b>: Treffer / Mahlzeiten, darunter zu viel Insulin ' +
+      'und typische Abweichung. Höheres Perzentil = mehr Insulin.</p>' +
+      '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Methode</th>' +
+      columns.map(column => '<th>' + escapeHTML(num(column.percentile, 1)) + ' %' +
+        (Number(column.percentile) === Number(d.percentile) ? '<span class="derivation-active">aktiv</span>' : '') +
+        (Number(column.percentile) === 50 ? ' <small>Median</small>' : '') + '</th>').join("") +
+      '</tr></thead><tbody>' + methods.map(method => '<tr><td>' + escapeHTML(suggestionMethods[method]) + '</td>' +
+        columns.map(column => {
+          const row = column.stats[method];
+          return '<td><b>' + row.hits + '</b> / ' + row.count + '<br><small>zu viel ' + row.too_much +
+            (row.median_abs_deviation == null ? '' : ' · ±' + escapeHTML(num(Number(row.median_abs_deviation) * 100, 0)) + ' %') +
+            '</small></td>';
+        }).join("") + '</tr>').join("") + '</tbody></table></div>';
+  };
   const stats = test.rows.length
     ? '<p class="hint derivation-note"><b>Rückblick-Test</b>: Was hätte jede Methode vor der Mahlzeit vorgeschlagen, ' +
       'verglichen mit dem später berechneten Faktor. Treffer = höchstens ±' + tolerance + ' %.</p>' +
@@ -1895,7 +1913,7 @@ function renderSuggestionDerivation(d) {
           row.hits + '</b> / ' + row.count + '</td><td>' + row.too_much + '</td><td>' + row.too_little + '</td><td>' +
           (row.median_abs_deviation == null ? '—' : '±' + escapeHTML(num(Number(row.median_abs_deviation) * 100, 0)) + ' %') +
           '</td></tr>';
-      }).join("") + '</tbody></table></div>' +
+      }).join("") + '</tbody></table></div>' + percentileTable() +
       '<details class="summary-details"><summary>Einzelne Mahlzeiten</summary><div class="table-wrap">' +
       '<table class="analysis-table compact"><thead><tr><th>Mahlzeit</th><th>Berechnet</th>' +
       methods.map(method => '<th>' + escapeHTML(suggestionMethods[method]) + '</th>').join("") + '</tr></thead><tbody>' +
