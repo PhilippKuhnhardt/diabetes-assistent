@@ -966,8 +966,7 @@ class IntegrationTests(unittest.TestCase):
         variants = derivation["variants"]
         self.assertEqual([(item["lookback_days"], Decimal(item["half_life_days"])) for item in variants],
                          [(days, Decimal(half)) for days in (8, 15, 30) for half in (1, 2, 3, 5, 7, 14, 28)])
-        self.assertEqual([Decimal(cell["percentile"]) for cell in variants[0]["cells"]],
-                         [Decimal(25), Decimal("37.5"), Decimal(50)])
+        self.assertEqual([str(cell["percentile"]) for cell in variants[0]["cells"]], ["25", "37.5", "50", "band"])
         self.assertEqual((derivation["glucose_low_mgdl"], derivation["glucose_high_mgdl"]), ("80", "160"))
 
     def test_summary_shows_median_middle_half_and_full_range(self):

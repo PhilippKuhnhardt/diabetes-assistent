@@ -885,12 +885,14 @@ class Handler(BaseHTTPRequestHandler):
                     groups[name]["suggestion"] = suggestion_factor(predictions[(name, None)], configured)
                 # Backtest matrix: every lookback × half-life (plus the configured ones), each at 25 %,
                 # the configured percentile and 50 %, all evaluated on the same meals of the last 90 days.
-                percentiles = sorted({Decimal(25), percentile, Decimal(50)})
+                # A last column tests the target-band method, aimed at the configured dose target.
+                percentiles = [*sorted({Decimal(25), percentile, Decimal(50)}), forecast.BAND]
                 rows = [(days_back, strength) for days_back in sorted({*forecast.LOOKBACKS, lookback})
                         for strength in sorted({*forecast.HALF_LIVES, half_life})]
                 test = forecast.backtest(points, today - timedelta(days=forecast.BACKTEST_DAYS - 1),
                                          [(days_back, strength, value) for days_back, strength in rows
-                                          for value in percentiles])
+                                          for value in percentiles],
+                                         calculation.dec(settings["dose_target_mgdl"]))
                 cells = iter(test["stats"])
                 suggestion_derivation = {
                     "percentile": str(percentile), "half_life_days": str(half_life), "lookback_days": lookback,
@@ -900,6 +902,7 @@ class Handler(BaseHTTPRequestHandler):
                                   "cells": [{"percentile": value, "stats": next(cells)} for value in percentiles]}
                                  for days_back, strength in rows],
                     "glucose_low_mgdl": str(forecast.GLUCOSE_LOW), "glucose_high_mgdl": str(forecast.GLUCOSE_HIGH),
+                    "dose_target_mgdl": str(settings["dose_target_mgdl"]),
                 }
                 # Information only: does the free-day factor follow the work-day factor by a stable ratio?
                 day_type_ratio = forecast.day_type_ratios(points, today)

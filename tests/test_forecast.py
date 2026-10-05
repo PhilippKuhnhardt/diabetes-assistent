@@ -61,8 +61,8 @@ class BacktestTests(unittest.TestCase):
         result = forecast.backtest(points + [target], TODAY - timedelta(days=1), [(28, Decimal(7), Decimal(100))])
         row = result["rows"][0]
         self.assertEqual(row["predictions"], [Decimal("1.5")])
-        # 0.5 IE/KE too much: 150 − 0.5 × 2000 / 10 = 50 mg/dL, below the range.
-        self.assertEqual(row["glucose"], [Decimal(50)])
+        # 0.5 IE/KE too much: target 120 − 0.5 × 2000 / 10 = 20 mg/dL, below the range.
+        self.assertEqual(row["glucose"], [Decimal(20)])
         stats = result["stats"][0]
         self.assertEqual((stats["below"], stats["in_range"], stats["above"], stats["glucose_count"]), (1, 0, 0, 1))
 
@@ -86,13 +86,65 @@ class BacktestTests(unittest.TestCase):
 
     def test_mean_and_median_of_the_simulated_endpoint_glucose(self):
         points = [point(age, "1.0") for age in range(4, 20)]
-        # The prediction is 1.0 IE/KE for every target, so each endpoint stays as measured.
-        for age, glucose in ((1, 90), (2, 120), (3, 210)):
-            target = point(age, "1.0")
-            target.update({"end_glucose": Decimal(glucose), "carbs_isf": Decimal(2000)})
+        # The prediction is 1.0 IE/KE; real factors 0.9, 1.0 and 1.4 end 20 below, at and 80 above the target.
+        for age, factor in ((1, "0.9"), (2, "1.0"), (3, "1.4")):
+            target = point(age, factor)
+            target.update({"end_glucose": Decimal(150), "carbs_isf": Decimal(2000)})
             points.append(target)
-        stats = forecast.backtest(points, TODAY - timedelta(days=3), [(28, Decimal(7), Decimal(50))])["stats"][0]
+        stats = forecast.backtest(points, TODAY - timedelta(days=3), [(28, Decimal(7), Decimal(50))],
+                                  Decimal(120))["stats"][0]
         self.assertEqual((stats["mean_glucose"], stats["median_glucose"]), (Decimal(140), Decimal(120)))
+
+    def test_a_perfect_factor_lands_on_the_target_whatever_the_measured_course(self):
+        # Checked cases, 50 g at KF 40 (S = 2000), suggestion = calculated factor:
+        # A: 5 IE, 120 → 180; B: start 180, 5 IE + 2 IE correction, end 110; C: like A with sport −30.
+        # The old formula gave 180, 110 and 150; with the dose corrected to the target all end at 120.
+        points = [point(age, "1.3") for age in range(4, 20)]
+        for age, end in ((1, 180), (2, 110), (3, 150)):
+            target = point(age, "1.3")
+            target.update({"end_glucose": Decimal(end), "carbs_isf": Decimal(2000)})
+            points.append(target)
+        result = forecast.backtest(points, TODAY - timedelta(days=3), [(28, Decimal(7), Decimal(50))], Decimal(120))
+        self.assertEqual([row["glucose"] for row in result["rows"]], [[Decimal(120)]] * 3)
+        self.assertEqual(result["stats"][0]["in_range"], 3)
+
+
+class BandTests(unittest.TestCase):
+    def test_band_aims_at_the_target_inside_the_range(self):
+        # S = 2000: 0.1 IE/KE is 20 mg/dL. At target 120 a factor F tolerates P in [F − 0.2, F + 0.2].
+        # Three meals at 1.0 and two at 1.6 cannot share a window, so the heavier group wins.
+        pairs = [(Decimal(value), Decimal(1)) for value in ("1.0", "1.0", "1.0", "1.6", "1.6")]
+        self.assertEqual(forecast.band_factor(pairs, Decimal(2000), Decimal(120)), Decimal("1.0"))
+
+    def test_band_covers_spread_values_with_one_window(self):
+        # 0.9 and 1.3 both fit only with P = 1.1; 1.8 stays outside.
+        pairs = [(Decimal(value), Decimal(1)) for value in ("0.9", "1.3", "1.8")]
+        self.assertEqual(forecast.band_factor(pairs, Decimal(2000), Decimal(120)), Decimal("1.1"))
+
+    def test_band_follows_rising_and_falling_factors_alike(self):
+        falling = [(Decimal("1.0"), Decimal(4)), (Decimal("1.5"), Decimal(1)), (Decimal("1.5"), Decimal(1))]
+        rising = [(Decimal("1.5"), Decimal(4)), (Decimal("1.0"), Decimal(1)), (Decimal("1.0"), Decimal(1))]
+        self.assertEqual(forecast.band_factor(falling, Decimal(2000), Decimal(120)), Decimal("1.0"))
+        self.assertEqual(forecast.band_factor(rising, Decimal(2000), Decimal(120)), Decimal("1.5"))
+
+    def test_lower_target_moves_the_window_towards_less_insulin(self):
+        # At target 100 F tolerates P in [F − 0.3, F + 0.1]: the window's centre drops to 0.9.
+        pairs = [(Decimal("1.0"), Decimal(1)), (Decimal("1.0"), Decimal(1))]
+        self.assertEqual(forecast.band_factor(pairs, Decimal(2000), Decimal(100)), Decimal("0.9"))
+
+    def test_backtest_band_column_uses_the_meal_size(self):
+        points = [point(age, "1.0") for age in range(2, 10)]
+        target = point(1, "1.0")
+        target.update({"end_glucose": Decimal(120), "carbs_isf": Decimal(2000)})
+        result = forecast.backtest(points + [target], TODAY - timedelta(days=1),
+                                   [(8, Decimal(3), Decimal(50)), (8, Decimal(3), forecast.BAND)])
+        self.assertEqual(result["rows"][0]["predictions"], [Decimal("1.0"), Decimal("1.0")])
+        self.assertEqual(result["stats"][1]["in_range"], 1)
+
+    def test_backtest_band_needs_the_meal_size(self):
+        points = [point(age, "1.0") for age in range(1, 10)]
+        result = forecast.backtest(points, TODAY - timedelta(days=1), [(8, Decimal(3), forecast.BAND)])
+        self.assertEqual(result["stats"][0]["count"], 0)
 
 
 class DayTypeRatioTests(unittest.TestCase):

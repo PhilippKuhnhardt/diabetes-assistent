@@ -7,7 +7,11 @@ by at most its weight share, however extreme it is.
 
 The backtest recomputes, for every past meal, what each combination of lookback, half-life and
 percentile would have suggested from the meals before it, and estimates where the endpoint
-glucose would have landed with that factor (below, inside or above 80–160 mg/dL).
+glucose would have landed with that factor and a dose corrected to the target (below, inside or
+above 80–160 mg/dL): target + (F − P) × Σ[g × KF] / 10.
+The backtest also tests a target-band method ("band" instead of a percentile): the factor that the
+largest weighted share of earlier meals would have tolerated with an endpoint inside 80–160 mg/dL,
+given the size Σ[g × KF] of the meal being predicted. It is only a matrix column, not a suggestion.
 These are model choices for experimentation, not dosing advice.
 """
 from __future__ import annotations
@@ -84,6 +88,35 @@ def predict_from(values: list[tuple[Decimal, int]], percentile: Decimal, half_li
     return {"count": len(values), "units_per_ke": value if value is not None and value > 0 else None}
 
 
+BAND = "band"
+
+
+def band_factor(pairs: list[tuple[Decimal, Decimal]], carbs_isf: Decimal, target: Decimal) -> Decimal:
+    """Factor P that puts the largest weight of (factor, weight) pairs inside the target band.
+
+    With a dose corrected to `target`, a meal whose real factor is F ends at about
+    target + (F − P) × S / 10 (S = Σ[g × KF] of the meal being dosed). That endpoint lies in
+    GLUCOSE_LOW–GLUCOSE_HIGH exactly when P lies in [F − (HIGH − target) × 10 / S, F + (target − LOW) × 10 / S].
+    The answer is the midpoint of the region covered by the heaviest set of these intervals; equal
+    regions are broken by the one nearest to the weighted median. It has no direction built in,
+    so it follows falling and rising factors alike."""
+    target = min(max(target, GLUCOSE_LOW), GLUCOSE_HIGH)
+    above = (GLUCOSE_HIGH - target) * 10 / carbs_isf
+    below = (target - GLUCOSE_LOW) * 10 / carbs_isf
+    intervals = sorted((factor - above, factor + below, weight) for factor, weight in pairs)
+    starts = [start for start, _, _ in intervals]
+    regions = []
+    for start in starts:
+        inside = [(end, weight) for low, end, weight in intervals if low <= start <= end]
+        later = [low for low in starts if low > start]
+        end = min([item[0] for item in inside] + later[:1])
+        regions.append((sum(weight for _, weight in inside), start, end))
+    best = max(score for score, _, _ in regions)
+    centre = weighted_quantile(pairs, HALF)
+    candidates = [(start + end) / 2 for score, start, end in regions if score == best]
+    return min(candidates, key=lambda value: (abs(value - centre), value))
+
+
 def median(values: list[Decimal]) -> Decimal | None:
     """Median of sorted values; None when empty."""
     if not values:
@@ -127,9 +160,20 @@ def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
     return {"days": days, "reference_days": reference_days, "neighbours": neighbours, "meals": result}
 
 
-def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal, Decimal]]) -> dict:
-    """Simulate each (lookback, half-life, percentile) variant on the meals since `since`.
-    Only meals every variant can predict count, so all cells compare the same meals."""
+def predict_band(values: list[tuple[Decimal, int]], half_life: Decimal, carbs_isf: Decimal | None,
+                 target: Decimal) -> Decimal | None:
+    """Target-band factor of the earlier meals; None below MIN_MEALS meals or without the meal size."""
+    if len(values) < MIN_MEALS or not carbs_isf or carbs_isf <= 0:
+        return None
+    value = band_factor([(factor, weight(age, half_life)) for factor, age in values], carbs_isf, target)
+    return value if value > 0 else None
+
+
+def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal, Decimal | str]],
+             target_glucose: Decimal = Decimal(120)) -> dict:
+    """Simulate each (lookback, half-life, percentile or BAND) variant on the meals since `since`.
+    Only meals every variant can predict count, so all cells compare the same meals.
+    `target_glucose` is the dose target the band method aims its endpoint at."""
     rows = []
     by_key: dict[tuple, list[dict]] = {}
     for point in points:
@@ -140,15 +184,19 @@ def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal,
             continue
         # The history for the longest lookback once per meal; each variant takes its own slice.
         known = history(by_key[target["key"]], target["key"], target["day"], longest)
-        predictions = [predict_from([item for item in known if item[1] <= lookback], percentile, half_life)["units_per_ke"]
-                       for lookback, half_life, percentile in variants]
+        predictions = [
+            predict_band([item for item in known if item[1] <= lookback], half_life, target.get("carbs_isf"), target_glucose)
+            if percentile == BAND else
+            predict_from([item for item in known if item[1] <= lookback], percentile, half_life)["units_per_ke"]
+            for lookback, half_life, percentile in variants]
         if None in predictions:
             continue
         glucose = None
-        if target.get("end_glucose") is not None and target.get("carbs_isf"):
-            # Under the meal model, (P − F) IE/KE more for Σ[g × KF] / 10 shifts the endpoint
-            # by −(P − F) × Σ[g × KF] / 10 mg/dL; all other doses stay as they were.
-            glucose = [target["end_glucose"] - (value - target["value"]) * target["carbs_isf"] / 10
+        if target.get("carbs_isf"):
+            # The dose help corrects to the target at the meal, so a dose with factor P ends at
+            # target + (F − P) × Σ[g × KF] / 10 under the meal model; F already contains the measured
+            # course, so the measured endpoint must not be added again. Only the factor error counts.
+            glucose = [target_glucose + (target["value"] - value) * target["carbs_isf"] / 10
                        for value in predictions]
         rows.append({"units_per_ke": target["value"], "predictions": predictions, "glucose": glucose})
     stats = []
