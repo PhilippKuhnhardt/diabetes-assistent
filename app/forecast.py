@@ -74,6 +74,14 @@ def predict(points: list[dict], key: tuple, day: date, percentile: Decimal,
     return {"count": len(values), "units_per_ke": value if value is not None and value > 0 else None}
 
 
+def median(values: list[Decimal]) -> Decimal | None:
+    """Median of sorted values; None when empty."""
+    if not values:
+        return None
+    middle = len(values) // 2
+    return values[middle] if len(values) % 2 else (values[middle - 1] + values[middle]) / 2
+
+
 def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal, Decimal]]) -> dict:
     """Simulate each (lookback, half-life, percentile) variant on the meals since `since`.
     Only meals every variant can predict count, so all cells compare the same meals."""
@@ -95,14 +103,14 @@ def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal,
     stats = []
     for index in range(len(variants)):
         absolute = sorted(abs(row["predictions"][index] - row["units_per_ke"]) / row["units_per_ke"] for row in rows)
-        levels = [row["glucose"][index] for row in rows if row["glucose"] is not None]
-        middle = len(absolute) // 2
+        levels = sorted(row["glucose"][index] for row in rows if row["glucose"] is not None)
         stats.append({
             "count": len(rows), "glucose_count": len(levels),
             "below": sum(level < GLUCOSE_LOW for level in levels),
             "in_range": sum(GLUCOSE_LOW <= level <= GLUCOSE_HIGH for level in levels),
             "above": sum(level > GLUCOSE_HIGH for level in levels),
-            "median_abs_deviation": ((absolute[middle] if len(absolute) % 2 else
-                                      (absolute[middle - 1] + absolute[middle]) / 2) if absolute else None),
+            "mean_glucose": sum(levels) / len(levels) if levels else None,
+            "median_glucose": median(levels),
+            "median_abs_deviation": median(absolute),
         })
     return {"rows": rows, "stats": stats}
