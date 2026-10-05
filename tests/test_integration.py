@@ -442,6 +442,14 @@ class IntegrationTests(unittest.TestCase):
         effects = self.request("/api/settings")["settings"]["sport_effects_mgdl"]
         self.assertEqual(Decimal(effects["racing"]), Decimal(-60))
 
+    def test_former_lookbacks_map_to_the_offered_ones(self):
+        _, current = storage.get_settings()
+        for old, new in ((14, 15), (21, 30), (28, 30)):
+            storage.save_settings({**current, "auto_lookback_days": old})
+            self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], new)
+        self.request("/api/settings", method="POST", body={"auto_lookback_days": 8})
+        self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], 8)
+
     def test_manual_meal_window_is_persisted_validated_and_resettable(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",
@@ -872,7 +880,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(Decimal(updated["settings"]["dose_cautious_target_mgdl"]), Decimal(150))
         for invalid in ({"dose_cautious_target_mgdl": "90"}, {"dose_cautious_target_mgdl": "251"},
                         {"auto_percentile": "24"}, {"auto_percentile": "51"}, {"auto_percentile": "NaN"},
-                        {"auto_lookback_days": 20}, {"auto_half_life_days": "0.5"}):
+                        {"auto_lookback_days": 21}, {"auto_half_life_days": "0.5"}):
             with self.assertRaises(urllib.error.HTTPError) as error:
                 self.request("/api/settings", method="POST", body=invalid)
             self.assertEqual(error.exception.code, 400)
@@ -944,16 +952,16 @@ class IntegrationTests(unittest.TestCase):
              for age, value in enumerate(["1.5", "0.8", "1.2", "1.0", "1.1"], start=1)], Decimal("0.375"))
         self.assertEqual(Decimal(dinner["suggestion"]["auto_units_per_ke"]), expected)
         self.assertEqual(dinner["suggestion"]["count"], 5)
-        self.assertEqual(dinner["suggestion"]["days"], 28)
+        self.assertEqual(dinner["suggestion"]["days"], 30)
         self.assertEqual([Decimal(value) for value in dinner["nightscout_units_per_ke"]], [Decimal("0.8")])
         self.assertIsNone(summary["groups"]["lunch"]["suggestion"]["auto_units_per_ke"])
         for kind in ("work", "free"):
             self.assertIn("suggestion", summary["groups"]["breakfast"]["by_day_type"][kind])
         derivation = summary["suggestion_derivation"]
-        self.assertEqual((derivation["lookback_days"], Decimal(derivation["half_life_days"])), (28, Decimal(28)))
+        self.assertEqual((derivation["lookback_days"], Decimal(derivation["half_life_days"])), (30, Decimal(28)))
         variants = derivation["variants"]
         self.assertEqual([(item["lookback_days"], Decimal(item["half_life_days"])) for item in variants],
-                         [(days, Decimal(half)) for days in (14, 21, 28) for half in (1, 2, 3, 5, 7, 14, 28)])
+                         [(days, Decimal(half)) for days in (8, 15, 30) for half in (1, 2, 3, 5, 7, 14, 28)])
         self.assertEqual([Decimal(cell["percentile"]) for cell in variants[0]["cells"]],
                          [Decimal(25), Decimal("37.5"), Decimal(50)])
         self.assertEqual((derivation["glucose_low_mgdl"], derivation["glucose_high_mgdl"]), ("80", "160"))
