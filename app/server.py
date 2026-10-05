@@ -188,11 +188,22 @@ def auto_factor(values: list[Decimal], percentile: Decimal) -> Decimal | None:
     return quartile(values, percentile / 100)
 
 
+def target_range_at(moment: datetime, settings: dict) -> tuple[Decimal, Decimal]:
+    """Nightscout target range at a moment, or the fallback when the profile has none."""
+    try:
+        return tuple(calculation.schedule_value_at(moment, settings.get("target_schedule") or [],
+                                                   settings["timezone"], key)
+                     for key in ("low_mgdl", "high_mgdl"))
+    except (ValueError, KeyError):
+        return forecast.DEFAULT_TARGET
+
+
 def meal_points(today: date, days_back: int, overrides: dict[str, str], periods: list[dict],
                 loaded: dict[str, dict] | None = None) -> list[dict]:
     """Valid, non-excluded meal factors from today back to days_back days, for the suggestion.
     Breakfast is keyed by the day type of its day."""
     excluded = storage.analysis_exclusions()
+    _, settings = storage.get_settings()
     points = []
     for offset in range(days_back + 1):
         day = today - timedelta(days=offset)
@@ -208,11 +219,16 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
                 continue
             at = (parse_instant(meal["at"]) if meal.get("at")
                   else datetime.combine(day, time(hour=12), tzinfo=timezone.utc))
+            end = parse_instant(result["end"]) if result.get("end") else None
+            low, high = target_range_at(end or at, settings)
             points.append({
-                "id": meal["id"], "day": day, "at": at,
-                "end": parse_instant(result["end"]) if result.get("end") else None,
+                "id": meal["id"], "day": day, "at": at, "end": end,
                 "key": (meal["meal"], day_type if meal["meal"] == "breakfast" else None),
                 "value": Decimal(factor),
+                "end_glucose": Decimal(result["g3"]) if result.get("g3") is not None else None,
+                "carbs_isf": (Decimal(result["carbs_times_isf_total"])
+                              if result.get("carbs_times_isf_total") is not None else None),
+                "target_low": low, "target_high": high,
             })
     return points
 
@@ -898,6 +914,9 @@ class Handler(BaseHTTPRequestHandler):
                     "shift": forecast.day_shift(points, now, half_life),
                     "backtest": test,
                     "percentile_comparison": percentile_comparison,
+                    "target_from_nightscout": bool(settings.get("target_schedule")),
+                    "target_ranges": sorted({(str(row["target_low"]), str(row["target_high"]))
+                                             for row in test["rows"] if row["glucose"] is not None}),
                 }
                 for name, group in groups.items():
                     current = set()
