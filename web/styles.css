@@ -196,6 +196,20 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .analysis-table.compact { min-width: 520px; }
 .derivation-note { margin: 14px 0 6px; }
 .analysis-table tr.matrix-group td { border-top: 2px solid var(--line); }
+.matrix .matrix-cell { min-width: 150px; padding: 8px; }
+.matrix-cell .range-bar { display: block; width: 100%; height: 8px; border-radius: 4px; overflow: hidden; margin: 2px 0 5px; }
+.matrix-cell .range-nums { display: block; white-space: nowrap; color: var(--muted); }
+.matrix-cell small { display: block; margin-top: 2px; }
+.matrix-cell.is-active { box-shadow: inset 0 0 0 2px #9fb8aa; }
+.matrix-cell.is-best { background: var(--green-light); box-shadow: inset 0 0 0 2px var(--green); }
+.matrix-cell.is-best small { color: var(--green); font-weight: 700; }
+rect.range-low { fill: #c8463f; }
+rect.range-ok { fill: #2f9a63; }
+rect.range-high { fill: #e0a43a; }
+span.range-low { color: #b23a33; font-weight: 650; }
+.range-ok { color: var(--green); }
+span.range-high { color: #9a6410; font-weight: 650; }
+.range-legend span { margin-right: 10px; white-space: nowrap; }
 .derivation-active { color: var(--green); font-size: 11px; font-weight: 700; margin-left: 6px; }
 .glucose-change { display: inline-block; padding: 3px 7px; border-radius: 6px; font-weight: 650; white-space: nowrap; }
 .glucose-change.rising { color: #8a3b16; background: #fff0e5; }

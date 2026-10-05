@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from functools import lru_cache
 
 METHODS = ("flat", "weighted", "weighted_shift")
 LOOKBACK_DAYS = 28
@@ -28,6 +29,8 @@ SHIFT_HOURS = 48
 SHIFT_CAP = Decimal("0.15")
 HIT_TOLERANCE = Decimal("0.10")
 HALF = Decimal("0.5")
+# Half-lives compared in the backtest: two stronger, the default, two weaker weightings.
+HALF_LIVES = (Decimal(3), Decimal(5), Decimal(7), Decimal(10), Decimal(14))
 # Range for the endpoint glucose three hours after a meal; deliberately tighter than the
 # Nightscout target range (80–180), which also covers the post-meal rise.
 GLUCOSE_LOW = Decimal(80)
@@ -66,6 +69,7 @@ def history(points: list[dict], key: tuple, day: date) -> list[tuple[Decimal, in
     return result
 
 
+@lru_cache(maxsize=1024)
 def weight(age: int, half_life: Decimal) -> Decimal:
     return HALF ** (Decimal(age) / half_life)
 
@@ -121,7 +125,8 @@ def predict(points: list[dict], key: tuple, at: datetime, day: date, percentile:
     }
 
 
-def backtest(points: list[dict], since: date, percentile: Decimal, half_life: Decimal) -> dict:
+def backtest(points: list[dict], since: date, percentile: Decimal, half_life: Decimal,
+             methods: tuple[str, ...] = METHODS) -> dict:
     """Compare what each method would have suggested before each meal with its calculated factor."""
     rows = []
     for target in sorted(points, key=lambda point: point["at"]):
@@ -129,7 +134,7 @@ def backtest(points: list[dict], since: date, percentile: Decimal, half_life: De
             continue
         predictions = {method: predict(points, target["key"], target["at"], target["day"],
                                        percentile, method, half_life)["units_per_ke"]
-                       for method in METHODS}
+                       for method in methods}
         if any(value is None for value in predictions.values()):
             continue
         row = {"id": target["id"], "at": target["at"], "meal": target["key"][0],
@@ -142,7 +147,7 @@ def backtest(points: list[dict], since: date, percentile: Decimal, half_life: De
                               for method, value in predictions.items()}
         rows.append(row)
     stats = {}
-    for method in METHODS:
+    for method in methods:
         deviations = sorted((row["predictions"][method] - row["units_per_ke"]) / row["units_per_ke"]
                             for row in rows)
         absolute = sorted(abs(value) for value in deviations)

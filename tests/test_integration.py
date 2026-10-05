@@ -947,9 +947,13 @@ class IntegrationTests(unittest.TestCase):
         dinner_now = next(item for item in derivation["current"] if item["meal"] == "dinner")
         self.assertEqual(Decimal(dinner_now["units_per_ke"]), Decimal("1.05"))
         self.assertEqual(set(derivation["backtest"]["stats"]), {"flat", "weighted", "weighted_shift"})
-        self.assertEqual([Decimal(item["percentile"]) for item in derivation["percentile_comparison"]],
+        variants = derivation["variants"]
+        self.assertEqual([(item["method"], item["half_life_days"]) for item in variants],
+                         [("flat", None)] + [(name, days) for name in ("weighted", "weighted_shift")
+                                             for days in ("3", "5", "7", "10", "14")])
+        self.assertEqual([Decimal(cell["percentile"]) for cell in variants[0]["cells"]],
                          [Decimal(25), Decimal("37.5"), Decimal(50)])
-        self.assertEqual(derivation["percentile_comparison"][1]["stats"], derivation["backtest"]["stats"])
+        self.assertEqual(variants[0]["cells"][1]["stats"], derivation["backtest"]["stats"]["flat"])
         self.assertEqual((derivation["glucose_low_mgdl"], derivation["glucose_high_mgdl"]), ("80", "160"))
 
     def test_summary_shows_median_middle_half_and_full_range(self):
