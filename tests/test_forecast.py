@@ -81,6 +81,18 @@ class BacktestTests(unittest.TestCase):
         stats = forecast.backtest(points, TODAY - timedelta(days=2), [(28, Decimal(7), Decimal(50))])["stats"][0]
         self.assertEqual(stats["count"], 2)
         self.assertEqual(stats["glucose_count"], 0)
+        self.assertIsNone(stats["mean_glucose"])
+        self.assertIsNone(stats["median_glucose"])
+
+    def test_mean_and_median_of_the_simulated_endpoint_glucose(self):
+        points = [point(age, "1.0") for age in range(4, 20)]
+        # The prediction is 1.0 IE/KE for every target, so each endpoint stays as measured.
+        for age, glucose in ((1, 90), (2, 120), (3, 210)):
+            target = point(age, "1.0")
+            target.update({"end_glucose": Decimal(glucose), "carbs_isf": Decimal(2000)})
+            points.append(target)
+        stats = forecast.backtest(points, TODAY - timedelta(days=3), [(28, Decimal(7), Decimal(50))])["stats"][0]
+        self.assertEqual((stats["mean_glucose"], stats["median_glucose"]), (Decimal(140), Decimal(120)))
 
 
 if __name__ == "__main__":
