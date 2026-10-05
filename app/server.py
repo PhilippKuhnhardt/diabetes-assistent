@@ -207,6 +207,7 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
             points.append({
                 "id": meal["id"], "day": day, "at": at,
                 "key": (meal["meal"], day_type if meal["meal"] == "breakfast" else None),
+                "day_type": day_type,
                 "value": Decimal(factor),
                 "end_glucose": Decimal(result["g3"]) if result.get("g3") is not None else None,
                 "carbs_isf": (Decimal(result["carbs_times_isf_total"])
@@ -871,7 +872,8 @@ class Handler(BaseHTTPRequestHandler):
                     }
                 configured = forecast_settings(settings)
                 percentile, half_life, lookback = configured
-                points = meal_points(today, max(days - 1, 0) + forecast.MAX_LOOKBACK + 1,
+                points = meal_points(today, max(max(days - 1, 0) + forecast.MAX_LOOKBACK + 1,
+                                                 forecast.RATIO_DAYS + forecast.RATIO_REFERENCE_DAYS),
                                      day_types, vacations, loaded_days)
                 predictions = {key: forecast.predict(points, key, today, percentile, half_life, lookback)
                                for key in (("breakfast", "work"), ("breakfast", "free"),
@@ -898,6 +900,8 @@ class Handler(BaseHTTPRequestHandler):
                                  for days_back, strength in rows],
                     "glucose_low_mgdl": str(forecast.GLUCOSE_LOW), "glucose_high_mgdl": str(forecast.GLUCOSE_HIGH),
                 }
+                # Information only: does the free-day factor follow the work-day factor by a stable ratio?
+                day_type_ratio = forecast.day_type_ratios(points, today)
                 for name, group in groups.items():
                     current = set()
                     if settings["ic_schedule"]:
@@ -910,6 +914,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._response(200, {
                     "days": days, "groups": groups, "profile_sync_error": profile_sync_error,
                     "suggestion_derivation": json_safe(suggestion_derivation),
+                    "day_type_ratio": json_safe(day_type_ratio),
                     "sport_analysis": sport_analysis.analyze(
                         sport_meals, sport_sessions, settings["sport_lookback_minutes"],
                         settings["window_minutes"], episodes.SPORT_LABELS),

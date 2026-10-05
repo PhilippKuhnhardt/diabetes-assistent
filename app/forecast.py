@@ -26,6 +26,11 @@ HALF_LIVES = (Decimal(1), Decimal(2), Decimal(3), Decimal(5), Decimal(7), Decima
 # Nightscout target range (80–180), which also covers the post-meal rise.
 GLUCOSE_LOW = Decimal(80)
 GLUCOSE_HIGH = Decimal(160)
+# Work-stress surcharge: last 30 days, each free-day meal against the two nearest work-day meals
+# before and the two after it, searched at most 7 days away.
+RATIO_DAYS = 30
+RATIO_NEIGHBOURS = 2
+RATIO_REFERENCE_DAYS = 7
 
 
 def weighted_quantile(pairs: list[tuple[Decimal, Decimal]], fraction: Decimal) -> Decimal:
@@ -80,6 +85,41 @@ def median(values: list[Decimal]) -> Decimal | None:
         return None
     middle = len(values) // 2
     return values[middle] if len(values) % 2 else (values[middle - 1] + values[middle]) / 2
+
+
+def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
+                    reference_days: int = RATIO_REFERENCE_DAYS, neighbours: int = RATIO_NEIGHBOURS) -> dict:
+    """Stress surcharge of work days over free days, per meal kind, over the last `days` days.
+    Free days are the base: work = free × (1 + surcharge). Overall: median work factor / median free
+    factor − 1. Per free-day meal: the median of the same meal kind on the `neighbours` nearest work
+    days before and after it (at most `reference_days` away; needs two) divided by its factor − 1, so a
+    stable surcharge shows up as tightly grouped single values. For information only."""
+    result = {}
+    for kind in ("breakfast", "lunch", "dinner"):
+        recent = [point for point in points if point["key"][0] == kind and 0 <= (today - point["day"]).days < days]
+        work = sorted(point["value"] for point in recent if point["day_type"] == "work")
+        free = sorted(point["value"] for point in recent if point["day_type"] == "free")
+        singles = []
+        for point in sorted(recent, key=lambda item: item["at"]):
+            if point["day_type"] != "free":
+                continue
+            work_days = sorted((item for item in points if item["key"][0] == kind and item["day_type"] == "work"),
+                               key=lambda item: item["at"])
+            before = [item for item in work_days if 1 <= (point["day"] - item["day"]).days <= reference_days]
+            after = [item for item in work_days if 1 <= (item["day"] - point["day"]).days <= reference_days]
+            reference = sorted(item["value"] for item in before[-neighbours:] + after[:neighbours])
+            if len(reference) >= 2:
+                singles.append({"day": point["day"].isoformat(), "surcharge": median(reference) / point["value"] - 1,
+                                "before": len(before[-neighbours:]), "after": len(after[:neighbours])})
+        surcharges = sorted(item["surcharge"] for item in singles)
+        result[kind] = {
+            "work_count": len(work), "work_median": median(work),
+            "free_count": len(free), "free_median": median(free),
+            "surcharge": median(work) / median(free) - 1 if work and free else None,
+            "singles": singles, "single_median": median(surcharges),
+            "single_min": surcharges[0] if surcharges else None, "single_max": surcharges[-1] if surcharges else None,
+        }
+    return {"days": days, "reference_days": reference_days, "neighbours": neighbours, "meals": result}
 
 
 def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal, Decimal]]) -> dict:
