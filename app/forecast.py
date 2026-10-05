@@ -26,8 +26,8 @@ HALF_LIVES = (Decimal(1), Decimal(2), Decimal(3), Decimal(5), Decimal(7), Decima
 # Nightscout target range (80–180), which also covers the post-meal rise.
 GLUCOSE_LOW = Decimal(80)
 GLUCOSE_HIGH = Decimal(160)
-# Free-day vs. work-day comparison: last 30 days, each free-day meal against the two nearest work-day
-# meals before and the two after it, searched at most 7 days away.
+# Work-stress surcharge: last 30 days, each free-day meal against the two nearest work-day meals
+# before and the two after it, searched at most 7 days away.
 RATIO_DAYS = 30
 RATIO_NEIGHBOURS = 2
 RATIO_REFERENCE_DAYS = 7
@@ -89,11 +89,11 @@ def median(values: list[Decimal]) -> Decimal | None:
 
 def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
                     reference_days: int = RATIO_REFERENCE_DAYS, neighbours: int = RATIO_NEIGHBOURS) -> dict:
-    """How the factor on free days relates to work days, per meal kind, over the last `days` days.
-    Overall: median free factor / median work factor. Per free-day meal: its factor divided by the
-    median of the same meal kind on the `neighbours` nearest work days before and after it (at most
-    `reference_days` away; needs two), so a stable ratio shows up as tightly grouped single ratios.
-    For information only."""
+    """Stress surcharge of work days over free days, per meal kind, over the last `days` days.
+    Free days are the base: work = free × (1 + surcharge). Overall: median work factor / median free
+    factor − 1. Per free-day meal: the median of the same meal kind on the `neighbours` nearest work
+    days before and after it (at most `reference_days` away; needs two) divided by its factor − 1, so a
+    stable surcharge shows up as tightly grouped single values. For information only."""
     result = {}
     for kind in ("breakfast", "lunch", "dinner"):
         recent = [point for point in points if point["key"][0] == kind and 0 <= (today - point["day"]).days < days]
@@ -109,15 +109,15 @@ def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
             after = [item for item in work_days if 1 <= (item["day"] - point["day"]).days <= reference_days]
             reference = sorted(item["value"] for item in before[-neighbours:] + after[:neighbours])
             if len(reference) >= 2:
-                singles.append({"day": point["day"].isoformat(), "ratio": point["value"] / median(reference),
+                singles.append({"day": point["day"].isoformat(), "surcharge": median(reference) / point["value"] - 1,
                                 "before": len(before[-neighbours:]), "after": len(after[:neighbours])})
-        ratios = sorted(item["ratio"] for item in singles)
+        surcharges = sorted(item["surcharge"] for item in singles)
         result[kind] = {
             "work_count": len(work), "work_median": median(work),
             "free_count": len(free), "free_median": median(free),
-            "ratio": median(free) / median(work) if work and free else None,
-            "singles": singles, "single_median": median(ratios),
-            "single_min": ratios[0] if ratios else None, "single_max": ratios[-1] if ratios else None,
+            "surcharge": median(work) / median(free) - 1 if work and free else None,
+            "singles": singles, "single_median": median(surcharges),
+            "single_min": surcharges[0] if surcharges else None, "single_max": surcharges[-1] if surcharges else None,
         }
     return {"days": days, "reference_days": reference_days, "neighbours": neighbours, "meals": result}
 

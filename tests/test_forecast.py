@@ -102,9 +102,10 @@ class DayTypeRatioTests(unittest.TestCase):
         item.update({"key": ("breakfast", kind), "day_type": kind})
         return item
 
-    def test_free_days_against_the_two_work_days_before_and_after(self):
+    def test_stress_surcharge_against_the_two_work_days_before_and_after(self):
         # Work days around the weekend 14 and 15 days ago need 1.5 IE/KE, all others 1.0; Wednesdays
-        # are odd (3.0) but too far from any weekend to count. Free days are always 0.8 × their neighbours.
+        # are odd (3.0) but too far from any weekend to count. Free days are always 0.8 × their neighbours,
+        # so work days carry a stress surcharge of 1 / 0.8 − 1 = 25 %.
         points = []
         for age in range(0, 40):
             day = TODAY - timedelta(days=age)
@@ -116,18 +117,18 @@ class DayTypeRatioTests(unittest.TestCase):
             points.append(self.breakfast(age, value))
         result = forecast.day_type_ratios(points, TODAY)["meals"]["breakfast"]
         self.assertEqual((result["single_median"], result["single_min"], result["single_max"]),
-                         (Decimal("0.8"), Decimal("0.8"), Decimal("0.8")))
+                         (Decimal("0.25"), Decimal("0.25"), Decimal("0.25")))
         # Saturdays and Sundays within 30 days (today is a Sunday, so the last weekend only has days before).
         self.assertEqual(len(result["singles"]), 10)
         self.assertEqual((result["singles"][-1]["before"], result["singles"][-1]["after"]), (2, 0))
         self.assertEqual((result["singles"][0]["before"], result["singles"][0]["after"]), (2, 2))
         self.assertEqual(result["free_count"], 10)
 
-    def test_without_free_days_there_is_no_ratio(self):
+    def test_without_free_days_there_is_no_surcharge(self):
         points = [dict(point(age, "1.0"), day_type="work") for age in range(1, 10)]
         result = forecast.day_type_ratios(points, TODAY)["meals"]["dinner"]
         self.assertEqual((result["work_count"], result["free_count"]), (9, 0))
-        self.assertIsNone(result["ratio"])
+        self.assertIsNone(result["surcharge"])
         self.assertEqual(result["singles"], [])
 
 
