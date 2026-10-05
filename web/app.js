@@ -1858,22 +1858,26 @@ function renderSuggestionDerivation(d) {
   const percentiles = variants.length ? variants[0].cells.map(cell => cell.percentile) : [];
   const total = variants.length ? variants[0].cells[0].stats.glucose_count : 0;
   const shares = stats => ["below", "in_range", "above"].map(key => stats.glucose_count ? stats[key] / stats.glucose_count * 100 : 0);
-  // Best cell: most endpoints in range, then fewest below 80.
+  // Best cell: most endpoints in range, then fewest below 80; once per lookback period and once overall.
   const cells = variants.flatMap(variant => variant.cells.map(cell => ({ variant, cell, s: shares(cell.stats) })));
-  const best = cells.reduce((top, item) => !top || item.s[1] > top.s[1] || (item.s[1] === top.s[1] && item.s[0] < top.s[0]) ? item : top, null);
+  const pick = items => items.reduce((top, item) => !top || item.s[1] > top.s[1] || (item.s[1] === top.s[1] && item.s[0] < top.s[0]) ? item : top, null);
+  const best = pick(cells);
+  const bestPerLookback = new Set([...new Set(variants.map(variant => variant.lookback_days))]
+    .map(days => pick(cells.filter(item => item.variant.lookback_days === days))?.cell));
   const strength = days => { const diff = Number(days) - 7; return num(days, 1) + ' T.' + (diff < 0 ? ' <small>stärker</small>' : diff > 0 ? ' <small>schwächer</small>' : ''); };
   const cellHTML = (variant, cell) => {
     const [below, inRange, above] = shares(cell.stats);
     const active = Number(cell.percentile) === Number(d.percentile) && Number(variant.lookback_days) === Number(d.lookback_days) &&
       Number(variant.half_life_days) === Number(d.half_life_days);
     const isBest = best && best.cell === cell;
+    const isPeriodBest = bestPerLookback.has(cell);
     const bar = '<svg class="range-bar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">' +
       '<rect class="range-low" x="0" width="' + below.toFixed(2) + '" height="8"/>' +
       '<rect class="range-ok" x="' + below.toFixed(2) + '" width="' + inRange.toFixed(2) + '" height="8"/>' +
       '<rect class="range-high" x="' + (below + inRange).toFixed(2) + '" width="' + above.toFixed(2) + '" height="8"/></svg>';
-    const notes = [isBest ? 'bestes' : '', active ? 'aktiv' : '',
+    const notes = [isBest ? 'bestes gesamt' : isPeriodBest ? 'bestes ' + variant.lookback_days + ' T.' : '', active ? 'aktiv' : '',
       cell.stats.median_abs_deviation == null ? '' : '±' + num(Number(cell.stats.median_abs_deviation) * 100, 0) + ' %'];
-    return '<td class="matrix-cell' + (active ? ' is-active' : '') + (isBest ? ' is-best' : '') + '">' + bar +
+    return '<td class="matrix-cell' + (active ? ' is-active' : '') + (isPeriodBest ? ' is-best' : '') + (isBest ? ' is-overall-best' : '') + '">' + bar +
       '<span class="range-nums"><span class="range-low">' + num(below, 0) + '</span> · <b class="range-ok">' + num(inRange, 0) +
       ' %</b> · <span class="range-high">' + num(above, 0) + '</span></span>' +
       (cell.stats.mean_glucose == null ? '' : '<span class="range-glucose">Ø ' + num(cell.stats.mean_glucose, 0) +
@@ -1887,7 +1891,8 @@ function renderSuggestionDerivation(d) {
   });
   const legend = '<p class="hint derivation-note range-legend"><span class="range-low">■ &lt; ' + num(low, 0) + '</span> ' +
     '<span class="range-ok">■ ' + num(low, 0) + '–' + num(high, 0) + '</span> <span class="range-high">■ &gt; ' + num(high, 0) +
-    '</span> · Anteil der Mahlzeiten mit BZ am Endpunkt in diesem Bereich, darunter Durchschnitt und Median dieses BZ, dazu typische Abweichung des Faktors.</p>';
+    '</span> · Anteil der Mahlzeiten mit BZ am Endpunkt in diesem Bereich, darunter Durchschnitt und Median dieses BZ, dazu typische Abweichung des Faktors. ' +
+    'Grün umrandet: bestes Feld je Zeitraum (meiste im Bereich, dann wenigste unter ' + num(low, 0) + '), kräftig: bestes gesamt.</p>';
   output.innerHTML = total
     ? legend + '<div class="table-wrap"><table class="analysis-table compact matrix"><thead><tr><th>Zeitraum</th><th>Halbwertszeit</th>' +
       percentiles.map(value => '<th>' + (value === "band" ? 'Zielband <small>max. ' + num(low, 0) + '–' + num(high, 0) + '</small>'
