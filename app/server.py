@@ -887,12 +887,18 @@ class Handler(BaseHTTPRequestHandler):
                     groups[name]["suggestion"] = suggestion_factor(predictions[(name, None)], percentile)
                 since = today - timedelta(days=days - 1)
                 test = forecast.backtest(points, since, percentile, half_life)
-                # The same backtest at the lower quartile and the median, next to the configured percentile.
-                percentile_comparison = [
-                    {"percentile": value,
-                     "stats": test["stats"] if value == percentile
-                     else forecast.backtest(points, since, value, half_life)["stats"]}
-                    for value in sorted({Decimal(25), percentile, Decimal(50)})]
+                # Backtest matrix: the equally weighted method once, both weighted methods at five
+                # half-lives (plus the configured one), each at 25 %, the configured percentile and 50 %.
+                percentiles = sorted({Decimal(25), percentile, Decimal(50)})
+                variants = [{"method": "flat", "half_life_days": None, "cells": [
+                    {"percentile": value, "stats": forecast.backtest(points, since, value, half_life, ("flat",))["stats"]["flat"]}
+                    for value in percentiles]}]
+                for name in ("weighted", "weighted_shift"):
+                    for strength in sorted({*forecast.HALF_LIVES, half_life}):
+                        variants.append({"method": name, "half_life_days": strength, "cells": [
+                            {"percentile": value,
+                             "stats": forecast.backtest(points, since, value, strength, (name,))["stats"][name]}
+                            for value in percentiles]})
                 suggestion_derivation = {
                     "method": method, "percentile": str(percentile), "half_life_days": str(half_life),
                     "days": forecast.LOOKBACK_DAYS, "min_meals": forecast.MIN_MEALS,
@@ -900,7 +906,7 @@ class Handler(BaseHTTPRequestHandler):
                     "current": [{"meal": key[0], "day_type": key[1], **predictions[key]} for key in predictions],
                     "shift": forecast.day_shift(points, now, half_life),
                     "backtest": test,
-                    "percentile_comparison": percentile_comparison,
+                    "variants": variants,
                     "glucose_low_mgdl": str(forecast.GLUCOSE_LOW), "glucose_high_mgdl": str(forecast.GLUCOSE_HIGH),
                 }
                 for name, group in groups.items():
