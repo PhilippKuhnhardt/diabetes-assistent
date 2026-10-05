@@ -155,9 +155,9 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result.setdefault("dose_cautious_target_mgdl", 140)
     result.setdefault("auto_percentile", "37.5")
     result.pop("auto_method", None)
-    # Lookbacks offered changed from 14/21/28 to 7/14/28 days; an old 21 falls back to the default.
-    if result.get("auto_lookback_days") not in (7, 14, 28):
-        result["auto_lookback_days"] = 28
+    # Lookbacks offered changed from 14/21/28 to 8/15/28 days: an old 14 becomes 15, anything else 28.
+    if result.get("auto_lookback_days") not in (8, 15, 28):
+        result["auto_lookback_days"] = 15 if result.get("auto_lookback_days") == 14 else 28
     result.setdefault("auto_half_life_days", "7")
     result.setdefault("lunch_end_minute", 1020)
     result.setdefault("sport_lookback_minutes", 360)

@@ -1,7 +1,7 @@
 """Suggested meal factor (Automatik) from recent calculated meal factors.
 
 The suggestion is a percentile of the meal factors of the same meal kind from the last
-`lookback` days (7, 14 or 28), each meal weighted by 0.5 ** (age in days / half-life).
+`lookback` days (8, 15 or 28; 8 so that on Sunday the previous Saturday still counts), each meal weighted by 0.5 ** (age in days / half-life).
 A percentile depends on the order of values, not their size, so one odd day can move it
 by at most its weight share, however extreme it is.
 
@@ -16,7 +16,7 @@ from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 
-LOOKBACKS = (7, 14, 28)
+LOOKBACKS = (8, 15, 28)
 MAX_LOOKBACK = max(LOOKBACKS)
 MIN_MEALS = 4
 HALF = Decimal("0.5")

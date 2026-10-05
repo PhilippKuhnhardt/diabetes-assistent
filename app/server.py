@@ -109,7 +109,7 @@ def validate_settings(value: dict) -> dict:
         raise ValueError("Perzentil der Automatik muss zwischen 25 und 50 % liegen")
     auto_lookback = int(result["auto_lookback_days"])
     if auto_lookback not in forecast.LOOKBACKS:
-        raise ValueError("Zeitraum der Automatik muss 7, 14 oder 28 Tage sein")
+        raise ValueError("Zeitraum der Automatik muss 8, 15 oder 28 Tage sein")
     half_life = calculation.dec(result["auto_half_life_days"])
     if not half_life.is_finite() or not 1 <= half_life <= 28:
         raise ValueError("Halbwertszeit der Automatik muss zwischen 1 und 28 Tagen liegen")

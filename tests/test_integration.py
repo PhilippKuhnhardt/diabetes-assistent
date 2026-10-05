@@ -442,12 +442,13 @@ class IntegrationTests(unittest.TestCase):
         effects = self.request("/api/settings")["settings"]["sport_effects_mgdl"]
         self.assertEqual(Decimal(effects["racing"]), Decimal(-60))
 
-    def test_former_21_day_lookback_falls_back_to_28_days(self):
+    def test_former_lookbacks_map_to_the_offered_ones(self):
         _, current = storage.get_settings()
-        storage.save_settings({**current, "auto_lookback_days": 21})
-        self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], 28)
-        self.request("/api/settings", method="POST", body={"auto_lookback_days": 7})
-        self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], 7)
+        for old, new in ((14, 15), (21, 28)):
+            storage.save_settings({**current, "auto_lookback_days": old})
+            self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], new)
+        self.request("/api/settings", method="POST", body={"auto_lookback_days": 8})
+        self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], 8)
 
     def test_manual_meal_window_is_persisted_validated_and_resettable(self):
         self.request("/api/treatment", method="POST", body={
@@ -960,7 +961,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual((derivation["lookback_days"], Decimal(derivation["half_life_days"])), (28, Decimal(28)))
         variants = derivation["variants"]
         self.assertEqual([(item["lookback_days"], Decimal(item["half_life_days"])) for item in variants],
-                         [(days, Decimal(half)) for days in (7, 14, 28) for half in (1, 2, 3, 5, 7, 14, 28)])
+                         [(days, Decimal(half)) for days in (8, 15, 28) for half in (1, 2, 3, 5, 7, 14, 28)])
         self.assertEqual([Decimal(cell["percentile"]) for cell in variants[0]["cells"]],
                          [Decimal(25), Decimal("37.5"), Decimal(50)])
         self.assertEqual((derivation["glucose_low_mgdl"], derivation["glucose_high_mgdl"]), ("80", "160"))

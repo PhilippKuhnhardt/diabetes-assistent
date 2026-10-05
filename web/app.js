@@ -1896,7 +1896,7 @@ function renderSuggestionDerivation(d) {
       ' für alle Felder: BZ am Endpunkt, wenn mit diesem Faktor gespritzt worden wäre (Modellrechnung, übrige Dosen unverändert). ' +
       'Kürzere Halbwertszeit = neue Werte zählen stärker.</p>'
     : '<p class="hint derivation-note">Im Zeitraum fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
-      d.min_meals + ' Faktoren derselben Mahlzeit in jedem Zeitraum davor, also auch in den letzten 7 Tagen).</p>';
+      d.min_meals + ' Faktoren derselben Mahlzeit in jedem Zeitraum davor, also auch in den letzten 8 Tagen).</p>';
 }
 
 async function loadSummary() {
