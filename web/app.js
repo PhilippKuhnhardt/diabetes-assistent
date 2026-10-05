@@ -419,7 +419,7 @@ async function loadSettings() {
   form.elements.dose_target_mgdl.value = data.settings.dose_target_mgdl;
   form.elements.dose_cautious_target_mgdl.value = data.settings.dose_cautious_target_mgdl;
   form.elements.auto_percentile.value = data.settings.auto_percentile;
-  form.elements.auto_method.value = data.settings.auto_method;
+  form.elements.auto_lookback_days.value = String(data.settings.auto_lookback_days);
   form.elements.auto_half_life_days.value = data.settings.auto_half_life_days;
   form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
   form.elements.lunch_end.value = minuteClock(data.settings.lunch_end_minute);
@@ -1709,7 +1709,7 @@ async function saveSettings(event) {
     dose_target_mgdl: form.elements.dose_target_mgdl.value,
     dose_cautious_target_mgdl: form.elements.dose_cautious_target_mgdl.value,
     auto_percentile: form.elements.auto_percentile.value,
-    auto_method: form.elements.auto_method.value,
+    auto_lookback_days: Number(form.elements.auto_lookback_days.value),
     auto_half_life_days: form.elements.auto_half_life_days.value,
     breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),
     lunch_end_minute: clockMinute(form.elements.lunch_end.value),
@@ -1846,20 +1846,13 @@ function renderSportAnalysis(analysis) {
     : '<div class="empty">Im Zeitraum sind keine Sport- oder Rennsport-Einträge im lokalen Datenbestand.</div>';
 }
 
-const suggestionMethods = { flat: "28 Tage gleich", weighted: "Gewichtet", weighted_shift: "Gewichtet + Tageslage" };
-
-// Backtest matrix: where the endpoint glucose would have landed with each method and percentile,
-// plus the current day shift.
+// Backtest matrix: where the endpoint glucose would have landed with each lookback,
+// weighting strength (half-life) and percentile.
 function renderSuggestionDerivation(d) {
   const output = $("#suggestion-derivation");
   if (!d) { output.innerHTML = ""; return; }
-  const pct = value => (Number(value) > 0 ? "+" : Number(value) < 0 ? "−" : "") + num(Math.abs(Number(value)) * 100, 0) + " %";
-  const ie = value => value == null ? "—" : escapeHTML(factorNum(value));
-  const dateTime = value => new Date(value).toLocaleString("de-DE", {
-    weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-  const label = item => names[item.meal] + (item.day_type ? (item.day_type === "work" ? " Arbeit" : " frei") : "");
-  $("#suggestion-method").textContent = suggestionMethods[d.method] + " · " + num(d.percentile, 1) + " % · Halbwertszeit " +
-    num(d.half_life_days, 1) + " T.";
+  $("#suggestion-method").textContent = "Aktiv: " + d.lookback_days + " T. · Halbwertszeit " + num(d.half_life_days, 1) +
+    " T. · " + num(d.percentile, 1) + " %";
   const low = Number(d.glucose_low_mgdl), high = Number(d.glucose_high_mgdl);
   const variants = d.variants || [];
   const percentiles = variants.length ? variants[0].cells.map(cell => cell.percentile) : [];
@@ -1871,8 +1864,8 @@ function renderSuggestionDerivation(d) {
   const strength = days => { const diff = Number(days) - 7; return num(days, 1) + ' T.' + (diff < 0 ? ' <small>stärker</small>' : diff > 0 ? ' <small>schwächer</small>' : ''); };
   const cellHTML = (variant, cell) => {
     const [below, inRange, above] = shares(cell.stats);
-    const active = variant.method === d.method && Number(cell.percentile) === Number(d.percentile) &&
-      (variant.half_life_days == null || Number(variant.half_life_days) === Number(d.half_life_days));
+    const active = Number(cell.percentile) === Number(d.percentile) && Number(variant.lookback_days) === Number(d.lookback_days) &&
+      Number(variant.half_life_days) === Number(d.half_life_days);
     const isBest = best && best.cell === cell;
     const bar = '<svg class="range-bar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">' +
       '<rect class="range-low" x="0" width="' + below.toFixed(2) + '" height="8"/>' +
@@ -1886,36 +1879,22 @@ function renderSuggestionDerivation(d) {
       escapeHTML(notes.filter(Boolean).join(' · ')) + '</small></td>';
   };
   const rows = variants.map((variant, index) => {
-    const first = index === 0 || variants[index - 1].method !== variant.method;
-    return '<tr' + (first ? ' class="matrix-group"' : '') + '><td>' + (first ? escapeHTML(suggestionMethods[variant.method]) : '') +
-      '</td><td>' + (variant.half_life_days == null ? '—' : strength(variant.half_life_days)) + '</td>' +
-      variant.cells.map(cell => cellHTML(variant, cell)).join("") + '</tr>';
+    const first = index === 0 || variants[index - 1].lookback_days !== variant.lookback_days;
+    return '<tr' + (first ? ' class="matrix-group"' : '') + '><td>' + (first ? escapeHTML(variant.lookback_days + ' Tage') : '') +
+      '</td><td>' + strength(variant.half_life_days) + '</td>' + variant.cells.map(cell => cellHTML(variant, cell)).join("") + '</tr>';
   });
   const legend = '<p class="hint derivation-note range-legend"><span class="range-low">■ &lt; ' + num(low, 0) + '</span> ' +
     '<span class="range-ok">■ ' + num(low, 0) + '–' + num(high, 0) + '</span> <span class="range-high">■ &gt; ' + num(high, 0) +
     '</span> · Anteil der Mahlzeiten mit BZ am Endpunkt in diesem Bereich, dazu typische Abweichung des Faktors.</p>';
-  const matrix = total
-    ? legend + '<div class="table-wrap"><table class="analysis-table compact matrix"><thead><tr><th>Methode</th><th>Halbwertszeit</th>' +
+  output.innerHTML = total
+    ? legend + '<div class="table-wrap"><table class="analysis-table compact matrix"><thead><tr><th>Zeitraum</th><th>Halbwertszeit</th>' +
       percentiles.map(value => '<th>' + escapeHTML(num(value, 1)) + ' %' + (Number(value) === 50 ? ' <small>Median</small>' : '') + '</th>').join("") +
       '</tr></thead><tbody>' + rows.join("") + '</tbody></table></div>' +
-      '<p class="hint derivation-note">Rückblick über ' + total + (total === 1 ? ' Mahlzeit' : ' Mahlzeiten') +
-      ': BZ am Endpunkt, wenn mit dem Faktor der Methode gespritzt worden wäre (Modellrechnung, übrige Dosen unverändert). ' +
+      '<p class="hint derivation-note">Rückblick über dieselben ' + total + (total === 1 ? ' Mahlzeit' : ' Mahlzeiten') +
+      ' für alle Felder: BZ am Endpunkt, wenn mit diesem Faktor gespritzt worden wäre (Modellrechnung, übrige Dosen unverändert). ' +
       'Kürzere Halbwertszeit = neue Werte zählen stärker.</p>'
     : '<p class="hint derivation-note">Im Zeitraum fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
-      d.min_meals + ' Faktoren derselben Mahlzeit aus den 28 Tagen davor).</p>';
-  const shift = d.shift;
-  const reasons = {
-    higher: "alle drei höher als üblich, Vorschläge " + pct(Number(shift.factor) - 1),
-    lower: "alle drei niedriger als üblich, Vorschläge " + pct(Number(shift.factor) - 1),
-    mixed: "uneinheitlich, keine Anpassung",
-    too_few: "zu wenige abgeschlossene Mahlzeiten in 48 h, keine Anpassung",
-  };
-  const shiftBlock = '<p class="hint derivation-note"><b>Tageslage</b>: ' + escapeHTML(reasons[shift.reason] || "") +
-    (d.method === "weighted_shift" ? '' : ' (aktive Methode ohne Tageslage)') + '.</p>' +
-    (shift.meals.length ? '<ul class="hint">' + shift.meals.map(meal => '<li>' + escapeHTML(label(meal) + " " + dateTime(meal.at)) +
-      ': ' + ie(meal.units_per_ke) + ' statt ' + ie(meal.reference_units_per_ke) + ' IE/KE' +
-      (meal.ratio != null ? ' (' + escapeHTML(pct(Number(meal.ratio) - 1)) + ')' : '') + '</li>').join("") + '</ul>' : '');
-  output.innerHTML = matrix + shiftBlock;
+      d.min_meals + ' Faktoren derselben Mahlzeit in jedem Zeitraum davor, also auch in den letzten 14 Tagen).</p>';
 }
 
 async function loadSummary() {

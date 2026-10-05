@@ -87,13 +87,6 @@ class DosingTests(unittest.TestCase):
         self.assertEqual(Decimal(result["auto_expected_glucose_mgdl"]), Decimal("94"))
         self.assertNotIn("auto_entry_units", dosing.suggest("20", settings, entries, [], self.now))
 
-    def test_auto_factor_is_cautious_percentile_inside_middle_half(self):
-        values = [Decimal(value) for value in ("0.8", "1.0", "1.1", "1.2", "1.5")]
-        self.assertEqual(server.auto_factor(values, Decimal("37.5")), Decimal("1.05"))
-        self.assertEqual(server.auto_factor(values, Decimal("25")), Decimal("1.0"))
-        self.assertEqual(server.auto_factor(values, Decimal("50")), Decimal("1.1"))
-        self.assertIsNone(server.auto_factor(values[:3], Decimal("37.5")))
-
     def test_stale_glucose_has_no_correction(self):
         entries = [{"at": self.now - timedelta(minutes=16), "sgv": 150}]
         result = dosing.suggest("20", self.settings, entries, [], self.now)

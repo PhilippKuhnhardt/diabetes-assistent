@@ -13,7 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-from app import storage
+from app import forecast, storage
 from app.server import Handler, night_analysis
 
 
@@ -871,7 +871,8 @@ class IntegrationTests(unittest.TestCase):
                                body={"dose_cautious_target_mgdl": "150", "auto_percentile": "37.5"})
         self.assertEqual(Decimal(updated["settings"]["dose_cautious_target_mgdl"]), Decimal(150))
         for invalid in ({"dose_cautious_target_mgdl": "90"}, {"dose_cautious_target_mgdl": "251"},
-                        {"auto_percentile": "24"}, {"auto_percentile": "51"}, {"auto_percentile": "NaN"}):
+                        {"auto_percentile": "24"}, {"auto_percentile": "51"}, {"auto_percentile": "NaN"},
+                        {"auto_lookback_days": 20}, {"auto_half_life_days": "1"}):
             with self.assertRaises(urllib.error.HTTPError) as error:
                 self.request("/api/settings", method="POST", body=invalid)
             self.assertEqual(error.exception.code, 400)
@@ -881,9 +882,7 @@ class IntegrationTests(unittest.TestCase):
         local_today = now.astimezone(zone).date()
         # Make every time of day count as dinner for this test.
         _, settings = storage.get_settings()
-        # The equally weighted method keeps the original percentile arithmetic visible.
-        storage.save_settings({**settings, "breakfast_end_minute": 1, "lunch_end_minute": 2,
-                               "auto_method": "flat"})
+        storage.save_settings({**settings, "breakfast_end_minute": 1, "lunch_end_minute": 2})
         current_day = {
             "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 100}],
             "treatments": [],
@@ -907,11 +906,16 @@ class IntegrationTests(unittest.TestCase):
             too_few = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
         self.assertEqual(result["auto_meal"], "dinner")
         self.assertEqual(result["auto_factor_count"], 5)
-        self.assertEqual(Decimal(result["auto_units_per_ke"]), Decimal("1.05"))
+        # 37.5 % percentile of the five dinners, each weighted by 0.5 ** (age / 7 days).
+        expected = forecast.weighted_quantile(
+            [(Decimal(value), forecast.weight(age, Decimal(7)))
+             for age, value in enumerate(["1.5", "0.8", "1.2", "1.0", "1.1"], start=1)], Decimal("0.375"))
+        self.assertEqual(Decimal(result["auto_units_per_ke"]), expected)
+        self.assertTrue(Decimal("1.0") < expected < Decimal("1.1"))
         self.assertEqual(Decimal(result["auto_median_units_per_ke"]), Decimal("1.1"))
         self.assertEqual(Decimal(result["auto_q1_units_per_ke"]), Decimal("1.0"))
         self.assertEqual(Decimal(result["cautious_target_mgdl"]), Decimal(150))
-        self.assertEqual(Decimal(result["auto_total_units"]), Decimal("2.1"))
+        self.assertEqual(Decimal(result["auto_total_units"]), 2 * expected)
         self.assertEqual(Decimal(result["auto_entry_units"]), Decimal("2"))
         self.assertEqual(result["factor_source"], "nightscout")
         self.assertEqual(too_few["auto_factor_count"], 3)
@@ -921,7 +925,7 @@ class IntegrationTests(unittest.TestCase):
         FakeNightscout.profile["store"]["Default"]["carbratio"] = [
             {"time": "00:00", "timeAsSeconds": 0, "value": 12.5}]
         self.request("/api/profile/sync", method="POST", body={})
-        self.request("/api/settings", method="POST", body={"auto_method": "flat"})
+        self.request("/api/settings", method="POST", body={"auto_half_life_days": "28"})
         local_today = datetime.now(timezone.utc).astimezone(ZoneInfo("Europe/Berlin")).date()
         past = [(local_today - timedelta(days=offset)).isoformat() for offset in range(1, 6)]
         factors = dict(zip(past, ["1.5", "0.8", "1.2", "1.0", "1.1"]))
@@ -935,7 +939,10 @@ class IntegrationTests(unittest.TestCase):
         with patch("app.server.day_payload", side_effect=payload):
             summary = self.request("/api/summary?days=3")
         dinner = summary["groups"]["dinner"]
-        self.assertEqual(Decimal(dinner["suggestion"]["auto_units_per_ke"]), Decimal("1.05"))
+        expected = forecast.weighted_quantile(
+            [(Decimal(value), forecast.weight(age, Decimal(28)))
+             for age, value in enumerate(["1.5", "0.8", "1.2", "1.0", "1.1"], start=1)], Decimal("0.375"))
+        self.assertEqual(Decimal(dinner["suggestion"]["auto_units_per_ke"]), expected)
         self.assertEqual(dinner["suggestion"]["count"], 5)
         self.assertEqual(dinner["suggestion"]["days"], 28)
         self.assertEqual([Decimal(value) for value in dinner["nightscout_units_per_ke"]], [Decimal("0.8")])
@@ -943,17 +950,12 @@ class IntegrationTests(unittest.TestCase):
         for kind in ("work", "free"):
             self.assertIn("suggestion", summary["groups"]["breakfast"]["by_day_type"][kind])
         derivation = summary["suggestion_derivation"]
-        self.assertEqual(derivation["method"], "flat")
-        dinner_now = next(item for item in derivation["current"] if item["meal"] == "dinner")
-        self.assertEqual(Decimal(dinner_now["units_per_ke"]), Decimal("1.05"))
-        self.assertEqual(set(derivation["backtest"]["stats"]), {"flat", "weighted", "weighted_shift"})
+        self.assertEqual((derivation["lookback_days"], Decimal(derivation["half_life_days"])), (28, Decimal(28)))
         variants = derivation["variants"]
-        self.assertEqual([(item["method"], item["half_life_days"]) for item in variants],
-                         [("flat", None)] + [(name, days) for name in ("weighted", "weighted_shift")
-                                             for days in ("3", "5", "7", "10", "14")])
+        self.assertEqual([(item["lookback_days"], Decimal(item["half_life_days"])) for item in variants],
+                         [(days, Decimal(half)) for days in (14, 21, 28) for half in (3, 5, 7, 10, 14, 28)])
         self.assertEqual([Decimal(cell["percentile"]) for cell in variants[0]["cells"]],
                          [Decimal(25), Decimal("37.5"), Decimal(50)])
-        self.assertEqual(variants[0]["cells"][1]["stats"], derivation["backtest"]["stats"]["flat"])
         self.assertEqual((derivation["glucose_low_mgdl"], derivation["glucose_high_mgdl"]), ("80", "160"))
 
     def test_summary_shows_median_middle_half_and_full_range(self):

@@ -200,13 +200,13 @@
               <label>Vorsichtiger Zielwert <span>mg/dL</span><input name="dose_cautious_target_mgdl" type="number" min="60" max="250" step="1" required></label>
               <label>Automatik-Perzentil <span>%</span><input name="auto_percentile" type="number" min="25" max="50" step="0.5" required></label>
               <p class="hint">25 % unteres Quartil, 50 % Median. Kleiner bedeutet weniger Insulin.</p>
-              <label>Automatik-Methode<select name="auto_method">
-                <option value="weighted_shift">Gewichtet + Tageslage</option>
-                <option value="weighted">Gewichtet</option>
-                <option value="flat">28 Tage gleich</option>
+              <label>Automatik-Zeitraum<select name="auto_lookback_days">
+                <option value="14">14 Tage</option>
+                <option value="21">21 Tage</option>
+                <option value="28">28 Tage</option>
               </select></label>
               <label>Halbwertszeit <span>Tage</span><input name="auto_half_life_days" type="number" min="2" max="28" step="0.5" required></label>
-              <p class="hint">Nach der Halbwertszeit zählt eine Mahlzeit nur noch halb.</p>
+              <p class="hint">Nach der Halbwertszeit zählt eine Mahlzeit nur noch halb. Kürzer = neue Werte zählen stärker.</p>
             </section>
             <section class="panel">
               <h2>Mahlzeiten</h2>
