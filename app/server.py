@@ -111,8 +111,8 @@ def validate_settings(value: dict) -> dict:
     if auto_lookback not in forecast.LOOKBACKS:
         raise ValueError("Zeitraum der Automatik muss 14, 21 oder 28 Tage sein")
     half_life = calculation.dec(result["auto_half_life_days"])
-    if not half_life.is_finite() or not 2 <= half_life <= 28:
-        raise ValueError("Halbwertszeit der Automatik muss zwischen 2 und 28 Tagen liegen")
+    if not half_life.is_finite() or not 1 <= half_life <= 28:
+        raise ValueError("Halbwertszeit der Automatik muss zwischen 1 und 28 Tagen liegen")
     effects = result["sport_effects_mgdl"]
     if not (0 < breakfast_end < lunch_end < 1440 and 0 <= lookback <= 1440):
         raise ValueError("Ungültige Mahlzeiten- oder Sportzeiten")

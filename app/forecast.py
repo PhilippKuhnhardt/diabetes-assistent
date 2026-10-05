@@ -20,8 +20,8 @@ LOOKBACKS = (14, 21, 28)
 MAX_LOOKBACK = max(LOOKBACKS)
 MIN_MEALS = 4
 HALF = Decimal("0.5")
-# Half-lives compared in the backtest: two stronger, the default, two weaker weightings.
-HALF_LIVES = (Decimal(3), Decimal(5), Decimal(7), Decimal(10), Decimal(14))
+# Half-lives compared in the backtest: four stronger weightings, the default and one weaker.
+HALF_LIVES = (Decimal(1), Decimal(2), Decimal(3), Decimal(5), Decimal(7), Decimal(14))
 # Range for the endpoint glucose three hours after a meal; deliberately tighter than the
 # Nightscout target range (80–180), which also covers the post-meal rise.
 GLUCOSE_LOW = Decimal(80)
