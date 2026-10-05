@@ -28,19 +28,15 @@ Vor dem Ende des Frühstücksfensters hängt `R` von der Tagesart ab (Arbeitstag
 
 ## Automatik-Faktor (Vorschlagsfaktor)
 
-Der dritte Vorschlag verwendet einen Faktor `A` aus den berechneten, nicht ausgeklammerten Faktoren derselben Mahlzeit (Frühstück nur derselben Tagesart) der 28 Tage vor heute, ab vier Mahlzeiten. Drei Methoden sind wählbar:
+Der dritte Vorschlag verwendet einen Faktor `A` aus den berechneten, nicht ausgeklammerten Faktoren derselben Mahlzeit (Frühstück nur derselben Tagesart) der letzten `Z` Tage vor heute, ab vier Mahlzeiten:
 
 ```text
-28 Tage gleich         A = Perzentil p der Faktoren, alle gleich gewichtet
-Gewichtet              A = gewichtetes Perzentil p, Gewicht = 0,5 ^ (Alter in Tagen / Halbwertszeit)
-Gewichtet + Tageslage  A = gewichtetes Perzentil p × Tageslage
+A = gewichtetes Perzentil p der Faktoren, Gewicht = 0,5 ^ (Alter in Tagen / Halbwertszeit)
 ```
 
-`p` ist das Automatik-Perzentil (Standard 37,5 %), die Halbwertszeit standardmäßig 7 Tage. Beim gewichteten Perzentil steht jeder Faktor in der Mitte seines kumulierten Gewichts, so dass sich bei gleichen Gewichten genau die lineare Interpolation an `(n − 1) × p` ergibt. Ein Perzentil hängt von der Reihenfolge ab, nicht vom Betrag: Ein einzelner extremer Faktor verschiebt es höchstens um seinen Gewichtsanteil.
+Einstellbar sind der Zeitraum `Z` (14, 21 oder 28 Tage, Standard 28), die Halbwertszeit (Standard 7 Tage; kürzer = neue Werte zählen stärker) und das Perzentil `p` (Standard 37,5 %). Jeder Faktor steht in der Mitte seines kumulierten Gewichts, so dass sich bei gleichen Gewichten genau die lineare Interpolation an `(n − 1) × p` ergibt. Ein Perzentil hängt von der Reihenfolge ab, nicht vom Betrag: Ein einzelner extremer Faktor verschiebt es höchstens um seinen Gewichtsanteil.
 
-Tageslage: Die letzten drei abgeschlossenen Mahlzeiten beliebiger Art (Endpunkt vor jetzt, Beginn höchstens 48 h zurück) werden je mit dem gewichteten Median ihrer eigenen Mahlzeit verglichen (`r = Faktor / Median`). Liegen alle drei `r` über 1 oder alle unter 1, ist die Tageslage das `r` mit der kleinsten Abweichung von 1, begrenzt auf 0,85 bis 1,15; sonst 1.
-
-Rückblick-Test: Für jede Mahlzeit im Analysezeitraum rechnet die App mit den Daten davor aus, was jede Methode vorgeschlagen hätte, und vergleicht mit dem berechneten Faktor. Treffer: Abweichung höchstens ±10 %; „zu viel Insulin“: Vorschlag mehr als 10 % über dem Faktor. Zum Vergleich läuft derselbe Test zusätzlich mit 25 % und 50 % (Median) neben dem eingestellten Perzentil. Für jede Kombination aus Methode und Perzentil zeigt die Analyse, wo der BG am Endpunkt gelandet wäre: `BG' = G(Endpunkt) − (Vorschlag − Faktor) × Σ[KH in g × KF] / 10`, alle übrigen Dosen unverändert. Die Matrix zeigt „28 Tage gleich“ sowie „Gewichtet“ und „Gewichtet + Tageslage“ jeweils mit den Halbwertszeiten 3, 5, 7, 10 und 14 Tagen (kürzer = neue Werte zählen stärker). Gezählt wird unter 80, 80–160 und über 160 mg/dL; das ist bewusst enger als der Nightscout-Zielbereich (80–180), weil nach drei Stunden ein Ende unter 160 erwartet wird. Dazu die typische Abweichung des Faktors. Methode, Gewichtung und Tageslage sind Modellannahmen zum Ausprobieren, keine Dosierempfehlung.
+Rückblick-Matrix: Für jede Mahlzeit im Analysezeitraum rechnet die App mit den Daten davor aus, welchen Faktor jede Kombination aus Zeitraum (14, 21, 28 Tage), Halbwertszeit (3, 5, 7, 10, 14 Tage) und Perzentil (25 %, eingestellt, 50 %) vorgeschlagen hätte, und wo der BG am Endpunkt damit gelandet wäre: `BG' = G(Endpunkt) − (Vorschlag − Faktor) × Σ[KH in g × KF] / 10`, alle übrigen Dosen unverändert. Alle Felder werten dieselben Mahlzeiten aus (nur solche, für die jede Kombination genug Vorgeschichte hat). Gezählt wird unter 80, 80–160 und über 160 mg/dL; das ist bewusst enger als der Nightscout-Zielbereich (80–180), weil nach drei Stunden ein Ende unter 160 erwartet wird. Dazu die typische Abweichung des Faktors. Zeitraum, Gewichtung und Perzentil sind Modellannahmen zum Ausprobieren, keine Dosierempfehlung.
 
 ## Faktor je Hauptmahlzeit
 

@@ -1,33 +1,24 @@
 """Suggested meal factor (Automatik) from recent calculated meal factors.
 
-Three methods can be compared:
-- flat: percentile of the past 28 days, every meal weighted equally (the original rule).
-- weighted: the same percentile, but each meal weighted by 0.5 ** (age in days / half-life).
-  A percentile depends on the order of values, not their size, so one odd day can move it
-  by at most its weight share, however extreme it is.
-- weighted_shift: weighted, multiplied by a day shift. The shift only applies when the last
-  three finished meals of any kind (within 48 h) all lay on the same side of their own weighted
-  median; it then uses the smallest of the three deviations, capped at ±15 %.
+The suggestion is a percentile of the meal factors of the same meal kind from the last
+`lookback` days (14, 21 or 28), each meal weighted by 0.5 ** (age in days / half-life).
+A percentile depends on the order of values, not their size, so one odd day can move it
+by at most its weight share, however extreme it is.
 
-The backtest recomputes, for every past meal, what each method would have suggested from the
-meals before it, so the methods can be compared against the factor that was actually calculated,
-and estimates where the endpoint glucose would have landed with that factor (below, inside or
-above 80–160 mg/dL).
+The backtest recomputes, for every past meal, what each combination of lookback, half-life and
+percentile would have suggested from the meals before it, and estimates where the endpoint
+glucose would have landed with that factor (below, inside or above 80–160 mg/dL).
 These are model choices for experimentation, not dosing advice.
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 
-METHODS = ("flat", "weighted", "weighted_shift")
-LOOKBACK_DAYS = 28
+LOOKBACKS = (14, 21, 28)
+MAX_LOOKBACK = max(LOOKBACKS)
 MIN_MEALS = 4
-SHIFT_MEALS = 3
-SHIFT_HOURS = 48
-SHIFT_CAP = Decimal("0.15")
-HIT_TOLERANCE = Decimal("0.10")
 HALF = Decimal("0.5")
 # Half-lives compared in the backtest: two stronger, the default, two weaker weightings.
 HALF_LIVES = (Decimal(3), Decimal(5), Decimal(7), Decimal(10), Decimal(14))
@@ -59,12 +50,12 @@ def weighted_quantile(pairs: list[tuple[Decimal, Decimal]], fraction: Decimal) -
     return items[-1][0]
 
 
-def history(points: list[dict], key: tuple, day: date) -> list[tuple[Decimal, int]]:
-    """(factor, age in days) of the same meal key from the 28 days before day; today is left out."""
+def history(points: list[dict], key: tuple, day: date, lookback: int) -> list[tuple[Decimal, int]]:
+    """(factor, age in days) of the same meal key from the lookback days before day; today is left out."""
     result = []
     for point in points:
         age = (day - point["day"]).days
-        if point["key"] == key and 1 <= age <= LOOKBACK_DAYS:
+        if point["key"] == key and 1 <= age <= lookback:
             result.append((point["value"], age))
     return result
 
@@ -74,97 +65,44 @@ def weight(age: int, half_life: Decimal) -> Decimal:
     return HALF ** (Decimal(age) / half_life)
 
 
-def baseline(points: list[dict], key: tuple, day: date, fraction: Decimal,
-             method: str, half_life: Decimal) -> Decimal | None:
-    values = history(points, key, day)
-    if len(values) < MIN_MEALS:
-        return None
-    if method == "flat":
-        return weighted_quantile([(value, Decimal(1)) for value, _ in values], fraction)
-    return weighted_quantile([(value, weight(age, half_life)) for value, age in values], fraction)
+def predict(points: list[dict], key: tuple, day: date, percentile: Decimal,
+            half_life: Decimal, lookback: int) -> dict:
+    """Weighted percentile of the meal key's factors before day; None below MIN_MEALS meals."""
+    values = history(points, key, day, lookback)
+    value = (weighted_quantile([(factor, weight(age, half_life)) for factor, age in values], percentile / 100)
+             if len(values) >= MIN_MEALS else None)
+    return {"count": len(values), "units_per_ke": value if value is not None and value > 0 else None}
 
 
-def day_shift(points: list[dict], at: datetime, half_life: Decimal) -> dict:
-    """Shift from the last three finished meals: all above (or all below) their own weighted median."""
-    finished = sorted((point for point in points
-                       if point.get("end") is not None and point["end"] <= at
-                       and at - point["at"] <= timedelta(hours=SHIFT_HOURS)),
-                      key=lambda point: point["at"], reverse=True)[:SHIFT_MEALS]
-    meals = []
-    for point in finished:
-        reference = baseline(points, point["key"], point["day"], HALF, "weighted", half_life)
-        meals.append({
-            "id": point["id"], "meal": point["key"][0], "day_type": point["key"][1], "at": point["at"],
-            "units_per_ke": point["value"], "reference_units_per_ke": reference,
-            "ratio": point["value"] / reference if reference and reference > 0 else None,
-        })
-    result = {"factor": Decimal(1), "applied": False, "meals": meals}
-    ratios = [meal["ratio"] for meal in meals]
-    if len(meals) < SHIFT_MEALS or None in ratios:
-        result["reason"] = "too_few"
-    elif all(ratio > 1 for ratio in ratios) or all(ratio < 1 for ratio in ratios):
-        smallest = min(ratios, key=lambda ratio: abs(ratio - 1))
-        result["factor"] = min(max(smallest, 1 - SHIFT_CAP), 1 + SHIFT_CAP)
-        result["applied"] = True
-        result["reason"] = "higher" if smallest > 1 else "lower"
-    else:
-        result["reason"] = "mixed"
-    return result
-
-
-def predict(points: list[dict], key: tuple, at: datetime, day: date, percentile: Decimal,
-            method: str, half_life: Decimal) -> dict:
-    fraction = percentile / 100
-    count = len(history(points, key, day))
-    base = baseline(points, key, day, fraction, method, half_life)
-    shift = day_shift(points, at, half_life) if method == "weighted_shift" else None
-    value = base * shift["factor"] if base is not None and shift else base
-    return {
-        "method": method, "count": count, "baseline_units_per_ke": base,
-        "units_per_ke": value if value is not None and value > 0 else None, "shift": shift,
-    }
-
-
-def backtest(points: list[dict], since: date, percentile: Decimal, half_life: Decimal,
-             methods: tuple[str, ...] = METHODS) -> dict:
-    """Compare what each method would have suggested before each meal with its calculated factor."""
+def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal, Decimal]]) -> dict:
+    """Simulate each (lookback, half-life, percentile) variant on the meals since `since`.
+    Only meals every variant can predict count, so all cells compare the same meals."""
     rows = []
     for target in sorted(points, key=lambda point: point["at"]):
         if target["day"] < since or target["value"] <= 0:
             continue
-        predictions = {method: predict(points, target["key"], target["at"], target["day"],
-                                       percentile, method, half_life)["units_per_ke"]
-                       for method in methods}
-        if any(value is None for value in predictions.values()):
+        predictions = [predict(points, target["key"], target["day"], percentile, half_life, lookback)["units_per_ke"]
+                       for lookback, half_life, percentile in variants]
+        if None in predictions:
             continue
-        row = {"id": target["id"], "at": target["at"], "meal": target["key"][0],
-               "day_type": target["key"][1], "units_per_ke": target["value"],
-               "predictions": predictions, "end_glucose": target.get("end_glucose"), "glucose": None}
+        glucose = None
         if target.get("end_glucose") is not None and target.get("carbs_isf"):
             # Under the meal model, (P − F) IE/KE more for Σ[g × KF] / 10 shifts the endpoint
             # by −(P − F) × Σ[g × KF] / 10 mg/dL; all other doses stay as they were.
-            row["glucose"] = {method: target["end_glucose"] - (value - target["value"]) * target["carbs_isf"] / 10
-                              for method, value in predictions.items()}
-        rows.append(row)
-    stats = {}
-    for method in methods:
-        deviations = sorted((row["predictions"][method] - row["units_per_ke"]) / row["units_per_ke"]
-                            for row in rows)
-        absolute = sorted(abs(value) for value in deviations)
-        stats[method] = {
-            "count": len(rows),
-            "hits": sum(abs(value) <= HIT_TOLERANCE for value in deviations),
-            "too_much": sum(value > HIT_TOLERANCE for value in deviations),
-            "too_little": sum(value < -HIT_TOLERANCE for value in deviations),
-            "glucose_count": sum(row["glucose"] is not None for row in rows),
-            "below": sum(row["glucose"] is not None and row["glucose"][method] < GLUCOSE_LOW
-                         for row in rows),
-            "in_range": sum(row["glucose"] is not None
-                            and GLUCOSE_LOW <= row["glucose"][method] <= GLUCOSE_HIGH for row in rows),
-            "above": sum(row["glucose"] is not None and row["glucose"][method] > GLUCOSE_HIGH
-                         for row in rows),
-            "median_abs_deviation": (absolute[len(absolute) // 2] if len(absolute) % 2 else
-                                     (absolute[len(absolute) // 2 - 1] + absolute[len(absolute) // 2]) / 2)
-                                    if absolute else None,
-        }
+            glucose = [target["end_glucose"] - (value - target["value"]) * target["carbs_isf"] / 10
+                       for value in predictions]
+        rows.append({"units_per_ke": target["value"], "predictions": predictions, "glucose": glucose})
+    stats = []
+    for index in range(len(variants)):
+        absolute = sorted(abs(row["predictions"][index] - row["units_per_ke"]) / row["units_per_ke"] for row in rows)
+        levels = [row["glucose"][index] for row in rows if row["glucose"] is not None]
+        middle = len(absolute) // 2
+        stats.append({
+            "count": len(rows), "glucose_count": len(levels),
+            "below": sum(level < GLUCOSE_LOW for level in levels),
+            "in_range": sum(GLUCOSE_LOW <= level <= GLUCOSE_HIGH for level in levels),
+            "above": sum(level > GLUCOSE_HIGH for level in levels),
+            "median_abs_deviation": ((absolute[middle] if len(absolute) % 2 else
+                                      (absolute[middle - 1] + absolute[middle]) / 2) if absolute else None),
+        })
     return {"rows": rows, "stats": stats}
