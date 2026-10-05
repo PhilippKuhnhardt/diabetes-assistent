@@ -204,6 +204,7 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .matrix-cell.is-active { box-shadow: inset 0 0 0 2px #9fb8aa; }
 .matrix-cell.is-best { background: var(--green-light); box-shadow: inset 0 0 0 2px var(--green); }
 .matrix-cell.is-best small { color: var(--green); font-weight: 700; }
+.matrix-cell.is-overall-best { box-shadow: inset 0 0 0 4px var(--green); }
 rect.range-low { fill: #c8463f; }
 rect.range-ok { fill: #2f9a63; }
 rect.range-high { fill: #e0a43a; }
