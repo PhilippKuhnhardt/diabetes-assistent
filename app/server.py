@@ -882,7 +882,14 @@ class Handler(BaseHTTPRequestHandler):
                         predictions[("breakfast", kind)], percentile)
                 for name in ("lunch", "dinner"):
                     groups[name]["suggestion"] = suggestion_factor(predictions[(name, None)], percentile)
-                test = forecast.backtest(points, today - timedelta(days=days - 1), percentile, half_life)
+                since = today - timedelta(days=days - 1)
+                test = forecast.backtest(points, since, percentile, half_life)
+                # The same backtest at the lower quartile and the median, next to the configured percentile.
+                percentile_comparison = [
+                    {"percentile": value,
+                     "stats": test["stats"] if value == percentile
+                     else forecast.backtest(points, since, value, half_life)["stats"]}
+                    for value in sorted({Decimal(25), percentile, Decimal(50)})]
                 suggestion_derivation = {
                     "method": method, "percentile": str(percentile), "half_life_days": str(half_life),
                     "days": forecast.LOOKBACK_DAYS, "min_meals": forecast.MIN_MEALS,
@@ -890,6 +897,7 @@ class Handler(BaseHTTPRequestHandler):
                     "current": [{"meal": key[0], "day_type": key[1], **predictions[key]} for key in predictions],
                     "shift": forecast.day_shift(points, now, half_life),
                     "backtest": test,
+                    "percentile_comparison": percentile_comparison,
                 }
                 for name, group in groups.items():
                     current = set()
