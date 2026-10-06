@@ -87,6 +87,29 @@ class DosingTests(unittest.TestCase):
         self.assertEqual(Decimal(result["auto_expected_glucose_mgdl"]), Decimal("94"))
         self.assertNotIn("auto_entry_units", dosing.suggest("20", settings, entries, [], self.now))
 
+    def test_auto_factor_cautious_target_and_carbs_only_variants(self):
+        entries = [{"at": self.now, "sgv": 150}]
+        result = dosing.suggest("20", self.settings, entries, [], self.now, auto_units_per_ke=Decimal("1.05"))
+        # 2.1 + (150 − 140) / 40 = 2.35 → 2.5 IE; 150 + (2.1 − 2.5) × 40 = 134
+        self.assertEqual(Decimal(result["auto_cautious_total_units"]), Decimal("2.35"))
+        self.assertEqual(Decimal(result["auto_cautious_entry_units"]), Decimal("2.5"))
+        self.assertEqual(Decimal(result["auto_cautious_expected_glucose_mgdl"]), Decimal("134"))
+        # Carbs only: 2.1 → 2 IE, no correction of the current 150 mg/dL.
+        self.assertEqual(Decimal(result["auto_carbs_total_units"]), Decimal("2.1"))
+        self.assertEqual(Decimal(result["auto_carbs_entry_units"]), Decimal("2"))
+        self.assertEqual(Decimal(result["auto_carbs_expected_glucose_mgdl"]), Decimal("154"))
+        self.assertEqual(Decimal(result["carbs_entry_units"]), Decimal("3"))
+        # Sport still counts in the carbs-only dose: 2.1 − 40 / 40 = 1.1 → 1 IE.
+        sport = dosing.suggest("20", self.settings, entries, [], self.now, activity_change="-40",
+                               auto_units_per_ke=Decimal("1.05"))
+        self.assertEqual(Decimal(sport["auto_carbs_entry_units"]), Decimal("1"))
+        self.assertEqual(Decimal(sport["auto_carbs_expected_glucose_mgdl"]), Decimal("154"))
+        # Without a fresh CGM value only the carbs-only dose remains.
+        stale = dosing.suggest("20", self.settings, [], [], self.now, auto_units_per_ke=Decimal("1.05"))
+        self.assertEqual(Decimal(stale["auto_carbs_entry_units"]), Decimal("2"))
+        self.assertNotIn("auto_carbs_expected_glucose_mgdl", stale)
+        self.assertNotIn("auto_cautious_entry_units", stale)
+
     def test_stale_glucose_has_no_correction(self):
         entries = [{"at": self.now - timedelta(minutes=16), "sgv": 150}]
         result = dosing.suggest("20", self.settings, entries, [], self.now)
