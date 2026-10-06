@@ -7,6 +7,11 @@ from decimal import Decimal, ROUND_HALF_UP
 from app import calculation, glucose
 
 
+def half_units(units: Decimal) -> Decimal:
+    """Round to the next injectable 0.5 IE step."""
+    return (units * 2).quantize(Decimal("1"), rounding=ROUND_HALF_UP) / 2
+
+
 def suggest(carbs: object, settings: dict, entries: list[dict],
             treatments: list[dict], now: datetime | None = None,
             activity_change: object = 0, units_per_ke: Decimal | None = None,
@@ -14,8 +19,9 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     """activity_change is a signed, user-estimated BG change in mg/dL from sport
     (negative lowers BG and therefore the dose; positive, e.g. adrenaline, raises it).
     units_per_ke replaces Nightscout's current I:C, e.g. with the breakfast factor of the day type.
-    auto_units_per_ke is the cautious percentile of recent calculated meal factors; it yields a third
-    suggestion that corrects to the normal target."""
+    auto_units_per_ke is the cautious percentile of recent calculated meal factors (Automatik).
+    For each factor the result holds three variants: correction to the normal target, correction to
+    the cautious target, and carbs only (plus sport, no BG correction; needs no fresh CGM value)."""
     now = now or datetime.now(timezone.utc)
     grams = calculation.dec(carbs)
     if not grams.is_finite() or not 0 <= grams <= 500:
@@ -69,6 +75,14 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     if auto_carb_units is not None:
         result["auto_units_per_ke"] = str(auto_units_per_ke)
         result["auto_carb_units"] = str(auto_carb_units)
+    for prefix, units in (("", carb_units), ("auto_", auto_carb_units)):
+        if units is not None:
+            carbs_total = max(Decimal(0), units + activity / isf)
+            result[prefix + "carbs_total_units"] = str(carbs_total)
+            result[prefix + "carbs_entry_units"] = str(half_units(carbs_total))
+            if fresh:
+                result[prefix + "carbs_expected_glucose_mgdl"] = str(
+                    latest[1] + activity + (units - half_units(carbs_total)) * isf)
     if fresh:
         # Sport shifts the modelled start glucose, so its effect flows through the correction factor.
         start = latest[1] + activity
@@ -93,6 +107,12 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
             result["auto_entry_units"] = str(auto_entry_units)
             # Expected glucose follows the auto factor's own carb model, not Nightscout's I:C.
             result["auto_expected_glucose_mgdl"] = str(start + (auto_carb_units - auto_entry_units) * isf)
+            auto_cautious_total = max(Decimal(0), auto_carb_units + cautious_correction_units)
+            auto_cautious_entry_units = half_units(auto_cautious_total)
+            result["auto_cautious_total_units"] = str(auto_cautious_total)
+            result["auto_cautious_entry_units"] = str(auto_cautious_entry_units)
+            result["auto_cautious_expected_glucose_mgdl"] = str(
+                start + (auto_carb_units - auto_cautious_entry_units) * isf)
     else:
         result["reason"] = "Kein aktueller CGM-Wert innerhalb von 15 Minuten"
     return result
