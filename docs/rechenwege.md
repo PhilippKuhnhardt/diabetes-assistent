@@ -12,23 +12,23 @@ Nightscout liefert CGM-Werte, Kohlenhydrate, Injektionen und das aktuelle Profil
 
 ## Spritzhilfe
 
-Für die eingegebenen Kohlenhydrate `KH`, den aktuellen CGM-Wert `G`, den Zielwert `Z`, den aktuellen Nightscout-I:C-Wert `R` in g/IE und den zeitabhängigen KF gilt:
+Mit Kohlenhydraten verwendet die Empfehlung nur den berechneten Faktor `A` in IE/KE (siehe Automatik-Faktor unten). Für die eingegebenen Kohlenhydrate `KH`, den aktuellen CGM-Wert `G`, den Zielwert `Z` und den zeitabhängigen KF gilt:
 
 ```text
-KH-Anteil        = KH / R
+KH-Anteil        = KH × A / 10
 Korrekturanteil  = (G - Z) / KF
 Vorschlag        = max(0, KH-Anteil + Korrekturanteil)
 Spritzmenge      = Vorschlag auf nächste 0,5 IE gerundet
 Erwarteter BG    = G + (KH-Anteil - Spritzmenge) × KF
 ```
 
-Der normale Vorschlag verwendet den lokalen Zielwert (Standard 100 mg/dL), der vorsichtige 140 mg/dL. Die Spritzmenge wird auf 0,5 IE gerundet. Der erwartete BG wird aus dieser gerundeten Spritzmenge berechnet und ist ein Modellwert bei voller KH- und Insulinwirkung, kein zeitlicher Glukoseverlauf. Ein CGM-Wert muss höchstens 15 Minuten alt sein. Vor dem Schreiben nach Nightscout wird mit aktuellen Daten erneut gerechnet; ein geänderter Vorschlag muss erneut bestätigt werden. Der angezeigte Glukosetrend und schnell wirksame Injektionen der letzten drei Stunden werden nicht verrechnet.
+Angezeigt werden drei Werte: **Normal** mit dem lokalen Zielwert `Z` (Standard 100 mg/dL), **Vorsichtig** mit dem vorsichtigen Zielwert (Standard 140 mg/dL) und **Nur KH** ohne Korrekturanteil: `max(0, KH-Anteil + Sport / KF)`, erwarteter BG `G + Sport + (KH-Anteil − Spritzmenge) × KF`; dieser Wert braucht keinen aktuellen CGM-Wert. Hat `A` weniger als vier Mahlzeiten, steht ersatzweise der Frühstücksmedian der Tagesart (unten) oder der Nightscout-I:C-Wert `R` ein (`KH-Anteil = KH / R`). Ohne Kohlenhydrate gibt es nur Normal und Vorsichtig als reine Korrektur. Die Spritzmenge wird auf 0,5 IE gerundet. Der erwartete BG wird aus dieser gerundeten Spritzmenge berechnet und ist ein Modellwert bei voller KH- und Insulinwirkung, kein zeitlicher Glukoseverlauf. Ein CGM-Wert muss höchstens 15 Minuten alt sein. Vor dem Schreiben nach Nightscout wird mit aktuellen Daten erneut gerechnet; ein geänderter Vorschlag muss erneut bestätigt werden. Der angezeigte Glukosetrend und schnell wirksame Injektionen der letzten drei Stunden werden nicht verrechnet.
 
 Vor dem Ende des Frühstücksfensters hängt `R` von der Tagesart ab (Arbeitstag oder freier Tag). Liegen in den letzten 28 Tagen vor heute mindestens drei berechnete, nicht ausgeklammerte Frühstücke derselben Tagesart vor, gilt `KH-Anteil = KH × F / 10` mit `F` = Median dieser Frühstücksfaktoren in IE/KE; sonst bleibt der Nightscout-Wert. Die Tagesart ist standardmäßig Montag bis Freitag Arbeitstag, Samstag und Sonntag frei. Ist in den Einstellungen Urlaub aktiv, zählt jeder Tag ab dem Einschalten als frei; beim Ausschalten endet der Urlaub am Vortag. Eine manuelle Auswahl für einen Tag hat immer Vorrang. Die Tagesart wird nur lokal gespeichert, nicht in Nightscout.
 
 ## Automatik-Faktor (Vorschlagsfaktor)
 
-Der dritte Vorschlag verwendet einen Faktor `A` aus den berechneten, nicht ausgeklammerten Faktoren derselben Mahlzeit (Frühstück nur derselben Tagesart) der letzten `Z` Tage vor heute, ab vier Mahlzeiten:
+Der berechnete Faktor `A` stammt aus den berechneten, nicht ausgeklammerten Faktoren derselben Mahlzeit (Frühstück nur derselben Tagesart) der letzten `Z` Tage vor heute, ab vier Mahlzeiten:
 
 ```text
 A = gewichtetes Perzentil p der Faktoren, Gewicht = 0,5 ^ (Alter in Tagen / Halbwertszeit)

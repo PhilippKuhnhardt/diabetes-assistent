@@ -1339,10 +1339,14 @@ function scheduleDoseHelp() {
   helpTimer = setTimeout(updateDoseHelp, 350);
 }
 
+// With carbs every suggestion uses the calculated (Automatik) factor; until it has enough meals the
+// day-type breakfast median or Nightscout's I:C stands in, marked in the factor line.
+const dosePrefix = data => Number(data.carbs_g) > 0 && data.auto_units_per_ke != null ? "auto_" : "";
+
 const doseVariants = {
-  normal: data => data.entry_units,
-  cautious: data => data.cautious_entry_units,
-  auto: data => data.auto_entry_units,
+  normal: data => data[dosePrefix(data) + "entry_units"],
+  cautious: data => data[dosePrefix(data) + "cautious_entry_units"],
+  carbs: data => Number(data.carbs_g) > 0 ? data[dosePrefix(data) + "carbs_entry_units"] : null,
 };
 
 function doseUnits(data, variant) {
@@ -1376,7 +1380,9 @@ function selectDoseSuggestion(event) {
 const doseKeys = ["carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl",
   "cautious_target_mgdl", "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "total_units",
   "cautious_total_units", "entry_units", "cautious_entry_units", "expected_glucose_mgdl", "cautious_expected_glucose_mgdl",
-  "auto_units_per_ke", "auto_total_units", "auto_entry_units", "auto_expected_glucose_mgdl"];
+  "auto_units_per_ke", "auto_total_units", "auto_entry_units", "auto_expected_glucose_mgdl",
+  "auto_cautious_total_units", "auto_cautious_entry_units", "auto_cautious_expected_glucose_mgdl",
+  "carbs_entry_units", "carbs_expected_glucose_mgdl", "auto_carbs_entry_units", "auto_carbs_expected_glucose_mgdl"];
 
 function doseChanged(previous, current) {
   return doseKeys.some(key => previous[key] !== current[key]) ||
@@ -1385,17 +1391,19 @@ function doseChanged(previous, current) {
 
 function doseHelpHTML(data) {
   const withCarbs = Number(data.carbs_g) > 0;
-  const option = (label, variant, units, expected) => units == null ? "" :
+  const option = (label, variant, expected) => {
+    const units = doseUnits(data, variant);
+    return units == null ? "" :
     '<button type="button" class="dose-option apply-dose" data-variant="' + variant + '" aria-pressed="false"' +
     ' title="' + escapeHTML(label + ": " + num(units, 2) + " IE direkt in Nightscout speichern") + '"' +
     (Number(units) > 100 ? ' disabled' : '') + '><span class="dose-label">' + escapeHTML(label) + '</span><strong>' +
-    escapeHTML(num(units, 2)) + ' <small>IE</small></strong><span class="dose-expected">→ ' + escapeHTML(num(expected, 0)) + ' mg/dL</span></button>';
-  const autoMissing = withCarbs && data.entry_units != null && data.auto_entry_units == null && data.auto_factor_min_meals
-    ? '<div class="dose-option is-off"><span class="dose-label">Automatik</span><strong>–</strong><span class="dose-expected">' +
-      escapeHTML((data.auto_factor_count || 0) + " von " + data.auto_factor_min_meals + " Mahlzeiten") + '</span></div>' : "";
-  const options = option("Normal", "normal", data.entry_units, data.expected_glucose_mgdl) +
-    option("Vorsichtig", "cautious", data.cautious_entry_units, data.cautious_expected_glucose_mgdl) +
-    (withCarbs ? option("Automatik", "auto", data.auto_entry_units, data.auto_expected_glucose_mgdl) || autoMissing : "");
+    escapeHTML(num(units, 2)) + ' <small>IE</small></strong><span class="dose-expected">' +
+    (expected != null ? '→ ' + escapeHTML(num(expected, 0)) + ' mg/dL' : 'ohne Korrektur') + '</span></button>';
+  };
+  const prefix = dosePrefix(data);
+  const options = option("Normal", "normal", data[prefix + "expected_glucose_mgdl"]) +
+    option("Vorsichtig", "cautious", data[prefix + "cautious_expected_glucose_mgdl"]) +
+    (withCarbs ? option("Nur KH", "carbs", data[prefix + "carbs_expected_glucose_mgdl"]) : "");
   return '<div class="dose-head"><span class="dose-heading">' + (withCarbs ? "Empfehlung" : "Korrektur ohne Essen") +
     '</span>' + (options.includes("apply-dose") ? '<span class="dose-hint">Antippen speichert direkt</span>' : '') + '</div>' +
     factorLine(data) +
@@ -1442,25 +1450,18 @@ async function updateDoseHelp() {
 
 const mealNames = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 
-// Set (Nightscout) and calculated (breakfast median, auto percentile) factors in one line.
+// The factor all suggestions use; a stand-in is named while Automatik lacks meals.
 function factorLine(data) {
   if (data.units_per_ke == null) return "";
   const kf = 'KF ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' mg/dL/IE';
   if (!(Number(data.carbs_g) > 0)) return '<p class="dose-factor">' + kf + '</p>';
-  const factor = value => escapeHTML(factorNum(value)) + ' IE/KE';
-  const parts = ['Gesetzt (Nightscout) <strong>' + factor(data.nightscout_units_per_ke) + '</strong>'];
-  if (data.breakfast) {
-    const kind = data.day_type === "free" ? "frei" : "Arbeit";
-    parts.push('Frühstück ' + kind + ' ' + (data.breakfast_factor_units_per_ke != null
-      ? '<strong>' + factor(data.breakfast_factor_units_per_ke) + '</strong>' : '–') +
-      ' (' + (data.breakfast_factor_count || 0) + '/' + data.breakfast_factor_min_meals + ')' +
-      (data.factor_source === "breakfast_day_type" ? ' ✓' : ''));
-  }
-  parts.push('Automatik ' + (data.auto_units_per_ke != null ? '<strong>' + factor(data.auto_units_per_ke) + '</strong>' : '–') +
-    ' (' + data.auto_factor_count + '/' + data.auto_factor_min_meals + ')');
-  if (!data.breakfast && data.auto_median_units_per_ke != null) parts.push('Median ' + factor(data.auto_median_units_per_ke));
-  parts.push(kf);
-  return '<p class="dose-factor">' + parts.join(' · ') + '</p>';
+  const factor = value => '<strong>' + escapeHTML(factorNum(value)) + ' IE/KE</strong>';
+  const count = ' (' + (data.auto_factor_count || 0) + '/' + data.auto_factor_min_meals + ')';
+  const used = data.auto_units_per_ke != null
+    ? 'Berechneter Faktor ' + factor(data.auto_units_per_ke) + count
+    : 'Berechneter Faktor –' + count + ' · ersatzweise ' + (data.factor_source === "breakfast_day_type"
+      ? 'Frühstück ' + (data.day_type === "free" ? "frei" : "Arbeit") : 'Nightscout') + ' ' + factor(data.units_per_ke);
+  return '<p class="dose-factor">' + used + ' · ' + kf + '</p>';
 }
 
 function closeEditDialog() {
