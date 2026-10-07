@@ -1364,6 +1364,70 @@ class IntegrationTests(unittest.TestCase):
             sparse_group = self.request("/api/summary?days=14")["groups"]["lunch"]
         self.assertEqual(sparse_group["strong_outlier_count"], 0)
 
+    def test_entry_preview_offers_sport_basal_and_day_type_and_save_stores_all_in_one_call(self):
+        self.request("/api/treatment", method="POST", body={
+            "kind": "exercise", "at": "2026-09-23T06:00:00Z", "sport_kind": "gym", "duration_minutes": 30,
+        })
+        self.request("/api/day?date=2026-09-23")  # The form previews the loaded day.
+        entry = {"day": "2026-09-23", "at": "2026-09-23T07:00:00Z", "mode": "meal", "carbs": "40"}
+        preview = self.request("/api/entry/preview", method="POST", body=entry)
+        self.assertIsNone(preview["assignment"])
+        self.assertEqual([item["sport_type"] for item in preview["sport"]["events"]], ["gym"])
+        self.assertEqual(Decimal(preview["sport"]["suggested_change_mgdl"]), Decimal(-40))
+        self.assertEqual(Decimal(preview["basal_units"]), Decimal(17))
+        self.assertEqual(preview["day_type"], {"value": "work", "source": "weekday"})
+        self.assertEqual(preview["dose"]["message"], "Eine aktuelle Empfehlung gibt es nur für den heutigen Tag.")
+        later = self.request("/api/entry/preview", method="POST", body={**entry, "at": "2026-09-23T13:00:00Z"})
+        self.assertEqual((later["basal_units"], later["day_type"], later["sport"]), ("0", None, None))
+
+        saved = self.request("/api/entry", method="POST", body={
+            **entry, "insulin": "3", "consider_sport": True, "sport_effect_mgdl": "-25", "with_basal": True,
+            "carbs_certainty": "known"})
+        self.assertEqual((saved["kind"], saved["sport_marked"], saved["basal_error"]), ("meal", True, None))
+        self.assertTrue(saved["basal"]["nightscout_synced"])
+        notes = [item["notes"] for item in FakeNightscout.treatments]
+        self.assertTrue(any("[DA2:basal]" in note for note in notes))
+        meal = saved["day_view"]["meals"][0]
+        self.assertEqual(meal["source_id"], saved["id"])
+        self.assertEqual((meal["sport"]["status"], Decimal(meal["sport"]["effect_mgdl"])), ("affected", Decimal(25)))
+        self.assertEqual(len(saved["day_view"]["basal"]), 1)
+
+        snack = {**entry, "at": "2026-09-23T07:30:00Z", "carbs": "10"}
+        preview = self.request("/api/entry/preview", method="POST", body=snack)
+        self.assertEqual((preview["assignment"]["meal"], preview["assignment"]["snack"]), ("breakfast", True))
+        self.assertEqual((preview["sport"], preview["basal_units"]), (None, "0"))
+        own = self.request("/api/entry/preview", method="POST", body={**snack, "as": "meal"})
+        self.assertFalse(own["assignment"]["snack"])
+        self.assertIsNotNone(own["sport"])
+        self.assertEqual(self.request("/api/entry", method="POST", body=snack)["kind"], "snack")
+        self.assertEqual(FakeNightscout.treatments[-1]["eventType"], "Carb Correction")
+        self.assertIn("[DA2:snack]", FakeNightscout.treatments[-1]["notes"])
+
+    def test_tapped_suggestion_is_saved_only_while_it_is_still_current(self):
+        self.request("/api/settings")
+        now = datetime.now(timezone.utc)
+        today = now.astimezone(ZoneInfo("Europe/Berlin")).date().isoformat()
+        current_day = {
+            "day": today, "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 150}],
+            "treatments": [], "basal": [], "day_type": "work", "day_type_source": "weekday", "meals": [],
+        }
+        entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "20"}
+        with fake_days(return_value=current_day):
+            dose = self.request("/api/entry/preview", method="POST", body=entry)["dose"]
+            self.assertEqual([item["variant"] for item in dose["options"]], ["normal", "cautious", "carbs"])
+            self.assertEqual(dose["options"][0]["units"], dose["entry_units"])
+            current_day["entries"][0]["sgv"] = 190
+            with self.assertRaises(urllib.error.HTTPError) as changed:
+                self.request("/api/entry", method="POST", body={
+                    **entry, "insulin": dose["entry_units"], "dose_check": dose["check"]})
+            self.assertIn("Empfehlung geändert", json.loads(changed.exception.read())["error"])
+            changed.exception.close()
+            self.assertEqual(FakeNightscout.treatments, [])
+            fresh = self.request("/api/entry/preview", method="POST", body=entry)["dose"]
+            self.request("/api/entry", method="POST", body={
+                **entry, "insulin": fresh["entry_units"], "dose_check": fresh["check"]})
+        self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["insulin"])), Decimal(fresh["entry_units"]))
+
 
 if __name__ == "__main__":
     unittest.main()

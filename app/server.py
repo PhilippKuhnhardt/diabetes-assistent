@@ -13,7 +13,7 @@ from urllib.parse import parse_qs, urlparse
 from app import auth
 from app.common import json_safe
 from app.ingestion import nightscout
-from app.services import annotations, background, basal, day_view, diary, dose_help, read_api, settings, summary, sync
+from app.services import annotations, background, basal, day_view, diary, dose_help, entry, read_api, settings, summary, sync
 from app.store import config, db
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -39,6 +39,8 @@ GET_ROUTES = {
 
 POST_ROUTES = {
     "/api/dose-help": dose_help.dose_help,
+    "/api/entry/preview": entry.preview,
+    "/api/entry": entry.save,
     "/api/vacation": settings.set_vacation,
     "/api/treatment": diary.save_diary_treatment,
     "/api/analysis/sport": annotations.set_sport_mark,
