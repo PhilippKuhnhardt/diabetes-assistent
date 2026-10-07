@@ -304,8 +304,12 @@ class GoldenMasterTests(unittest.TestCase):
     def compact_day(payload):
         """The raw CGM echo is large and plain mirror data: keep its count and digest."""
         entries = payload.get("entries", [])
-        return {**payload, "entries": {"count": len(entries),
-                                       "sha256": digest(json.dumps(entries, sort_keys=True).encode())}}
+        echo = [{"at": item["at"], "sgv": item["sgv"]} for item in entries]
+        tones = {}
+        for item in entries:
+            tones[item.get("tone")] = tones.get(item.get("tone"), 0) + 1
+        return {**payload, "entries": {"count": len(entries), "tones": tones,
+                                       "sha256": digest(json.dumps(echo, sort_keys=True).encode())}}
 
     @classmethod
     def at(cls, moment):
