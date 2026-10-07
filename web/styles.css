@@ -65,6 +65,7 @@ label span { color: var(--muted); font-weight: 450; }
 label input, label select { display: block; margin-top: 7px; }
 .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .entry-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.entry-switch:has(> :nth-child(3)) { grid-template-columns: 1.4fr 1fr 1fr; }
 .entry-switch button.entry-mode { min-height: 44px; padding: 9px 10px; background: var(--canvas); border: 1px solid var(--line); border-radius: 9px; color: var(--ink); font-size: 12px; font-weight: 700; }
 .entry-switch button.entry-mode[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: white; }
 .primary { background: var(--green); border: 1px solid var(--green); color: #fff; border-radius: 9px; min-height: 43px; padding: 10px 15px; font-weight: 650; }

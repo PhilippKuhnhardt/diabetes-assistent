@@ -194,7 +194,31 @@ function updateEntryChips() {
   $("#entry-note-field").hidden = !noteOpen;
   $("#entry-note-chip").hidden = noteOpen;
   $("#entry-note-chip").setAttribute("aria-expanded", String(noteOpen));
+  updateEntryBasalOption();
   updateEntrySubmitLabel();
+}
+
+function basalDefault() {
+  const units = Number(state.settings?.basal_default_units ?? 17);
+  return Number.isFinite(units) && units > 0 ? units : 0;
+}
+
+// Before breakfast end, while the day has no basal yet, the usual basal dose rides along with the entry.
+function entryBasalUnits() {
+  const form = $("#entry-form");
+  const option = $("#entry-basal-option");
+  return form.elements.kind.value === "meal" && !option.hidden && form.elements.with_basal.checked ? basalDefault() : 0;
+}
+
+function updateEntryBasalOption() {
+  const form = $("#entry-form");
+  const option = $("#entry-basal-option");
+  const time = form.elements.at.value ? clockMinute(form.elements.at.value) : NaN;
+  const breakfastEnd = Number(state.settings?.breakfast_end_minute ?? 660);
+  option.hidden = !(form.elements.kind.value === "meal" && basalDefault() > 0 &&
+    state.dayData?.day === state.day && !(state.dayData.basal || []).length &&
+    Number.isFinite(time) && time < breakfastEnd);
+  $("#entry-basal-hint").textContent = "+ Basal " + num(basalDefault(), 1) + " IE";
 }
 
 function updateEntrySubmitLabel() {
@@ -204,12 +228,19 @@ function updateEntrySubmitLabel() {
     button.textContent = "Sport in Nightscout speichern";
     return;
   }
+  if (form.elements.kind.value === "basal") {
+    const units = Number(form.elements.basal_units.value);
+    button.textContent = Number.isFinite(units) && units > 0 ? "Basal " + num(units, 1) + " IE speichern" : "Basal speichern";
+    return;
+  }
   const carbs = Number(form.elements.carbs.value);
   const insulin = Number(form.elements.insulin.value);
   const parts = [
     Number.isFinite(carbs) && carbs > 0 ? num(carbs, 0) + " g" : "",
     Number.isFinite(insulin) && insulin > 0 ? num(insulin, 2) + " IE" : "",
   ].filter(Boolean);
+  const basal = entryBasalUnits();
+  if (parts.length && basal > 0) parts.push("Basal " + num(basal, 1) + " IE");
   button.textContent = parts.length ? parts.join(" + ") + " speichern" : "In Nightscout speichern";
 }
 
@@ -398,6 +429,10 @@ function updateEntryFields() {
   form.elements.carbs.setCustomValidity("");
   $$(".entry-mode").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.entryMode === mode)));
   $("#entry-meal-fields").hidden = mode !== "meal";
+  $("#entry-basal-field").hidden = mode !== "basal";
+  form.elements.basal_units.disabled = mode !== "basal";
+  form.elements.basal_units.required = mode === "basal";
+  if (mode === "basal" && !form.elements.basal_units.value && basalDefault() > 0) form.elements.basal_units.value = basalDefault();
   $("#entry-sport-field").hidden = mode !== "exercise";
   $("#entry-duration-field").hidden = mode !== "exercise";
   form.elements.carbs.disabled = mode !== "meal";
@@ -427,6 +462,7 @@ async function loadSettings() {
   form.elements.auto_percentile.value = data.settings.auto_percentile;
   form.elements.auto_lookback_days.value = String(data.settings.auto_lookback_days);
   form.elements.auto_half_life_days.value = data.settings.auto_half_life_days;
+  form.elements.basal_default_units.value = data.settings.basal_default_units ?? 17;
   form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
   form.elements.lunch_end.value = minuteClock(data.settings.lunch_end_minute);
   form.elements.sport_lookback_minutes.value = data.settings.sport_lookback_minutes;
@@ -850,7 +886,8 @@ function renderDayOverview() {
     last ? "" : "Keine CGM-Werte in diesem Zeitraum.",
     clipped ? "Werte vor Mitternacht stehen beim Vortag." : "",
   ].filter(Boolean).join(" ");
-  $("#day-overview-recent").innerHTML = isToday ? recentEntriesHTML(data.treatments) : "";
+  $("#day-overview-recent").innerHTML = isToday ? recentEntriesHTML([...data.treatments,
+    ...(data.basal || []).map(dose => ({ at: dose.at, basal: dose.units }))]) : "";
 }
 
 // The whole day for "Tag durchgehen"; drawn only while visible so its width is known.
@@ -893,6 +930,7 @@ function recentEntriesHTML(treatments) {
     .map(item => {
       const parts = item.eventType === "Exercise"
         ? [(sportNames[item.sport_type] || "Sport") + (Number(item.duration) ? " " + num(item.duration, 0) + " min" : "")]
+        : item.basal ? ["Basal " + num(item.basal, 1) + " IE"]
         : [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 2) + " IE" : ""].filter(Boolean);
       return parts.length ? '<span class="recent-chip"><time>' + escapeHTML(timeOnly(item.at)) + '</time> ' + escapeHTML(parts.join(" + ")) + '</span>' : "";
     }).filter(Boolean);
@@ -1223,7 +1261,7 @@ function renderDay(data) {
   renderVisibleCharts();
 }
 
-const entryLabels = { meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur / Bolus", exercise: "Sport", other: "Weiterer Eintrag" };
+const entryLabels = { basal: "Basal", meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur / Bolus", exercise: "Sport", other: "Weiterer Eintrag" };
 
 function entryLabel(item, data) {
   if (item.kind === "exercise") return sportNames[item.sport_kind] || "Sport";
@@ -1235,12 +1273,15 @@ function entryRowHTML(item, data) {
   const details = [
     Number(item.carbs) ? num(item.carbs) + " g KH" : "",
     Number(item.insulin) ? num(item.insulin) + " IE" : "",
+    item.kind === "basal" ? num(item.basal_units) + " IE" + (item.nightscout_synced ? "" : " · nur lokal, noch nicht in Nightscout") : "",
     item.kind === "exercise" ? num(item.duration_minutes, 0) + " min" : "",
     item.glucose_mgdl != null
       ? (item.glucose_at === item.at ? "BZ " : "BZ um " + timeOnly(item.glucose_at) + ": ") + num(item.glucose_mgdl, 0) + " mg/dL" : "",
   ].filter(Boolean).join(" · ");
   const label = entryLabel(item, data);
-  const action = item.kind === "other" ? "" :
+  const action = item.kind === "other" ? "" : item.kind === "basal"
+    ? '<button type="button" class="delete-basal quiet" data-id="' + escapeHTML(item.id) + '" data-at="' + escapeHTML(item.at) +
+      '" aria-label="' + escapeHTML("Basal um " + timeOnly(item.at) + " löschen") + '">Löschen</button>' :
     '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '" aria-label="' +
     escapeHTML(label + " um " + timeOnly(item.at) + " bearbeiten") + '">Bearbeiten</button>';
   return '<article class="timeline-item"><time>' + escapeHTML(timeOnly(item.at)) +
@@ -1478,6 +1519,7 @@ function closeEditDialog() {
 
 function resetEntryForm() {
   state.pendingEventId = null;
+  state.pendingBasalId = null;
   const form = $("#entry-form");
   form.reset();
   form.elements.carbs.setCustomValidity("");
@@ -1575,10 +1617,74 @@ async function saveEditedEntry(event) {
   }
 }
 
+async function saveBasal(at, units, notes = "") {
+  const event_id = state.pendingBasalId || crypto.randomUUID();
+  state.pendingBasalId = event_id;
+  const result = await api("/api/basal", { method: "POST", body: JSON.stringify({ at, units, event_id, notes }) });
+  state.pendingBasalId = null;
+  return result;
+}
+
+async function deleteBasal(id) {
+  await api("/api/basal/delete", { method: "POST", body: JSON.stringify({ id }) });
+}
+
+async function saveBasalEntry(form) {
+  const units = Number(form.elements.basal_units.value);
+  if (!(units > 0 && units <= 100 && Number.isInteger(units * 2))) {
+    form.elements.basal_units.setCustomValidity("Bitte Basal zwischen 0,5 und 100 IE in 0,5er-Schritten eintragen.");
+    form.elements.basal_units.reportValidity();
+    return;
+  }
+  let at;
+  try { at = toInstant(state.day, form.elements.at.value); }
+  catch (error) { toast(error.message, true); return; }
+  const button = $("#entry-submit");
+  button.disabled = true;
+  try {
+    const result = await saveBasal(at, units, form.elements.notes.value);
+    state.day = result.day;
+    updateLocation(true);
+    resetEntryForm();
+    await loadDay();
+    toast("Basal " + num(units, 1) + " IE " + (result.nightscout_synced ? "gespeichert" : "lokal gespeichert, Nightscout folgt"),
+      !result.nightscout_synced && Boolean(state.dayData?.connected),
+      { label: "Rückgängig", run: () => undoBasal(result.id, result.day) });
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function undoBasal(id, day) {
+  try {
+    await deleteBasal(id);
+    if (state.day === day) await loadDay();
+    toast("Basal entfernt");
+  } catch (error) {
+    toast(error.message, true);
+  }
+}
+
+async function deleteBasalRow(button) {
+  if (!window.confirm("Basal um " + timeOnly(button.dataset.at) + " Uhr wirklich löschen?")) return;
+  button.disabled = true;
+  try {
+    await deleteBasal(button.dataset.id);
+    toast("Basal gelöscht");
+    await loadDay();
+  } catch (error) {
+    button.disabled = false;
+    toast(error.message, true);
+  }
+}
+
 async function saveEntry(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const mode = form.elements.kind.value;
+  if (mode === "basal") return saveBasalEntry(form);
   const carbs = mode === "meal" ? Number(form.elements.carbs.value || 0) : 0;
   const insulin = mode === "meal" ? Number(form.elements.insulin.value || 0) : 0;
   if (mode === "meal" && carbs <= 0 && insulin <= 0) {
@@ -1592,6 +1698,7 @@ async function saveEntry(event) {
   try { at = toInstant(state.day, form.elements.at.value); }
   catch (error) { toast(error.message, true); return; }
   const considerSport = mode === "meal" && form.elements.consider_sport.checked && !$("#entry-sport-option").hidden;
+  const basalUnits = entryBasalUnits();
   const sportEffect = form.elements.sport_effect_mgdl.value;
   const payload = {
     kind, at,
@@ -1620,6 +1727,12 @@ async function saveEntry(event) {
       }
     }
     const result = await api("/api/treatment", { method: "POST", body: JSON.stringify(payload) });
+    let basal = null;
+    let basalError = null;
+    if (basalUnits > 0) {
+      try { basal = await saveBasal(at, basalUnits); }
+      catch (error) { basalError = error.message; }
+    }
     state.day = result.day;
     updateLocation(true);
     await loadDay();
@@ -1637,8 +1750,16 @@ async function saveEntry(event) {
       insulin: form.elements.insulin.value, notes: form.elements.notes.value };
     resetEntryForm();
     const message = (kind === "exercise" ? "Sport" : [carbs > 0 ? num(carbs, 0) + " g" : "", insulin > 0 ? num(insulin, 2) + " IE" : ""]
-      .filter(Boolean).join(" + ")) + " in Nightscout gespeichert" + (considerSport ? " · Sport berücksichtigt" : "");
-    toast(message, false, saved ? { label: "Rückgängig", run: () => undoEntry(saved.id, restore) } : null);
+      .filter(Boolean).join(" + ")) + (basal ? " + Basal " + num(basalUnits, 1) + " IE" : "") + " gespeichert" +
+      (considerSport ? " · Sport berücksichtigt" : "") +
+      (basal && !basal.nightscout_synced ? " · Basal vorerst nur lokal" : "") +
+      (basalError ? " · Basal nicht gespeichert: " + basalError : "");
+    const undo = async () => {
+      if (basal) await deleteBasal(basal.id).catch(error => toast(error.message, true));
+      if (saved) await undoEntry(saved.id, restore);
+      else if (basal) await loadDay();
+    };
+    toast(message, Boolean(basalError), saved || basal ? { label: "Rückgängig", run: undo } : null);
   } catch (error) {
     toast(error.message, true);
   } finally {
@@ -1726,6 +1847,7 @@ async function saveSettings(event) {
     auto_percentile: form.elements.auto_percentile.value,
     auto_lookback_days: Number(form.elements.auto_lookback_days.value),
     auto_half_life_days: form.elements.auto_half_life_days.value,
+    basal_default_units: form.elements.basal_default_units.value,
     breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),
     lunch_end_minute: clockMinute(form.elements.lunch_end.value),
     sport_lookback_minutes: Number(form.elements.sport_lookback_minutes.value),
@@ -2220,6 +2342,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyDoseChoice();
   });
   $("#entry-form").elements.notes.addEventListener("input", updateEntryChips);
+  $("#entry-form").elements.with_basal.addEventListener("change", updateEntrySubmitLabel);
+  $("#entry-form").elements.basal_units.addEventListener("input", event => {
+    event.target.setCustomValidity("");
+    updateEntrySubmitLabel();
+  });
   $("#entry-time-chip").addEventListener("click", () => {
     state.entryTimeOpen = true;
     updateEntryChips();
@@ -2232,6 +2359,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   $("#diary-view").addEventListener("click", event => {
     if (event.target.closest(".delete-treatment")) deleteTreatment(event);
+    const basalButton = event.target.closest(".delete-basal");
+    if (basalButton) deleteBasalRow(basalButton);
     const edit = event.target.closest(".edit-entry");
     if (edit) editEntry(edit.dataset.id);
     if (event.target.closest(".sport-save, .sport-suggestion, .sport-remove")) saveSportMark(event);
