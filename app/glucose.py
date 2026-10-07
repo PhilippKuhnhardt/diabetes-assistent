@@ -10,6 +10,58 @@ from app import calculation
 TREND_WINDOW_MINUTES = Decimal(15)
 TREND_FLAT_MGDL = Decimal(10)
 TREND_FAST_MGDL = Decimal(30)
+LOW_MGDL = Decimal(70)
+HIGH_MGDL = Decimal(250)
+
+
+def target_at(at: datetime, settings: dict) -> dict | None:
+    """The Nightscout target range row in force at the local clock time of `at`."""
+    local = at.astimezone(ZoneInfo(settings["timezone"]))
+    minute = local.hour * 60 + local.minute
+    return max((row for row in settings.get("target_schedule") or [] if int(row["start_minute"]) <= minute),
+               key=lambda row: int(row["start_minute"]), default=None)
+
+
+def tone(value, at: datetime, settings: dict) -> str:
+    """Colour class of a CGM value: low < 70, high > 250, else inside or outside the target range."""
+    if value is None:
+        return "none"
+    value = calculation.dec(value)
+    if value < LOW_MGDL:
+        return "low"
+    if value > HIGH_MGDL:
+        return "high"
+    target = target_at(at, settings)
+    if target is None:
+        return "neutral"
+    inside = calculation.dec(target["low_mgdl"]) <= value <= calculation.dec(target["high_mgdl"])
+    return "in-range" if inside else "outside"
+
+
+def target_bands(start: datetime, end: datetime, settings: dict) -> list[dict]:
+    """The target range as time segments between two instants, for drawing behind a curve."""
+    zone = ZoneInfo(settings["timezone"])
+    rows = sorted(settings.get("target_schedule") or [], key=lambda row: int(row["start_minute"]))
+    bands = []
+    day = start.astimezone(zone).date() - timedelta(days=1)
+    while day <= end.astimezone(zone).date():
+        midnight = datetime.combine(day, datetime.min.time(), tzinfo=zone)
+        for index, row in enumerate(rows):
+            # Local clock times; the next row (or the next midnight) ends the segment.
+            begin = (midnight + timedelta(minutes=int(row["start_minute"]))).astimezone(timezone.utc)
+            stop_minute = int(rows[index + 1]["start_minute"]) if index + 1 < len(rows) else 1440
+            stop = (midnight + timedelta(minutes=stop_minute)).astimezone(timezone.utc)
+            if stop <= start or begin >= end:
+                continue
+            band = {"from": max(begin, start), "to": min(stop, end),
+                    "low_mgdl": str(row["low_mgdl"]), "high_mgdl": str(row["high_mgdl"])}
+            if bands and bands[-1]["to"] == band["from"] and (bands[-1]["low_mgdl"], bands[-1]["high_mgdl"]) == (
+                    band["low_mgdl"], band["high_mgdl"]):
+                bands[-1]["to"] = band["to"]
+            else:
+                bands.append(band)
+        day += timedelta(days=1)
+    return bands
 
 
 def trend(points: list[tuple[datetime, Decimal]]) -> dict | None:

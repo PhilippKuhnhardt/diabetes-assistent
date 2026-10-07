@@ -8,7 +8,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 444,
-   "sha256": "785fe8c1d9691f62bfc708cc441da2231b5e0a436ccb9b74fb8c13216589c71c"
+   "sha256": "785fe8c1d9691f62bfc708cc441da2231b5e0a436ccb9b74fb8c13216589c71c",
+   "tones": {
+    "high": 2,
+    "in-range": 352,
+    "low": 60,
+    "outside": 30
+   }
   },
   "exercises": [],
   "meals": [
@@ -119,6 +125,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-08-29T08:25:00+00:00",
+     "auto_start": "2026-08-29T05:25:00+00:00",
+     "end": "2026-08-29T08:25:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "129.0550719841138507363892107"
+     },
+     "manual": false,
+     "start": "2026-08-29T05:25:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "129.8840815393971568057576195"
+     }
     }
    },
    {
@@ -228,6 +249,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-08-29T12:50:00+00:00",
+     "auto_start": "2026-08-29T09:50:00+00:00",
+     "end": "2026-08-29T12:50:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-08-29T09:50:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "125.1282230813723401016773722"
+     }
     }
    },
    {
@@ -337,6 +373,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-08-29T19:25:00+00:00",
+     "auto_start": "2026-08-29T16:25:00+00:00",
+     "end": "2026-08-29T19:25:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "92.87266971973857245759071655"
+     },
+     "manual": false,
+     "start": "2026-08-29T16:25:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "44.74853510027480175951734461"
+     }
     }
    }
   ],
@@ -357,6 +408,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-08-28T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-08-30T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-08-29T05:25:00+00:00",
@@ -371,6 +430,7 @@
     "id": "t-0001",
     "insulin": 8.5,
     "kind": "meal",
+    "meal_id": "t-0001",
     "notes": "",
     "sport_kind": null
    },
@@ -387,6 +447,7 @@
     "id": "t-0002",
     "insulin": 10.5,
     "kind": "meal",
+    "meal_id": "t-0002",
     "notes": "",
     "sport_kind": null
    },
@@ -403,6 +464,7 @@
     "id": "t-0003",
     "insulin": 5.5,
     "kind": "meal",
+    "meal_id": "t-0003",
     "notes": "",
     "sport_kind": null
    }
@@ -484,7 +546,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "f7abb9e17a2aaffc38174af51339b526de28853c91f7ce0793466123d39159f2"
+   "sha256": "f7abb9e17a2aaffc38174af51339b526de28853c91f7ce0793466123d39159f2",
+   "tones": {
+    "high": 19,
+    "in-range": 361,
+    "low": 118,
+    "outside": 66
+   }
   },
   "exercises": [],
   "meals": [
@@ -595,6 +663,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-08-30T08:05:00+00:00",
+     "auto_start": "2026-08-30T05:05:00+00:00",
+     "end": "2026-08-30T08:05:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "132.7250252253742453064262675"
+     },
+     "manual": false,
+     "start": "2026-08-30T05:05:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "135.0000000000000000000000000"
+     }
     }
    },
    {
@@ -734,6 +817,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-08-30T15:05:00+00:00",
+     "auto_start": "2026-08-30T10:30:00+00:00",
+     "end": "2026-08-30T15:05:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-08-30T10:30:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "115.0160919701771522131729290"
+     }
     }
    },
    {
@@ -843,6 +941,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-08-30T19:20:00+00:00",
+     "auto_start": "2026-08-30T16:20:00+00:00",
+     "end": "2026-08-30T19:20:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "89.03409647996531656967534308"
+     },
+     "manual": false,
+     "start": "2026-08-30T16:20:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    }
   ],
@@ -863,6 +976,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-08-29T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-08-31T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-08-30T05:05:00+00:00",
@@ -877,6 +998,7 @@
     "id": "t-0004",
     "insulin": 6.0,
     "kind": "meal",
+    "meal_id": "t-0004",
     "notes": "",
     "sport_kind": null
    },
@@ -893,6 +1015,7 @@
     "id": "t-0005",
     "insulin": 16.0,
     "kind": "meal",
+    "meal_id": "t-0005",
     "notes": "",
     "sport_kind": null
    },
@@ -909,6 +1032,7 @@
     "id": "t-0006",
     "insulin": 1,
     "kind": "snack",
+    "meal_id": "t-0005",
     "notes": "",
     "sport_kind": null
    },
@@ -925,6 +1049,7 @@
     "id": "t-0007",
     "insulin": 3.0,
     "kind": "meal",
+    "meal_id": "t-0007",
     "notes": "",
     "sport_kind": null
    }
@@ -1032,7 +1157,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "328754cc483909b54d3c1ad4d55a1a4b2a16d3d32f6325babb4848ebbca055be"
+   "sha256": "328754cc483909b54d3c1ad4d55a1a4b2a16d3d32f6325babb4848ebbca055be",
+   "tones": {
+    "high": 19,
+    "in-range": 315,
+    "low": 154,
+    "outside": 76
+   }
   },
   "exercises": [],
   "meals": [
@@ -1143,6 +1274,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-08-31T07:50:00+00:00",
+     "auto_start": "2026-08-31T04:50:00+00:00",
+     "end": "2026-08-31T07:50:00+00:00",
+     "end_glucose": {
+      "tone": "outside",
+      "value": "232.0109602836292402985280525"
+     },
+     "manual": false,
+     "start": "2026-08-31T04:50:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "129.1660311136406753936634415"
+     }
     }
    },
    {
@@ -1252,6 +1398,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-08-31T13:25:00+00:00",
+     "auto_start": "2026-08-31T10:25:00+00:00",
+     "end": "2026-08-31T13:25:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "123.1772785287954038398385792"
+     },
+     "manual": false,
+     "start": "2026-08-31T10:25:00+00:00",
+     "start_glucose": {
+      "tone": "outside",
+      "value": "183.7981624004068486184099000"
+     }
     }
    },
    {
@@ -1361,6 +1522,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-08-31T20:10:00+00:00",
+     "auto_start": "2026-08-31T17:10:00+00:00",
+     "end": "2026-08-31T20:10:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-08-31T17:10:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "106.0000000000000000000000000"
+     }
     }
    }
   ],
@@ -1381,6 +1557,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-08-30T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-01T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-08-31T04:50:00+00:00",
@@ -1395,6 +1579,7 @@
     "id": "t-0008",
     "insulin": 10.5,
     "kind": "meal",
+    "meal_id": "t-0008",
     "notes": "",
     "sport_kind": null
    },
@@ -1411,6 +1596,7 @@
     "id": "t-0009",
     "insulin": 3.0,
     "kind": "meal",
+    "meal_id": "t-0009",
     "notes": "Pizza",
     "sport_kind": null
    },
@@ -1427,6 +1613,7 @@
     "id": "t-0010",
     "insulin": 15.5,
     "kind": "meal",
+    "meal_id": "t-0010",
     "notes": "",
     "sport_kind": null
    }
@@ -1534,7 +1721,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "9e2df004ded7fcdff2f58fb0cd075325feec4dedf83dbf101476e6ec804dc16f"
+   "sha256": "9e2df004ded7fcdff2f58fb0cd075325feec4dedf83dbf101476e6ec804dc16f",
+   "tones": {
+    "high": 6,
+    "in-range": 384,
+    "low": 133,
+    "outside": 41
+   }
   },
   "exercises": [],
   "meals": [
@@ -1645,6 +1838,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-01T08:50:00+00:00",
+     "auto_start": "2026-09-01T05:50:00+00:00",
+     "end": "2026-09-01T08:50:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-01T05:50:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "132.9652890115714767572330334"
+     }
     }
    },
    {
@@ -1754,6 +1962,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-01T12:40:00+00:00",
+     "auto_start": "2026-09-01T09:40:00+00:00",
+     "end": "2026-09-01T12:40:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-01T09:40:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -1885,6 +2108,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-01T22:35:00+00:00",
+     "auto_start": "2026-09-01T17:15:00+00:00",
+     "end": "2026-09-01T22:35:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "106.1528914288035805574646295"
+     },
+     "manual": false,
+     "start": "2026-09-01T17:15:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "88.81957169842840437425307444"
+     }
     }
    }
   ],
@@ -1896,6 +2134,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-08-31T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-02T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-01T05:50:00+00:00",
@@ -1910,6 +2156,7 @@
     "id": "t-0011",
     "insulin": 10.5,
     "kind": "meal",
+    "meal_id": "t-0011",
     "notes": "",
     "sport_kind": null
    },
@@ -1926,6 +2173,7 @@
     "id": "t-0012",
     "insulin": 10.0,
     "kind": "meal",
+    "meal_id": "t-0012",
     "notes": "",
     "sport_kind": null
    },
@@ -1942,6 +2190,7 @@
     "id": "t-0013",
     "insulin": 9.0,
     "kind": "meal",
+    "meal_id": "t-0013",
     "notes": "",
     "sport_kind": null
    },
@@ -1958,6 +2207,7 @@
     "id": "t-0014",
     "insulin": 1.5,
     "kind": "correction",
+    "meal_id": "t-0013",
     "notes": "",
     "sport_kind": null
    }
@@ -2052,7 +2302,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "81f49d86e532fe0eaf733207ef63531e6aac1ed86fbe58ebef69ddbdc6283296"
+   "sha256": "81f49d86e532fe0eaf733207ef63531e6aac1ed86fbe58ebef69ddbdc6283296",
+   "tones": {
+    "high": 18,
+    "in-range": 333,
+    "low": 135,
+    "outside": 78
+   }
   },
   "exercises": [],
   "meals": [
@@ -2163,6 +2419,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-02T13:35:00+00:00",
+     "auto_start": "2026-09-02T10:35:00+00:00",
+     "end": "2026-09-02T13:35:00+00:00",
+     "end_glucose": {
+      "tone": "outside",
+      "value": "205.0067810596154294061082774"
+     },
+     "manual": false,
+     "start": "2026-09-02T10:35:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "118.0000000000000000000000000"
+     }
     }
    },
    {
@@ -2272,6 +2543,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-02T19:30:00+00:00",
+     "auto_start": "2026-09-02T16:30:00+00:00",
+     "end": "2026-09-02T19:30:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-02T16:30:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "149.0764612155423903028045093"
+     }
     }
    }
   ],
@@ -2292,6 +2578,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-01T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-03T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-02T10:35:00+00:00",
@@ -2306,6 +2600,7 @@
     "id": "t-0015",
     "insulin": 8.0,
     "kind": "meal",
+    "meal_id": "t-0015",
     "notes": "",
     "sport_kind": null
    },
@@ -2322,6 +2617,7 @@
     "id": "t-0016",
     "insulin": 10.0,
     "kind": "meal",
+    "meal_id": "t-0016",
     "notes": "",
     "sport_kind": null
    }
@@ -2429,7 +2725,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "b3c12c505a4265179a0d60c5990f79e52b3e3800e969e930703150278fe40844"
+   "sha256": "b3c12c505a4265179a0d60c5990f79e52b3e3800e969e930703150278fe40844",
+   "tones": {
+    "high": 8,
+    "in-range": 296,
+    "low": 196,
+    "outside": 64
+   }
   },
   "exercises": [],
   "meals": [
@@ -2561,6 +2863,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-03T08:20:00+00:00",
+     "auto_start": "2026-09-03T05:20:00+00:00",
+     "end": "2026-09-03T08:20:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-03T05:20:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "128.0000000000000000000000000"
+     }
     }
    },
    {
@@ -2700,6 +3017,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-03T14:50:00+00:00",
+     "auto_start": "2026-09-03T10:15:00+00:00",
+     "end": "2026-09-03T14:50:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "168.0064360982381356348110185"
+     },
+     "manual": false,
+     "start": "2026-09-03T10:15:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -2809,6 +3141,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-03T20:30:00+00:00",
+     "auto_start": "2026-09-03T17:30:00+00:00",
+     "end": "2026-09-03T20:30:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-03T17:30:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "121.7504656825296720229639190"
+     }
     }
    }
   ],
@@ -2829,6 +3176,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-02T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-04T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-03T05:20:00+00:00",
@@ -2843,6 +3198,7 @@
     "id": "t-0017",
     "insulin": 13.0,
     "kind": "meal",
+    "meal_id": "t-0017",
     "notes": "",
     "sport_kind": null
    },
@@ -2859,6 +3215,7 @@
     "id": "t-0018",
     "insulin": 0,
     "kind": "carbs",
+    "meal_id": "t-0017",
     "notes": "",
     "sport_kind": null
    },
@@ -2875,6 +3232,7 @@
     "id": "t-0019",
     "insulin": 6.5,
     "kind": "meal",
+    "meal_id": "t-0019",
     "notes": "",
     "sport_kind": null
    },
@@ -2891,6 +3249,7 @@
     "id": "t-0020",
     "insulin": 1,
     "kind": "snack",
+    "meal_id": "t-0019",
     "notes": "",
     "sport_kind": null
    },
@@ -2907,6 +3266,7 @@
     "id": "t-0021",
     "insulin": 12.0,
     "kind": "meal",
+    "meal_id": "t-0021",
     "notes": "",
     "sport_kind": null
    }
@@ -3027,7 +3387,12 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "4cb7b389f6404a6baba142f469a3ea90eabb68a0fc2b385da3c05f40720c6354"
+   "sha256": "4cb7b389f6404a6baba142f469a3ea90eabb68a0fc2b385da3c05f40720c6354",
+   "tones": {
+    "in-range": 315,
+    "low": 195,
+    "outside": 54
+   }
   },
   "exercises": [
    {
@@ -3147,6 +3512,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-04T09:10:00+00:00",
+     "auto_start": "2026-09-04T06:10:00+00:00",
+     "end": "2026-09-04T09:10:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-04T06:10:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "125.1887338521734257620257838"
+     }
     }
    },
    {
@@ -3256,6 +3636,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-04T12:35:00+00:00",
+     "auto_start": "2026-09-04T09:35:00+00:00",
+     "end": "2026-09-04T12:35:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-04T09:35:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -3371,6 +3766,21 @@
      "status": "affected",
      "suggested": true,
      "suggested_effect_mgdl": "40"
+    },
+    "window": {
+     "auto_end": "2026-09-04T19:20:00+00:00",
+     "auto_start": "2026-09-04T16:20:00+00:00",
+     "end": "2026-09-04T19:20:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-04T16:20:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "88.95847541160612593910980924"
+     }
     }
    }
   ],
@@ -3391,6 +3801,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-03T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-05T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-04T06:10:00+00:00",
@@ -3405,6 +3823,7 @@
     "id": "t-0022",
     "insulin": 20.0,
     "kind": "meal",
+    "meal_id": "t-0022",
     "notes": "",
     "sport_kind": null
    },
@@ -3421,6 +3840,7 @@
     "id": "t-0023",
     "insulin": 5.0,
     "kind": "meal",
+    "meal_id": "t-0023",
     "notes": "",
     "sport_kind": null
    },
@@ -3437,6 +3857,7 @@
     "id": "t-0024",
     "insulin": 0,
     "kind": "exercise",
+    "meal_id": null,
     "notes": "",
     "sport_kind": "gym"
    },
@@ -3453,6 +3874,7 @@
     "id": "t-0025",
     "insulin": 7.0,
     "kind": "meal",
+    "meal_id": "t-0025",
     "notes": "",
     "sport_kind": null
    }
@@ -3568,7 +3990,12 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "f37b7b6945751630bd16df1dd8938c815d15875797d612da582cbe83d08fa926"
+   "sha256": "f37b7b6945751630bd16df1dd8938c815d15875797d612da582cbe83d08fa926",
+   "tones": {
+    "in-range": 347,
+    "low": 179,
+    "outside": 38
+   }
   },
   "exercises": [],
   "meals": [
@@ -3679,6 +4106,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-05T08:50:00+00:00",
+     "auto_start": "2026-09-05T05:50:00+00:00",
+     "end": "2026-09-05T08:50:00+00:00",
+     "end_glucose": {
+      "tone": "outside",
+      "value": "73.96739204052882531426094495"
+     },
+     "manual": false,
+     "start": "2026-09-05T05:50:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "128.2713462911016316165120255"
+     }
     }
    },
    {
@@ -3788,6 +4230,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-05T13:30:00+00:00",
+     "auto_start": "2026-09-05T10:30:00+00:00",
+     "end": "2026-09-05T13:30:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "118.9533669554144396226731230"
+     },
+     "manual": false,
+     "start": "2026-09-05T10:30:00+00:00",
+     "start_glucose": {
+      "tone": "outside",
+      "value": "74.97399225548683706420009852"
+     }
     }
    },
    {
@@ -3897,6 +4354,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-05T20:30:00+00:00",
+     "auto_start": "2026-09-05T17:30:00+00:00",
+     "end": "2026-09-05T20:30:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-05T17:30:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "103.1751665833077878704764363"
+     }
     }
    }
   ],
@@ -3917,6 +4389,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-04T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-06T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-05T05:50:00+00:00",
@@ -3931,6 +4411,7 @@
     "id": "t-0026",
     "insulin": 9.0,
     "kind": "meal",
+    "meal_id": "t-0026",
     "notes": "",
     "sport_kind": null
    },
@@ -3947,6 +4428,7 @@
     "id": "t-0027",
     "insulin": 4.5,
     "kind": "meal",
+    "meal_id": "t-0027",
     "notes": "",
     "sport_kind": null
    },
@@ -3963,6 +4445,7 @@
     "id": "t-0028",
     "insulin": 15.5,
     "kind": "meal",
+    "meal_id": "t-0028",
     "notes": "",
     "sport_kind": null
    }
@@ -4091,7 +4574,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 552,
-   "sha256": "a3012f33f8e976a758689045975f3389041d028591068c44b94e06d1d44e1478"
+   "sha256": "a3012f33f8e976a758689045975f3389041d028591068c44b94e06d1d44e1478",
+   "tones": {
+    "high": 3,
+    "in-range": 404,
+    "low": 123,
+    "outside": 22
+   }
   },
   "exercises": [],
   "meals": [
@@ -4202,6 +4691,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-06T08:55:00+00:00",
+     "auto_start": "2026-09-06T05:55:00+00:00",
+     "end": "2026-09-06T08:55:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-06T05:55:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "134.0374688771482358656707354"
+     }
     }
    },
    {
@@ -4311,6 +4815,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-06T12:45:00+00:00",
+     "auto_start": "2026-09-06T09:45:00+00:00",
+     "end": "2026-09-06T12:45:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "95.92646626690045563014844308"
+     },
+     "manual": false,
+     "start": "2026-09-06T09:45:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -4420,6 +4939,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-06T20:10:00+00:00",
+     "auto_start": "2026-09-06T17:10:00+00:00",
+     "end": "2026-09-06T20:10:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "143.0000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-06T17:10:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "90.19950189132702998665895707"
+     }
     }
    }
   ],
@@ -4440,6 +4974,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-05T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-07T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-06T05:05:00+00:00",
@@ -4454,6 +4996,7 @@
     "id": "00000000-0000-4000-8000-000000000008",
     "insulin": 0,
     "kind": "basal",
+    "meal_id": null,
     "nightscout_synced": true,
     "notes": "",
     "sport_kind": null
@@ -4471,6 +5014,7 @@
     "id": "t-0029",
     "insulin": 11.5,
     "kind": "meal",
+    "meal_id": "t-0029",
     "notes": "",
     "sport_kind": null
    },
@@ -4487,6 +5031,7 @@
     "id": "t-0030",
     "insulin": 3.0,
     "kind": "meal",
+    "meal_id": "t-0030",
     "notes": "",
     "sport_kind": null
    },
@@ -4503,6 +5048,7 @@
     "id": "t-0031",
     "insulin": 9.5,
     "kind": "meal",
+    "meal_id": "t-0031",
     "notes": "",
     "sport_kind": null
    }
@@ -4610,7 +5156,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 552,
-   "sha256": "da0341b7f507e3a2924c2b9434e021c74b398078e38f241ea5663707039ce610"
+   "sha256": "da0341b7f507e3a2924c2b9434e021c74b398078e38f241ea5663707039ce610",
+   "tones": {
+    "high": 3,
+    "in-range": 369,
+    "low": 132,
+    "outside": 48
+   }
   },
   "exercises": [],
   "meals": [
@@ -4655,6 +5207,18 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-07T08:10:00+00:00",
+     "auto_start": "2026-09-07T05:10:00+00:00",
+     "end": "2026-09-07T08:10:00+00:00",
+     "end_glucose": null,
+     "manual": false,
+     "start": "2026-09-07T05:10:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "126.9114576953509082662658620"
+     }
     }
    },
    {
@@ -4794,6 +5358,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-07T14:20:00+00:00",
+     "auto_start": "2026-09-07T09:45:00+00:00",
+     "end": "2026-09-07T14:20:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "56.10119851013574895527811664"
+     },
+     "manual": false,
+     "start": "2026-09-07T09:45:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -4925,6 +5504,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-07T22:40:00+00:00",
+     "auto_start": "2026-09-07T17:20:00+00:00",
+     "end": "2026-09-07T22:40:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "68.74985942393656956708855193"
+     },
+     "manual": false,
+     "start": "2026-09-07T17:20:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "95.93914733878535996782410511"
+     }
     }
    }
   ],
@@ -4945,6 +5539,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-06T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-08T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-07T05:10:00+00:00",
@@ -4959,6 +5561,7 @@
     "id": "t-0033",
     "insulin": 11.0,
     "kind": "meal",
+    "meal_id": "t-0033",
     "notes": "",
     "sport_kind": null
    },
@@ -4975,6 +5578,7 @@
     "id": "t-0034",
     "insulin": 7.0,
     "kind": "meal",
+    "meal_id": "t-0034",
     "notes": "Pizza",
     "sport_kind": null
    },
@@ -4991,6 +5595,7 @@
     "id": "t-0035",
     "insulin": 1,
     "kind": "snack",
+    "meal_id": "t-0034",
     "notes": "",
     "sport_kind": null
    },
@@ -5007,6 +5612,7 @@
     "id": "t-0036",
     "insulin": 4.0,
     "kind": "meal",
+    "meal_id": "t-0036",
     "notes": "",
     "sport_kind": null
    },
@@ -5023,6 +5629,7 @@
     "id": "t-0037",
     "insulin": 1.5,
     "kind": "correction",
+    "meal_id": "t-0036",
     "notes": "",
     "sport_kind": null
    }
@@ -5143,7 +5750,12 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "76b5a344f1e39168623fc0292f966872cd8247d68fdd120de251073bcbc55019"
+   "sha256": "76b5a344f1e39168623fc0292f966872cd8247d68fdd120de251073bcbc55019",
+   "tones": {
+    "in-range": 387,
+    "low": 107,
+    "outside": 70
+   }
   },
   "exercises": [],
   "meals": [
@@ -5254,6 +5866,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-08T09:10:00+00:00",
+     "auto_start": "2026-09-08T06:10:00+00:00",
+     "end": "2026-09-08T09:10:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-08T06:10:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "134.8866701693355480643403289"
+     }
     }
    },
    {
@@ -5363,6 +5990,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-08T12:35:00+00:00",
+     "auto_start": "2026-09-08T09:35:00+00:00",
+     "end": "2026-09-08T12:35:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "44.02855801101212150086096006"
+     },
+     "manual": false,
+     "start": "2026-09-08T09:35:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -5473,6 +6115,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-08T19:40:00+00:00",
+     "auto_start": "2026-09-08T16:40:00+00:00",
+     "end": "2026-09-08T20:00:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "153.0374854901332906376335908"
+     },
+     "manual": true,
+     "start": "2026-09-08T16:20:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "93.95445550461908692236552938"
+     }
     }
    }
   ],
@@ -5493,6 +6150,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-07T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-09T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-08T06:10:00+00:00",
@@ -5507,6 +6172,7 @@
     "id": "t-0038",
     "insulin": 9.5,
     "kind": "meal",
+    "meal_id": "t-0038",
     "notes": "",
     "sport_kind": null
    },
@@ -5523,6 +6189,7 @@
     "id": "t-0039",
     "insulin": 7.0,
     "kind": "meal",
+    "meal_id": "t-0039",
     "notes": "",
     "sport_kind": null
    },
@@ -5539,6 +6206,7 @@
     "id": "t-0040",
     "insulin": 7.5,
     "kind": "meal",
+    "meal_id": "t-0040",
     "notes": "",
     "sport_kind": null
    }
@@ -5646,7 +6314,12 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "d5c1355e8d7033b0439b38fb74e58d202e0c108716f87e315f3ba21296edce20"
+   "sha256": "d5c1355e8d7033b0439b38fb74e58d202e0c108716f87e315f3ba21296edce20",
+   "tones": {
+    "in-range": 415,
+    "low": 95,
+    "outside": 54
+   }
   },
   "exercises": [],
   "meals": [
@@ -5757,6 +6430,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-09T09:05:00+00:00",
+     "auto_start": "2026-09-09T06:05:00+00:00",
+     "end": "2026-09-09T09:05:00+00:00",
+     "end_glucose": {
+      "tone": "outside",
+      "value": "77.22469572624371385981293102"
+     },
+     "manual": false,
+     "start": "2026-09-09T06:05:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "124.1232162083781954912281287"
+     }
     }
    },
    {
@@ -5866,6 +6554,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-09T13:50:00+00:00",
+     "auto_start": "2026-09-09T10:50:00+00:00",
+     "end": "2026-09-09T13:50:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "68.73914064334350786569617281"
+     },
+     "manual": false,
+     "start": "2026-09-09T10:50:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "80.04749509790383606285730067"
+     }
     }
    },
    {
@@ -5975,6 +6678,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-09T19:45:00+00:00",
+     "auto_start": "2026-09-09T16:45:00+00:00",
+     "end": "2026-09-09T19:45:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "87.77044828483195154975421372"
+     },
+     "manual": false,
+     "start": "2026-09-09T16:45:00+00:00",
+     "start_glucose": {
+      "tone": "outside",
+      "value": "70.25602881733439656831743064"
+     }
     }
    }
   ],
@@ -5995,6 +6713,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-08T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-10T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-09T06:05:00+00:00",
@@ -6009,6 +6735,7 @@
     "id": "t-0041",
     "insulin": 6.0,
     "kind": "meal",
+    "meal_id": "t-0041",
     "notes": "",
     "sport_kind": null
    },
@@ -6025,6 +6752,7 @@
     "id": "t-0042",
     "insulin": 7.0,
     "kind": "meal",
+    "meal_id": "t-0042",
     "notes": "",
     "sport_kind": null
    },
@@ -6041,6 +6769,7 @@
     "id": "t-0043",
     "insulin": 10.5,
     "kind": "meal",
+    "meal_id": "t-0043",
     "notes": "",
     "sport_kind": null
    }
@@ -6148,7 +6877,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "183a60063323c8832ded8ac94b7f46df57ca387b12fd837f637bb2206b703947"
+   "sha256": "183a60063323c8832ded8ac94b7f46df57ca387b12fd837f637bb2206b703947",
+   "tones": {
+    "high": 4,
+    "in-range": 388,
+    "low": 98,
+    "outside": 74
+   }
   },
   "exercises": [],
   "meals": [
@@ -6259,6 +6994,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-10T08:20:00+00:00",
+     "auto_start": "2026-09-10T05:20:00+00:00",
+     "end": "2026-09-10T08:20:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-10T05:20:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "124.0384382191464203047589698"
+     }
     }
    },
    {
@@ -6368,6 +7118,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-10T20:15:00+00:00",
+     "auto_start": "2026-09-10T17:15:00+00:00",
+     "end": "2026-09-10T20:15:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "170.8427445356637568454586578"
+     },
+     "manual": false,
+     "start": "2026-09-10T17:15:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "86.00000000000000000000000000"
+     }
     }
    }
   ],
@@ -6398,6 +7163,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-09T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-11T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-10T05:20:00+00:00",
@@ -6412,6 +7185,7 @@
     "id": "t-0044",
     "insulin": 13.0,
     "kind": "meal",
+    "meal_id": "t-0044",
     "notes": "",
     "sport_kind": null
    },
@@ -6428,6 +7202,7 @@
     "id": "t-0045",
     "insulin": 0,
     "kind": "carbs",
+    "meal_id": null,
     "notes": "nur KH",
     "sport_kind": null
    },
@@ -6444,6 +7219,7 @@
     "id": "t-0046",
     "insulin": 3.5,
     "kind": "correction",
+    "meal_id": null,
     "notes": "",
     "sport_kind": null
    },
@@ -6460,6 +7236,7 @@
     "id": "t-0047",
     "insulin": 6.5,
     "kind": "meal",
+    "meal_id": "t-0047",
     "notes": "",
     "sport_kind": null
    }
@@ -6554,7 +7331,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "552eced86afcb261ac9f9bf3d5642ec38c1669fd0adb4d7d39c7e15e9e87cbe3"
+   "sha256": "552eced86afcb261ac9f9bf3d5642ec38c1669fd0adb4d7d39c7e15e9e87cbe3",
+   "tones": {
+    "high": 22,
+    "in-range": 341,
+    "low": 93,
+    "outside": 108
+   }
   },
   "exercises": [],
   "meals": [
@@ -6695,6 +7478,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-11T14:15:00+00:00",
+     "auto_start": "2026-09-11T09:40:00+00:00",
+     "end": "2026-09-11T14:15:00+00:00",
+     "end_glucose": {
+      "tone": "outside",
+      "value": "222.0864092521528134931624270"
+     },
+     "manual": false,
+     "start": "2026-09-11T09:40:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "125.8698243041925796306368086"
+     }
     }
    },
    {
@@ -6804,6 +7602,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-11T19:35:00+00:00",
+     "auto_start": "2026-09-11T16:35:00+00:00",
+     "end": "2026-09-11T19:35:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-11T16:35:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "152.2004124776133237552014884"
+     }
     }
    }
   ],
@@ -6824,6 +7637,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-10T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-12T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-11T09:40:00+00:00",
@@ -6838,6 +7659,7 @@
     "id": "t-0048",
     "insulin": 9.5,
     "kind": "meal",
+    "meal_id": "t-0048",
     "notes": "",
     "sport_kind": null
    },
@@ -6854,6 +7676,7 @@
     "id": "t-0049",
     "insulin": 1,
     "kind": "snack",
+    "meal_id": "t-0048",
     "notes": "",
     "sport_kind": null
    },
@@ -6870,6 +7693,7 @@
     "id": "t-0050",
     "insulin": 12.0,
     "kind": "meal",
+    "meal_id": "t-0050",
     "notes": "",
     "sport_kind": null
    }
@@ -6964,7 +7788,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "aee674977a0c60f26dccde0dd7e6110180ee509df2f7552ee37ded42b1766fa9"
+   "sha256": "aee674977a0c60f26dccde0dd7e6110180ee509df2f7552ee37ded42b1766fa9",
+   "tones": {
+    "high": 16,
+    "in-range": 341,
+    "low": 124,
+    "outside": 83
+   }
   },
   "exercises": [],
   "meals": [
@@ -7075,6 +7905,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-12T09:05:00+00:00",
+     "auto_start": "2026-09-12T06:05:00+00:00",
+     "end": "2026-09-12T09:05:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "44.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-12T06:05:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "130.8352995215806277353845955"
+     }
     }
    },
    {
@@ -7184,6 +8029,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-12T13:45:00+00:00",
+     "auto_start": "2026-09-12T10:45:00+00:00",
+     "end": "2026-09-12T13:45:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "173.7299419761045801840852663"
+     },
+     "manual": false,
+     "start": "2026-09-12T10:45:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "52.99510504641338237745767461"
+     }
     }
    },
    {
@@ -7293,6 +8153,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-12T20:25:00+00:00",
+     "auto_start": "2026-09-12T17:25:00+00:00",
+     "end": "2026-09-12T20:25:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "128.9365198899921375562728699"
+     },
+     "manual": false,
+     "start": "2026-09-12T17:25:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "117.0363574001028983021780141"
+     }
     }
    }
   ],
@@ -7313,6 +8188,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-11T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-13T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-12T06:05:00+00:00",
@@ -7327,6 +8210,7 @@
     "id": "t-0051",
     "insulin": 11.0,
     "kind": "meal",
+    "meal_id": "t-0051",
     "notes": "",
     "sport_kind": null
    },
@@ -7343,6 +8227,7 @@
     "id": "t-0052",
     "insulin": 10.5,
     "kind": "meal",
+    "meal_id": "t-0052",
     "notes": "",
     "sport_kind": null
    },
@@ -7359,6 +8244,7 @@
     "id": "t-0053",
     "insulin": 11.0,
     "kind": "meal",
+    "meal_id": "t-0053",
     "notes": "",
     "sport_kind": null
    }
@@ -7453,7 +8339,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "d7803a50acf8b9857b5d39ab2f6a642a683ac005b46fde7b75f3c95f251f4d68"
+   "sha256": "d7803a50acf8b9857b5d39ab2f6a642a683ac005b46fde7b75f3c95f251f4d68",
+   "tones": {
+    "high": 11,
+    "in-range": 346,
+    "low": 130,
+    "outside": 77
+   }
   },
   "exercises": [],
   "meals": [
@@ -7564,6 +8456,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-13T08:25:00+00:00",
+     "auto_start": "2026-09-13T05:25:00+00:00",
+     "end": "2026-09-13T08:25:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-13T05:25:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "125.0588430128104330254234736"
+     }
     }
    },
    {
@@ -7673,6 +8580,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-13T13:55:00+00:00",
+     "auto_start": "2026-09-13T10:55:00+00:00",
+     "end": "2026-09-13T13:55:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-13T10:55:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "58.02337515371935424788717654"
+     }
     }
    },
    {
@@ -7826,6 +8748,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-13T22:15:00+00:00",
+     "auto_start": "2026-09-13T16:55:00+00:00",
+     "end": "2026-09-13T22:15:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "81.94399719985999299964998250"
+     },
+     "manual": false,
+     "start": "2026-09-13T16:55:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    }
   ],
@@ -7846,6 +8783,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-12T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-14T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-13T05:25:00+00:00",
@@ -7860,6 +8805,7 @@
     "id": "t-0054",
     "insulin": 7.0,
     "kind": "meal",
+    "meal_id": "t-0054",
     "notes": "",
     "sport_kind": null
    },
@@ -7876,6 +8822,7 @@
     "id": "t-0055",
     "insulin": 13.5,
     "kind": "meal",
+    "meal_id": "t-0055",
     "notes": "",
     "sport_kind": null
    },
@@ -7892,6 +8839,7 @@
     "id": "t-0056",
     "insulin": 5.5,
     "kind": "meal",
+    "meal_id": "t-0056",
     "notes": "",
     "sport_kind": null
    },
@@ -7908,6 +8856,7 @@
     "id": "t-0057",
     "insulin": 2,
     "kind": "correction",
+    "meal_id": "t-0056",
     "notes": "",
     "sport_kind": null
    },
@@ -7924,6 +8873,7 @@
     "id": "t-0058",
     "insulin": 1.5,
     "kind": "correction",
+    "meal_id": "t-0056",
     "notes": "",
     "sport_kind": null
    }
@@ -8044,7 +8994,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "fa57345f0caf8eb83fe19eec84125404e383c864b19025b9464d87e18af67dc3"
+   "sha256": "fa57345f0caf8eb83fe19eec84125404e383c864b19025b9464d87e18af67dc3",
+   "tones": {
+    "high": 1,
+    "in-range": 315,
+    "low": 191,
+    "outside": 57
+   }
   },
   "exercises": [],
   "meals": [
@@ -8155,6 +9111,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-14T08:25:00+00:00",
+     "auto_start": "2026-09-14T05:25:00+00:00",
+     "end": "2026-09-14T08:25:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "62.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-14T05:25:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "132.0000000000000000000000000"
+     }
     }
    },
    {
@@ -8264,6 +9235,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-14T13:25:00+00:00",
+     "auto_start": "2026-09-14T10:25:00+00:00",
+     "end": "2026-09-14T13:25:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-14T10:25:00+00:00",
+     "start_glucose": {
+      "tone": "outside",
+      "value": "73.41523725020967653144824147"
+     }
     }
    },
    {
@@ -8373,6 +9359,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-14T19:35:00+00:00",
+     "auto_start": "2026-09-14T16:35:00+00:00",
+     "end": "2026-09-14T19:35:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-14T16:35:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "62.99474033024521623870158072"
+     }
     }
    }
   ],
@@ -8393,6 +9394,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-13T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-15T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-14T05:25:00+00:00",
@@ -8407,6 +9416,7 @@
     "id": "t-0059",
     "insulin": 7.5,
     "kind": "meal",
+    "meal_id": "t-0059",
     "notes": "",
     "sport_kind": null
    },
@@ -8423,6 +9433,7 @@
     "id": "t-0060",
     "insulin": 9.5,
     "kind": "meal",
+    "meal_id": "t-0060",
     "notes": "Pizza",
     "sport_kind": null
    },
@@ -8439,6 +9450,7 @@
     "id": "t-0061",
     "insulin": 17.5,
     "kind": "meal",
+    "meal_id": "t-0061",
     "notes": "",
     "sport_kind": null
    }
@@ -8567,7 +9579,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "434632616749cf2c00fdd407bdf04ebb08c863c1483a7222270c3433fa479d20"
+   "sha256": "434632616749cf2c00fdd407bdf04ebb08c863c1483a7222270c3433fa479d20",
+   "tones": {
+    "high": 2,
+    "in-range": 387,
+    "low": 146,
+    "outside": 29
+   }
   },
   "exercises": [
    {
@@ -8687,6 +9705,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-15T08:50:00+00:00",
+     "auto_start": "2026-09-15T05:50:00+00:00",
+     "end": "2026-09-15T08:50:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "104.4449582534618104780770671"
+     },
+     "manual": false,
+     "start": "2026-09-15T05:50:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "125.4181529132180611325083996"
+     }
     }
    },
    {
@@ -8826,6 +9859,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-15T15:05:00+00:00",
+     "auto_start": "2026-09-15T10:30:00+00:00",
+     "end": "2026-09-15T15:05:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "159.8824605039373175119692486"
+     },
+     "manual": false,
+     "start": "2026-09-15T10:30:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "108.9256022066435534186994977"
+     }
     }
    },
    {
@@ -8941,6 +9989,21 @@
      "status": "affected",
      "suggested": true,
      "suggested_effect_mgdl": "-40"
+    },
+    "window": {
+     "auto_end": "2026-09-15T19:10:00+00:00",
+     "auto_start": "2026-09-15T16:10:00+00:00",
+     "end": "2026-09-15T19:10:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "147.4928853351045485317222087"
+     },
+     "manual": false,
+     "start": "2026-09-15T16:10:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "149.9934809727569046692867970"
+     }
     }
    }
   ],
@@ -8961,6 +10024,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-14T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-16T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-15T05:50:00+00:00",
@@ -8975,6 +10046,7 @@
     "id": "t-0062",
     "insulin": 4.0,
     "kind": "meal",
+    "meal_id": "t-0062",
     "notes": "",
     "sport_kind": null
    },
@@ -8991,6 +10063,7 @@
     "id": "t-0063",
     "insulin": 5.5,
     "kind": "meal",
+    "meal_id": "t-0063",
     "notes": "",
     "sport_kind": null
    },
@@ -9007,6 +10080,7 @@
     "id": "t-0064",
     "insulin": 1,
     "kind": "snack",
+    "meal_id": "t-0063",
     "notes": "",
     "sport_kind": null
    },
@@ -9023,6 +10097,7 @@
     "id": "t-0065",
     "insulin": 0,
     "kind": "exercise",
+    "meal_id": "t-0063",
     "notes": "Racing",
     "sport_kind": "racing"
    },
@@ -9039,6 +10114,7 @@
     "id": "t-0066",
     "insulin": 7.5,
     "kind": "meal",
+    "meal_id": "t-0066",
     "notes": "",
     "sport_kind": null
    }
@@ -9180,7 +10256,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "e2d37a5f4546e9eb59e306e752f7b2fd1ed97b1e21034c1888f6293355b2cc69"
+   "sha256": "e2d37a5f4546e9eb59e306e752f7b2fd1ed97b1e21034c1888f6293355b2cc69",
+   "tones": {
+    "high": 2,
+    "in-range": 457,
+    "low": 53,
+    "outside": 52
+   }
   },
   "exercises": [],
   "meals": [
@@ -9291,6 +10373,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-16T08:25:00+00:00",
+     "auto_start": "2026-09-16T05:25:00+00:00",
+     "end": "2026-09-16T08:25:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-16T05:25:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "133.8971685227989073334734188"
+     }
     }
    },
    {
@@ -9400,6 +10497,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-16T13:00:00+00:00",
+     "auto_start": "2026-09-16T10:00:00+00:00",
+     "end": "2026-09-16T13:00:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "68.02123944215947891483539771"
+     },
+     "manual": false,
+     "start": "2026-09-16T10:00:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -9509,6 +10621,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-16T20:25:00+00:00",
+     "auto_start": "2026-09-16T17:25:00+00:00",
+     "end": "2026-09-16T20:25:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "96.04159757474643689152483749"
+     },
+     "manual": false,
+     "start": "2026-09-16T17:25:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "94.87672422536639789035955170"
+     }
     }
    }
   ],
@@ -9529,6 +10656,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-15T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-17T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-16T05:05:00+00:00",
@@ -9543,6 +10678,7 @@
     "id": "00000000-0000-4000-8000-000000000018",
     "insulin": 0,
     "kind": "basal",
+    "meal_id": null,
     "nightscout_synced": true,
     "notes": "",
     "sport_kind": null
@@ -9560,6 +10696,7 @@
     "id": "t-0067",
     "insulin": 11.0,
     "kind": "meal",
+    "meal_id": "t-0067",
     "notes": "",
     "sport_kind": null
    },
@@ -9576,6 +10713,7 @@
     "id": "t-0068",
     "insulin": 4.0,
     "kind": "meal",
+    "meal_id": "t-0068",
     "notes": "",
     "sport_kind": null
    },
@@ -9592,6 +10730,7 @@
     "id": "t-0069",
     "insulin": 6.5,
     "kind": "meal",
+    "meal_id": "t-0069",
     "notes": "",
     "sport_kind": null
    }
@@ -9725,7 +10864,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "a7befb632a981d9377d58d56c8a14de270f6b8c2930863a1e91c6290d460f675"
+   "sha256": "a7befb632a981d9377d58d56c8a14de270f6b8c2930863a1e91c6290d460f675",
+   "tones": {
+    "high": 5,
+    "in-range": 438,
+    "low": 70,
+    "outside": 51
+   }
   },
   "exercises": [],
   "meals": [
@@ -9836,6 +10981,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-17T07:55:00+00:00",
+     "auto_start": "2026-09-17T04:55:00+00:00",
+     "end": "2026-09-17T07:55:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "98.14664211294710996084677152"
+     },
+     "manual": false,
+     "start": "2026-09-17T04:55:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "127.3061925030893862419332693"
+     }
     }
    },
    {
@@ -9945,6 +11105,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-17T12:55:00+00:00",
+     "auto_start": "2026-09-17T09:55:00+00:00",
+     "end": "2026-09-17T12:55:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "157.9634963746399471180356953"
+     },
+     "manual": false,
+     "start": "2026-09-17T09:55:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "107.7518965910200892130368248"
+     }
     }
    },
    {
@@ -10054,6 +11229,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-17T20:05:00+00:00",
+     "auto_start": "2026-09-17T17:05:00+00:00",
+     "end": "2026-09-17T20:05:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-17T17:05:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "99.02642244364743558972178600"
+     }
     }
    }
   ],
@@ -10074,6 +11264,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-16T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-18T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-17T04:55:00+00:00",
@@ -10088,6 +11286,7 @@
     "id": "t-0071",
     "insulin": 4.0,
     "kind": "meal",
+    "meal_id": "t-0071",
     "notes": "",
     "sport_kind": null
    },
@@ -10104,6 +11303,7 @@
     "id": "t-0072",
     "insulin": 10.5,
     "kind": "meal",
+    "meal_id": "t-0072",
     "notes": "",
     "sport_kind": null
    },
@@ -10120,6 +11320,7 @@
     "id": "t-0073",
     "insulin": 12.0,
     "kind": "meal",
+    "meal_id": "t-0073",
     "notes": "",
     "sport_kind": null
    }
@@ -10214,7 +11415,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "030f9cb2d4b45a0c591815764f140f0795a802b1de77121328ff09373cbdbc9b"
+   "sha256": "030f9cb2d4b45a0c591815764f140f0795a802b1de77121328ff09373cbdbc9b",
+   "tones": {
+    "high": 1,
+    "in-range": 448,
+    "low": 60,
+    "outside": 55
+   }
   },
   "exercises": [],
   "meals": [
@@ -10325,6 +11532,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-18T07:50:00+00:00",
+     "auto_start": "2026-09-18T05:00:00+00:00",
+     "end": "2026-09-18T07:50:00+00:00",
+     "end_glucose": {
+      "tone": "outside",
+      "value": "76.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-18T05:00:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "133.9924823020861611710902750"
+     }
     }
    },
    {
@@ -10434,6 +11656,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-18T13:25:00+00:00",
+     "auto_start": "2026-09-18T10:35:00+00:00",
+     "end": "2026-09-18T13:25:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "101.1406831552407251770920879"
+     },
+     "manual": false,
+     "start": "2026-09-18T10:35:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "92.94778020923888605773554363"
+     }
     }
    },
    {
@@ -10543,6 +11780,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-18T20:00:00+00:00",
+     "auto_start": "2026-09-18T17:10:00+00:00",
+     "end": "2026-09-18T20:00:00+00:00",
+     "end_glucose": {
+      "tone": "outside",
+      "value": "78.12647597980480711132958514"
+     },
+     "manual": false,
+     "start": "2026-09-18T17:10:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "93.09708467912718196426088840"
+     }
     }
    }
   ],
@@ -10563,6 +11815,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-17T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-19T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-18T05:00:00+00:00",
@@ -10577,6 +11837,7 @@
     "id": "t-0074",
     "insulin": 4.5,
     "kind": "meal",
+    "meal_id": "t-0074",
     "notes": "",
     "sport_kind": null
    },
@@ -10593,6 +11854,7 @@
     "id": "t-0075",
     "insulin": 4.5,
     "kind": "meal",
+    "meal_id": "t-0075",
     "notes": "",
     "sport_kind": null
    },
@@ -10609,6 +11871,7 @@
     "id": "t-0076",
     "insulin": 11.0,
     "kind": "meal",
+    "meal_id": "t-0076",
     "notes": "",
     "sport_kind": null
    }
@@ -10716,7 +11979,12 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "e86a2e358e8643a5005a60d72e6abc2dfe90ccc03ac72600a3de6181be4ca0ce"
+   "sha256": "e86a2e358e8643a5005a60d72e6abc2dfe90ccc03ac72600a3de6181be4ca0ce",
+   "tones": {
+    "high": 1,
+    "in-range": 506,
+    "outside": 57
+   }
   },
   "exercises": [],
   "meals": [
@@ -10848,6 +12116,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-19T08:05:00+00:00",
+     "auto_start": "2026-09-19T05:15:00+00:00",
+     "end": "2026-09-19T08:05:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "133.8303820017365171617235734"
+     },
+     "manual": false,
+     "start": "2026-09-19T05:15:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "128.0147693301559991957784963"
+     }
     }
    },
    {
@@ -10987,6 +12270,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-19T14:10:00+00:00",
+     "auto_start": "2026-09-19T09:45:00+00:00",
+     "end": "2026-09-19T14:10:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "130.2691452676151218182109805"
+     },
+     "manual": false,
+     "start": "2026-09-19T09:45:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "135.0260479072403949614915940"
+     }
     }
    },
    {
@@ -11118,6 +12416,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-19T21:50:00+00:00",
+     "auto_start": "2026-09-19T16:40:00+00:00",
+     "end": "2026-09-19T21:50:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "109.7700213149696671585505821"
+     },
+     "manual": false,
+     "start": "2026-09-19T16:40:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "116.0403536170450108762340342"
+     }
     }
    }
   ],
@@ -11129,6 +12442,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-18T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-20T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-19T05:15:00+00:00",
@@ -11143,6 +12464,7 @@
     "id": "t-0077",
     "insulin": 12.5,
     "kind": "meal",
+    "meal_id": "t-0077",
     "notes": "",
     "sport_kind": null
    },
@@ -11159,6 +12481,7 @@
     "id": "t-0078",
     "insulin": 0,
     "kind": "carbs",
+    "meal_id": "t-0077",
     "notes": "",
     "sport_kind": null
    },
@@ -11175,6 +12498,7 @@
     "id": "t-0079",
     "insulin": 10.0,
     "kind": "meal",
+    "meal_id": "t-0079",
     "notes": "",
     "sport_kind": null
    },
@@ -11191,6 +12515,7 @@
     "id": "t-0080",
     "insulin": 1,
     "kind": "snack",
+    "meal_id": "t-0079",
     "notes": "",
     "sport_kind": null
    },
@@ -11207,6 +12532,7 @@
     "id": "t-0081",
     "insulin": 3.0,
     "kind": "meal",
+    "meal_id": "t-0081",
     "notes": "",
     "sport_kind": null
    },
@@ -11223,6 +12549,7 @@
     "id": "t-0082",
     "insulin": 1,
     "kind": "correction",
+    "meal_id": "t-0081",
     "notes": "",
     "sport_kind": null
    }
@@ -11343,7 +12670,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "39030884d902551f49c357c82e075fe9478176777b0a7bb96209ed70cf23999e"
+   "sha256": "39030884d902551f49c357c82e075fe9478176777b0a7bb96209ed70cf23999e",
+   "tones": {
+    "high": 1,
+    "in-range": 437,
+    "low": 83,
+    "outside": 43
+   }
   },
   "exercises": [],
   "meals": [
@@ -11479,6 +12812,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-20T12:55:00+00:00",
+     "auto_start": "2026-09-20T10:05:00+00:00",
+     "end": "2026-09-20T12:15:00+00:00",
+     "end_glucose": {
+      "tone": "outside",
+      "value": "217.0566131517471047268750932"
+     },
+     "manual": true,
+     "start": "2026-09-20T11:15:00+00:00",
+     "start_glucose": {
+      "tone": "outside",
+      "value": "222.7942743834428057999752138"
+     }
     }
    },
    {
@@ -11588,6 +12936,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-20T14:05:00+00:00",
+     "auto_start": "2026-09-20T11:15:00+00:00",
+     "end": "2026-09-20T14:05:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "138.1234219082856822513734724"
+     },
+     "manual": false,
+     "start": "2026-09-20T11:15:00+00:00",
+     "start_glucose": {
+      "tone": "outside",
+      "value": "222.7942743834428057999752138"
+     }
     }
    },
    {
@@ -11697,6 +13060,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-20T19:40:00+00:00",
+     "auto_start": "2026-09-20T16:50:00+00:00",
+     "end": "2026-09-20T19:40:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-20T16:50:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "98.15699689472102574376439948"
+     }
     }
    }
   ],
@@ -11717,6 +13095,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-19T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-21T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-20T10:05:00+00:00",
@@ -11731,6 +13117,7 @@
     "id": "t-0083",
     "insulin": 5.5,
     "kind": "meal",
+    "meal_id": "t-0083",
     "notes": "",
     "sport_kind": null
    },
@@ -11747,6 +13134,7 @@
     "id": "t-0084",
     "insulin": 4,
     "kind": "meal",
+    "meal_id": "t-0084",
     "notes": "",
     "sport_kind": null
    },
@@ -11763,6 +13151,7 @@
     "id": "t-0085",
     "insulin": 4.5,
     "kind": "meal",
+    "meal_id": "t-0085",
     "notes": "",
     "sport_kind": null
    }
@@ -11870,7 +13259,12 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "3e6acd509941c957ae5bc6990de2e20baf389214e230a7161331385ca97df909"
+   "sha256": "3e6acd509941c957ae5bc6990de2e20baf389214e230a7161331385ca97df909",
+   "tones": {
+    "in-range": 377,
+    "low": 156,
+    "outside": 31
+   }
   },
   "exercises": [],
   "meals": [
@@ -11981,6 +13375,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-21T08:55:00+00:00",
+     "auto_start": "2026-09-21T06:05:00+00:00",
+     "end": "2026-09-21T08:55:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-21T06:05:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "134.8876962657104810333781685"
+     }
     }
    },
    {
@@ -12090,6 +13499,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-21T12:30:00+00:00",
+     "auto_start": "2026-09-21T09:40:00+00:00",
+     "end": "2026-09-21T12:30:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "121.7383768292323848969937284"
+     },
+     "manual": false,
+     "start": "2026-09-21T09:40:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -12199,6 +13623,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-21T19:15:00+00:00",
+     "auto_start": "2026-09-21T16:25:00+00:00",
+     "end": "2026-09-21T19:15:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-21T16:25:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "120.0000000000000000000000000"
+     }
     }
    }
   ],
@@ -12219,6 +13658,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-20T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-22T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-21T06:05:00+00:00",
@@ -12233,6 +13680,7 @@
     "id": "t-0086",
     "insulin": 13.0,
     "kind": "meal",
+    "meal_id": "t-0086",
     "notes": "",
     "sport_kind": null
    },
@@ -12249,6 +13697,7 @@
     "id": "t-0087",
     "insulin": 7.5,
     "kind": "meal",
+    "meal_id": "t-0087",
     "notes": "Pizza",
     "sport_kind": null
    },
@@ -12265,6 +13714,7 @@
     "id": "t-0088",
     "insulin": 14.0,
     "kind": "meal",
+    "meal_id": "t-0088",
     "notes": "",
     "sport_kind": null
    }
@@ -12359,7 +13809,12 @@
   "day_type_source": "manual",
   "entries": {
    "count": 564,
-   "sha256": "d6cb5787587d1a9d6034bf77eb735de283810684be37fdf41df1c5429af68909"
+   "sha256": "d6cb5787587d1a9d6034bf77eb735de283810684be37fdf41df1c5429af68909",
+   "tones": {
+    "in-range": 308,
+    "low": 229,
+    "outside": 27
+   }
   },
   "exercises": [],
   "meals": [
@@ -12470,6 +13925,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-22T08:10:00+00:00",
+     "auto_start": "2026-09-22T05:20:00+00:00",
+     "end": "2026-09-22T08:10:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "51.18310067710366551348149744"
+     },
+     "manual": false,
+     "start": "2026-09-22T05:20:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "133.9657983722558647698603434"
+     }
     }
    },
    {
@@ -12579,6 +14049,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-22T12:30:00+00:00",
+     "auto_start": "2026-09-22T09:40:00+00:00",
+     "end": "2026-09-22T12:30:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-22T09:40:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "53.00000000000000000000000000"
+     }
     }
    },
    {
@@ -12688,6 +14173,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-22T19:45:00+00:00",
+     "auto_start": "2026-09-22T16:55:00+00:00",
+     "end": "2026-09-22T19:45:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-22T16:55:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "81.73645655595129628095750849"
+     }
     }
    }
   ],
@@ -12708,6 +14208,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-21T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-23T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-22T05:20:00+00:00",
@@ -12722,6 +14230,7 @@
     "id": "t-0089",
     "insulin": 7.5,
     "kind": "meal",
+    "meal_id": "t-0089",
     "notes": "",
     "sport_kind": null
    },
@@ -12738,6 +14247,7 @@
     "id": "t-0090",
     "insulin": 12.0,
     "kind": "meal",
+    "meal_id": "t-0090",
     "notes": "",
     "sport_kind": null
    },
@@ -12754,6 +14264,7 @@
     "id": "t-0091",
     "insulin": 6.5,
     "kind": "meal",
+    "meal_id": "t-0091",
     "notes": "",
     "sport_kind": null
    }
@@ -12848,7 +14359,12 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "112973d7ae5528ca1e940fdb5cbae9fce24f3e81eefaf9d02409fffcbfe095e4"
+   "sha256": "112973d7ae5528ca1e940fdb5cbae9fce24f3e81eefaf9d02409fffcbfe095e4",
+   "tones": {
+    "in-range": 293,
+    "low": 227,
+    "outside": 44
+   }
   },
   "exercises": [],
   "meals": [
@@ -12959,6 +14475,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-23T08:15:00+00:00",
+     "auto_start": "2026-09-23T05:25:00+00:00",
+     "end": "2026-09-23T08:15:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-23T05:25:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "126.1470478545911357123228516"
+     }
     }
    },
    {
@@ -13098,6 +14629,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-23T14:05:00+00:00",
+     "auto_start": "2026-09-23T09:40:00+00:00",
+     "end": "2026-09-23T14:05:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "67.01566585102780967806117640"
+     },
+     "manual": false,
+     "start": "2026-09-23T09:40:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -13207,6 +14753,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-23T19:30:00+00:00",
+     "auto_start": "2026-09-23T16:40:00+00:00",
+     "end": "2026-09-23T19:30:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "97.03536438594252726902797080"
+     },
+     "manual": false,
+     "start": "2026-09-23T16:40:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "85.96098769456442017765463287"
+     }
     }
    }
   ],
@@ -13227,6 +14788,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-22T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-24T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-23T05:25:00+00:00",
@@ -13241,6 +14810,7 @@
     "id": "t-0092",
     "insulin": 6.5,
     "kind": "meal",
+    "meal_id": "t-0092",
     "notes": "",
     "sport_kind": null
    },
@@ -13257,6 +14827,7 @@
     "id": "t-0093",
     "insulin": 6.0,
     "kind": "meal",
+    "meal_id": "t-0093",
     "notes": "",
     "sport_kind": null
    },
@@ -13273,6 +14844,7 @@
     "id": "t-0094",
     "insulin": 1,
     "kind": "snack",
+    "meal_id": "t-0093",
     "notes": "",
     "sport_kind": null
    },
@@ -13289,6 +14861,7 @@
     "id": "t-0095",
     "insulin": 3.0,
     "kind": "meal",
+    "meal_id": "t-0095",
     "notes": "",
     "sport_kind": null
    }
@@ -13396,7 +14969,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 544,
-   "sha256": "6a9e63ad7791c78d5278e0c8d62b8d581706c54f3d2b610ca1ec497fbb0db669"
+   "sha256": "6a9e63ad7791c78d5278e0c8d62b8d581706c54f3d2b610ca1ec497fbb0db669",
+   "tones": {
+    "high": 12,
+    "in-range": 391,
+    "low": 70,
+    "outside": 71
+   }
   },
   "exercises": [],
   "meals": [
@@ -13507,6 +15086,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-24T08:15:00+00:00",
+     "auto_start": "2026-09-24T05:25:00+00:00",
+     "end": "2026-09-24T08:15:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-24T05:25:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "131.8348769313547261479880163"
+     }
     }
    },
    {
@@ -13550,6 +15144,18 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-24T13:30:00+00:00",
+     "auto_start": "2026-09-24T10:40:00+00:00",
+     "end": "2026-09-24T13:30:00+00:00",
+     "end_glucose": null,
+     "manual": false,
+     "start": "2026-09-24T10:40:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "49.55718780796177233881419468"
+     }
     }
    },
    {
@@ -13659,6 +15265,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-24T19:55:00+00:00",
+     "auto_start": "2026-09-24T17:05:00+00:00",
+     "end": "2026-09-24T19:55:00+00:00",
+     "end_glucose": {
+      "tone": "outside",
+      "value": "182.8673403754467630812893301"
+     },
+     "manual": false,
+     "start": "2026-09-24T17:05:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "91.98079309489010837492761217"
+     }
     }
    }
   ],
@@ -13679,6 +15300,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-23T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-25T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-24T05:25:00+00:00",
@@ -13693,6 +15322,7 @@
     "id": "t-0096",
     "insulin": 14.0,
     "kind": "meal",
+    "meal_id": "t-0096",
     "notes": "",
     "sport_kind": null
    },
@@ -13709,6 +15339,7 @@
     "id": "t-0097",
     "insulin": 9.0,
     "kind": "meal",
+    "meal_id": "t-0097",
     "notes": "",
     "sport_kind": null
    },
@@ -13725,6 +15356,7 @@
     "id": "t-0098",
     "insulin": 11.5,
     "kind": "meal",
+    "meal_id": "t-0098",
     "notes": "",
     "sport_kind": null
    }
@@ -13827,7 +15459,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 544,
-   "sha256": "79a7747f7a7d86482c434118f9045889e9a46b0f96e5632f47871a3c55b0b218"
+   "sha256": "79a7747f7a7d86482c434118f9045889e9a46b0f96e5632f47871a3c55b0b218",
+   "tones": {
+    "high": 22,
+    "in-range": 357,
+    "low": 74,
+    "outside": 91
+   }
   },
   "exercises": [],
   "meals": [
@@ -13938,6 +15576,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-25T08:15:00+00:00",
+     "auto_start": "2026-09-25T05:25:00+00:00",
+     "end": "2026-09-25T08:15:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "106.9851924565866607676142020"
+     },
+     "manual": false,
+     "start": "2026-09-25T05:25:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "125.9699805981825011458444615"
+     }
     }
    },
    {
@@ -14047,6 +15700,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-25T12:45:00+00:00",
+     "auto_start": "2026-09-25T09:55:00+00:00",
+     "end": "2026-09-25T12:45:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "149.0891212547757892620148804"
+     },
+     "manual": false,
+     "start": "2026-09-25T09:55:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "103.9376730817534075842794871"
+     }
     }
    },
    {
@@ -14178,6 +15846,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-25T21:50:00+00:00",
+     "auto_start": "2026-09-25T16:40:00+00:00",
+     "end": "2026-09-25T21:50:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-25T16:40:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "113.0000000000000000000000000"
+     }
     }
    }
   ],
@@ -14198,6 +15881,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-24T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-26T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-25T05:25:00+00:00",
@@ -14212,6 +15903,7 @@
     "id": "t-0099",
     "insulin": 5.0,
     "kind": "meal",
+    "meal_id": "t-0099",
     "notes": "",
     "sport_kind": null
    },
@@ -14228,6 +15920,7 @@
     "id": "t-0100",
     "insulin": 9.0,
     "kind": "meal",
+    "meal_id": "t-0100",
     "notes": "",
     "sport_kind": null
    },
@@ -14244,6 +15937,7 @@
     "id": "t-0101",
     "insulin": 12.5,
     "kind": "meal",
+    "meal_id": "t-0101",
     "notes": "",
     "sport_kind": null
    },
@@ -14260,6 +15954,7 @@
     "id": "t-0102",
     "insulin": 1,
     "kind": "correction",
+    "meal_id": "t-0101",
     "notes": "",
     "sport_kind": null
    }
@@ -14388,7 +16083,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "fc68d6384ffa7bd92ed330f8639720eb65dd06ffbdc4cae79101ad58737893a1"
+   "sha256": "fc68d6384ffa7bd92ed330f8639720eb65dd06ffbdc4cae79101ad58737893a1",
+   "tones": {
+    "high": 8,
+    "in-range": 317,
+    "low": 182,
+    "outside": 57
+   }
   },
   "exercises": [
    {
@@ -14508,6 +16209,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-26T08:25:00+00:00",
+     "auto_start": "2026-09-26T05:35:00+00:00",
+     "end": "2026-09-26T08:25:00+00:00",
+     "end_glucose": {
+      "tone": "outside",
+      "value": "72.15746016749825317626681625"
+     },
+     "manual": false,
+     "start": "2026-09-26T05:35:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "130.1740518393041241385254406"
+     }
     }
    },
    {
@@ -14617,6 +16333,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-26T12:35:00+00:00",
+     "auto_start": "2026-09-26T09:45:00+00:00",
+     "end": "2026-09-26T12:35:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "151.0293862808347165241719124"
+     },
+     "manual": false,
+     "start": "2026-09-26T09:45:00+00:00",
+     "start_glucose": {
+      "tone": "outside",
+      "value": "70.02730597485138207818535463"
+     }
     }
    },
    {
@@ -14732,6 +16463,21 @@
      "status": "unaffected",
      "suggested": true,
      "suggested_effect_mgdl": "40"
+    },
+    "window": {
+     "auto_end": "2026-09-26T19:05:00+00:00",
+     "auto_start": "2026-09-26T16:15:00+00:00",
+     "end": "2026-09-26T19:05:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-26T16:15:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "120.9729898334830089599714817"
+     }
     }
    }
   ],
@@ -14752,6 +16498,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-25T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-27T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-26T05:05:00+00:00",
@@ -14766,6 +16520,7 @@
     "id": "00000000-0000-4000-8000-000000000028",
     "insulin": 0,
     "kind": "basal",
+    "meal_id": null,
     "nightscout_synced": true,
     "notes": "",
     "sport_kind": null
@@ -14783,6 +16538,7 @@
     "id": "t-0103",
     "insulin": 12.5,
     "kind": "meal",
+    "meal_id": "t-0103",
     "notes": "",
     "sport_kind": null
    },
@@ -14799,6 +16555,7 @@
     "id": "t-0104",
     "insulin": 9.5,
     "kind": "meal",
+    "meal_id": "t-0104",
     "notes": "",
     "sport_kind": null
    },
@@ -14815,6 +16572,7 @@
     "id": "t-0105",
     "insulin": 0,
     "kind": "exercise",
+    "meal_id": null,
     "notes": "",
     "sport_kind": "gym"
    },
@@ -14831,6 +16589,7 @@
     "id": "t-0106",
     "insulin": 14.5,
     "kind": "meal",
+    "meal_id": "t-0106",
     "notes": "",
     "sport_kind": null
    }
@@ -14977,7 +16736,12 @@
   "day_type_source": "manual",
   "entries": {
    "count": 564,
-   "sha256": "92a03cd363c1ff976341f8335e90d0b3e2f659f9eda2aa7420be46f745d8f2f1"
+   "sha256": "92a03cd363c1ff976341f8335e90d0b3e2f659f9eda2aa7420be46f745d8f2f1",
+   "tones": {
+    "in-range": 352,
+    "low": 195,
+    "outside": 17
+   }
   },
   "exercises": [],
   "meals": [
@@ -15109,6 +16873,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-27T08:15:00+00:00",
+     "auto_start": "2026-09-27T05:25:00+00:00",
+     "end": "2026-09-27T08:15:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-27T05:25:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "135.9526129347414314482630281"
+     }
     }
    },
    {
@@ -15248,6 +17027,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-27T14:30:00+00:00",
+     "auto_start": "2026-09-27T10:05:00+00:00",
+     "end": "2026-09-27T14:30:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "143.8330526814206210799041004"
+     },
+     "manual": false,
+     "start": "2026-09-27T10:05:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -15357,6 +17151,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-27T19:55:00+00:00",
+     "auto_start": "2026-09-27T17:05:00+00:00",
+     "end": "2026-09-27T19:55:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "45.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-27T17:05:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "128.1803509485850805829671466"
+     }
     }
    }
   ],
@@ -15377,6 +17186,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-26T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-28T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-27T05:25:00+00:00",
@@ -15391,6 +17208,7 @@
     "id": "t-0108",
     "insulin": 11.0,
     "kind": "meal",
+    "meal_id": "t-0108",
     "notes": "",
     "sport_kind": null
    },
@@ -15407,6 +17225,7 @@
     "id": "t-0109",
     "insulin": 0,
     "kind": "carbs",
+    "meal_id": "t-0108",
     "notes": "",
     "sport_kind": null
    },
@@ -15423,6 +17242,7 @@
     "id": "t-0110",
     "insulin": 4.5,
     "kind": "meal",
+    "meal_id": "t-0110",
     "notes": "",
     "sport_kind": null
    },
@@ -15439,6 +17259,7 @@
     "id": "t-0111",
     "insulin": 1,
     "kind": "snack",
+    "meal_id": "t-0110",
     "notes": "",
     "sport_kind": null
    },
@@ -15455,6 +17276,7 @@
     "id": "t-0112",
     "insulin": 8.5,
     "kind": "meal",
+    "meal_id": "t-0112",
     "notes": "",
     "sport_kind": null
    }
@@ -15588,7 +17410,12 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "d5c5f0f9a519d34fb93ff28db56efbd17b71deccc33bdce76a753a0ba9464aa2"
+   "sha256": "d5c5f0f9a519d34fb93ff28db56efbd17b71deccc33bdce76a753a0ba9464aa2",
+   "tones": {
+    "in-range": 361,
+    "low": 185,
+    "outside": 18
+   }
   },
   "exercises": [],
   "meals": [
@@ -15699,6 +17526,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-28T08:10:00+00:00",
+     "auto_start": "2026-09-28T05:20:00+00:00",
+     "end": "2026-09-28T08:10:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-28T05:20:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "131.8575070477629253948770519"
+     }
     }
    },
    {
@@ -15808,6 +17650,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-28T13:20:00+00:00",
+     "auto_start": "2026-09-28T10:30:00+00:00",
+     "end": "2026-09-28T13:20:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-28T10:30:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -15917,6 +17774,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-28T19:05:00+00:00",
+     "auto_start": "2026-09-28T16:15:00+00:00",
+     "end": "2026-09-28T19:05:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-28T16:15:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "53.93675643100424558005999336"
+     }
     }
    }
   ],
@@ -15938,6 +17810,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-27T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-29T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-28T05:20:00+00:00",
@@ -15952,6 +17832,7 @@
     "id": "t-0113",
     "insulin": 13.0,
     "kind": "meal",
+    "meal_id": "t-0113",
     "notes": "",
     "sport_kind": null
    },
@@ -15968,6 +17849,7 @@
     "id": "t-0114",
     "insulin": 9.0,
     "kind": "meal",
+    "meal_id": "t-0114",
     "notes": "Pizza",
     "sport_kind": null
    },
@@ -15984,6 +17866,7 @@
     "id": "t-0116",
     "insulin": 0,
     "kind": "other",
+    "meal_id": "t-0114",
     "notes": "ignored",
     "sport_kind": null
    },
@@ -16000,6 +17883,7 @@
     "id": "t-0115",
     "insulin": 11.0,
     "kind": "meal",
+    "meal_id": "t-0115",
     "notes": "",
     "sport_kind": null
    }
@@ -16094,7 +17978,12 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "08e17dfc8847f91ea6bc96f5ecb2f12e0fbbaa03906816daf73369a481930f7e"
+   "sha256": "08e17dfc8847f91ea6bc96f5ecb2f12e0fbbaa03906816daf73369a481930f7e",
+   "tones": {
+    "in-range": 290,
+    "low": 248,
+    "outside": 26
+   }
   },
   "exercises": [],
   "meals": [
@@ -16205,6 +18094,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-29T12:35:00+00:00",
+     "auto_start": "2026-09-29T09:45:00+00:00",
+     "end": "2026-09-29T12:35:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-29T09:45:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "126.6247717040079744709888478"
+     }
     }
    },
    {
@@ -16314,6 +18218,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-29T19:30:00+00:00",
+     "auto_start": "2026-09-29T16:40:00+00:00",
+     "end": "2026-09-29T19:30:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-29T16:40:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "44.94918091356587095749748584"
+     }
     }
    }
   ],
@@ -16334,6 +18253,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-28T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-09-30T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-29T09:45:00+00:00",
@@ -16348,6 +18275,7 @@
     "id": "t-0117",
     "insulin": 14.5,
     "kind": "meal",
+    "meal_id": "t-0117",
     "notes": "",
     "sport_kind": null
    },
@@ -16364,6 +18292,7 @@
     "id": "t-0118",
     "insulin": 7.0,
     "kind": "meal",
+    "meal_id": "t-0118",
     "notes": "",
     "sport_kind": null
    }
@@ -16458,7 +18387,12 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "e06ec38b9266fef31c37e24f1419f6a022da6bea0fcb4a3f49d6af52804ded82"
+   "sha256": "e06ec38b9266fef31c37e24f1419f6a022da6bea0fcb4a3f49d6af52804ded82",
+   "tones": {
+    "in-range": 338,
+    "low": 189,
+    "outside": 37
+   }
   },
   "exercises": [],
   "meals": [
@@ -16569,6 +18503,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-30T08:40:00+00:00",
+     "auto_start": "2026-09-30T05:50:00+00:00",
+     "end": "2026-09-30T08:40:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-09-30T05:50:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "126.0178102737157855268091489"
+     }
     }
    },
    {
@@ -16678,6 +18627,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-30T12:50:00+00:00",
+     "auto_start": "2026-09-30T10:00:00+00:00",
+     "end": "2026-09-30T12:50:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "80.91806471588998498463505339"
+     },
+     "manual": false,
+     "start": "2026-09-30T10:00:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -16787,6 +18751,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-09-30T19:10:00+00:00",
+     "auto_start": "2026-09-30T16:20:00+00:00",
+     "end": "2026-09-30T19:10:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "152.1682181451977328186125780"
+     },
+     "manual": false,
+     "start": "2026-09-30T16:20:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "87.25655864835459196327884466"
+     }
     }
    }
   ],
@@ -16807,6 +18786,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-29T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-10-01T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-09-30T05:50:00+00:00",
@@ -16821,6 +18808,7 @@
     "id": "t-0119",
     "insulin": 14.0,
     "kind": "meal",
+    "meal_id": "t-0119",
     "notes": "",
     "sport_kind": null
    },
@@ -16837,6 +18825,7 @@
     "id": "t-0120",
     "insulin": 4.0,
     "kind": "meal",
+    "meal_id": "t-0120",
     "notes": "",
     "sport_kind": null
    },
@@ -16853,6 +18842,7 @@
     "id": "t-0121",
     "insulin": 7.0,
     "kind": "meal",
+    "meal_id": "t-0121",
     "notes": "",
     "sport_kind": null
    }
@@ -16947,7 +18937,12 @@
   "day_type_source": "vacation",
   "entries": {
    "count": 564,
-   "sha256": "4e459ee0c2e5314988f07e5919b0bcf41d973891165c40089ce7783f30f429d7"
+   "sha256": "4e459ee0c2e5314988f07e5919b0bcf41d973891165c40089ce7783f30f429d7",
+   "tones": {
+    "in-range": 350,
+    "low": 168,
+    "outside": 46
+   }
   },
   "exercises": [],
   "meals": [
@@ -17058,6 +19053,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-01T08:10:00+00:00",
+     "auto_start": "2026-10-01T05:20:00+00:00",
+     "end": "2026-10-01T08:10:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-10-01T05:20:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "133.7518225717992963869604184"
+     }
     }
    },
    {
@@ -17197,6 +19207,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-01T15:05:00+00:00",
+     "auto_start": "2026-10-01T10:40:00+00:00",
+     "end": "2026-10-01T15:05:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-10-01T10:40:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -17328,6 +19353,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-01T21:35:00+00:00",
+     "auto_start": "2026-10-01T16:25:00+00:00",
+     "end": "2026-10-01T21:35:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "53.43896128816677088192576565"
+     },
+     "manual": false,
+     "start": "2026-10-01T16:25:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    }
   ],
@@ -17348,6 +19388,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-09-30T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-10-02T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-10-01T05:20:00+00:00",
@@ -17362,6 +19410,7 @@
     "id": "t-0122",
     "insulin": 19.5,
     "kind": "meal",
+    "meal_id": "t-0122",
     "notes": "",
     "sport_kind": null
    },
@@ -17378,6 +19427,7 @@
     "id": "t-0123",
     "insulin": 13.5,
     "kind": "meal",
+    "meal_id": "t-0123",
     "notes": "",
     "sport_kind": null
    },
@@ -17394,6 +19444,7 @@
     "id": "t-0124",
     "insulin": 1,
     "kind": "snack",
+    "meal_id": "t-0123",
     "notes": "",
     "sport_kind": null
    },
@@ -17410,6 +19461,7 @@
     "id": "t-0125",
     "insulin": 4.5,
     "kind": "meal",
+    "meal_id": "t-0125",
     "notes": "",
     "sport_kind": null
    },
@@ -17426,6 +19478,7 @@
     "id": "t-0126",
     "insulin": 2,
     "kind": "correction",
+    "meal_id": "t-0125",
     "notes": "",
     "sport_kind": null
    }
@@ -17546,7 +19599,13 @@
   "day_type_source": "vacation",
   "entries": {
    "count": 564,
-   "sha256": "955cafaf5cda196e1555ed61ea8f22d9bf29c9d8aec47dc9acd04db8e06dcb45"
+   "sha256": "955cafaf5cda196e1555ed61ea8f22d9bf29c9d8aec47dc9acd04db8e06dcb45",
+   "tones": {
+    "high": 1,
+    "in-range": 356,
+    "low": 142,
+    "outside": 65
+   }
   },
   "exercises": [],
   "meals": [
@@ -17657,6 +19716,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-02T08:45:00+00:00",
+     "auto_start": "2026-10-02T05:55:00+00:00",
+     "end": "2026-10-02T08:45:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "65.29635404604007711403025193"
+     },
+     "manual": false,
+     "start": "2026-10-02T05:55:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "125.0000000000000000000000000"
+     }
     }
    },
    {
@@ -17766,6 +19840,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-02T13:20:00+00:00",
+     "auto_start": "2026-10-02T10:30:00+00:00",
+     "end": "2026-10-02T13:20:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "123.0382316713068421496667510"
+     },
+     "manual": false,
+     "start": "2026-10-02T10:30:00+00:00",
+     "start_glucose": {
+      "tone": "outside",
+      "value": "70.13906982690998559023038354"
+     }
     }
    },
    {
@@ -17875,6 +19964,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-02T20:05:00+00:00",
+     "auto_start": "2026-10-02T17:15:00+00:00",
+     "end": "2026-10-02T20:05:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "117.1090517102680438909804679"
+     },
+     "manual": false,
+     "start": "2026-10-02T17:15:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "105.6005785973070891688747093"
+     }
     }
    }
   ],
@@ -17895,6 +19999,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-10-01T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-10-03T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-10-02T05:55:00+00:00",
@@ -17909,6 +20021,7 @@
     "id": "t-0127",
     "insulin": 5.0,
     "kind": "meal",
+    "meal_id": "t-0127",
     "notes": "",
     "sport_kind": null
    },
@@ -17925,6 +20038,7 @@
     "id": "t-0128",
     "insulin": 8.5,
     "kind": "meal",
+    "meal_id": "t-0128",
     "notes": "",
     "sport_kind": null
    },
@@ -17941,6 +20055,7 @@
     "id": "t-0129",
     "insulin": 9.5,
     "kind": "meal",
+    "meal_id": "t-0129",
     "notes": "",
     "sport_kind": null
    }
@@ -18061,7 +20176,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "5ab09767ad3dfa2af0d5aafc7e062445be41a5009df03b081561d8deaf243ffb"
+   "sha256": "5ab09767ad3dfa2af0d5aafc7e062445be41a5009df03b081561d8deaf243ffb",
+   "tones": {
+    "high": 1,
+    "in-range": 316,
+    "low": 202,
+    "outside": 45
+   }
   },
   "exercises": [],
   "meals": [
@@ -18172,6 +20293,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-03T08:50:00+00:00",
+     "auto_start": "2026-10-03T06:00:00+00:00",
+     "end": "2026-10-03T08:50:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-10-03T06:00:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "132.8749753178899068191577054"
+     }
     }
    },
    {
@@ -18281,6 +20417,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-03T13:45:00+00:00",
+     "auto_start": "2026-10-03T10:55:00+00:00",
+     "end": "2026-10-03T13:45:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-10-03T10:55:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -18390,6 +20541,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-03T19:25:00+00:00",
+     "auto_start": "2026-10-03T16:35:00+00:00",
+     "end": "2026-10-03T19:25:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-10-03T16:35:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "46.80016383743685432121239703"
+     }
     }
    }
   ],
@@ -18410,6 +20576,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-10-02T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-10-04T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-10-03T06:00:00+00:00",
@@ -18424,6 +20598,7 @@
     "id": "t-0130",
     "insulin": 17.5,
     "kind": "meal",
+    "meal_id": "t-0130",
     "notes": "",
     "sport_kind": null
    },
@@ -18440,6 +20615,7 @@
     "id": "t-0131",
     "insulin": 7.0,
     "kind": "meal",
+    "meal_id": "t-0131",
     "notes": "",
     "sport_kind": null
    },
@@ -18456,6 +20632,7 @@
     "id": "t-0132",
     "insulin": 15.0,
     "kind": "meal",
+    "meal_id": "t-0132",
     "notes": "",
     "sport_kind": null
    }
@@ -18550,7 +20727,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "df7ba69c9b06f44ff1c863d466d753a25a0904c9a451ee10114b7e0a6e525ad8"
+   "sha256": "df7ba69c9b06f44ff1c863d466d753a25a0904c9a451ee10114b7e0a6e525ad8",
+   "tones": {
+    "high": 5,
+    "in-range": 315,
+    "low": 202,
+    "outside": 42
+   }
   },
   "exercises": [],
   "meals": [
@@ -18661,6 +20844,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-04T08:35:00+00:00",
+     "auto_start": "2026-10-04T05:45:00+00:00",
+     "end": "2026-10-04T08:35:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-10-04T05:45:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "131.0977211391381443700737536"
+     }
     }
    },
    {
@@ -18770,6 +20968,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-04T12:40:00+00:00",
+     "auto_start": "2026-10-04T09:50:00+00:00",
+     "end": "2026-10-04T12:40:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "112.8887808678455017928903657"
+     },
+     "manual": false,
+     "start": "2026-10-04T09:50:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    },
    {
@@ -18879,6 +21092,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-04T20:00:00+00:00",
+     "auto_start": "2026-10-04T17:10:00+00:00",
+     "end": "2026-10-04T20:00:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-10-04T17:10:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "94.13368236543792895925072103"
+     }
     }
    }
   ],
@@ -18899,6 +21127,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-10-03T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-10-05T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-10-04T05:45:00+00:00",
@@ -18913,6 +21149,7 @@
     "id": "t-0133",
     "insulin": 11.5,
     "kind": "meal",
+    "meal_id": "t-0133",
     "notes": "",
     "sport_kind": null
    },
@@ -18929,6 +21166,7 @@
     "id": "t-0134",
     "insulin": 9.5,
     "kind": "meal",
+    "meal_id": "t-0134",
     "notes": "",
     "sport_kind": null
    },
@@ -18945,6 +21183,7 @@
     "id": "t-0135",
     "insulin": 9.0,
     "kind": "meal",
+    "meal_id": "t-0135",
     "notes": "",
     "sport_kind": null
    }
@@ -19060,7 +21299,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 564,
-   "sha256": "0a30e45990ede70af3c91b1d65894529a5a443e0e320aeb9a55ede5c19c427fd"
+   "sha256": "0a30e45990ede70af3c91b1d65894529a5a443e0e320aeb9a55ede5c19c427fd",
+   "tones": {
+    "high": 9,
+    "in-range": 392,
+    "low": 79,
+    "outside": 84
+   }
   },
   "exercises": [],
   "meals": [
@@ -19192,6 +21437,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-05T08:45:00+00:00",
+     "auto_start": "2026-10-05T05:55:00+00:00",
+     "end": "2026-10-05T08:45:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "178.0148803579951459432745589"
+     },
+     "manual": false,
+     "start": "2026-10-05T05:55:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "131.0083169930310819046609608"
+     }
     }
    },
    {
@@ -19331,6 +21591,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-05T15:05:00+00:00",
+     "auto_start": "2026-10-05T10:40:00+00:00",
+     "end": "2026-10-05T15:05:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "48.33128945358047525230187769"
+     },
+     "manual": false,
+     "start": "2026-10-05T10:40:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "161.2544637109951376991711312"
+     }
     }
    },
    {
@@ -19440,6 +21715,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-05T20:05:00+00:00",
+     "auto_start": "2026-10-05T17:15:00+00:00",
+     "end": "2026-10-05T20:05:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "121.9625421418336360688772753"
+     },
+     "manual": false,
+     "start": "2026-10-05T17:15:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "69.16373581132741280950420514"
+     }
     }
    }
   ],
@@ -19460,6 +21750,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-10-04T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-10-06T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-10-05T05:55:00+00:00",
@@ -19474,6 +21772,7 @@
     "id": "t-0136",
     "insulin": 8.5,
     "kind": "meal",
+    "meal_id": "t-0136",
     "notes": "",
     "sport_kind": null
    },
@@ -19490,6 +21789,7 @@
     "id": "t-0137",
     "insulin": 0,
     "kind": "carbs",
+    "meal_id": "t-0136",
     "notes": "",
     "sport_kind": null
    },
@@ -19506,6 +21806,7 @@
     "id": "t-0138",
     "insulin": 10.5,
     "kind": "meal",
+    "meal_id": "t-0138",
     "notes": "Pizza",
     "sport_kind": null
    },
@@ -19522,6 +21823,7 @@
     "id": "t-0139",
     "insulin": 1,
     "kind": "snack",
+    "meal_id": "t-0138",
     "notes": "",
     "sport_kind": null
    },
@@ -19538,6 +21840,7 @@
     "id": "t-0140",
     "insulin": 11.0,
     "kind": "meal",
+    "meal_id": "t-0140",
     "notes": "",
     "sport_kind": null
    }
@@ -19686,7 +21989,13 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 561,
-   "sha256": "35e6343ae0eb852e67c3c0dbfe51a5bbbda7086e47b6b3a52dfd14315a6b2269"
+   "sha256": "35e6343ae0eb852e67c3c0dbfe51a5bbbda7086e47b6b3a52dfd14315a6b2269",
+   "tones": {
+    "high": 4,
+    "in-range": 436,
+    "low": 64,
+    "outside": 57
+   }
   },
   "exercises": [],
   "meals": [
@@ -19797,6 +22106,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-06T08:10:00+00:00",
+     "auto_start": "2026-10-06T05:20:00+00:00",
+     "end": "2026-10-06T08:10:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "121.0599139968025311619145934"
+     },
+     "manual": false,
+     "start": "2026-10-06T05:20:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "127.4998796417123817004725646"
+     }
     }
    },
    {
@@ -19906,6 +22230,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-06T12:30:00+00:00",
+     "auto_start": "2026-10-06T09:40:00+00:00",
+     "end": "2026-10-06T12:30:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "143.8854065131257214905204047"
+     },
+     "manual": false,
+     "start": "2026-10-06T09:40:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "113.9602080886054707165631817"
+     }
     }
    },
    {
@@ -20015,6 +22354,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-06T19:40:00+00:00",
+     "auto_start": "2026-10-06T16:50:00+00:00",
+     "end": "2026-10-06T19:40:00+00:00",
+     "end_glucose": {
+      "tone": "in-range",
+      "value": "91.96326731282483494872875404"
+     },
+     "manual": false,
+     "start": "2026-10-06T16:50:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "98.42377757106490600265489948"
+     }
     }
    }
   ],
@@ -20035,6 +22389,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-10-05T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-10-07T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-10-06T05:05:00+00:00",
@@ -20049,6 +22411,7 @@
     "id": "00000000-0000-4000-8000-000000000038",
     "insulin": 0,
     "kind": "basal",
+    "meal_id": null,
     "nightscout_synced": true,
     "notes": "",
     "sport_kind": null
@@ -20066,6 +22429,7 @@
     "id": "t-0141",
     "insulin": 12.5,
     "kind": "meal",
+    "meal_id": "t-0141",
     "notes": "",
     "sport_kind": null
    },
@@ -20082,6 +22446,7 @@
     "id": "t-0142",
     "insulin": 5.0,
     "kind": "meal",
+    "meal_id": "t-0142",
     "notes": "",
     "sport_kind": null
    },
@@ -20098,6 +22463,7 @@
     "id": "t-0143",
     "insulin": 6.0,
     "kind": "meal",
+    "meal_id": "t-0143",
     "notes": "",
     "sport_kind": null
    }
@@ -20265,7 +22631,12 @@
   "day_type_source": "weekday",
   "entries": {
    "count": 273,
-   "sha256": "a055288bea484078be55b6361b14d052ffec6f3dbd609747c000a46210646744"
+   "sha256": "a055288bea484078be55b6361b14d052ffec6f3dbd609747c000a46210646744",
+   "tones": {
+    "in-range": 242,
+    "low": 30,
+    "outside": 1
+   }
   },
   "exercises": [
    {
@@ -20385,6 +22756,21 @@
      "status": "auto",
      "suggested": false,
      "suggested_effect_mgdl": "0"
+    },
+    "window": {
+     "auto_end": "2026-10-07T09:00:00+00:00",
+     "auto_start": "2026-10-07T06:10:00+00:00",
+     "end": "2026-10-07T09:00:00+00:00",
+     "end_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     },
+     "manual": false,
+     "start": "2026-10-07T06:10:00+00:00",
+     "start_glucose": {
+      "tone": "in-range",
+      "value": "127.9435072477604340700431206"
+     }
     }
    },
    {
@@ -20434,6 +22820,18 @@
      "status": "auto",
      "suggested": true,
      "suggested_effect_mgdl": "40"
+    },
+    "window": {
+     "auto_end": "2026-10-07T12:55:00+00:00",
+     "auto_start": "2026-10-07T10:05:00+00:00",
+     "end": "2026-10-07T12:55:00+00:00",
+     "end_glucose": null,
+     "manual": false,
+     "start": "2026-10-07T10:05:00+00:00",
+     "start_glucose": {
+      "tone": "low",
+      "value": "40.00000000000000000000000000"
+     }
     }
    }
   ],
@@ -20455,6 +22853,14 @@
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
+  "target_bands": [
+   {
+    "from": "2026-10-06T12:00:00+00:00",
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "to": "2026-10-08T11:00:00+00:00"
+   }
+  ],
   "timeline": [
    {
     "at": "2026-10-07T05:10:00+00:00",
@@ -20469,6 +22875,7 @@
     "id": "11111111-1111-4111-8111-111111111111",
     "insulin": 0,
     "kind": "basal",
+    "meal_id": null,
     "nightscout_synced": true,
     "notes": "",
     "sport_kind": null
@@ -20486,6 +22893,7 @@
     "id": "t-0145",
     "insulin": 8.0,
     "kind": "meal",
+    "meal_id": "t-0145",
     "notes": "",
     "sport_kind": null
    },
@@ -20502,6 +22910,7 @@
     "id": "ns-0004",
     "insulin": 0,
     "kind": "exercise",
+    "meal_id": "t-0145",
     "notes": "Runde",
     "sport_kind": "jogging"
    },
@@ -20518,6 +22927,7 @@
     "id": "ns-0002",
     "insulin": 7.0,
     "kind": "meal",
+    "meal_id": "ns-0002",
     "notes": "Mittag",
     "sport_kind": null
    },
@@ -20534,6 +22944,7 @@
     "id": "ns-0003",
     "insulin": 0,
     "kind": "snack",
+    "meal_id": "ns-0002",
     "notes": "",
     "sport_kind": null
    }

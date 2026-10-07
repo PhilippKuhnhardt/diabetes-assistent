@@ -10,7 +10,8 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from app import calculation, episodes
-from app.common import json_safe, local_day_range
+from app import glucose as cgm
+from app.common import json_safe, local_day_range, parse_instant
 from app.ingestion import nightscout, sync
 from app.store import basal_doses as basal_store, config, marks, mirror, results
 from app.analysis.night import night_analysis
@@ -125,6 +126,8 @@ def compute_day(day: str) -> dict:
         window_events = [item for item in treatments if item["id"] in included_ids and item["id"] not in event_ids]
         output["events"] = [episodes.serialize_treatment(item) for item in sorted(associated + window_events, key=lambda item: item["at"])]
         rendered.append(output)
+    for output in rendered:
+        output["window"] = meal_window(output, entries, settings)
     night = night_analysis(day, treatments, entries, rendered, settings)
     meal_sources = {meal["source_id"] for meal in meals}
     episode_ids = {meal["id"] for meal in meals if not meal["imported"]}
@@ -204,6 +207,8 @@ def compute_day(day: str) -> dict:
             "glucose_mgdl": glucose, "glucose_at": glucose_at,
             **({"nightscout_synced": item["nightscout_synced"]} if kind == "basal" else {}),
         })
+    for item in timeline:
+        item["meal_id"] = block_meal_id(item, rendered)
     day_type, day_type_source = marks.day_type_for(day, marks.analysis_day_types(), marks.vacation_periods())
     return json_safe({
         "day": day, "connected": nightscout.is_configured(),
@@ -216,6 +221,41 @@ def compute_day(day: str) -> dict:
                    "nightscout_synced": dose["nightscout_synced"]} for dose in basal_doses],
         "basal_sync_error": basal_sync_error,
         "night": night,
-        "entries": [{"at": item["at"], "sgv": item["sgv"]} for item in entries],
+        "entries": [{"at": item["at"], "sgv": item["sgv"], "tone": cgm.tone(item["sgv"], item["at"], settings)}
+                    for item in entries],
+        "target_bands": cgm.target_bands(start, end, settings),
         "treatments": [episodes.serialize_treatment(item) for item in treatments],
     })
+
+
+def _instant(value):
+    return parse_instant(value) if isinstance(value, str) else value
+
+
+def meal_window(meal: dict, entries: list[dict], settings: dict) -> dict:
+    """The meal's counted window as the diary draws it, with the CGM value at both handles."""
+    calc = meal["calculation"]
+    fallback = meal["at"] + timedelta(minutes=int(settings.get("window_minutes", 180)))
+    start = _instant(calc.get("start") or calc.get("window_start")) or meal["at"]
+    end = _instant(calc.get("end") or calc.get("window_end")) or fallback
+
+    def reading(at):
+        try:
+            value = calculation.interpolate_glucose(entries, at)["value"]
+        except ValueError:
+            return None
+        return {"value": value, "tone": cgm.tone(value, at, settings)}
+
+    return {"start": start, "end": end,
+            "auto_start": _instant(calc.get("auto_start")) or meal["at"],
+            "auto_end": _instant(calc.get("auto_end")) or fallback,
+            "manual": bool(calc.get("manual_window")),
+            "start_glucose": reading(start), "end_glucose": reading(end)}
+
+
+def block_meal_id(item: dict, meals: list[dict]) -> str | None:
+    """The diary groups an entry under its own main meal, else under the first meal whose window holds it."""
+    own = next((meal for meal in meals if meal["source_id"] == item["id"]), None)
+    if own is None:
+        own = next((meal for meal in meals if meal["window"]["start"] <= item["at"] < meal["window"]["end"]), None)
+    return own["id"] if own else None

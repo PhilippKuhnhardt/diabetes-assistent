@@ -570,7 +570,7 @@ function glucoseTone(value, at) {
 }
 
 function glucosePoints(entries) {
-  return entries.map(point => ({ t: new Date(point.at).getTime(), g: Number(point.sgv) }))
+  return entries.map(point => ({ t: new Date(point.at).getTime(), g: Number(point.sgv), tone: point.tone }))
     .filter(point => Number.isFinite(point.g)).sort((a, b) => a.t - b.t);
 }
 
@@ -619,17 +619,14 @@ function trendArrow(points, t) {
   return trendSymbol(trendDirection(numerator / denominator * 15));
 }
 
+// The server sends each meal's counted window and the CGM value at both ends.
 function mealWindow(meal) {
-  const calc = meal.calculation || {};
-  const fallback = new Date(meal.at).getTime() + Number(state.settings?.window_minutes || 180) * MINUTE;
-  const time = value => value ? new Date(value).getTime() : null;
+  const window = meal.window;
+  const time = value => new Date(value).getTime();
   return {
-    mealAt: new Date(meal.at).getTime(),
-    start: time(calc.start || calc.window_start) ?? new Date(meal.at).getTime(),
-    end: time(calc.end || calc.window_end) ?? fallback,
-    autoStart: time(calc.auto_start) ?? new Date(meal.at).getTime(),
-    autoEnd: time(calc.auto_end) ?? fallback,
-    manual: Boolean(calc.manual_window),
+    mealAt: time(meal.at), start: time(window.start), end: time(window.end),
+    autoStart: time(window.auto_start), autoEnd: time(window.auto_end), manual: window.manual,
+    startGlucose: window.start_glucose, endGlucose: window.end_glucose,
     sourceId: meal.source_id || null,
   };
 }
@@ -703,31 +700,28 @@ function eventLanes(events, scales, view, range) {
 }
 
 function targetBand(view, scales) {
-  const parts = [];
-  for (let t = view.from; t < view.to; t += 15 * MINUTE) {
-    const target = targetAt(t);
-    const last = parts[parts.length - 1];
-    if (last && target && last.low === target.low && last.high === target.high) last.to = t + 15 * MINUTE;
-    else if (target) parts.push({ ...target, from: t, to: t + 15 * MINUTE });
-  }
-  return parts.map(part => {
-    const high = Math.min(part.high, scales.top);
-    const low = Math.max(part.low, scales.bottom);
-    if (high <= low) return "";
-    return '<rect class="target-band" x="' + scales.x(part.from).toFixed(1) + '" y="' + scales.y(high).toFixed(1) +
-      '" width="' + (scales.x(Math.min(part.to, view.to)) - scales.x(part.from)).toFixed(1) + '" height="' + (scales.y(low) - scales.y(high)).toFixed(1) + '"/>';
+  return (state.dayData?.target_bands || []).map(band => {
+    const from = Math.max(new Date(band.from).getTime(), view.from);
+    const to = Math.min(new Date(band.to).getTime(), view.to);
+    const high = Math.min(Number(band.high_mgdl), scales.top);
+    const low = Math.max(Number(band.low_mgdl), scales.bottom);
+    if (to <= from || high <= low) return "";
+    return '<rect class="target-band" x="' + scales.x(from).toFixed(1) + '" y="' + scales.y(high).toFixed(1) +
+      '" width="' + (scales.x(to) - scales.x(from)).toFixed(1) + '" height="' + (scales.y(low) - scales.y(high)).toFixed(1) + '"/>';
   }).join("");
 }
 
-function handleSVG(name, t, points, scales, interactive) {
+function handleSVG(name, t, points, scales, interactive, reading) {
   const x = scales.x(t);
-  const value = glucoseAt(points, t);
+  // A drawn meal window brings its own reading; the editor's moving handles look the value up.
+  const value = interactive ? glucoseAt(points, t) : reading ? Number(reading.value) : null;
+  const tone = interactive ? glucoseTone(value, t) : reading?.tone || "none";
   const dotY = value == null ? CHART.plotBottom : scales.y(value);
   const label = name === "start" ? "Beginn" : "Ende";
   return '<g class="window-handle" data-handle="' + name + '" transform="translate(' + x.toFixed(1) + ' 0)"' +
     (interactive ? ' tabindex="0" role="slider" aria-label="' + label + ' des Zeitraums" aria-valuetext="' + escapeHTML(timeOnly(t)) + ' Uhr"' : '') + '>' +
     '<line class="handle-line" x1="0" y1="64" x2="0" y2="' + (interactive ? 290 : CHART.plotBottom) + '"/>' +
-    '<circle class="handle-dot" data-tone="' + glucoseTone(value, t) + '" cx="0" cy="' + dotY.toFixed(1) + '" r="' + (interactive ? 7 : 4.5) + '"' + (value == null ? ' hidden' : '') + '/>' +
+    '<circle class="handle-dot" data-tone="' + tone + '" cx="0" cy="' + dotY.toFixed(1) + '" r="' + (interactive ? 7 : 4.5) + '"' + (value == null ? ' hidden' : '') + '/>' +
     (interactive
       ? '<rect class="handle-hit" x="-24" y="62" width="48" height="262"/>' +
         '<g class="handle-knob"><rect x="-21" y="288" width="42" height="30" rx="15"/><path d="M-5 297v12M0 297v12M5 297v12"/></g>'
@@ -786,8 +780,9 @@ function windowChartSVG(range, entries, treatments, options = {}) {
       : '') +
     eventLanes(chartEvents(treatments), scales, view, range) + curve +
     (overview
-      ? (last ? '<circle class="handle-dot" data-tone="' + glucoseTone(last.g, last.t) + '" cx="' + scales.x(last.t).toFixed(1) + '" cy="' + scales.y(last.g).toFixed(1) + '" r="4.5"/>' : '')
-      : handleSVG("start", range.start, points, scales, interactive) + handleSVG("end", range.end, points, scales, interactive)) +
+      ? (last ? '<circle class="handle-dot" data-tone="' + (last.tone || "none") + '" cx="' + scales.x(last.t).toFixed(1) + '" cy="' + scales.y(last.g).toFixed(1) + '" r="4.5"/>' : '')
+      : handleSVG("start", range.start, points, scales, interactive, range.startGlucose) +
+        handleSVG("end", range.end, points, scales, interactive, range.endGlucose)) +
     '</g>' + '<line class="axis" x1="' + CHART.left + '" x2="' + CHART.right + '" y1="' + CHART.plotBottom + '" y2="' + CHART.plotBottom + '"/>' + ticks.join("") + yLabels.join("") +
     '<text class="y-unit" x="2" y="' + (CHART.plotTop - 16) + '">mg/dL</text>' +
     '</svg>';
@@ -1252,18 +1247,16 @@ function entryRowHTML(item, data) {
     '</div><div class="timeline-actions">' + action + '</div></article>';
 }
 
-// One chronological list: each main meal as a block holding the entries inside its window.
+// One chronological list: each main meal as a block holding the entries the server grouped under it.
 function dayBlocks(data) {
-  const blocks = data.meals.map(meal => ({ meal, range: mealWindow(meal), items: [] }));
+  const blocks = new Map(data.meals.map(meal => [meal.id, { meal, range: mealWindow(meal), items: [] }]));
   const rows = [];
   for (const item of data.timeline) {
-    const t = new Date(item.at).getTime();
-    const block = blocks.find(row => row.meal.source_id === item.id) ||
-      blocks.find(row => t >= row.range.start && t < row.range.end);
+    const block = blocks.get(item.meal_id);
     if (block) block.items.push(item);
-    else rows.push({ t, item });
+    else rows.push({ t: new Date(item.at).getTime(), item });
   }
-  return [...blocks.map(block => ({ t: new Date(block.meal.at).getTime(), block })), ...rows].sort((a, b) => a.t - b.t);
+  return [...[...blocks.values()].map(block => ({ t: block.range.mealAt, block })), ...rows].sort((a, b) => a.t - b.t);
 }
 
 function mealNeedsCheck(meal) {
