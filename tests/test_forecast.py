@@ -109,42 +109,59 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual(result["stats"][0]["in_range"], 3)
 
 
-class BandTests(unittest.TestCase):
-    def test_band_aims_at_the_target_inside_the_range(self):
-        # S = 2000: 0.1 IE/KE is 20 mg/dL. At target 120 a factor F tolerates P in [F − 0.2, F + 0.2].
-        # Three meals at 1.0 and two at 1.6 cannot share a window, so the heavier group wins.
-        pairs = [(Decimal(value), Decimal(1)) for value in ("1.0", "1.0", "1.0", "1.6", "1.6")]
-        self.assertEqual(forecast.band_factor(pairs, Decimal(2000), Decimal(120)), Decimal("1.0"))
+class SurchargeTests(unittest.TestCase):
+    def sized(self, days_ago, grams, carbs_isf, base="0.8"):
+        # A meal whose real factor is base plus the 40 mg/dL surcharge spread over its size.
+        item = point(days_ago, "0")
+        grams, carbs_isf = Decimal(grams), Decimal(carbs_isf)
+        item.update({"carbs_g": grams, "carbs_isf": carbs_isf, "end_glucose": Decimal(120),
+                     "value": Decimal(base) + forecast.surcharge_units_per_ke(grams, carbs_isf)})
+        return item
 
-    def test_band_covers_spread_values_with_one_window(self):
-        # 0.9 and 1.3 both fit only with P = 1.1; 1.8 stays outside.
-        pairs = [(Decimal(value), Decimal(1)) for value in ("0.9", "1.3", "1.8")]
-        self.assertEqual(forecast.band_factor(pairs, Decimal(2000), Decimal(120)), Decimal("1.1"))
+    def test_surcharge_grows_up_to_forty_grams(self):
+        self.assertEqual(forecast.surcharge_share(Decimal(10)), Decimal("0.25"))
+        self.assertEqual(forecast.surcharge_share(Decimal(40)), Decimal(1))
+        self.assertEqual(forecast.surcharge_share(Decimal(120)), Decimal(1))
 
-    def test_band_follows_rising_and_falling_factors_alike(self):
-        falling = [(Decimal("1.0"), Decimal(4)), (Decimal("1.5"), Decimal(1)), (Decimal("1.5"), Decimal(1))]
-        rising = [(Decimal("1.5"), Decimal(4)), (Decimal("1.0"), Decimal(1)), (Decimal("1.0"), Decimal(1))]
-        self.assertEqual(forecast.band_factor(falling, Decimal(2000), Decimal(120)), Decimal("1.0"))
-        self.assertEqual(forecast.band_factor(rising, Decimal(2000), Decimal(120)), Decimal("1.5"))
+    def test_factor_without_surcharge(self):
+        # 60 g at KF 30: Σ[g × KF] = 1800, the surcharge is 10 × 40 / 1800 IE/KE.
+        meal = point(1, "1.2")
+        meal.update({"carbs_g": Decimal(60), "carbs_isf": Decimal(1800)})
+        self.assertEqual(forecast.base_factor(meal), Decimal("1.2") - Decimal(400) / Decimal(1800))
+        self.assertIsNone(forecast.base_factor(point(1, "1.2")))
 
-    def test_lower_target_moves_the_window_towards_less_insulin(self):
-        # At target 100 F tolerates P in [F − 0.3, F + 0.1]: the window's centre drops to 0.9.
-        pairs = [(Decimal("1.0"), Decimal(1)), (Decimal("1.0"), Decimal(1))]
-        self.assertEqual(forecast.band_factor(pairs, Decimal(2000), Decimal(100)), Decimal("0.9"))
+    def test_backtest_surcharge_column_fits_small_and_large_meals(self):
+        # Small meals (50 g, S 1500) and large ones (100 g, S 4000) share a base factor of 0.8:
+        # the plain median lands between them, the surcharge column hits the small meal exactly.
+        history = [self.sized(age, 50, 1500) if age % 2 else self.sized(age, 100, 4000) for age in range(2, 10)]
+        target = self.sized(1, 50, 1500)
+        result = forecast.backtest(history + [target], TODAY - timedelta(days=1),
+                                   [(8, Decimal(3), Decimal(50)), (8, Decimal(3), forecast.SURCHARGE)],
+                                   Decimal(120), Decimal(50))
+        plain, surcharge = result["rows"][0]["glucose"]
+        self.assertNotEqual(plain, Decimal(120))
+        self.assertEqual(surcharge.quantize(Decimal("0.0001")), Decimal(120))
 
-    def test_backtest_band_column_uses_the_meal_size(self):
-        points = [point(age, "1.0") for age in range(2, 10)]
-        target = point(1, "1.0")
-        target.update({"end_glucose": Decimal(120), "carbs_isf": Decimal(2000)})
-        result = forecast.backtest(points + [target], TODAY - timedelta(days=1),
-                                   [(8, Decimal(3), Decimal(50)), (8, Decimal(3), forecast.BAND)])
-        self.assertEqual(result["rows"][0]["predictions"], [Decimal("1.0"), Decimal("1.0")])
-        self.assertEqual(result["stats"][1]["in_range"], 1)
-
-    def test_backtest_band_needs_the_meal_size(self):
-        points = [point(age, "1.0") for age in range(1, 10)]
-        result = forecast.backtest(points, TODAY - timedelta(days=1), [(8, Decimal(3), forecast.BAND)])
+    def test_backtest_surcharge_needs_the_meal_size(self):
+        history = [self.sized(age, 50, 1500) for age in range(2, 10)]
+        result = forecast.backtest(history + [point(1, "1.0")], TODAY - timedelta(days=1),
+                                   [(8, Decimal(3), forecast.SURCHARGE)])
         self.assertEqual(result["stats"][0]["count"], 0)
+
+    def test_dose_adds_the_surcharge_once_scaled_by_the_carbs(self):
+        from app import dosing
+        now = datetime(2026, 10, 4, 10, tzinfo=timezone.utc)
+        settings = {"timezone": "Europe/Berlin", "ic_schedule": [{"start_minute": 0, "grams_per_unit": "10"}],
+                    "isf_schedule": [{"start_minute": 0, "mgdl_per_unit": "40"}],
+                    "dose_target_mgdl": "120", "dose_cautious_target_mgdl": "150"}
+        entries = [{"at": now - timedelta(minutes=5), "sgv": 120}]
+        plain = dosing.suggest("20", settings, entries, [], now, auto_units_per_ke=Decimal(1))
+        meal = dosing.suggest("20", settings, entries, [], now, auto_units_per_ke=Decimal(1),
+                              auto_surcharge_mgdl=Decimal(40), surcharge_share=forecast.surcharge_share)
+        # 20 g: half of the 40 mg/dL surcharge at KF 40 is 0.5 IE on top of 2 IE for the carbs.
+        self.assertEqual(Decimal(meal["auto_surcharge_units"]), Decimal("0.5"))
+        self.assertEqual(Decimal(meal["auto_carb_units"]) - Decimal(plain["auto_carb_units"]), Decimal("0.5"))
+        self.assertEqual(Decimal(meal["auto_entry_units"]), Decimal("2.5"))
 
 
 class DayTypeRatioTests(unittest.TestCase):
