@@ -10,9 +10,23 @@ EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal|basal))\]")
 BASAL_MARKER = "[DA2:basal]"
 SNACK_GAP = timedelta(minutes=120)
 SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio|racing)\]")
-# Data-quality marks on carb entries: carbs only estimated, or a fat-/protein-rich meal.
-QUALITY_TAG = re.compile(r"\[DAQ:(unsure|fat)\]")
-QUALITY_MARKERS = {"carbs_unsure": "[DAQ:unsure]", "fat_protein": "[DAQ:fat]"}
+# Data-quality marks on carb entries: how certain the carbs are (weighed, known dish or FDDB
+# estimate, no serious estimate) and whether the meal is fat-/protein-rich.
+QUALITY_TAG = re.compile(r"\[DAQ:(weighed|known|unsure|fat)\]")
+QUALITY_MARKERS = {"fat_protein": "[DAQ:fat]"}
+# Most to least certain; a meal takes the least certain level of its marked carb entries.
+CERTAINTIES = ("weighed", "known", "unsure")
+CERTAINTY_TAG = re.compile(r"\[DAQ:(weighed|known|unsure)\]")
+
+
+def carbs_certainty(notes: str) -> str | None:
+    match = CERTAINTY_TAG.search(notes)
+    return match.group(1) if match else None
+
+
+def least_certain(levels) -> str | None:
+    marked = [level for level in levels if level in CERTAINTIES]
+    return max(marked, key=CERTAINTIES.index) if marked else None
 SPORT_LABELS = {"jogging": "Joggen", "gym": "Gym", "light_cardio": "Leichtes Cardio", "racing": "Rennsport"}
 
 
@@ -81,6 +95,7 @@ def normalize_treatments(raw: list[dict]) -> list[dict]:
             "duration": item.get("duration") or 0,
             "notes": item.get("notes") or "",
             "sport_type": sport_type,
+            "carbs_certainty": carbs_certainty(str(item.get("notes") or "")),
             **{flag: tag in str(item.get("notes") or "") for flag, tag in QUALITY_MARKERS.items()},
             **marker,
         })

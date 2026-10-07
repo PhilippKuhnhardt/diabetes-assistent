@@ -388,8 +388,9 @@ def day_payload(day: str, refresh: bool = True) -> dict:
         # A meal carries a data-quality mark when any of its counted carb entries does.
         carb_ids = ({item.get("id") for item in output["calculation"].get("carb_events", [])} | {meal["source_id"]}
                     | {item["id"] for item in associated if calculation.dec(item.get("carbs") or 0) > 0})
-        output["quality"] = {flag: any(item.get(flag) for item in treatments if item["id"] in carb_ids)
-                             for flag in episodes.QUALITY_MARKERS}
+        output["quality"] = {
+            "carbs_certainty": episodes.least_certain(item.get("carbs_certainty") for item in treatments if item["id"] in carb_ids),
+            **{flag: any(item.get(flag) for item in treatments if item["id"] in carb_ids) for flag in episodes.QUALITY_MARKERS}}
         calculation_events = output["calculation"]
         included_ids = {item["id"] for key in ("carb_events", "doses")
                         for item in calculation_events.get(key, [])
@@ -474,7 +475,7 @@ def day_payload(day: str, refresh: bool = True) -> dict:
             "carbs": item["carbs"], "insulin": item["insulin"],
             "basal_units": item["basal_units"], "duration_minutes": item["duration"],
             "sport_kind": item.get("sport_type"), "notes": note,
-            "carbs_unsure": item.get("carbs_unsure", False), "fat_protein": item.get("fat_protein", False),
+            "carbs_certainty": item.get("carbs_certainty"), "fat_protein": item.get("fat_protein", False),
             "glucose_mgdl": glucose, "glucose_at": glucose_at,
             **({"nightscout_synced": item["nightscout_synced"]} if kind == "basal" else {}),
         })
@@ -572,7 +573,13 @@ def save_diary_treatment(payload: dict) -> dict:
         main_meal = kind == "meal" and (bool(payload.get("main_meal"))
                                          or "[DA2:meal]" in str((existing or {}).get("notes") or ""))
         marker = " [DA2:snack]" if kind == "snack" else " [DA2:meal]" if main_meal else ""
-        quality = "".join(" " + tag for flag, tag in episodes.QUALITY_MARKERS.items() if carbs > 0 and payload.get(flag) is True)
+        certainty = payload.get("carbs_certainty")
+        if payload.get("carbs_unsure") is True and not certainty:  # older clients
+            certainty = "unsure"
+        if certainty not in (None, "", *episodes.CERTAINTIES):
+            raise ValueError("Unbekannte KH-Sicherheit")
+        quality = (f" [DAQ:{certainty}]" if carbs > 0 and certainty else "") + "".join(
+            " " + tag for flag, tag in episodes.QUALITY_MARKERS.items() if carbs > 0 and payload.get(flag) is True)
         notes = (note + marker + quality + f" [DAE:{event_id}]").strip()
         legacy = episodes.TAG.search(str((existing or {}).get("notes") or ""))
         if kind == "meal" and legacy and legacy.group(3) == "meal":
