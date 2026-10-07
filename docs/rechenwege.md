@@ -1,6 +1,6 @@
 # Rechenwege
 
-Die Oberfläche zeigt Ergebnisse, Eingaben und Blockierungsgründe. Formeln, Zwischenschritte und Modellannahmen stehen hier. Maßgeblich für die Implementierung sind `app/dosing.py`, `app/calculation.py` und `app/server.py`.
+Die Oberfläche zeigt Ergebnisse, Eingaben und Blockierungsgründe. Formeln, Zwischenschritte und Modellannahmen stehen hier. Maßgeblich für die Implementierung sind `app/dosing.py`, `app/calculation.py`, `app/forecast.py` und die Anwendungsfälle in `app/services/` (Tag, Empfehlung, Analyse).
 
 ## Daten und Einheiten
 
