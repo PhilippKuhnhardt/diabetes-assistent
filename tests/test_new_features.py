@@ -162,7 +162,7 @@ class MealClassificationTests(unittest.TestCase):
 class AuthTests(unittest.TestCase):
     def test_server_refuses_to_start_without_password(self):
         with patch.dict(os.environ, {"APP_PASSWORD": ""}):
-            with patch.object(server.storage, "init") as init:
+            with patch.object(server.db, "init") as init:
                 with self.assertRaisesRegex(SystemExit, "APP_PASSWORD"):
                     server.main()
                 init.assert_not_called()

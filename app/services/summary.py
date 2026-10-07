@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import calculation, episodes, forecast, nightscout, sport_analysis, storage
+from app import calculation, episodes, forecast, nightscout, sport_analysis
+from app.store import config, marks
 from app.analysis.stats import median, quartile, strong_outlier_flags
 from app.common import MEALS, json_safe
 from app.services import day_view, factors, sync
@@ -21,11 +22,11 @@ def summary(params: dict) -> dict:
             sync.sync_profile_cache()
         except nightscout.NightscoutError as error:
             profile_sync_error = str(error)
-    _, settings = storage.get_settings()
+    _, settings = config.get_settings()
     today = datetime.now(ZoneInfo(settings["timezone"])).date()
-    excluded_ids = storage.analysis_exclusions()
-    day_types = storage.analysis_day_types()
-    vacations = storage.vacation_periods()
+    excluded_ids = marks.analysis_exclusions()
+    day_types = marks.analysis_day_types()
+    vacations = marks.vacation_periods()
     groups = {name: {"total": 0, "count": 0, "valid_count": 0, "excluded_count": 0,
                      "blocked_count": 0, "values": [], "nightscout_values": [],
                      "calculations": [], "multi_carb_count": 0, "shortened_count": 0}
@@ -59,7 +60,7 @@ def summary(params: dict) -> dict:
             night_end_values.append(Decimal(night_item["end_glucose"]))
             night_minimum_values.append(Decimal(night_item["minimum_glucose"]))
             night_delta_values.append(Decimal(night_item["delta_mgdl"]))
-        day_type, _ = storage.day_type_for(day, day_types, vacations)
+        day_type, _ = marks.day_type_for(day, day_types, vacations)
         sport_sessions.extend(
             {"id": item["id"], "at": item["at"], "duration_minutes": item["duration_minutes"],
              "kind": item["sport_kind"], "notes": item["notes"]}

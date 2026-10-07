@@ -16,8 +16,9 @@ from pathlib import Path
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-from app import forecast, storage
+from app import forecast
 from app.analysis.night import night_analysis
+from app.store import config, db, marks, mirror
 from app.server import Handler
 
 
@@ -135,10 +136,10 @@ INITIAL_PROFILE = json.loads(json.dumps(FakeNightscout.profile))
 class IntegrationTests(unittest.TestCase):
     def setUp(self):
         self.old_env = dict(os.environ)
-        self.old_db = storage.DB_PATH
+        self.old_db = db.DB_PATH
         self.temp = tempfile.TemporaryDirectory()
-        storage.DB_PATH = Path(self.temp.name) / "app.sqlite3"
-        storage.init()
+        db.DB_PATH = Path(self.temp.name) / "app.sqlite3"
+        db.init()
         FakeNightscout.treatments = []
         FakeNightscout.profile = json.loads(json.dumps(INITIAL_PROFILE))
         FakeNightscout.entries = [
@@ -168,7 +169,7 @@ class IntegrationTests(unittest.TestCase):
         self.fake.shutdown()
         self.app.server_close()
         self.fake.server_close()
-        storage.DB_PATH = self.old_db
+        db.DB_PATH = self.old_db
         os.environ.clear()
         os.environ.update(self.old_env)
         self.temp.cleanup()
@@ -407,7 +408,7 @@ class IntegrationTests(unittest.TestCase):
             Decimal(after["calculation"]["adjusted_delta_mgdl"]),
             Decimal(after["calculation"]["delta_mgdl"]) + 35,
         )
-        self.assertEqual(storage.analysis_exclusions(), set())
+        self.assertEqual(marks.analysis_exclusions(), set())
 
     def test_racing_raises_glucose_and_is_subtracted_from_delta(self):
         self.request("/api/treatment", method="POST", body={
@@ -435,9 +436,9 @@ class IntegrationTests(unittest.TestCase):
         )
 
     def test_settings_without_racing_get_its_default_and_stay_editable(self):
-        _, current = storage.get_settings()
+        _, current = config.get_settings()
         legacy = {**current, "sport_effects_mgdl": {"jogging": 40, "gym": 40, "light_cardio": 20}}
-        storage.save_settings(legacy)
+        config.save_settings(legacy)
         effects = self.request("/api/settings")["settings"]["sport_effects_mgdl"]
         self.assertEqual(Decimal(effects["racing"]), Decimal(-40))
         self.request("/api/settings", method="POST", body={
@@ -447,9 +448,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(Decimal(effects["racing"]), Decimal(-60))
 
     def test_former_lookbacks_map_to_the_offered_ones(self):
-        _, current = storage.get_settings()
+        _, current = config.get_settings()
         for old, new in ((14, 15), (21, 30), (28, 30)):
-            storage.save_settings({**current, "auto_lookback_days": old})
+            config.save_settings({**current, "auto_lookback_days": old})
             self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], new)
         self.request("/api/settings", method="POST", body={"auto_lookback_days": 8})
         self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], 8)
@@ -488,7 +489,7 @@ class IntegrationTests(unittest.TestCase):
         reset = self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]
         self.assertFalse(reset["manual_window"])
         self.assertEqual(reset["end"], "2026-09-23T13:00:00+00:00")
-        self.assertEqual(storage.analysis_windows(), {})
+        self.assertEqual(marks.analysis_windows(), {})
 
     def test_blocked_calculation_still_exposes_editable_window(self):
         FakeNightscout.entries = FakeNightscout.entries[:1] + [
@@ -760,7 +761,7 @@ class IntegrationTests(unittest.TestCase):
             "window_minutes": 180,
             "isf_schedule": [{"start_minute": 0, "mgdl_per_unit": 999}],
         })
-        _, settings = storage.get_settings()
+        _, settings = config.get_settings()
         self.assertEqual(settings["isf_schedule"][0]["mgdl_per_unit"], "50")
 
         refreshed = self.request("/api/profile/sync", method="POST", body={})
@@ -772,7 +773,7 @@ class IntegrationTests(unittest.TestCase):
         FakeNightscout.profile["store"]["Default"]["sens"][0]["value"] = 2.8
         try:
             self.request("/api/profile/sync", method="POST", body={})
-            _, settings = storage.get_settings()
+            _, settings = config.get_settings()
             self.assertEqual(settings["isf_schedule"][0]["mgdl_per_unit"], "50.45096")
         finally:
             FakeNightscout.profile = original
@@ -904,9 +905,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(len(result["doses"]), 2)
         self.assertAlmostEqual(float(result["factor_units_per_ke"]) * float(result["ratio_g_per_unit"]), 10.0)
         self.assertLess(float(result["ratio_g_per_unit"]), float(before["meals"][0]["calculation"]["ratio_g_per_unit"]))
-        self.assertIsNotNone(storage.synced_at("2026-09-23"))
-        with storage.connect() as db:
-            self.assertEqual(db.execute("SELECT COUNT(*) FROM treatments").fetchone()[0], 2)
+        self.assertIsNotNone(mirror.synced_at("2026-09-23"))
+        with db.connect() as connection:
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM treatments").fetchone()[0], 2)
 
     def test_snack_is_shown_with_meal_when_counted_in_factor(self):
         FakeNightscout.treatments = [
@@ -966,8 +967,8 @@ class IntegrationTests(unittest.TestCase):
         dose_id = before["meals"][0]["events"][1]["id"]
         self.request("/api/treatment/delete", method="POST", body={"id": dose_id, "day": "2026-09-23"})
         self.assertEqual(len(FakeNightscout.treatments), 1)
-        with storage.connect() as db:
-            self.assertEqual(db.execute("SELECT COUNT(*) FROM treatments WHERE id=?", (dose_id,)).fetchone()[0], 0)
+        with db.connect() as connection:
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM treatments WHERE id=?", (dose_id,)).fetchone()[0], 0)
         after = self.request("/api/day?date=2026-09-23")
         self.assertEqual(len(after["meals"]), 1)
         self.assertEqual([event["id"] for event in after["meals"][0]["events"]], ["ns-1"])
@@ -1032,7 +1033,7 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual([item["expected_delta_mgdl"] for item in changed["calculations"]], ["50", "50"])
             # Saturday may lie before or after Monday depending on the weekday the test runs.
             self.assertEqual(sorted(item["deviation_mgdl"] for item in changed["calculations"]), ["0", "50"])
-            self.assertEqual(storage.analysis_day_types()[monday], "free")
+            self.assertEqual(marks.analysis_day_types()[monday], "free")
             self.request("/api/analysis/exclusion", method="POST", body={
                 "meal_id": "work-breakfast", "day": monday, "excluded": True,
             })
@@ -1048,25 +1049,25 @@ class IntegrationTests(unittest.TestCase):
         self.assertFalse(self.request("/api/settings")["vacation"]["active"])
         state = self.request("/api/vacation", method="POST", body={"active": True})
         self.assertEqual(state, {"active": True, "since": today.isoformat()})
-        self.assertEqual(storage.day_type_for(today.isoformat(), {}, storage.vacation_periods()),
+        self.assertEqual(marks.day_type_for(today.isoformat(), {}, marks.vacation_periods()),
                          ("free", "vacation"))
-        self.assertEqual(storage.day_type_for("2020-01-06", {}, storage.vacation_periods()),
+        self.assertEqual(marks.day_type_for("2020-01-06", {}, marks.vacation_periods()),
                          ("work", "weekday"))
-        self.assertEqual(storage.day_type_for(today.isoformat(), {today.isoformat(): "work"},
-                                              storage.vacation_periods()), ("work", "manual"))
+        self.assertEqual(marks.day_type_for(today.isoformat(), {today.isoformat(): "work"},
+                                              marks.vacation_periods()), ("work", "manual"))
         day = self.request("/api/day?date=" + today.isoformat())
         self.assertEqual((day["day_type"], day["day_type_source"]), ("free", "vacation"))
         # Switching off on the day it was switched on leaves no vacation behind.
         self.request("/api/vacation", method="POST", body={"active": False})
-        self.assertEqual(storage.vacation_periods(), [])
-        self.assertEqual(storage.day_type_for(monday, {}, []), ("work", "weekday"))
+        self.assertEqual(marks.vacation_periods(), [])
+        self.assertEqual(marks.day_type_for(monday, {}, []), ("work", "weekday"))
         # An older vacation ends the day before it is switched off.
-        storage.set_vacation(True, "2026-08-01")
-        storage.set_vacation(False, "2026-08-10")
-        periods = storage.vacation_periods()
+        marks.set_vacation(True, "2026-08-01")
+        marks.set_vacation(False, "2026-08-10")
+        periods = marks.vacation_periods()
         self.assertEqual(periods, [{"start_day": "2026-08-01", "end_day": "2026-08-09"}])
-        self.assertEqual(storage.day_type_for("2026-08-03", {}, periods)[0], "free")
-        self.assertEqual(storage.day_type_for("2026-08-10", {}, periods)[0], "work")
+        self.assertEqual(marks.day_type_for("2026-08-03", {}, periods)[0], "free")
+        self.assertEqual(marks.day_type_for("2026-08-10", {}, periods)[0], "work")
         with self.assertRaises(urllib.error.HTTPError) as error:
             self.request("/api/vacation", method="POST", body={"active": "yes"})
         self.assertEqual(error.exception.code, 400)
@@ -1078,14 +1079,14 @@ class IntegrationTests(unittest.TestCase):
         now = datetime.now(timezone.utc)
         local_today = now.astimezone(zone).date()
         # Make every time of day count as breakfast for this test.
-        _, settings = storage.get_settings()
-        storage.save_settings({**settings, "breakfast_end_minute": 1439, "lunch_end_minute": 1439})
+        _, settings = config.get_settings()
+        config.save_settings({**settings, "breakfast_end_minute": 1439, "lunch_end_minute": 1439})
         current_day = {
             "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 100}],
             "treatments": [],
         }
         past = [(local_today - timedelta(days=offset)).isoformat() for offset in range(1, 29)]
-        free_days = [day for day in past if storage.day_type_for(day, {}, [])[0] == "free"][:3]
+        free_days = [day for day in past if marks.day_type_for(day, {}, [])[0] == "free"][:3]
         factors = dict(zip(free_days, ["2", "3", "4"]))
 
         def payload(day, refresh=True):
@@ -1128,8 +1129,8 @@ class IntegrationTests(unittest.TestCase):
         now = datetime.now(timezone.utc)
         local_today = now.astimezone(zone).date()
         # Make every time of day count as dinner for this test.
-        _, settings = storage.get_settings()
-        storage.save_settings({**settings, "breakfast_end_minute": 1, "lunch_end_minute": 2})
+        _, settings = config.get_settings()
+        config.save_settings({**settings, "breakfast_end_minute": 1, "lunch_end_minute": 2})
         current_day = {
             "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 100}],
             "treatments": [],
@@ -1148,8 +1149,8 @@ class IntegrationTests(unittest.TestCase):
 
         with patch("app.services.day_view.day_payload", side_effect=payload):
             result = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
-            storage.set_analysis_exclusion("d-" + past[0], True)
-            storage.set_analysis_exclusion("d-" + past[1], True)
+            marks.set_analysis_exclusion("d-" + past[0], True)
+            marks.set_analysis_exclusion("d-" + past[1], True)
             too_few = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
         self.assertEqual(result["auto_meal"], "dinner")
         self.assertEqual(result["auto_factor_count"], 5)
@@ -1237,7 +1238,7 @@ class IntegrationTests(unittest.TestCase):
                 "meal_id": "meal-4", "day": "2026-09-23", "excluded": True,
             })
         self.assertTrue(response["excluded"])
-        self.assertIn("meal-4", storage.analysis_exclusions())
+        self.assertIn("meal-4", marks.analysis_exclusions())
         with patch("app.services.day_view.day_payload", side_effect=then_empty([{"meals": meals}])):
             filtered = self.request("/api/summary?days=14")["groups"]["lunch"]
         self.assertEqual(filtered["count"], 4)
@@ -1252,7 +1253,7 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/analysis/exclusion", method="POST", body={
                 "meal_id": "meal-4", "day": "2026-09-23", "excluded": False,
             })
-        self.assertNotIn("meal-4", storage.analysis_exclusions())
+        self.assertNotIn("meal-4", marks.analysis_exclusions())
 
         with patch("app.services.day_view.day_payload", side_effect=then_empty([{"meals": meals[:4]}])):
             small_group = self.request("/api/summary?days=14")["groups"]["lunch"]

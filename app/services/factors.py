@@ -4,7 +4,8 @@ from __future__ import annotations
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
-from app import forecast, storage
+from app import forecast
+from app.store import marks
 from app.common import MEALS, parse_instant
 from app.services import day_view
 
@@ -18,11 +19,11 @@ def meal_factor_values(meal_kind: str, day_type: str | None, today: date,
                        overrides: dict[str, str], periods: list[dict]) -> list[Decimal]:
     """Sorted IE/KE of one meal kind over the past 28 days (excluded meals left out).
     A day_type restricts the days to work or free days, as used for breakfast."""
-    excluded = storage.analysis_exclusions()
+    excluded = marks.analysis_exclusions()
     values = []
     for offset in range(1, BREAKFAST_FACTOR_DAYS + 1):
         day = (today - timedelta(days=offset)).isoformat()
-        if day_type is not None and storage.day_type_for(day, overrides, periods)[0] != day_type:
+        if day_type is not None and marks.day_type_for(day, overrides, periods)[0] != day_type:
             continue
         for meal in day_view.day_payload(day, refresh=False).get("meals", []):
             factor = (meal.get("calculation") or {}).get("factor_units_per_ke")
@@ -47,7 +48,7 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
                 loaded: dict[str, dict] | None = None) -> list[dict]:
     """Valid, non-excluded meal factors from today back to days_back days, for the suggestion.
     Breakfast is keyed by the day type of its day."""
-    excluded = storage.analysis_exclusions()
+    excluded = marks.analysis_exclusions()
     points = []
     for offset in range(days_back + 1):
         day = today - timedelta(days=offset)
@@ -55,7 +56,7 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
         payload = loaded[text] if loaded is not None and text in loaded else day_view.day_payload(text, refresh=False)
         if loaded is not None:
             loaded[text] = payload
-        day_type = storage.day_type_for(text, overrides, periods)[0]
+        day_type = marks.day_type_for(text, overrides, periods)[0]
         for meal in payload.get("meals", []):
             result = meal.get("calculation") or {}
             factor = result.get("factor_units_per_ke")

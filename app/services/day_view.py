@@ -5,7 +5,8 @@ from datetime import timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import calculation, episodes, nightscout, storage
+from app import calculation, episodes, nightscout
+from app.store import config, marks, mirror
 from app.analysis.night import night_analysis
 from app.common import json_safe, local_day_range
 from app.services import basal, sync
@@ -18,32 +19,32 @@ def day_payload(day: str, refresh: bool = True) -> dict:
             sync.sync_profile_cache()
         except nightscout.NightscoutError as error:
             profile_sync_error = str(error)
-    settings_id, settings = storage.get_settings()
+    settings_id, settings = config.get_settings()
     start, end = local_day_range(day, settings["timezone"])
     sync_error = None
     fresh = False
     if refresh and nightscout.is_configured():
         try:
             raw_entries, raw_treatments = nightscout.fetch_range(start, end)
-            storage.mirror_day(day, raw_entries, raw_treatments, start, end)
+            mirror.mirror_day(day, raw_entries, raw_treatments, start, end)
             fresh = True
         except nightscout.NightscoutError as error:
             sync_error = str(error)
-    raw_entries, raw_treatments = storage.cached_between(start, end)
+    raw_entries, raw_treatments = mirror.cached_between(start, end)
     basal_doses, basal_sync_error = basal.reconcile_basal(start, end, raw_treatments, fresh)
     entries = episodes.normalize_entries(raw_entries)
     treatments = episodes.normalize_treatments(raw_treatments)
     episodes.group_diary_followups(treatments, settings)
     meals = episodes.meals_for_day(treatments, day, settings["timezone"], settings)
-    sport_marks = storage.analysis_sport_marks()
-    manual_windows = storage.analysis_windows()
+    sport_marks = marks.analysis_sport_marks()
+    manual_windows = marks.analysis_windows()
     rendered = []
     main_meal_ids = {item["id"] for item in treatments
                      if (item.get("role") == "meal" or item.get("eventType") == "Meal Bolus")
                      and Decimal(str(item.get("carbs") or 0)) > 0}
     shown_in_meals = set()
     for meal in meals:
-        meal_settings_id, meal_settings = storage.get_settings_at(meal["at"])
+        meal_settings_id, meal_settings = config.get_settings_at(meal["at"])
         associated = [item for item in treatments if item.get("episode_id") == meal["id"] or item.get("id") == meal["source_id"]]
         output = {**meal}
         nearby_sport = [
@@ -181,11 +182,11 @@ def day_payload(day: str, refresh: bool = True) -> dict:
             "glucose_mgdl": glucose, "glucose_at": glucose_at,
             **({"nightscout_synced": item["nightscout_synced"]} if kind == "basal" else {}),
         })
-    day_type, day_type_source = storage.day_type_for(day, storage.analysis_day_types(), storage.vacation_periods())
+    day_type, day_type_source = marks.day_type_for(day, marks.analysis_day_types(), marks.vacation_periods())
     return json_safe({
         "day": day, "connected": nightscout.is_configured(),
         "day_type": day_type, "day_type_source": day_type_source,
-        "synced_at": storage.synced_at(day), "sync_error": sync_error,
+        "synced_at": mirror.synced_at(day), "sync_error": sync_error,
         "profile_sync_error": profile_sync_error,
         "settings_version": settings_id, "meals": rendered, "exercises": exercises, "other_events": other_events,
         "timeline": timeline,
