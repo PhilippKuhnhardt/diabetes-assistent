@@ -5,16 +5,17 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import dosing, forecast, storage
+from app import dosing, forecast
+from app.store import config, marks, mirror
 from app.analysis.stats import median, quartile
 from app.common import parse_instant
 from app.services import day_view, factors
 
 
 def dose_help(payload: dict) -> dict:
-    _, current_settings = storage.get_settings()
+    _, current_settings = config.get_settings()
     today = datetime.now(ZoneInfo(current_settings["timezone"])).date().isoformat()
-    synced = storage.synced_at(today)
+    synced = mirror.synced_at(today)
     cached_recently = bool(synced and datetime.now(timezone.utc) -
                            parse_instant(synced) < timedelta(minutes=1))
     current_day = day_view.day_payload(today, refresh=not cached_recently)
@@ -24,8 +25,8 @@ def dose_help(payload: dict) -> dict:
                   for row in current_day["treatments"]]
     now = datetime.now(timezone.utc)
     local_now = now.astimezone(ZoneInfo(current_settings["timezone"]))
-    overrides, periods = storage.analysis_day_types(), storage.vacation_periods()
-    day_type, day_type_source = storage.day_type_for(today, overrides, periods)
+    overrides, periods = marks.analysis_day_types(), marks.vacation_periods()
+    day_type, day_type_source = marks.day_type_for(today, overrides, periods)
     minute = local_now.hour * 60 + local_now.minute
     is_breakfast = minute < int(current_settings["breakfast_end_minute"])
     meal_kind = ("breakfast" if is_breakfast else
