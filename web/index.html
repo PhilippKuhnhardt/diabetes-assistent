@@ -214,6 +214,11 @@
               <h2>Spritzhilfe</h2>
               <label>Zielwert <span>mg/dL</span><input name="dose_target_mgdl" type="number" min="60" max="140" step="1" required></label>
               <label>Vorsichtiger Zielwert <span>mg/dL</span><input name="dose_cautious_target_mgdl" type="number" min="60" max="250" step="1" required></label>
+              <label>Automatik-Methode<select name="auto_method">
+                <option value="percentile">Perzentil</option>
+                <option value="surcharge">Perzentil + Mahlzeitzuschlag</option>
+              </select></label>
+              <p class="hint">Mahlzeitzuschlag: je Hauptmahlzeit fest 40 mg/dL für Fett und Eiweiß (etwa 1 IE), bis 40 g KH anteilig weniger; Snacks ohne Zuschlag. Der Faktor wird ohne diesen Anteil berechnet.</p>
               <label>Automatik-Perzentil <span>%</span><input name="auto_percentile" type="number" min="25" max="50" step="0.5" required></label>
               <p class="hint">25 % unteres Quartil, 50 % Median. Kleiner bedeutet weniger Insulin.</p>
               <label>Automatik-Zeitraum<select name="auto_lookback_days">
