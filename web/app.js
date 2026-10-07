@@ -6,6 +6,7 @@ const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", pers
 const views = new Set(["diary", "analysis", "settings"]);
 const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 const CERTAINTY_LABELS = { weighed: "Gewogen", known: "Halbwegs sicher", unsure: "KH unsicher" };
+const CERTAINTY_SHORT = { weighed: "Gewogen", known: "Halbwegs", unsure: "Unsicher" };
 const num = (value, digits = 2) => Number(value).toLocaleString("de-DE", { maximumFractionDigits: digits, minimumFractionDigits: 0 });
 const factorNum = value => Number(value).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 const signedChange = (value, digits = 1) => value == null ? "—" : (Number(value) > 0 ? "+" : "") + num(value, digits) + " mg/dL";
@@ -368,7 +369,7 @@ function setCertainty(form, value) {
 
 // The certainty chips act like radios that can also be cleared by tapping the chosen one again.
 document.addEventListener("pointerdown", event => {
-  const input = event.target.closest?.('label.chip')?.querySelector('input[name="carbs_certainty"]');
+  const input = event.target.closest?.('label')?.querySelector('input[name="carbs_certainty"]');
   if (input) input.dataset.wasChecked = input.checked ? "1" : "";
 });
 document.addEventListener("click", event => {
@@ -376,11 +377,21 @@ document.addEventListener("click", event => {
   if (!(input instanceof HTMLInputElement) || input.name !== "carbs_certainty") return;
   if (input.dataset.wasChecked === "1") input.checked = false;
   input.dataset.wasChecked = "";
+  if (input.form?.id === "entry-form") updateEntryQuality();
 });
 
+// Carb certainty and the fat mark stay folded behind one chip that shows the current choice.
 function updateEntryQuality() {
   const form = $("#entry-form");
-  $("#entry-quality").hidden = !(form.elements.kind.value === "meal" && Number(form.elements.carbs.value) > 0);
+  const show = form.elements.kind.value === "meal" && Number(form.elements.carbs.value) > 0;
+  const open = show && Boolean(state.entryQualityOpen);
+  const chip = $("#entry-quality-chip");
+  const parts = [CERTAINTY_SHORT[form.elements.carbs_certainty.value], form.elements.fat_protein.checked ? "fettreich" : null].filter(Boolean);
+  chip.hidden = !show;
+  chip.classList.toggle("chip-set", parts.length > 0);
+  chip.setAttribute("aria-expanded", String(open));
+  chip.textContent = parts.length ? parts.join(" · ") + (open ? " ▴" : " ▾") : "+ KH-Details";
+  $("#entry-quality").hidden = !open;
 }
 
 function updateEntrySportOption() {
@@ -1548,6 +1559,7 @@ function resetEntryForm() {
   state.entryTimeTouched = false;
   state.entryTimeOpen = false;
   state.entryNoteOpen = false;
+  state.entryQualityOpen = false;
   state.doseChoice = null;
   state.entryAs = null;
   setDefaultMealTime();
@@ -2379,6 +2391,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateEntryChips();
     $("#entry-time").focus();
   });
+  $("#entry-quality-chip").addEventListener("click", () => {
+    state.entryQualityOpen = !state.entryQualityOpen;
+    updateEntryQuality();
+  });
+  $("#entry-quality").addEventListener("change", updateEntryQuality);
   $("#entry-note-chip").addEventListener("click", () => {
     state.entryNoteOpen = true;
     updateEntryChips();

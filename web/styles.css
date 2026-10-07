@@ -443,7 +443,7 @@ span.range-high { color: #9a6410; font-weight: 650; }
 /* Compact entry: chips for time, sport and note; tappable dose suggestions; one save button. */
 .entry-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 14px; }
 .entry-chips .entry-sport-option, .entry-chips .entry-quality { display: contents; }
-.entry-chips .entry-quality[hidden] { display: none; }
+.entry-chips .entry-quality[hidden], .quality-box[hidden] { display: none; }
 #edit-quality { margin: 0 0 14px; }
 .entry-chips button.chip, .entry-chips label.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; margin: 0; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--canvas); color: var(--ink); font-size: 12px; font-weight: 650; cursor: pointer; }
 label.chip span { color: inherit; font-weight: inherit; }
@@ -541,4 +541,13 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .factor-facts .key dd { color: var(--green); }
 .factor-facts.compact { grid-template-columns: 1fr; gap: 4px; margin-top: 8px; padding-top: 7px; }
 .factor-facts.compact dd { font-size: 14px; white-space: nowrap; }
-.chip-group { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+/* KH-Sicherheit: three-way segment; the entry form folds it with the fat mark behind one chip. */
+.quality-box { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; }
+.segment { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--canvas); }
+.segment label { position: relative; margin: 0; padding: 7px 12px; font-size: 12px; font-weight: 650; color: var(--ink); cursor: pointer; }
+.segment label + label { border-left: 1px solid var(--line); }
+.segment input { position: absolute; opacity: 0; width: 1px; height: 1px; min-height: 0; margin: 0; pointer-events: none; }
+.segment label:has(input:checked) { background: var(--amber-light); color: var(--amber); }
+.segment label:has(input:focus-visible) { outline: 2px solid var(--green); outline-offset: -2px; }
+.entry-chips button.chip.chip-set { background: var(--amber-light); border-color: #e0c27a; color: var(--amber); }
+.segment label span { color: inherit; font-weight: inherit; font-size: inherit; }
