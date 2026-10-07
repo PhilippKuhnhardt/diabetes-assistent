@@ -117,7 +117,17 @@ def _base_schema(db: sqlite3.Connection) -> None:
         db.execute("ALTER TABLE analysis_sport_marks ADD COLUMN effect_mgdl TEXT NOT NULL DEFAULT '0'")
 
 
-MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema]
+def _day_results(db: sqlite3.Connection) -> None:
+    """Calculated diary days, reused while their inputs are unchanged."""
+    db.execute("""CREATE TABLE IF NOT EXISTS day_results (
+        day TEXT PRIMARY KEY,
+        fingerprint TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        computed_at TEXT NOT NULL
+    )""")
+
+
+MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results]
 
 
 def init() -> None:

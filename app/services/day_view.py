@@ -1,22 +1,50 @@
-"""One diary day: mirror from Nightscout, calculate its meals, build the view."""
+"""One diary day: mirror from Nightscout, calculate its meals, build the view, keep the result."""
 from __future__ import annotations
 
+import hashlib
+import json
+import os
 from datetime import timedelta
 from decimal import Decimal
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from app import calculation, episodes
 from app.common import json_safe, local_day_range
 from app.ingestion import nightscout, sync
-from app.store import basal_doses as basal_store, config, marks, mirror
+from app.store import basal_doses as basal_store, config, marks, mirror, results
 from app.analysis.night import night_analysis
+
+# Any change to the app's code recalculates stored days once, so a stored result never
+# outlives the code that produced it.
+CODE_VERSION = hashlib.sha256(b"".join(
+    path.read_bytes() for path in sorted(Path(__file__).resolve().parents[1].rglob("*.py")))).hexdigest()
 
 
 def day_payload(day: str, refresh: bool = True) -> dict:
-    status = sync.sync_day(day) if refresh else {
-        "profile_sync_error": None, "sync_error": None, "basal_sync_error": None}
-    profile_sync_error, sync_error = status["profile_sync_error"], status["sync_error"]
-    basal_sync_error = status["basal_sync_error"]
+    """The diary day as the app shows it. With refresh it is first mirrored from Nightscout;
+    the calculation is reused from SQLite while nothing it reads has changed."""
+    status = sync.sync_day(day) if refresh else {}
+    _, settings = config.get_settings()
+    start, end = local_day_range(day, settings["timezone"])
+    fingerprint = hashlib.sha256(json.dumps([CODE_VERSION, os.environ.get("APP_TIMEZONE"), results.day_inputs(start, end, day)],
+                                            default=str).encode()).hexdigest()
+    payload = results.day_result(day, fingerprint)
+    if payload is None:
+        payload = compute_day(day)
+        results.save_day_result(day, fingerprint, payload)
+    # Request-specific fields are never stored with the result.
+    payload.update({
+        "connected": nightscout.is_configured(),
+        "sync_error": status.get("sync_error"), "profile_sync_error": status.get("profile_sync_error"),
+        "basal_sync_error": status.get("basal_sync_error"),
+    })
+    return payload
+
+
+def compute_day(day: str) -> dict:
+    """Calculate one diary day from the local copy only."""
+    profile_sync_error = sync_error = basal_sync_error = None
     settings_id, settings = config.get_settings()
     start, end = local_day_range(day, settings["timezone"])
     raw_entries, raw_treatments = mirror.cached_between(start, end)
