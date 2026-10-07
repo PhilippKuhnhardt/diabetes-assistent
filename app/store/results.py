@@ -23,6 +23,22 @@ def save_day_result(day: str, fingerprint: str, payload: dict) -> None:
              datetime.now(timezone.utc).isoformat()))
 
 
+def summary_result(key: str, fingerprint: str) -> dict | None:
+    with connect() as db:
+        row = db.execute("SELECT payload FROM summary_results WHERE key=? AND fingerprint=?", (key, fingerprint)).fetchone()
+    return json.loads(row["payload"]) if row else None
+
+
+def save_summary_result(key: str, fingerprint: str, payload: dict) -> None:
+    with connect() as db:
+        db.execute(
+            "INSERT INTO summary_results(key,fingerprint,payload,computed_at) VALUES(?,?,?,?) "
+            "ON CONFLICT(key) DO UPDATE SET fingerprint=excluded.fingerprint,payload=excluded.payload,"
+            "computed_at=excluded.computed_at",
+            (key, fingerprint, json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
+             datetime.now(timezone.utc).isoformat()))
+
+
 def day_inputs(start: datetime, end: datetime, day: str) -> list:
     """Everything a calculated day reads from SQLite, in a compact comparable form.
     Mirror rows are only ever rewritten with a new synced_at or deleted, so count, newest

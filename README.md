@@ -95,7 +95,7 @@ python3 -m unittest discover -s tests -v
 node --check web/app.js
 ```
 
-Berechnete Tage liegen in SQLite (`day_results`) zusammen mit einem Fingerabdruck aller gelesenen Daten (Spiegel, Basal, Einstellungen, Profil, eigene Markierungen) und des Programmcodes; ändert sich davon etwas, wird der Tag beim nächsten Lesen neu berechnet. Tagebuch, Analyse, Export und Lese-API lesen dieselben gespeicherten Ergebnisse.
+Berechnete Tage liegen in SQLite (`day_results`) zusammen mit einem Fingerabdruck aller gelesenen Daten (Spiegel, Basal, Einstellungen, Profil, eigene Markierungen) und des Programmcodes; ändert sich davon etwas, wird der Tag beim nächsten Lesen neu berechnet. Tagebuch, Analyse, Export und Lese-API lesen dieselben gespeicherten Ergebnisse. Die Analyse-Seite (Faktorgruppen, berechneter Faktor, Rückblick-Matrix, Stressaufschlag) liegt je Zeitraum in `summary_results` und gilt, solange heute derselbe Tag ist, die Ausklammerungen gleich sind und keiner der gelesenen Tage sich geändert hat.
 
 Die Integrationstests verwenden einen lokalen Fake-Nightscout-Server und schreiben nichts in das persönliche Nightscout.
 
