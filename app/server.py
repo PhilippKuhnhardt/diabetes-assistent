@@ -10,7 +10,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from app import auth, nightscout, storage
+from app import auth, nightscout
+from app.store import config, db
 from app.common import json_safe
 from app.services import (annotations, basal, day_view, diary, dose_help, read_api, settings, summary,
                           sync)
@@ -30,7 +31,7 @@ def day_view_request(params: dict) -> dict:
 GET_ROUTES = {
     "/api/settings": lambda params: settings.settings_view(),
     "/api/glucose/current": lambda params: sync.current_glucose(),
-    "/api/settings/history": lambda params: {"versions": storage.settings_history()},
+    "/api/settings/history": lambda params: {"versions": config.settings_history()},
     "/api/day": day_view_request,
     "/api/test-connection": lambda params: sync.test_connection(),
     "/api/summary": summary.summary,
@@ -233,7 +234,7 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     if not auth.password():
         raise SystemExit("APP_PASSWORD muss gesetzt sein")
-    storage.init()
+    db.init()
     host = os.environ.get("APP_HOST", "127.0.0.1")
     port = int(os.environ.get("APP_PORT", "8765"))
     if os.environ.get("API_READ_KEY") and not auth.read_api_key():

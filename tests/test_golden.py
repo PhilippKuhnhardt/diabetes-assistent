@@ -28,7 +28,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from app import storage
+from app.store import db
 from app.server import Handler
 
 GOLDEN = Path(__file__).with_name("golden")
@@ -249,12 +249,12 @@ class GoldenMasterTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.old_env = dict(os.environ)
-        cls.old_db = storage.DB_PATH
+        cls.old_db = db.DB_PATH
         cls.temp = tempfile.TemporaryDirectory()
-        storage.DB_PATH = Path(cls.temp.name) / "app.sqlite3"
+        db.DB_PATH = Path(cls.temp.name) / "app.sqlite3"
         cls.patched = freeze_app_clock()
         FrozenDatetime.instant = FIRST_DAY - timedelta(days=1)
-        storage.init()
+        db.init()
         entries, treatments = build_dataset()
         GoldenNightscout.entries = entries
         GoldenNightscout.treatments = treatments
@@ -281,7 +281,7 @@ class GoldenMasterTests(unittest.TestCase):
         cls.fake.server_close()
         for module in cls.patched:
             module.datetime = real_datetime
-        storage.DB_PATH = cls.old_db
+        db.DB_PATH = cls.old_db
         os.environ.clear()
         os.environ.update(cls.old_env)
         cls.temp.cleanup()

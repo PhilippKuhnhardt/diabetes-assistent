@@ -7,7 +7,8 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import calculation, episodes, nightscout, storage
+from app import calculation, episodes, nightscout
+from app.store import basal_doses, config, mirror
 from app.common import local_day_range, parse_instant, unit_text
 
 
@@ -37,19 +38,19 @@ def basal_record(dose: dict) -> dict:
 def push_basal(dose: dict, remote: list[dict] | None = None) -> None:
     """Write a local basal dose to Nightscout unless it is already there."""
     if remote is None:
-        _, settings = storage.get_settings()
+        _, settings = config.get_settings()
         day = dose["at"].astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
         start, end = local_day_range(day, settings["timezone"])
         _, remote = nightscout.fetch_range(start, end)
     if not any(basal_event_id(item) == dose["id"] for item in remote):
         nightscout.write_treatment(basal_record(dose))
-    storage.set_basal_synced(dose["id"])
+    basal_doses.set_basal_synced(dose["id"])
 
 
 def reconcile_basal(start: datetime, end: datetime, raw_treatments: list[dict], fresh: bool) -> tuple[list[dict], str | None]:
     """Local basal doses of a day. After a fresh Nightscout read, unsent doses are sent,
     doses deleted in Nightscout are dropped, and basal notes known only to Nightscout are adopted."""
-    local = storage.basal_doses_between(start, end)
+    local = basal_doses.basal_doses_between(start, end)
     if not fresh:
         return local, None
     error = None
@@ -61,9 +62,9 @@ def reconcile_basal(start: datetime, end: datetime, raw_treatments: list[dict], 
     for dose in local:
         if dose["id"] in remote:
             if not dose["nightscout_synced"]:
-                storage.set_basal_synced(dose["id"])
+                basal_doses.set_basal_synced(dose["id"])
         elif dose["nightscout_synced"]:
-            storage.delete_basal_dose(dose["id"])
+            basal_doses.delete_basal_dose(dose["id"])
         else:
             try:
                 push_basal(dose, raw_treatments)
@@ -78,8 +79,8 @@ def reconcile_basal(start: datetime, end: datetime, raw_treatments: list[dict], 
             at = episodes.parse_at(item)
         except (ValueError, KeyError):
             continue
-        storage.save_basal_dose(dose_id, at, unit_text(units), synced=True)
-    return storage.basal_doses_between(start, end), error
+        basal_doses.save_basal_dose(dose_id, at, unit_text(units), synced=True)
+    return basal_doses.basal_doses_between(start, end), error
 
 
 def save_basal(payload: dict) -> dict:
@@ -90,10 +91,10 @@ def save_basal(payload: dict) -> dict:
         raise ValueError("Basal muss zwischen 0,5 und 100 IE in 0,5er-Schritten liegen")
     dose_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
     note = str(payload.get("notes") or "").strip()[:500]
-    _, settings = storage.get_settings()
+    _, settings = config.get_settings()
     day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
-    storage.save_basal_dose(dose_id, at, unit_text(units), note)
-    dose = storage.basal_dose(dose_id)
+    basal_doses.save_basal_dose(dose_id, at, unit_text(units), note)
+    dose = basal_doses.basal_dose(dose_id)
     error = None
     if nightscout.is_configured():
         try:
@@ -106,24 +107,24 @@ def save_basal(payload: dict) -> dict:
 
 
 def delete_basal(dose_id: str) -> None:
-    dose = storage.basal_dose(dose_id)
+    dose = basal_doses.basal_dose(dose_id)
     if dose is None:
         raise ValueError("Basal-Eintrag nicht gefunden")
     if nightscout.is_configured():
         try:
-            _, settings = storage.get_settings()
+            _, settings = config.get_settings()
             day = dose["at"].astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
             start, end = local_day_range(day, settings["timezone"])
             _, remote = nightscout.fetch_range(start, end)
             for item in remote:
                 if basal_event_id(item) == dose_id and item.get("_id"):
                     nightscout.delete_treatment(str(item["_id"]))
-                    storage.delete_cached_treatment(str(item["_id"]))
+                    mirror.delete_cached_treatment(str(item["_id"]))
         except nightscout.NightscoutError:
             # A dose Nightscout never received can still be removed locally.
             if dose["nightscout_synced"]:
                 raise
-    storage.delete_basal_dose(dose_id)
+    basal_doses.delete_basal_dose(dose_id)
 
 
 def delete_basal_entry(payload: dict) -> dict:

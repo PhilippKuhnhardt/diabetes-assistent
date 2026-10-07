@@ -5,7 +5,8 @@ from datetime import date, datetime, timedelta
 from urllib.parse import parse_qs
 from zoneinfo import ZoneInfo
 
-from app import export, storage
+from app import export
+from app.store import config, marks, mirror
 from app.common import parse_instant
 from app.services import day_view
 
@@ -40,10 +41,10 @@ def api_day_range(params: dict, today: date) -> tuple[date, date]:
 
 def api_read(path: str, query: str) -> dict:
     """Read-only JSON view of the local SQLite mirror (same rows as the ZIP export); never asks Nightscout."""
-    _, settings = storage.get_settings()
+    _, settings = config.get_settings()
     zone = ZoneInfo(settings["timezone"])
     today = datetime.now(zone).date()
-    first_at = storage.first_cached_at()
+    first_at = mirror.first_cached_at()
     first_cached = parse_instant(first_at).astimezone(zone).date() if first_at else None
     if path in ("/api/v1", "/api/v1/"):
         return {
@@ -66,7 +67,7 @@ def api_read(path: str, query: str) -> dict:
     first, last = api_day_range(parse_qs(query), today)
     loaded_first = max(first, first_cached) if first_cached else last + timedelta(days=1)
     tables = export.collect(loaded_first, last, lambda day: day_view.day_payload(day, refresh=False),
-                            storage.analysis_exclusions(), settings)
+                            marks.analysis_exclusions(), settings)
     tables = {table: export.rows_for(table, rows) for table, rows in tables.items()}
     result = {"from": first.isoformat(), "to": last.isoformat(), "timezone": settings["timezone"]}
     if name == "data":
@@ -76,10 +77,10 @@ def api_read(path: str, query: str) -> dict:
 
 def export_zip(params: dict) -> tuple[str, bytes]:
     """ZIP of all locally stored days (or the last `days`); read-only snapshot, no Nightscout requests."""
-    _, settings = storage.get_settings()
+    _, settings = config.get_settings()
     zone = ZoneInfo(settings["timezone"])
     today = datetime.now(zone).date()
-    first_at = storage.first_cached_at()
+    first_at = mirror.first_cached_at()
     first_day = min(today, parse_instant(first_at).astimezone(zone).date()) if first_at else today
     if "days" in params:
         days = int(params["days"][0])
@@ -87,5 +88,5 @@ def export_zip(params: dict) -> tuple[str, bytes]:
             raise ValueError("Ungültiger Zeitraum")
         first_day = max(first_day, today - timedelta(days=days - 1))
     data = export.build_zip(first_day, today, lambda day: day_view.day_payload(day, refresh=False),
-                            storage.analysis_exclusions(), settings)
+                            marks.analysis_exclusions(), settings)
     return f"diabetes-export-{today.isoformat()}.zip", data
