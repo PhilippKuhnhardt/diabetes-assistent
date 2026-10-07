@@ -735,6 +735,71 @@ def delete_basal(dose_id: str) -> None:
     storage.delete_basal_dose(dose_id)
 
 
+API_TABLES = {"meals": "meals", "window-events": "window_events", "entries": "entries",
+              "treatments": "treatments", "basal": "basal"}
+API_MAX_DAYS = 3650
+MAX_API_KEYS = 20
+
+
+class ApiNotFound(Exception):
+    pass
+
+
+def api_day_range(params: dict, today: date) -> tuple[date, date]:
+    """Local days for the read API: from/to (YYYY-MM-DD, inclusive) or the last `days` days (default 30)."""
+    if "from" in params or "to" in params:
+        try:
+            last = date.fromisoformat(params["to"][0]) if "to" in params else today
+            first = date.fromisoformat(params["from"][0]) if "from" in params else last - timedelta(days=29)
+        except ValueError:
+            raise ValueError("Ungültiges Datum, erwartet JJJJ-MM-TT") from None
+    else:
+        days = int(params.get("days", ["30"])[0])
+        if not 1 <= days <= API_MAX_DAYS:
+            raise ValueError("Ungültiger Zeitraum")
+        first, last = today - timedelta(days=days - 1), today
+    last = min(last, today)
+    if first > last or (last - first).days >= API_MAX_DAYS:
+        raise ValueError("Ungültiger Zeitraum")
+    return first, last
+
+
+def api_read(path: str, query: str) -> dict:
+    """Read-only JSON view of the local SQLite mirror (same rows as the ZIP export); never asks Nightscout."""
+    _, settings = storage.get_settings()
+    zone = ZoneInfo(settings["timezone"])
+    today = datetime.now(zone).date()
+    first_at = storage.first_cached_at()
+    first_cached = parse_instant(first_at).astimezone(zone).date() if first_at else None
+    if path in ("/api/v1", "/api/v1/"):
+        return {
+            "version": 1, "timezone": settings["timezone"], "today": today.isoformat(),
+            "first_day": first_cached.isoformat() if first_cached else None,
+            "query": "?days=N (Standard 30) oder ?from=JJJJ-MM-TT&to=JJJJ-MM-TT, lokale Tage inklusive",
+            "endpoints": {
+                "/api/v1/data": "alle Tabellen auf einmal",
+                **{f"/api/v1/{name}": f"Spalten: {', '.join(export.TABLE_COLUMNS[table])}"
+                   for name, table in API_TABLES.items()},
+                "/api/v1/profile": "Einstellungen und aktuelles Nightscout-Profil",
+            },
+            "notes": export.README,
+        }
+    if path == "/api/v1/profile":
+        return {"timezone": settings["timezone"], "settings": settings}
+    name = path.removeprefix("/api/v1/")
+    if name != "data" and name not in API_TABLES:
+        raise ApiNotFound(path)
+    first, last = api_day_range(parse_qs(query), today)
+    loaded_first = max(first, first_cached) if first_cached else last + timedelta(days=1)
+    tables = export.collect(loaded_first, last, lambda day: day_payload(day, refresh=False),
+                            storage.analysis_exclusions(), settings)
+    tables = {table: export.rows_for(table, rows) for table, rows in tables.items()}
+    result = {"from": first.isoformat(), "to": last.isoformat(), "timezone": settings["timezone"]}
+    if name == "data":
+        return {**result, "tables": tables}
+    return {**result, "rows": tables[API_TABLES[name]]}
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "DiabetesAnalysis/0.1"
 
@@ -774,6 +839,18 @@ class Handler(BaseHTTPRequestHandler):
             self._redirect("/login")
         return False
 
+    def _check_api_access(self) -> bool:
+        """/api/v1 accepts an "Authorization: Bearer" API key with read scope, or the browser login."""
+        header = self.headers.get("Authorization")
+        if not header:
+            return self._check_auth()
+        key = auth.bearer_key(header)
+        record = storage.use_api_key(auth.api_key_hash(key)) if key else None
+        if record and "read" in record["scopes"]:
+            return True
+        self._response(401, {"error": "Ungültiger API-Schlüssel"})
+        return False
+
     def _body(self) -> dict:
         if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
             raise ValueError("JSON-Anfrage erwartet")
@@ -800,9 +877,24 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data)
             return
+        if path == "/api/v1" or path.startswith("/api/v1/"):
+            if not self._check_api_access():
+                return
+            try:
+                self._response(200, api_read(path, urlparse(self.path).query))
+            except ApiNotFound:
+                self._response(404, {"error": "Nicht gefunden"})
+            except ValueError as error:
+                self._response(400, {"error": str(error)})
+            except Exception:
+                self._response(500, {"error": "Interner Fehler"})
+            return
         if not self._check_auth():
             return
         try:
+            if path == "/api/keys":
+                self._response(200, {"keys": storage.api_keys()})
+                return
             if path == "/api/settings":
                 profile_sync_error = None
                 if nightscout.is_configured():
@@ -1393,6 +1485,22 @@ class Handler(BaseHTTPRequestHandler):
                 nightscout.delete_treatment(record_id)
                 storage.delete_cached_treatment(record_id)
                 self._response(200, {"id": record_id})
+                return
+            if path == "/api/keys":
+                name = str(payload.get("name", "")).strip()[:60]
+                if not name:
+                    raise ValueError("Name fehlt")
+                if len(storage.api_keys()) >= MAX_API_KEYS:
+                    raise ValueError("Höchstens 20 API-Schlüssel")
+                key = auth.new_api_key()
+                record = storage.save_api_key(str(uuid.uuid4()), name, key[:10], auth.api_key_hash(key), ["read"])
+                # The key itself is shown only in this response; SQLite keeps its hash.
+                self._response(200, {**record, "key": key})
+                return
+            if path == "/api/keys/revoke":
+                if not storage.delete_api_key(str(payload["id"])):
+                    raise ValueError("API-Schlüssel nicht gefunden")
+                self._response(200, {"keys": storage.api_keys()})
                 return
             if path == "/api/settings":
                 settings = validate_settings(payload)

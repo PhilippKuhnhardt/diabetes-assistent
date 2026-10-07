@@ -67,6 +67,22 @@ Die Berechnung setzt vollständige KH-Wirkung bis zum Endpunkt, vollständige re
 
 In **Einstellungen → Datenexport** lädt **Daten exportieren** eine ZIP mit allen lokal gespeicherten Tagen (`/api/export`, optional `?days=N`). Sie enthält `meals.csv` (eine Zeile je Hauptmahlzeit mit Fenster, BZ Start/Ende, KH, IE, KH × KF, Sport, Ausklammerung und Faktor), `window_events.csv` (alle KH und IE, die ins Fenster einer Mahlzeit zählen), `entries.csv` (CGM), `treatments.csv` (alle Behandlungen), `basal.csv` (Basal aus der App), `profile.json` (Einstellungen und Nightscout-Profil) und eine `LIESMICH.md` mit den Spalten. Der Export liest nur SQLite, fragt Nightscout nicht ab und erfordert die normale App-Anmeldung. Er dient zur Weiterentwicklung der Vorhersageformel; die Datei gehört nicht ins Repository.
 
+## Lese-API für Skripte und Agenten
+
+In **Einstellungen → API-Zugriff** erzeugt **Schlüssel erzeugen** einen API-Schlüssel (`da_…`), der nur einmal angezeigt wird; SQLite speichert nur seinen SHA-256-Hash. Ein Schlüssel hat den Scope `read`, öffnet ausschließlich `GET /api/v1/…` und kann weder die App bedienen noch etwas ändern oder neue Schlüssel anlegen. **Widerrufen** löscht ihn sofort.
+
+```sh
+curl -H "Authorization: Bearer $DIABETES_API_KEY" "https://deine-domain/api/v1/meals?days=30"
+```
+
+- `GET /api/v1`: Übersicht mit Endpunkten, Spalten, Zeitzone und erstem gespeicherten Tag.
+- `GET /api/v1/meals`, `/window-events`, `/entries`, `/treatments`, `/basal`: dieselben Zeilen wie die CSV-Dateien des Exports als JSON (`{"from", "to", "timezone", "rows"}`), Zahlen als Dezimal-Strings.
+- `GET /api/v1/data`: alle Tabellen auf einmal unter `tables`.
+- `GET /api/v1/profile`: Einstellungen und aktuelles Nightscout-Profil.
+- Zeitraum: `?days=N` (Standard 30) oder `?from=JJJJ-MM-TT&to=JJJJ-MM-TT` (lokale Tage, inklusive, höchstens 3650 Tage).
+
+Die API liest wie der Export nur SQLite und fragt Nightscout nicht ab. Ein späterer Schreibzugriff bekäme einen eigenen Scope.
+
 ## Entwicklung
 
 Laufzeit: Python-Standardbibliothek, HTML/CSS/JavaScript, SQLite. Relevante Module: `app/nightscout.py` für die Nightscout-Schnittstelle, `app/storage.py` für Persistenz, `app/episodes.py` für Ereignisse und Mahlzeitenerkennung, `app/calculation.py` für Faktoren, `app/dosing.py` für die KH-/Korrekturhilfe, `app/auth.py` für die Browser-Anmeldung. `app/server.py` stellt API und statische Dateien bereit.
