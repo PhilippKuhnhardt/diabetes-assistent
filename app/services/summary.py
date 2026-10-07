@@ -237,6 +237,7 @@ def compute_summary(days: int, today: date) -> dict:
         "glucose_low_mgdl": str(forecast.GLUCOSE_LOW), "glucose_high_mgdl": str(forecast.GLUCOSE_HIGH),
         "dose_target_mgdl": str(settings["dose_target_mgdl"]),
     }
+    mark_matrix(suggestion_derivation)
     # Information only: does the free-day factor follow the work-day factor by a stable ratio?
     day_type_ratio = forecast.day_type_ratios(points, today)
     for name, group in groups.items():
@@ -265,3 +266,35 @@ def compute_summary(days: int, today: date) -> dict:
             "nights": night_records,
         },
     }
+
+
+def mark_matrix(derivation: dict) -> None:
+    """Add to every backtest cell its shares below / in / above range, whether it is the configured
+    variant, and the best cells: most endpoints in range, then fewest below, once per lookback
+    period and once overall (the first of equal cells wins)."""
+    def better(cell, top):
+        stats, best = cell["stats"], top["stats"] if top else None
+        return best is None or stats["in_range"] > best["in_range"] or (
+            stats["in_range"] == best["in_range"] and stats["below"] < best["below"])
+
+    overall, per_lookback = None, {}
+    for variant in derivation["variants"]:
+        for cell in variant["cells"]:
+            stats = cell["stats"]
+            total = stats["glucose_count"]
+            cell["shares"] = {key: (Decimal(stats[key]) * 100 / total if total else Decimal(0))
+                              for key in ("below", "in_range", "above")}
+            surcharge = cell["percentile"] == forecast.SURCHARGE
+            cell["active"] = ((surcharge if derivation["method"] == forecast.SURCHARGE
+                               else not surcharge and Decimal(cell["percentile"]) == Decimal(derivation["percentile"]))
+                              and variant["lookback_days"] == derivation["lookback_days"]
+                              and Decimal(variant["half_life_days"]) == Decimal(derivation["half_life_days"]))
+            cell["best"] = None
+            if better(cell, overall):
+                overall = cell
+            if better(cell, per_lookback.get(variant["lookback_days"])):
+                per_lookback[variant["lookback_days"]] = cell
+    for cell in per_lookback.values():
+        cell["best"] = "lookback"
+    if overall is not None:
+        overall["best"] = "overall"

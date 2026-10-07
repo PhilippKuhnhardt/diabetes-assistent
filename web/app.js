@@ -1902,22 +1902,13 @@ function renderSuggestionDerivation(d) {
   const variants = d.variants || [];
   const percentiles = variants.length ? variants[0].cells.map(cell => cell.percentile) : [];
   const total = variants.length ? variants[0].cells[0].stats.glucose_count : 0;
-  const shares = stats => ["below", "in_range", "above"].map(key => stats.glucose_count ? stats[key] / stats.glucose_count * 100 : 0);
-  // Best cell: most endpoints in range, then fewest below 80; once per lookback period and once overall.
-  const cells = variants.flatMap(variant => variant.cells.map(cell => ({ variant, cell, s: shares(cell.stats) })));
-  const pick = items => items.reduce((top, item) => !top || item.s[1] > top.s[1] || (item.s[1] === top.s[1] && item.s[0] < top.s[0]) ? item : top, null);
-  const best = pick(cells);
-  const bestPerLookback = new Set([...new Set(variants.map(variant => variant.lookback_days))]
-    .map(days => pick(cells.filter(item => item.variant.lookback_days === days))?.cell));
+  // The server marks the active cell and the best cells (per lookback period and overall).
   const strength = days => { const diff = Number(days) - 7; return num(days, 1) + ' T.' + (diff < 0 ? ' <small>stärker</small>' : diff > 0 ? ' <small>schwächer</small>' : ''); };
   const cellHTML = (variant, cell) => {
-    const [below, inRange, above] = shares(cell.stats);
-    const active = (d.method === "surcharge" ? cell.percentile === "surcharge"
-      : cell.percentile !== "surcharge" && Number(cell.percentile) === Number(d.percentile)) &&
-      Number(variant.lookback_days) === Number(d.lookback_days) &&
-      Number(variant.half_life_days) === Number(d.half_life_days);
-    const isBest = best && best.cell === cell;
-    const isPeriodBest = bestPerLookback.has(cell);
+    const [below, inRange, above] = ["below", "in_range", "above"].map(key => Number(cell.shares[key]));
+    const active = cell.active;
+    const isBest = cell.best === "overall";
+    const isPeriodBest = Boolean(cell.best);
     const bar = '<svg class="range-bar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">' +
       '<rect class="range-low" x="0" width="' + below.toFixed(2) + '" height="8"/>' +
       '<rect class="range-ok" x="' + below.toFixed(2) + '" width="' + inRange.toFixed(2) + '" height="8"/>' +
