@@ -9,9 +9,11 @@ The backtest recomputes, for every past meal, what each combination of lookback,
 percentile would have suggested from the meals before it, and estimates where the endpoint
 glucose would have landed with that factor and a dose corrected to the target (below, inside or
 above 80–160 mg/dL): target + (F − P) × Σ[g × KF] / 10.
-The backtest also tests a target-band method ("band" instead of a percentile): the factor that the
-largest weighted share of earlier meals would have tolerated with an endpoint inside 80–160 mg/dL,
-given the size Σ[g × KF] of the meal being predicted. It is only a matrix column, not a suggestion.
+The surcharge method splits each meal into a factor per KE and a fixed surcharge per main meal:
+the meal's own fat and protein raise glucose by about SURCHARGE_MGDL regardless of its carbs, growing
+linearly up to the full amount at SURCHARGE_FULL_GRAMS so small meals get less. Past factors are
+reduced by the surcharge's share, F − 10 × 40 × share / Σ[g × KF], before the weighted percentile;
+the dose then adds the surcharge once per main meal (40 × share / KF IE). Snacks get no surcharge.
 These are model choices for experimentation, not dosing advice.
 """
 from __future__ import annotations
@@ -88,33 +90,48 @@ def predict_from(values: list[tuple[Decimal, int]], percentile: Decimal, half_li
     return {"count": len(values), "units_per_ke": value if value is not None and value > 0 else None}
 
 
-BAND = "band"
+SURCHARGE = "surcharge"
+SURCHARGE_MGDL = Decimal(40)
+SURCHARGE_FULL_GRAMS = Decimal(40)
+METHODS = ("percentile", SURCHARGE)
 
 
-def band_factor(pairs: list[tuple[Decimal, Decimal]], carbs_isf: Decimal, target: Decimal) -> Decimal:
-    """Factor P that puts the largest weight of (factor, weight) pairs inside the target band.
+def surcharge_share(grams: Decimal) -> Decimal:
+    """Share of the full meal surcharge: grows linearly with the carbs up to SURCHARGE_FULL_GRAMS."""
+    return min(Decimal(1), max(Decimal(0), grams) / SURCHARGE_FULL_GRAMS)
 
-    With a dose corrected to `target`, a meal whose real factor is F ends at about
-    target + (F − P) × S / 10 (S = Σ[g × KF] of the meal being dosed). That endpoint lies in
-    GLUCOSE_LOW–GLUCOSE_HIGH exactly when P lies in [F − (HIGH − target) × 10 / S, F + (target − LOW) × 10 / S].
-    The answer is the midpoint of the region covered by the heaviest set of these intervals; equal
-    regions are broken by the one nearest to the weighted median. It has no direction built in,
-    so it follows falling and rising factors alike."""
-    target = min(max(target, GLUCOSE_LOW), GLUCOSE_HIGH)
-    above = (GLUCOSE_HIGH - target) * 10 / carbs_isf
-    below = (target - GLUCOSE_LOW) * 10 / carbs_isf
-    intervals = sorted((factor - above, factor + below, weight) for factor, weight in pairs)
-    starts = [start for start, _, _ in intervals]
-    regions = []
-    for start in starts:
-        inside = [(end, weight) for low, end, weight in intervals if low <= start <= end]
-        later = [low for low in starts if low > start]
-        end = min([item[0] for item in inside] + later[:1])
-        regions.append((sum(weight for _, weight in inside), start, end))
-    best = max(score for score, _, _ in regions)
-    centre = weighted_quantile(pairs, HALF)
-    candidates = [(start + end) / 2 for score, start, end in regions if score == best]
-    return min(candidates, key=lambda value: (abs(value - centre), value))
+
+def surcharge_units_per_ke(grams: Decimal, carbs_isf: Decimal) -> Decimal:
+    """The surcharge expressed in IE/KE of a meal with Σ[g × KF] = carbs_isf."""
+    return 10 * SURCHARGE_MGDL * surcharge_share(grams) / carbs_isf
+
+
+def base_factor(point: dict) -> Decimal | None:
+    """A meal's factor without its surcharge share; None without carbs or meal size."""
+    grams, carbs_isf = point.get("carbs_g"), point.get("carbs_isf")
+    if not grams or not carbs_isf or carbs_isf <= 0:
+        return None
+    return point["value"] - surcharge_units_per_ke(grams, carbs_isf)
+
+
+def base_history(points: list[dict], key: tuple, day: date, lookback: int) -> list[tuple[Decimal, int]]:
+    """(factor without surcharge, age in days) of the same meal key before day."""
+    result = []
+    for point in points:
+        age = (day - point["day"]).days
+        if point["key"] == key and 1 <= age <= lookback:
+            base = base_factor(point)
+            if base is not None:
+                result.append((base, age))
+    return result
+
+
+def predict_method(points: list[dict], key: tuple, day: date, percentile: Decimal,
+                   half_life: Decimal, lookback: int, method: str) -> dict:
+    """Like predict; with the surcharge method the factor is the percentile without surcharge."""
+    if method != SURCHARGE:
+        return predict(points, key, day, percentile, half_life, lookback)
+    return predict_from(base_history(points, key, day, lookback), percentile, half_life)
 
 
 def median(values: list[Decimal]) -> Decimal | None:
@@ -160,20 +177,20 @@ def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
     return {"days": days, "reference_days": reference_days, "neighbours": neighbours, "meals": result}
 
 
-def predict_band(values: list[tuple[Decimal, int]], half_life: Decimal, carbs_isf: Decimal | None,
-                 target: Decimal) -> Decimal | None:
-    """Target-band factor of the earlier meals; None below MIN_MEALS meals or without the meal size."""
-    if len(values) < MIN_MEALS or not carbs_isf or carbs_isf <= 0:
+def predict_surcharge(values: list[tuple[Decimal, int]], percentile: Decimal, half_life: Decimal,
+                      target: dict) -> Decimal | None:
+    """Full factor for the target meal: percentile without surcharge plus the meal's surcharge share."""
+    base = predict_from(values, percentile, half_life)["units_per_ke"]
+    if base is None or not target.get("carbs_g") or not target.get("carbs_isf"):
         return None
-    value = band_factor([(factor, weight(age, half_life)) for factor, age in values], carbs_isf, target)
-    return value if value > 0 else None
+    return base + surcharge_units_per_ke(target["carbs_g"], target["carbs_isf"])
 
 
 def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal, Decimal | str]],
-             target_glucose: Decimal = Decimal(120)) -> dict:
-    """Simulate each (lookback, half-life, percentile or BAND) variant on the meals since `since`.
+             target_glucose: Decimal = Decimal(120), surcharge_percentile: Decimal = Decimal("37.5")) -> dict:
+    """Simulate each (lookback, half-life, percentile or SURCHARGE) variant on the meals since `since`.
     Only meals every variant can predict count, so all cells compare the same meals.
-    `target_glucose` is the dose target the band method aims its endpoint at."""
+    SURCHARGE uses `surcharge_percentile` on factors without surcharge and adds the meal's own share."""
     rows = []
     by_key: dict[tuple, list[dict]] = {}
     for point in points:
@@ -184,9 +201,10 @@ def backtest(points: list[dict], since: date, variants: list[tuple[int, Decimal,
             continue
         # The history for the longest lookback once per meal; each variant takes its own slice.
         known = history(by_key[target["key"]], target["key"], target["day"], longest)
+        known_base = base_history(by_key[target["key"]], target["key"], target["day"], longest)
         predictions = [
-            predict_band([item for item in known if item[1] <= lookback], half_life, target.get("carbs_isf"), target_glucose)
-            if percentile == BAND else
+            predict_surcharge([item for item in known_base if item[1] <= lookback], surcharge_percentile, half_life, target)
+            if percentile == SURCHARGE else
             predict_from([item for item in known if item[1] <= lookback], percentile, half_life)["units_per_ke"]
             for lookback, half_life, percentile in variants]
         if None in predictions:

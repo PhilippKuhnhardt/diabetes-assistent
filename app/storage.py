@@ -129,6 +129,7 @@ def default_settings() -> dict:
         "auto_percentile": "37.5",
         "auto_lookback_days": 30,
         "auto_half_life_days": "7",
+        "auto_method": "percentile",
         "peak_minutes": 60,
         "duration_minutes": 180,
         "breakfast_end_minute": 660,
@@ -168,7 +169,9 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result.setdefault("dose_target_mgdl", 100)
     result.setdefault("dose_cautious_target_mgdl", 140)
     result.setdefault("auto_percentile", "37.5")
-    result.pop("auto_method", None)
+    # Older versions stored methods that were removed (day shift, equal weights): back to the percentile.
+    if result.get("auto_method") not in ("percentile", "surcharge"):
+        result["auto_method"] = "percentile"
     # Lookbacks offered changed from 14/21/28 to 8/15/30 days: an old 14 becomes 15, anything else 30.
     if result.get("auto_lookback_days") not in (8, 15, 30):
         result["auto_lookback_days"] = 15 if result.get("auto_lookback_days") == 14 else 30

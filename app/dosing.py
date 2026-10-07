@@ -15,11 +15,14 @@ def half_units(units: Decimal) -> Decimal:
 def suggest(carbs: object, settings: dict, entries: list[dict],
             treatments: list[dict], now: datetime | None = None,
             activity_change: object = 0, units_per_ke: Decimal | None = None,
-            auto_units_per_ke: Decimal | None = None) -> dict:
+            auto_units_per_ke: Decimal | None = None, auto_surcharge_mgdl: Decimal | None = None,
+            surcharge_share=None) -> dict:
     """activity_change is a signed, user-estimated BG change in mg/dL from sport
     (negative lowers BG and therefore the dose; positive, e.g. adrenaline, raises it).
     units_per_ke replaces Nightscout's current I:C, e.g. with the breakfast factor of the day type.
     auto_units_per_ke is the cautious percentile of recent calculated meal factors (Automatik).
+    auto_surcharge_mgdl, when given, adds the fixed main-meal surcharge to the auto dose:
+    surcharge_mgdl × surcharge_share(grams) / KF IE (surcharge method; never for snacks).
     For each factor the result holds three variants: correction to the normal target, correction to
     the cautious target, and carbs only (plus sport, no BG correction; needs no fresh CGM value)."""
     now = now or datetime.now(timezone.utc)
@@ -74,6 +77,10 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     auto_carb_units = grams * auto_units_per_ke / 10 if auto_units_per_ke is not None else None
     if auto_carb_units is not None:
         result["auto_units_per_ke"] = str(auto_units_per_ke)
+        if auto_surcharge_mgdl is not None and grams > 0:
+            surcharge_units = auto_surcharge_mgdl * surcharge_share(grams) / isf
+            result["auto_surcharge_units"] = str(surcharge_units)
+            auto_carb_units += surcharge_units
         result["auto_carb_units"] = str(auto_carb_units)
     for prefix, units in (("", carb_units), ("auto_", auto_carb_units)):
         if units is not None:
