@@ -1,23 +1,14 @@
-"""Live Nightscout reads: profile cache, day mirror, current glucose."""
+"""Endpoints that talk to Nightscout directly: manual sync, profile sync, connection test, current glucose."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from app import episodes, glucose, nightscout
-from app.store import config, mirror
+from app import episodes, glucose
 from app.common import local_day_range, parse_instant
+from app.ingestion import nightscout, sync as ingestion_sync
+from app.store import config
 
-
-
-def sync_profile_cache(force: bool = False) -> None:
-    if not nightscout.is_configured():
-        raise nightscout.NightscoutError("Nightscout-Zugang in Umgebungsvariablen fehlt")
-    if not force and not config.profile_sync_due():
-        return
-    config.mark_profile_sync_attempt()
-    profiles = nightscout.fetch_profiles()
-    config.mirror_nightscout_profiles(profiles)
 
 
 def sync_days(payload: dict) -> dict:
@@ -28,27 +19,18 @@ def sync_days(payload: dict) -> dict:
         raise ValueError("Ungültiger Zeitraum")
     profile_sync_error = None
     try:
-        sync_profile_cache(force=True)
+        ingestion_sync.sync_profile_cache(force=True)
     except nightscout.NightscoutError as error:
         profile_sync_error = str(error)
     _, settings = config.get_settings()
     today = datetime.now(ZoneInfo(settings["timezone"])).date()
-    errors = []
-    synced = 0
-    for offset in range(days):
-        day = (today - timedelta(days=offset)).isoformat()
-        start, end = local_day_range(day, settings["timezone"])
-        try:
-            entries, treatments = nightscout.fetch_range(start, end)
-            mirror.mirror_day(day, entries, treatments, start, end)
-            synced += 1
-        except nightscout.NightscoutError as error:
-            errors.append({"day": day, "error": str(error)})
+    synced, errors = ingestion_sync.mirror_days(
+        [(today - timedelta(days=offset)).isoformat() for offset in range(days)], settings["timezone"])
     return {"synced": synced, "errors": errors, "profile_sync_error": profile_sync_error}
 
 
 def sync_profile(payload: dict) -> dict:
-    sync_profile_cache(force=True)
+    ingestion_sync.sync_profile_cache(force=True)
     version, settings = config.get_settings()
     profile_sync = config.profile_sync_status()
     profile = settings.get("nightscout_profile")
@@ -63,7 +45,7 @@ def sync_profile(payload: dict) -> dict:
 def test_connection() -> dict:
     if not nightscout.is_configured():
         raise ValueError("Nightscout-Zugang in Umgebungsvariablen fehlt")
-    sync_profile_cache(force=True)
+    ingestion_sync.sync_profile_cache(force=True)
     _, settings = config.get_settings()
     today = datetime.now(ZoneInfo(settings["timezone"])).date().isoformat()
     start, end = local_day_range(today, settings["timezone"])
@@ -76,7 +58,7 @@ def current_glucose() -> dict:
         raise ValueError("Nightscout-Zugang in Umgebungsvariablen fehlt")
     profile_current = True
     try:
-        sync_profile_cache()
+        ingestion_sync.sync_profile_cache()
     except nightscout.NightscoutError:
         profile_current = False
     _, settings = config.get_settings()
