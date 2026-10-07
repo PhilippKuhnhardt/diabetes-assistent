@@ -1,0 +1,25 @@
+{
+ "settings": {
+  "auto_half_life_days": "5",
+  "auto_lookback_days": 15,
+  "auto_method": "percentile",
+  "auto_percentile": "37.5",
+  "basal_default_units": "17",
+  "breakfast_end_minute": 660,
+  "dose_cautious_target_mgdl": "150",
+  "dose_target_mgdl": "120",
+  "duration_minutes": 180,
+  "lunch_end_minute": 1020,
+  "peak_minutes": 60,
+  "sport_effects_mgdl": {
+   "gym": "40",
+   "jogging": "40",
+   "light_cardio": "20",
+   "racing": "-40"
+  },
+  "sport_lookback_minutes": 360,
+  "timezone": "Europe/Berlin",
+  "window_minutes": 180
+ },
+ "version": 1
+}

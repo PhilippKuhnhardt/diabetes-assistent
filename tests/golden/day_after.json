@@ -1,0 +1,21 @@
+{
+ "basal": [],
+ "basal_sync_error": null,
+ "connected": true,
+ "day": "2026-10-08",
+ "day_type": "work",
+ "day_type_source": "weekday",
+ "entries": [],
+ "exercises": [],
+ "meals": [],
+ "night": {
+  "reason": "Für diesen Tag ist kein Abendessen erfasst."
+ },
+ "other_events": [],
+ "profile_sync_error": null,
+ "settings_version": 2,
+ "sync_error": null,
+ "synced_at": "2026-10-07T10:40:00+00:00",
+ "timeline": [],
+ "treatments": []
+}

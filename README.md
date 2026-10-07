@@ -96,3 +96,5 @@ node --check web/app.js
 ```
 
 Die Integrationstests verwenden einen lokalen Fake-Nightscout-Server und schreiben nichts in das persönliche Nightscout.
+
+`tests/test_golden.py` lädt 40 Tage synthetische Testdaten bei eingefrorener Uhr und vergleicht Tagebuch, Analyse, Empfehlung, Export und Lese-API mit den Referenzständen in `tests/golden/`. Umbauten müssen sie unverändert bestehen; eine gewollte Änderung erzeugt sie mit `GOLDEN_UPDATE=1 python3 -m unittest tests.test_golden` neu, und der Diff gehört in den Review. Für echte Daten vergleicht `scripts/compare_api.py` die Lese-API vor und nach einem Deployment (`snapshot` vorher und nachher, dann `compare`); die Snapshots enthalten persönliche Daten und gehören nicht ins Repository.
