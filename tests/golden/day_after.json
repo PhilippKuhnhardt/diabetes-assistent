@@ -16,6 +16,14 @@
  "settings_version": 2,
  "sync_error": null,
  "synced_at": "2026-10-07T10:40:00+00:00",
+ "target_bands": [
+  {
+   "from": "2026-10-07T12:00:00+00:00",
+   "high_mgdl": "180",
+   "low_mgdl": "80",
+   "to": "2026-10-09T11:00:00+00:00"
+  }
+ ],
  "timeline": [],
  "treatments": []
 }
