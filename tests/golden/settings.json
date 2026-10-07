@@ -1,0 +1,74 @@
+{
+ "connected": true,
+ "login_required": false,
+ "profile_sync_at": "2026-10-07T10:40:00+00:00",
+ "profile_sync_error": null,
+ "settings": {
+  "auto_half_life_days": "5",
+  "auto_lookback_days": 30,
+  "auto_method": "percentile",
+  "auto_percentile": "37.5",
+  "basal_default_units": "17",
+  "breakfast_end_minute": 660,
+  "dose_cautious_target_mgdl": "150",
+  "dose_target_mgdl": "120",
+  "duration_minutes": 180,
+  "ic_schedule": [
+   {
+    "grams_per_unit": "6",
+    "start_minute": 0
+   },
+   {
+    "grams_per_unit": "8",
+    "start_minute": 660
+   },
+   {
+    "grams_per_unit": "7.5",
+    "start_minute": 1020
+   }
+  ],
+  "isf_schedule": [
+   {
+    "mgdl_per_unit": "30",
+    "start_minute": 0
+   },
+   {
+    "mgdl_per_unit": "35",
+    "start_minute": 660
+   },
+   {
+    "mgdl_per_unit": "35",
+    "start_minute": 1140
+   }
+  ],
+  "lunch_end_minute": 1020,
+  "nightscout_profile": {
+   "profile_id": "golden-profile",
+   "profile_name": "Default",
+   "start_at": "2026-01-01T00:00:00Z",
+   "timezone": "Europe/Berlin"
+  },
+  "peak_minutes": 60,
+  "sport_effects_mgdl": {
+   "gym": "40",
+   "jogging": "40",
+   "light_cardio": "20",
+   "racing": "-40"
+  },
+  "sport_lookback_minutes": 360,
+  "target_schedule": [
+   {
+    "high_mgdl": "180",
+    "low_mgdl": "80",
+    "start_minute": 0
+   }
+  ],
+  "timezone": "Europe/Berlin",
+  "window_minutes": 170
+ },
+ "vacation": {
+  "active": false,
+  "since": null
+ },
+ "version": 2
+}

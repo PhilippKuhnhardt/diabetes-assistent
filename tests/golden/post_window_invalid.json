@@ -1,0 +1,6 @@
+{
+ "body": {
+  "error": "Beginn muss höchstens zwei Stunden vor oder nach dem Mahlzeitbeginn liegen"
+ },
+ "status": 400
+}

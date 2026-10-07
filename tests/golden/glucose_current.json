@@ -1,0 +1,11 @@
+{
+ "fresh": true,
+ "glucose_at": "2026-10-07T10:35:15.894000+00:00",
+ "glucose_mgdl": "40",
+ "status": "low",
+ "target_high_mgdl": "180",
+ "target_low_mgdl": "80",
+ "trend_delta_mgdl": "0.0",
+ "trend_direction": "flat",
+ "trend_minutes": "15"
+}
