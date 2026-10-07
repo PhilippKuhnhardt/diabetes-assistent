@@ -24,6 +24,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 from datetime import datetime as real_datetime, timedelta, timezone
+from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -467,6 +468,21 @@ class GoldenMasterTests(unittest.TestCase):
         cells = self.results["summary_30"]["suggestion_derivation"]["variants"]
         self.assertTrue(any(cell["stats"]["glucose_count"] for row in cells for cell in row["cells"]))
         self.assertIn("auto_entry_units", self.results["dose_help"]["lunch_60g"])
+
+    def test_window_editor_counts_what_the_factor_counts(self):
+        """The editor's totals for a meal's own window equal the calculated meal's totals."""
+        compared = 0
+        for day in self.results["days"]:
+            for meal in self.call("/api/day?date=" + day)["meals"]:
+                calc = meal["calculation"]
+                if "carbs_total" not in calc:
+                    continue
+                preview = self.call("/api/analysis/window/preview",
+                                    {"day": day, "meal_id": meal["id"], "start": calc["start"], "end": calc["end"]})
+                self.assertEqual(Decimal(preview["carbs_g"]), Decimal(calc["carbs_total"]), meal["id"])
+                self.assertEqual(Decimal(preview["rapid_units"]), Decimal(calc["rapid_units_in_window"]), meal["id"])
+                compared += 1
+        self.assertGreaterEqual(compared, 100)
 
 
 if __name__ == "__main__":

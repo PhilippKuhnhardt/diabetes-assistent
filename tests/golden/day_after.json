@@ -25,5 +25,11 @@
   }
  ],
  "timeline": [],
- "treatments": []
+ "treatments": [],
+ "window_limits": {
+  "lag_minutes": 120,
+  "lead_minutes": 120,
+  "max_minutes": 600,
+  "min_minutes": 30
+ }
 }
