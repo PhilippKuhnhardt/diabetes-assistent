@@ -566,6 +566,30 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(compute.call_count, 4)
         self.assertNotEqual(excluded, first)
 
+    def test_background_round_mirrors_today_and_stores_days_and_analysis_pages(self):
+        from app.services import background, summary
+        today = datetime.now(ZoneInfo("Europe/Berlin")).date()
+        self.assertIsNone(mirror.synced_at(today.isoformat()))
+        self.assertEqual(background.run_once(), {"errors": {}})
+        for day in (today, today - timedelta(days=1)):
+            self.assertIsNotNone(mirror.synced_at(day.isoformat()))
+        with db.connect() as connection:
+            days = connection.execute("SELECT COUNT(*) FROM day_results").fetchone()[0]
+            pages = {row[0] for row in connection.execute("SELECT key FROM summary_results")}
+        self.assertEqual(days, summary.history_days(30) + 1)
+        self.assertEqual(pages, {"1", "3", "7", "14", "30"})
+        # Stored results answer the next request without calculating again.
+        with patch("app.services.summary.compute_summary") as compute, \
+                patch("app.services.day_view.compute_day") as compute_day:
+            self.request("/api/summary?days=14")
+            compute.assert_not_called()
+            compute_day.assert_not_called()
+        with patch.dict(os.environ, {"APP_SYNC_MINUTES": "0"}):
+            self.assertIsNone(background.start())
+        with patch.dict(os.environ, {"APP_SYNC_MINUTES": "soon"}):
+            with self.assertRaises(SystemExit):
+                background.interval_minutes()
+
     def test_blocked_calculation_still_exposes_editable_window(self):
         FakeNightscout.entries = FakeNightscout.entries[:1] + [
             {"_id": "glucose-1405", "date": int(datetime(2026, 9, 23, 14, 5, tzinfo=timezone.utc).timestamp() * 1000),

@@ -13,7 +13,7 @@ from urllib.parse import parse_qs, urlparse
 from app import auth
 from app.common import json_safe
 from app.ingestion import nightscout
-from app.services import annotations, basal, day_view, diary, dose_help, read_api, settings, summary, sync
+from app.services import annotations, background, basal, day_view, diary, dose_help, read_api, settings, summary, sync
 from app.store import config, db
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -239,6 +239,8 @@ def main():
     port = int(os.environ.get("APP_PORT", "8765"))
     if os.environ.get("API_READ_KEY") and not auth.read_api_key():
         print(f"API_READ_KEY ist kürzer als {auth.MIN_API_KEY_LENGTH} Zeichen; Lese-API per Schlüssel bleibt aus", flush=True)
+    if background.start():
+        print(f"Hintergrund-Sync alle {background.interval_minutes()} Minuten", flush=True)
     print(f"Diabetes Analysis listening on {host}:{port}", flush=True)
     ThreadingHTTPServer((host, port), Handler).serve_forever()
 
