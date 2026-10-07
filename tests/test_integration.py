@@ -610,19 +610,10 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(error.exception.code, 400)
         error.exception.close()
 
-    def test_read_api_needs_a_key_and_returns_export_rows_as_json(self):
+    def test_read_api_needs_the_key_and_returns_export_rows_as_json(self):
         self.request("/api/treatment", method="POST", body={"kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4"})
         meal = self.request("/api/day?date=2026-09-23")["meals"][0]
-        created = self.request("/api/keys", method="POST", body={"name": "Claude Code"})
-        key = created["key"]
-        self.assertTrue(key.startswith("da_"))
-        self.assertEqual(created["scopes"], ["read"])
-        listed = self.request("/api/keys")["keys"]
-        self.assertEqual([(item["name"], item["prefix"]) for item in listed], [("Claude Code", key[:10])])
-        self.assertNotIn("key", listed[0])
-        with storage.connect() as db:
-            stored = db.execute("SELECT key_hash FROM api_keys").fetchone()["key_hash"]
-        self.assertNotEqual(stored, key)
+        key = "k" * 40
         os.environ["APP_PASSWORD"] = "secret"
 
         def get(path, token=None, method="GET"):
@@ -640,12 +631,17 @@ class IntegrationTests(unittest.TestCase):
             error.exception.close()
             return error.exception.code
 
+        # Without API_READ_KEY no key opens the API.
+        self.assertEqual(status("/api/v1/meals", key), 401)
+        os.environ["API_READ_KEY"] = "short"
+        self.assertEqual(status("/api/v1/meals", "short"), 401)
+        os.environ["API_READ_KEY"] = key
         self.assertEqual(status("/api/v1/meals"), 401)
-        self.assertEqual(status("/api/v1/meals", "da_wrong"), 401)
-        # A key only opens the read API, never the app or writes.
+        self.assertEqual(status("/api/v1/meals", "k" * 39), 401)
+        # The key only opens the read API, never the app or writes.
         self.assertEqual(status("/api/settings", key), 401)
-        self.assertEqual(status("/api/keys", key), 401)
-        self.assertEqual(status("/api/keys", key, method="POST"), 401)
+        self.assertEqual(status("/api/day?date=2026-09-23", key), 401)
+        self.assertEqual(status("/api/settings", key, method="POST"), 401)
         index = get("/api/v1", key)
         self.assertIn("/api/v1/meals", index["endpoints"])
         self.assertEqual(index["first_day"], "2026-09-23")
@@ -662,8 +658,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(status("/api/v1/unknown", key), 404)
         self.assertEqual(status("/api/v1/meals?days=0", key), 400)
         self.assertEqual(status("/api/v1/meals?from=gestern", key), 400)
-        self.assertIsNotNone(storage.api_keys()[0]["last_used_at"])
-        storage.delete_api_key(created["id"])
+        os.environ["API_READ_KEY"] = "n" * 40
         self.assertEqual(status("/api/v1/meals", key), 401)
 
     def test_basal_is_stored_locally_mirrored_as_note_and_ignored_by_meal_factor(self):

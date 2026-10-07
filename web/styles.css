@@ -118,16 +118,6 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .summary-card p { font-size: 12px; color: var(--muted); line-height: 1.6; }
 .settings-grid { display: grid; gap: 20px; align-items: stretch; }
 .settings-top { grid-template-columns: 2fr 1fr; }
-.api-panel { grid-column: 1 / -1; }
-.api-key-list:empty { display: none; }
-.api-key-list { margin: 12px 0 0; border-top: 1px solid var(--line); }
-.api-key-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
-.api-key-row span.hint { grid-column: 1; }
-.api-key-row button { grid-row: 1 / span 2; grid-column: 2; }
-.api-key-form { display: flex; gap: 10px; align-items: end; margin-top: 14px; }
-.api-key-form label { margin: 0; flex: 0 1 260px; }
-.api-key-new { margin-top: 12px; }
-.api-key-copy { display: flex; gap: 8px; }
 .settings-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .settings-grid .panel { display: flex; flex-direction: column; }
 .settings-grid .panel > button { align-self: flex-start; margin-top: auto; }
@@ -573,4 +563,3 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .entry-card .inline-unit { margin-bottom: 10px; }
 .entry-card .entry-day-type { margin: 0; }
 .entry-card > .entry-chips:last-child, .entry-card > .inline-unit:last-child { margin-bottom: 0; }
-.api-key-form button { white-space: nowrap; }
