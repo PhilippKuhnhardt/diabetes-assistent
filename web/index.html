@@ -68,41 +68,46 @@
                 <button type="button" class="entry-mode" data-entry-mode="basal" aria-pressed="false">Basal</button>
               </div>
               <input type="hidden" name="kind" id="entry-kind" value="meal">
-              <div id="entry-meal-fields">
-                <div class="field-pair">
-                  <label id="entry-carbs-field">Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"></label>
-                  <label id="entry-insulin-field">Insulin <span>IE</span><input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
-                </div>
+              <div class="entry-chips">
+                <button type="button" id="entry-time-chip" class="chip" aria-controls="entry-time-field" aria-expanded="false">Zeit: jetzt</button>
+                <button type="button" id="entry-assign-chip" class="chip" title="Zuordnung umschalten" hidden></button>
+                <label id="entry-basal-option" class="chip chip-toggle" hidden><input type="checkbox" name="with_basal" checked> <span id="entry-basal-hint"></span></label>
               </div>
+              <label id="entry-time-field" hidden>Zeitpunkt (24 h)<input type="time" name="at" id="entry-time" step="60" required></label>
+              <!-- Cards follow the entry flow: meal, outside factors, dose (recommendation and own IE). -->
+              <section id="entry-meal-fields" class="entry-card" aria-label="Essen">
+                <p class="entry-card-title">Essen</p>
+                <label id="entry-carbs-field">Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"></label>
+                <div id="entry-quality" class="entry-chips entry-quality-row" hidden>
+                  <span class="certainty-slider"><input type="range" name="certainty_level" min="0" max="2" step="1" value="1" aria-label="KH-Sicherheit: unsicher, halbwegs sicher, gewogen"><output class="certainty-label">KH halbwegs</output></span>
+                  <label class="chip chip-toggle" title="Fett- oder eiweißreiche Mahlzeit"><input type="checkbox" name="fat_protein"> <span>Fettreich</span></label>
+                </div>
+              </section>
               <label id="entry-basal-field" hidden>Basal <span>IE</span><input name="basal_units" type="number" min="0.5" max="100" step="0.5" inputmode="decimal" disabled></label>
               <label id="entry-sport-field" hidden>Sportart
                 <select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select>
               </label>
               <label id="entry-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
-              <div class="entry-chips">
-                <button type="button" id="entry-time-chip" class="chip" aria-controls="entry-time-field" aria-expanded="false">Zeit: jetzt</button>
-                <button type="button" id="entry-assign-chip" class="chip" title="Zuordnung umschalten" hidden></button>
-                <button type="button" id="entry-note-chip" class="chip" aria-controls="entry-note-field" aria-expanded="false">+ Notiz</button>
-                <label id="entry-basal-option" class="chip chip-toggle" hidden><input type="checkbox" name="with_basal" checked> <span id="entry-basal-hint"></span></label>
-                <div id="entry-quality" class="entry-quality" hidden>
-                  <span class="chip-group" role="radiogroup" aria-label="KH-Sicherheit"><label class="chip chip-toggle" title="KH gewogen"><input type="radio" name="carbs_certainty" value="weighed"> <span>Gewogen</span></label><label class="chip chip-toggle" title="Gericht bekannt oder FDDB-KI-Auswertung"><input type="radio" name="carbs_certainty" value="known"> <span>Halbwegs sicher</span></label><label class="chip chip-toggle" title="Keine ernsthafte Schätzung"><input type="radio" name="carbs_certainty" value="unsure"> <span>KH unsicher</span></label></span>
-                  <label class="chip chip-toggle"><input type="checkbox" name="fat_protein"> <span>Fett-/eiweißreich</span></label>
-                </div>
-                <div id="entry-sport-option" class="entry-sport-option" hidden>
+              <section id="entry-influences" class="entry-card" aria-label="Einflüsse" hidden>
+                <p class="entry-card-title">Einflüsse</p>
+                <div id="entry-sport-option" class="entry-chips entry-sport-row" hidden>
                   <label class="chip chip-toggle"><input type="checkbox" name="consider_sport"> <span id="entry-sport-hint"></span></label>
                 </div>
-              </div>
-              <label id="entry-time-field" hidden>Zeitpunkt (24 h)<input type="time" name="at" id="entry-time" step="60" required></label>
-              <label id="entry-sport-effect-field" hidden>Geschätzte BZ-Wirkung durch Sport <span>mg/dL, − senkt, + hebt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1"></label>
-              <div id="entry-day-type" class="entry-day-type" hidden>
-                <div class="entry-switch" role="group" aria-label="Tagesart für das Frühstück">
-                  <button type="button" class="day-type-option" data-day-type="work" aria-pressed="false">Arbeitstag</button>
-                  <button type="button" class="day-type-option" data-day-type="free" aria-pressed="false">Freier Tag</button>
+                <label id="entry-sport-effect-field" class="inline-unit" hidden><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1" aria-label="BZ-Wirkung durch Sport in mg/dL"><span>mg/dL BZ-Wirkung, − senkt</span></label>
+                <div id="entry-day-type" class="entry-day-type" hidden>
+                  <div class="entry-switch" role="group" aria-label="Tagesart für das Frühstück">
+                    <button type="button" class="day-type-option" data-day-type="work" aria-pressed="false">Arbeitstag</button>
+                    <button type="button" class="day-type-option" data-day-type="free" aria-pressed="false">Freier Tag</button>
+                  </div>
+                  <p id="entry-day-type-hint" class="hint"></p>
                 </div>
-                <p id="entry-day-type-hint" class="hint"></p>
-              </div>
-              <div id="dose-result" class="help-result" aria-live="polite"></div>
+                </section>
+              <section id="entry-dose" class="entry-card entry-dose-card" aria-label="Dosis">
+                <div id="dose-result" class="help-result" aria-live="polite"></div>
+                <label id="entry-insulin-field">Eigene IE<input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
+              </section>
               <label id="entry-note-field" hidden>Notiz <span>optional</span><input name="notes" type="text" maxlength="500"></label>
+              <div class="entry-chips"><button type="button" id="entry-note-chip" class="chip quiet-chip" aria-controls="entry-note-field" aria-expanded="false">+ Notiz</button></div>
               <div class="form-actions entry-actions"><button class="primary" type="submit" id="entry-submit">In Nightscout speichern</button></div>
             </form>
           </section>
@@ -269,7 +274,7 @@
         <label>Insulin <span>IE</span><input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
       </div>
       <div id="edit-quality" class="entry-chips entry-quality">
-        <span class="chip-group" role="radiogroup" aria-label="KH-Sicherheit"><label class="chip chip-toggle" title="KH gewogen"><input type="radio" name="carbs_certainty" value="weighed"> <span>Gewogen</span></label><label class="chip chip-toggle" title="Gericht bekannt oder FDDB-KI-Auswertung"><input type="radio" name="carbs_certainty" value="known"> <span>Halbwegs sicher</span></label><label class="chip chip-toggle" title="Keine ernsthafte Schätzung"><input type="radio" name="carbs_certainty" value="unsure"> <span>KH unsicher</span></label></span>
+        <span class="certainty-slider"><input type="range" name="certainty_level" min="0" max="2" step="1" value="1" aria-label="KH-Sicherheit: unsicher, halbwegs sicher, gewogen"><output class="certainty-label">KH halbwegs</output></span>
         <label class="chip chip-toggle"><input type="checkbox" name="fat_protein"> <span>Fett-/eiweißreich</span></label>
       </div>
       <label id="edit-sport-field" hidden>Sportart<select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select></label>
