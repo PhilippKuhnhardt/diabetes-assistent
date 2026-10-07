@@ -59,6 +59,10 @@ Die Analyse zeigt Einzelwerte, Mittelwert, Median, beobachteten Bereich, bei min
 
 Die Berechnung setzt vollständige KH-Wirkung bis zum Endpunkt, vollständige rechnerische Wirkung auch später IE, keinen weiteren Hintergrundtrend und den bestätigten Sporteffekt voraus. Diese Annahmen sind keine Beschreibung des tatsächlichen Wirkverlaufs.
 
+## Datenexport
+
+In **Einstellungen → Datenexport** lädt **Daten exportieren** eine ZIP mit allen lokal gespeicherten Tagen (`/api/export`, optional `?days=N`). Sie enthält `meals.csv` (eine Zeile je Hauptmahlzeit mit Fenster, BZ Start/Ende, KH, IE, KH × KF, Sport, Ausklammerung und Faktor), `window_events.csv` (alle KH und IE, die ins Fenster einer Mahlzeit zählen), `entries.csv` (CGM), `treatments.csv` (alle Behandlungen), `profile.json` (Einstellungen und Nightscout-Profil) und eine `LIESMICH.md` mit den Spalten. Der Export liest nur SQLite, fragt Nightscout nicht ab und erfordert die normale App-Anmeldung. Er dient zur Weiterentwicklung der Vorhersageformel; die Datei gehört nicht ins Repository.
+
 ## Entwicklung
 
 Laufzeit: Python-Standardbibliothek, HTML/CSS/JavaScript, SQLite. Relevante Module: `app/nightscout.py` für die Nightscout-Schnittstelle, `app/storage.py` für Persistenz, `app/episodes.py` für Ereignisse und Mahlzeitenerkennung, `app/calculation.py` für Faktoren, `app/dosing.py` für die KH-/Korrekturhilfe, `app/auth.py` für die Browser-Anmeldung. `app/server.py` stellt API und statische Dateien bereit.

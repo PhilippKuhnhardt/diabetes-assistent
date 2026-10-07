@@ -47,6 +47,8 @@ h1 { margin: 0; font-size: clamp(28px, 3vw, 38px); font-weight: 680; letter-spac
 .day-nav { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .day-nav button, .day-nav input { min-height: 40px; }
 .day-nav button, button:not(.tab):not(.primary) { border: 1px solid var(--line); background: white; color: var(--ink); border-radius: 8px; padding: 9px 13px; font-weight: 600; }
+a.button { display: inline-block; border: 1px solid var(--line); background: white; color: var(--ink); border-radius: 8px; padding: 9px 13px; font-weight: 600; text-decoration: none; }
+a.button:focus-visible { outline: 3px solid #7bb995; outline-offset: 2px; }
 .day-nav .quiet { font-size: 12px; }
 input, select { width: 100%; background: white; color: var(--ink); border: 1px solid #cddbd2; border-radius: 8px; min-height: 42px; padding: 9px 11px; }
 .day-nav input { width: auto; font-size: 13px; font-weight: 600; }
