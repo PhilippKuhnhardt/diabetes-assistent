@@ -1,6 +1,6 @@
 # Rechenwege
 
-Die Oberfläche zeigt Ergebnisse, Eingaben und Blockierungsgründe. Formeln, Zwischenschritte und Modellannahmen stehen hier. Maßgeblich für die Implementierung sind `app/dosing.py`, `app/calculation.py`, `app/server.py` und `app/sensitivity.py`.
+Die Oberfläche zeigt Ergebnisse, Eingaben und Blockierungsgründe. Formeln, Zwischenschritte und Modellannahmen stehen hier. Maßgeblich für die Implementierung sind `app/dosing.py`, `app/calculation.py` und `app/server.py`.
 
 ## Daten und Einheiten
 
@@ -78,8 +78,6 @@ Delta = gemessene Glukoseänderung - erwartete Glukoseänderung
 Manuell ausgeklammerte Mahlzeiten bleiben in der Liste, gehen aber nicht in die Kennzahlen ein. Der Mittelwert und Median verwenden berechenbare, nicht ausgeklammerte Faktoren. Die mittleren 50 % werden ab fünf solchen Werten als Quartile mit linearer Interpolation an den Positionen `(n - 1) × 0,25` und `(n - 1) × 0,75` gezeigt. Ab sechs Werten wird der Median der letzten drei mit dem der drei davor verglichen.
 
 Die Markierung „Stark abweichend“ erscheint ab drei berechenbaren Werten derselben Mahlzeitenart. Frühstück wird nach Arbeit und Frei getrennt. Für Wert `x`, Median `m` und Median der absoluten Abweichungen `MAD` gilt `|x - m| > max(3 × MAD, 0,5 × m)`. Auch bereits ausgeklammerte Werte gehen in diesen Vergleich ein. Die Markierung klammert selbst nichts aus.
-
-Der Korrekturfaktorvergleich betrachtet je Zeitabschnitt nur nicht ausgeklammerte Mahlzeiten mit einer berechenbaren Abweichung. Die Exposition eines Abschnitts ist `Σ(KH / I:C) - Σ(IE)`. Der angezeigte Kandidat minimiert die Summe der absoluten modellierten Abweichungen: gewichteter Median von `aktueller KF + Delta / Exposition` mit Gewicht `|Exposition|`. Der I:C-Zeitplan bleibt dabei fest. Der Kandidat wird nicht nach Nightscout geschrieben.
 
 Für die Nachtübersicht beginnt das Fenster drei Stunden nach der letzten erfassten schnell wirksamen Injektion zwischen Abendessen und folgendem Frühstück. Es endet beim Frühstück. `Veränderung = CGM(Ende) - CGM(Start)`; der Minimalwert ist das Minimum der Messwerte im Fenster einschließlich interpolierter Randwerte. Drei Stunden sind nur die Auswertungsgrenze des Modells.
 
