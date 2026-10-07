@@ -511,6 +511,31 @@ class IntegrationTests(unittest.TestCase):
         self.assertIsNotNone(fixed["factor_units_per_ke"])
         self.assertEqual(Decimal(fixed["g3"]), Decimal(130))
 
+    def test_quality_marks_are_stored_in_nightscout_and_shown_per_meal(self):
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4", "notes": "Pizza",
+            "carbs_unsure": True, "fat_protein": True,
+        })
+        notes = FakeNightscout.treatments[0]["notes"]
+        self.assertIn("[DAQ:unsure]", notes)
+        self.assertIn("[DAQ:fat]", notes)
+        day = self.request("/api/day?date=2026-09-23")
+        self.assertEqual(day["meals"][0]["quality"], {"carbs_unsure": True, "fat_protein": True})
+        entry = next(item for item in day["timeline"] if item["kind"] == "meal")
+        self.assertEqual(entry["notes"], "Pizza")
+        self.assertTrue(entry["carbs_unsure"])
+        self.request("/api/treatment", method="POST", body={
+            "id": entry["id"], "original_day": "2026-09-23", "kind": "meal", "at": MEAL_AT,
+            "carbs": "40", "insulin": "4", "notes": "Pizza", "carbs_unsure": False, "fat_protein": True,
+        })
+        self.assertNotIn("[DAQ:unsure]", FakeNightscout.treatments[0]["notes"])
+        meal = self.request("/api/day?date=2026-09-23")["meals"][0]
+        self.assertEqual(meal["quality"], {"carbs_unsure": False, "fat_protein": True})
+        with urllib.request.urlopen(self.base + "/api/export") as response:
+            archive = zipfile.ZipFile(io.BytesIO(response.read()))
+        row = next(csv.DictReader(io.StringIO(archive.read("meals.csv").decode())))
+        self.assertEqual((row["carbs_unsure"], row["fat_protein"]), ("False", "True"))
+
     def test_export_zip_contains_meals_glucose_treatments_and_profile(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",
