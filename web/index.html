@@ -85,7 +85,7 @@
                 <button type="button" id="entry-note-chip" class="chip" aria-controls="entry-note-field" aria-expanded="false">+ Notiz</button>
                 <label id="entry-basal-option" class="chip chip-toggle" hidden><input type="checkbox" name="with_basal" checked> <span id="entry-basal-hint"></span></label>
                 <div id="entry-quality" class="entry-quality" hidden>
-                  <label class="chip chip-toggle" title="KH nur geschätzt oder Mahlzeit chaotisch erfasst"><input type="checkbox" name="carbs_unsure"> <span>KH unsicher</span></label>
+                  <span class="chip-group" role="radiogroup" aria-label="KH-Sicherheit"><label class="chip chip-toggle" title="KH gewogen"><input type="radio" name="carbs_certainty" value="weighed"> <span>Gewogen</span></label><label class="chip chip-toggle" title="Gericht bekannt oder FDDB-KI-Auswertung"><input type="radio" name="carbs_certainty" value="known"> <span>Halbwegs sicher</span></label><label class="chip chip-toggle" title="Keine ernsthafte Schätzung"><input type="radio" name="carbs_certainty" value="unsure"> <span>KH unsicher</span></label></span>
                   <label class="chip chip-toggle"><input type="checkbox" name="fat_protein"> <span>Fett-/eiweißreich</span></label>
                 </div>
                 <div id="entry-sport-option" class="entry-sport-option" hidden>
@@ -269,7 +269,7 @@
         <label>Insulin <span>IE</span><input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
       </div>
       <div id="edit-quality" class="entry-chips entry-quality">
-        <label class="chip chip-toggle"><input type="checkbox" name="carbs_unsure"> <span>KH unsicher</span></label>
+        <span class="chip-group" role="radiogroup" aria-label="KH-Sicherheit"><label class="chip chip-toggle" title="KH gewogen"><input type="radio" name="carbs_certainty" value="weighed"> <span>Gewogen</span></label><label class="chip chip-toggle" title="Gericht bekannt oder FDDB-KI-Auswertung"><input type="radio" name="carbs_certainty" value="known"> <span>Halbwegs sicher</span></label><label class="chip chip-toggle" title="Keine ernsthafte Schätzung"><input type="radio" name="carbs_certainty" value="unsure"> <span>KH unsicher</span></label></span>
         <label class="chip chip-toggle"><input type="checkbox" name="fat_protein"> <span>Fett-/eiweißreich</span></label>
       </div>
       <label id="edit-sport-field" hidden>Sportart<select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select></label>

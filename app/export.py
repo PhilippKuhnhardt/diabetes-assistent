@@ -14,13 +14,13 @@ MEAL_COLUMNS = [
     "manual_window", "excluded", "sport_status", "sport_effect_mgdl", "g0_mgdl", "g_end_mgdl",
     "delta_mgdl", "carbs_meal_g", "carbs_total_g", "extra_carb_count", "carbs_times_isf",
     "rapid_units", "insulin_effect_mgdl", "meal_isf", "factor_ie_per_ke", "blocked_reason",
-    "carbs_unsure", "fat_protein",
+    "carbs_certainty", "fat_protein",
 ]
 WINDOW_EVENT_COLUMNS = ["meal_id", "kind", "at", "carbs_g", "units", "isf", "event_type"]
 ENTRY_COLUMNS = ["at", "sgv"]
 BASAL_COLUMNS = ["id", "at", "units", "nightscout_synced", "notes"]
 TREATMENT_COLUMNS = ["id", "at", "eventType", "carbs", "insulin", "basal_units", "duration",
-                     "sport_type", "role", "meal", "episode_id", "carbs_unsure", "fat_protein", "notes"]
+                     "sport_type", "role", "meal", "episode_id", "carbs_certainty", "fat_protein", "notes"]
 
 README = """# Datenexport Diabetes-Tagebuch
 
@@ -32,8 +32,10 @@ profile.json).
   + sport_effect_mgdl + insulin_effect_mgdl) / carbs_times_isf. sport_effect_mgdl ist positiv
   für eine bestätigte BZ-Senkung durch Sport. g_end_mgdl ist der BZ am Endpunkt.
   excluded = manuell ausgeklammert. blocked_reason ist gesetzt, wenn kein Faktor vorliegt.
-  carbs_unsure / fat_protein: mindestens ein KH-Eintrag im Fenster war als „KH unsicher“
-  bzw. „fett-/eiweißreich“ markiert.
+  carbs_certainty: KH-Sicherheit, die unsicherste Stufe der markierten KH-Einträge im Fenster:
+  weighed = gewogen, known = Gericht bekannt oder FDDB-KI-Auswertung, unsure = keine ernsthafte
+  Schätzung, leer = nicht angegeben. fat_protein: mindestens ein KH-Eintrag war als
+  „fett-/eiweißreich“ markiert.
 - window_events.csv: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.
 - entries.csv: alle gespiegelten CGM-Werte in mg/dL.
 - treatments.csv: alle gespiegelten Nightscout-Behandlungen inklusive Sport (Basal aus der App
