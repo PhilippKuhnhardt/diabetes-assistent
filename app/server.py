@@ -10,11 +10,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from app import auth, nightscout
-from app.store import config, db
+from app import auth
 from app.common import json_safe
-from app.services import (annotations, basal, day_view, diary, dose_help, read_api, settings, summary,
-                          sync)
+from app.ingestion import nightscout
+from app.services import annotations, basal, day_view, diary, dose_help, read_api, settings, summary, sync
+from app.store import config, db
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 MAX_BODY = 64 * 1024

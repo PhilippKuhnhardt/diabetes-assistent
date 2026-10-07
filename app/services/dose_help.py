@@ -6,10 +6,10 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from app import dosing, forecast
-from app.store import config, marks, mirror
-from app.analysis.stats import median, quartile
 from app.common import parse_instant
 from app.services import day_view, factors
+from app.store import config, marks, mirror
+from app.analysis.stats import median, quartile
 
 
 def dose_help(payload: dict) -> dict:
