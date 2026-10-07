@@ -86,7 +86,7 @@ Die API liest wie der Export nur SQLite und fragt Nightscout nicht ab. Ein spät
 
 ## Entwicklung
 
-Laufzeit: Python-Standardbibliothek, HTML/CSS/JavaScript, SQLite. Relevante Module: `app/nightscout.py` für die Nightscout-Schnittstelle, `app/storage.py` für Persistenz, `app/episodes.py` für Ereignisse und Mahlzeitenerkennung, `app/calculation.py` für Faktoren, `app/dosing.py` für die KH-/Korrekturhilfe, `app/auth.py` für die Browser-Anmeldung. `app/server.py` stellt API und statische Dateien bereit.
+Laufzeit: Python-Standardbibliothek, HTML/CSS/JavaScript, SQLite. Relevante Module: `app/nightscout.py` für die Nightscout-Schnittstelle, `app/storage.py` für Persistenz, `app/episodes.py` für Ereignisse und Mahlzeitenerkennung, `app/calculation.py` für Faktoren, `app/dosing.py` für die KH-/Korrekturhilfe, `app/forecast.py` für den berechneten Faktor und die Rückblick-Matrix, `app/auth.py` für die Browser-Anmeldung. `app/analysis/` enthält weitere reine Auswertungen (Statistik, Nacht), `app/services/` die Anwendungsfälle hinter den Endpunkten (Tag, Eintrag, Basal, Empfehlung, Analyse, Lese-API, Einstellungen, eigene Markierungen, Nightscout-Sync). `app/server.py` ist nur die HTTP-Schicht: Anmeldung, Routen-Tabelle, JSON und statische Dateien.
 
 Prüfen mit:
 

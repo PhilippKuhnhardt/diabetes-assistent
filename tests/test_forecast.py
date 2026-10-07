@@ -2,7 +2,8 @@ import unittest
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
-from app import forecast, server
+from app import forecast
+from app.analysis import stats
 
 TODAY = date(2026, 10, 4)
 KEY = ("dinner", None)
@@ -23,7 +24,7 @@ class WeightedQuantileTests(unittest.TestCase):
         values = [Decimal(value) for value in ("0.8", "1.0", "1.1", "1.2", "1.5")]
         for fraction in ("0.25", "0.375", "0.5", "0.75"):
             self.assertEqual(forecast.weighted_quantile([(value, Decimal(1)) for value in values], Decimal(fraction)),
-                             server.quartile(values, Decimal(fraction)))
+                             stats.quartile(values, Decimal(fraction)))
 
     def test_one_extreme_recent_day_moves_the_suggestion_by_at_most_one_place(self):
         history = [point(age, "1.0") for age in range(2, 12)] + [point(age, "1.2") for age in range(12, 20)]

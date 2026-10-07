@@ -17,7 +17,8 @@ from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 from app import forecast, storage
-from app.server import Handler, night_analysis
+from app.analysis.night import night_analysis
+from app.server import Handler
 
 
 MEAL_AT = "2026-09-23T10:00:00Z"
@@ -221,7 +222,7 @@ class IntegrationTests(unittest.TestCase):
             "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 150}],
             "treatments": [],
         }
-        with patch("app.server.day_payload", return_value=current_day):
+        with patch("app.services.day_view.day_payload", return_value=current_day):
             suggestion = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
         self.assertEqual(Decimal(suggestion["target_mgdl"]), Decimal(100))
         self.assertEqual(Decimal(suggestion["cautious_target_mgdl"]), Decimal(140))
@@ -528,8 +529,8 @@ class IntegrationTests(unittest.TestCase):
         self.request("/api/settings", method="POST", body={"auto_method": "surcharge"})
         now = datetime.now(timezone.utc)
         current_day = {"entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 150}], "treatments": []}
-        with patch("app.server.day_payload", return_value=current_day), \
-                patch("app.server.forecast.predict_method", return_value={"count": 5, "units_per_ke": Decimal(1)}):
+        with patch("app.services.day_view.day_payload", return_value=current_day), \
+                patch("app.forecast.predict_method", return_value={"count": 5, "units_per_ke": Decimal(1)}):
             meal = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
             snack = self.request("/api/dose-help", method="POST", body={"carbs": "20", "snack": True})
         # 20 g is half of the full-surcharge size: 20 mg/dL at the current KF (50 or 45 by clock).
@@ -817,7 +818,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(result["settings"]["ic_schedule"][0]["grams_per_unit"], "12.5")
 
     def test_analysis_accepts_one_day(self):
-        with patch("app.server.day_payload", return_value={"meals": []}):
+        with patch("app.services.day_view.day_payload", return_value={"meals": []}):
             summary = self.request("/api/summary?days=1")
         self.assertEqual(summary["days"], 1)
         self.assertEqual(summary["sport_analysis"]["sessions"], [])
@@ -832,7 +833,7 @@ class IntegrationTests(unittest.TestCase):
                         {"at": "2026-09-23T13:00:00+02:00", "carbs": "10", "isf": "45"},
                     ],
                 }}
-        with patch("app.server.day_payload", side_effect=then_empty([{"meals": [meal]}])):
+        with patch("app.services.day_view.day_payload", side_effect=then_empty([{"meals": [meal]}])):
             row = self.request("/api/summary?days=7")["groups"]["lunch"]["calculations"][0]
         self.assertEqual(Decimal(row["expected_delta_mgdl"]), Decimal("27.5"))
         self.assertEqual(Decimal(row["deviation_mgdl"]), Decimal("12.5"))
@@ -852,7 +853,7 @@ class IntegrationTests(unittest.TestCase):
         blocked = {"id": "blocked", "meal": "dinner", "at": at,
                    "calculation": {**calculated["calculation"], "factor_units_per_ke": None,
                                    "reason": "CGM-Lücke"}}
-        with patch("app.server.day_payload", side_effect=then_empty([{"meals": [calculated, blocked]}])):
+        with patch("app.services.day_view.day_payload", side_effect=then_empty([{"meals": [calculated, blocked]}])):
             rows = self.request("/api/summary?days=7")["groups"]["dinner"]["calculations"]
         self.assertEqual(Decimal(rows[0]["expected_delta_mgdl"]), Decimal("-3"))
         self.assertEqual(Decimal(rows[0]["deviation_mgdl"]), Decimal("39.8"))
@@ -1018,7 +1019,7 @@ class IntegrationTests(unittest.TestCase):
         def payload(day, refresh=False):
             return {"meals": meals_by_day.get(day, [])}
 
-        with patch("app.server.day_payload", side_effect=payload):
+        with patch("app.services.day_view.day_payload", side_effect=payload):
             initial = self.request("/api/summary?days=7")["groups"]["breakfast"]
             self.assertEqual(initial["by_day_type"]["work"]["mean_units_per_ke"], "1")
             self.assertEqual(initial["by_day_type"]["free"]["mean_units_per_ke"], "2")
@@ -1094,7 +1095,7 @@ class IntegrationTests(unittest.TestCase):
             return {"meals": [{"id": "b-" + day, "meal": "breakfast",
                                "calculation": {"factor_units_per_ke": factor}}] if factor else []}
 
-        with patch("app.server.day_payload", side_effect=payload):
+        with patch("app.services.day_view.day_payload", side_effect=payload):
             self.request("/api/analysis/day-type", method="POST",
                          body={"day": local_today.isoformat(), "day_type": "work"})
             work = self.request("/api/dose-help", method="POST", body={"carbs": "30"})
@@ -1145,7 +1146,7 @@ class IntegrationTests(unittest.TestCase):
                 {"id": "l-" + day, "meal": "lunch", "calculation": {"factor_units_per_ke": "9"}},
             ] if factor else []}
 
-        with patch("app.server.day_payload", side_effect=payload):
+        with patch("app.services.day_view.day_payload", side_effect=payload):
             result = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
             storage.set_analysis_exclusion("d-" + past[0], True)
             storage.set_analysis_exclusion("d-" + past[1], True)
@@ -1182,7 +1183,7 @@ class IntegrationTests(unittest.TestCase):
                                "calculation": {"factor_units_per_ke": factor,
                                                "ratio_g_per_unit": "10"}}] if factor else []}
 
-        with patch("app.server.day_payload", side_effect=payload):
+        with patch("app.services.day_view.day_payload", side_effect=payload):
             summary = self.request("/api/summary?days=3")
         dinner = summary["groups"]["dinner"]
         expected = forecast.weighted_quantile(
@@ -1218,7 +1219,7 @@ class IntegrationTests(unittest.TestCase):
                 "ratio_g_per_unit": str(10 / float(factor)),
             },
         } for index, factor in enumerate(factors)]
-        with patch("app.server.day_payload", side_effect=then_empty([{"meals": meals}])):
+        with patch("app.services.day_view.day_payload", side_effect=then_empty([{"meals": meals}])):
             group = self.request("/api/summary?days=14")["groups"]["lunch"]
         self.assertEqual(group["count"], 5)
         self.assertEqual(group["median_units_per_ke"], "1.2")
@@ -1231,13 +1232,13 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(group["strong_outlier_count"], 1)
         self.assertEqual([item["strong_outlier"] for item in group["calculations"]], [False, False, False, False, True])
 
-        with patch("app.server.day_payload", return_value={"meals": meals}):
+        with patch("app.services.day_view.day_payload", return_value={"meals": meals}):
             response = self.request("/api/analysis/exclusion", method="POST", body={
                 "meal_id": "meal-4", "day": "2026-09-23", "excluded": True,
             })
         self.assertTrue(response["excluded"])
         self.assertIn("meal-4", storage.analysis_exclusions())
-        with patch("app.server.day_payload", side_effect=then_empty([{"meals": meals}])):
+        with patch("app.services.day_view.day_payload", side_effect=then_empty([{"meals": meals}])):
             filtered = self.request("/api/summary?days=14")["groups"]["lunch"]
         self.assertEqual(filtered["count"], 4)
         self.assertEqual(filtered["excluded_count"], 1)
@@ -1247,19 +1248,19 @@ class IntegrationTests(unittest.TestCase):
         self.assertTrue(filtered["calculations"][-1]["excluded"])
         self.assertTrue(filtered["calculations"][-1]["strong_outlier"])
 
-        with patch("app.server.day_payload", return_value={"meals": meals}):
+        with patch("app.services.day_view.day_payload", return_value={"meals": meals}):
             self.request("/api/analysis/exclusion", method="POST", body={
                 "meal_id": "meal-4", "day": "2026-09-23", "excluded": False,
             })
         self.assertNotIn("meal-4", storage.analysis_exclusions())
 
-        with patch("app.server.day_payload", side_effect=then_empty([{"meals": meals[:4]}])):
+        with patch("app.services.day_view.day_payload", side_effect=then_empty([{"meals": meals[:4]}])):
             small_group = self.request("/api/summary?days=14")["groups"]["lunch"]
         self.assertIsNone(small_group["q1_units_per_ke"])
         self.assertIsNone(small_group["q3_units_per_ke"])
         self.assertEqual(float(small_group["median_units_per_ke"]), 1.15)
 
-        with patch("app.server.day_payload", side_effect=then_empty([{"meals": meals[:2]}])):
+        with patch("app.services.day_view.day_payload", side_effect=then_empty([{"meals": meals[:2]}])):
             sparse_group = self.request("/api/summary?days=14")["groups"]["lunch"]
         self.assertEqual(sparse_group["strong_outlier_count"], 0)
 
