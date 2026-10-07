@@ -99,9 +99,15 @@ def collect(first_day: date, last_day: date, day_payload: Callable[[str], dict],
                 window_events.append({"meal_id": meal["id"], "kind": "insulin", "at": _local(item["at"], zone),
                                       "units": item["units"], "isf": item["isf"],
                                       "event_type": item.get("event_type") or item.get("role")})
-        entries.extend({"at": _local(item["at"], zone), "sgv": item["sgv"]} for item in payload.get("entries", []))
-        treatments.extend({**item, "at": _local(item["at"], zone)} for item in payload.get("treatments", []))
-        basal.extend({**item, "at": _local(item["at"], zone)} for item in payload.get("basal", []))
+        # A day payload also covers parts of the neighbouring days; keep only the rows of this
+        # local day so each reading or treatment appears once across a multi-day range.
+        own = payload["day"]
+        entries.extend(row for row in ({"at": _local(item["at"], zone), "sgv": item["sgv"]}
+                                       for item in payload.get("entries", [])) if row["at"][:10] == own)
+        treatments.extend(row for row in ({**item, "at": _local(item["at"], zone)}
+                                          for item in payload.get("treatments", [])) if row["at"][:10] == own)
+        basal.extend(row for row in ({**item, "at": _local(item["at"], zone)}
+                                     for item in payload.get("basal", [])) if row["at"][:10] == own)
         day += timedelta(days=1)
     return {"meals": meals, "window_events": window_events, "entries": entries,
             "treatments": treatments, "basal": basal}
