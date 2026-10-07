@@ -14,7 +14,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
 
-from app import auth, calculation, dosing, episodes, forecast, glucose, nightscout, sensitivity, sport_analysis, storage
+from app import auth, calculation, dosing, episodes, export, forecast, glucose, nightscout, sensitivity, sport_analysis, storage
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 MAX_BODY = 64 * 1024
@@ -703,6 +703,31 @@ class Handler(BaseHTTPRequestHandler):
                 start, end = local_day_range(today, settings["timezone"])
                 nightscout.fetch_range(start, end)
                 self._response(200, {"message": "Nightscout-Verbindung und aktuelles Profil erfolgreich geprüft"})
+                return
+            if path == "/api/export":
+                # Read-only snapshot of the local mirror; no Nightscout requests.
+                params = parse_qs(urlparse(self.path).query)
+                _, settings = storage.get_settings()
+                zone = ZoneInfo(settings["timezone"])
+                today = datetime.now(zone).date()
+                first_at = storage.first_cached_at()
+                first_day = min(today, parse_instant(first_at).astimezone(zone).date()) if first_at else today
+                if "days" in params:
+                    days = int(params["days"][0])
+                    if not 1 <= days <= 3650:
+                        raise ValueError("Ungültiger Zeitraum")
+                    first_day = max(first_day, today - timedelta(days=days - 1))
+                data = export.build_zip(first_day, today, lambda day: day_payload(day, refresh=False),
+                                        storage.analysis_exclusions(), settings)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/zip")
+                self.send_header("Content-Disposition",
+                                 f'attachment; filename="diabetes-export-{today.isoformat()}.zip"')
+                self.send_header("Content-Length", str(len(data)))
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.end_headers()
+                self.wfile.write(data)
                 return
             if path == "/api/summary":
                 params = parse_qs(urlparse(self.path).query)

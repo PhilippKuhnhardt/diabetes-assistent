@@ -295,6 +295,14 @@ def cached_between(start: datetime, end: datetime) -> tuple[list[dict], list[dic
     return [json.loads(row["payload"]) for row in entries], [json.loads(row["payload"]) for row in treatments]
 
 
+def first_cached_at() -> str | None:
+    """Earliest mirrored CGM reading or treatment (UTC ISO), or None for an empty mirror."""
+    with connect() as db:
+        row = db.execute("SELECT MIN(at) AS at FROM (SELECT MIN(at) AS at FROM entries "
+                         "UNION ALL SELECT MIN(at) FROM treatments)").fetchone()
+    return row["at"] if row else None
+
+
 def delete_cached_treatment(record_id: str) -> None:
     with connect() as db:
         db.execute("DELETE FROM treatments WHERE id=?", (record_id,))
