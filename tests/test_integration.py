@@ -571,7 +571,7 @@ class IntegrationTests(unittest.TestCase):
         with urllib.request.urlopen(self.base + "/api/export") as response:
             self.assertEqual(response.headers["Content-Type"], "application/zip")
             archive = zipfile.ZipFile(io.BytesIO(response.read()))
-        self.assertEqual(sorted(archive.namelist()), ["LIESMICH.md", "entries.csv", "meals.csv",
+        self.assertEqual(sorted(archive.namelist()), ["LIESMICH.md", "basal.csv", "entries.csv", "meals.csv",
                                                       "profile.json", "treatments.csv", "window_events.csv"])
         meals = list(csv.DictReader(io.StringIO(archive.read("meals.csv").decode())))
         self.assertEqual(len(meals), 1)
@@ -592,6 +592,84 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/export?days=0")
         self.assertEqual(error.exception.code, 400)
         error.exception.close()
+
+    def test_basal_is_stored_locally_mirrored_as_note_and_ignored_by_meal_factor(self):
+        self.request("/api/treatment", method="POST", body={"kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4"})
+        before = self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]
+        dose_id = "6f1c2f55-3c55-4a3f-9d0e-5d3b0c1d2e3f"
+        saved = self.request("/api/basal", method="POST", body={
+            "at": "2026-09-23T10:05:00Z", "units": "17", "event_id": dose_id})
+        self.assertEqual((saved["id"], saved["day"], saved["nightscout_synced"]), (dose_id, "2026-09-23", True))
+        # Retrying the same entry does not duplicate it in Nightscout.
+        self.request("/api/basal", method="POST", body={"at": "2026-09-23T10:05:00Z", "units": "17", "event_id": dose_id})
+        note = [item for item in FakeNightscout.treatments if item["eventType"] == "Note"]
+        self.assertEqual(len(note), 1)
+        self.assertNotIn("insulin", note[0])
+        self.assertEqual(note[0]["basal_units"], 17)
+        self.assertIn("[DA2:basal]", note[0]["notes"])
+        day = self.request("/api/day?date=2026-09-23")
+        after = day["meals"][0]["calculation"]
+        self.assertEqual(after["factor_units_per_ke"], before["factor_units_per_ke"])
+        self.assertEqual(after["rapid_units_in_window"], before["rapid_units_in_window"])
+        self.assertEqual([(item["id"], item["units"], item["nightscout_synced"]) for item in day["basal"]],
+                         [(dose_id, "17", True)])
+        basal_rows = [item for item in day["timeline"] if item["kind"] == "basal"]
+        self.assertEqual([(item["id"], item["basal_units"]) for item in basal_rows], [(dose_id, "17")])
+        self.assertEqual(len([item for item in day["timeline"] if item["eventType"] == "Note"]), 0)
+        self.assertEqual(day["other_events"], [])
+        with urllib.request.urlopen(self.base + "/api/export") as response:
+            archive = zipfile.ZipFile(io.BytesIO(response.read()))
+        rows = list(csv.DictReader(io.StringIO(archive.read("basal.csv").decode())))
+        self.assertEqual([(row["id"], row["units"], row["nightscout_synced"]) for row in rows], [(dose_id, "17", "True")])
+        self.request("/api/basal/delete", method="POST", body={"id": dose_id})
+        self.assertEqual([item["eventType"] for item in FakeNightscout.treatments], ["Meal Bolus"])
+        self.assertEqual(self.request("/api/day?date=2026-09-23")["basal"], [])
+        for units in ("0", "101", "17.3", "NaN"):
+            with self.assertRaises(urllib.error.HTTPError) as error:
+                self.request("/api/basal", method="POST", body={"at": "2026-09-23T10:05:00Z", "units": units})
+            self.assertEqual(error.exception.code, 400)
+            error.exception.close()
+
+    def test_basal_without_nightscout_is_kept_locally_and_sent_later(self):
+        url = os.environ["NIGHTSCOUT_URL"]
+        os.environ["NIGHTSCOUT_URL"] = "http://127.0.0.1:1"
+        saved = self.request("/api/basal", method="POST", body={"at": "2026-09-23T07:00:00Z", "units": "17.5"})
+        self.assertFalse(saved["nightscout_synced"])
+        self.assertTrue(saved["nightscout_error"])
+        offline = self.request("/api/day?date=2026-09-23")
+        self.assertEqual([item["nightscout_synced"] for item in offline["basal"]], [False])
+        self.assertEqual(FakeNightscout.treatments, [])
+        os.environ["NIGHTSCOUT_URL"] = url
+        self.request("/api/day?date=2026-09-23")
+        self.assertEqual([item["basal_units"] for item in FakeNightscout.treatments], [17.5])
+        online = self.request("/api/day?date=2026-09-23")
+        self.assertEqual([item["nightscout_synced"] for item in online["basal"]], [True])
+        self.assertEqual(len(FakeNightscout.treatments), 1)
+        # Deleted in Nightscout: a synced dose disappears locally too.
+        FakeNightscout.treatments = []
+        self.assertEqual(self.request("/api/day?date=2026-09-23")["basal"], [])
+
+    def test_basal_note_known_only_to_nightscout_is_adopted(self):
+        dose_id = "0b9a7e7c-1d2e-4f3a-8b5c-6d7e8f9a0b1c"
+        FakeNightscout.treatments = [{"_id": "ns-basal", "created_at": "2026-09-23T06:30:00Z", "eventType": "Note",
+                                      "basal_units": 16, "notes": f"Basal 16 IE [DA2:basal] [DAE:{dose_id}]"}]
+        day = self.request("/api/day?date=2026-09-23")
+        self.assertEqual([(item["id"], item["units"], item["nightscout_synced"]) for item in day["basal"]],
+                         [(dose_id, "16", True)])
+
+    def test_basal_default_is_configurable(self):
+        self.assertEqual(self.request("/api/settings")["settings"]["basal_default_units"], "17")
+        self.request("/api/settings", method="POST", body={"basal_default_units": "18.5"})
+        self.assertEqual(self.request("/api/settings")["settings"]["basal_default_units"], "18.5")
+        self.request("/api/settings", method="POST", body={"basal_default_units": "20"})
+        self.assertEqual(self.request("/api/settings")["settings"]["basal_default_units"], "20")
+        self.request("/api/settings", method="POST", body={"basal_default_units": "0"})
+        self.assertEqual(self.request("/api/settings")["settings"]["basal_default_units"], "0")
+        for invalid in ("-1", "100.5", "17.2"):
+            with self.assertRaises(urllib.error.HTTPError) as error:
+                self.request("/api/settings", method="POST", body={"basal_default_units": invalid})
+            self.assertEqual(error.exception.code, 400)
+            error.exception.close()
 
     def test_current_nightscout_profile_is_the_only_isf_source(self):
         data = self.request("/api/settings")

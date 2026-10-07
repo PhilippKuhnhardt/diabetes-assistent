@@ -86,6 +86,15 @@ def init() -> None:
             synced_at TEXT NOT NULL,
             target_schedule TEXT NOT NULL DEFAULT '[]'
         );
+        CREATE TABLE IF NOT EXISTS basal_doses (
+            id TEXT PRIMARY KEY,
+            at TEXT NOT NULL,
+            units TEXT NOT NULL,
+            notes TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            nightscout_synced INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE INDEX IF NOT EXISTS basal_doses_at ON basal_doses(at);
         CREATE TABLE IF NOT EXISTS nightscout_profile_sync (
             id INTEGER PRIMARY KEY CHECK(id = 1),
             attempted_at TEXT NOT NULL,
@@ -107,6 +116,10 @@ def init() -> None:
 DEFAULT_SPORT_EFFECTS = {"jogging": 40, "gym": 40, "light_cardio": 20, "racing": -40}
 
 
+# Usual daily basal dose offered with breakfast (IE); configurable in the settings.
+DEFAULT_BASAL_UNITS = "17"
+
+
 def default_settings() -> dict:
     return {
         "timezone": os.environ.get("APP_TIMEZONE", "Europe/Berlin"),
@@ -123,6 +136,7 @@ def default_settings() -> dict:
         "lunch_end_minute": 1020,
         "sport_lookback_minutes": 360,
         "sport_effects_mgdl": dict(DEFAULT_SPORT_EFFECTS),
+        "basal_default_units": DEFAULT_BASAL_UNITS,
     }
 
 
@@ -163,6 +177,7 @@ def _with_nightscout_profile(settings: dict) -> dict:
         result["auto_lookback_days"] = 15 if result.get("auto_lookback_days") == 14 else 30
     result.setdefault("auto_half_life_days", "7")
     result.setdefault("lunch_end_minute", 1020)
+    result.setdefault("basal_default_units", DEFAULT_BASAL_UNITS)
     result.setdefault("sport_lookback_minutes", 360)
     # Older settings versions predate newer sport types such as racing.
     result["sport_effects_mgdl"] = {**DEFAULT_SPORT_EFFECTS, **result.get("sport_effects_mgdl", {})}
@@ -299,10 +314,10 @@ def cached_between(start: datetime, end: datetime) -> tuple[list[dict], list[dic
 
 
 def first_cached_at() -> str | None:
-    """Earliest mirrored CGM reading or treatment (UTC ISO), or None for an empty mirror."""
+    """Earliest mirrored CGM reading, treatment or local basal dose (UTC ISO), or None for an empty mirror."""
     with connect() as db:
         row = db.execute("SELECT MIN(at) AS at FROM (SELECT MIN(at) AS at FROM entries "
-                         "UNION ALL SELECT MIN(at) FROM treatments)").fetchone()
+                         "UNION ALL SELECT MIN(at) FROM treatments UNION ALL SELECT MIN(at) FROM basal_doses)").fetchone()
     return row["at"] if row else None
 
 
@@ -420,3 +435,39 @@ def set_analysis_window(meal_id: str, start: datetime | None, end: datetime | No
                 (meal_id, start.astimezone(timezone.utc).isoformat(), end.astimezone(timezone.utc).isoformat(),
                  datetime.now(timezone.utc).isoformat()),
             )
+
+
+def basal_doses_between(start: datetime, end: datetime) -> list[dict]:
+    """Locally stored basal injections; the app's own record, mirrored to Nightscout when possible."""
+    with connect() as db:
+        rows = db.execute("SELECT id,at,units,notes,nightscout_synced FROM basal_doses WHERE at>=? AND at<? ORDER BY at",
+                          (start.astimezone(timezone.utc).isoformat(), end.astimezone(timezone.utc).isoformat())).fetchall()
+    return [{"id": row["id"], "at": datetime.fromisoformat(row["at"]), "units": row["units"],
+             "notes": row["notes"], "nightscout_synced": bool(row["nightscout_synced"])} for row in rows]
+
+
+def save_basal_dose(dose_id: str, at: datetime, units: str, notes: str = "", synced: bool = False) -> None:
+    with connect() as db:
+        db.execute(
+            "INSERT INTO basal_doses(id,at,units,notes,created_at,nightscout_synced) VALUES(?,?,?,?,?,?) "
+            "ON CONFLICT(id) DO UPDATE SET at=excluded.at,units=excluded.units,notes=excluded.notes",
+            (dose_id, at.astimezone(timezone.utc).isoformat(), units, notes,
+             datetime.now(timezone.utc).isoformat(), int(synced)),
+        )
+
+
+def set_basal_synced(dose_id: str, synced: bool = True) -> None:
+    with connect() as db:
+        db.execute("UPDATE basal_doses SET nightscout_synced=? WHERE id=?", (int(synced), dose_id))
+
+
+def delete_basal_dose(dose_id: str) -> None:
+    with connect() as db:
+        db.execute("DELETE FROM basal_doses WHERE id=?", (dose_id,))
+
+
+def basal_dose(dose_id: str) -> dict | None:
+    with connect() as db:
+        row = db.execute("SELECT id,at,units,notes,nightscout_synced FROM basal_doses WHERE id=?", (dose_id,)).fetchone()
+    return {"id": row["id"], "at": datetime.fromisoformat(row["at"]), "units": row["units"], "notes": row["notes"],
+            "nightscout_synced": bool(row["nightscout_synced"])} if row else None

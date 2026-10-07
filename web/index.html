@@ -65,6 +65,7 @@
               <div class="entry-switch" role="group" aria-label="Eintragsart">
                 <button type="button" class="entry-mode" data-entry-mode="meal" aria-pressed="true">Essen &amp; Insulin</button>
                 <button type="button" class="entry-mode" data-entry-mode="exercise" aria-pressed="false">Sport</button>
+                <button type="button" class="entry-mode" data-entry-mode="basal" aria-pressed="false">Basal</button>
               </div>
               <input type="hidden" name="kind" id="entry-kind" value="meal">
               <div id="entry-meal-fields">
@@ -73,6 +74,7 @@
                   <label id="entry-insulin-field">Insulin <span>IE</span><input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
                 </div>
               </div>
+              <label id="entry-basal-field" hidden>Basal <span>IE</span><input name="basal_units" type="number" min="0.5" max="100" step="0.5" inputmode="decimal" disabled></label>
               <label id="entry-sport-field" hidden>Sportart
                 <select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select>
               </label>
@@ -81,6 +83,7 @@
                 <button type="button" id="entry-time-chip" class="chip" aria-controls="entry-time-field" aria-expanded="false">Zeit: jetzt</button>
                 <button type="button" id="entry-assign-chip" class="chip" title="Zuordnung umschalten" hidden></button>
                 <button type="button" id="entry-note-chip" class="chip" aria-controls="entry-note-field" aria-expanded="false">+ Notiz</button>
+                <label id="entry-basal-option" class="chip chip-toggle" hidden><input type="checkbox" name="with_basal" checked> <span id="entry-basal-hint"></span></label>
                 <div id="entry-quality" class="entry-quality" hidden>
                   <label class="chip chip-toggle" title="KH nur geschätzt oder Mahlzeit chaotisch erfasst"><input type="checkbox" name="carbs_unsure"> <span>KH unsicher</span></label>
                   <label class="chip chip-toggle"><input type="checkbox" name="fat_protein"> <span>Fett-/eiweißreich</span></label>
@@ -225,6 +228,8 @@
               </select></label>
               <label>Halbwertszeit <span>Tage</span><input name="auto_half_life_days" type="number" min="1" max="28" step="0.5" required></label>
               <p class="hint">Nach der Halbwertszeit zählt eine Mahlzeit nur noch halb. Kürzer = neue Werte zählen stärker.</p>
+              <label>Basal zum Frühstück <span>IE</span><input name="basal_default_units" type="number" min="0" max="100" step="0.5" required></label>
+              <p class="hint">Wird beim Frühstück automatisch mit eingetragen, solange heute noch kein Basal erfasst ist. 0 schaltet das aus.</p>
             </section>
             <section class="panel">
               <h2>Mahlzeiten</h2>
