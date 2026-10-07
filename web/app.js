@@ -531,12 +531,12 @@ function renderIsfRows(rows, profile, syncedAt, syncError) {
 }
 
 const MINUTE = 60000;
-const RAPID_TYPES = new Set(["Meal Bolus", "Correction Bolus", "Snack Bolus", "Bolus"]);
-// Mirrors the server-side limits for a manual meal window.
-const WINDOW_LEAD = 120 * MINUTE;
-const WINDOW_LAG = 120 * MINUTE;
-const WINDOW_MIN = 30 * MINUTE;
-const WINDOW_MAX = 600 * MINUTE;
+// The server's limits for a manual meal window, in milliseconds.
+function windowLimits() {
+  const limits = state.dayData?.window_limits || { lead_minutes: 120, lag_minutes: 120, min_minutes: 30, max_minutes: 600 };
+  return { lead: limits.lead_minutes * MINUTE, lag: limits.lag_minutes * MINUTE,
+    min: limits.min_minutes * MINUTE, max: limits.max_minutes * MINUTE };
+}
 const SNAP_PIXELS = 16;
 let CHART = chartLayout(600);
 
@@ -547,76 +547,15 @@ function chartLayout(width) {
 }
 let windowEditor = null;
 
-function localMinute(at) {
-  const clock = new Date(at).toLocaleTimeString("de-DE", { timeZone: state.settings?.timezone || undefined, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-  return clockMinute(clock);
-}
-
-function targetAt(at) {
-  const minute = localMinute(at);
-  const row = (state.settings?.target_schedule || [])
-    .filter(item => Number(item.start_minute) <= minute)
-    .sort((a, b) => Number(a.start_minute) - Number(b.start_minute)).pop();
-  return row ? { low: Number(row.low_mgdl), high: Number(row.high_mgdl) } : null;
-}
-
-function glucoseTone(value, at) {
-  if (value == null) return "none";
-  if (value < 70) return "low";
-  if (value > 250) return "high";
-  const target = targetAt(at);
-  if (!target) return "neutral";
-  return value >= target.low && value <= target.high ? "in-range" : "outside";
-}
-
 function glucosePoints(entries) {
   return entries.map(point => ({ t: new Date(point.at).getTime(), g: Number(point.sgv), tone: point.tone }))
     .filter(point => Number.isFinite(point.g)).sort((a, b) => a.t - b.t);
-}
-
-// Same rule as the server: linear interpolation, at most 15 minutes between readings.
-function glucoseAt(points, t) {
-  let before = null;
-  for (const point of points) {
-    if (point.t === t) return point.g;
-    if (point.t > t) {
-      if (!before || point.t - before.t > 15 * MINUTE) return null;
-      return before.g + (point.g - before.g) * (t - before.t) / (point.t - before.t);
-    }
-    before = point;
-  }
-  return null;
 }
 
 const trendSymbols = { up_fast: "↑", up: "↗", flat: "→", down: "↘", down_fast: "↓" };
 
 function trendSymbol(direction) {
   return trendSymbols[direction] || "";
-}
-
-// Same rule as app/glucose.py: least-squares slope over the last 15 minutes, as change per 15 minutes;
-// below 5 mg/dL flat, from 30 mg/dL fast.
-function trendDirection(delta) {
-  if (Math.abs(delta) < 10) return "flat";
-  if (delta > 0) return delta >= 30 ? "up_fast" : "up";
-  return delta <= -30 ? "down_fast" : "down";
-}
-
-function trendArrow(points, t) {
-  const current = glucoseAt(points, t);
-  if (current == null) return "";
-  const window = points.filter(point => point.t < t && point.t >= t - 16 * MINUTE);
-  window.push({ t, g: current });
-  if (window.length < 2 || window[window.length - 1].t - window[0].t < 5 * MINUTE) return "";
-  const xs = window.map(point => (point.t - t) / MINUTE);
-  const meanX = xs.reduce((sum, x) => sum + x, 0) / xs.length;
-  const meanY = window.reduce((sum, point) => sum + point.g, 0) / window.length;
-  let numerator = 0, denominator = 0;
-  window.forEach((point, index) => {
-    numerator += (xs[index] - meanX) * (point.g - meanY);
-    denominator += (xs[index] - meanX) ** 2;
-  });
-  return trendSymbol(trendDirection(numerator / denominator * 15));
 }
 
 // The server sends each meal's counted window and the CGM value at both ends.
@@ -638,7 +577,7 @@ function chartEvents(treatments) {
       return [{ kind: "sport", t, end: t + Number(item.duration || 0) * MINUTE, label: sportNames[item.sport_type] || "Sport" }];
     }
     const result = [];
-    if (Number(item.insulin) > 0) result.push({ kind: "insulin", id: item.id, t, amount: Number(item.insulin), rapid: RAPID_TYPES.has(item.eventType) || Boolean(item.role) });
+    if (Number(item.insulin) > 0) result.push({ kind: "insulin", id: item.id, t, amount: Number(item.insulin), rapid: Boolean(item.rapid) });
     if (Number(item.carbs) > 0) result.push({ kind: "carbs", id: item.id, t, amount: Number(item.carbs) });
     return result;
   });
@@ -648,8 +587,8 @@ function chartView(range) {
   const from = Math.min(range.start, range.autoStart) - 45 * MINUTE;
   const to = Math.max(range.end, range.autoEnd, range.mealAt + 240 * MINUTE) + 75 * MINUTE;
   return {
-    from: Math.max(from, range.mealAt - WINDOW_LEAD - 30 * MINUTE),
-    to: Math.min(to, range.mealAt + WINDOW_MAX + 60 * MINUTE),
+    from: Math.max(from, range.mealAt - windowLimits().lead - 30 * MINUTE),
+    to: Math.min(to, range.mealAt + windowLimits().max + 60 * MINUTE),
   };
 }
 
@@ -713,9 +652,10 @@ function targetBand(view, scales) {
 
 function handleSVG(name, t, points, scales, interactive, reading) {
   const x = scales.x(t);
-  // A drawn meal window brings its own reading; the editor's moving handles look the value up.
-  const value = interactive ? glucoseAt(points, t) : reading ? Number(reading.value) : null;
-  const tone = interactive ? glucoseTone(value, t) : reading?.tone || "none";
+  // A drawn meal window brings its own reading; the editor's moving handles look theirs up.
+  if (interactive) reading = editorReading(t);
+  const value = reading?.value != null ? Number(reading.value) : null;
+  const tone = reading?.tone || "none";
   const dotY = value == null ? CHART.plotBottom : scales.y(value);
   const label = name === "start" ? "Beginn" : "Ende";
   return '<g class="window-handle" data-handle="' + name + '" transform="translate(' + x.toFixed(1) + ' 0)"' +
@@ -901,12 +841,13 @@ function recentEntriesHTML(treatments) {
 
 function windowBounds(handle) {
   const editor = windowEditor;
-  if (handle === "start") return { min: Math.max(editor.mealAt - WINDOW_LEAD, editor.view.from), max: editor.mealAt + WINDOW_LAG };
-  return { min: minWindowEnd(editor.start), max: Math.min(editor.start + WINDOW_MAX, editor.view.to) };
+  const limits = windowLimits();
+  if (handle === "start") return { min: Math.max(editor.mealAt - limits.lead, editor.view.from), max: editor.mealAt + limits.lag };
+  return { min: minWindowEnd(editor.start), max: Math.min(editor.start + limits.max, editor.view.to) };
 }
 
 function minWindowEnd(start) {
-  return Math.max(start, windowEditor.mealAt) + WINDOW_MIN;
+  return Math.max(start, windowEditor.mealAt) + windowLimits().min;
 }
 
 // The meal's own entry (carbs and bolus) always counts, even when the start was moved after it.
@@ -944,16 +885,42 @@ function placeHandle(handle, raw, options = {}) {
   if (snapped && editor.snapped[handle]?.t !== snapped.t) navigator.vibrate?.(8);
   editor.snapped[handle] = snapped;
   editor[handle] = t;
-  if (handle === "start") editor.end = Math.min(Math.max(editor.end, minWindowEnd(editor.start)), editor.start + WINDOW_MAX);
+  if (handle === "start") editor.end = Math.min(Math.max(editor.end, minWindowEnd(editor.start)), editor.start + windowLimits().max);
+}
+
+// The CGM reading at a handle position, from the per-minute readings the server sent for the editor.
+function editorReading(t) {
+  const readings = windowEditor?.readings;
+  // A handle clamped to a limit can sit between minutes; it reads the minute it is in.
+  return readings?.get(t) || readings?.get(Math.floor(t / MINUTE) * MINUTE) || null;
+}
+
+const readingValue = reading => reading?.value != null ? Number(reading.value) : null;
+
+// The server counts the candidate window (same rule as the factor); the editor asks after each move.
+function scheduleWindowPreview() {
+  const editor = windowEditor;
+  clearTimeout(editor.previewTimer);
+  editor.previewTimer = setTimeout(async () => {
+    const key = editor.start + "-" + editor.end;
+    try {
+      const summary = await api("/api/analysis/window/preview", { method: "POST", body: JSON.stringify({
+        meal_id: editor.mealId, day: editor.day, start: new Date(editor.start).toISOString(), end: new Date(editor.end).toISOString(),
+      }) });
+      if (windowEditor !== editor || key !== editor.start + "-" + editor.end) return;
+      editor.summary = summary;
+      $("#window-summary").innerHTML = editorSummary();
+    } catch (error) {
+      toast(error.message, true);
+    }
+  }, 120);
 }
 
 function editorSummary() {
   const editor = windowEditor;
-  const included = editor.events.filter(event => windowIncludes(editor, event));
-  const carbs = included.filter(event => event.kind === "carbs").reduce((sum, event) => sum + event.amount, 0);
-  const insulin = included.filter(event => event.kind === "insulin" && event.rapid).reduce((sum, event) => sum + event.amount, 0);
-  const g0 = glucoseAt(editor.points, editor.start);
-  const g1 = glucoseAt(editor.points, editor.end);
+  const summary = editor.summary;
+  const g0 = readingValue(editorReading(editor.start));
+  const g1 = readingValue(editorReading(editor.end));
   const minutes = Math.round((editor.end - editor.start) / MINUTE);
   const changed = editor.start !== editor.savedStart || editor.end !== editor.savedEnd;
   const isDefault = editor.start === editor.autoStart && editor.end === editor.autoEnd;
@@ -963,8 +930,8 @@ function editorSummary() {
     cell("Ende <small>(exkl.)</small>", escapeHTML(timeOnly(editor.end)), g1 == null ? "kein CGM-Wert" : escapeHTML(num(g1, 0)) + " mg/dL") +
     cell("ΔG", g0 == null || g1 == null ? "—" : escapeHTML(signedChange(g1 - g0, 0))) +
     cell("Dauer", escapeHTML(Math.floor(minutes / 60) + " h " + String(minutes % 60).padStart(2, "0") + " min")) +
-    cell("KH im Fenster", escapeHTML(num(carbs, 0)) + " g") +
-    cell("Schnelles Insulin", escapeHTML(num(insulin, 1)) + " IE") +
+    cell("KH im Fenster", summary ? escapeHTML(num(summary.carbs_g, 0)) + " g" : "…") +
+    cell("Schnelles Insulin", summary ? escapeHTML(num(summary.rapid_units, 1)) + " IE" : "…") +
     '</div><p class="window-state">' +
     (isDefault ? "Automatischer Standardzeitraum" : "Manueller Zeitraum") +
     (changed ? " · <b>nicht gespeichert</b>" : "") +
@@ -974,14 +941,15 @@ function editorSummary() {
 function updateWindowReadout() {
   const editor = windowEditor;
   const t = editor[editor.active];
-  const value = glucoseAt(editor.points, t);
+  const reading = editorReading(t);
+  const value = readingValue(reading);
   const snapped = editor.snapped[editor.active];
   const readout = $("#window-readout");
-  readout.dataset.tone = glucoseTone(value, t);
+  readout.dataset.tone = reading?.tone || "none";
   readout.innerHTML = '<span class="readout-label">' + (editor.active === "start" ? "Beginn" : "Ende") + ' · ' + escapeHTML(timeOnly(t)) + ' Uhr' +
     (snapped ? ' · eingerastet: ' + escapeHTML(snapped.label) : '') + '</span>' +
     '<span class="readout-value"><strong>' + (value == null ? "—" : escapeHTML(num(value, 0))) + '</strong>' +
-    '<span class="readout-trend">' + escapeHTML(trendArrow(editor.points, t)) + '</span><small>mg/dL</small></span>';
+    '<span class="readout-trend">' + escapeHTML(value == null ? "" : trendSymbol(reading.trend)) + '</span><small>mg/dL</small></span>';
 }
 
 function updateWindowEditor() {
@@ -993,14 +961,15 @@ function updateWindowEditor() {
   for (const name of ["start", "end"]) {
     const group = $('.window-handle[data-handle="' + name + '"]', svg);
     const t = editor[name];
-    const value = glucoseAt(editor.points, t);
+    const reading = editorReading(t);
+    const value = readingValue(reading);
     group.setAttribute("transform", "translate(" + scales.x(t).toFixed(1) + " 0)");
     group.setAttribute("aria-valuetext", timeOnly(t) + " Uhr");
     group.classList.toggle("is-active", editor.active === name);
     group.classList.toggle("is-snapped", Boolean(editor.snapped[name]));
     const dot = $(".handle-dot", group);
     dot.toggleAttribute("hidden", value == null);
-    dot.dataset.tone = glucoseTone(value, t);
+    dot.dataset.tone = reading?.tone || "none";
     if (value != null) dot.setAttribute("cy", scales.y(value).toFixed(1));
   }
   const shade = $(".window-shade", svg);
@@ -1013,6 +982,11 @@ function updateWindowEditor() {
   $$("[data-window-handle]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.windowHandle === editor.active)));
   updateWindowReadout();
   $("#window-summary").innerHTML = editorSummary();
+  const key = editor.start + "-" + editor.end;
+  if (editor.previewKey !== key) {
+    editor.previewKey = key;
+    scheduleWindowPreview();
+  }
 }
 
 function renderWindowEditor(focus) {
@@ -1025,13 +999,21 @@ function renderWindowEditor(focus) {
   if (focus) $('#window-chart .window-handle[data-handle="' + focus + '"]')?.focus();
 }
 
-function openWindowEditor(mealId) {
+async function openWindowEditor(mealId) {
   const meal = state.dayData?.meals.find(item => item.id === mealId);
   if (!meal) return;
   const range = mealWindow(meal);
+  let editorData;
+  try {
+    editorData = await api("/api/analysis/window-editor?" + new URLSearchParams({ day: state.day, meal_id: mealId }));
+  } catch (error) {
+    toast(error.message, true);
+    return;
+  }
   windowEditor = {
     ...range, mealId, day: state.day, active: "end", snapped: {}, drag: null, tap: null,
-    savedStart: range.start, savedEnd: range.end,
+    savedStart: range.start, savedEnd: range.end, summary: null,
+    readings: new Map(editorData.readings.map(row => [new Date(row.t).getTime(), row])),
     points: glucosePoints(state.dayData.entries), events: chartEvents(state.dayData.treatments),
   };
   $("#window-meal-type").textContent = names[meal.meal] + " · " + timeOnly(meal.at) + " Uhr · " + num(meal.carbs) + " g KH";
@@ -1117,7 +1099,7 @@ async function saveWindow(reset = false) {
   if (!editor) return;
   const button = $("#save-window");
   const isDefault = editor.start === editor.autoStart && editor.end === editor.autoEnd;
-  if (!reset && !isDefault && (glucoseAt(editor.points, editor.start) == null || glucoseAt(editor.points, editor.end) == null)) {
+  if (!reset && !isDefault && (readingValue(editorReading(editor.start)) == null || readingValue(editorReading(editor.end)) == null)) {
     toast("An Beginn und Ende wird ein CGM-Wert benötigt.", true);
     return;
   }

@@ -85,6 +85,11 @@ MANUAL_WINDOW_LEAD = timedelta(hours=2)
 MANUAL_WINDOW_LAG = timedelta(hours=2)
 MANUAL_WINDOW_MIN = timedelta(minutes=30)
 MANUAL_WINDOW_MAX = timedelta(hours=10)
+# The same limits in minutes, for the diary's charts and the window editor.
+MANUAL_WINDOW_LIMITS = {
+    "lead_minutes": MANUAL_WINDOW_LEAD // timedelta(minutes=1), "lag_minutes": MANUAL_WINDOW_LAG // timedelta(minutes=1),
+    "min_minutes": MANUAL_WINDOW_MIN // timedelta(minutes=1), "max_minutes": MANUAL_WINDOW_MAX // timedelta(minutes=1),
+}
 
 
 def validate_manual_window(meal_at: datetime, start: datetime, end: datetime) -> None:

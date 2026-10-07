@@ -1428,6 +1428,31 @@ class IntegrationTests(unittest.TestCase):
                 **entry, "insulin": fresh["entry_units"], "dose_check": fresh["check"]})
         self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["insulin"])), Decimal(fresh["entry_units"]))
 
+    def test_window_editor_reads_cgm_per_minute_and_counts_a_candidate_window(self):
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",
+        })
+        self.request("/api/treatment", method="POST", body={
+            "kind": "correction", "at": "2026-09-23T12:30:00Z", "insulin": "1",
+        })
+        meal = self.request("/api/day?date=2026-09-23")["meals"][0]
+        self.assertEqual(meal["window"]["start_glucose"], {"value": "100", "tone": "neutral"})
+        query = urllib.parse.urlencode({"day": "2026-09-23", "meal_id": meal["id"]})
+        editor = self.request("/api/analysis/window-editor?" + query)
+        self.assertEqual(editor["limits"], {"lead_minutes": 120, "lag_minutes": 120, "min_minutes": 30, "max_minutes": 600})
+        readings = {row["t"]: row for row in editor["readings"]}
+        self.assertEqual(Decimal(readings["2026-09-23T10:00:00+00:00"]["value"]), Decimal(100))
+        self.assertIsNone(readings["2026-09-23T11:00:00+00:00"]["value"])
+        self.assertIn("2026-09-23T12:30:00+00:00", readings)
+        body = {"day": "2026-09-23", "meal_id": meal["id"], "start": MEAL_AT}
+        whole = self.request("/api/analysis/window/preview", method="POST", body={**body, "end": "2026-09-23T13:00:00Z"})
+        self.assertEqual((Decimal(whole["carbs_g"]), Decimal(whole["rapid_units"])), (Decimal(40), Decimal(5)))
+        self.assertEqual((Decimal(whole["delta_mgdl"]), whole["minutes"], whole["problem"]), (Decimal(20), 180, None))
+        short = self.request("/api/analysis/window/preview", method="POST", body={**body, "end": "2026-09-23T12:00:00Z"})
+        self.assertEqual((Decimal(short["rapid_units"]), short["missing_glucose"]), (Decimal(4), True))
+        early = self.request("/api/analysis/window/preview", method="POST", body={**body, "end": "2026-09-23T10:10:00Z"})
+        self.assertIn("30 Minuten", early["problem"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -104,6 +104,26 @@ def automatic_window(episode: dict, all_treatments: list[dict], entries: list[di
             "extended_end": extended_end, "next_main_meal_at": next_main_meal_at}
 
 
+def window_totals(episode: dict, all_treatments: list[dict], start: datetime, end: datetime) -> tuple[Decimal, Decimal]:
+    """Carbs and rapid insulin a window counts, as calculate_episode sums them: half-open
+    [start, end), every dose in full, and the meal's own entry always."""
+    source_id = episode.get("source_id")
+    carbs = dec(episode["carbs"])
+    units = Decimal(0)
+    for treatment in all_treatments:
+        if treatment.get("eventType") == "Exercise":
+            continue
+        own_entry = bool(source_id) and treatment.get("id") == source_id
+        inside = start <= treatment["at"] < end
+        amount = dec(treatment.get("carbs") or 0)
+        if inside and not own_entry and amount > 0:
+            carbs += amount
+        dose = dec(treatment.get("insulin") or 0)
+        if dose > 0 and (own_entry or inside) and is_rapid_insulin(treatment):
+            units += dose
+    return carbs, units
+
+
 def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[dict], settings: dict,
                       sport_effect_mgdl: Decimal = Decimal(0), manual_window: dict | None = None) -> dict:
     """Solve one endpoint balance for every carb and rapid dose in a meal window.
