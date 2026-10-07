@@ -654,6 +654,13 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(sorted(data["tables"]), ["basal", "entries", "meals", "treatments", "window_events"])
         self.assertIn(100, [row["sgv"] for row in data["tables"]["entries"]])
         self.assertEqual([row["eventType"] for row in data["tables"]["treatments"]], ["Meal Bolus"])
+        # Neighbouring day payloads overlap; a multi-day range still lists every row once.
+        wide = get("/api/v1/data?from=2026-09-22&to=2026-09-24", key)["tables"]
+        self.assertEqual([row["eventType"] for row in wide["treatments"]], ["Meal Bolus"])
+        stamps = [row["at"] for row in wide["entries"]]
+        self.assertEqual(len(stamps), len(set(stamps)))
+        self.assertEqual(len(stamps), len(data["tables"]["entries"]) + sum(
+            len(get(f"/api/v1/entries?from={day}&to={day}", key)["rows"]) for day in ("2026-09-22", "2026-09-24")))
         self.assertTrue(get("/api/v1/profile", key)["settings"]["isf_schedule"])
         self.assertEqual(status("/api/v1/unknown", key), 404)
         self.assertEqual(status("/api/v1/meals?days=0", key), 400)
