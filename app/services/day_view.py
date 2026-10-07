@@ -25,10 +25,7 @@ def day_payload(day: str, refresh: bool = True) -> dict:
     """The diary day as the app shows it. With refresh it is first mirrored from Nightscout;
     the calculation is reused from SQLite while nothing it reads has changed."""
     status = sync.sync_day(day) if refresh else {}
-    _, settings = config.get_settings()
-    start, end = local_day_range(day, settings["timezone"])
-    fingerprint = hashlib.sha256(json.dumps([CODE_VERSION, os.environ.get("APP_TIMEZONE"), results.day_inputs(start, end, day)],
-                                            default=str).encode()).hexdigest()
+    fingerprint = day_fingerprint(day)
     payload = results.day_result(day, fingerprint)
     if payload is None:
         payload = compute_day(day)
@@ -40,6 +37,14 @@ def day_payload(day: str, refresh: bool = True) -> dict:
         "basal_sync_error": status.get("basal_sync_error"),
     })
     return payload
+
+
+def day_fingerprint(day: str) -> str:
+    """Hash of everything compute_day reads, plus the code that computes it."""
+    _, settings = config.get_settings()
+    start, end = local_day_range(day, settings["timezone"])
+    return hashlib.sha256(json.dumps([CODE_VERSION, os.environ.get("APP_TIMEZONE"), results.day_inputs(start, end, day)],
+                                     default=str).encode()).hexdigest()
 
 
 def compute_day(day: str) -> dict:

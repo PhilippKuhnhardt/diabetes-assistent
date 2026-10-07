@@ -1,7 +1,9 @@
 """Analysis page: factor groups, Automatik derivation, night and sport overview."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+import hashlib
+import json
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
@@ -9,7 +11,7 @@ from app import calculation, episodes, forecast, sport_analysis
 from app.common import MEALS, json_safe
 from app.ingestion import nightscout, sync
 from app.services import day_view, factors
-from app.store import config, marks
+from app.store import config, marks, results
 from app.analysis.stats import median, quartile, strong_outlier_flags
 
 
@@ -25,6 +27,30 @@ def summary(params: dict) -> dict:
             profile_sync_error = str(error)
     _, settings = config.get_settings()
     today = datetime.now(ZoneInfo(settings["timezone"])).date()
+    # Stored per period while today, the exclusions and every day it reads are unchanged.
+    fingerprint = hashlib.sha256(json.dumps([
+        day_view.CODE_VERSION, today.isoformat(), sorted(marks.analysis_exclusions()),
+        [day_view.day_fingerprint((today - timedelta(days=offset)).isoformat())
+         for offset in range(history_days(days) + 1)],
+    ]).encode()).hexdigest()
+    result = results.summary_result(str(days), fingerprint)
+    if result is None:
+        result = json_safe(compute_summary(days, today))
+        results.save_summary_result(str(days), fingerprint, result)
+    result["profile_sync_error"] = profile_sync_error
+    return result
+
+
+def history_days(days: int) -> int:
+    """How many days before today the analysis reads (period, 90-day matrix with lookback, stress tile)."""
+    return max(max(days - 1, forecast.BACKTEST_DAYS - 1) + forecast.MAX_LOOKBACK + 1,
+               forecast.RATIO_DAYS + forecast.RATIO_REFERENCE_DAYS)
+
+
+def compute_summary(days: int, today: date) -> dict:
+    """The analysis page for the last `days` days, from stored diary days only."""
+    profile_sync_error = None
+    _, settings = config.get_settings()
     excluded_ids = marks.analysis_exclusions()
     day_types = marks.analysis_day_types()
     vacations = marks.vacation_periods()
@@ -177,9 +203,7 @@ def summary(params: dict) -> dict:
         }
     configured = factors.forecast_settings(settings)
     percentile, half_life, lookback = configured
-    points = factors.meal_points(today, max(max(days - 1, forecast.BACKTEST_DAYS - 1) + forecast.MAX_LOOKBACK + 1,
-                                     forecast.RATIO_DAYS + forecast.RATIO_REFERENCE_DAYS),
-                         day_types, vacations, loaded_days)
+    points = factors.meal_points(today, history_days(days), day_types, vacations, loaded_days)
     method = settings.get("auto_method", "percentile")
     predictions = {key: {**forecast.predict_method(points, key, today, percentile, half_life, lookback, method),
                          "surcharge": method == forecast.SURCHARGE}
