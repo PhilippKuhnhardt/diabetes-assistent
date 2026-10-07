@@ -4,9 +4,9 @@ from __future__ import annotations
 from datetime import date
 
 from app import calculation
-from app.store import marks
 from app.common import parse_instant
 from app.services import day_view, settings as settings_service
+from app.store import marks
 
 
 def set_sport_mark(payload: dict) -> dict:

@@ -7,10 +7,11 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import calculation, episodes, nightscout
-from app.store import config, mirror
+from app import calculation, episodes
 from app.common import MEALS, local_day_range, parse_instant
+from app.ingestion import nightscout
 from app.services import day_view
+from app.store import config, mirror
 
 
 DOSAGE_ROLES = {"meal-dose", "correction", "snack"}

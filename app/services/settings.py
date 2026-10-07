@@ -5,10 +5,11 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import auth, calculation, episodes, forecast, nightscout
-from app.store import config, marks
+from app import auth, calculation, episodes, forecast
 from app.common import parse_instant, unit_text
-from app.services import sync
+from app.ingestion import nightscout, sync
+from app.store import config, marks
+
 
 
 def validate_settings(value: dict) -> dict:

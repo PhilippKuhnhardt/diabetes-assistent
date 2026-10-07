@@ -4,7 +4,8 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import patch
 
-from app import auth, dosing, episodes, nightscout, server
+from app import auth, dosing, episodes, server
+from app.ingestion import nightscout
 
 
 class DosingTests(unittest.TestCase):
