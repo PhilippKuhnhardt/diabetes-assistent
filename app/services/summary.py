@@ -5,11 +5,12 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import calculation, episodes, forecast, nightscout, sport_analysis
+from app import calculation, episodes, forecast, sport_analysis
+from app.common import MEALS, json_safe
+from app.ingestion import nightscout, sync
+from app.services import day_view, factors
 from app.store import config, marks
 from app.analysis.stats import median, quartile, strong_outlier_flags
-from app.common import MEALS, json_safe
-from app.services import day_view, factors, sync
 
 
 def summary(params: dict) -> dict:

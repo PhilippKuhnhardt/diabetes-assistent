@@ -5,9 +5,9 @@ from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
 from app import forecast
-from app.store import marks
 from app.common import MEALS, parse_instant
 from app.services import day_view
+from app.store import marks
 
 
 BREAKFAST_FACTOR_DAYS = 28

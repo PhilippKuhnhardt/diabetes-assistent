@@ -5,33 +5,22 @@ from datetime import timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import calculation, episodes, nightscout
-from app.store import config, marks, mirror
-from app.analysis.night import night_analysis
+from app import calculation, episodes
 from app.common import json_safe, local_day_range
-from app.services import basal, sync
+from app.ingestion import nightscout, sync
+from app.store import basal_doses as basal_store, config, marks, mirror
+from app.analysis.night import night_analysis
 
 
 def day_payload(day: str, refresh: bool = True) -> dict:
-    profile_sync_error = None
-    if refresh and nightscout.is_configured():
-        try:
-            sync.sync_profile_cache()
-        except nightscout.NightscoutError as error:
-            profile_sync_error = str(error)
+    status = sync.sync_day(day) if refresh else {
+        "profile_sync_error": None, "sync_error": None, "basal_sync_error": None}
+    profile_sync_error, sync_error = status["profile_sync_error"], status["sync_error"]
+    basal_sync_error = status["basal_sync_error"]
     settings_id, settings = config.get_settings()
     start, end = local_day_range(day, settings["timezone"])
-    sync_error = None
-    fresh = False
-    if refresh and nightscout.is_configured():
-        try:
-            raw_entries, raw_treatments = nightscout.fetch_range(start, end)
-            mirror.mirror_day(day, raw_entries, raw_treatments, start, end)
-            fresh = True
-        except nightscout.NightscoutError as error:
-            sync_error = str(error)
     raw_entries, raw_treatments = mirror.cached_between(start, end)
-    basal_doses, basal_sync_error = basal.reconcile_basal(start, end, raw_treatments, fresh)
+    basal_doses = basal_store.basal_doses_between(start, end)
     entries = episodes.normalize_entries(raw_entries)
     treatments = episodes.normalize_treatments(raw_treatments)
     episodes.group_diary_followups(treatments, settings)
