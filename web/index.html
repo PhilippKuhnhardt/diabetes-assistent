@@ -193,6 +193,19 @@
             <p class="hint">ZIP mit CSV-Dateien aller gespeicherten Tage: Mahlzeiten mit Faktor und Fenster, CGM-Werte, Behandlungen und Profil.</p>
             <a class="button" href="/api/export" download>Daten exportieren</a>
           </section>
+          <section class="panel api-panel">
+            <h2>API-Zugriff <span class="unit">nur lesen</span></h2>
+            <p class="hint">Schlüssel für Skripte und Agenten: <code>Authorization: Bearer …</code> an <code>/api/v1</code> liefert dieselben Daten wie der Export als JSON. Ein Schlüssel kann nichts ändern.</p>
+            <div id="api-key-list" class="api-key-list" aria-live="polite"></div>
+            <form id="api-key-form" class="api-key-form">
+              <label>Name<input name="name" maxlength="60" placeholder="z. B. Claude Code" required></label>
+              <button type="submit">Schlüssel erzeugen</button>
+            </form>
+            <div id="api-key-new" class="api-key-new" hidden>
+              <p>Neuer Schlüssel, wird nur jetzt angezeigt:</p>
+              <div class="api-key-copy"><input id="api-key-value" class="mono" readonly><button type="button" id="api-key-copy">Kopieren</button></div>
+            </div>
+          </section>
         </div>
         <h2 class="settings-heading">Nightscout-Profil</h2>
         <div class="settings-grid settings-cols">

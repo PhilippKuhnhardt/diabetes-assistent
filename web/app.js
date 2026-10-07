@@ -305,6 +305,65 @@ async function saveVacation(event) {
   }
 }
 
+function renderApiKeys(keys) {
+  const when = value => value ? new Date(value).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "nie";
+  $("#api-key-list").innerHTML = keys.map(key =>
+    '<div class="api-key-row"><strong>' + escapeHTML(key.name) + ' <span class="mono hint">' + escapeHTML(key.prefix) + '…</span></strong>' +
+    '<button type="button" data-revoke-key="' + escapeHTML(key.id) + '">Widerrufen</button>' +
+    '<span class="hint">Erstellt ' + when(key.created_at) + ' · zuletzt benutzt ' + when(key.last_used_at) + '</span></div>').join("");
+}
+
+async function loadApiKeys() {
+  try {
+    renderApiKeys((await api("/api/keys")).keys);
+  } catch (error) {
+    toast(error.message, true);
+  }
+}
+
+async function createApiKey(event) {
+  event.preventDefault();
+  const form = event.target;
+  const button = form.querySelector("button");
+  button.disabled = true;
+  try {
+    const data = await api("/api/keys", { method: "POST", body: JSON.stringify({ name: form.elements.name.value }) });
+    $("#api-key-value").value = data.key;
+    $("#api-key-new").hidden = false;
+    form.reset();
+    await loadApiKeys();
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function revokeApiKey(event) {
+  const button = event.target.closest("[data-revoke-key]");
+  if (!button || !confirm("Diesen API-Schlüssel widerrufen? Skripte mit ihm verlieren sofort den Zugriff.")) return;
+  button.disabled = true;
+  try {
+    renderApiKeys((await api("/api/keys/revoke", { method: "POST", body: JSON.stringify({ id: button.dataset.revokeKey }) })).keys);
+    $("#api-key-new").hidden = true;
+    toast("API-Schlüssel widerrufen");
+  } catch (error) {
+    button.disabled = false;
+    toast(error.message, true);
+  }
+}
+
+async function copyApiKey() {
+  const input = $("#api-key-value");
+  try {
+    await navigator.clipboard.writeText(input.value);
+    toast("Schlüssel kopiert");
+  } catch {
+    input.select();
+    toast("Bitte manuell kopieren", true);
+  }
+}
+
 function renderVacation(vacation) {
   $("#vacation-toggle").checked = Boolean(vacation?.active);
   $("#vacation-status").textContent = vacation?.active
@@ -512,6 +571,7 @@ async function loadSettings() {
   renderIcRows(data.settings.ic_schedule || []);
   renderTargetRows(data.settings.target_schedule || []);
   renderVacation(data.vacation);
+  loadApiKeys();
 }
 
 function renderTargetRows(rows) {
@@ -2380,6 +2440,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#dose-result").addEventListener("click", selectDoseSuggestion);
   $("#entry-day-type").addEventListener("click", saveEntryDayType);
   $("#vacation-toggle").addEventListener("change", saveVacation);
+  $("#api-key-form").addEventListener("submit", createApiKey);
+  $("#api-key-list").addEventListener("click", revokeApiKey);
+  $("#api-key-copy").addEventListener("click", copyApiKey);
   $("#entry-form").elements.carbs.addEventListener("input", event => {
     event.target.setCustomValidity("");
     updateEntrySubmitLabel();
