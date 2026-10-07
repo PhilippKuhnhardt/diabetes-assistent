@@ -6,7 +6,8 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 TAG = re.compile(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction|snack)\]")
-EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal))\]")
+EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal|basal))\]")
+BASAL_MARKER = "[DA2:basal]"
 SNACK_GAP = timedelta(minutes=120)
 SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio|racing)\]")
 # Data-quality marks on carb entries: carbs only estimated, or a fat-/protein-rich meal.

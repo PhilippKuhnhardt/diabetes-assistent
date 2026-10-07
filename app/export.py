@@ -18,6 +18,7 @@ MEAL_COLUMNS = [
 ]
 WINDOW_EVENT_COLUMNS = ["meal_id", "kind", "at", "carbs_g", "units", "isf", "event_type"]
 ENTRY_COLUMNS = ["at", "sgv"]
+BASAL_COLUMNS = ["id", "at", "units", "nightscout_synced", "notes"]
 TREATMENT_COLUMNS = ["id", "at", "eventType", "carbs", "insulin", "basal_units", "duration",
                      "sport_type", "role", "meal", "episode_id", "carbs_unsure", "fat_protein", "notes"]
 
@@ -35,7 +36,10 @@ profile.json).
   bzw. „fett-/eiweißreich“ markiert.
 - window_events.csv: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.
 - entries.csv: alle gespiegelten CGM-Werte in mg/dL.
-- treatments.csv: alle gespiegelten Nightscout-Behandlungen inklusive Basal und Sport.
+- treatments.csv: alle gespiegelten Nightscout-Behandlungen inklusive Sport (Basal aus der App
+  als Notiz mit basal_units).
+- basal.csv: Basal-Injektionen aus der App (lokal gespeichert, nightscout_synced = auch in
+  Nightscout). Basal zählt nicht in den Mahlzeitenfaktor.
 - profile.json: Einstellungen und Nightscout-Profil (Korrekturfaktor, I:C, Zielbereich).
 """
 
@@ -60,7 +64,7 @@ def build_zip(first_day: date, last_day: date, day_payload: Callable[[str], dict
               excluded: set[str], settings: dict) -> bytes:
     """Collect every day from first_day to last_day (inclusive) into a ZIP of CSV files."""
     zone = ZoneInfo(settings["timezone"])
-    meals, window_events, entries, treatments = [], [], [], []
+    meals, window_events, entries, treatments, basal = [], [], [], [], []
     day = first_day
     while day <= last_day:
         payload = day_payload(day.isoformat())
@@ -93,6 +97,7 @@ def build_zip(first_day: date, last_day: date, day_payload: Callable[[str], dict
                                       "event_type": item.get("event_type") or item.get("role")})
         entries.extend({"at": _local(item["at"], zone), "sgv": item["sgv"]} for item in payload.get("entries", []))
         treatments.extend({**item, "at": _local(item["at"], zone)} for item in payload.get("treatments", []))
+        basal.extend({**item, "at": _local(item["at"], zone)} for item in payload.get("basal", []))
         day += timedelta(days=1)
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
@@ -101,6 +106,7 @@ def build_zip(first_day: date, last_day: date, day_payload: Callable[[str], dict
         archive.writestr("window_events.csv", _csv(WINDOW_EVENT_COLUMNS, window_events))
         archive.writestr("entries.csv", _csv(ENTRY_COLUMNS, entries))
         archive.writestr("treatments.csv", _csv(TREATMENT_COLUMNS, treatments))
+        archive.writestr("basal.csv", _csv(BASAL_COLUMNS, basal))
         archive.writestr("profile.json", json.dumps(
             {"exported_days": [first_day.isoformat(), last_day.isoformat()], "settings": settings},
             ensure_ascii=False, indent=2, default=str))
