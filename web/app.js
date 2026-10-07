@@ -259,6 +259,7 @@ function updateEntryDayType() {
   const visible = form.elements.kind.value === "meal" && Boolean(state.dayData?.day_type) &&
     Number.isFinite(time) && time < breakfastEnd;
   box.hidden = !visible;
+  updateEntryInfluences();
   if (!visible) return;
   $$(".day-type-option").forEach(button =>
     button.setAttribute("aria-pressed", String(button.dataset.dayType === state.dayData.day_type)));
@@ -423,14 +424,21 @@ function updateEntrySportOption() {
   if (!available) {
     checkbox.checked = false;
     effectField.hidden = true;
+    updateEntryInfluences();
     if (!wasHidden) scheduleDoseHelp();
     return;
   }
   const suggested = eligible.reduce((total, item) => total + sportChange(state.settings.sport_effects_mgdl[item.sport_type]), 0);
+  // The chip only says whether the sport counts; ticking it opens the editable BZ change.
   $("#entry-sport-hint").textContent = eligible.map(item =>
-    sportNames[item.sport_type] + " " + timeOnly(item.at)).join(", ") + " einrechnen · " + signedChange(suggested, 0);
+    sportNames[item.sport_type] + " " + timeOnly(item.at)).join(", ") + (checkbox.checked ? " berücksichtigt" : " berücksichtigen");
   if (!checkbox.checked) form.elements.sport_effect_mgdl.value = suggested;
   effectField.hidden = !checkbox.checked;
+  updateEntryInfluences();
+}
+
+function updateEntryInfluences() {
+  $("#entry-influences").hidden = $("#entry-sport-option").hidden && $("#entry-day-type").hidden;
 }
 
 function entrySportChange() {
@@ -458,7 +466,7 @@ function updateEntryFields() {
   form.elements.carbs.setCustomValidity("");
   $$(".entry-mode").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.entryMode === mode)));
   $("#entry-meal-fields").hidden = mode !== "meal";
-  $("#entry-insulin-field").hidden = mode !== "meal";
+  $("#entry-dose").hidden = mode !== "meal";
   $("#entry-basal-field").hidden = mode !== "basal";
   form.elements.basal_units.disabled = mode !== "basal";
   form.elements.basal_units.required = mode === "basal";
