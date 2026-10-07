@@ -424,6 +424,7 @@ async function loadSettings() {
   form.elements.window_minutes.value = data.settings.window_minutes;
   form.elements.dose_target_mgdl.value = data.settings.dose_target_mgdl;
   form.elements.dose_cautious_target_mgdl.value = data.settings.dose_cautious_target_mgdl;
+  form.elements.auto_method.value = data.settings.auto_method || "percentile";
   form.elements.auto_percentile.value = data.settings.auto_percentile;
   form.elements.auto_lookback_days.value = String(data.settings.auto_lookback_days);
   form.elements.auto_half_life_days.value = data.settings.auto_half_life_days;
@@ -1443,7 +1444,8 @@ async function updateDoseHelp() {
   output.setAttribute("aria-busy", "true");
   try {
     const data = await api("/api/dose-help", { method: "POST",
-      body: JSON.stringify({ carbs: String(carbs), activity_change_mgdl: activityChange }) });
+      body: JSON.stringify({ carbs: String(carbs), activity_change_mgdl: activityChange,
+                             snack: Boolean(entryAssignment()?.snack) }) });
     if (requestId !== helpRequestId) return null;
     doseHelp = data;
     output.innerHTML = doseHelpHTML(data);
@@ -1464,8 +1466,11 @@ function factorLine(data) {
   if (!(Number(data.carbs_g) > 0)) return '<p class="dose-factor">' + kf + '</p>';
   const factor = value => '<strong>' + escapeHTML(factorNum(value)) + ' IE/KE</strong>';
   const count = ' (' + (data.auto_factor_count || 0) + '/' + data.auto_factor_min_meals + ')';
+  const surcharge = data.auto_surcharge_units != null
+    ? ' + Zuschlag <strong>' + escapeHTML(num(data.auto_surcharge_units, 2)) + ' IE</strong>'
+    : data.auto_method === "surcharge" && data.auto_units_per_ke != null ? ' · Snack ohne Zuschlag' : '';
   const used = data.auto_units_per_ke != null
-    ? 'Berechneter Faktor ' + factor(data.auto_units_per_ke) + count
+    ? 'Berechneter Faktor ' + factor(data.auto_units_per_ke) + count + surcharge
     : 'Berechneter Faktor –' + count + ' · ersatzweise ' + (data.factor_source === "breakfast_day_type"
       ? 'Frühstück ' + (data.day_type === "free" ? "frei" : "Arbeit") : 'Nightscout') + ' ' + factor(data.units_per_ke);
   return '<p class="dose-factor">' + used + ' · ' + kf + '</p>';
@@ -1723,6 +1728,7 @@ async function saveSettings(event) {
     window_minutes: Number(form.elements.window_minutes.value),
     dose_target_mgdl: form.elements.dose_target_mgdl.value,
     dose_cautious_target_mgdl: form.elements.dose_cautious_target_mgdl.value,
+    auto_method: form.elements.auto_method.value,
     auto_percentile: form.elements.auto_percentile.value,
     auto_lookback_days: Number(form.elements.auto_lookback_days.value),
     auto_half_life_days: form.elements.auto_half_life_days.value,
@@ -1867,7 +1873,7 @@ function renderSuggestionDerivation(d) {
   const output = $("#suggestion-derivation");
   if (!d) { output.innerHTML = ""; return; }
   $("#suggestion-method").textContent = "Aktiv: " + d.lookback_days + " T. · Halbwertszeit " + num(d.half_life_days, 1) +
-    " T. · " + num(d.percentile, 1) + " %";
+    " T. · " + num(d.percentile, 1) + " %" + (d.method === "surcharge" ? " + Zuschlag" : "");
   const low = Number(d.glucose_low_mgdl), high = Number(d.glucose_high_mgdl);
   const variants = d.variants || [];
   const percentiles = variants.length ? variants[0].cells.map(cell => cell.percentile) : [];
@@ -1882,7 +1888,9 @@ function renderSuggestionDerivation(d) {
   const strength = days => { const diff = Number(days) - 7; return num(days, 1) + ' T.' + (diff < 0 ? ' <small>stärker</small>' : diff > 0 ? ' <small>schwächer</small>' : ''); };
   const cellHTML = (variant, cell) => {
     const [below, inRange, above] = shares(cell.stats);
-    const active = Number(cell.percentile) === Number(d.percentile) && Number(variant.lookback_days) === Number(d.lookback_days) &&
+    const active = (d.method === "surcharge" ? cell.percentile === "surcharge"
+      : cell.percentile !== "surcharge" && Number(cell.percentile) === Number(d.percentile)) &&
+      Number(variant.lookback_days) === Number(d.lookback_days) &&
       Number(variant.half_life_days) === Number(d.half_life_days);
     const isBest = best && best.cell === cell;
     const isPeriodBest = bestPerLookback.has(cell);
@@ -1910,15 +1918,15 @@ function renderSuggestionDerivation(d) {
     'Grün umrandet: bestes Feld je Zeitraum (meiste im Bereich, dann wenigste unter ' + num(low, 0) + '), kräftig: bestes gesamt.</p>';
   output.innerHTML = total
     ? legend + '<div class="table-wrap"><table class="analysis-table compact matrix"><thead><tr><th>Zeitraum</th><th>Halbwertszeit</th>' +
-      percentiles.map(value => '<th>' + (value === "band" ? 'Zielband <small>max. ' + num(low, 0) + '–' + num(high, 0) + '</small>'
+      percentiles.map(value => '<th>' + (value === "surcharge" ? escapeHTML(num(d.percentile, 1)) + ' % + Zuschlag <small>' + num(d.surcharge_mgdl, 0) + ' mg/dL je Mahlzeit</small>'
         : escapeHTML(num(value, 1)) + ' %' + (Number(value) === 50 ? ' <small>Median</small>' : '')) + '</th>').join("") +
       '</tr></thead><tbody>' + rows.join("") + '</tbody></table></div>' +
       '<p class="hint derivation-note">Getestet werden dieselben ' + total + (total === 1 ? ' Mahlzeit' : ' Mahlzeiten') +
       ' der letzten ' + d.backtest_days + ' Tage für alle Felder, unabhängig vom Zeitraum oben. Jede Mahlzeit bekommt den Vorschlag, ' +
       'den das Feld aus den Tagen davor berechnet hätte; gezeigt wird der BZ am Endpunkt mit diesem Faktor bei Korrektur auf den Zielwert (Modellrechnung: Ziel + (tatsächlicher − vorgeschlagener Faktor) × Σ[KH × KF] / 10, nur der Faktorfehler zählt). ' +
-      'Kürzere Halbwertszeit = neue Werte zählen stärker. Zielband (nur Test, kein Vorschlag): der Faktor, mit dem die meisten ' +
-      'gewichteten früheren Mahlzeiten bei Korrektur auf ' + num(d.dose_target_mgdl, 0) + ' mg/dL zwischen ' + num(low, 0) + ' und ' +
-      num(high, 0) + ' gelandet wären, passend zur Größe der jeweiligen Mahlzeit.</p>'
+      'Kürzere Halbwertszeit = neue Werte zählen stärker. Zuschlag: eingestelltes Perzentil der Faktoren ohne einen festen Anstieg von ' +
+      num(d.surcharge_mgdl, 0) + ' mg/dL je Hauptmahlzeit (Fett/Eiweiß, bis ' + num(d.surcharge_full_grams, 0) +
+      ' g KH anteilig), dazu dieser Zuschlag für die jeweilige Mahlzeit.</p>'
     : '<p class="hint derivation-note">In den letzten ' + d.backtest_days + ' Tagen fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
       d.min_meals + ' Faktoren derselben Mahlzeit in jedem Zeitraum davor, also auch in den letzten 8 Tagen).</p>';
 }
@@ -1965,7 +1973,8 @@ async function loadSummary() {
       : Number(low) === Number(high) ? factorNum(low) : factorNum(low) + '–' + factorNum(high);
     const fact = (label, value, key = false) =>
       '<div' + (key ? ' class="key"' : '') + '><dt>' + label + '</dt><dd>' + escapeHTML(value) + '</dd></div>';
-    const suggestion = s => s.auto_units_per_ke != null ? factorNum(s.auto_units_per_ke) : '—';
+    const suggestion = s => s.auto_units_per_ke != null
+      ? factorNum(s.auto_units_per_ke) + (s.surcharge ? ' + Zuschlag' : '') : '—';
     const suggestionNote = s => 'Vorschlag aus ' + s.count + '\u00a0(' + s.days + '\u00a0T.)';
     const mealsText = count => count + (count === 1 ? ' Mahlzeit' : ' Mahlzeiten');
     const breakfastSubcards = () => '<div class="breakfast-subcards">' + ["work", "free"].map(dayType => {
@@ -2167,6 +2176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#entry-assign-chip").addEventListener("click", () => {
     state.entryAs = entryAssignment()?.snack ? "meal" : "snack";
     updateEntrySportOption();
+    scheduleDoseHelp();
   });
   $("#entry-form").elements.consider_sport.addEventListener("change", () => {
     updateEntrySportOption();

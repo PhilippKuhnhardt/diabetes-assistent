@@ -511,6 +511,32 @@ class IntegrationTests(unittest.TestCase):
         self.assertIsNotNone(fixed["factor_units_per_ke"])
         self.assertEqual(Decimal(fixed["g3"]), Decimal(130))
 
+    def test_surcharge_method_is_a_setting(self):
+        self.assertEqual(self.request("/api/settings")["settings"]["auto_method"], "percentile")
+        saved = self.request("/api/settings", method="POST", body={"auto_method": "surcharge"})
+        self.assertEqual(saved["settings"]["auto_method"], "surcharge")
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            self.request("/api/settings", method="POST", body={"auto_method": "band"})
+        self.assertEqual(error.exception.code, 400)
+        error.exception.close()
+        summary = self.request("/api/summary?days=1")
+        self.assertEqual(summary["suggestion_derivation"]["method"], "surcharge")
+        self.assertTrue(summary["groups"]["dinner"]["suggestion"]["surcharge"])
+
+    def test_surcharge_goes_to_main_meals_not_snacks(self):
+        self.request("/api/settings")  # Sync the current Nightscout I:C and KF schedules.
+        self.request("/api/settings", method="POST", body={"auto_method": "surcharge"})
+        now = datetime.now(timezone.utc)
+        current_day = {"entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 150}], "treatments": []}
+        with patch("app.server.day_payload", return_value=current_day), \
+                patch("app.server.forecast.predict_method", return_value={"count": 5, "units_per_ke": Decimal(1)}):
+            meal = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
+            snack = self.request("/api/dose-help", method="POST", body={"carbs": "20", "snack": True})
+        # 20 g is half of the full-surcharge size: 20 mg/dL at KF 50 is 0.4 IE.
+        self.assertEqual(Decimal(meal["auto_surcharge_units"]), Decimal("0.4"))
+        self.assertNotIn("auto_surcharge_units", snack)
+        self.assertEqual(Decimal(meal["auto_carb_units"]) - Decimal(snack["auto_carb_units"]), Decimal("0.4"))
+
     def test_quality_marks_are_stored_in_nightscout_and_shown_per_meal(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4", "notes": "Pizza",
@@ -1025,7 +1051,7 @@ class IntegrationTests(unittest.TestCase):
         variants = derivation["variants"]
         self.assertEqual([(item["lookback_days"], Decimal(item["half_life_days"])) for item in variants],
                          [(days, Decimal(half)) for days in (8, 15, 30) for half in (1, 2, 3, 5, 7, 14, 28)])
-        self.assertEqual([str(cell["percentile"]) for cell in variants[0]["cells"]], ["25", "37.5", "50", "band"])
+        self.assertEqual([str(cell["percentile"]) for cell in variants[0]["cells"]], ["25", "37.5", "50", "surcharge"])
         self.assertEqual((derivation["glucose_low_mgdl"], derivation["glucose_high_mgdl"]), ("80", "160"))
 
     def test_summary_shows_median_middle_half_and_full_range(self):

@@ -79,7 +79,7 @@ def validate_settings(value: dict) -> dict:
     for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes",
                 "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
                 "sport_effects_mgdl", "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile",
-                "auto_half_life_days", "auto_lookback_days"):
+                "auto_half_life_days", "auto_lookback_days", "auto_method"):
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
@@ -87,8 +87,8 @@ def validate_settings(value: dict) -> dict:
     result.pop("ic_schedule", None)
     result.pop("target_schedule", None)
     result.pop("nightscout_profile", None)
-    # The day shift and the equally weighted method were removed; only weighting remains.
-    result.pop("auto_method", None)
+    if result.get("auto_method", "percentile") not in forecast.METHODS:
+        raise ValueError("Unbekannte Methode der Automatik")
     ZoneInfo(result["timezone"])
     window = int(result["window_minutes"])
     peak = int(result["peak_minutes"])
@@ -133,6 +133,7 @@ def validate_settings(value: dict) -> dict:
         "auto_percentile": str(auto_percentile),
         "auto_half_life_days": str(half_life),
         "auto_lookback_days": auto_lookback,
+        "auto_method": result.get("auto_method", "percentile"),
     })
     return result
 
@@ -181,6 +182,8 @@ def suggestion_factor(prediction: dict, settings: tuple[Decimal, Decimal, int]) 
         "auto_units_per_ke": str(value) if value is not None else None,
         "count": prediction["count"], "days": settings[2], "min_meals": AUTO_FACTOR_MIN_MEALS,
         "percentile": str(settings[0]), "half_life_days": str(settings[1]),
+        "surcharge": prediction.get("surcharge", False),
+        "surcharge_mgdl": str(forecast.SURCHARGE_MGDL), "surcharge_full_grams": str(forecast.SURCHARGE_FULL_GRAMS),
     }
 
 
@@ -212,6 +215,7 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
                 "end_glucose": Decimal(result["g3"]) if result.get("g3") is not None else None,
                 "carbs_isf": (Decimal(result["carbs_times_isf_total"])
                               if result.get("carbs_times_isf_total") is not None else None),
+                "carbs_g": Decimal(result["carbs_total"]) if result.get("carbs_total") is not None else None,
             })
     return points
 
@@ -907,7 +911,9 @@ class Handler(BaseHTTPRequestHandler):
                 points = meal_points(today, max(max(days - 1, forecast.BACKTEST_DAYS - 1) + forecast.MAX_LOOKBACK + 1,
                                                  forecast.RATIO_DAYS + forecast.RATIO_REFERENCE_DAYS),
                                      day_types, vacations, loaded_days)
-                predictions = {key: forecast.predict(points, key, today, percentile, half_life, lookback)
+                method = settings.get("auto_method", "percentile")
+                predictions = {key: {**forecast.predict_method(points, key, today, percentile, half_life, lookback, method),
+                                     "surcharge": method == forecast.SURCHARGE}
                                for key in (("breakfast", "work"), ("breakfast", "free"),
                                            ("lunch", None), ("dinner", None))}
                 for kind in ("work", "free"):
@@ -917,17 +923,19 @@ class Handler(BaseHTTPRequestHandler):
                     groups[name]["suggestion"] = suggestion_factor(predictions[(name, None)], configured)
                 # Backtest matrix: every lookback × half-life (plus the configured ones), each at 25 %,
                 # the configured percentile and 50 %, all evaluated on the same meals of the last 90 days.
-                # A last column tests the target-band method, aimed at the configured dose target.
-                percentiles = [*sorted({Decimal(25), percentile, Decimal(50)}), forecast.BAND]
+                # A last column tests the configured percentile with the fixed surcharge per main meal.
+                percentiles = [*sorted({Decimal(25), percentile, Decimal(50)}), forecast.SURCHARGE]
                 rows = [(days_back, strength) for days_back in sorted({*forecast.LOOKBACKS, lookback})
                         for strength in sorted({*forecast.HALF_LIVES, half_life})]
                 test = forecast.backtest(points, today - timedelta(days=forecast.BACKTEST_DAYS - 1),
                                          [(days_back, strength, value) for days_back, strength in rows
                                           for value in percentiles],
-                                         calculation.dec(settings["dose_target_mgdl"]))
+                                         calculation.dec(settings["dose_target_mgdl"]), percentile)
                 cells = iter(test["stats"])
                 suggestion_derivation = {
                     "percentile": str(percentile), "half_life_days": str(half_life), "lookback_days": lookback,
+                    "method": method, "surcharge_mgdl": str(forecast.SURCHARGE_MGDL),
+                    "surcharge_full_grams": str(forecast.SURCHARGE_FULL_GRAMS),
                     "min_meals": forecast.MIN_MEALS, "meal_count": len(test["rows"]),
                     "backtest_days": forecast.BACKTEST_DAYS,
                     "variants": [{"lookback_days": days_back, "half_life_days": strength,
@@ -1051,15 +1059,21 @@ class Handler(BaseHTTPRequestHandler):
                                   and factor["median_units_per_ke"] > 0)
                 auto_percentile, half_life, lookback = forecast_settings(current_settings)
                 points = meal_points(local_now.date(), lookback, overrides, periods)
-                prediction = forecast.predict(points, (meal_kind, day_type if is_breakfast else None),
-                                              local_now.date(), auto_percentile, half_life, lookback)
+                method = current_settings.get("auto_method", "percentile")
+                prediction = forecast.predict_method(points, (meal_kind, day_type if is_breakfast else None),
+                                                     local_now.date(), auto_percentile, half_life, lookback, method)
                 auto_value = prediction["units_per_ke"]
+                # The surcharge belongs once to each main meal; a snack of a meal gets the factor only.
+                surcharge = (method == forecast.SURCHARGE and auto_value is not None
+                             and payload.get("snack") is not True)
                 result = dosing.suggest(payload.get("carbs", 0), current_settings, entries, treatments, now,
                                         activity_change=payload.get("activity_change_mgdl", 0),
                                         units_per_ke=factor["median_units_per_ke"] if use_factor else None,
-                                        auto_units_per_ke=auto_value)
+                                        auto_units_per_ke=auto_value,
+                                        auto_surcharge_mgdl=forecast.SURCHARGE_MGDL if surcharge else None,
+                                        surcharge_share=forecast.surcharge_share)
                 result.update({
-                    "auto_meal": meal_kind, "auto_factor_count": prediction["count"],
+                    "auto_meal": meal_kind, "auto_factor_count": prediction["count"], "auto_method": method,
                     "auto_factor_min_meals": AUTO_FACTOR_MIN_MEALS, "auto_percentile": str(auto_percentile),
                     "auto_half_life_days": str(half_life), "auto_factor_days": lookback,
                     "auto_median_units_per_ke": str(median(meal_values)) if meal_values else None,
