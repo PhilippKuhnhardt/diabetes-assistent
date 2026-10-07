@@ -444,12 +444,18 @@ span.range-high { color: #9a6410; font-weight: 650; }
 .entry-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 14px; }
 .entry-chips .entry-sport-option, .entry-chips .entry-quality { display: contents; }
 .entry-chips .entry-quality[hidden], .entry-chips[hidden] { display: none; }
-#entry-carbs-field, .entry-quality-row { margin-bottom: 12px; }
-/* Number and time fields of the entry form sit compactly to the right of their label. */
-#entry-form label:has(> input[type=number], > input[type=time]) { display: flex; align-items: center; gap: 0; margin-bottom: 10px; }
-#entry-form label:has(> input[type=number], > input[type=time]) > span { margin: 0 8px 0 5px; }
-#entry-form label:has(> input[type=number], > input[type=time]) > input { flex: 0 0 120px; width: 120px; margin-left: auto; text-align: right; }
-.entry-quality-row { margin-top: -4px; }
+#entry-carbs-field { margin-bottom: 10px; }
+/* Entry cards: meal, outside factors, dose. Number and time inputs stay narrow under their label. */
+#entry-form input[type=number], #entry-form input[type=time] { width: 120px; }
+.entry-card { margin: 0 0 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--canvas); }
+.entry-card[hidden] { display: none; }
+.entry-card > label:last-child, .entry-card > :last-child { margin-bottom: 0; }
+.entry-card-title { margin: 0 0 8px; color: var(--green-dark); font-size: 12px; font-weight: 750; }
+.entry-dose-card { border-color: #bddac6; background: #f9fdf9; }
+.entry-dose-card .help-result:not(:empty) { margin: 0 0 12px; padding: 0; border: 0; background: none; }
+.inline-unit { display: flex; align-items: center; gap: 8px; }
+.inline-unit > span { font-size: 12px; }
+.entry-quality-row { margin: 0; }
 .entry-chips button.chip.quiet-chip { background: none; border-style: dashed; color: var(--muted); }
 #edit-quality { margin: 0 0 14px; }
 .entry-chips button.chip, .entry-chips label.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; margin: 0; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--canvas); color: var(--ink); font-size: 12px; font-weight: 650; cursor: pointer; }
@@ -553,3 +559,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .certainty-slider input[type=range] { flex: 1; min-width: 60px; min-height: 0; height: 28px; margin: 0; padding: 0; border: 0; background: none; accent-color: var(--green); }
 .certainty-label { min-width: 82px; font-size: 12px; font-weight: 650; color: var(--amber); white-space: nowrap; }
 .entry-quality-row { flex-wrap: nowrap; }
+.entry-card .entry-chips { margin: 0 0 10px; }
+.entry-card .inline-unit { margin-bottom: 10px; }
+.entry-card .entry-day-type { margin: 0; }
+.entry-card > .entry-chips:last-child, .entry-card > .inline-unit:last-child { margin-bottom: 0; }
