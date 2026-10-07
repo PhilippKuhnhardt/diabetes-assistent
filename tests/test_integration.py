@@ -491,6 +491,46 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(reset["end"], "2026-09-23T13:00:00+00:00")
         self.assertEqual(marks.analysis_windows(), {})
 
+    def test_calculated_day_is_stored_and_recalculated_when_an_input_changes(self):
+        from app.services import day_view
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",
+        })
+        first = self.request("/api/day?date=2026-09-23")
+        with patch("app.services.day_view.compute_day", wraps=day_view.compute_day) as compute:
+            self.assertEqual(day_view.day_payload("2026-09-23", refresh=False)["meals"], first["meals"])
+            self.assertEqual(compute.call_count, 0)
+            meal_id = first["meals"][0]["id"]
+            changes = [
+                ("/api/analysis/sport", {"meal_id": meal_id, "day": "2026-09-23", "status": "affected",
+                                         "effect_mgdl": "30"}),
+                ("/api/analysis/window", {"meal_id": meal_id, "day": "2026-09-23",
+                                          "start": MEAL_AT, "end": "2026-09-23T14:00:00Z"}),
+                ("/api/analysis/day-type", {"day": "2026-09-23", "day_type": "free"}),
+                ("/api/settings", {"window_minutes": 170}),
+                ("/api/basal", {"at": "2026-09-23T06:00:00Z", "units": "17"}),
+            ]
+            for path, body in changes:
+                with self.subTest(path):
+                    calls = compute.call_count
+                    self.request(path, method="POST", body=body)
+                    day_view.day_payload("2026-09-23", refresh=False)
+                    self.assertEqual(compute.call_count, calls + 1)
+                    day_view.day_payload("2026-09-23", refresh=False)
+                    self.assertEqual(compute.call_count, calls + 1)
+            # A fresh Nightscout read rewrites the mirror, so the day is calculated again.
+            calls = compute.call_count
+            self.request("/api/day?date=2026-09-23")
+            self.assertEqual(compute.call_count, calls + 1)
+            with patch("app.services.day_view.CODE_VERSION", "other code"):
+                day_view.day_payload("2026-09-23", refresh=False)
+            self.assertEqual(compute.call_count, calls + 2)
+        stored = day_view.day_payload("2026-09-23", refresh=False)
+        self.assertEqual(stored["meals"][0]["sport"]["effect_mgdl"], "30")
+        self.assertTrue(stored["meals"][0]["calculation"]["manual_window"])
+        self.assertEqual(stored["day_type"], "free")
+        self.assertEqual(len(stored["basal"]), 1)
+
     def test_blocked_calculation_still_exposes_editable_window(self):
         FakeNightscout.entries = FakeNightscout.entries[:1] + [
             {"_id": "glucose-1405", "date": int(datetime(2026, 9, 23, 14, 5, tzinfo=timezone.utc).timestamp() * 1000),
