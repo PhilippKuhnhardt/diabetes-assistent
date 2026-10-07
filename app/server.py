@@ -73,13 +73,18 @@ def parse_instant(value: str) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
+def unit_text(units: Decimal) -> str:
+    """Insulin units without trailing zeros or exponent: 20, 17.5."""
+    return format(units.normalize(), "f") if units else "0"
+
+
 def validate_settings(value: dict) -> dict:
     _, old = storage.get_settings()
     result = dict(old)
     for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes",
                 "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
                 "sport_effects_mgdl", "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile",
-                "auto_half_life_days", "auto_lookback_days"):
+                "auto_half_life_days", "auto_lookback_days", "basal_default_units"):
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
@@ -113,6 +118,9 @@ def validate_settings(value: dict) -> dict:
     half_life = calculation.dec(result["auto_half_life_days"])
     if not half_life.is_finite() or not 1 <= half_life <= 28:
         raise ValueError("Halbwertszeit der Automatik muss zwischen 1 und 28 Tagen liegen")
+    basal_default = calculation.dec(result.get("basal_default_units", storage.DEFAULT_BASAL_UNITS))
+    if not basal_default.is_finite() or not 0 <= basal_default <= 100 or basal_default % Decimal("0.5"):
+        raise ValueError("Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen")
     effects = result["sport_effects_mgdl"]
     if not (0 < breakfast_end < lunch_end < 1440 and 0 <= lookback <= 1440):
         raise ValueError("Ungültige Mahlzeiten- oder Sportzeiten")
@@ -133,6 +141,7 @@ def validate_settings(value: dict) -> dict:
         "auto_percentile": str(auto_percentile),
         "auto_half_life_days": str(half_life),
         "auto_lookback_days": auto_lookback,
+        "basal_default_units": unit_text(basal_default),
     })
     return result
 
@@ -306,13 +315,16 @@ def day_payload(day: str, refresh: bool = True) -> dict:
     settings_id, settings = storage.get_settings()
     start, end = local_day_range(day, settings["timezone"])
     sync_error = None
+    fresh = False
     if refresh and nightscout.is_configured():
         try:
             raw_entries, raw_treatments = nightscout.fetch_range(start, end)
             storage.mirror_day(day, raw_entries, raw_treatments, start, end)
+            fresh = True
         except nightscout.NightscoutError as error:
             sync_error = str(error)
     raw_entries, raw_treatments = storage.cached_between(start, end)
+    basal_doses, basal_sync_error = reconcile_basal(start, end, raw_treatments, fresh)
     entries = episodes.normalize_entries(raw_entries)
     treatments = episodes.normalize_treatments(raw_treatments)
     episodes.group_diary_followups(treatments, settings)
@@ -389,6 +401,8 @@ def day_payload(day: str, refresh: bool = True) -> dict:
             continue
         if item["id"] in meal_sources or item["id"] in shown_in_meals or item.get("episode_id") in episode_ids:
             continue
+        if episodes.BASAL_MARKER in item["notes"]:
+            continue
         if item["eventType"] == "Exercise":
             kind = item.get("sport_type")
             note = episodes.EVENT_TAG.sub("", episodes.SPORT_TAG.sub("", item["notes"])).strip()
@@ -408,11 +422,18 @@ def day_payload(day: str, refresh: bool = True) -> dict:
             "notes": episodes.EVENT_TAG.sub("", episodes.TAG.sub("", item["notes"])).strip(),
         })
     timeline = []
-    for item in treatments:
+    # Basal notes in Nightscout are shown from the local record, which also holds unsent doses.
+    basal_items = [{"id": dose["id"], "at": dose["at"], "eventType": "Basal", "carbs": 0, "insulin": 0,
+                    "basal_units": dose["units"], "duration": 0, "notes": dose["notes"],
+                    "nightscout_synced": dose["nightscout_synced"]} for dose in basal_doses]
+    for item in sorted([entry for entry in treatments if episodes.BASAL_MARKER not in entry["notes"]] + basal_items,
+                       key=lambda entry: entry["at"]):
         if item["at"].astimezone(zone).date().isoformat() != day:
             continue
         event_type = item["eventType"]
-        if event_type == "Exercise":
+        if event_type == "Basal":
+            kind = "basal"
+        elif event_type == "Exercise":
             kind = "exercise"
         elif event_type == "Meal Bolus" and calculation.dec(item["carbs"]) > 0:
             kind = "meal"
@@ -445,6 +466,7 @@ def day_payload(day: str, refresh: bool = True) -> dict:
             "basal_units": item["basal_units"], "duration_minutes": item["duration"],
             "sport_kind": item.get("sport_type"), "notes": note,
             "glucose_mgdl": glucose, "glucose_at": glucose_at,
+            **({"nightscout_synced": item["nightscout_synced"]} if kind == "basal" else {}),
         })
     day_type, day_type_source = storage.day_type_for(day, storage.analysis_day_types(), storage.vacation_periods())
     return json_safe({
@@ -454,6 +476,9 @@ def day_payload(day: str, refresh: bool = True) -> dict:
         "profile_sync_error": profile_sync_error,
         "settings_version": settings_id, "meals": rendered, "exercises": exercises, "other_events": other_events,
         "timeline": timeline,
+        "basal": [{"id": dose["id"], "at": dose["at"], "units": dose["units"], "notes": dose["notes"],
+                   "nightscout_synced": dose["nightscout_synced"]} for dose in basal_doses],
+        "basal_sync_error": basal_sync_error,
         "night": night,
         "entries": [{"at": item["at"], "sgv": item["sgv"]} for item in entries],
         "treatments": [episodes.serialize_treatment(item) for item in treatments],
@@ -576,6 +601,120 @@ def save_diary_treatment(payload: dict) -> dict:
     elif not ensure_not_duplicate(day, event_id):
         nightscout.write_treatment(record)
     return {"id": record_id or None, "event_id": event_id, "day": day}
+
+
+def basal_event_id(record: dict) -> str | None:
+    """App event ID of a basal note in Nightscout, or None for other treatments."""
+    notes = str(record.get("notes") or "")
+    if episodes.BASAL_MARKER not in notes:
+        return None
+    match = re.search(r"\[DAE:([a-f0-9-]{36})\]", notes)
+    return match.group(1) if match else (str(record.get("identifier") or "") or None)
+
+
+def basal_record(dose: dict) -> dict:
+    """Nightscout copy of a basal dose: a note without an insulin field, so neither
+    Nightscout's IOB nor the meal-factor model counts it as rapid insulin."""
+    units = calculation.dec(dose["units"])
+    note = str(dose.get("notes") or "").strip()
+    text = f"Basal {unit_text(units)} IE" + (f" — {note}" if note else "")
+    return {
+        "eventType": "Note", "created_at": dose["at"].astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "notes": f"{text} {episodes.BASAL_MARKER} [DAE:{dose['id']}]", "basal_units": float(units),
+        "enteredBy": "Diabetes Diary", "identifier": dose["id"],
+    }
+
+
+def push_basal(dose: dict, remote: list[dict] | None = None) -> None:
+    """Write a local basal dose to Nightscout unless it is already there."""
+    if remote is None:
+        _, settings = storage.get_settings()
+        day = dose["at"].astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+        start, end = local_day_range(day, settings["timezone"])
+        _, remote = nightscout.fetch_range(start, end)
+    if not any(basal_event_id(item) == dose["id"] for item in remote):
+        nightscout.write_treatment(basal_record(dose))
+    storage.set_basal_synced(dose["id"])
+
+
+def reconcile_basal(start: datetime, end: datetime, raw_treatments: list[dict], fresh: bool) -> tuple[list[dict], str | None]:
+    """Local basal doses of a day. After a fresh Nightscout read, unsent doses are sent,
+    doses deleted in Nightscout are dropped, and basal notes known only to Nightscout are adopted."""
+    local = storage.basal_doses_between(start, end)
+    if not fresh:
+        return local, None
+    error = None
+    remote = {}
+    for item in raw_treatments:
+        dose_id = basal_event_id(item)
+        if dose_id:
+            remote[dose_id] = item
+    for dose in local:
+        if dose["id"] in remote:
+            if not dose["nightscout_synced"]:
+                storage.set_basal_synced(dose["id"])
+        elif dose["nightscout_synced"]:
+            storage.delete_basal_dose(dose["id"])
+        else:
+            try:
+                push_basal(dose, raw_treatments)
+            except nightscout.NightscoutError as failure:
+                error = str(failure)
+    known = {dose["id"] for dose in local}
+    for dose_id, item in remote.items():
+        units = calculation.dec(item.get("basal_units") or 0)
+        if dose_id in known or not units.is_finite() or not 0 < units <= 100:
+            continue
+        try:
+            at = episodes.parse_at(item)
+        except (ValueError, KeyError):
+            continue
+        storage.save_basal_dose(dose_id, at, unit_text(units), synced=True)
+    return storage.basal_doses_between(start, end), error
+
+
+def save_basal(payload: dict) -> dict:
+    """Store a basal injection locally and, when connected, as a Nightscout note."""
+    at = parse_instant(str(payload["at"]))
+    units = calculation.dec(payload.get("units") or 0)
+    if not units.is_finite() or not 0 < units <= 100 or units % Decimal("0.5"):
+        raise ValueError("Basal muss zwischen 0,5 und 100 IE in 0,5er-Schritten liegen")
+    dose_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
+    note = str(payload.get("notes") or "").strip()[:500]
+    _, settings = storage.get_settings()
+    day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+    storage.save_basal_dose(dose_id, at, unit_text(units), note)
+    dose = storage.basal_dose(dose_id)
+    error = None
+    if nightscout.is_configured():
+        try:
+            push_basal(dose)
+        except nightscout.NightscoutError as failure:
+            error = str(failure)
+    else:
+        error = "Nightscout ist nicht verbunden"
+    return {"id": dose_id, "day": day, "nightscout_synced": error is None, "nightscout_error": error}
+
+
+def delete_basal(dose_id: str) -> None:
+    dose = storage.basal_dose(dose_id)
+    if dose is None:
+        raise ValueError("Basal-Eintrag nicht gefunden")
+    if nightscout.is_configured():
+        try:
+            _, settings = storage.get_settings()
+            day = dose["at"].astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+            start, end = local_day_range(day, settings["timezone"])
+            _, remote = nightscout.fetch_range(start, end)
+            for item in remote:
+                if basal_event_id(item) == dose_id and item.get("_id"):
+                    nightscout.delete_treatment(str(item["_id"]))
+                    storage.delete_cached_treatment(str(item["_id"]))
+        except nightscout.NightscoutError:
+            # A dose Nightscout never received can still be removed locally.
+            if dose["nightscout_synced"]:
+                raise
+    storage.delete_basal_dose(dose_id)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -1199,6 +1338,16 @@ class Handler(BaseHTTPRequestHandler):
                 self._response(200, {"version": version, "settings": settings,
                                      "message": ("I:C-Zeitplan" if is_ic else "Korrekturfaktor-Zeitplan") +
                                                 " in Nightscout gespeichert"})
+                return
+            if path == "/api/basal":
+                self._response(200, save_basal(payload))
+                return
+            if path == "/api/basal/delete":
+                dose_id = payload.get("id")
+                if not isinstance(dose_id, str) or not dose_id or len(dose_id) > 200:
+                    raise ValueError("Ungültiger Eintrag")
+                delete_basal(dose_id)
+                self._response(200, {"id": dose_id})
                 return
             if path == "/api/treatment/delete":
                 if not nightscout.is_configured():
