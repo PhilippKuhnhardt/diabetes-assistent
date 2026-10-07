@@ -13,6 +13,7 @@ from app import calculation, episodes
 from app import glucose as cgm
 from app.common import json_safe, local_day_range, parse_instant
 from app.ingestion import nightscout, sync
+from app.services import settings as settings_service
 from app.store import basal_doses as basal_store, config, marks, mirror, results
 from app.analysis.night import night_analysis
 
@@ -224,7 +225,9 @@ def compute_day(day: str) -> dict:
         "entries": [{"at": item["at"], "sgv": item["sgv"], "tone": cgm.tone(item["sgv"], item["at"], settings)}
                     for item in entries],
         "target_bands": cgm.target_bands(start, end, settings),
-        "treatments": [episodes.serialize_treatment(item) for item in treatments],
+        "treatments": [{**episodes.serialize_treatment(item), "rapid": calculation.is_rapid_insulin(item)}
+                       for item in treatments],
+        "window_limits": settings_service.MANUAL_WINDOW_LIMITS,
     })
 
 
