@@ -14,7 +14,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
 
-from app import auth, calculation, dosing, episodes, export, forecast, glucose, nightscout, sensitivity, sport_analysis, storage
+from app import auth, calculation, dosing, episodes, export, forecast, glucose, nightscout, sport_analysis, storage
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 MAX_BODY = 64 * 1024
@@ -992,7 +992,6 @@ class Handler(BaseHTTPRequestHandler):
                                  "blocked_count": 0, "values": [], "nightscout_values": [],
                                  "calculations": [], "multi_carb_count": 0, "shortened_count": 0}
                           for name in MEALS}
-                sensitivity_meals = []
                 night_records = []
                 night_start_values = []
                 night_end_values = []
@@ -1070,8 +1069,6 @@ class Handler(BaseHTTPRequestHandler):
                             expected = carb_effect - Decimal(result["insulin_effect_mgdl"]) - Decimal(result.get("sport_effect_mgdl", "0"))
                             item["expected_delta_mgdl"] = str(expected)
                             item["deviation_mgdl"] = str(Decimal(result["delta_mgdl"]) - expected)
-                        sensitivity_meals.append({"calculation": result, "excluded": excluded,
-                                                  "deviation_mgdl": item["deviation_mgdl"]})
                         if factor_text is None:
                             group["blocked_count"] += 1
                         else:
@@ -1194,9 +1191,6 @@ class Handler(BaseHTTPRequestHandler):
                     "sport_analysis": sport_analysis.analyze(
                         sport_meals, sport_sessions, settings["sport_lookback_minutes"],
                         settings["window_minutes"], episodes.SPORT_LABELS),
-                    "sensitivity_comparison": sensitivity.compare_schedule(
-                        sensitivity_meals, settings["isf_schedule"], settings["ic_schedule"],
-                        settings["timezone"]),
                     "night": {
                         "count": len(night_start_values),
                         "unavailable_count": days - len(night_start_values),
