@@ -127,7 +127,17 @@ def _day_results(db: sqlite3.Connection) -> None:
     )""")
 
 
-MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results]
+def _summary_results(db: sqlite3.Connection) -> None:
+    """Analysis pages (factor groups, Automatik factors, backtest matrix) per period."""
+    db.execute("""CREATE TABLE IF NOT EXISTS summary_results (
+        key TEXT PRIMARY KEY,
+        fingerprint TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        computed_at TEXT NOT NULL
+    )""")
+
+
+MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results]
 
 
 def init() -> None:
