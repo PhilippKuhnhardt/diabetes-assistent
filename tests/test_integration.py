@@ -610,6 +610,57 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(error.exception.code, 400)
         error.exception.close()
 
+    def test_read_api_needs_the_key_and_returns_export_rows_as_json(self):
+        self.request("/api/treatment", method="POST", body={"kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4"})
+        meal = self.request("/api/day?date=2026-09-23")["meals"][0]
+        key = "k" * 40
+        os.environ["APP_PASSWORD"] = "secret"
+
+        def get(path, token=None, method="GET"):
+            headers = {"Authorization": f"Bearer {token}"} if token else {}
+            data = b"{}" if method == "POST" else None
+            if data:
+                headers["Content-Type"] = "application/json"
+            req = urllib.request.Request(self.base + path, headers=headers, method=method, data=data)
+            with urllib.request.urlopen(req) as response:
+                return json.loads(response.read())
+
+        def status(path, token=None, method="GET"):
+            with self.assertRaises(urllib.error.HTTPError) as error:
+                get(path, token, method)
+            error.exception.close()
+            return error.exception.code
+
+        # Without API_READ_KEY no key opens the API.
+        self.assertEqual(status("/api/v1/meals", key), 401)
+        os.environ["API_READ_KEY"] = "short"
+        self.assertEqual(status("/api/v1/meals", "short"), 401)
+        os.environ["API_READ_KEY"] = key
+        self.assertEqual(status("/api/v1/meals"), 401)
+        self.assertEqual(status("/api/v1/meals", "k" * 39), 401)
+        # The key only opens the read API, never the app or writes.
+        self.assertEqual(status("/api/settings", key), 401)
+        self.assertEqual(status("/api/day?date=2026-09-23", key), 401)
+        self.assertEqual(status("/api/settings", key, method="POST"), 401)
+        index = get("/api/v1", key)
+        self.assertIn("/api/v1/meals", index["endpoints"])
+        self.assertEqual(index["first_day"], "2026-09-23")
+        meals = get("/api/v1/meals?from=2026-09-22&to=2026-09-24", key)
+        self.assertEqual((meals["from"], meals["to"]), ("2026-09-22", "2026-09-24"))
+        self.assertEqual([(row["meal_id"], row["day"], row["excluded"]) for row in meals["rows"]],
+                         [(meal["id"], "2026-09-23", False)])
+        self.assertEqual(meals["rows"][0]["factor_ie_per_ke"], meal["calculation"]["factor_units_per_ke"])
+        data = get("/api/v1/data?from=2026-09-23&to=2026-09-23", key)
+        self.assertEqual(sorted(data["tables"]), ["basal", "entries", "meals", "treatments", "window_events"])
+        self.assertIn(100, [row["sgv"] for row in data["tables"]["entries"]])
+        self.assertEqual([row["eventType"] for row in data["tables"]["treatments"]], ["Meal Bolus"])
+        self.assertTrue(get("/api/v1/profile", key)["settings"]["isf_schedule"])
+        self.assertEqual(status("/api/v1/unknown", key), 404)
+        self.assertEqual(status("/api/v1/meals?days=0", key), 400)
+        self.assertEqual(status("/api/v1/meals?from=gestern", key), 400)
+        os.environ["API_READ_KEY"] = "n" * 40
+        self.assertEqual(status("/api/v1/meals", key), 401)
+
     def test_basal_is_stored_locally_mirrored_as_note_and_ignored_by_meal_factor(self):
         self.request("/api/treatment", method="POST", body={"kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4"})
         before = self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]
