@@ -95,15 +95,6 @@ def init() -> None:
             nightscout_synced INTEGER NOT NULL DEFAULT 0
         );
         CREATE INDEX IF NOT EXISTS basal_doses_at ON basal_doses(at);
-        CREATE TABLE IF NOT EXISTS api_keys (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            prefix TEXT NOT NULL,
-            key_hash TEXT NOT NULL UNIQUE,
-            scopes TEXT NOT NULL DEFAULT 'read',
-            created_at TEXT NOT NULL,
-            last_used_at TEXT
-        );
         CREATE TABLE IF NOT EXISTS nightscout_profile_sync (
             id INTEGER PRIMARY KEY CHECK(id = 1),
             attempted_at TEXT NOT NULL,
@@ -480,39 +471,3 @@ def basal_dose(dose_id: str) -> dict | None:
         row = db.execute("SELECT id,at,units,notes,nightscout_synced FROM basal_doses WHERE id=?", (dose_id,)).fetchone()
     return {"id": row["id"], "at": datetime.fromisoformat(row["at"]), "units": row["units"], "notes": row["notes"],
             "nightscout_synced": bool(row["nightscout_synced"])} if row else None
-
-
-def _api_key_row(row) -> dict:
-    return {"id": row["id"], "name": row["name"], "prefix": row["prefix"], "scopes": row["scopes"].split(),
-            "created_at": row["created_at"], "last_used_at": row["last_used_at"]}
-
-
-def api_keys() -> list[dict]:
-    """API keys for scripts and agents; only the SHA-256 hash of a key is stored."""
-    with connect() as db:
-        rows = db.execute("SELECT id,name,prefix,scopes,created_at,last_used_at FROM api_keys ORDER BY created_at").fetchall()
-    return [_api_key_row(row) for row in rows]
-
-
-def save_api_key(key_id: str, name: str, prefix: str, key_hash: str, scopes: list[str]) -> dict:
-    with connect() as db:
-        db.execute("INSERT INTO api_keys(id,name,prefix,key_hash,scopes,created_at) VALUES(?,?,?,?,?,?)",
-                   (key_id, name, prefix, key_hash, " ".join(scopes), datetime.now(timezone.utc).isoformat()))
-        row = db.execute("SELECT id,name,prefix,scopes,created_at,last_used_at FROM api_keys WHERE id=?", (key_id,)).fetchone()
-    return _api_key_row(row)
-
-
-def delete_api_key(key_id: str) -> bool:
-    with connect() as db:
-        return db.execute("DELETE FROM api_keys WHERE id=?", (key_id,)).rowcount > 0
-
-
-def use_api_key(key_hash: str) -> dict | None:
-    """The key with this hash, marked as used now; None for an unknown or revoked key."""
-    with connect() as db:
-        row = db.execute("SELECT id,name,prefix,scopes,created_at,last_used_at FROM api_keys WHERE key_hash=?",
-                         (key_hash,)).fetchone()
-        if row is None:
-            return None
-        db.execute("UPDATE api_keys SET last_used_at=? WHERE id=?", (datetime.now(timezone.utc).isoformat(), row["id"]))
-    return _api_key_row(row)

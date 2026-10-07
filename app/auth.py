@@ -4,13 +4,11 @@ from __future__ import annotations
 import hashlib
 import hmac
 import os
-import secrets
 from http.cookies import SimpleCookie
 
 COOKIE_NAME = "diary_session"
-API_KEY_PREFIX = "da_"
-# Scopes an API key can carry. Only reading exists; writing would get its own scope later.
-API_SCOPES = ("read",)
+# A later write key would get its own variable, never reuse the read key.
+MIN_API_KEY_LENGTH = 32
 MAX_AGE = 365 * 24 * 3600
 
 
@@ -40,18 +38,14 @@ def cookie_header(secure: bool = False, clear: bool = False) -> str:
     return header + ("; Secure" if secure else "")
 
 
-def new_api_key() -> str:
-    return API_KEY_PREFIX + secrets.token_urlsafe(32)
+def read_api_key() -> str:
+    """Read-only key for scripts and agents (`API_READ_KEY`); too short or unset disables key access."""
+    key = os.environ.get("API_READ_KEY", "")
+    return key if len(key) >= MIN_API_KEY_LENGTH else ""
 
 
-def api_key_hash(key: str) -> str:
-    return hashlib.sha256(key.encode()).hexdigest()
-
-
-def bearer_key(authorization_header: str) -> str | None:
-    """The key of an "Authorization: Bearer da_…" header, None when absent or malformed."""
+def api_read_authorized(authorization_header: str) -> bool:
+    """True for "Authorization: Bearer <API_READ_KEY>"."""
     scheme, _, value = authorization_header.strip().partition(" ")
-    value = value.strip()
-    if scheme.lower() != "bearer" or not value.startswith(API_KEY_PREFIX) or len(value) > 200:
-        return None
-    return value
+    expected = read_api_key()
+    return bool(expected) and scheme.lower() == "bearer" and hmac.compare_digest(value.strip().encode(), expected.encode())

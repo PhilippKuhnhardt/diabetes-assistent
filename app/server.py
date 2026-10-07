@@ -738,7 +738,6 @@ def delete_basal(dose_id: str) -> None:
 API_TABLES = {"meals": "meals", "window-events": "window_events", "entries": "entries",
               "treatments": "treatments", "basal": "basal"}
 API_MAX_DAYS = 3650
-MAX_API_KEYS = 20
 
 
 class ApiNotFound(Exception):
@@ -840,13 +839,11 @@ class Handler(BaseHTTPRequestHandler):
         return False
 
     def _check_api_access(self) -> bool:
-        """/api/v1 accepts an "Authorization: Bearer" API key with read scope, or the browser login."""
+        """/api/v1 accepts "Authorization: Bearer <API_READ_KEY>" or the browser login."""
         header = self.headers.get("Authorization")
         if not header:
             return self._check_auth()
-        key = auth.bearer_key(header)
-        record = storage.use_api_key(auth.api_key_hash(key)) if key else None
-        if record and "read" in record["scopes"]:
+        if auth.api_read_authorized(header):
             return True
         self._response(401, {"error": "Ungültiger API-Schlüssel"})
         return False
@@ -892,9 +889,6 @@ class Handler(BaseHTTPRequestHandler):
         if not self._check_auth():
             return
         try:
-            if path == "/api/keys":
-                self._response(200, {"keys": storage.api_keys()})
-                return
             if path == "/api/settings":
                 profile_sync_error = None
                 if nightscout.is_configured():
@@ -1486,22 +1480,6 @@ class Handler(BaseHTTPRequestHandler):
                 storage.delete_cached_treatment(record_id)
                 self._response(200, {"id": record_id})
                 return
-            if path == "/api/keys":
-                name = str(payload.get("name", "")).strip()[:60]
-                if not name:
-                    raise ValueError("Name fehlt")
-                if len(storage.api_keys()) >= MAX_API_KEYS:
-                    raise ValueError("Höchstens 20 API-Schlüssel")
-                key = auth.new_api_key()
-                record = storage.save_api_key(str(uuid.uuid4()), name, key[:10], auth.api_key_hash(key), ["read"])
-                # The key itself is shown only in this response; SQLite keeps its hash.
-                self._response(200, {**record, "key": key})
-                return
-            if path == "/api/keys/revoke":
-                if not storage.delete_api_key(str(payload["id"])):
-                    raise ValueError("API-Schlüssel nicht gefunden")
-                self._response(200, {"keys": storage.api_keys()})
-                return
             if path == "/api/settings":
                 settings = validate_settings(payload)
                 effective_at = parse_instant(str(payload["effective_at"])) if payload.get("effective_at") else None
@@ -1605,6 +1583,8 @@ def main():
     storage.init()
     host = os.environ.get("APP_HOST", "127.0.0.1")
     port = int(os.environ.get("APP_PORT", "8765"))
+    if os.environ.get("API_READ_KEY") and not auth.read_api_key():
+        print(f"API_READ_KEY ist kürzer als {auth.MIN_API_KEY_LENGTH} Zeichen; Lese-API per Schlüssel bleibt aus", flush=True)
     print(f"Diabetes Analysis listening on {host}:{port}", flush=True)
     ThreadingHTTPServer((host, port), Handler).serve_forever()
 

@@ -11,6 +11,7 @@ Compose liest alle Zugangsdaten direkt aus der Umgebung des Deployment-Prozesses
 | `NIGHTSCOUT_URL` | HTTPS-Basisadresse von Nightscout |
 | `NIGHTSCOUT_CREDENTIAL` | Roher Nightscout-Zugangstoken oder rohe `API_SECRET` |
 | `APP_PASSWORD` | Eigenes Passwort für die App-Anmeldung |
+| `API_READ_KEY` | Optional: Schlüssel für die Lese-API (mindestens 32 Zeichen) |
 | `NIGHTSCOUT_AUTH_MODE` | `secret` (Standard) oder `token` |
 
 Bei `secret` sendet die App den SHA-1-Hash der rohen `API_SECRET` im `api-secret`-Header. Bei `token` wird der rohe Zugangstoken verwendet. Die drei Zugangswerte müssen im Deployment als Umgebungsvariablen gesetzt werden; fehlende Werte stoppen Compose mit einer Fehlermeldung. Gib sie in der Secret-/Environment-Konfiguration deines Hosters an oder exportiere sie in der Shell.
@@ -29,7 +30,7 @@ Die SQLite-Datei bleibt im gemounteten Verzeichnis `APP_DATA_DIR` als `app.sqlit
 
 Für Coolify die Git-Quelle als **Dockerfile-Anwendung** anlegen (Build-Kontext im Projektverzeichnis, Dockerfile `Dockerfile`). `compose.yaml` bleibt für den lokalen Start. In Coolify den internen Port **8765** als „Ports Exposes“ und die Domain beispielsweise als `https://tagebuch.example.de:8765` konfigurieren. Der Port im Domain-Feld ist das interne Proxy-Ziel; im Browser wird die Domain über HTTPS-Port 443 aufgerufen. Keinen Host-Port veröffentlichen. Das Docker-Image setzt `APP_HOST=0.0.0.0` und `APP_DB=/data/app.sqlite3` bereits selbst.
 
-Unter **Environment Variables** `NIGHTSCOUT_URL`, `NIGHTSCOUT_CREDENTIAL` und ein starkes `APP_PASSWORD` als Laufzeitvariablen setzen. Optional: `NIGHTSCOUT_AUTH_MODE=token` statt `secret` und `APP_TIMEZONE=Europe/Berlin`. Zugangsdaten gehören nicht ins Repository oder in Build-Argumente.
+Unter **Environment Variables** `NIGHTSCOUT_URL`, `NIGHTSCOUT_CREDENTIAL` und ein starkes `APP_PASSWORD` als Laufzeitvariablen setzen. Optional: `NIGHTSCOUT_AUTH_MODE=token` statt `secret`, `APP_TIMEZONE=Europe/Berlin` und `API_READ_KEY` für die Lese-API. Zugangsdaten gehören nicht ins Repository oder in Build-Argumente.
 
 Unter **Configuration → Persistent Storage** einen **Volume Mount** mit einem Namen wie `app-data`, leerem „Source Path“ und „Destination Path“ `/data` anlegen. So bleiben `app.sqlite3` und die zu SQLite-WAL gehörenden Dateien bei einem Redeploy zusammen erhalten. Nur eine laufende App-Instanz soll dieses Verzeichnis beschreiben. Nach dem ersten Deploy im Container prüfen, dass `/data/app.sqlite3` existiert und beschreibbar ist; nach einem weiteren Deploy muss die lokale Einstellungshistorie noch vorhanden sein.
 
@@ -69,7 +70,7 @@ In **Einstellungen → Datenexport** lädt **Daten exportieren** eine ZIP mit al
 
 ## Lese-API für Skripte und Agenten
 
-In **Einstellungen → API-Zugriff** erzeugt **Schlüssel erzeugen** einen API-Schlüssel (`da_…`), der nur einmal angezeigt wird; SQLite speichert nur seinen SHA-256-Hash. Ein Schlüssel hat den Scope `read`, öffnet ausschließlich `GET /api/v1/…` und kann weder die App bedienen noch etwas ändern oder neue Schlüssel anlegen. **Widerrufen** löscht ihn sofort.
+Ist die Umgebungsvariable `API_READ_KEY` gesetzt (mindestens 32 Zeichen, z. B. `openssl rand -hex 32`), liefert `GET /api/v1/…` mit `Authorization: Bearer <API_READ_KEY>` die Daten als JSON. Der Schlüssel öffnet nur diese Lese-Endpunkte, keine anderen Seiten und keine Änderungen. Ohne die Variable funktioniert `/api/v1` nur mit der normalen Browser-Anmeldung. Wechseln = Variable im Deployment ändern und neu starten.
 
 ```sh
 curl -H "Authorization: Bearer $DIABETES_API_KEY" "https://deine-domain/api/v1/meals?days=30"
@@ -81,7 +82,7 @@ curl -H "Authorization: Bearer $DIABETES_API_KEY" "https://deine-domain/api/v1/m
 - `GET /api/v1/profile`: Einstellungen und aktuelles Nightscout-Profil.
 - Zeitraum: `?days=N` (Standard 30) oder `?from=JJJJ-MM-TT&to=JJJJ-MM-TT` (lokale Tage, inklusive, höchstens 3650 Tage).
 
-Die API liest wie der Export nur SQLite und fragt Nightscout nicht ab. Ein späterer Schreibzugriff bekäme einen eigenen Scope.
+Die API liest wie der Export nur SQLite und fragt Nightscout nicht ab. Ein späterer Schreibzugriff bekäme eine eigene Variable.
 
 ## Entwicklung
 
