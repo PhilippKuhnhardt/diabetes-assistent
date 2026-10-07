@@ -540,27 +540,43 @@ class IntegrationTests(unittest.TestCase):
     def test_quality_marks_are_stored_in_nightscout_and_shown_per_meal(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4", "notes": "Pizza",
-            "carbs_unsure": True, "fat_protein": True,
+            "carbs_certainty": "known", "fat_protein": True,
         })
         notes = FakeNightscout.treatments[0]["notes"]
-        self.assertIn("[DAQ:unsure]", notes)
+        self.assertIn("[DAQ:known]", notes)
         self.assertIn("[DAQ:fat]", notes)
         day = self.request("/api/day?date=2026-09-23")
-        self.assertEqual(day["meals"][0]["quality"], {"carbs_unsure": True, "fat_protein": True})
+        self.assertEqual(day["meals"][0]["quality"], {"carbs_certainty": "known", "fat_protein": True})
         entry = next(item for item in day["timeline"] if item["kind"] == "meal")
         self.assertEqual(entry["notes"], "Pizza")
-        self.assertTrue(entry["carbs_unsure"])
+        self.assertEqual(entry["carbs_certainty"], "known")
         self.request("/api/treatment", method="POST", body={
             "id": entry["id"], "original_day": "2026-09-23", "kind": "meal", "at": MEAL_AT,
-            "carbs": "40", "insulin": "4", "notes": "Pizza", "carbs_unsure": False, "fat_protein": True,
+            "carbs": "40", "insulin": "4", "notes": "Pizza", "carbs_certainty": None, "fat_protein": True,
         })
-        self.assertNotIn("[DAQ:unsure]", FakeNightscout.treatments[0]["notes"])
+        self.assertNotIn("[DAQ:known]", FakeNightscout.treatments[0]["notes"])
         meal = self.request("/api/day?date=2026-09-23")["meals"][0]
-        self.assertEqual(meal["quality"], {"carbs_unsure": False, "fat_protein": True})
+        self.assertEqual(meal["quality"], {"carbs_certainty": None, "fat_protein": True})
         with urllib.request.urlopen(self.base + "/api/export") as response:
             archive = zipfile.ZipFile(io.BytesIO(response.read()))
         row = next(csv.DictReader(io.StringIO(archive.read("meals.csv").decode())))
-        self.assertEqual((row["carbs_unsure"], row["fat_protein"]), ("False", "True"))
+        self.assertEqual((row["carbs_certainty"], row["fat_protein"]), ("", "True"))
+
+    def test_meal_takes_least_certain_carb_level_and_old_unsure_marks_still_count(self):
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4", "carbs_certainty": "weighed",
+        })
+        # An older client still sends carbs_unsure; existing [DAQ:unsure] notes keep meaning "unsure".
+        later = (datetime.fromisoformat(MEAL_AT) + timedelta(minutes=30)).isoformat()
+        self.request("/api/treatment", method="POST", body={
+            "kind": "carbs", "at": later, "carbs": "10", "insulin": "0", "carbs_unsure": True,
+        })
+        self.assertIn("[DAQ:unsure]", FakeNightscout.treatments[-1]["notes"])
+        meal = self.request("/api/day?date=2026-09-23")["meals"][0]
+        self.assertEqual(meal["quality"]["carbs_certainty"], "unsure")
+        with self.assertRaises(urllib.error.HTTPError):
+            self.request("/api/treatment", method="POST", body={
+                "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4", "carbs_certainty": "maybe"})
 
     def test_export_zip_contains_meals_glucose_treatments_and_profile(self):
         self.request("/api/treatment", method="POST", body={
