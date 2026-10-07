@@ -5,13 +5,14 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import auth, calculation, episodes, forecast, nightscout, storage
+from app import auth, calculation, episodes, forecast, nightscout
+from app.store import config, marks
 from app.common import parse_instant, unit_text
 from app.services import sync
 
 
 def validate_settings(value: dict) -> dict:
-    _, old = storage.get_settings()
+    _, old = config.get_settings()
     result = dict(old)
     for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes",
                 "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
@@ -50,7 +51,7 @@ def validate_settings(value: dict) -> dict:
     half_life = calculation.dec(result["auto_half_life_days"])
     if not half_life.is_finite() or not 1 <= half_life <= 28:
         raise ValueError("Halbwertszeit der Automatik muss zwischen 1 und 28 Tagen liegen")
-    basal_default = calculation.dec(result.get("basal_default_units", storage.DEFAULT_BASAL_UNITS))
+    basal_default = calculation.dec(result.get("basal_default_units", config.DEFAULT_BASAL_UNITS))
     if not basal_default.is_finite() or not 0 <= basal_default <= 100 or basal_default % Decimal("0.5"):
         raise ValueError("Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen")
     effects = result["sport_effects_mgdl"]
@@ -96,7 +97,7 @@ def validate_manual_window(meal_at: datetime, start: datetime, end: datetime) ->
 
 
 def vacation_state() -> dict:
-    current = next((period for period in storage.vacation_periods() if period["end_day"] is None), None)
+    current = next((period for period in marks.vacation_periods() if period["end_day"] is None), None)
     return {"active": bool(current), "since": current["start_day"] if current else None}
 
 
@@ -107,8 +108,8 @@ def settings_view() -> dict:
             sync.sync_profile_cache()
         except nightscout.NightscoutError as error:
             profile_sync_error = str(error)
-    version, settings = storage.get_settings()
-    profile_sync = storage.profile_sync_status()
+    version, settings = config.get_settings()
+    profile_sync = config.profile_sync_status()
     return {
         "version": version, "settings": settings, "connected": nightscout.is_configured(),
         "login_required": bool(auth.password()),
@@ -120,7 +121,7 @@ def settings_view() -> dict:
 def save_settings(payload: dict) -> dict:
     settings = validate_settings(payload)
     effective_at = parse_instant(str(payload["effective_at"])) if payload.get("effective_at") else None
-    version = storage.save_settings(settings, effective_at)
+    version = config.save_settings(settings, effective_at)
     return {"version": version, "settings": settings}
 
 
@@ -128,9 +129,9 @@ def set_vacation(payload: dict) -> dict:
     active = payload.get("active")
     if not isinstance(active, bool):
         raise ValueError("Ungültige Urlaubsauswahl")
-    _, current_settings = storage.get_settings()
+    _, current_settings = config.get_settings()
     today = datetime.now(ZoneInfo(current_settings["timezone"])).date().isoformat()
-    storage.set_vacation(active, today)
+    marks.set_vacation(active, today)
     return vacation_state()
 
 
@@ -153,8 +154,8 @@ def save_profile_schedule(path: str, payload: dict) -> dict:
                 converted.append(row)
         schedule = converted
     profiles = nightscout.update_profile_schedule("carbratio" if is_ic else "sens", schedule, profile_id)
-    storage.mirror_nightscout_profiles(profiles)
-    version, settings = storage.get_settings()
+    config.mirror_nightscout_profiles(profiles)
+    version, settings = config.get_settings()
     return {"version": version, "settings": settings,
             "message": ("I:C-Zeitplan" if is_ic else "Korrekturfaktor-Zeitplan") +
                        " in Nightscout gespeichert"}

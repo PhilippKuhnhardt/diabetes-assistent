@@ -7,7 +7,8 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import calculation, episodes, nightscout, storage
+from app import calculation, episodes, nightscout
+from app.store import config, mirror
 from app.common import MEALS, local_day_range, parse_instant
 from app.services import day_view
 
@@ -26,7 +27,7 @@ def record_with_tag(at: datetime, event_type: str, episode_id: str, meal: str, r
 
 
 def ensure_not_duplicate(day: str, event_id: str) -> bool:
-    _, settings = storage.get_settings()
+    _, settings = config.get_settings()
     start, end = local_day_range(day, settings["timezone"])
     _, existing = nightscout.fetch_range(start, end)
     return any(item.get("identifier") == event_id or f"[DAE:{event_id}]" in str(item.get("notes") or "") for item in existing)
@@ -40,7 +41,7 @@ def save_diary_treatment(payload: dict) -> dict:
     if kind not in {"meal", "snack", "carbs", "correction", "exercise"}:
         raise ValueError("Ungültiger Eintragstyp")
     at = parse_instant(str(payload["at"]))
-    _, settings = storage.get_settings()
+    _, settings = config.get_settings()
     day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
     carbs = calculation.dec(payload.get("carbs") or 0)
     units = calculation.dec(payload.get("insulin") or 0)
@@ -134,7 +135,7 @@ def save_diary_treatment(payload: dict) -> dict:
                 or calculation.dec(saved.get("insulin") or 0) != units
                 or str(saved.get("notes") or "") != notes):
             raise nightscout.NightscoutError("Nightscout hat die Änderung nicht bestätigt")
-        storage.delete_cached_treatment(record_id)
+        mirror.delete_cached_treatment(record_id)
     elif not ensure_not_duplicate(day, event_id):
         nightscout.write_treatment(record)
     return {"id": record_id or None, "event_id": event_id, "day": day}
@@ -148,13 +149,13 @@ def delete_treatment(payload: dict) -> dict:
     if not isinstance(record_id, str) or not record_id or len(record_id) > 200 or not isinstance(day, str):
         raise ValueError("Ungültiger Eintrag")
     date.fromisoformat(day)
-    _, settings = storage.get_settings()
+    _, settings = config.get_settings()
     start, end = local_day_range(day, settings["timezone"])
     _, treatments = nightscout.fetch_range(start, end)
     if not any(item.get("_id") == record_id for item in treatments):
         raise ValueError("Eintrag in Nightscout nicht gefunden")
     nightscout.delete_treatment(record_id)
-    storage.delete_cached_treatment(record_id)
+    mirror.delete_cached_treatment(record_id)
     return {"id": record_id}
 
 
@@ -172,7 +173,7 @@ def save_episode(payload: dict) -> dict:
     note = str(payload.get("notes", ""))[:500]
     episode_id = str(uuid.UUID(str(payload.get("episode_id") or uuid.uuid4())))
     event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
-    _, settings = storage.get_settings()
+    _, settings = config.get_settings()
     day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
     if not ensure_not_duplicate(day, event_id):
         record = record_with_tag(at, "Meal Bolus", episode_id, meal, "meal", carbs, insulin, note, event_id)
@@ -195,7 +196,7 @@ def save_exercise(payload: dict) -> dict:
         raise ValueError("Dauer muss zwischen 1 und 1440 Minuten liegen")
     note = str(payload.get("notes", "")).strip()[:400]
     event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
-    _, settings = storage.get_settings()
+    _, settings = config.get_settings()
     day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
     if not ensure_not_duplicate(day, event_id):
         label = episodes.SPORT_LABELS[kind]
@@ -230,7 +231,7 @@ def save_dose(payload: dict) -> dict:
     if role != "snack" and carbs != 0:
         raise ValueError("Kohlenhydrate nur für Zwischenmahlzeiten erlaubt")
     event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
-    _, settings = storage.get_settings()
+    _, settings = config.get_settings()
     day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
     if not ensure_not_duplicate(day, event_id):
         nearby_days = [(at.astimezone(ZoneInfo(settings["timezone"])).date() - timedelta(days=offset)).isoformat() for offset in (0, 1)]
