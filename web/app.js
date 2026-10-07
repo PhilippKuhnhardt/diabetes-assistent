@@ -259,6 +259,7 @@ function updateEntryDayType() {
   const visible = form.elements.kind.value === "meal" && Boolean(state.dayData?.day_type) &&
     Number.isFinite(time) && time < breakfastEnd;
   box.hidden = !visible;
+  updateEntryInfluences();
   if (!visible) return;
   $$(".day-type-option").forEach(button =>
     button.setAttribute("aria-pressed", String(button.dataset.dayType === state.dayData.day_type)));
@@ -362,20 +363,32 @@ function updateEntryAssignment() {
     : "eigenes " + names[mealKindAt(assignment.at, state.settings)]) + " ⇄";
 }
 
-function setCertainty(form, value) {
-  $$('input[name="carbs_certainty"]', form).forEach(input => { input.checked = input.value === value; });
+// KH-Sicherheit is a three-stop slider (unsure, roughly known, weighed) that starts in the middle.
+// An edited entry without a mark keeps none until the slider is moved.
+const CERTAINTY_LEVELS = ["unsure", "known", "weighed"];
+const CERTAINTY_SLIDER_LABELS = ["KH unsicher", "KH halbwegs", "KH gewogen"];
+
+function showCertainty(input) {
+  input.parentElement.querySelector(".certainty-label").textContent = CERTAINTY_SLIDER_LABELS[Number(input.value)];
 }
 
-// The certainty chips act like radios that can also be cleared by tapping the chosen one again.
-document.addEventListener("pointerdown", event => {
-  const input = event.target.closest?.('label.chip')?.querySelector('input[name="carbs_certainty"]');
-  if (input) input.dataset.wasChecked = input.checked ? "1" : "";
-});
-document.addEventListener("click", event => {
-  const input = event.target;
-  if (!(input instanceof HTMLInputElement) || input.name !== "carbs_certainty") return;
-  if (input.dataset.wasChecked === "1") input.checked = false;
-  input.dataset.wasChecked = "";
+function setCertainty(form, value) {
+  const input = form.elements.certainty_level;
+  const index = CERTAINTY_LEVELS.indexOf(value);
+  input.value = String(index < 0 ? 1 : index);
+  input.dataset.unset = value === undefined || index >= 0 ? "" : "1";
+  showCertainty(input);
+}
+
+function certaintyValue(form) {
+  const input = form.elements.certainty_level;
+  return input.dataset.unset === "1" ? null : CERTAINTY_LEVELS[Number(input.value)];
+}
+
+document.addEventListener("input", event => {
+  if (!(event.target instanceof HTMLInputElement) || event.target.name !== "certainty_level") return;
+  event.target.dataset.unset = "";
+  showCertainty(event.target);
 });
 
 function updateEntryQuality() {
@@ -411,14 +424,21 @@ function updateEntrySportOption() {
   if (!available) {
     checkbox.checked = false;
     effectField.hidden = true;
+    updateEntryInfluences();
     if (!wasHidden) scheduleDoseHelp();
     return;
   }
   const suggested = eligible.reduce((total, item) => total + sportChange(state.settings.sport_effects_mgdl[item.sport_type]), 0);
+  // The chip only says whether the sport counts; ticking it opens the editable BZ change.
   $("#entry-sport-hint").textContent = eligible.map(item =>
-    sportNames[item.sport_type] + " " + timeOnly(item.at)).join(", ") + " einrechnen · " + signedChange(suggested, 0);
+    sportNames[item.sport_type] + " " + timeOnly(item.at)).join(", ") + (checkbox.checked ? " berücksichtigt" : " berücksichtigen");
   if (!checkbox.checked) form.elements.sport_effect_mgdl.value = suggested;
   effectField.hidden = !checkbox.checked;
+  updateEntryInfluences();
+}
+
+function updateEntryInfluences() {
+  $("#entry-influences").hidden = $("#entry-sport-option").hidden && $("#entry-day-type").hidden;
 }
 
 function entrySportChange() {
@@ -446,6 +466,7 @@ function updateEntryFields() {
   form.elements.carbs.setCustomValidity("");
   $$(".entry-mode").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.entryMode === mode)));
   $("#entry-meal-fields").hidden = mode !== "meal";
+  $("#entry-dose").hidden = mode !== "meal";
   $("#entry-basal-field").hidden = mode !== "basal";
   form.elements.basal_units.disabled = mode !== "basal";
   form.elements.basal_units.required = mode === "basal";
@@ -1544,6 +1565,7 @@ function resetEntryForm() {
   state.pendingBasalId = null;
   const form = $("#entry-form");
   form.reset();
+  setCertainty(form);
   form.elements.carbs.setCustomValidity("");
   state.entryTimeTouched = false;
   state.entryTimeOpen = false;
@@ -1614,7 +1636,7 @@ async function saveEditedEntry(event) {
     sport_kind: form.elements.sport_kind.value,
     duration_minutes: form.elements.duration_minutes.value || 0,
     notes: form.elements.notes.value,
-    carbs_certainty: carbs > 0 ? form.elements.carbs_certainty.value || null : null,
+    carbs_certainty: carbs > 0 ? certaintyValue(form) : null,
     fat_protein: carbs > 0 && form.elements.fat_protein.checked,
   };
   const button = $('button[type="submit"]', form);
@@ -1729,7 +1751,7 @@ async function saveEntry(event) {
     duration_minutes: form.elements.duration_minutes.value || 0,
     notes: form.elements.notes.value,
     main_meal: Boolean(assignment && !assignment.snack),
-    carbs_certainty: carbs > 0 ? form.elements.carbs_certainty.value || null : null,
+    carbs_certainty: carbs > 0 ? certaintyValue(form) : null,
     fat_protein: carbs > 0 && form.elements.fat_protein.checked,
     event_id: state.pendingEventId || crypto.randomUUID(),
   };
