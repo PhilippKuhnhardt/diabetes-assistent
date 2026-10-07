@@ -330,8 +330,14 @@ function updateEntryAssignment() {
     : "eigenes " + names[mealKindAt(assignment.at, state.settings)]) + " ⇄";
 }
 
+function updateEntryQuality() {
+  const form = $("#entry-form");
+  $("#entry-quality").hidden = !(form.elements.kind.value === "meal" && Number(form.elements.carbs.value) > 0);
+}
+
 function updateEntrySportOption() {
   updateEntryAssignment();
+  updateEntryQuality();
   const form = $("#entry-form");
   const option = $("#entry-sport-option");
   const effectField = $("#entry-sport-effect-field");
@@ -1271,7 +1277,8 @@ function mealBlockHTML(block, data) {
   return '<article class="day-meal' + (check ? ' needs-check' : '') + '" id="meal-' + escapeHTML(meal.id) + '">' +
     '<div class="day-meal-head"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' +
     '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") +
-    '</span></div>' + status + '</div>' +
+    '</span>' + (meal.quality?.carbs_unsure ? '<span class="outlier-badge">KH unsicher</span>' : '') +
+    (meal.quality?.fat_protein ? '<span class="outlier-badge">Fett-/eiweißreich</span>' : '') + '</div>' + status + '</div>' +
     items.map(item => entryRowHTML(item, data)).join("") +
     '<details class="day-meal-details" data-meal-id="' + escapeHTML(meal.id) + '"' + (check ? ' open' : '') +
     '><summary>Kurve, Zeitraum und Sport</summary>' +
@@ -1498,7 +1505,10 @@ function editEntry(id) {
   form.elements.sport_kind.value = item.sport_kind || "jogging";
   form.elements.duration_minutes.value = Number(item.duration_minutes) || "";
   form.elements.notes.value = item.notes || "";
+  form.elements.carbs_unsure.checked = Boolean(item.carbs_unsure);
+  form.elements.fat_protein.checked = Boolean(item.fat_protein);
   const sport = item.kind === "exercise";
+  $("#edit-quality").hidden = sport || !(Number(item.carbs) > 0);
   $("#edit-meal-fields").hidden = sport;
   $("#edit-sport-field").hidden = !sport;
   $("#edit-duration-field").hidden = !sport;
@@ -1540,6 +1550,8 @@ async function saveEditedEntry(event) {
     sport_kind: form.elements.sport_kind.value,
     duration_minutes: form.elements.duration_minutes.value || 0,
     notes: form.elements.notes.value,
+    carbs_unsure: carbs > 0 && form.elements.carbs_unsure.checked,
+    fat_protein: carbs > 0 && form.elements.fat_protein.checked,
   };
   const button = $('button[type="submit"]', form);
   button.disabled = true;
@@ -1588,6 +1600,8 @@ async function saveEntry(event) {
     duration_minutes: form.elements.duration_minutes.value || 0,
     notes: form.elements.notes.value,
     main_meal: Boolean(assignment && !assignment.snack),
+    carbs_unsure: carbs > 0 && form.elements.carbs_unsure.checked,
+    fat_protein: carbs > 0 && form.elements.fat_protein.checked,
     event_id: state.pendingEventId || crypto.randomUUID(),
   };
   state.pendingEventId = payload.event_id;
@@ -2167,6 +2181,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#edit-form").elements.carbs.addEventListener("input", event => {
     setPickerBase(event.target, 1);
     event.target.setCustomValidity("");
+    $("#edit-quality").hidden = state.editing?.kind === "exercise" || !(Number(event.target.value) > 0);
   });
   $("#edit-form").elements.insulin.addEventListener("input", event => {
     setPickerBase(event.target, 0.5);
