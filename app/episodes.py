@@ -10,6 +10,9 @@ EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal|basal))\]")
 BASAL_MARKER = "[DA2:basal]"
 SNACK_GAP = timedelta(minutes=120)
 SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio|racing)\]")
+# Data-quality marks on carb entries: carbs only estimated, or a fat-/protein-rich meal.
+QUALITY_TAG = re.compile(r"\[DAQ:(unsure|fat)\]")
+QUALITY_MARKERS = {"carbs_unsure": "[DAQ:unsure]", "fat_protein": "[DAQ:fat]"}
 SPORT_LABELS = {"jogging": "Joggen", "gym": "Gym", "light_cardio": "Leichtes Cardio", "racing": "Rennsport"}
 
 
@@ -78,6 +81,7 @@ def normalize_treatments(raw: list[dict]) -> list[dict]:
             "duration": item.get("duration") or 0,
             "notes": item.get("notes") or "",
             "sport_type": sport_type,
+            **{flag: tag in str(item.get("notes") or "") for flag, tag in QUALITY_MARKERS.items()},
             **marker,
         })
     return sorted(result, key=lambda x: x["at"])
@@ -164,7 +168,7 @@ def meals_for_day(treatments: list[dict], day: str, timezone_name: str,
             "id": item["episode_id"] if tagged else item["id"],
             "source_id": item["id"], "imported": bool(imported),
             "at": item["at"], "meal": item["meal"] if tagged else inferred,
-            "carbs": item["carbs"], "notes": EVENT_TAG.sub("", TAG.sub("", item["notes"])).strip(),
+            "carbs": item["carbs"], "notes": QUALITY_TAG.sub("", EVENT_TAG.sub("", TAG.sub("", item["notes"]))).strip(),
         })
     return roots
 

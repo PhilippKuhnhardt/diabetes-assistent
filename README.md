@@ -47,6 +47,7 @@ Die Spritzhilfe verwendet I:C und KF aus dem **aktuellen Nightscout-Profil**. De
 
 **Basal** wird in der App selbst gespeichert (SQLite, Tabelle `basal_doses`) und zusätzlich als Nightscout-Notiz (`eventType: Note`, `basal_units`, Marker `[DA2:basal]`) ohne `insulin`-Feld gespiegelt, damit weder Nightscouts IOB noch der Mahlzeitenfaktor es als schnelles Insulin zählt. Bis zum Ende des Frühstücks steht im Formular ein Chip „+ Basal 17 IE“ (Wert in den Einstellungen unter „Basal zum Frühstück“, 0 schaltet ihn aus), solange am Tag noch kein Basal erfasst ist; er ist vorausgewählt, und der Frühstückseintrag oder ein angetippter Vorschlag speichert das Basal mit. „Rückgängig“ entfernt beides. Ohne Frühstück trägt der Modus „Basal“ einen frei wählbaren Wert ein. Ist Nightscout nicht erreichbar, bleibt das Basal lokal und wird beim nächsten Laden des Tages nachgetragen; ein in Nightscout gelöschtes, bereits übertragenes Basal verschwindet auch lokal, und Basal-Notizen aus Nightscout ohne lokalen Eintrag werden übernommen. Gelöscht wird in der Tagesliste.
 
+Beim Eintragen von Kohlenhydraten lassen sich zwei Markierungen setzen: **KH unsicher** (KH nur geschätzt oder Mahlzeit chaotisch erfasst) und **Fett-/eiweißreich**. Sie stehen als `[DAQ:unsure]` bzw. `[DAQ:fat]` in der Nightscout-Notiz, sind im Bearbeiten-Dialog änderbar, erscheinen an der Mahlzeit im Tagebuch und im Datenexport. An der Faktorberechnung ändern sie nichts; sie sammeln Daten für die Weiterentwicklung der Formel.
 
 ## Analyse
 

@@ -14,12 +14,13 @@ MEAL_COLUMNS = [
     "manual_window", "excluded", "sport_status", "sport_effect_mgdl", "g0_mgdl", "g_end_mgdl",
     "delta_mgdl", "carbs_meal_g", "carbs_total_g", "extra_carb_count", "carbs_times_isf",
     "rapid_units", "insulin_effect_mgdl", "meal_isf", "factor_ie_per_ke", "blocked_reason",
+    "carbs_unsure", "fat_protein",
 ]
 WINDOW_EVENT_COLUMNS = ["meal_id", "kind", "at", "carbs_g", "units", "isf", "event_type"]
 ENTRY_COLUMNS = ["at", "sgv"]
 BASAL_COLUMNS = ["id", "at", "units", "nightscout_synced", "notes"]
 TREATMENT_COLUMNS = ["id", "at", "eventType", "carbs", "insulin", "basal_units", "duration",
-                     "sport_type", "role", "meal", "episode_id", "notes"]
+                     "sport_type", "role", "meal", "episode_id", "carbs_unsure", "fat_protein", "notes"]
 
 README = """# Datenexport Diabetes-Tagebuch
 
@@ -31,6 +32,8 @@ profile.json).
   + sport_effect_mgdl + insulin_effect_mgdl) / carbs_times_isf. sport_effect_mgdl ist positiv
   für eine bestätigte BZ-Senkung durch Sport. g_end_mgdl ist der BZ am Endpunkt.
   excluded = manuell ausgeklammert. blocked_reason ist gesetzt, wenn kein Faktor vorliegt.
+  carbs_unsure / fat_protein: mindestens ein KH-Eintrag im Fenster war als „KH unsicher“
+  bzw. „fett-/eiweißreich“ markiert.
 - window_events.csv: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.
 - entries.csv: alle gespiegelten CGM-Werte in mg/dL.
 - treatments.csv: alle gespiegelten Nightscout-Behandlungen inklusive Sport (Basal aus der App
@@ -83,6 +86,7 @@ def build_zip(first_day: date, last_day: date, day_payload: Callable[[str], dict
                 "insulin_effect_mgdl": result.get("insulin_effect_mgdl"), "meal_isf": result.get("meal_isf"),
                 "factor_ie_per_ke": result.get("factor_units_per_ke"),
                 "blocked_reason": None if result.get("factor_units_per_ke") else result.get("reason"),
+                **(meal.get("quality") or {}),
             })
             for item in result.get("carb_events", []):
                 window_events.append({"meal_id": meal["id"], "kind": "carbs", "at": _local(item["at"], zone),

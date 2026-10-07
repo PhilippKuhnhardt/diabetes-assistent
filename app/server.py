@@ -381,6 +381,11 @@ def day_payload(day: str, refresh: bool = True) -> dict:
                 "window_start": (manual or automatic)["start"].isoformat(),
                 "window_end": (manual or automatic)["end"].isoformat(),
             })
+        # A meal carries a data-quality mark when any of its counted carb entries does.
+        carb_ids = ({item.get("id") for item in output["calculation"].get("carb_events", [])} | {meal["source_id"]}
+                    | {item["id"] for item in associated if calculation.dec(item.get("carbs") or 0) > 0})
+        output["quality"] = {flag: any(item.get(flag) for item in treatments if item["id"] in carb_ids)
+                             for flag in episodes.QUALITY_MARKERS}
         calculation_events = output["calculation"]
         included_ids = {item["id"] for key in ("carb_events", "doses")
                         for item in calculation_events.get(key, [])
@@ -419,7 +424,7 @@ def day_payload(day: str, refresh: bool = True) -> dict:
         other_events.append({
             "id": item["id"], "at": item["at"], "eventType": item["eventType"], "carbs": item["carbs"],
             "insulin": item["insulin"], "basal_units": item["basal_units"],
-            "notes": episodes.EVENT_TAG.sub("", episodes.TAG.sub("", item["notes"])).strip(),
+            "notes": episodes.QUALITY_TAG.sub("", episodes.EVENT_TAG.sub("", episodes.TAG.sub("", item["notes"]))).strip(),
         })
     timeline = []
     # Basal notes in Nightscout are shown from the local record, which also holds unsent doses.
@@ -445,8 +450,8 @@ def day_payload(day: str, refresh: bool = True) -> dict:
             kind = "correction"
         else:
             kind = "other"
-        note = episodes.EVENT_TAG.sub("", episodes.SPORT_TAG.sub("",
-               episodes.TAG.sub("", item["notes"]))).replace("[DA2:snack]", "").strip()
+        note = episodes.QUALITY_TAG.sub("", episodes.EVENT_TAG.sub("", episodes.SPORT_TAG.sub("",
+               episodes.TAG.sub("", item["notes"])))).replace("[DA2:snack]", "").strip()
         for label in episodes.SPORT_LABELS.values():
             if kind == "exercise" and (note == label or note.startswith(label + " — ")):
                 note = note[len(label):].lstrip(" —")
@@ -465,6 +470,7 @@ def day_payload(day: str, refresh: bool = True) -> dict:
             "carbs": item["carbs"], "insulin": item["insulin"],
             "basal_units": item["basal_units"], "duration_minutes": item["duration"],
             "sport_kind": item.get("sport_type"), "notes": note,
+            "carbs_unsure": item.get("carbs_unsure", False), "fat_protein": item.get("fat_protein", False),
             "glucose_mgdl": glucose, "glucose_at": glucose_at,
             **({"nightscout_synced": item["nightscout_synced"]} if kind == "basal" else {}),
         })
@@ -562,7 +568,8 @@ def save_diary_treatment(payload: dict) -> dict:
         main_meal = kind == "meal" and (bool(payload.get("main_meal"))
                                          or "[DA2:meal]" in str((existing or {}).get("notes") or ""))
         marker = " [DA2:snack]" if kind == "snack" else " [DA2:meal]" if main_meal else ""
-        notes = (note + marker + f" [DAE:{event_id}]").strip()
+        quality = "".join(" " + tag for flag, tag in episodes.QUALITY_MARKERS.items() if carbs > 0 and payload.get(flag) is True)
+        notes = (note + marker + quality + f" [DAE:{event_id}]").strip()
         legacy = episodes.TAG.search(str((existing or {}).get("notes") or ""))
         if kind == "meal" and legacy and legacy.group(3) == "meal":
             notes += " " + legacy.group(0)
@@ -580,7 +587,7 @@ def save_diary_treatment(payload: dict) -> dict:
         candidate = next(item for item in classified if f"[DAE:{event_id}]" in item["notes"])
         if candidate["eventType"] != "Meal Bolus":
             record["eventType"] = candidate["eventType"]
-            record["notes"] = (note + " [DA2:snack]" + f" [DAE:{event_id}]").strip()
+            record["notes"] = (note + " [DA2:snack]" + quality + f" [DAE:{event_id}]").strip()
     if "date" in record:
         record["date"] = int(at.timestamp() * 1000)
     if kind == "exercise":
