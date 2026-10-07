@@ -445,6 +445,10 @@ span.range-high { color: #9a6410; font-weight: 650; }
 .entry-chips .entry-sport-option, .entry-chips .entry-quality { display: contents; }
 .entry-chips .entry-quality[hidden], .entry-chips[hidden] { display: none; }
 #entry-carbs-field, .entry-quality-row { margin-bottom: 12px; }
+/* Number and time fields of the entry form sit compactly to the right of their label. */
+#entry-form label:has(> input[type=number], > input[type=time]) { display: flex; align-items: center; gap: 0; margin-bottom: 10px; }
+#entry-form label:has(> input[type=number], > input[type=time]) > span { margin: 0 8px 0 5px; }
+#entry-form label:has(> input[type=number], > input[type=time]) > input { flex: 0 0 120px; width: 120px; margin-left: auto; text-align: right; }
 .entry-quality-row { margin-top: -4px; }
 .entry-chips button.chip.quiet-chip { background: none; border-style: dashed; color: var(--muted); }
 #edit-quality { margin: 0 0 14px; }

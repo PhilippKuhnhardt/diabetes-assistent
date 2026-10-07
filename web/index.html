@@ -90,7 +90,7 @@
               <div id="entry-sport-option" class="entry-chips entry-sport-row" hidden>
                 <label class="chip chip-toggle"><input type="checkbox" name="consider_sport"> <span id="entry-sport-hint"></span></label>
               </div>
-              <label id="entry-sport-effect-field" hidden>Geschätzte BZ-Wirkung durch Sport <span>mg/dL, − senkt, + hebt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1"></label>
+              <label id="entry-sport-effect-field" hidden>BZ-Wirkung Sport <span>mg/dL, − senkt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1"></label>
               <div id="entry-day-type" class="entry-day-type" hidden>
                 <div class="entry-switch" role="group" aria-label="Tagesart für das Frühstück">
                   <button type="button" class="day-type-option" data-day-type="work" aria-pressed="false">Arbeitstag</button>
@@ -99,7 +99,7 @@
                 <p id="entry-day-type-hint" class="hint"></p>
               </div>
               <div id="dose-result" class="help-result" aria-live="polite"></div>
-              <label id="entry-insulin-field">Insulin <span>IE, Vorschlag antippen oder selbst eingeben</span><input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
+              <label id="entry-insulin-field">Insulin <span>IE, eigene Eingabe</span><input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
               <label id="entry-note-field" hidden>Notiz <span>optional</span><input name="notes" type="text" maxlength="500"></label>
               <div class="entry-chips"><button type="button" id="entry-note-chip" class="chip quiet-chip" aria-controls="entry-note-field" aria-expanded="false">+ Notiz</button></div>
               <div class="form-actions entry-actions"><button class="primary" type="submit" id="entry-submit">In Nightscout speichern</button></div>
