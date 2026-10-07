@@ -1486,7 +1486,8 @@ function editEntry(id) {
   remove.dataset.at = item.at;
   $("#edit-date").textContent = new Date(state.day + "T12:00:00").toLocaleDateString("de-DE", {day: "numeric", month: "long", year: "numeric"});
   $("#edit-dialog").showModal();
-  form.elements.at.focus();
+  // On touch screens a focused field would pop up the keyboard or picker before anything was tapped.
+  if (matchMedia("(pointer: fine)").matches) form.elements.at.focus();
 }
 
 async function saveEditedEntry(event) {

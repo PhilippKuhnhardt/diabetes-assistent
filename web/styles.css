@@ -63,6 +63,9 @@ h2 { font-size: 17px; margin: 0 0 18px; letter-spacing: -.02em; }
 label { display: block; font-size: 12px; font-weight: 650; margin-bottom: 16px; }
 label span { color: var(--muted); font-weight: 450; }
 label input, label select { display: block; margin-top: 7px; }
+/* iOS Safari renders native time fields with no height when empty and centres the value. */
+input[type=time] { -webkit-appearance: none; appearance: none; text-align: left; }
+input[type=time]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
 .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .entry-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
 .entry-switch:has(> :nth-child(3)) { grid-template-columns: 1.4fr 1fr 1fr; }
@@ -299,11 +302,15 @@ span.range-high { color: #9a6410; font-weight: 650; }
   .diary-analysis .meal-list { grid-template-columns: 1fr; }
 }
 
-#edit-dialog { width: min(460px, calc(100vw - 28px)); max-height: calc(100vh - 32px); overflow-y: auto; border: 1px solid var(--line); border-radius: 15px; padding: 24px; color: var(--ink); box-shadow: 0 18px 70px #10281840; }
+#edit-dialog { width: min(460px, calc(100vw - 28px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; scroll-padding-bottom: 90px; border: 1px solid var(--line); border-radius: 15px; padding: 24px; color: var(--ink); box-shadow: 0 18px 70px #10281840; }
 #edit-dialog::backdrop { background: #0c2419a8; }
 #edit-dialog .section-head { align-items: center; }
 #edit-dialog .section-head button { font-size: 22px; line-height: 1; padding: 3px 9px; }
 #edit-dialog .primary { flex: 1; }
+/* On phones the dialog sits at the top so the keyboard covers as little as possible; the rest scrolls. */
+@media (max-width: 650px) {
+  #edit-dialog { margin: 12px auto auto; padding: 18px; width: calc(100vw - 20px); }
+}
 
 
 /* Compact analysis controls */
