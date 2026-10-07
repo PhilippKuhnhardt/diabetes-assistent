@@ -325,6 +325,7 @@ const CERTAINTY_SLIDER_LABELS = ["KH unsicher", "KH halbwegs", "KH gewogen"];
 
 function showCertainty(input) {
   input.parentElement.querySelector(".certainty-label").textContent = CERTAINTY_SLIDER_LABELS[Number(input.value)];
+  input.parentElement.dataset.level = CERTAINTY_LEVELS[Number(input.value)];  // colours: red, yellow, green
 }
 
 function setCertainty(form, value) {
@@ -1255,7 +1256,7 @@ function mealBlockHTML(block, data) {
   return '<article class="day-meal' + (check ? ' needs-check' : '') + '" id="meal-' + escapeHTML(meal.id) + '">' +
     '<div class="day-meal-head"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' +
     '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") +
-    '</span>' + (meal.quality?.carbs_certainty ? '<span class="outlier-badge">' + CERTAINTY_LABELS[meal.quality.carbs_certainty] + '</span>' : '') +
+    '</span>' + (meal.quality?.carbs_certainty ? '<span class="outlier-badge certainty-' + meal.quality.carbs_certainty + '">' + CERTAINTY_LABELS[meal.quality.carbs_certainty] + '</span>' : '') +
     (meal.quality?.fat_protein ? '<span class="outlier-badge">Fett-/eiweißreich</span>' : '') + '</div>' + status + '</div>' +
     items.map(item => entryRowHTML(item, data)).join("") +
     '<details class="day-meal-details" data-meal-id="' + escapeHTML(meal.id) + '"' + (check ? ' open' : '') +

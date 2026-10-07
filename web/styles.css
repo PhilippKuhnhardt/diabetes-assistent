@@ -556,8 +556,18 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .factor-facts.compact dd { font-size: 14px; white-space: nowrap; }
 /* KH-Sicherheit: three-stop slider with its current label, on one line with the fat mark. */
 .certainty-slider { flex: 1 1 180px; display: flex; align-items: center; gap: 8px; min-width: 0; }
-.certainty-slider input[type=range] { flex: 1; min-width: 60px; min-height: 0; height: 28px; margin: 0; padding: 0; border: 0; background: none; accent-color: var(--green); }
-.certainty-label { min-width: 82px; font-size: 12px; font-weight: 650; color: var(--amber); white-space: nowrap; }
+/* Colour-coded scale: red unsure, yellow roughly known, green weighed; thumb and label take the chosen colour. */
+.certainty-slider { --certainty: #b98a00; --certainty-text: #8a6700; }
+.certainty-slider[data-level="unsure"] { --certainty: #c0392b; --certainty-text: #a8322a; }
+.certainty-slider[data-level="weighed"] { --certainty: var(--green); --certainty-text: var(--green); }
+.certainty-slider input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; min-width: 60px; min-height: 0; height: 28px; margin: 0; padding: 0; border: 0; background: none; }
+.certainty-slider input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(to right, #e5786d 0 33.3%, #ecc94b 33.3% 66.6%, #4fa36f 66.6%); }
+.certainty-slider input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: linear-gradient(to right, #e5786d 0 33.3%, #ecc94b 33.3% 66.6%, #4fa36f 66.6%); }
+.certainty-slider input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8px; border: 3px solid #fff; border-radius: 50%; background: var(--certainty); box-shadow: 0 0 0 1px rgba(24, 50, 41, .25), 0 1px 3px rgba(24, 50, 41, .2); }
+.certainty-slider input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border: 3px solid #fff; border-radius: 50%; background: var(--certainty); box-shadow: 0 0 0 1px rgba(24, 50, 41, .25), 0 1px 3px rgba(24, 50, 41, .2); }
+.certainty-label { min-width: 82px; font-size: 12px; font-weight: 650; color: var(--certainty-text); white-space: nowrap; }
+.outlier-badge.certainty-unsure { background: #fdecea; color: #a8322a; }
+.outlier-badge.certainty-weighed { background: var(--green-light); color: var(--green); }
 .entry-quality-row { flex-wrap: nowrap; }
 .entry-card .entry-chips { margin: 0 0 10px; }
 .entry-card .inline-unit { margin-bottom: 10px; }
