@@ -21,6 +21,8 @@ ENTRY_COLUMNS = ["at", "sgv"]
 BASAL_COLUMNS = ["id", "at", "units", "nightscout_synced", "notes"]
 TREATMENT_COLUMNS = ["id", "at", "eventType", "carbs", "insulin", "basal_units", "duration",
                      "sport_type", "role", "meal", "episode_id", "carbs_certainty", "fat_protein", "notes"]
+TABLE_COLUMNS = {"meals": MEAL_COLUMNS, "window_events": WINDOW_EVENT_COLUMNS, "entries": ENTRY_COLUMNS,
+                 "treatments": TREATMENT_COLUMNS, "basal": BASAL_COLUMNS}
 
 README = """# Datenexport Diabetes-Tagebuch
 
@@ -62,9 +64,9 @@ def _csv(columns: list[str], rows: list[dict]) -> str:
     return buffer.getvalue()
 
 
-def build_zip(first_day: date, last_day: date, day_payload: Callable[[str], dict],
-              excluded: set[str], settings: dict) -> bytes:
-    """Collect every day from first_day to last_day (inclusive) into a ZIP of CSV files."""
+def collect(first_day: date, last_day: date, day_payload: Callable[[str], dict],
+            excluded: set[str], settings: dict) -> dict[str, list[dict]]:
+    """Rows of every export table for first_day to last_day (inclusive), shared by ZIP and JSON API."""
     zone = ZoneInfo(settings["timezone"])
     meals, window_events, entries, treatments, basal = [], [], [], [], []
     day = first_day
@@ -101,14 +103,28 @@ def build_zip(first_day: date, last_day: date, day_payload: Callable[[str], dict
         treatments.extend({**item, "at": _local(item["at"], zone)} for item in payload.get("treatments", []))
         basal.extend({**item, "at": _local(item["at"], zone)} for item in payload.get("basal", []))
         day += timedelta(days=1)
+    return {"meals": meals, "window_events": window_events, "entries": entries,
+            "treatments": treatments, "basal": basal}
+
+
+def rows_for(table: str, rows: list[dict]) -> list[dict]:
+    """Rows restricted to the documented columns, as in the CSV files."""
+    columns = TABLE_COLUMNS[table]
+    return [{key: row.get(key) for key in columns} for row in rows]
+
+
+def build_zip(first_day: date, last_day: date, day_payload: Callable[[str], dict],
+              excluded: set[str], settings: dict) -> bytes:
+    """Collect every day from first_day to last_day (inclusive) into a ZIP of CSV files."""
+    tables = collect(first_day, last_day, day_payload, excluded, settings)
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("LIESMICH.md", README)
-        archive.writestr("meals.csv", _csv(MEAL_COLUMNS, meals))
-        archive.writestr("window_events.csv", _csv(WINDOW_EVENT_COLUMNS, window_events))
-        archive.writestr("entries.csv", _csv(ENTRY_COLUMNS, entries))
-        archive.writestr("treatments.csv", _csv(TREATMENT_COLUMNS, treatments))
-        archive.writestr("basal.csv", _csv(BASAL_COLUMNS, basal))
+        archive.writestr("meals.csv", _csv(MEAL_COLUMNS, tables["meals"]))
+        archive.writestr("window_events.csv", _csv(WINDOW_EVENT_COLUMNS, tables["window_events"]))
+        archive.writestr("entries.csv", _csv(ENTRY_COLUMNS, tables["entries"]))
+        archive.writestr("treatments.csv", _csv(TREATMENT_COLUMNS, tables["treatments"]))
+        archive.writestr("basal.csv", _csv(BASAL_COLUMNS, tables["basal"]))
         archive.writestr("profile.json", json.dumps(
             {"exported_days": [first_day.isoformat(), last_day.isoformat()], "settings": settings},
             ensure_ascii=False, indent=2, default=str))
