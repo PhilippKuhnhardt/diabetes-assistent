@@ -135,7 +135,8 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .isf-row label { margin-bottom: 10px; }
 .isf-row button { margin-bottom: 10px; height: 42px; }
 .spaced { margin-top: 28px; }
-#toast { position: fixed; right: 24px; bottom: 22px; max-width: min(360px, calc(100vw - 36px)); background: var(--ink); color: #fff; border-radius: 9px; padding: 13px 17px; font-size: 13px; box-shadow: 0 12px 28px #10281833; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s; }
+/* Above every page layer (sticky topbar z 20, entry save bar z 5); dialogs use the top layer. */
+#toast { position: fixed; z-index: 100; right: 24px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); max-width: min(360px, calc(100vw - 36px)); background: var(--ink); color: #fff; border-radius: 9px; padding: 13px 17px; font-size: 13px; box-shadow: 0 12px 28px #10281833; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s; }
 #toast.visible { opacity: 1; transform: translateY(0); }
 #toast.error { background: #8e372e; }
 #toast.has-action { pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
@@ -506,6 +507,8 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
   .refresh-label { display: none; }
   .panel { padding: 18px; }
   .entry-actions { margin: 0 -18px -18px; padding: 10px 18px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  /* Full width and lifted above the sticky "In Nightscout speichern" bar so neither hides the other. */
+  #toast { left: 12px; right: 12px; max-width: none; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* Diary modes: "Jetzt" (entry) and "Tag durchgehen" (review); side by side on wide screens. */
