@@ -73,6 +73,7 @@
               <div class="entry-chips">
                 <button type="button" id="entry-time-chip" class="chip" aria-controls="entry-time-field" aria-expanded="false">Zeit: jetzt</button>
                 <button type="button" id="entry-assign-chip" class="chip" title="Zuordnung umschalten" hidden></button>
+                <button type="button" id="entry-split-chip" class="chip" title="Split-Bolus ein- oder ausschalten" aria-pressed="false" hidden></button>
                 <label id="entry-basal-option" class="chip chip-toggle" hidden><input type="checkbox" name="with_basal" checked> <span id="entry-basal-hint"></span></label>
               </div>
               <label id="entry-time-field" hidden>Zeitpunkt (24 h)<input type="time" name="at" id="entry-time" step="60" required></label>
@@ -262,6 +263,10 @@
               <p class="hint">Nach der Halbwertszeit zählt eine Mahlzeit nur noch halb. Kürzer = neue Werte zählen stärker.</p>
               <label>Basal zum Frühstück <span>IE</span><input name="basal_default_units" type="number" min="0" max="100" step="0.5" required></label>
               <p class="hint">Wird beim Frühstück automatisch mit eingetragen, solange heute noch kein Basal erfasst ist. 0 schaltet das aus.</p>
+              <label>Split-Bolus ab <span>g KH</span><input name="split_min_grams" type="number" min="0" max="300" step="5" required></label>
+              <label>Split: Anteil jetzt <span>%</span><input name="split_first_percent" type="number" min="30" max="90" step="5" required></label>
+              <label>Split: 2. Teil nach <span>min</span><input name="split_delay_minutes" type="number" min="30" max="300" step="15" required></label>
+              <p class="hint">Ab dieser KH-Menge ist bei Hauptmahlzeiten „Split“ vorausgewählt: ein Teil jetzt, der Rest später. 0 schaltet das aus.</p>
             </section>
             <section class="panel">
               <h2>Mahlzeiten</h2>

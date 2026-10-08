@@ -17,6 +17,10 @@ DEFAULT_SPORT_EFFECTS = {"jogging": 40, "gym": 40, "light_cardio": 20, "racing":
 DEFAULT_BASAL_UNITS = "17"
 
 
+# Split bolus for large main meals: from this many grams, this share now, the rest this many minutes later.
+DEFAULT_SPLIT = {"split_min_grams": 80, "split_first_percent": 60, "split_delay_minutes": 120}
+
+
 def default_settings() -> dict:
     return {
         "timezone": os.environ.get("APP_TIMEZONE", "Europe/Berlin"),
@@ -35,6 +39,7 @@ def default_settings() -> dict:
         "sport_lookback_minutes": 360,
         "sport_effects_mgdl": dict(DEFAULT_SPORT_EFFECTS),
         "basal_default_units": DEFAULT_BASAL_UNITS,
+        **DEFAULT_SPLIT,
     }
 
 
@@ -77,6 +82,8 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result.setdefault("auto_surcharge_mgdl", "40")
     result.setdefault("lunch_end_minute", 1020)
     result.setdefault("basal_default_units", DEFAULT_BASAL_UNITS)
+    for key, value in DEFAULT_SPLIT.items():
+        result.setdefault(key, value)
     result.setdefault("sport_lookback_minutes", 360)
     # Older settings versions predate newer sport types such as racing.
     result["sport_effects_mgdl"] = {**DEFAULT_SPORT_EFFECTS, **result.get("sport_effects_mgdl", {})}
