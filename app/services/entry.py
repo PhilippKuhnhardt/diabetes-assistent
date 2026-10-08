@@ -167,6 +167,18 @@ def _day_notice(context: dict) -> str | None:
             f"{shown.day:02d}.{shown.month:02d}.{shown.year}")
 
 
+def _on_board(context: dict, dose: dict) -> dict | None:
+    """Today's "Wirkt noch" card, whatever the form currently holds."""
+    if context["day"] != context["today"]:
+        return None
+    if "on_board" in dose:
+        return dose["on_board"]
+    try:
+        return dose_help.dose_help({"carbs": "0"}).get("on_board")
+    except ValueError:
+        return None
+
+
 def preview(payload: dict) -> dict:
     """Everything the entry form shows for the values typed so far."""
     context = _context(payload)
@@ -175,6 +187,7 @@ def preview(payload: dict) -> dict:
     current = context["current"]
     day_type_visible = (context["mode"] == "meal" and bool(current.get("day_type"))
                         and _before_breakfast_end(context))
+    dose = _dose(context, payload, assignment, sport)
     return {
         "day": context["day"],
         "day_notice": _day_notice(context),
@@ -183,7 +196,8 @@ def preview(payload: dict) -> dict:
         "basal_units": str(_basal_units(context)),
         "day_type": ({"value": current["day_type"], "source": current["day_type_source"]}
                      if day_type_visible else None),
-        "dose": _dose(context, payload, assignment, sport),
+        "dose": dose,
+        "on_board": _on_board(context, dose),
     }
 
 

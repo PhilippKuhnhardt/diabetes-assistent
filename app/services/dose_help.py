@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import dosing, forecast
+from app import calculation, dosing, forecast, on_board
 from app.common import parse_instant
 from app.services import day_view, factors
 from app.store import config, marks, mirror
@@ -46,6 +46,32 @@ def dose_help(payload: dict) -> dict:
                                          local_now.date(), auto_percentile, half_life, lookback, method,
                                          surcharge_mgdl)
     auto_value = prediction["units_per_ke"]
+    predictions = {(meal_kind, day_type if is_breakfast else None): auto_value}
+
+    def carb_factor(at: datetime) -> Decimal | None:
+        """IE/KE that values a past carb entry: Automatik of its meal kind, else Nightscout's I:C then."""
+        local = at.astimezone(ZoneInfo(current_settings["timezone"]))
+        minute = local.hour * 60 + local.minute
+        kind = ("breakfast" if minute < int(current_settings["breakfast_end_minute"]) else
+                "lunch" if minute < int(current_settings["lunch_end_minute"]) else "dinner")
+        key = (kind, day_type if kind == "breakfast" else None)
+        if key not in predictions:
+            predictions[key] = forecast.predict_method(points, key, local_now.date(), auto_percentile, half_life,
+                                                       lookback, method, surcharge_mgdl)["units_per_ke"]
+        if predictions[key] is not None:
+            return predictions[key]
+        try:
+            return Decimal(10) / calculation.schedule_value_at(at, current_settings.get("ic_schedule", []),
+                                                               current_settings["timezone"], "grams_per_unit")
+        except ValueError:
+            return None
+
+    try:
+        active = on_board.summary(on_board.sources(
+            treatments, now, current_settings, carb_factor,
+            surcharge_mgdl if method == forecast.SURCHARGE else None, forecast.surcharge_share), now)
+    except ValueError:
+        active = None
     # The surcharge belongs once to each main meal; a snack of a meal gets the factor only.
     surcharge = (method == forecast.SURCHARGE and auto_value is not None
                  and payload.get("snack") is not True)
@@ -54,7 +80,8 @@ def dose_help(payload: dict) -> dict:
                             units_per_ke=factor["median_units_per_ke"] if use_factor else None,
                             auto_units_per_ke=auto_value,
                             auto_surcharge_mgdl=surcharge_mgdl if surcharge else None,
-                            surcharge_share=forecast.surcharge_share)
+                            surcharge_share=forecast.surcharge_share, on_board=active)
+    result["on_board"] = on_board_view(active, result) if active else None
     result.update({
         "auto_meal": meal_kind, "auto_factor_count": prediction["count"], "auto_method": method,
         "auto_factor_min_meals": factors.AUTO_FACTOR_MIN_MEALS, "auto_percentile": str(auto_percentile),
@@ -71,3 +98,27 @@ def dose_help(payload: dict) -> dict:
                                           if factor and factor["median_units_per_ke"] is not None else None),
     })
     return result
+
+
+def on_board_view(active: dict, result: dict) -> dict:
+    """The diary's "Wirkt noch" card: what still lowers and raises glucose, until when, and the
+    expected value once all of it has acted (normal forecast, with its typical spread)."""
+    instant = lambda value: value.isoformat() if value else None
+    fresh = result.get("glucose_fresh")
+    return {
+        "glucose_mgdl": result.get("glucose_mgdl"), "glucose_fresh": bool(fresh),
+        "insulin_units": str(active["insulin_units"]),
+        "lowering_mgdl": str(active["lowering_mgdl"]), "lowering_until": instant(active["lowering_until"]),
+        "raising_mgdl": str(active["raising_mgdl"]), "raising_until": instant(active["raising_until"]),
+        "carbs_mgdl": str(active["carbs_mgdl"]), "surcharge_mgdl": str(active["surcharge_mgdl"]),
+        "carbs_remaining_g": str(sum((row["remaining_grams"] for row in active["carbs"]), Decimal(0))),
+        "expected_mgdl": (str(Decimal(result["glucose_mgdl"]) - active["lowering_mgdl"] + active["raising_mgdl"])
+                          if fresh else None),
+        "expected_at": instant(active["settled_at"]),
+        "spread_mgdl": str(on_board.FORECAST_SPREAD_MGDL),
+        "fresh_meal_at": instant(active["fresh_meal_at"]),
+        "doses": [{"at": dose["at"].isoformat(), "units": str(dose["units"]),
+                   "remaining_units": str(dose["remaining_units"])} for dose in active["doses"]],
+        "carbs": [{"at": row["at"].isoformat(), "grams": str(row["grams"]),
+                   "remaining_grams": str(row["remaining_grams"])} for row in active["carbs"]],
+    }
