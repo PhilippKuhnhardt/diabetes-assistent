@@ -19,7 +19,7 @@ def validate_settings(value: dict) -> dict:
                 "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
                 "sport_effects_mgdl", "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile",
                 "auto_half_life_days", "auto_lookback_days", "auto_method", "auto_surcharge_mgdl",
-                "basal_default_units"):
+                "basal_default_units", "split_min_grams", "split_first_percent", "split_delay_minutes"):
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
@@ -59,6 +59,10 @@ def validate_settings(value: dict) -> dict:
     basal_default = calculation.dec(result.get("basal_default_units", config.DEFAULT_BASAL_UNITS))
     if not basal_default.is_finite() or not 0 <= basal_default <= 100 or basal_default % Decimal("0.5"):
         raise ValueError("Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen")
+    split = {key: int(result.get(key, default)) for key, default in config.DEFAULT_SPLIT.items()}
+    if not (0 <= split["split_min_grams"] <= 300 and 30 <= split["split_first_percent"] <= 90
+            and 30 <= split["split_delay_minutes"] <= 300):
+        raise ValueError("Split-Bolus: ab 0–300 g (0 = aus), 30–90 % sofort, Rest nach 30–300 min")
     effects = result["sport_effects_mgdl"]
     if not (0 < breakfast_end < lunch_end < 1440 and 0 <= lookback <= 1440):
         raise ValueError("Ungültige Mahlzeiten- oder Sportzeiten")
@@ -82,6 +86,7 @@ def validate_settings(value: dict) -> dict:
         "auto_method": result.get("auto_method", "percentile"),
         "auto_surcharge_mgdl": str(surcharge),
         "basal_default_units": unit_text(basal_default),
+        **split,
     })
     return result
 

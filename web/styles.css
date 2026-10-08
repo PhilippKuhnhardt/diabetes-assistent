@@ -474,6 +474,7 @@ span.range-high { color: #9a6410; font-weight: 650; }
 label.chip span { color: inherit; font-weight: inherit; }
 label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accent-color: var(--green); }
 .entry-chips label.chip:has(input:checked) { background: var(--amber-light); border-color: #e0c27a; color: var(--amber); }
+.entry-chips button.chip[aria-pressed="true"] { background: var(--amber-light); border-color: #e0c27a; color: var(--amber); }
 .entry-switch { margin-bottom: 14px; }
 .entry-switch button.entry-mode { min-height: 38px; }
 .entry-day-type .entry-switch button.day-type-option { min-height: 36px; }

@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
-from app import dosing, forecast, on_board
+from app import dosing, episodes, forecast, on_board, split
 
 
 class CurveTests(unittest.TestCase):
@@ -127,6 +127,38 @@ class TimelineTests(unittest.TestCase):
         three_hours = next(row for row in rows if row["at"] == dose + timedelta(hours=3))
         self.assertAlmostEqual(float(three_hours["model_mgdl"]), 150 - 60 * (1 - 0.14), delta=1)
         self.assertTrue(all(row["lowering_per_hour"] >= 0 and row["raising_per_hour"] == 0 for row in rows))
+
+
+class SplitTests(unittest.TestCase):
+    settings = {"split_min_grams": 80, "split_first_percent": 60, "split_delay_minutes": 120}
+
+    def test_offered_for_large_main_meals_only(self):
+        self.assertEqual(split.offer(Decimal(80), False, self.settings), {"first_percent": 60, "delay_minutes": 120})
+        self.assertIsNone(split.offer(Decimal(79), False, self.settings))
+        self.assertIsNone(split.offer(Decimal(120), True, self.settings))
+        self.assertIsNone(split.offer(Decimal(120), False, {**self.settings, "split_min_grams": 0}))
+
+    def test_first_part_is_rounded_to_half_units_and_the_rest_completes_the_dose(self):
+        self.assertEqual(split.parts(Decimal("9.5"), 60), (Decimal("5.5"), Decimal("4.0")))
+        self.assertEqual(split.parts(Decimal(10), 60), (Decimal(6), Decimal(4)))
+
+    def test_marker_round_trips_through_the_note(self):
+        tag = episodes.split_tag("4", 120)
+        self.assertEqual(tag, "[DASP:4@120]")
+        self.assertEqual(episodes.split_plan("Pasta " + tag), {"units": "4", "delay_minutes": 120})
+        self.assertIsNone(episodes.split_plan("Pasta"))
+
+    def test_plan_stays_open_until_a_later_dose_or_three_hours_past_due(self):
+        meal_at = datetime(2026, 10, 8, 12, tzinfo=timezone.utc)
+        meal = {"at": meal_at, "role": "meal", "carbs": "100", "insulin": "6", "eventType": "Meal Bolus",
+                "split": {"units": "4", "delay_minutes": 120}}
+        plan = split.open_plan([meal], meal_at + timedelta(minutes=100))
+        self.assertEqual((plan["units"], plan["due_at"]), (Decimal(4), meal_at + timedelta(hours=2)))
+        self.assertIsNone(split.open_plan([meal], meal_at + timedelta(hours=5, minutes=1)))
+        first_part = {"at": meal_at + timedelta(minutes=10), "insulin": "1", "eventType": "Correction Bolus"}
+        self.assertIsNotNone(split.open_plan([meal, first_part], meal_at + timedelta(hours=2)))
+        second = {"at": meal_at + timedelta(minutes=125), "insulin": "4", "eventType": "Correction Bolus"}
+        self.assertIsNone(split.open_plan([meal, second], meal_at + timedelta(minutes=130)))
 
 
 if __name__ == "__main__":

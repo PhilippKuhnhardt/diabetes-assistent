@@ -332,6 +332,18 @@ function updateEntryAssignment() {
     : "eigenes " + names[assignment.own_meal]) + " ⇄";
 }
 
+// The server offers a split bolus for a large main meal; the chip switches it off and on.
+function updateEntrySplit() {
+  const chip = $("#entry-split-chip");
+  const split = $("#entry-form").elements.kind.value === "meal" ? currentPreview()?.split : null;
+  chip.hidden = !split;
+  if (!split) return;
+  chip.setAttribute("aria-pressed", String(Boolean(split.active)));
+  chip.textContent = split.active
+    ? "Split " + split.first_percent + "/" + (100 - split.first_percent) + " · 2. Teil " + timeOnly(split.due_at)
+    : "Ohne Split";
+}
+
 // KH-Sicherheit is a three-stop slider (unsure, roughly known, weighed) that starts in the middle.
 // An edited entry without a mark keeps none until the slider is moved.
 const CERTAINTY_LEVELS = ["unsure", "known", "weighed"];
@@ -368,6 +380,7 @@ function updateEntryQuality() {
 
 function updateEntrySportOption() {
   updateEntryAssignment();
+  updateEntrySplit();
   updateEntryQuality();
   const form = $("#entry-form");
   const option = $("#entry-sport-option");
@@ -443,6 +456,9 @@ async function loadSettings() {
   form.elements.auto_half_life_days.value = data.settings.auto_half_life_days;
   form.elements.auto_surcharge_mgdl.value = data.settings.auto_surcharge_mgdl ?? 40;
   form.elements.basal_default_units.value = data.settings.basal_default_units ?? 17;
+  form.elements.split_min_grams.value = data.settings.split_min_grams ?? 80;
+  form.elements.split_first_percent.value = data.settings.split_first_percent ?? 60;
+  form.elements.split_delay_minutes.value = data.settings.split_delay_minutes ?? 120;
   form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
   form.elements.lunch_end.value = minuteClock(data.settings.lunch_end_minute);
   form.elements.sport_lookback_minutes.value = data.settings.sport_lookback_minutes;
@@ -934,6 +950,8 @@ function activeCardHTML(active) {
         : [(active.expected_at ? "um " + timeOnly(active.expected_at) : "jetzt"), "±" + num(active.spread_mgdl, 0) + " mg/dL"],
       " expected") +
     (nothing ? '<p class="hint">Nichts wirkt mehr nach.</p>' : '') +
+    (active.split_plan ? '<p class="hint">2. Teil geplant: ' + escapeHTML(num(active.split_plan.units, 1)) + ' IE um ' +
+      escapeHTML(timeOnly(active.split_plan.due_at)) + ', in der Prognose noch nicht enthalten.</p>' : '') +
     (active.fresh_meal_at ? '<p class="hint">Mahlzeit um ' + escapeHTML(timeOnly(active.fresh_meal_at)) +
       ': Die KH steigen noch, die Prognose ist hier am unsichersten.</p>' : '');
 }
@@ -1437,6 +1455,7 @@ function previewRequest() {
   try { at = toInstant(state.day, form.elements.at.value); } catch (_) { /* The time field is incomplete. */ }
   return {
     day: state.day, at, mode: form.elements.kind.value, carbs: form.elements.carbs.value, as: state.entryAs || null,
+    split: state.split ?? null,
     consider_sport: form.elements.consider_sport.checked, sport_effect_mgdl: form.elements.sport_effect_mgdl.value || "0",
   };
 }
@@ -1520,7 +1539,7 @@ function selectDoseSuggestion(event) {
   form.requestSubmit($("#entry-submit"));
 }
 
-const doseLabels = { normal: "Normal", cautious: "Vorsichtig", carbs: "Nur KH" };
+const doseLabels = { split: "2. Teil", normal: "Normal", cautious: "Vorsichtig", carbs: "Nur KH" };
 
 function doseHelpHTML(data) {
   const withCarbs = Number(data.carbs_g) > 0;
@@ -1530,7 +1549,10 @@ function doseHelpHTML(data) {
     ' title="' + escapeHTML(label + ": " + num(option.units, 2) + " IE direkt in Nightscout speichern") + '"' +
     (option.savable ? '' : ' disabled') + '><span class="dose-label">' + escapeHTML(label) + '</span><strong>' +
     escapeHTML(num(option.units, 2)) + ' <small>IE</small></strong><span class="dose-expected">' +
-    (option.expected_mgdl != null ? '→ ' + escapeHTML(num(option.expected_mgdl, 0)) + ' mg/dL' : 'ohne Korrektur') + '</span></button>';
+    (option.expected_mgdl != null ? '→ ' + escapeHTML(num(option.expected_mgdl, 0)) + ' mg/dL' : 'ohne Korrektur') + '</span>' +
+    (option.later_units != null ? '<span class="dose-expected">+ ' + escapeHTML(num(option.later_units, 1)) + ' IE um ' +
+      escapeHTML(timeOnly(option.later_at)) + '</span>' : '') +
+    (option.due_at ? '<span class="dose-expected">geplant ' + escapeHTML(timeOnly(option.due_at)) + '</span>' : '') + '</button>';
   }).join("");
   return '<div class="dose-head"><span class="dose-heading">' + (withCarbs ? "Empfehlung" : "Korrektur ohne Essen") +
     '</span>' + (options ? '<span class="dose-hint">Antippen speichert direkt</span>' : '') + '</div>' +
@@ -1580,6 +1602,7 @@ function resetEntryForm() {
   state.entryNoteOpen = false;
   state.doseChoice = null;
   state.entryAs = null;
+  state.split = null;
   setDefaultMealTime();
   updateEntryFields();
   if ($("#edit-dialog").open) closeEditDialog();
@@ -1765,6 +1788,7 @@ async function saveEntry(event) {
     event_id: state.pendingEventId || crypto.randomUUID(),
     basal_event_id: basalUnits > 0 ? state.pendingBasalId || crypto.randomUUID() : null,
     dose_check: chosen != null && Number(chosen) === insulin ? doseHelp.check : null,
+    dose_variant: state.doseChoice || null,
   };
   state.pendingEventId = payload.event_id;
   state.pendingBasalId = payload.basal_event_id;
@@ -1789,6 +1813,7 @@ async function saveEntry(event) {
     const basal = result.basal;
     const message = (result.kind === "exercise" ? "Sport" : [carbs > 0 ? num(carbs, 0) + " g" : "", insulin > 0 ? num(insulin, 2) + " IE" : ""]
       .filter(Boolean).join(" + ")) + (basal ? " + Basal " + num(basal.units, 1) + " IE" : "") + " gespeichert" +
+      (result.split_units ? " · 2. Teil " + num(result.split_units, 1) + " IE vorgemerkt" : "") +
       (result.sport_marked ? " · Sport berücksichtigt" : "") +
       (basal && !basal.nightscout_synced ? " · Basal vorerst nur lokal" : "") +
       (result.basal_error ? " · Basal nicht gespeichert: " + result.basal_error : "") +
@@ -1890,6 +1915,9 @@ async function saveSettings(event) {
     auto_half_life_days: form.elements.auto_half_life_days.value,
     auto_surcharge_mgdl: form.elements.auto_surcharge_mgdl.value,
     basal_default_units: form.elements.basal_default_units.value,
+    split_min_grams: Number(form.elements.split_min_grams.value),
+    split_first_percent: Number(form.elements.split_first_percent.value),
+    split_delay_minutes: Number(form.elements.split_delay_minutes.value),
     breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),
     lunch_end_minute: clockMinute(form.elements.lunch_end.value),
     sport_lookback_minutes: Number(form.elements.sport_lookback_minutes.value),
@@ -2457,6 +2485,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#entry-form").addEventListener("focusin", setDefaultMealTime);
   $("#entry-assign-chip").addEventListener("click", () => {
     state.entryAs = currentPreview()?.assignment?.snack ? "meal" : "snack";
+    schedulePreview(0);
+  });
+  $("#entry-split-chip").addEventListener("click", () => {
+    state.split = !currentPreview()?.split?.active;
     schedulePreview(0);
   });
   $("#entry-form").elements.consider_sport.addEventListener("change", () => {

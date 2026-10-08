@@ -44,6 +44,19 @@ G vorsichtig  = G + Sport − max(0, Insulinrest − KH-Rest − Zuschlag-Rest)
 - Der Faktor je Hauptmahlzeit (unten) nutzt diese Kurve nicht; dort zählen alle IE im Fenster voll.
 - „Wirkungen über den Tag“ (Tag durchgehen) rechnet dasselbe Modell alle 5 Minuten: wie viel mg/dL pro Stunde gerade gehoben (KH, Zuschlag) und gesenkt (Insulin) werden, und als Vergleichslinie `BZ(t − 3 h) − Insulin wirkte seitdem + KH und Zuschlag wirkten seitdem`. KH werden mit dem Automatik-Faktor des Tages bewertet. Angezeigt werden die mittlere Abweichung zum gemessenen BZ und die größte Abweichung nach oben und unten ab 40 mg/dL.
 
+### Split-Bolus
+
+Ab `split_min_grams` KH (Standard 80 g, 0 = aus) ist bei einer Hauptmahlzeit „Split“ vorausgewählt; ein Snack bekommt keinen. Jede Option zeigt dann den ersten Teil und den Rest:
+
+```text
+jetzt   = auf 0,5 IE gerundet (Empfehlung × split_first_percent / 100)     (Standard 60 %)
+später  = Empfehlung − jetzt, um Mahlzeit + split_delay_minutes            (Standard 120 min)
+```
+
+- Der erwartete Wert der Option gilt für die volle Empfehlung, also beide Teile.
+- Gespeichert wird beim Eintrag für heute `später = gewählte Empfehlung − tatsächlich eingetragene IE` als Markierung `[DASP:<IE>@<min>]` in der Nightscout-Notiz der Mahlzeit.
+- Der Plan ist offen, bis eine schnelle Insulingabe mehr als 15 min nach der Mahlzeit eingetragen ist oder 3 h nach dem geplanten Zeitpunkt. Solange zeigt die Karte „Wirkt noch“ den 2. Teil (nicht in der Prognose enthalten), und ein Eintrag ohne KH bietet zuerst die Option „2. Teil“ mit der geplanten Menge an; daneben stehen Normal und Vorsichtig aus der aktuellen Prognose (aktives Insulin und offene KH).
+
 Vor dem Ende des Frühstücksfensters hängt `R` von der Tagesart ab (Arbeitstag oder freier Tag). Liegen in den letzten 28 Tagen vor heute mindestens drei berechnete, nicht ausgeklammerte Frühstücke derselben Tagesart vor, gilt `KH-Anteil = KH × F / 10` mit `F` = Median dieser Frühstücksfaktoren in IE/KE; sonst bleibt der Nightscout-Wert. Die Tagesart ist standardmäßig Montag bis Freitag Arbeitstag, Samstag und Sonntag frei. Ist in den Einstellungen Urlaub aktiv, zählt jeder Tag ab dem Einschalten als frei; beim Ausschalten endet der Urlaub am Vortag. Eine manuelle Auswahl für einen Tag hat immer Vorrang. Die Tagesart wird nur lokal gespeichert, nicht in Nightscout.
 
 ## Automatik-Faktor (Vorschlagsfaktor)

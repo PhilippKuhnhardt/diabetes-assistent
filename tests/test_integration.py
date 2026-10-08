@@ -18,7 +18,8 @@ from pathlib import Path
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-from app import forecast
+from app import dosing, episodes, forecast
+from app.common import unit_text
 from app.analysis.night import night_analysis
 from app.services import day_view
 from app.store import config, db, marks, mirror
@@ -1443,6 +1444,41 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/entry", method="POST", body={
                 **entry, "insulin": fresh["entry_units"], "dose_check": fresh["check"]})
         self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["insulin"])), Decimal(fresh["entry_units"]))
+
+    def test_large_meal_is_split_and_the_second_part_is_offered_later(self):
+        self.request("/api/settings")
+        now = datetime.now(timezone.utc)
+        today = now.astimezone(ZoneInfo("Europe/Berlin")).date().isoformat()
+        current_day = {
+            "day": today, "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 120}],
+            "treatments": [], "basal": [], "day_type": "work", "day_type_source": "weekday", "meals": [],
+        }
+        entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "100", "as": "meal"}
+        with fake_days(return_value=current_day):
+            preview = self.request("/api/entry/preview", method="POST", body=entry)
+            self.assertEqual((preview["split"]["active"], preview["split"]["first_percent"]), (True, 60))
+            normal = preview["dose"]["options"][0]
+            full, first, later = (Decimal(normal[key]) for key in ("full_units", "units", "later_units"))
+            self.assertEqual(first + later, full)
+            self.assertEqual(first, dosing.half_units(full * Decimal("0.6")))
+            off = self.request("/api/entry/preview", method="POST", body={**entry, "split": False})
+            self.assertFalse(off["split"]["active"])
+            self.assertNotIn("later_units", off["dose"]["options"][0])
+            self.assertIsNone(self.request("/api/entry/preview", method="POST", body={**entry, "carbs": "40"})["split"])
+            saved = self.request("/api/entry", method="POST", body={
+                **entry, "insulin": str(first), "dose_variant": "normal"})
+        self.assertEqual(Decimal(saved["split_units"]), later)
+        note = FakeNightscout.treatments[-1]["notes"]
+        self.assertIn(episodes.split_tag(unit_text(later), 120), note)
+
+        meal_at = now - timedelta(minutes=110)
+        current_day["treatments"] = [{"at": meal_at.isoformat(), "role": "meal", "eventType": "Meal Bolus",
+                                      "carbs": "100", "insulin": str(first), "split": episodes.split_plan(note)}]
+        with fake_days(return_value=current_day):
+            dose = self.request("/api/entry/preview", method="POST", body={**entry, "carbs": "0"})["dose"]
+        self.assertEqual(dose["options"][0]["variant"], "split")
+        self.assertEqual(Decimal(dose["options"][0]["units"]), later)
+        self.assertEqual(dose["split_plan"]["due_at"], (meal_at + timedelta(minutes=120)).isoformat())
 
     def test_window_editor_reads_cgm_per_minute_and_counts_a_candidate_window(self):
         self.request("/api/treatment", method="POST", body={
