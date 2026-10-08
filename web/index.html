@@ -118,6 +118,12 @@
               <div class="section-head"><h2>Tag durchgehen</h2><span id="record-count" class="hint"></span></div>
               <div id="review-chart" class="day-overview-chart review-chart"></div>
               <div id="review-summary" class="review-summary" aria-live="polite"></div>
+              <details id="effects-card" class="effects-card" open hidden>
+                <summary>Wirkungen über den Tag <span id="effects-summary" class="hint"></span></summary>
+                <div id="effects-chart" class="effects-chart"></div>
+                <p class="effects-legend"><span class="legend-measured">gemessen</span><span class="legend-model">Modell aus dem BZ 3 h vorher</span><span class="legend-raising">hebt: KH, Fett/Eiweiß</span><span class="legend-lowering">senkt: Insulin</span></p>
+                <p class="hint">Unten: wie stark gerade gehoben und gesenkt wird, in mg/dL pro Stunde. Wo gemessen und Modell auseinanderlaufen, hat das Modell etwas nicht erfasst, etwa unterschätzte KH, Fett oder Sport.</p>
+              </details>
               <section id="night-card" class="night-card" aria-live="polite" hidden>
                 <div class="section-head"><h2>Nacht</h2><span id="night-window" class="hint"></span></div>
                 <div id="night-values" class="night-values"></div>

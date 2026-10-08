@@ -834,6 +834,87 @@ function renderVisibleCharts() {
   renderDayOverview();
   renderReviewChart();
   renderMealCharts();
+  renderEffects();
+}
+
+// "Wirkungen": measured glucose against the 3-h model, and how strongly carbs raise and insulin lowers.
+async function loadEffects() {
+  const day = state.day;
+  try {
+    const data = await api("/api/day/effects?date=" + encodeURIComponent(day));
+    if (day !== state.day) return;
+    state.effects = data;
+  } catch (error) {
+    state.effects = { day, rows: [], reason: error.message };
+  }
+  renderEffects();
+}
+
+function effectsSummaryText(data) {
+  const summary = data.summary;
+  if (!summary?.count) return data.reason || "Noch keine Werte für das Modell.";
+  const parts = ["Modell im Mittel " + num(summary.mean_abs_mgdl, 0) + " mg/dL daneben"];
+  if (summary.max_above) parts.push("BZ bis " + signedChange(summary.max_above.mgdl, 0) + " über Modell um " + timeOnly(summary.max_above.at));
+  if (summary.max_below) parts.push("bis " + signedChange(summary.max_below.mgdl, 0) + " darunter um " + timeOnly(summary.max_below.at));
+  return parts.join(" · ");
+}
+
+function effectsChartSVG(data, width) {
+  const W = Math.max(300, Math.min(900, Math.round(width))), L = 36, R = W - 10;
+  const top = 8, mid = 168, rateTop = 186, rateBottom = 290, H = 312;
+  const from = new Date(data.from).getTime(), to = Math.max(new Date(data.to).getTime(), from + 60 * MINUTE);
+  const rows = data.rows.map(row => ({ t: new Date(row.at).getTime(), g: row.glucose_mgdl == null ? null : Number(row.glucose_mgdl),
+    m: row.model_mgdl == null ? null : Number(row.model_mgdl), up: Number(row.raising_per_hour), down: Number(row.lowering_per_hour) }));
+  const values = rows.flatMap(row => [row.g, row.m]).filter(value => value != null);
+  const gTop = Math.max(250, Math.ceil((Math.max(0, ...values) + 10) / 50) * 50);
+  const gBottom = Math.min(50, Math.floor(Math.min(400, ...values) / 10) * 10);
+  const rateMax = Math.max(60, ...rows.map(row => Math.max(row.up, row.down)));
+  const x = t => L + (t - from) / (to - from) * (R - L);
+  const y = g => mid - (Math.min(Math.max(g, gBottom), gTop) - gBottom) / (gTop - gBottom) * (mid - top);
+  const zero = (rateTop + rateBottom) / 2;
+  const r = v => v / rateMax * (rateBottom - rateTop) / 2;
+  const line = key => {
+    let d = "", open = false;
+    for (const row of rows) {
+      if (row[key] == null) { open = false; continue; }
+      d += (open ? "L" : "M") + x(row.t).toFixed(1) + " " + y(row[key]).toFixed(1);
+      open = true;
+    }
+    return d;
+  };
+  const area = (key, sign) => rows.length ? "M" + x(rows[0].t).toFixed(1) + " " + zero + rows.map(row =>
+    "L" + x(row.t).toFixed(1) + " " + (zero - sign * r(row[key])).toFixed(1)).join("") +
+    "L" + x(rows[rows.length - 1].t).toFixed(1) + " " + zero + "Z" : "";
+  const grid = [];
+  for (let g = Math.ceil(gBottom / 50) * 50; g <= gTop; g += 50) {
+    grid.push('<line class="grid" x1="' + L + '" x2="' + R + '" y1="' + y(g).toFixed(1) + '" y2="' + y(g).toFixed(1) + '"/>' +
+      '<text x="' + (L - 6) + '" y="' + (y(g) + 4).toFixed(1) + '" text-anchor="end">' + g + '</text>');
+  }
+  const ticks = [];
+  for (let t = Math.ceil(from / (180 * MINUTE)) * 180 * MINUTE; t <= to; t += 180 * MINUTE) {
+    ticks.push('<line class="grid" x1="' + x(t).toFixed(1) + '" x2="' + x(t).toFixed(1) + '" y1="' + top + '" y2="' + rateBottom + '"/>' +
+      '<text x="' + x(t).toFixed(1) + '" y="' + (rateBottom + 16) + '" text-anchor="middle">' + escapeHTML(timeOnly(t)) + '</text>');
+  }
+  return '<svg class="window-chart-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Gemessener BZ, Modell und Wirkungen">' +
+    grid.join("") + ticks.join("") +
+    '<path class="model" d="' + line("m") + '"/><path class="measured" d="' + line("g") + '"/>' +
+    '<path class="raising" d="' + area("up", 1) + '"/><path class="lowering" d="' + area("down", -1) + '"/>' +
+    '<line class="axis" x1="' + L + '" x2="' + R + '" y1="' + zero + '" y2="' + zero + '"/>' +
+    '<text x="' + (L - 6) + '" y="' + (rateTop + 8) + '" text-anchor="end">+' + Math.round(rateMax) + '</text>' +
+    '<text x="' + (L - 6) + '" y="' + rateBottom + '" text-anchor="end">−' + Math.round(rateMax) + '</text>' +
+    '<text class="y-unit" x="' + L + '" y="' + (rateTop - 4) + '">mg/dL pro h</text></svg>';
+}
+
+function renderEffects() {
+  const card = $("#effects-card");
+  const data = state.effects;
+  if (!card) return;
+  card.hidden = !data || data.day !== state.day;
+  if (card.hidden) return;
+  $("#effects-summary").textContent = effectsSummaryText(data);
+  const node = $("#effects-chart");
+  if (!card.open || !node.clientWidth) return;
+  node.innerHTML = data.rows.length ? effectsChartSVG(data, node.clientWidth) : '<p class="hint">Keine Daten für diesen Tag.</p>';
 }
 
 // Today's "Wirkt noch" card: what still lowers and raises glucose and the expected value after it.
@@ -1332,6 +1413,7 @@ async function loadDay() {
   $("#night-card").hidden = true;
   try {
     renderDay(await api("/api/day?date=" + encodeURIComponent(state.day)));
+    loadEffects();
     await updatePreview();
   } catch (error) {
     $("#timeline").innerHTML = '<div class="empty">Daten konnten nicht geladen werden.</div>';
@@ -2413,6 +2495,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#timeline").addEventListener("toggle", event => {
     if (event.target.matches(".day-meal-details") && event.target.open) renderMealCharts();
   }, true);
+  $("#effects-card").addEventListener("toggle", renderEffects);
   $("#close-edit").addEventListener("click", closeEditDialog);
   $("#edit-dialog").addEventListener("close", () => { state.editing = null; });
   $("#dose-result").addEventListener("click", selectDoseSuggestion);

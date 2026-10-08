@@ -391,6 +391,11 @@ class GoldenMasterTests(unittest.TestCase):
         record["glucose_current"] = cls.call("/api/glucose/current")
         record["days"] = {day: cls.compact_day(cls.call("/api/day?date=" + day)) for day in days}
         record["day_after"] = cls.call("/api/day?date=" + (NOW + timedelta(days=1)).date().isoformat())
+        record["day_effects"] = {}
+        for day in (days[-2], days[-1]):
+            effects = cls.call("/api/day/effects?date=" + day)
+            # Every hour of the 5-minute rows, plus the summary, keeps the reference readable.
+            record["day_effects"][day] = {**effects, "rows": effects["rows"][::12], "row_count": len(effects["rows"])}
         for span in (1, 7, 30):
             record[f"summary_{span}"] = cls.call(f"/api/summary?days={span}")
         record["dose_help"] = {
@@ -442,6 +447,9 @@ class GoldenMasterTests(unittest.TestCase):
     def test_diary_days(self):
         self.check("days")
         self.check("day_after")
+
+    def test_day_effects(self):
+        self.check("day_effects")
 
     def test_analysis_summary(self):
         for name in ("summary_1", "summary_7", "summary_30", "summary_30_surcharge"):

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import calculation, dosing, forecast, on_board
+from app import dosing, forecast, on_board
 from app.common import parse_instant
 from app.services import day_view, factors
 from app.store import config, marks, mirror
@@ -46,25 +46,8 @@ def dose_help(payload: dict) -> dict:
                                          local_now.date(), auto_percentile, half_life, lookback, method,
                                          surcharge_mgdl)
     auto_value = prediction["units_per_ke"]
-    predictions = {(meal_kind, day_type if is_breakfast else None): auto_value}
-
-    def carb_factor(at: datetime) -> Decimal | None:
-        """IE/KE that values a past carb entry: Automatik of its meal kind, else Nightscout's I:C then."""
-        local = at.astimezone(ZoneInfo(current_settings["timezone"]))
-        minute = local.hour * 60 + local.minute
-        kind = ("breakfast" if minute < int(current_settings["breakfast_end_minute"]) else
-                "lunch" if minute < int(current_settings["lunch_end_minute"]) else "dinner")
-        key = (kind, day_type if kind == "breakfast" else None)
-        if key not in predictions:
-            predictions[key] = forecast.predict_method(points, key, local_now.date(), auto_percentile, half_life,
-                                                       lookback, method, surcharge_mgdl)["units_per_ke"]
-        if predictions[key] is not None:
-            return predictions[key]
-        try:
-            return Decimal(10) / calculation.schedule_value_at(at, current_settings.get("ic_schedule", []),
-                                                               current_settings["timezone"], "grams_per_unit")
-        except ValueError:
-            return None
+    carb_factor = factors.carb_factor(current_settings, local_now.date(), points, day_type,
+                                      {(meal_kind, day_type if is_breakfast else None): auto_value})
 
     try:
         active = on_board.summary(on_board.sources(

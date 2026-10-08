@@ -101,5 +101,33 @@ class OnBoardTests(unittest.TestCase):
         self.assertEqual(active["settled_at"], active["lowering_until"])
 
 
+class TimelineTests(unittest.TestCase):
+    def setUp(self):
+        self.start = datetime(2026, 10, 8, 10, tzinfo=timezone.utc)
+        self.settings = {"timezone": "Europe/Berlin", "isf_schedule": [{"start_minute": 0, "mgdl_per_unit": "30"}]}
+        self.entries = [{"at": self.start + timedelta(minutes=5 * k), "sgv": 150} for k in range(-48, 120)]
+
+    def rows(self, treatments):
+        end = self.start + timedelta(hours=6)
+        found = on_board.sources(treatments, end, self.settings, lambda at: Decimal(1), None,
+                                 forecast.surcharge_share, keep_all=True)
+        return on_board.timeline(found, self.entries, self.start, end)
+
+    def test_without_events_the_model_is_the_glucose_three_hours_earlier(self):
+        rows = self.rows([])
+        self.assertTrue(all(row["model_mgdl"] == 150 and row["lowering_per_hour"] == 0 for row in rows))
+
+    def test_rates_add_up_to_the_full_effect_and_the_model_follows_them(self):
+        dose = self.start + timedelta(minutes=30)
+        rows = self.rows([{"id": "c", "at": dose, "eventType": "Correction Bolus", "insulin": 2}])
+        before = [row for row in rows if row["at"] < dose]
+        self.assertTrue(all(row["lowering_per_hour"] == 0 for row in before))
+        acted = sum(row["lowering_per_hour"] for row in rows) / 12
+        self.assertAlmostEqual(float(acted), 60 * (1 - float(on_board.insulin_remaining(Decimal(335)))), places=3)
+        three_hours = next(row for row in rows if row["at"] == dose + timedelta(hours=3))
+        self.assertAlmostEqual(float(three_hours["model_mgdl"]), 150 - 60 * (1 - 0.14), delta=1)
+        self.assertTrue(all(row["lowering_per_hour"] >= 0 and row["raising_per_hour"] == 0 for row in rows))
+
+
 if __name__ == "__main__":
     unittest.main()
