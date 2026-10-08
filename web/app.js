@@ -1934,9 +1934,10 @@ function renderSuggestionDerivation(d) {
       '<rect class="range-low" x="0" width="' + below.toFixed(2) + '" height="8"/>' +
       '<rect class="range-ok" x="' + below.toFixed(2) + '" width="' + inRange.toFixed(2) + '" height="8"/>' +
       '<rect class="range-high" x="' + (below + inRange).toFixed(2) + '" width="' + above.toFixed(2) + '" height="8"/></svg>';
-    const notes = [isBest ? 'bestes gesamt' : isPeriodBest ? 'bestes ' + variant.lookback_days + ' T.' : '', active ? 'aktiv' : '',
+    const notes = [isBest ? 'bestes gesamt' : isPeriodBest ? 'bestes ' + variant.lookback_days + ' T.' : '',
       cell.stats.median_abs_deviation == null ? '' : '±' + num(Number(cell.stats.median_abs_deviation) * 100, 0) + ' %'];
-    return '<td class="matrix-cell' + (active ? ' is-active' : '') + (isPeriodBest ? ' is-best' : '') + (isBest ? ' is-overall-best' : '') + '">' + bar +
+    return '<td class="matrix-cell' + (active ? ' is-active' : '') + (isPeriodBest ? ' is-best' : '') + (isBest ? ' is-overall-best' : '') + '">' +
+      (active ? '<span class="active-badge">Aktiv</span>' : '') + bar +
       '<span class="range-nums"><span class="range-low">' + num(below, 0) + '</span> · <b class="range-ok">' + num(inRange, 0) +
       ' %</b> · <span class="range-high">' + num(above, 0) + '</span></span>' +
       (cell.stats.mean_glucose == null ? '' : '<span class="range-glucose">Ø ' + num(cell.stats.mean_glucose, 0) +
@@ -1951,7 +1952,7 @@ function renderSuggestionDerivation(d) {
   const legend = '<p class="hint derivation-note range-legend"><span class="range-low">■ &lt; ' + num(low, 0) + '</span> ' +
     '<span class="range-ok">■ ' + num(low, 0) + '–' + num(high, 0) + '</span> <span class="range-high">■ &gt; ' + num(high, 0) +
     '</span> · Anteil der Mahlzeiten mit BZ am Endpunkt in diesem Bereich, darunter Durchschnitt und Median dieses BZ, dazu typische Abweichung des Faktors. ' +
-    'Grün umrandet: bestes Feld je Zeitraum (meiste im Bereich, dann wenigste unter ' + num(low, 0) + '), kräftig: bestes gesamt.</p>';
+    'Grün umrandet: bestes Feld je Zeitraum (meiste im Bereich, dann wenigste unter ' + num(low, 0) + '), kräftig: bestes gesamt. Dunkel umrandet mit „Aktiv“: deine Einstellung.</p>';
   output.innerHTML = total
     ? legend + '<div class="table-wrap"><table class="analysis-table compact matrix"><thead><tr><th>Zeitraum</th><th>Halbwertszeit</th>' +
       percentiles.map(value => '<th>' + (value === "surcharge" ? escapeHTML(num(d.percentile, 1)) + ' % + Zuschlag <small>' + num(d.surcharge_mgdl, 0) + ' mg/dL je Mahlzeit</small>'
@@ -1990,8 +1991,9 @@ const rangeBar = (below, inRange, above) => {
     '<rect class="range-ok" x="' + pct(below) + '" width="' + pct(inRange) + '" height="8"/>' +
     '<rect class="range-high" x="' + (Number(pct(below)) + Number(pct(inRange))).toFixed(2) + '" width="' + pct(above) + '" height="8"/></svg>';
 };
-const rangeCounts = (below, inRange, above) => '<span class="range-nums"><span class="range-low">' + below +
-  '</span> · <b class="range-ok">' + inRange + '</b> · <span class="range-high">' + above + '</span></span>';
+const rangeCounts = (below, inRange, above, medianGlucose) => '<span class="range-nums"><span class="range-low">' + below +
+  '</span> · <b class="range-ok">' + inRange + '</b> · <span class="range-high">' + above + '</span>' +
+  (medianGlucose == null ? '' : '<small class="range-median">Median ' + num(medianGlucose, 0) + ' mg/dL</small>') + '</span>';
 const applyButton = (apply, label = "Übernehmen") => '<button type="button" class="quiet apply-button" data-apply="' +
   escapeHTML(JSON.stringify(apply)) + '">' + label + '</button>';
 
@@ -2056,8 +2058,10 @@ function renderAutomatik(d) {
     '<div class="tradeoff-head"><b>' + (isCurrent ? 'Aktuell' : o.changes.map(key => tuningNames[key] + ' ' +
       tuningLabel(key, key === "percentile" ? o.percentile : key === "surcharge" ? o.surcharge_mgdl : key === "half_life" ? o.half_life_days : o.lookback_days)).join(' · ')) +
     '</b><small>' + escapeHTML(strategyText(o)) + '</small>' + (isCurrent ? '' : '<span class="tradeoff-delta">' +
-      deltaText(o.delta_below, "zu tief") + ' · ' + deltaText(o.delta_above, "zu hoch") + '</span>') + '</div>' +
-    rangeBar(o.below, o.in_range, o.above) + rangeCounts(o.below, o.in_range, o.above) +
+      deltaText(o.delta_below, "zu tief") + ' · ' + deltaText(o.delta_above, "zu hoch") +
+      (o.delta_median_glucose == null ? '' : ' · Median ' + (Number(o.delta_median_glucose) >= 0 ? '+' : '−') +
+        num(Math.abs(Number(o.delta_median_glucose)), 0) + ' mg/dL') + '</span>') + '</div>' +
+    rangeBar(o.below, o.in_range, o.above) + rangeCounts(o.below, o.in_range, o.above, o.median_glucose) +
     (isCurrent ? '<span class="hint">eingestellt</span>' : applyButton(o.apply)) + '</li>';
   const alternatives = t.line.filter(o => o.changes.length);
   tradeoffs.innerHTML = '<div class="tradeoff-layout">' + plot + '<div><ul class="tradeoff-list">' +
@@ -2075,10 +2079,10 @@ function renderAutomatik(d) {
     '<small>' + row.meal_count + ' Mahlzeiten</small></summary><p class="hint">' + tuningHints[row.key] + '</p>' +
     '<ul class="tuning-options">' + row.options.map(o => '<li class="' + (o.active ? 'is-active' : '') + (o.best ? ' is-best' : '') + '">' +
       '<span class="tuning-label">' + escapeHTML(tuningLabel(row.key, o.value)) + (o.active ? ' <small>aktiv</small>' : '') + '</span>' +
-      rangeBar(o.below, o.in_range, o.above) + rangeCounts(o.below, o.in_range, o.above) +
+      rangeBar(o.below, o.in_range, o.above) + rangeCounts(o.below, o.in_range, o.above, o.median_glucose) +
       (o.active ? '<span></span>' : applyButton(o.apply)) + '</li>').join("") + '</ul></details>').join("") +
     '<p class="hint range-legend"><span class="range-low">■ unter 80</span> <span class="range-ok">■ 80–160</span> <span class="range-high">■ über 160</span> · ' +
-    'Jede Zeile prüft die Mahlzeiten, die alle ihre Optionen berechnen können. „Kein Unterschied“: die Optionen liegen höchstens ' +
+    'Median = mittlerer BZ am Endpunkt dieser Mahlzeiten (Ziel ' + num(d.dose_target_mgdl, 0) + ' mg/dL). Jede Zeile prüft die Mahlzeiten, die alle ihre Optionen berechnen können. „Kein Unterschied“: die Optionen liegen höchstens ' +
     num(d.tuning[0].noise_meals, 1) + ' Mahlzeiten auseinander.</p>';
 }
 

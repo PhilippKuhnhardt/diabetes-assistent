@@ -258,6 +258,9 @@ class TuningTests(unittest.TestCase):
                                  and (other["below"], other["above"]) != (option["below"], option["above"])
                                  for other in result["cloud"]))
         self.assertEqual(result["current"]["changes"], [])
+        self.assertIsNotNone(result["current"]["median_glucose"])
+        for option in line:
+            self.assertEqual(option["delta_median_glucose"], option["median_glucose"] - result["current"]["median_glucose"])
 
     def test_worked_example_adds_the_surcharge_once(self):
         history = [self.sized(age, "1.0", 60, 1800) for age in range(1, 6)]

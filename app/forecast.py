@@ -357,6 +357,7 @@ def tradeoffs(points: list[dict], since: date, lookback: int, half_life: Decimal
         option = {"lookback_days": variant[0], "half_life_days": variant[1], "percentile": variant[2],
                   "surcharge_mgdl": variant[3], "below": item["below"], "in_range": item["in_range"],
                   "above": item["above"], "median_abs_deviation": item["median_abs_deviation"],
+                  "median_glucose": item["median_glucose"],
                   "changes": changes(variant), "variants": 1}
         known = options.get(counts)
         if known is None or len(option["changes"]) < len(known["changes"]):
@@ -375,6 +376,9 @@ def tradeoffs(points: list[dict], since: date, lookback: int, half_life: Decimal
     for option in line:
         option["delta_below"] = option["below"] - current["below"]
         option["delta_above"] = option["above"] - current["above"]
+        option["delta_median_glucose"] = (option["median_glucose"] - current["median_glucose"]
+                                          if option["median_glucose"] is not None
+                                          and current["median_glucose"] is not None else None)
     meals = stats[0]["glucose_count"] if stats else 0
     return {"meal_count": meals, "current": current, "line": line,
             "cloud": [{"below": option["below"], "above": option["above"], "variants": option["variants"]}
