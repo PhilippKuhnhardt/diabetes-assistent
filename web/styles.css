@@ -208,7 +208,8 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .matrix-cell .range-nums { display: block; white-space: nowrap; color: var(--muted); }
 .matrix-cell .range-glucose { display: block; white-space: nowrap; font-size: 12px; }
 .matrix-cell small { display: block; margin-top: 2px; }
-.matrix-cell.is-active { box-shadow: inset 0 0 0 2px #9fb8aa; }
+.matrix-cell.is-active { outline: 2px solid var(--ink); outline-offset: -2px; }
+.matrix-cell .active-badge { display: inline-block; margin-bottom: 3px; padding: 1px 7px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 11px; font-weight: 700; }
 .matrix-cell.is-best { background: var(--green-light); box-shadow: inset 0 0 0 2px var(--green); }
 .matrix-cell.is-best small { color: var(--green); font-weight: 700; }
 .matrix-cell.is-overall-best { box-shadow: inset 0 0 0 4px var(--green); }
@@ -610,7 +611,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .tradeoff-plot .on-line { fill: var(--green); }
 .tradeoff-plot .current { fill: none; stroke: var(--ink); stroke-width: 2; }
 .tradeoff-list, .tuning-options { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
-.tradeoff { display: grid; grid-template-columns: minmax(0, 1fr) 100px 92px 96px; gap: 12px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line); }
+.tradeoff { display: grid; grid-template-columns: minmax(0, 1fr) 100px 112px 96px; gap: 12px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line); }
 .tradeoff:first-child { border-top: 0; }
 .tradeoff-head { display: grid; gap: 2px; min-width: 0; }
 .tradeoff-head small { color: var(--muted); font-size: 12px; }
@@ -625,7 +626,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .verdict { padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 650; background: #edf1ee; color: var(--muted); }
 .verdict-shift { background: var(--amber-light); color: var(--amber); }
 .verdict-better { background: var(--green-light); color: var(--green); }
-.tuning-options li { display: grid; grid-template-columns: 110px minmax(0, 1fr) 92px 96px; gap: 12px; align-items: center; padding: 4px 0; font-size: 13px; }
+.tuning-options li { display: grid; grid-template-columns: 110px minmax(0, 1fr) 112px 96px; gap: 12px; align-items: center; padding: 4px 0; font-size: 13px; }
 .tuning-options li.is-active .tuning-label { font-weight: 700; }
 .tuning-options li.is-best .range-nums b::after { content: " ★"; }
 .tradeoff .range-bar, .tuning-options .range-bar { width: 100%; height: 10px; }
@@ -641,3 +642,4 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .tradeoff-delta { font-size: 12px; font-weight: 650; color: var(--muted); }
 .delta-good { color: var(--green); }
 .delta-bad { color: #b23a33; }
+.range-nums .range-median { display: block; color: var(--muted); font-size: 11px; font-weight: 500; }
