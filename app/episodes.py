@@ -6,7 +6,9 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 TAG = re.compile(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction|snack)\]")
-EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal|basal))\]")
+EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal|basal)|DASP:\d+(?:\.\d+)?@\d+)\]")
+# A split bolus on a main meal: the second part's planned IE and its delay in minutes after the meal.
+SPLIT_TAG = re.compile(r"\[DASP:(\d+(?:\.\d+)?)@(\d+)\]")
 BASAL_MARKER = "[DA2:basal]"
 SNACK_GAP = timedelta(minutes=120)
 SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio|racing)\]")
@@ -22,6 +24,15 @@ CERTAINTY_TAG = re.compile(r"\[DAQ:(weighed|known|unsure)\]")
 def carbs_certainty(notes: str) -> str | None:
     match = CERTAINTY_TAG.search(notes)
     return match.group(1) if match else None
+
+
+def split_plan(notes: str) -> dict | None:
+    match = SPLIT_TAG.search(notes)
+    return {"units": match.group(1), "delay_minutes": int(match.group(2))} if match else None
+
+
+def split_tag(units, delay_minutes: int) -> str:
+    return f"[DASP:{units}@{int(delay_minutes)}]"
 
 
 def least_certain(levels) -> str | None:
@@ -97,6 +108,7 @@ def normalize_treatments(raw: list[dict]) -> list[dict]:
             "sport_type": sport_type,
             "carbs_certainty": carbs_certainty(str(item.get("notes") or "")),
             **{flag: tag in str(item.get("notes") or "") for flag, tag in QUALITY_MARKERS.items()},
+            "split": split_plan(str(item.get("notes") or "")),
             **marker,
         })
     return sorted(result, key=lambda x: x["at"])

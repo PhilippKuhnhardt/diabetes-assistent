@@ -8,7 +8,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from app import calculation, episodes
-from app.common import MEALS, local_day_range, parse_instant
+from app.common import MEALS, local_day_range, parse_instant, unit_text
 from app.ingestion import nightscout
 from app.services import day_view
 from app.store import config, mirror
@@ -101,7 +101,17 @@ def save_diary_treatment(payload: dict) -> dict:
             raise ValueError("Unbekannte KH-Sicherheit")
         quality = (f" [DAQ:{certainty}]" if carbs > 0 and certainty else "") + "".join(
             " " + tag for flag, tag in episodes.QUALITY_MARKERS.items() if carbs > 0 and payload.get(flag) is True)
-        notes = (note + marker + quality + f" [DAE:{event_id}]").strip()
+        split = ""
+        if kind == "meal" and payload.get("split_units") is not None:
+            units_later = calculation.dec(payload["split_units"])
+            delay = int(payload.get("split_delay_minutes") or 0)
+            if not units_later.is_finite() or not 0 < units_later <= 100 or not 30 <= delay <= 300:
+                raise ValueError("Ungültiger Split-Bolus")
+            split = " " + episodes.split_tag(unit_text(units_later), delay)
+        elif kind == "meal" and existing:
+            kept = episodes.SPLIT_TAG.search(str(existing.get("notes") or ""))
+            split = " " + kept.group(0) if kept else ""
+        notes = (note + marker + quality + split + f" [DAE:{event_id}]").strip()
         legacy = episodes.TAG.search(str((existing or {}).get("notes") or ""))
         if kind == "meal" and legacy and legacy.group(3) == "meal":
             notes += " " + legacy.group(0)

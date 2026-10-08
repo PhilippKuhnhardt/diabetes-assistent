@@ -87,6 +87,7 @@
    "lowering_until": "2026-10-07T14:35:00+00:00",
    "raising_mgdl": "297.3262809500909144136526580",
    "raising_until": "2026-10-07T14:35:00+00:00",
+   "split_plan": null,
    "spread_mgdl": "60",
    "surcharge_mgdl": "0"
   },
@@ -96,6 +97,7 @@
     "units": "7.0"
    }
   ],
+  "split_plan": null,
   "target_mgdl": "120",
   "total_units": "0",
   "trend_delta_mgdl": "0.0",
@@ -153,11 +155,13 @@
    "lowering_until": null,
    "raising_mgdl": "0",
    "raising_until": null,
+   "split_plan": null,
    "spread_mgdl": "60",
    "surcharge_mgdl": "0"
   },
   "reason": "Kein aktueller CGM-Wert innerhalb von 15 Minuten",
   "recent_rapid_doses": [],
+  "split_plan": null,
   "target_mgdl": "120",
   "trend_delta_mgdl": "0.0",
   "trend_direction": "flat",
@@ -258,6 +262,7 @@
    "lowering_until": "2026-10-07T14:35:00+00:00",
    "raising_mgdl": "297.3262809500909144136526580",
    "raising_until": "2026-10-07T14:35:00+00:00",
+   "split_plan": null,
    "spread_mgdl": "60",
    "surcharge_mgdl": "0"
   },
@@ -267,6 +272,7 @@
     "units": "7.0"
    }
   ],
+  "split_plan": null,
   "target_mgdl": "120",
   "total_units": "5.214285714285714285714285714",
   "trend_delta_mgdl": "0.0",
@@ -362,6 +368,7 @@
    "lowering_until": "2026-10-07T14:35:00+00:00",
    "raising_mgdl": "297.3262809500909144136526580",
    "raising_until": "2026-10-07T14:35:00+00:00",
+   "split_plan": null,
    "spread_mgdl": "60",
    "surcharge_mgdl": "0"
   },
@@ -371,6 +378,7 @@
     "units": "7.0"
    }
   ],
+  "split_plan": null,
   "target_mgdl": "120",
   "total_units": "0.214285714285714285714285714",
   "trend_delta_mgdl": "0.0",
@@ -467,6 +475,7 @@
    "lowering_until": "2026-10-07T14:35:00+00:00",
    "raising_mgdl": "313.7287451024447224172200421",
    "raising_until": "2026-10-07T15:40:00+00:00",
+   "split_plan": null,
    "spread_mgdl": "60",
    "surcharge_mgdl": "46.66666666666666666666666667"
   },
@@ -476,6 +485,7 @@
     "units": "7.0"
    }
   ],
+  "split_plan": null,
   "target_mgdl": "120",
   "total_units": "5.214285714285714285714285714",
   "trend_delta_mgdl": "0.0",
@@ -571,6 +581,7 @@
    "lowering_until": "2026-10-07T14:35:00+00:00",
    "raising_mgdl": "313.7287451024447224172200421",
    "raising_until": "2026-10-07T15:40:00+00:00",
+   "split_plan": null,
    "spread_mgdl": "60",
    "surcharge_mgdl": "46.66666666666666666666666667"
   },
@@ -580,6 +591,7 @@
     "units": "7.0"
    }
   ],
+  "split_plan": null,
   "target_mgdl": "120",
   "total_units": "0.214285714285714285714285714",
   "trend_delta_mgdl": "0.0",
@@ -637,11 +649,13 @@
    "lowering_until": null,
    "raising_mgdl": "0",
    "raising_until": null,
+   "split_plan": null,
    "spread_mgdl": "60",
    "surcharge_mgdl": "0"
   },
   "reason": "Kein aktueller CGM-Wert innerhalb von 15 Minuten",
   "recent_rapid_doses": [],
+  "split_plan": null,
   "target_mgdl": "120",
   "trend_delta_mgdl": null,
   "trend_direction": null,
@@ -736,6 +750,7 @@
    "lowering_until": "2026-10-07T14:35:00+00:00",
    "raising_mgdl": "297.3262809500909144136526580",
    "raising_until": "2026-10-07T14:35:00+00:00",
+   "split_plan": null,
    "spread_mgdl": "60",
    "surcharge_mgdl": "0"
   },
@@ -745,6 +760,7 @@
     "units": "7.0"
    }
   ],
+  "split_plan": null,
   "target_mgdl": "120",
   "total_units": "2.482142857142857142857142857",
   "trend_delta_mgdl": "0.0",

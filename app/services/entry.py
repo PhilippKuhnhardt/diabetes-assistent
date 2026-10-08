@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from zoneinfo import ZoneInfo
 
-from app import calculation, episodes
+from app import calculation, episodes, split as split_bolus
 from app.common import parse_instant
 from app.ingestion import nightscout
 from app.services import annotations, basal, day_view, diary, dose_help
@@ -16,6 +16,8 @@ from app.store import config, mirror
 MODES = ("meal", "exercise", "basal")
 WEEKDAYS = ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
 DOSE_VARIANTS = ("normal", "cautious", "carbs")
+# The planned second part of a split bolus, offered as its own option while it is open.
+SPLIT_VARIANT = "split"
 # The fields a shown suggestion depends on; saving a tapped suggestion re-checks them.
 DOSE_CHECK_KEYS = (
     "carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl",
@@ -127,7 +129,20 @@ def _dose_check(result: dict) -> str:
     return hashlib.sha256(json.dumps([result.get(key) for key in DOSE_CHECK_KEYS], default=str).encode()).hexdigest()
 
 
-def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | None) -> dict:
+def _split(context: dict, assignment: dict | None, payload: dict) -> dict | None:
+    """The split-bolus chip: offered and preselected for a large main meal; the form can switch it off."""
+    carbs, at = context["carbs"], context["at"]
+    if context["mode"] != "meal" or not carbs or at is None:
+        return None
+    offer = split_bolus.offer(carbs, bool(assignment and assignment["snack"]), context["settings"])
+    if offer is None:
+        return None
+    return {**offer, "active": payload.get("split") is not False,
+            "due_at": (at + timedelta(minutes=offer["delay_minutes"])).isoformat()}
+
+
+def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | None,
+          split: dict | None = None) -> dict:
     """The suggestion for today, with the three options already resolved for display."""
     carbs = context["carbs"]
     if context["mode"] != "meal" or carbs is None:
@@ -152,8 +167,22 @@ def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | N
         units = result.get(prefix + keys[variant][0])
         if units is None:
             continue
-        options.append({"variant": variant, "units": units, "expected_mgdl": result.get(prefix + keys[variant][1]),
-                        "savable": Decimal(str(units)) <= 100})
+        option = {"variant": variant, "units": units, "expected_mgdl": result.get(prefix + keys[variant][1])}
+        if split and split["active"]:
+            # The shown units are the first part; the expected value assumes the planned second part too.
+            first, later = split_bolus.parts(Decimal(str(units)), split["first_percent"])
+            option.update({"units": str(first), "full_units": str(units), "later_units": str(later),
+                           "later_at": split["due_at"]})
+        option["savable"] = Decimal(option["units"]) <= 100
+        options.append(option)
+    plan = result.get("split_plan")
+    if plan and carbs == 0:
+        units = Decimal(plan["units"])
+        forecast = result.get("forecast_mgdl")
+        options.insert(0, {"variant": SPLIT_VARIANT, "units": plan["units"], "due_at": plan["due_at"],
+                           "expected_mgdl": (str(Decimal(forecast) - units * Decimal(result["isf_mgdl_per_unit"]))
+                                             if forecast is not None else None),
+                           "savable": units <= 100})
     return {**result, "options": options, "check": _dose_check(result)}
 
 
@@ -187,7 +216,8 @@ def preview(payload: dict) -> dict:
     current = context["current"]
     day_type_visible = (context["mode"] == "meal" and bool(current.get("day_type"))
                         and _before_breakfast_end(context))
-    dose = _dose(context, payload, assignment, sport)
+    split = _split(context, assignment, payload)
+    dose = _dose(context, payload, assignment, sport, split)
     return {
         "day": context["day"],
         "day_notice": _day_notice(context),
@@ -196,6 +226,7 @@ def preview(payload: dict) -> dict:
         "basal_units": str(_basal_units(context)),
         "day_type": ({"value": current["day_type"], "source": current["day_type_source"]}
                      if day_type_visible else None),
+        "split": split,
         "dose": dose,
         "on_board": _on_board(context, dose),
     }
@@ -222,10 +253,21 @@ def save(payload: dict) -> dict:
     sport_change = _sport_change(payload) if consider_sport else Decimal(0)
     if sport_change is None:
         raise ValueError("Der geschätzte Sporteinfluss liegt außerhalb des erlaubten Bereichs.")
+    split = _split(context, assignment, payload) if carbs > 0 else None
+    dose = (_dose(context, payload, assignment, sport, split)
+            if payload.get("dose_check") or (split and split["active"]) else {})
     if payload.get("dose_check"):
         # A tapped suggestion must still match the current one (new CGM value, new dose, profile change).
-        if _dose(context, payload, assignment, sport).get("check") != payload["dose_check"]:
+        if dose.get("check") != payload["dose_check"]:
             raise ValueError(DOSE_CHANGED)
+    split_units = None
+    if split and split["active"] and context["day"] == context["today"]:
+        # The second part completes the chosen suggestion (normal unless another was tapped).
+        options = {option["variant"]: option for option in dose.get("options", [])}
+        option = options.get(payload.get("dose_variant")) or options.get("normal") or options.get("carbs")
+        if option and option.get("full_units") is not None:
+            later = Decimal(option["full_units"]) - insulin
+            split_units = str(later) if later > 0 else None
     if mode == "exercise":
         kind = "exercise"
     elif carbs > 0:
@@ -239,6 +281,8 @@ def save(payload: dict) -> dict:
         "carbs_certainty": payload.get("carbs_certainty") if carbs > 0 else None,
         "fat_protein": carbs > 0 and payload.get("fat_protein") is True,
         "event_id": payload.get("event_id"),
+        **({"split_units": split_units, "split_delay_minutes": split["delay_minutes"]}
+           if split_units and kind == "meal" else {}),
     })
     day = saved["day"]
     basal_result = basal_error = None
@@ -264,6 +308,7 @@ def save(payload: dict) -> dict:
             current = day_view.day_payload(day, refresh=False)
     return {
         "day": day, "kind": kind, "event_id": saved["event_id"], "id": treatment and treatment["id"],
+        "split_units": split_units if kind == "meal" else None,
         "carbs": str(carbs), "insulin": str(insulin),
         "basal": basal_result and {**basal_result, "units": str(basal_units)}, "basal_error": basal_error,
         "sport_marked": consider_sport and sport_error is None, "sport_error": sport_error,

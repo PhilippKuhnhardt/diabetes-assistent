@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import dosing, forecast, on_board
+from app import dosing, forecast, on_board, split
 from app.common import parse_instant
 from app.services import day_view, factors
 from app.store import config, marks, mirror
@@ -64,6 +64,9 @@ def dose_help(payload: dict) -> dict:
                             auto_units_per_ke=auto_value,
                             auto_surcharge_mgdl=surcharge_mgdl if surcharge else None,
                             surcharge_share=forecast.surcharge_share, on_board=active)
+    plan = split.open_plan(treatments, now)
+    result["split_plan"] = plan and {"meal_at": plan["meal_at"].isoformat(), "units": str(plan["units"]),
+                                     "due_at": plan["due_at"].isoformat()}
     result["on_board"] = on_board_view(active, result) if active else None
     result.update({
         "auto_meal": meal_kind, "auto_factor_count": prediction["count"], "auto_method": method,
@@ -100,6 +103,7 @@ def on_board_view(active: dict, result: dict) -> dict:
         "expected_at": instant(active["settled_at"]),
         "spread_mgdl": str(on_board.FORECAST_SPREAD_MGDL),
         "fresh_meal_at": instant(active["fresh_meal_at"]),
+        "split_plan": result.get("split_plan"),
         "doses": [{"at": dose["at"].isoformat(), "units": str(dose["units"]),
                    "remaining_units": str(dose["remaining_units"])} for dose in active["doses"]],
         "carbs": [{"at": row["at"].isoformat(), "grams": str(row["grams"]),
