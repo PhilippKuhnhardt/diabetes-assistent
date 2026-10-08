@@ -1321,6 +1321,9 @@ function currentPreview() {
 }
 
 function renderPreview() {
+  const notice = currentPreview()?.day_notice;
+  $("#entry-day-notice").textContent = notice || "";
+  $("#entry-day-notice").hidden = !notice;
   updateEntrySportOption();
   updateEntryDayType();
   updateEntryBasalOption();
