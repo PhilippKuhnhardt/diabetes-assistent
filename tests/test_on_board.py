@@ -73,6 +73,18 @@ class OnBoardTests(unittest.TestCase):
         self.assertEqual(Decimal(result["cautious_forecast_mgdl"]), 170)  # rests only cancel the bolus
         self.assertEqual(Decimal(result["cautious_entry_units"]), Decimal("0.5"))
 
+    def test_cautious_counts_a_large_meal_rest_minus_the_typical_miss(self):
+        # Evening of 2026-10-08: 144 g fat-rich dinner 2.5 h earlier, split bolus, glucose 165 and rising.
+        meal = [{"id": "m", "at": self.now - timedelta(minutes=153), "eventType": "Meal Bolus", "carbs": 144,
+                 "insulin": 8, "fat_protein": True}]
+        active = self.active(meal, factor=Decimal("0.9"))
+        result = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 165}], meal, self.now, on_board=active)
+        full = 165 - active["lowering_mgdl"] + active["raising_mgdl"]
+        self.assertEqual(Decimal(result["forecast_mgdl"]), full)
+        self.assertEqual(Decimal(result["cautious_forecast_mgdl"]), full - on_board.FORECAST_SPREAD_MGDL)
+        self.assertGreater(Decimal(result["cautious_entry_units"]), 3)
+        self.assertLess(Decimal(result["cautious_entry_units"]), Decimal(result["entry_units"]))
+
     def test_low_glucose_never_doses_for_carbs_still_to_come(self):
         meal = [{"id": "m", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 80,
                  "insulin": 2}]

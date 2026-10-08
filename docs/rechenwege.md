@@ -33,13 +33,13 @@ Insulinrest   = Σ IE × noch aktiv(t) × KF zur Spritzzeit          (schnelles 
 KH-Rest       = Σ KH in g × (1 − t / Aufnahmedauer) × A / 10 × KF zur Essenszeit
 Zuschlag-Rest = Σ Z × Anteil × noch offen(t)                       (nur Methode Zuschlag, je Hauptmahlzeit)
 G normal      = G + Sport − Insulinrest + KH-Rest + Zuschlag-Rest
-G vorsichtig  = G + Sport − max(0, Insulinrest − KH-Rest − Zuschlag-Rest)
+G vorsichtig  = max(G + Sport − max(0, Insulinrest − KH-Rest − Zuschlag-Rest), G normal − 60)
 ```
 
 - noch aktiv: exponentielle Fiasp-Kurve wie Loop (Peak 55 min nach 10 min Verzögerung, 6 h Dauer): 100 % bis 15 min, 75 % nach 1 h, 36 % nach 2 h, 14 % nach 3 h, 4 % nach 4 h.
 - Aufnahmedauer: 2,5 h bis 40 g, 3,5 h ab 100 g, dazwischen linear; mit Fett-Markierung × 1,5. `A` ist der Automatik-Faktor der Mahlzeitart zur Essenszeit, sonst der Nightscout-I:C-Wert.
 - Zuschlag: wirkt linear von 2 h bis 5 h nach Mahlzeitbeginn (mit Fett-Markierung bis 6 h); Snacks haben keinen.
-- Normal und Nur KH rechnen mit `G normal`, Vorsichtig mit `G vorsichtig`: dort heben KH- und Zuschlag-Rest das aktive Insulin nur auf und fordern nie selbst Insulin. Unter 70 mg/dL rechnet auch Normal mit `G vorsichtig`.
+- Normal und Nur KH rechnen mit `G normal`, Vorsichtig mit `G vorsichtig`: die Vorhersage minus ihre typische Abweichung (60 mg/dL), mindestens aber so, dass KH- und Zuschlag-Rest nur das aktive Insulin aufheben. Ohne offene KH ist das `G − Insulinrest`; nach großen Mahlzeiten deckt Vorsichtig so auch einen geplanten 2. Teil (Fehler vom 08.10.: vorher 0,5 statt 4,5 IE). Unter 70 mg/dL rechnen Normal und Vorsichtig nur mit `G + Sport − max(0, Insulinrest − KH-Rest − Zuschlag-Rest)`.
 - Die Karte „Wirkt noch“ im Tagebuch (heute) zeigt Insulinrest („senkt noch“), KH- und Zuschlag-Rest („hebt noch“) mit dem Zeitpunkt, ab dem weniger als 5 mg/dL übrig sind, und `G − Insulinrest + KH-Rest + Zuschlag-Rest` als erwarteten Wert (typisch ±60 mg/dL). Bis 90 min nach einer Hauptmahlzeit steht ein Hinweis, dass die Prognose dort am unsichersten ist.
 - Der Faktor je Hauptmahlzeit (unten) nutzt diese Kurve nicht; dort zählen alle IE im Fenster voll.
 - „Wirkungen über den Tag“ (Tag durchgehen) rechnet dasselbe Modell alle 5 Minuten: wie viel mg/dL pro Stunde gerade gehoben (KH, Zuschlag) und gesenkt (Insulin) werden, und als Vergleichslinie `BZ(t − 3 h) − Insulin wirkte seitdem + KH und Zuschlag wirkten seitdem`. KH werden mit dem Automatik-Faktor des Tages bewertet. Angezeigt werden die mittlere Abweichung zum gemessenen BZ und die größte Abweichung nach oben und unten ab 40 mg/dL.
