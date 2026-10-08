@@ -166,7 +166,7 @@ function changeDay(day, options = {}) {
   if (!validDay(day) || day === state.day) return;
   resetEntryForm();
   state.day = day;
-  state.persistDay = day !== todayDay();
+  if (day < new Date().toLocaleDateString("sv-SE")) state.persistDay = true;
   $("#selected-day").value = day;
   setDefaultMealTime();
   setDefaultSportTime();
