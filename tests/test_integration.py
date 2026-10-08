@@ -5,6 +5,7 @@ import json
 import os
 import tempfile
 import threading
+import time
 import unittest
 import zipfile
 import urllib.error
@@ -1443,6 +1444,29 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/entry", method="POST", body={
                 **entry, "insulin": fresh["entry_units"], "dose_check": fresh["check"]})
         self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["insulin"])), Decimal(fresh["entry_units"]))
+
+    def test_tapped_suggestion_saves_while_earlier_insulin_still_acts(self):
+        # What still acts decays every second; the shown doses stay the same, so saving must not fail.
+        self.request("/api/settings")
+        now = datetime.now(timezone.utc)
+        today = now.astimezone(ZoneInfo("Europe/Berlin")).date().isoformat()
+        current_day = {
+            "day": today, "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 150}],
+            "treatments": [{"id": "earlier", "at": (now - timedelta(minutes=40)).isoformat(),
+                            "eventType": "Correction Bolus", "insulin": 3, "carbs": 0, "notes": ""}],
+            "basal": [], "day_type": "work", "day_type_source": "weekday", "meals": [],
+        }
+        entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "144", "as": "meal",
+                 "fat_protein": True}
+        with fake_days(return_value=current_day):
+            preview = self.request("/api/entry/preview", method="POST", body=entry)
+            self.assertIsNotNone(preview["on_board"])
+            normal = preview["dose"]["options"][0]
+            time.sleep(1.1)
+            self.request("/api/entry", method="POST", body={
+                **entry, "insulin": normal["units"], "dose_check": preview["dose"]["check"],
+                "dose_variant": "normal"})
+        self.assertEqual(Decimal(str(FakeNightscout.treatments[-1]["insulin"])), Decimal(normal["units"]))
 
     def test_large_meal_is_split_and_the_second_part_is_offered_later(self):
         self.request("/api/settings")
