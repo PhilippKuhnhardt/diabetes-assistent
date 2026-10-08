@@ -13,7 +13,7 @@ from urllib.parse import parse_qs, urlparse
 from app import auth
 from app.common import json_safe
 from app.ingestion import nightscout
-from app.services import annotations, background, basal, day_view, diary, dose_help, entry, read_api, settings, summary, sync, window_editor
+from app.services import annotations, background, basal, day_view, diary, dose_help, effects, entry, read_api, settings, summary, sync, window_editor
 from app.store import config, db
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -33,6 +33,7 @@ GET_ROUTES = {
     "/api/glucose/current": lambda params: sync.current_glucose(),
     "/api/settings/history": lambda params: {"versions": config.settings_history()},
     "/api/day": day_view_request,
+    "/api/day/effects": effects.day_effects,
     "/api/test-connection": lambda params: sync.test_connection(),
     "/api/summary": summary.summary,
     "/api/analysis/window-editor": window_editor.editor,

@@ -85,9 +85,10 @@ def is_main_meal(item: dict) -> bool:
 
 
 def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, surcharge_mgdl: Decimal | None,
-            surcharge_share) -> dict:
+            surcharge_share, keep_all: bool = False) -> dict:
     """The doses, carb entries and surcharges that may still act at `now`, with their full effect in mg/dL.
-    carb_factor(at) gives the IE/KE that values a carb entry made at `at`."""
+    carb_factor(at) gives the IE/KE that values a carb entry made at `at`. keep_all keeps everything up to
+    `now` however old, for a whole-day timeline."""
     zone = settings["timezone"]
     isf = lambda at: calculation.isf_at(at, settings.get("isf_schedule", []), zone)
     seen, doses, carbs, surcharges, meals = set(), [], [], [], []
@@ -96,7 +97,7 @@ def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, 
         if key in seen or item["at"] > now:
             continue
         seen.add(key)
-        age = _minutes(now, item["at"])
+        age = Decimal(0) if keep_all else _minutes(now, item["at"])
         units = calculation.dec(item.get("insulin") or 0)
         if units > 0 and calculation.is_rapid_insulin(item) and age < INSULIN_DELAY + INSULIN_DURATION:
             doses.append({"at": item["at"], "units": units, "mgdl_per_unit": isf(item["at"])})
@@ -114,8 +115,12 @@ def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, 
     return {"doses": doses, "carbs": carbs, "surcharges": surcharges, "fresh_meals": meals}
 
 
-def effects_at(found: dict, moment: datetime) -> dict:
-    """Effect still to come at `moment` in mg/dL (positive numbers) and the active insulin in IE."""
+def effects_at(found: dict, moment: datetime, cutoff: datetime | None = None) -> dict:
+    """Effect still to come at `moment` in mg/dL (positive numbers) and the active insulin in IE.
+    Entries after `cutoff` (default `moment`) do not count; entries between `moment` and a later cutoff
+    count in full, so effects_at(a, b) − effects_at(b, b) is what acted from a to b."""
+    cutoff = cutoff or moment
+    found = {key: [row for row in found[key] if row["at"] <= cutoff] for key in ("doses", "carbs", "surcharges")}
     units = sum((dose["units"] * insulin_remaining(_minutes(moment, dose["at"])) for dose in found["doses"]), Decimal(0))
     lowering = sum((dose["units"] * insulin_remaining(_minutes(moment, dose["at"])) * dose["mgdl_per_unit"]
                     for dose in found["doses"]), Decimal(0))
@@ -152,3 +157,29 @@ def summary(found: dict, now: datetime) -> dict:
             "carbs": [{"at": row["at"], "grams": row["grams"],
                        "remaining_grams": row["grams"] * carb_remaining(_minutes(now, row["at"]), row["grams"], row["fat"])}
                       for row in found["carbs"]]}
+
+
+def timeline(found: dict, entries: list[dict], start: datetime, end: datetime,
+             horizon: timedelta = timedelta(hours=3)) -> list[dict]:
+    """Every STEP from start to end: how fast insulin lowers and carbs plus surcharge raise glucose
+    (mg/dL per hour over the step), the measured glucose and the model's value from the glucose
+    `horizon` earlier: G(t − h) − insulin acted + carbs and surcharge acted since then."""
+    def reading(moment):
+        try:
+            return calculation.interpolate_glucose(entries, moment)["value"]
+        except ValueError:
+            return None
+    per_hour = Decimal(3600) / Decimal(str(STEP.total_seconds()))
+    rows, moment = [], start
+    while moment <= end:
+        now, after = effects_at(found, moment), effects_at(found, moment + STEP)
+        step_start, before = effects_at(found, moment, moment + STEP), effects_at(found, moment - horizon, moment)
+        earlier = reading(moment - horizon)
+        model = (None if earlier is None else earlier - (before["lowering_mgdl"] - now["lowering_mgdl"])
+                 + (before["raising_mgdl"] - now["raising_mgdl"]))
+        rows.append({"at": moment, "glucose_mgdl": reading(moment), "model_mgdl": model,
+                     "lowering_per_hour": (step_start["lowering_mgdl"] - after["lowering_mgdl"]) * per_hour,
+                     "raising_per_hour": (step_start["raising_mgdl"] - after["raising_mgdl"]) * per_hour,
+                     "insulin_units": now["insulin_units"]})
+        moment += STEP
+    return rows

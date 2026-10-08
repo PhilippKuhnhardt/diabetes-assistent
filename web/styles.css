@@ -541,6 +541,19 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 }
 @media (min-width: 951px) { .review-chart { display: none; } }
 .review-chart { margin: 4px 0 8px; }
+.effects-card { margin: 4px 0 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
+.effects-card summary { cursor: pointer; font-size: 13px; font-weight: 700; }
+.effects-card summary .hint { display: block; font-weight: 500; }
+.effects-chart { margin: 8px 0 4px; min-height: 60px; }
+.effects-chart .measured { fill: none; stroke: var(--curve); stroke-width: 2.4; stroke-linejoin: round; }
+.effects-chart .model { fill: none; stroke: #4c5a53; stroke-width: 1.6; stroke-dasharray: 5 4; }
+.effects-chart .raising { fill: #a1600f40; stroke: #a1600f; stroke-width: 1; }
+.effects-chart .lowering { fill: #1f6d9a40; stroke: #1f6d9a; stroke-width: 1; }
+.effects-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 4px 0; font-size: 11px; color: var(--muted); }
+.effects-legend span::before { content: ""; display: inline-block; width: 16px; height: 0; margin-right: 5px; vertical-align: middle; border-top: 2.4px solid var(--green); }
+.effects-legend .legend-model::before { border-top: 1.6px dashed #4c5a53; }
+.effects-legend .legend-raising::before { height: 8px; border: 1px solid #a1600f; background: #a1600f40; }
+.effects-legend .legend-lowering::before { height: 8px; border: 1px solid #1f6d9a; background: #1f6d9a40; }
 .review-summary { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
 .review-summary:empty { display: none; }
 .review-chip { padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--canvas); color: var(--ink); font-size: 12px; font-weight: 650; text-decoration: none; }

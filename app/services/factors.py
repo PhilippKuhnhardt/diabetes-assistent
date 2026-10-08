@@ -4,7 +4,9 @@ from __future__ import annotations
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
-from app import forecast
+from zoneinfo import ZoneInfo
+
+from app import calculation, forecast
 from app.common import MEALS, parse_instant
 from app.services import day_view
 from app.store import marks
@@ -92,3 +94,30 @@ def forecast_settings(settings: dict) -> tuple[Decimal, Decimal, int]:
     """Configured percentile, half-life and lookback of the Automatik factor."""
     return (Decimal(str(settings["auto_percentile"])), Decimal(str(settings["auto_half_life_days"])),
             int(settings["auto_lookback_days"]))
+
+
+def carb_factor(settings: dict, today: date, points: list[dict], day_type: str | None,
+                predictions: dict | None = None):
+    """IE/KE that values a carb entry made at `at`: the Automatik factor of its meal kind on `today`
+    (breakfast keyed by the day type), else Nightscout's I:C at that time, else None."""
+    predictions = {} if predictions is None else predictions
+    percentile, half_life, lookback = forecast_settings(settings)
+    method = settings.get("auto_method", "percentile")
+
+    def value(at: datetime) -> Decimal | None:
+        local = at.astimezone(ZoneInfo(settings["timezone"]))
+        minute = local.hour * 60 + local.minute
+        kind = ("breakfast" if minute < int(settings["breakfast_end_minute"]) else
+                "lunch" if minute < int(settings["lunch_end_minute"]) else "dinner")
+        key = (kind, day_type if kind == "breakfast" else None)
+        if key not in predictions:
+            predictions[key] = forecast.predict_method(points, key, today, percentile, half_life, lookback,
+                                                       method, surcharge_mgdl(settings))["units_per_ke"]
+        if predictions[key] is not None:
+            return predictions[key]
+        try:
+            return Decimal(10) / calculation.schedule_value_at(at, settings.get("ic_schedule", []),
+                                                               settings["timezone"], "grams_per_unit")
+        except ValueError:
+            return None
+    return value
