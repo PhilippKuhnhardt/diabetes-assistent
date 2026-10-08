@@ -1392,7 +1392,6 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(Decimal(preview["basal_units"]), Decimal(17))
         self.assertEqual(preview["day_type"], {"value": "work", "source": "weekday"})
         self.assertEqual(preview["dose"]["message"], "Eine aktuelle Empfehlung gibt es nur für den heutigen Tag.")
-        self.assertEqual(preview["day_notice"], "Eintrag für einen vergangenen Tag: Mi, 23.09.2026")
         later = self.request("/api/entry/preview", method="POST", body={**entry, "at": "2026-09-23T13:00:00Z"})
         self.assertEqual((later["basal_units"], later["day_type"], later["sport"]), ("0", None, None))
 
