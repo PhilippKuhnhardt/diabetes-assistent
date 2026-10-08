@@ -16,7 +16,7 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
             treatments: list[dict], now: datetime | None = None,
             activity_change: object = 0, units_per_ke: Decimal | None = None,
             auto_units_per_ke: Decimal | None = None, auto_surcharge_mgdl: Decimal | None = None,
-            surcharge_share=None) -> dict:
+            surcharge_share=None, on_board: dict | None = None) -> dict:
     """activity_change is a signed, user-estimated BG change in mg/dL from sport
     (negative lowers BG and therefore the dose; positive, e.g. adrenaline, raises it).
     units_per_ke replaces Nightscout's current I:C, e.g. with the breakfast factor of the day type.
@@ -24,7 +24,11 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     auto_surcharge_mgdl, when given, adds the fixed main-meal surcharge to the auto dose:
     surcharge_mgdl × surcharge_share(grams) / KF IE (surcharge method; never for snacks).
     For each factor the result holds three variants: correction to the normal target, correction to
-    the cautious target, and carbs only (plus sport, no BG correction; needs no fresh CGM value)."""
+    the cautious target, and carbs only (plus sport, no BG correction; needs no fresh CGM value).
+    on_board (app.on_board.summary) moves the start glucose by what still acts: normal and carbs only use
+    the full forecast (− remaining insulin + remaining carbs and surcharge); cautious lets the remaining
+    carbs and surcharge only cancel active insulin, never ask for insulin themselves (below 70 mg/dL the
+    normal suggestion does the same)."""
     now = now or datetime.now(timezone.utc)
     grams = calculation.dec(carbs)
     if not grams.is_finite() or not 0 <= grams <= 500:
@@ -82,6 +86,12 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
             result["auto_surcharge_units"] = str(surcharge_units)
             auto_carb_units += surcharge_units
         result["auto_carb_units"] = str(auto_carb_units)
+    lowering = on_board["lowering_mgdl"] if on_board else Decimal(0)
+    raising = on_board["raising_mgdl"] if on_board else Decimal(0)
+    if fresh:
+        cautious_start = latest[1] + activity - max(Decimal(0), lowering - raising)
+        # Below 70 mg/dL carbs still to come never justify insulin now.
+        start = latest[1] + activity - lowering + raising if latest[1] >= glucose.LOW_MGDL else cautious_start
     for prefix, units in (("", carb_units), ("auto_", auto_carb_units)):
         if units is not None:
             carbs_total = max(Decimal(0), units + activity / isf)
@@ -89,12 +99,14 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
             result[prefix + "carbs_entry_units"] = str(half_units(carbs_total))
             if fresh:
                 result[prefix + "carbs_expected_glucose_mgdl"] = str(
-                    latest[1] + activity + (units - half_units(carbs_total)) * isf)
+                    start + (units - half_units(carbs_total)) * isf)
     if fresh:
-        # Sport shifts the modelled start glucose, so its effect flows through the correction factor.
-        start = latest[1] + activity
+        # Sport shifts the modelled start glucose, so its effect flows through the correction factor;
+        # so do the insulin, carbs and surcharge still acting.
+        result["forecast_mgdl"] = str(start)
+        result["cautious_forecast_mgdl"] = str(cautious_start)
         correction_units = (start - target) / isf
-        cautious_correction_units = (start - cautious_target) / isf
+        cautious_correction_units = (cautious_start - cautious_target) / isf
         total = max(Decimal(0), carb_units + correction_units)
         cautious_total = max(Decimal(0), carb_units + cautious_correction_units)
         entry_units = (total * 2).quantize(Decimal("1"), rounding=ROUND_HALF_UP) / 2
@@ -106,7 +118,7 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         result["cautious_correction_units"] = str(cautious_correction_units)
         result["cautious_total_units"] = str(cautious_total)
         result["cautious_entry_units"] = str(cautious_entry_units)
-        result["cautious_expected_glucose_mgdl"] = str(start + (carb_units - cautious_entry_units) * isf)
+        result["cautious_expected_glucose_mgdl"] = str(cautious_start + (carb_units - cautious_entry_units) * isf)
         if auto_carb_units is not None:
             auto_total = max(Decimal(0), auto_carb_units + correction_units)
             auto_entry_units = (auto_total * 2).quantize(Decimal("1"), rounding=ROUND_HALF_UP) / 2
@@ -119,7 +131,7 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
             result["auto_cautious_total_units"] = str(auto_cautious_total)
             result["auto_cautious_entry_units"] = str(auto_cautious_entry_units)
             result["auto_cautious_expected_glucose_mgdl"] = str(
-                start + (auto_carb_units - auto_cautious_entry_units) * isf)
+                cautious_start + (auto_carb_units - auto_cautious_entry_units) * isf)
     else:
         result["reason"] = "Kein aktueller CGM-Wert innerhalb von 15 Minuten"
     return result

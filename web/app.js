@@ -836,6 +836,35 @@ function renderVisibleCharts() {
   renderMealCharts();
 }
 
+// Today's "Wirkt noch" card: what still lowers and raises glucose and the expected value after it.
+function activeCardHTML(active) {
+  const until = value => value ? "bis " + timeOnly(value) : "wirkt nicht mehr";
+  const nothing = !active.lowering_until && !active.raising_until;
+  const value = (sign, mgdl) => escapeHTML(sign + num(mgdl, 0)) + ' <small>mg/dL</small>';
+  const item = (label, strong, lines, extra = "") => '<div class="active-item' + extra + '"><span>' + label + '</span><strong>' +
+    strong + '</strong>' + lines.map(line => '<small>' + escapeHTML(line) + '</small>').join("") + '</div>';
+  return item("Senkt noch", value("−", active.lowering_mgdl),
+      ["Insulin " + num(active.insulin_units, 1) + " IE", until(active.lowering_until)]) +
+    item("Hebt noch", value("+", active.raising_mgdl),
+      ["KH " + num(active.carbs_remaining_g, 0) + " g +" + num(active.carbs_mgdl, 0),
+       "Fett/Eiweiß +" + num(active.surcharge_mgdl, 0), until(active.raising_until)]) +
+    item("Erwartet", active.expected_mgdl == null ? "—" : value("≈ ", active.expected_mgdl),
+      active.expected_mgdl == null ? ["kein aktueller CGM-Wert"]
+        : [(active.expected_at ? "um " + timeOnly(active.expected_at) : "jetzt"), "±" + num(active.spread_mgdl, 0) + " mg/dL"],
+      " expected") +
+    (nothing ? '<p class="hint">Nichts wirkt mehr nach.</p>' : '') +
+    (active.fresh_meal_at ? '<p class="hint">Mahlzeit um ' + escapeHTML(timeOnly(active.fresh_meal_at)) +
+      ': Die KH steigen noch, die Prognose ist hier am unsichersten.</p>' : '');
+}
+
+function renderActiveCard() {
+  const node = $("#day-overview-active");
+  if (!node) return;
+  const active = state.day === todayDay() ? state.preview?.on_board : null;
+  node.hidden = !active;
+  node.innerHTML = active ? activeCardHTML(active) : "";
+}
+
 // What happened in the last three hours, newest first, as context for the next decision.
 function recentEntriesHTML(treatments) {
   const now = Date.now();
@@ -1336,6 +1365,7 @@ function currentPreview() {
 }
 
 function renderPreview() {
+  renderActiveCard();
   const notice = currentPreview()?.day_notice;
   $("#entry-day-notice span").textContent = notice || "";
   $("#entry-day-notice").hidden = !notice;
@@ -1426,8 +1456,9 @@ function doseHelpHTML(data) {
     (options ? '<div class="dose-options">' + options + '</div>' : '') +
     (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport <strong>' +
       escapeHTML(signedChange(data.activity_change_mgdl, 0)) + '</strong> · ' + escapeHTML((Number(data.activity_units) > 0 ? "+" : "") + num(data.activity_units, 2)) + ' IE</p>' : '') +
-    (data.recent_rapid_doses?.length ? '<p class="dose-warning">Dosen letzte 3 h: ' +
-      data.recent_rapid_doses.map(row => escapeHTML(timeOnly(row.at) + " · " + num(row.units) + " IE")).join(", ") + '</p>' : '') +
+    (data.on_board && (data.on_board.lowering_until || data.on_board.raising_until)
+      ? '<p class="dose-factor">Wirkt noch <strong>−' + escapeHTML(num(data.on_board.lowering_mgdl, 0)) + ' / +' +
+        escapeHTML(num(data.on_board.raising_mgdl, 0)) + ' mg/dL</strong> · eingerechnet</p>' : '') +
     (data.reason ? '<p class="hint">' + escapeHTML(data.reason) + '</p>' : '');
 }
 
@@ -2524,6 +2555,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     toast(error.message, true);
   }
   setInterval(() => { if (!document.hidden) loadCurrentGlucose(); }, 60000);
+  // "Wirkt noch" and the suggestion age with the active insulin, so today's preview refreshes too.
+  setInterval(() => { if (!document.hidden && state.day === todayDay()) updatePreview(); }, 5 * 60000);
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) loadCurrentGlucose();
   });

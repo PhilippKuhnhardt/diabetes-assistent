@@ -22,7 +22,26 @@ Spritzmenge      = Vorschlag auf nächste 0,5 IE gerundet
 Erwarteter BG    = G + (KH-Anteil - Spritzmenge) × KF
 ```
 
-Angezeigt werden drei Werte: **Normal** mit dem lokalen Zielwert `Z` (Standard 100 mg/dL), **Vorsichtig** mit dem vorsichtigen Zielwert (Standard 140 mg/dL) und **Nur KH** ohne Korrekturanteil: `max(0, KH-Anteil + Sport / KF)`, erwarteter BG `G + Sport + (KH-Anteil − Spritzmenge) × KF`; dieser Wert braucht keinen aktuellen CGM-Wert. Hat `A` weniger als vier Mahlzeiten, steht ersatzweise der Frühstücksmedian der Tagesart (unten) oder der Nightscout-I:C-Wert `R` ein (`KH-Anteil = KH / R`). Ohne Kohlenhydrate gibt es nur Normal und Vorsichtig als reine Korrektur. Die Spritzmenge wird auf 0,5 IE gerundet. Der erwartete BG wird aus dieser gerundeten Spritzmenge berechnet und ist ein Modellwert bei voller KH- und Insulinwirkung, kein zeitlicher Glukoseverlauf. Ein CGM-Wert muss höchstens 15 Minuten alt sein. Vor dem Schreiben nach Nightscout wird mit aktuellen Daten erneut gerechnet; ein geänderter Vorschlag muss erneut bestätigt werden. Der angezeigte Glukosetrend und schnell wirksame Injektionen der letzten drei Stunden werden nicht verrechnet.
+Angezeigt werden drei Werte: **Normal** mit dem lokalen Zielwert `Z` (Standard 100 mg/dL), **Vorsichtig** mit dem vorsichtigen Zielwert (Standard 140 mg/dL) und **Nur KH** ohne Korrekturanteil: `max(0, KH-Anteil + Sport / KF)`, erwarteter BG `G + Sport + (KH-Anteil − Spritzmenge) × KF`; dieser Wert braucht keinen aktuellen CGM-Wert. Hat `A` weniger als vier Mahlzeiten, steht ersatzweise der Frühstücksmedian der Tagesart (unten) oder der Nightscout-I:C-Wert `R` ein (`KH-Anteil = KH / R`). Ohne Kohlenhydrate gibt es nur Normal und Vorsichtig als reine Korrektur. Die Spritzmenge wird auf 0,5 IE gerundet. Der erwartete BG wird aus dieser gerundeten Spritzmenge berechnet und ist ein Modellwert bei voller KH- und Insulinwirkung, kein zeitlicher Glukoseverlauf. Ein CGM-Wert muss höchstens 15 Minuten alt sein. Vor dem Schreiben nach Nightscout wird mit aktuellen Daten erneut gerechnet; ein geänderter Vorschlag muss erneut bestätigt werden. Der angezeigte Glukosetrend wird nicht verrechnet.
+
+### Was noch wirkt
+
+Vor der Korrektur wird `G` um das verschoben, was noch wirkt (Herleitung: Analysen-Notiz `fiasp-wirkkurve.md` im Projektordner):
+
+```text
+Insulinrest   = Σ IE × noch aktiv(t) × KF zur Spritzzeit          (schnelles Insulin der letzten 6 h)
+KH-Rest       = Σ KH in g × (1 − t / Aufnahmedauer) × A / 10 × KF zur Essenszeit
+Zuschlag-Rest = Σ Z × Anteil × noch offen(t)                       (nur Methode Zuschlag, je Hauptmahlzeit)
+G normal      = G + Sport − Insulinrest + KH-Rest + Zuschlag-Rest
+G vorsichtig  = G + Sport − max(0, Insulinrest − KH-Rest − Zuschlag-Rest)
+```
+
+- noch aktiv: exponentielle Fiasp-Kurve wie Loop (Peak 55 min nach 10 min Verzögerung, 6 h Dauer): 100 % bis 15 min, 75 % nach 1 h, 36 % nach 2 h, 14 % nach 3 h, 4 % nach 4 h.
+- Aufnahmedauer: 2,5 h bis 40 g, 3,5 h ab 100 g, dazwischen linear; mit Fett-Markierung × 1,5. `A` ist der Automatik-Faktor der Mahlzeitart zur Essenszeit, sonst der Nightscout-I:C-Wert.
+- Zuschlag: wirkt linear von 2 h bis 5 h nach Mahlzeitbeginn (mit Fett-Markierung bis 6 h); Snacks haben keinen.
+- Normal und Nur KH rechnen mit `G normal`, Vorsichtig mit `G vorsichtig`: dort heben KH- und Zuschlag-Rest das aktive Insulin nur auf und fordern nie selbst Insulin. Unter 70 mg/dL rechnet auch Normal mit `G vorsichtig`.
+- Die Karte „Wirkt noch“ im Tagebuch (heute) zeigt Insulinrest („senkt noch“), KH- und Zuschlag-Rest („hebt noch“) mit dem Zeitpunkt, ab dem weniger als 5 mg/dL übrig sind, und `G − Insulinrest + KH-Rest + Zuschlag-Rest` als erwarteten Wert (typisch ±60 mg/dL). Bis 90 min nach einer Hauptmahlzeit steht ein Hinweis, dass die Prognose dort am unsichersten ist.
+- Der Faktor je Hauptmahlzeit (unten) nutzt diese Kurve nicht; dort zählen alle IE im Fenster voll.
 
 Vor dem Ende des Frühstücksfensters hängt `R` von der Tagesart ab (Arbeitstag oder freier Tag). Liegen in den letzten 28 Tagen vor heute mindestens drei berechnete, nicht ausgeklammerte Frühstücke derselben Tagesart vor, gilt `KH-Anteil = KH × F / 10` mit `F` = Median dieser Frühstücksfaktoren in IE/KE; sonst bleibt der Nightscout-Wert. Die Tagesart ist standardmäßig Montag bis Freitag Arbeitstag, Samstag und Sonntag frei. Ist in den Einstellungen Urlaub aktiv, zählt jeder Tag ab dem Einschalten als frei; beim Ausschalten endet der Urlaub am Vortag. Eine manuelle Auswahl für einen Tag hat immer Vorrang. Die Tagesart wird nur lokal gespeichert, nicht in Nightscout.
 

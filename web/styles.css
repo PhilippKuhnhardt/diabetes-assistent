@@ -501,6 +501,14 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 
 /* Diary head and recent context */
 .refresh-label { margin-left: 6px; }
+.active-card { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 8px 0 4px; }
+.active-item { padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--canvas); min-width: 0; }
+.active-item span, .active-item small { display: block; color: var(--muted); font-size: 11px; font-weight: 650; }
+.active-item strong { display: block; margin: 1px 0 2px; font-size: 17px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.active-item strong small { display: inline; font-size: 11px; font-weight: 600; }
+.active-item.expected { background: var(--green-light); border-color: #b9d8c5; }
+.active-item.expected strong { color: var(--green-dark); }
+.active-card .hint { grid-column: 1 / -1; margin: 0; }
 .overview-recent { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 6px 0 2px; }
 .overview-recent:empty { display: none; }
 .recent-label { color: var(--muted); font-size: 11px; font-weight: 650; margin-right: 2px; }
