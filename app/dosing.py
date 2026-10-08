@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
 from app import calculation, glucose
+from app.on_board import FORECAST_SPREAD_MGDL
 
 
 def half_units(units: Decimal) -> Decimal:
@@ -26,9 +27,9 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     For each factor the result holds three variants: correction to the normal target, correction to
     the cautious target, and carbs only (plus sport, no BG correction; needs no fresh CGM value).
     on_board (app.on_board.summary) moves the start glucose by what still acts: normal and carbs only use
-    the full forecast (− remaining insulin + remaining carbs and surcharge); cautious lets the remaining
-    carbs and surcharge only cancel active insulin, never ask for insulin themselves (below 70 mg/dL the
-    normal suggestion does the same)."""
+    the full forecast (− remaining insulin + remaining carbs and surcharge); cautious uses that forecast
+    minus its typical miss (FORECAST_SPREAD_MGDL), but never less than letting the remaining
+    carbs and surcharge only cancel active insulin. Below 70 mg/dL both only cancel active insulin."""
     now = now or datetime.now(timezone.utc)
     grams = calculation.dec(carbs)
     if not grams.is_finite() or not 0 <= grams <= 500:
@@ -89,9 +90,13 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     lowering = on_board["lowering_mgdl"] if on_board else Decimal(0)
     raising = on_board["raising_mgdl"] if on_board else Decimal(0)
     if fresh:
-        cautious_start = latest[1] + activity - max(Decimal(0), lowering - raising)
-        # Below 70 mg/dL carbs still to come never justify insulin now.
-        start = latest[1] + activity - lowering + raising if latest[1] >= glucose.LOW_MGDL else cautious_start
+        guarded = latest[1] + activity - max(Decimal(0), lowering - raising)
+        full = latest[1] + activity - lowering + raising
+        # Cautious starts from the lower edge of the forecast's typical miss; below 70 mg/dL carbs
+        # still to come never justify insulin now, for either suggestion.
+        low = latest[1] < glucose.LOW_MGDL
+        cautious_start = guarded if low else max(guarded, full - FORECAST_SPREAD_MGDL)
+        start = guarded if low else full
     for prefix, units in (("", carb_units), ("auto_", auto_carb_units)):
         if units is not None:
             carbs_total = max(Decimal(0), units + activity / isf)
