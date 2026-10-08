@@ -27,6 +27,7 @@ def default_settings() -> dict:
         "auto_lookback_days": 30,
         "auto_half_life_days": "7",
         "auto_method": "percentile",
+        "auto_surcharge_mgdl": "40",
         "peak_minutes": 60,
         "duration_minutes": 180,
         "breakfast_end_minute": 660,
@@ -73,6 +74,7 @@ def _with_nightscout_profile(settings: dict) -> dict:
     if result.get("auto_lookback_days") not in (8, 15, 30):
         result["auto_lookback_days"] = 15 if result.get("auto_lookback_days") == 14 else 30
     result.setdefault("auto_half_life_days", "7")
+    result.setdefault("auto_surcharge_mgdl", "40")
     result.setdefault("lunch_end_minute", 1020)
     result.setdefault("basal_default_units", DEFAULT_BASAL_UNITS)
     result.setdefault("sport_lookback_minutes", 360)

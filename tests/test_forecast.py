@@ -208,3 +208,62 @@ class DayTypeRatioTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TuningTests(unittest.TestCase):
+    def sized(self, days_ago, value, grams=60, carbs_isf=1800):
+        item = point(days_ago, value)
+        item.update({"carbs_g": Decimal(grams), "carbs_isf": Decimal(carbs_isf), "end_glucose": Decimal(120)})
+        return item
+
+    def test_surcharge_amount_is_configurable(self):
+        meal = self.sized(1, "1.2")
+        self.assertEqual(forecast.base_factor(meal, Decimal(20)), Decimal("1.2") - Decimal(200) / Decimal(1800))
+        self.assertEqual(forecast.base_factor(meal, Decimal(0)), Decimal("1.2"))
+
+    def test_a_zero_surcharge_variant_is_the_plain_percentile(self):
+        history = [self.sized(age, value) for age, value in zip(range(1, 20), ["0.8", "1.0", "1.3", "1.1"] * 5)]
+        result = forecast.backtest(history, TODAY - timedelta(days=10),
+                                   [(28, Decimal(7), Decimal(50)), (28, Decimal(7), Decimal(50), Decimal(0))])
+        self.assertEqual(result["stats"][0], result["stats"][1])
+
+    def test_each_tuning_row_uses_the_meals_its_options_can_predict(self):
+        # Only the 30-day lookback reaches meals 9–20 days back, so the 8-day option needs recent meals.
+        history = [self.sized(age, "1.0") for age in range(9, 21)] + [self.sized(age, "1.0") for age in (1, 2)]
+        rows = {row["key"]: row for row in forecast.tuning(history, TODAY - timedelta(days=2), 30, Decimal(7),
+                                                           Decimal("37.5"), Decimal(0))}
+        self.assertEqual(rows["percentile"]["meal_count"], 2)
+        self.assertEqual(rows["lookback"]["meal_count"], 0)
+        self.assertEqual([option["value"] for option in rows["surcharge"]["options"]], list(forecast.TUNING_SURCHARGES))
+        self.assertEqual(sum(option["active"] for option in rows["percentile"]["options"]), 1)
+
+    def test_verdicts(self):
+        def option(below, in_range, above, active=False):
+            return {"below": below, "in_range": in_range, "above": above, "glucose_count": below + in_range + above,
+                    "active": active}
+        self.assertEqual(forecast.judge([option(5, 20, 5, True), option(6, 19, 5)])["verdict"], "none")
+        self.assertEqual(forecast.judge([option(5, 20, 5, True), option(10, 20, 0)])["verdict"], "shift")
+        options = [option(8, 14, 8, True), option(3, 24, 3)]
+        self.assertEqual(forecast.judge(options)["verdict"], "better")
+        self.assertTrue(options[1]["best"])
+
+    def test_tradeoff_line_keeps_only_strategies_not_beaten_on_both_sides(self):
+        history = [self.sized(age, value) for age, value in zip(range(1, 40), ["0.7", "1.0", "1.4", "0.9", "1.2"] * 8)]
+        result = forecast.tradeoffs(history, TODAY - timedelta(days=20), 15, Decimal(7), Decimal("37.5"), Decimal(40))
+        line = result["line"]
+        self.assertTrue(line)
+        self.assertEqual([option["below"] for option in line], sorted(option["below"] for option in line))
+        for option in line:
+            self.assertFalse(any(other["below"] <= option["below"] and other["above"] <= option["above"]
+                                 and (other["below"], other["above"]) != (option["below"], option["above"])
+                                 for other in result["cloud"]))
+        self.assertEqual(result["current"]["changes"], [])
+
+    def test_worked_example_adds_the_surcharge_once(self):
+        history = [self.sized(age, "1.0", 60, 1800) for age in range(1, 6)]
+        example = forecast.explain(history, KEY, TODAY, 15, Decimal(7), Decimal(50), Decimal(30))
+        base = Decimal(1) - Decimal(300) / Decimal(1800)
+        self.assertEqual(example["units_per_ke"], base)
+        self.assertEqual(example["carb_units"], 6 * base)
+        self.assertEqual(example["surcharge_units"], Decimal(1))
+        self.assertEqual(example["total_units"], 6 * base + 1)

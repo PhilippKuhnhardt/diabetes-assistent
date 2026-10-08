@@ -624,6 +624,21 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(summary["suggestion_derivation"]["method"], "surcharge")
         self.assertTrue(summary["groups"]["dinner"]["suggestion"]["surcharge"])
 
+    def test_surcharge_amount_is_a_setting(self):
+        self.assertEqual(self.request("/api/settings")["settings"]["auto_surcharge_mgdl"], "40")
+        saved = self.request("/api/settings", method="POST", body={"auto_method": "surcharge", "auto_surcharge_mgdl": 60})
+        self.assertEqual(saved["settings"]["auto_surcharge_mgdl"], "60")
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            self.request("/api/settings", method="POST", body={"auto_surcharge_mgdl": 0})
+        self.assertEqual(error.exception.code, 400)
+        error.exception.close()
+        derivation = self.request("/api/summary?days=1")["suggestion_derivation"]
+        self.assertEqual((derivation["surcharge_mgdl"], derivation["active_surcharge_mgdl"]), ("60", "60"))
+        self.assertEqual([row["key"] for row in derivation["tuning"]], ["percentile", "surcharge", "half_life", "lookback"])
+        surcharge = next(row for row in derivation["tuning"] if row["key"] == "surcharge")
+        self.assertEqual(surcharge["options"][0]["apply"], {"auto_method": "percentile"})
+        self.assertEqual(surcharge["options"][1]["apply"], {"auto_method": "surcharge", "auto_surcharge_mgdl": "20"})
+
     def test_surcharge_goes_to_main_meals_not_snacks(self):
         self.request("/api/settings")  # Sync the current Nightscout I:C and KF schedules.
         self.request("/api/settings", method="POST", body={"auto_method": "surcharge"})

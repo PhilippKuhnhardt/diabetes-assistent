@@ -32,7 +32,8 @@ def meal_factor_values(meal_kind: str, day_type: str | None, today: date,
     return sorted(values)
 
 
-def suggestion_factor(prediction: dict, settings: tuple[Decimal, Decimal, int]) -> dict:
+def suggestion_factor(prediction: dict, settings: tuple[Decimal, Decimal, int],
+                      surcharge_mgdl: Decimal = forecast.SURCHARGE_MGDL) -> dict:
     """The auto factor the dose help uses, with the number of meals it is based on."""
     value = prediction["units_per_ke"]
     return {
@@ -40,7 +41,7 @@ def suggestion_factor(prediction: dict, settings: tuple[Decimal, Decimal, int]) 
         "count": prediction["count"], "days": settings[2], "min_meals": AUTO_FACTOR_MIN_MEALS,
         "percentile": str(settings[0]), "half_life_days": str(settings[1]),
         "surcharge": prediction.get("surcharge", False),
-        "surcharge_mgdl": str(forecast.SURCHARGE_MGDL), "surcharge_full_grams": str(forecast.SURCHARGE_FULL_GRAMS),
+        "surcharge_mgdl": str(surcharge_mgdl), "surcharge_full_grams": str(forecast.SURCHARGE_FULL_GRAMS),
     }
 
 
@@ -75,6 +76,16 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
                 "carbs_g": Decimal(result["carbs_total"]) if result.get("carbs_total") is not None else None,
             })
     return points
+
+
+def surcharge_mgdl(settings: dict) -> Decimal:
+    """Configured meal surcharge (mg/dL per main meal); used only with the surcharge method."""
+    return Decimal(str(settings.get("auto_surcharge_mgdl", forecast.SURCHARGE_MGDL)))
+
+
+def active_surcharge_mgdl(settings: dict) -> Decimal:
+    """The surcharge the suggestion uses: the configured one with the surcharge method, else 0."""
+    return surcharge_mgdl(settings) if settings.get("auto_method") == forecast.SURCHARGE else Decimal(0)
 
 
 def forecast_settings(settings: dict) -> tuple[Decimal, Decimal, int]:

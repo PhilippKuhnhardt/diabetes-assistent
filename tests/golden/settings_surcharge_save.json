@@ -4,6 +4,7 @@
   "auto_lookback_days": 30,
   "auto_method": "surcharge",
   "auto_percentile": "37.5",
+  "auto_surcharge_mgdl": "40",
   "basal_default_units": "17",
   "breakfast_end_minute": 660,
   "dose_cautious_target_mgdl": "150",

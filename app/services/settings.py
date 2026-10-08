@@ -18,7 +18,8 @@ def validate_settings(value: dict) -> dict:
     for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes",
                 "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
                 "sport_effects_mgdl", "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile",
-                "auto_half_life_days", "auto_lookback_days", "auto_method", "basal_default_units"):
+                "auto_half_life_days", "auto_lookback_days", "auto_method", "auto_surcharge_mgdl",
+                "basal_default_units"):
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
@@ -52,6 +53,9 @@ def validate_settings(value: dict) -> dict:
     half_life = calculation.dec(result["auto_half_life_days"])
     if not half_life.is_finite() or not 1 <= half_life <= 28:
         raise ValueError("Halbwertszeit der Automatik muss zwischen 1 und 28 Tagen liegen")
+    surcharge = calculation.dec(result.get("auto_surcharge_mgdl", forecast.SURCHARGE_MGDL))
+    if not surcharge.is_finite() or not 5 <= surcharge <= 150:
+        raise ValueError("Mahlzeitzuschlag muss zwischen 5 und 150 mg/dL liegen")
     basal_default = calculation.dec(result.get("basal_default_units", config.DEFAULT_BASAL_UNITS))
     if not basal_default.is_finite() or not 0 <= basal_default <= 100 or basal_default % Decimal("0.5"):
         raise ValueError("Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen")
@@ -76,6 +80,7 @@ def validate_settings(value: dict) -> dict:
         "auto_half_life_days": str(half_life),
         "auto_lookback_days": auto_lookback,
         "auto_method": result.get("auto_method", "percentile"),
+        "auto_surcharge_mgdl": str(surcharge),
         "basal_default_units": unit_text(basal_default),
     })
     return result

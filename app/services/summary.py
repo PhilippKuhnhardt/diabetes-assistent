@@ -205,29 +205,34 @@ def compute_summary(days: int, today: date) -> dict:
     percentile, half_life, lookback = configured
     points = factors.meal_points(today, history_days(days), day_types, vacations, loaded_days)
     method = settings.get("auto_method", "percentile")
-    predictions = {key: {**forecast.predict_method(points, key, today, percentile, half_life, lookback, method),
+    surcharge_mgdl = factors.surcharge_mgdl(settings)
+    active_surcharge = factors.active_surcharge_mgdl(settings)
+    predictions = {key: {**forecast.predict_method(points, key, today, percentile, half_life, lookback, method,
+                                                   surcharge_mgdl),
                          "surcharge": method == forecast.SURCHARGE}
                    for key in (("breakfast", "work"), ("breakfast", "free"),
                                ("lunch", None), ("dinner", None))}
     for kind in ("work", "free"):
         breakfast["by_day_type"][kind]["suggestion"] = factors.suggestion_factor(
-            predictions[("breakfast", kind)], configured)
+            predictions[("breakfast", kind)], configured, surcharge_mgdl)
     for name in ("lunch", "dinner"):
-        groups[name]["suggestion"] = factors.suggestion_factor(predictions[(name, None)], configured)
+        groups[name]["suggestion"] = factors.suggestion_factor(predictions[(name, None)], configured, surcharge_mgdl)
     # Backtest matrix: every lookback × half-life (plus the configured ones), each at 25 %,
     # the configured percentile and 50 %, all evaluated on the same meals of the last 90 days.
     # A last column tests the configured percentile with the fixed surcharge per main meal.
     percentiles = [*sorted({Decimal(25), percentile, Decimal(50)}), forecast.SURCHARGE]
     rows = [(days_back, strength) for days_back in sorted({*forecast.LOOKBACKS, lookback})
             for strength in sorted({*forecast.HALF_LIVES, half_life})]
-    test = forecast.backtest(points, today - timedelta(days=forecast.BACKTEST_DAYS - 1),
+    since = today - timedelta(days=forecast.BACKTEST_DAYS - 1)
+    target = calculation.dec(settings["dose_target_mgdl"])
+    test = forecast.backtest(points, since,
                              [(days_back, strength, value) for days_back, strength in rows
                               for value in percentiles],
-                             calculation.dec(settings["dose_target_mgdl"]), percentile)
+                             target, percentile, surcharge_mgdl)
     cells = iter(test["stats"])
     suggestion_derivation = {
         "percentile": str(percentile), "half_life_days": str(half_life), "lookback_days": lookback,
-        "method": method, "surcharge_mgdl": str(forecast.SURCHARGE_MGDL),
+        "method": method, "surcharge_mgdl": str(surcharge_mgdl),
         "surcharge_full_grams": str(forecast.SURCHARGE_FULL_GRAMS),
         "min_meals": forecast.MIN_MEALS, "meal_count": len(test["rows"]),
         "backtest_days": forecast.BACKTEST_DAYS,
@@ -238,6 +243,25 @@ def compute_summary(days: int, today: date) -> dict:
         "dose_target_mgdl": str(settings["dose_target_mgdl"]),
     }
     mark_matrix(suggestion_derivation)
+    # The Automatik view: one row per setting around the configured ones, and a worked example per meal.
+    suggestion_derivation["tuning"] = [
+        {**row, "options": [{**option, "apply": tuning_apply(row["key"], option["value"])} for option in row["options"]]}
+        for row in forecast.tuning(points, since, lookback, half_life, percentile, active_surcharge, target)]
+    suggestion_derivation["active_surcharge_mgdl"] = str(active_surcharge)
+    tradeoffs = forecast.tradeoffs(points, since, lookback, half_life, percentile, active_surcharge, target)
+    for option in [tradeoffs["current"], *tradeoffs["line"]]:
+        option["apply"] = {}
+        for key, value in (("lookback", option["lookback_days"]), ("half_life", option["half_life_days"]),
+                           ("percentile", option["percentile"]), ("surcharge", option["surcharge_mgdl"])):
+            if key in option["changes"]:
+                option["apply"].update(tuning_apply(key, value))
+    suggestion_derivation["tradeoffs"] = tradeoffs
+    suggestion_derivation["examples"] = [
+        forecast.explain(points, key, today, lookback, half_life, percentile, active_surcharge)
+        for key in (("breakfast", "work"), ("breakfast", "free"), ("lunch", None), ("dinner", None))]
+    suggestion_derivation["weights"] = [
+        {"age_days": age, "weight": forecast.weight(age, half_life)}
+        for age in sorted({1, *(int(half_life * k) for k in (1, 2, 4)), lookback}) if 1 <= age <= lookback]
     # Information only: does the free-day factor follow the work-day factor by a stable ratio?
     day_type_ratio = forecast.day_type_ratios(points, today)
     for name, group in groups.items():
@@ -266,6 +290,18 @@ def compute_summary(days: int, today: date) -> dict:
             "nights": night_records,
         },
     }
+
+
+def tuning_apply(key: str, value) -> dict:
+    """The settings change that makes a tuning option the configured one."""
+    if key == "percentile":
+        return {"auto_percentile": str(value)}
+    if key == "half_life":
+        return {"auto_half_life_days": str(value)}
+    if key == "lookback":
+        return {"auto_lookback_days": int(value)}
+    return ({"auto_method": forecast.SURCHARGE, "auto_surcharge_mgdl": str(value)} if value
+            else {"auto_method": "percentile"})
 
 
 def mark_matrix(derivation: dict) -> None:
