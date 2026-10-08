@@ -2925,8 +2925,59 @@
   ]
  },
  "suggestion_derivation": {
+  "active_surcharge_mgdl": "40",
   "backtest_days": 90,
   "dose_target_mgdl": "120",
+  "examples": [
+   {
+    "carb_units": "5.832892006423574663542768488",
+    "carbs_g": "65",
+    "count": 17,
+    "day_type": "work",
+    "isf": "30",
+    "meal": "breakfast",
+    "min_meals": 4,
+    "surcharge_units": "1.333333333333333333333333333",
+    "total_units": "7.166225339756907996876101821",
+    "units_per_ke": "0.8973680009882422559296566905"
+   },
+   {
+    "carb_units": "8.308878286190823255406079233",
+    "carbs_g": "95",
+    "count": 9,
+    "day_type": "free",
+    "isf": "30",
+    "meal": "breakfast",
+    "min_meals": 4,
+    "surcharge_units": "1.333333333333333333333333333",
+    "total_units": "9.642211619524156588739412566",
+    "units_per_ke": "0.8746187669674550795164293929"
+   },
+   {
+    "carb_units": "8.345982669365446588114869963",
+    "carbs_g": "82.5",
+    "count": 28,
+    "day_type": null,
+    "isf": "35",
+    "meal": "lunch",
+    "min_meals": 4,
+    "surcharge_units": "1.142857142857142857142857143",
+    "total_units": "9.488839812222589445257727106",
+    "units_per_ke": "1.011634262953387465226044844"
+   },
+   {
+    "carb_units": "6.584773518938817070721823214",
+    "carbs_g": "75",
+    "count": 30,
+    "day_type": null,
+    "isf": "35",
+    "meal": "dinner",
+    "min_meals": 4,
+    "surcharge_units": "1.142857142857142857142857143",
+    "total_units": "7.727630661795959927864680357",
+    "units_per_ke": "0.8779698025251756094295764285"
+   }
+  ],
   "glucose_high_mgdl": "160",
   "glucose_low_mgdl": "80",
   "half_life_days": "5",
@@ -2937,6 +2988,1328 @@
   "percentile": "37.5",
   "surcharge_full_grams": "40",
   "surcharge_mgdl": "40",
+  "tradeoffs": {
+   "cloud": [
+    {
+     "above": 26,
+     "below": 13,
+     "variants": 5
+    },
+    {
+     "above": 27,
+     "below": 13,
+     "variants": 6
+    },
+    {
+     "above": 28,
+     "below": 14,
+     "variants": 2
+    },
+    {
+     "above": 33,
+     "below": 14,
+     "variants": 1
+    },
+    {
+     "above": 25,
+     "below": 14,
+     "variants": 7
+    },
+    {
+     "above": 22,
+     "below": 15,
+     "variants": 2
+    },
+    {
+     "above": 22,
+     "below": 16,
+     "variants": 5
+    },
+    {
+     "above": 30,
+     "below": 16,
+     "variants": 2
+    },
+    {
+     "above": 21,
+     "below": 15,
+     "variants": 8
+    },
+    {
+     "above": 19,
+     "below": 14,
+     "variants": 9
+    },
+    {
+     "above": 19,
+     "below": 15,
+     "variants": 14
+    },
+    {
+     "above": 21,
+     "below": 16,
+     "variants": 2
+    },
+    {
+     "above": 25,
+     "below": 17,
+     "variants": 6
+    },
+    {
+     "above": 20,
+     "below": 15,
+     "variants": 14
+    },
+    {
+     "above": 18,
+     "below": 14,
+     "variants": 3
+    },
+    {
+     "above": 20,
+     "below": 17,
+     "variants": 20
+    },
+    {
+     "above": 16,
+     "below": 15,
+     "variants": 1
+    },
+    {
+     "above": 19,
+     "below": 16,
+     "variants": 18
+    },
+    {
+     "above": 19,
+     "below": 17,
+     "variants": 10
+    },
+    {
+     "above": 24,
+     "below": 18,
+     "variants": 4
+    },
+    {
+     "above": 17,
+     "below": 18,
+     "variants": 8
+    },
+    {
+     "above": 16,
+     "below": 16,
+     "variants": 3
+    },
+    {
+     "above": 17,
+     "below": 17,
+     "variants": 24
+    },
+    {
+     "above": 18,
+     "below": 18,
+     "variants": 12
+    },
+    {
+     "above": 22,
+     "below": 19,
+     "variants": 1
+    },
+    {
+     "above": 16,
+     "below": 18,
+     "variants": 9
+    },
+    {
+     "above": 16,
+     "below": 17,
+     "variants": 8
+    },
+    {
+     "above": 17,
+     "below": 19,
+     "variants": 6
+    },
+    {
+     "above": 20,
+     "below": 20,
+     "variants": 1
+    },
+    {
+     "above": 25,
+     "below": 12,
+     "variants": 4
+    },
+    {
+     "above": 23,
+     "below": 12,
+     "variants": 3
+    },
+    {
+     "above": 27,
+     "below": 14,
+     "variants": 2
+    },
+    {
+     "above": 31,
+     "below": 14,
+     "variants": 2
+    },
+    {
+     "above": 24,
+     "below": 14,
+     "variants": 7
+    },
+    {
+     "above": 22,
+     "below": 13,
+     "variants": 5
+    },
+    {
+     "above": 21,
+     "below": 14,
+     "variants": 10
+    },
+    {
+     "above": 29,
+     "below": 15,
+     "variants": 1
+    },
+    {
+     "above": 23,
+     "below": 14,
+     "variants": 10
+    },
+    {
+     "above": 22,
+     "below": 14,
+     "variants": 11
+    },
+    {
+     "above": 27,
+     "below": 16,
+     "variants": 4
+    },
+    {
+     "above": 18,
+     "below": 16,
+     "variants": 19
+    },
+    {
+     "above": 20,
+     "below": 18,
+     "variants": 16
+    },
+    {
+     "above": 23,
+     "below": 18,
+     "variants": 9
+    },
+    {
+     "above": 23,
+     "below": 19,
+     "variants": 4
+    },
+    {
+     "above": 15,
+     "below": 20,
+     "variants": 4
+    },
+    {
+     "above": 18,
+     "below": 21,
+     "variants": 2
+    },
+    {
+     "above": 17,
+     "below": 20,
+     "variants": 2
+    },
+    {
+     "above": 18,
+     "below": 20,
+     "variants": 2
+    },
+    {
+     "above": 24,
+     "below": 12,
+     "variants": 5
+    },
+    {
+     "above": 32,
+     "below": 14,
+     "variants": 3
+    },
+    {
+     "above": 20,
+     "below": 13,
+     "variants": 2
+    },
+    {
+     "above": 26,
+     "below": 14,
+     "variants": 3
+    },
+    {
+     "above": 27,
+     "below": 15,
+     "variants": 3
+    },
+    {
+     "above": 26,
+     "below": 16,
+     "variants": 1
+    },
+    {
+     "above": 20,
+     "below": 16,
+     "variants": 6
+    },
+    {
+     "above": 25,
+     "below": 16,
+     "variants": 5
+    },
+    {
+     "above": 18,
+     "below": 15,
+     "variants": 2
+    },
+    {
+     "above": 24,
+     "below": 19,
+     "variants": 1
+    },
+    {
+     "above": 18,
+     "below": 19,
+     "variants": 10
+    },
+    {
+     "above": 21,
+     "below": 19,
+     "variants": 2
+    },
+    {
+     "above": 14,
+     "below": 18,
+     "variants": 2
+    },
+    {
+     "above": 14,
+     "below": 20,
+     "variants": 1
+    },
+    {
+     "above": 16,
+     "below": 21,
+     "variants": 4
+    },
+    {
+     "above": 15,
+     "below": 19,
+     "variants": 4
+    },
+    {
+     "above": 28,
+     "below": 12,
+     "variants": 4
+    },
+    {
+     "above": 25,
+     "below": 13,
+     "variants": 2
+    },
+    {
+     "above": 20,
+     "below": 14,
+     "variants": 3
+    },
+    {
+     "above": 26,
+     "below": 17,
+     "variants": 3
+    },
+    {
+     "above": 17,
+     "below": 15,
+     "variants": 4
+    },
+    {
+     "above": 23,
+     "below": 17,
+     "variants": 2
+    },
+    {
+     "above": 15,
+     "below": 16,
+     "variants": 5
+    },
+    {
+     "above": 20,
+     "below": 19,
+     "variants": 3
+    },
+    {
+     "above": 13,
+     "below": 18,
+     "variants": 6
+    },
+    {
+     "above": 12,
+     "below": 20,
+     "variants": 2
+    },
+    {
+     "above": 28,
+     "below": 13,
+     "variants": 5
+    },
+    {
+     "above": 30,
+     "below": 14,
+     "variants": 2
+    },
+    {
+     "above": 22,
+     "below": 17,
+     "variants": 6
+    },
+    {
+     "above": 24,
+     "below": 17,
+     "variants": 6
+    },
+    {
+     "above": 17,
+     "below": 16,
+     "variants": 8
+    },
+    {
+     "above": 14,
+     "below": 16,
+     "variants": 2
+    },
+    {
+     "above": 13,
+     "below": 17,
+     "variants": 7
+    },
+    {
+     "above": 21,
+     "below": 18,
+     "variants": 5
+    },
+    {
+     "above": 12,
+     "below": 17,
+     "variants": 5
+    },
+    {
+     "above": 29,
+     "below": 13,
+     "variants": 5
+    },
+    {
+     "above": 21,
+     "below": 17,
+     "variants": 6
+    },
+    {
+     "above": 12,
+     "below": 18,
+     "variants": 1
+    },
+    {
+     "above": 15,
+     "below": 21,
+     "variants": 3
+    },
+    {
+     "above": 16,
+     "below": 20,
+     "variants": 3
+    },
+    {
+     "above": 19,
+     "below": 19,
+     "variants": 6
+    },
+    {
+     "above": 29,
+     "below": 12,
+     "variants": 5
+    },
+    {
+     "above": 33,
+     "below": 15,
+     "variants": 1
+    },
+    {
+     "above": 29,
+     "below": 16,
+     "variants": 1
+    },
+    {
+     "above": 24,
+     "below": 16,
+     "variants": 2
+    },
+    {
+     "above": 30,
+     "below": 17,
+     "variants": 3
+    },
+    {
+     "above": 28,
+     "below": 18,
+     "variants": 1
+    },
+    {
+     "above": 18,
+     "below": 17,
+     "variants": 8
+    },
+    {
+     "above": 27,
+     "below": 19,
+     "variants": 2
+    },
+    {
+     "above": 16,
+     "below": 19,
+     "variants": 5
+    },
+    {
+     "above": 22,
+     "below": 20,
+     "variants": 1
+    },
+    {
+     "above": 26,
+     "below": 11,
+     "variants": 4
+    },
+    {
+     "above": 23,
+     "below": 11,
+     "variants": 1
+    },
+    {
+     "above": 22,
+     "below": 11,
+     "variants": 1
+    },
+    {
+     "above": 33,
+     "below": 13,
+     "variants": 2
+    },
+    {
+     "above": 24,
+     "below": 13,
+     "variants": 2
+    },
+    {
+     "above": 21,
+     "below": 13,
+     "variants": 3
+    },
+    {
+     "above": 31,
+     "below": 15,
+     "variants": 2
+    },
+    {
+     "above": 26,
+     "below": 18,
+     "variants": 3
+    },
+    {
+     "above": 19,
+     "below": 20,
+     "variants": 4
+    },
+    {
+     "above": 21,
+     "below": 20,
+     "variants": 1
+    },
+    {
+     "above": 27,
+     "below": 11,
+     "variants": 3
+    },
+    {
+     "above": 25,
+     "below": 11,
+     "variants": 3
+    },
+    {
+     "above": 24,
+     "below": 11,
+     "variants": 4
+    },
+    {
+     "above": 34,
+     "below": 13,
+     "variants": 3
+    },
+    {
+     "above": 23,
+     "below": 13,
+     "variants": 4
+    },
+    {
+     "above": 25,
+     "below": 18,
+     "variants": 1
+    },
+    {
+     "above": 22,
+     "below": 18,
+     "variants": 5
+    },
+    {
+     "above": 13,
+     "below": 19,
+     "variants": 1
+    },
+    {
+     "above": 30,
+     "below": 11,
+     "variants": 3
+    },
+    {
+     "above": 32,
+     "below": 13,
+     "variants": 2
+    },
+    {
+     "above": 30,
+     "below": 15,
+     "variants": 3
+    },
+    {
+     "above": 19,
+     "below": 18,
+     "variants": 8
+    },
+    {
+     "above": 14,
+     "below": 17,
+     "variants": 2
+    },
+    {
+     "above": 15,
+     "below": 17,
+     "variants": 5
+    },
+    {
+     "above": 29,
+     "below": 11,
+     "variants": 3
+    },
+    {
+     "above": 27,
+     "below": 12,
+     "variants": 3
+    },
+    {
+     "above": 28,
+     "below": 15,
+     "variants": 1
+    },
+    {
+     "above": 31,
+     "below": 13,
+     "variants": 1
+    },
+    {
+     "above": 23,
+     "below": 15,
+     "variants": 1
+    },
+    {
+     "above": 24,
+     "below": 15,
+     "variants": 2
+    },
+    {
+     "above": 23,
+     "below": 16,
+     "variants": 2
+    },
+    {
+     "above": 11,
+     "below": 17,
+     "variants": 2
+    },
+    {
+     "above": 34,
+     "below": 16,
+     "variants": 1
+    },
+    {
+     "above": 29,
+     "below": 18,
+     "variants": 1
+    },
+    {
+     "above": 28,
+     "below": 19,
+     "variants": 2
+    },
+    {
+     "above": 16,
+     "below": 22,
+     "variants": 1
+    },
+    {
+     "above": 21,
+     "below": 21,
+     "variants": 2
+    },
+    {
+     "above": 31,
+     "below": 16,
+     "variants": 1
+    },
+    {
+     "above": 30,
+     "below": 18,
+     "variants": 1
+    },
+    {
+     "above": 23,
+     "below": 20,
+     "variants": 1
+    },
+    {
+     "above": 15,
+     "below": 18,
+     "variants": 1
+    },
+    {
+     "above": 19,
+     "below": 21,
+     "variants": 1
+    },
+    {
+     "above": 28,
+     "below": 11,
+     "variants": 1
+    },
+    {
+     "above": 26,
+     "below": 12,
+     "variants": 1
+    },
+    {
+     "above": 20,
+     "below": 12,
+     "variants": 1
+    },
+    {
+     "above": 14,
+     "below": 19,
+     "variants": 1
+    },
+    {
+     "above": 36,
+     "below": 12,
+     "variants": 1
+    },
+    {
+     "above": 22,
+     "below": 12,
+     "variants": 2
+    },
+    {
+     "above": 18,
+     "below": 13,
+     "variants": 2
+    },
+    {
+     "above": 30,
+     "below": 12,
+     "variants": 1
+    },
+    {
+     "above": 37,
+     "below": 12,
+     "variants": 1
+    },
+    {
+     "above": 13,
+     "below": 16,
+     "variants": 1
+    },
+    {
+     "above": 30,
+     "below": 13,
+     "variants": 1
+    },
+    {
+     "above": 37,
+     "below": 11,
+     "variants": 1
+    },
+    {
+     "above": 29,
+     "below": 14,
+     "variants": 1
+    },
+    {
+     "above": 19,
+     "below": 13,
+     "variants": 1
+    },
+    {
+     "above": 17,
+     "below": 13,
+     "variants": 1
+    },
+    {
+     "above": 12,
+     "below": 19,
+     "variants": 1
+    }
+   ],
+   "current": {
+    "above": 18,
+    "apply": {},
+    "below": 16,
+    "changes": [],
+    "half_life_days": "5",
+    "in_range": 47,
+    "lookback_days": 30,
+    "median_abs_deviation": "0.1143378799587268473537576153",
+    "percentile": "37.5",
+    "surcharge_mgdl": "40",
+    "variants": 19
+   },
+   "line": [
+    {
+     "above": 22,
+     "apply": {
+      "auto_half_life_days": "2",
+      "auto_lookback_days": 15,
+      "auto_percentile": "25"
+     },
+     "below": 11,
+     "changes": [
+      "lookback",
+      "half_life",
+      "percentile"
+     ],
+     "delta_above": 4,
+     "delta_below": -5,
+     "half_life_days": "2",
+     "in_range": 48,
+     "lookback_days": 15,
+     "median_abs_deviation": "0.1327515168907971808631611083",
+     "percentile": "25",
+     "surcharge_mgdl": "40",
+     "variants": 1
+    },
+    {
+     "above": 20,
+     "apply": {
+      "auto_half_life_days": "3",
+      "auto_method": "surcharge",
+      "auto_percentile": "35",
+      "auto_surcharge_mgdl": "20"
+     },
+     "below": 12,
+     "changes": [
+      "half_life",
+      "percentile",
+      "surcharge"
+     ],
+     "delta_above": 2,
+     "delta_below": -4,
+     "half_life_days": "3",
+     "in_range": 49,
+     "lookback_days": 30,
+     "median_abs_deviation": "0.1364623919639743842706658735",
+     "percentile": "35",
+     "surcharge_mgdl": "20",
+     "variants": 1
+    },
+    {
+     "above": 17,
+     "apply": {
+      "auto_half_life_days": "14",
+      "auto_method": "surcharge",
+      "auto_surcharge_mgdl": "20"
+     },
+     "below": 13,
+     "changes": [
+      "half_life",
+      "surcharge"
+     ],
+     "delta_above": -1,
+     "delta_below": -3,
+     "half_life_days": "14",
+     "in_range": 51,
+     "lookback_days": 30,
+     "median_abs_deviation": "0.1238957847971381447073230936",
+     "percentile": "37.5",
+     "surcharge_mgdl": "20",
+     "variants": 1
+    },
+    {
+     "above": 16,
+     "apply": {
+      "auto_half_life_days": "1",
+      "auto_lookback_days": 8,
+      "auto_method": "surcharge",
+      "auto_percentile": "40",
+      "auto_surcharge_mgdl": "20"
+     },
+     "below": 15,
+     "changes": [
+      "lookback",
+      "half_life",
+      "percentile",
+      "surcharge"
+     ],
+     "delta_above": -2,
+     "delta_below": -1,
+     "half_life_days": "1",
+     "in_range": 50,
+     "lookback_days": 8,
+     "median_abs_deviation": "0.1243833293187077127588405655",
+     "percentile": "40",
+     "surcharge_mgdl": "20",
+     "variants": 1
+    },
+    {
+     "above": 13,
+     "apply": {
+      "auto_half_life_days": "7",
+      "auto_method": "percentile",
+      "auto_percentile": "50"
+     },
+     "below": 16,
+     "changes": [
+      "half_life",
+      "percentile",
+      "surcharge"
+     ],
+     "delta_above": -5,
+     "delta_below": 0,
+     "half_life_days": "7",
+     "in_range": 52,
+     "lookback_days": 30,
+     "median_abs_deviation": "0.1176192278596476995624431893",
+     "percentile": "50",
+     "surcharge_mgdl": "0",
+     "variants": 1
+    },
+    {
+     "above": 11,
+     "apply": {
+      "auto_half_life_days": "14",
+      "auto_lookback_days": 15,
+      "auto_method": "percentile",
+      "auto_percentile": "50"
+     },
+     "below": 17,
+     "changes": [
+      "lookback",
+      "half_life",
+      "percentile",
+      "surcharge"
+     ],
+     "delta_above": -7,
+     "delta_below": 1,
+     "half_life_days": "14",
+     "in_range": 53,
+     "lookback_days": 15,
+     "median_abs_deviation": "0.1076760951615818405858998041",
+     "percentile": "50",
+     "surcharge_mgdl": "0",
+     "variants": 2
+    }
+   ],
+   "meal_count": 81
+  },
+  "tuning": [
+   {
+    "key": "percentile",
+    "meal_count": 94,
+    "noise_meals": "4.70",
+    "options": [
+     {
+      "above": 33,
+      "active": false,
+      "apply": {
+       "auto_percentile": "25"
+      },
+      "below": 13,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 48,
+      "mean_glucose": "145.1167526665928507528293227",
+      "median_abs_deviation": "0.1392945275438972329735603590",
+      "median_glucose": "139.1008000728791643234785166",
+      "value": "25"
+     },
+     {
+      "above": 25,
+      "active": false,
+      "apply": {
+       "auto_percentile": "30"
+      },
+      "below": 15,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 54,
+      "mean_glucose": "138.2200063736799828317099862",
+      "median_abs_deviation": "0.1404844066469434886381604985",
+      "median_glucose": "133.3277443010095495161060232",
+      "value": "30"
+     },
+     {
+      "above": 21,
+      "active": false,
+      "apply": {
+       "auto_percentile": "35"
+      },
+      "below": 17,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 56,
+      "mean_glucose": "131.8266509706841673600990134",
+      "median_abs_deviation": "0.1237921650840826873547201262",
+      "median_glucose": "128.3577856322339764537262244",
+      "value": "35"
+     },
+     {
+      "above": 21,
+      "active": true,
+      "apply": {
+       "auto_percentile": "37.5"
+      },
+      "below": 17,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 56,
+      "mean_glucose": "128.8368969360117214269170439",
+      "median_abs_deviation": "0.1103917346975235691459022789",
+      "median_glucose": "124.9210108745158192569411677",
+      "value": "37.5"
+     },
+     {
+      "above": 20,
+      "active": false,
+      "apply": {
+       "auto_percentile": "40"
+      },
+      "below": 17,
+      "best": true,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 57,
+      "mean_glucose": "126.2358711064962611048512598",
+      "median_abs_deviation": "0.1079736322799948876262439668",
+      "median_glucose": "123.0977884795780334281624390",
+      "value": "40"
+     },
+     {
+      "above": 20,
+      "active": false,
+      "apply": {
+       "auto_percentile": "45"
+      },
+      "below": 18,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 56,
+      "mean_glucose": "121.6575771899206519906738944",
+      "median_abs_deviation": "0.1089712477739874239029799554",
+      "median_glucose": "120.0150771372646786991064784",
+      "value": "45"
+     },
+     {
+      "above": 19,
+      "active": false,
+      "apply": {
+       "auto_percentile": "50"
+      },
+      "below": 19,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 56,
+      "mean_glucose": "116.8674749410983785091778496",
+      "median_abs_deviation": "0.1032591853342513806591294776",
+      "median_glucose": "114.9652237918766111532321319",
+      "value": "50"
+     }
+    ],
+    "verdict": "shift"
+   },
+   {
+    "key": "surcharge",
+    "meal_count": 94,
+    "noise_meals": "4.70",
+    "options": [
+     {
+      "above": 23,
+      "active": false,
+      "apply": {
+       "auto_method": "percentile"
+      },
+      "below": 17,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 54,
+      "mean_glucose": "126.6525355979695195064646710",
+      "median_abs_deviation": "0.1408545022963730011944963478",
+      "median_glucose": "127.4156493073948436627956068",
+      "value": "0"
+     },
+     {
+      "above": 20,
+      "active": false,
+      "apply": {
+       "auto_method": "surcharge",
+       "auto_surcharge_mgdl": "20"
+      },
+      "below": 17,
+      "best": true,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 57,
+      "mean_glucose": "126.9138774862728663237273518",
+      "median_abs_deviation": "0.1257439280314895450726960421",
+      "median_glucose": "125.6236679447098675363659744",
+      "value": "20"
+     },
+     {
+      "above": 21,
+      "active": true,
+      "apply": {
+       "auto_method": "surcharge",
+       "auto_surcharge_mgdl": "40"
+      },
+      "below": 17,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 56,
+      "mean_glucose": "128.8368969360117214269170439",
+      "median_abs_deviation": "0.1103917346975235691459022789",
+      "median_glucose": "124.9210108745158192569411677",
+      "value": "40"
+     },
+     {
+      "above": 24,
+      "active": false,
+      "apply": {
+       "auto_method": "surcharge",
+       "auto_surcharge_mgdl": "60"
+      },
+      "below": 19,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 51,
+      "mean_glucose": "132.5150667559439216775513536",
+      "median_abs_deviation": "0.1318840090497942052252891874",
+      "median_glucose": "126.4901381478317295654870432",
+      "value": "60"
+     },
+     {
+      "above": 29,
+      "active": false,
+      "apply": {
+       "auto_method": "surcharge",
+       "auto_surcharge_mgdl": "80"
+      },
+      "below": 20,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 45,
+      "mean_glucose": "136.3218767947378473179664265",
+      "median_abs_deviation": "0.1463893831628585252363763852",
+      "median_glucose": "124.7251948011060885125100901",
+      "value": "80"
+     }
+    ],
+    "verdict": "shift"
+   },
+   {
+    "key": "half_life",
+    "meal_count": 94,
+    "noise_meals": "4.70",
+    "options": [
+     {
+      "above": 23,
+      "active": false,
+      "apply": {
+       "auto_half_life_days": "1"
+      },
+      "below": 20,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 51,
+      "mean_glucose": "128.9852219430496259967658180",
+      "median_abs_deviation": "0.1560366430071538697739582316",
+      "median_glucose": "125.7251604321562217700226888",
+      "value": "1"
+     },
+     {
+      "above": 22,
+      "active": false,
+      "apply": {
+       "auto_half_life_days": "2"
+      },
+      "below": 19,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 53,
+      "mean_glucose": "127.8745499147950522918835284",
+      "median_abs_deviation": "0.1413473285969050460595185330",
+      "median_glucose": "127.1721406520244031056566808",
+      "value": "2"
+     },
+     {
+      "above": 21,
+      "active": false,
+      "apply": {
+       "auto_half_life_days": "3"
+      },
+      "below": 18,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 55,
+      "mean_glucose": "129.2279727555073343044386846",
+      "median_abs_deviation": "0.1385903307551205002377675300",
+      "median_glucose": "127.2551408845225538865634626",
+      "value": "3"
+     },
+     {
+      "above": 21,
+      "active": true,
+      "apply": {
+       "auto_half_life_days": "5"
+      },
+      "below": 17,
+      "best": true,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 56,
+      "mean_glucose": "128.8368969360117214269170439",
+      "median_abs_deviation": "0.1103917346975235691459022789",
+      "median_glucose": "124.9210108745158192569411677",
+      "value": "5"
+     },
+     {
+      "above": 21,
+      "active": false,
+      "apply": {
+       "auto_half_life_days": "7"
+      },
+      "below": 17,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 56,
+      "mean_glucose": "128.3786538808946965848731177",
+      "median_abs_deviation": "0.1131043547912667687032288129",
+      "median_glucose": "127.8422788052312282802698861",
+      "value": "7"
+     },
+     {
+      "above": 21,
+      "active": false,
+      "apply": {
+       "auto_half_life_days": "14"
+      },
+      "below": 18,
+      "best": false,
+      "count": 94,
+      "glucose_count": 94,
+      "in_range": 55,
+      "mean_glucose": "127.9140151603704286476712779",
+      "median_abs_deviation": "0.1228709759817933530910156418",
+      "median_glucose": "126.3417053292865566636691900",
+      "value": "14"
+     }
+    ],
+    "verdict": "none"
+   },
+   {
+    "key": "lookback",
+    "meal_count": 82,
+    "noise_meals": "4.10",
+    "options": [
+     {
+      "above": 19,
+      "active": false,
+      "apply": {
+       "auto_lookback_days": 8
+      },
+      "below": 16,
+      "best": false,
+      "count": 82,
+      "glucose_count": 82,
+      "in_range": 47,
+      "mean_glucose": "126.1658114492579812733478754",
+      "median_abs_deviation": "0.1202868074399143988715307068",
+      "median_glucose": "127.5494967130729331799976650",
+      "value": 8
+     },
+     {
+      "above": 17,
+      "active": false,
+      "apply": {
+       "auto_lookback_days": 15
+      },
+      "below": 17,
+      "best": false,
+      "count": 82,
+      "glucose_count": 82,
+      "in_range": 48,
+      "mean_glucose": "126.5753768947125191481055626",
+      "median_abs_deviation": "0.1172517802369200247713310438",
+      "median_glucose": "127.0663431120682348586098322",
+      "value": 15
+     },
+     {
+      "above": 18,
+      "active": true,
+      "apply": {
+       "auto_lookback_days": 30
+      },
+      "below": 16,
+      "best": true,
+      "count": 82,
+      "glucose_count": 82,
+      "in_range": 48,
+      "mean_glucose": "126.0267040788166900763271456",
+      "median_abs_deviation": "0.1128293723435454127986766801",
+      "median_glucose": "129.3015120424346479569115196",
+      "value": 30
+     }
+    ],
+    "verdict": "none"
+   }
+  ],
   "variants": [
    {
     "cells": [
@@ -4485,6 +5858,28 @@
     ],
     "half_life_days": "14",
     "lookback_days": 30
+   }
+  ],
+  "weights": [
+   {
+    "age_days": 1,
+    "weight": "0.8705505632961241391362700175"
+   },
+   {
+    "age_days": 5,
+    "weight": "0.5"
+   },
+   {
+    "age_days": 10,
+    "weight": "0.25"
+   },
+   {
+    "age_days": 20,
+    "weight": "0.0625"
+   },
+   {
+    "age_days": 30,
+    "weight": "0.015625"
    }
   ]
  }

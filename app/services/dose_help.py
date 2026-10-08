@@ -41,8 +41,10 @@ def dose_help(payload: dict) -> dict:
     auto_percentile, half_life, lookback = factors.forecast_settings(current_settings)
     points = factors.meal_points(local_now.date(), lookback, overrides, periods)
     method = current_settings.get("auto_method", "percentile")
+    surcharge_mgdl = factors.surcharge_mgdl(current_settings)
     prediction = forecast.predict_method(points, (meal_kind, day_type if is_breakfast else None),
-                                         local_now.date(), auto_percentile, half_life, lookback, method)
+                                         local_now.date(), auto_percentile, half_life, lookback, method,
+                                         surcharge_mgdl)
     auto_value = prediction["units_per_ke"]
     # The surcharge belongs once to each main meal; a snack of a meal gets the factor only.
     surcharge = (method == forecast.SURCHARGE and auto_value is not None
@@ -51,7 +53,7 @@ def dose_help(payload: dict) -> dict:
                             activity_change=payload.get("activity_change_mgdl", 0),
                             units_per_ke=factor["median_units_per_ke"] if use_factor else None,
                             auto_units_per_ke=auto_value,
-                            auto_surcharge_mgdl=forecast.SURCHARGE_MGDL if surcharge else None,
+                            auto_surcharge_mgdl=surcharge_mgdl if surcharge else None,
                             surcharge_share=forecast.surcharge_share)
     result.update({
         "auto_meal": meal_kind, "auto_factor_count": prediction["count"], "auto_method": method,

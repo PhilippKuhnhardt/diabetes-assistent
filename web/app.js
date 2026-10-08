@@ -2,7 +2,7 @@
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
-const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", persistDay: false, settings: null, dayData: null, pendingMealId: null, pendingSportId: null, entryTimeTouched: false };
+const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", analysisTab: "werte", persistDay: false, settings: null, dayData: null, pendingMealId: null, pendingSportId: null, entryTimeTouched: false };
 const views = new Set(["diary", "analysis", "settings"]);
 const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 const CERTAINTY_LABELS = { weighed: "Gewogen", known: "Halbwegs sicher", unsure: "KH unsicher" };
@@ -122,6 +122,7 @@ function locationState() {
   const historyDay = currentView !== "diary" && validDay(window.history.state?.day) ? window.history.state.day : null;
   return {
     view: currentView,
+    analysisTab: params.get("tab") === "automatik" ? "automatik" : "werte",
     day: urlDay || historyDay || new Date().toLocaleDateString("sv-SE"),
     persistDay: Boolean(urlDay || (historyDay && window.history.state?.persistDay)),
   };
@@ -131,6 +132,7 @@ function syncTabLinks(url = new URL(window.location.href)) {
   $$(".tab").forEach(link => {
     const linkURL = new URL(url);
     linkURL.searchParams.set("view", link.dataset.view);
+    linkURL.searchParams.delete("tab");
     if (link.dataset.view === "diary" && state.persistDay) linkURL.searchParams.set("date", state.day);
     else linkURL.searchParams.delete("date");
     link.href = linkURL.href;
@@ -142,6 +144,8 @@ function updateLocation(replace = false) {
   url.searchParams.set("view", state.view);
   if (state.view === "diary" && state.persistDay) url.searchParams.set("date", state.day);
   else url.searchParams.delete("date");
+  if (state.view === "analysis" && state.analysisTab === "automatik") url.searchParams.set("tab", "automatik");
+  else url.searchParams.delete("tab");
   syncTabLinks(url);
   window.history[replace ? "replaceState" : "pushState"]({ view: state.view, day: state.day, persistDay: state.persistDay }, "", url);
 }
@@ -160,6 +164,16 @@ function view(name, options = {}) {
   if (changed && options.updateHistory !== false) updateLocation();
   if (name === "analysis") loadSummary();
   if (name === "diary") setDefaultMealTime();
+}
+
+// Analysis sub-pages: values of the chosen period, or how the Automatik would have done.
+function analysisTab(name, options = {}) {
+  const changed = state.analysisTab !== name;
+  state.analysisTab = name;
+  $$("[data-analysis-tab]").forEach(button => button.setAttribute("aria-selected", String(button.dataset.analysisTab === name)));
+  $("#analysis-werte").hidden = name !== "werte";
+  $("#analysis-automatik").hidden = name !== "automatik";
+  if (changed && options.updateHistory !== false) updateLocation(true);
 }
 
 function changeDay(day, options = {}) {
@@ -427,6 +441,7 @@ async function loadSettings() {
   form.elements.auto_percentile.value = data.settings.auto_percentile;
   form.elements.auto_lookback_days.value = String(data.settings.auto_lookback_days);
   form.elements.auto_half_life_days.value = data.settings.auto_half_life_days;
+  form.elements.auto_surcharge_mgdl.value = data.settings.auto_surcharge_mgdl ?? 40;
   form.elements.basal_default_units.value = data.settings.basal_default_units ?? 17;
   form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
   form.elements.lunch_end.value = minuteClock(data.settings.lunch_end_minute);
@@ -1760,6 +1775,7 @@ async function saveSettings(event) {
     auto_percentile: form.elements.auto_percentile.value,
     auto_lookback_days: Number(form.elements.auto_lookback_days.value),
     auto_half_life_days: form.elements.auto_half_life_days.value,
+    auto_surcharge_mgdl: form.elements.auto_surcharge_mgdl.value,
     basal_default_units: form.elements.basal_default_units.value,
     breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),
     lunch_end_minute: clockMinute(form.elements.lunch_end.value),
@@ -1942,13 +1958,148 @@ function renderSuggestionDerivation(d) {
         : escapeHTML(num(value, 1)) + ' %' + (Number(value) === 50 ? ' <small>Median</small>' : '')) + '</th>').join("") +
       '</tr></thead><tbody>' + rows.join("") + '</tbody></table></div>' +
       '<p class="hint derivation-note">Getestet werden dieselben ' + total + (total === 1 ? ' Mahlzeit' : ' Mahlzeiten') +
-      ' der letzten ' + d.backtest_days + ' Tage für alle Felder, unabhängig vom Zeitraum oben. Jede Mahlzeit bekommt den Vorschlag, ' +
+      ' der letzten ' + d.backtest_days + ' Tage für alle Felder, unabhängig vom Zeitraum unter „Werte“. Jede Mahlzeit bekommt den Vorschlag, ' +
       'den das Feld aus den Tagen davor berechnet hätte; gezeigt wird der BZ am Endpunkt mit diesem Faktor bei Korrektur auf den Zielwert (Modellrechnung: Ziel + (tatsächlicher − vorgeschlagener Faktor) × Σ[KH × KF] / 10, nur der Faktorfehler zählt). ' +
       'Kürzere Halbwertszeit = neue Werte zählen stärker. Zuschlag: eingestelltes Perzentil der Faktoren ohne einen festen Anstieg von ' +
       num(d.surcharge_mgdl, 0) + ' mg/dL je Hauptmahlzeit (Fett/Eiweiß, bis ' + num(d.surcharge_full_grams, 0) +
       ' g KH anteilig), dazu dieser Zuschlag für die jeweilige Mahlzeit.</p>'
     : '<p class="hint derivation-note">In den letzten ' + d.backtest_days + ' Tagen fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
       d.min_meals + ' Faktoren derselben Mahlzeit in jedem Zeitraum davor, also auch in den letzten 8 Tagen).</p>';
+}
+
+// Automatik view: worked example, trade-offs against the current strategy and one row per setting.
+// The server delivers every number, verdict and the settings change behind each "Übernehmen".
+const tuningLabel = (key, value) => key === "percentile" ? num(value, 1) + " %"
+  : key === "surcharge" ? (Number(value) ? num(value, 0) + " mg/dL" : "aus")
+  : key === "half_life" ? num(value, 1) + (Number(value) === 1 ? " Tag" : " Tage")
+  : num(value, 0) + " Tage";
+const tuningNames = { percentile: "Perzentil", surcharge: "Zuschlag", half_life: "Halbwertszeit", lookback: "Zeitraum" };
+const tuningHints = {
+  percentile: "Welcher Wert aus den bisherigen Faktoren genommen wird. Tiefer = weniger Insulin.",
+  surcharge: "Fester BZ-Anstieg je Hauptmahlzeit für Fett und Eiweiß, als Insulin zusätzlich zu den KH. Aus = nur Perzentil.",
+  half_life: "Nach dieser Zeit zählt eine Mahlzeit nur noch halb. Kürzer = neue Werte zählen stärker.",
+  lookback: "Wie viele Tage Vorgeschichte in den Vorschlag eingehen.",
+};
+const strategyText = o => num(o.percentile, 1) + " % · " + (Number(o.surcharge_mgdl) ? "Zuschlag " + num(o.surcharge_mgdl, 0) + " mg/dL" : "ohne Zuschlag") +
+  " · Halbwertszeit " + num(o.half_life_days, 1) + " T. · " + o.lookback_days + " Tage";
+const rangeBar = (below, inRange, above) => {
+  const total = below + inRange + above || 1, pct = value => (value * 100 / total).toFixed(2);
+  return '<svg class="range-bar" viewBox="0 0 100 8" preserveAspectRatio="none" role="img" aria-label="' +
+    below + ' unter 80, ' + inRange + ' im Bereich, ' + above + ' über 160">' +
+    '<rect class="range-low" x="0" width="' + pct(below) + '" height="8"/>' +
+    '<rect class="range-ok" x="' + pct(below) + '" width="' + pct(inRange) + '" height="8"/>' +
+    '<rect class="range-high" x="' + (Number(pct(below)) + Number(pct(inRange))).toFixed(2) + '" width="' + pct(above) + '" height="8"/></svg>';
+};
+const rangeCounts = (below, inRange, above) => '<span class="range-nums"><span class="range-low">' + below +
+  '</span> · <b class="range-ok">' + inRange + '</b> · <span class="range-high">' + above + '</span></span>';
+const applyButton = (apply, label = "Übernehmen") => '<button type="button" class="quiet apply-button" data-apply="' +
+  escapeHTML(JSON.stringify(apply)) + '">' + label + '</button>';
+
+const deltaText = (value, label) => '<span class="' + (Number(value) < 0 ? 'delta-good' : Number(value) > 0 ? 'delta-bad' : '') + '">' +
+  (Number(value) > 0 ? '+' : Number(value) < 0 ? '−' : '±') + Math.abs(Number(value)) + ' ' + label + '</span>';
+
+function renderAutomatik(d) {
+  const explain = $("#automatik-explain"), tradeoffs = $("#automatik-tradeoffs"), tuning = $("#automatik-tuning");
+  if (!d || !d.tuning) { explain.innerHTML = tradeoffs.innerHTML = tuning.innerHTML = ""; return; }
+  const surcharge = Number(d.active_surcharge_mgdl);
+  const weights = (d.weights || []).map(item => (item.age_days === 1 ? 'gestern ' : 'vor ' + item.age_days + ' Tagen ') +
+    num(item.weight, 2)).join(' · ');
+  const exampleName = item => item.meal === "breakfast" ? "Frühstück " + (item.day_type === "work" ? "Arbeit" : "Frei") : names[item.meal];
+  const examples = d.examples.map(item => {
+    if (item.units_per_ke == null) {
+      return '<tr><td>' + escapeHTML(exampleName(item)) + '</td><td>' + item.count + '</td><td colspan="5" class="hint">Zu wenige Mahlzeiten (mind. ' + item.min_meals + ')</td></tr>';
+    }
+    return '<tr><td>' + escapeHTML(exampleName(item)) + '</td><td>' + item.count + '</td><td><b>' + factorNum(item.units_per_ke) + '</b> IE/KE</td>' +
+      '<td>' + num(item.carbs_g, 0) + ' g · KF ' + num(item.isf, 0) + '</td>' +
+      '<td>' + num(Number(item.carbs_g) / 10, 1) + ' KE × ' + factorNum(item.units_per_ke) + ' = ' + num(item.carb_units, 1) + ' IE</td>' +
+      '<td>' + (surcharge ? '+ ' + num(item.surcharge_units, 1) + ' IE' : '—') + '</td>' +
+      '<td><b>' + num(item.total_units, 1) + ' IE</b></td></tr>';
+  }).join("");
+  explain.innerHTML = '<div class="automatik-chips">' +
+    ['Perzentil <b>' + num(d.percentile, 1) + ' %</b>', 'Zuschlag <b>' + (surcharge ? num(surcharge, 0) + ' mg/dL' : 'aus') + '</b>',
+     'Halbwertszeit <b>' + num(d.half_life_days, 1) + ' Tage</b>', 'Zeitraum <b>' + d.lookback_days + ' Tage</b>']
+      .map(text => '<span class="chip">' + text + '</span>').join("") + '</div>' +
+    '<ol class="automatik-steps">' +
+    '<li>Alle gültigen Mahlzeiten derselben Art aus den letzten ' + d.lookback_days + ' Tagen (Frühstück getrennt nach Arbeit und Frei). Ältere zählen weniger: ' + escapeHTML(weights) + '.</li>' +
+    (surcharge ? '<li>Von jedem Faktor wird der Zuschlag abgezogen: ' + num(surcharge, 0) + ' mg/dL je Hauptmahlzeit, umgerechnet in IE/KE dieser Mahlzeit (bis 40 g KH anteilig weniger).</li>' : '') +
+    '<li>Davon der gewichtete ' + num(d.percentile, 1) + '-%-Wert. Das ist der Faktor für die KH.</li>' +
+    '<li>Dosis = KE × Faktor' + (surcharge ? ' + Zuschlag (' + num(surcharge, 0) + ' mg/dL ÷ KF, einmal je Hauptmahlzeit, nicht für Snacks)' : '') + ', dazu wie immer die Korrektur auf den Zielwert.</li></ol>' +
+    '<p class="hint">Beispiel mit einer typischen Mahlzeit (Median der KH und des KF der verwendeten Mahlzeiten), ohne Korrektur:</p>' +
+    '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Mahlzeit</th><th>Mahlzeiten</th><th>Faktor</th><th>Typisch</th><th>KH-Teil</th><th>Zuschlag</th><th>Summe</th></tr></thead><tbody>' +
+    examples + '</tbody></table></div>';
+
+  const t = d.tradeoffs;
+  $("#tradeoff-count").textContent = t.meal_count + " Mahlzeiten";
+  if (!t.meal_count) {
+    tradeoffs.innerHTML = '<div class="empty">In den letzten ' + d.backtest_days + ' Tagen fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
+      d.min_meals + ' derselben Art in den 8 Tagen davor).</div>';
+    tuning.innerHTML = "";
+    return;
+  }
+  const current = t.current;
+  const points = t.cloud;
+  const maxX = Math.max(1, ...points.map(p => p.below)), maxY = Math.max(1, ...points.map(p => p.above));
+  const W = 320, H = 200, L = 34, B = 30, x = v => L + v / maxX * (W - L - 12), y = v => H - B - v / maxY * (H - B - 12);
+  const ticks = (max, f) => Array.from(new Set([0, Math.round(max / 2), max])).map(f).join("");
+  const plot = '<svg class="tradeoff-plot" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Unter 80 gegen über 160 für alle Kombinationen">' +
+    ticks(maxX, v => '<text x="' + x(v) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + v + '</text>') +
+    ticks(maxY, v => '<text x="' + (L - 8) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + v + '</text>') +
+    '<line class="axis" x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - 6) + '" y2="' + (H - B) + '"/>' +
+    '<line class="axis" x1="' + L + '" y1="' + (H - B) + '" x2="' + L + '" y2="6"/>' +
+    '<text class="axis-label" x="' + (W - 6) + '" y="' + (H - 2) + '" text-anchor="end">unter 80 →</text>' +
+    '<text class="axis-label" x="' + (L + 4) + '" y="12">über 160 ↑</text>' +
+    points.map(p => '<circle class="cloud" cx="' + x(p.below) + '" cy="' + y(p.above) + '" r="3"/>').join("") +
+    '<polyline class="line" points="' + t.line.map(o => x(o.below) + ',' + y(o.above)).join(" ") + '"/>' +
+    t.line.map(o => '<circle class="on-line" cx="' + x(o.below) + '" cy="' + y(o.above) + '" r="4.5"/>').join("") +
+    '<circle class="current" cx="' + x(current.below) + '" cy="' + y(current.above) + '" r="7"/></svg>';
+  const optionRow = (o, isCurrent) => '<li class="tradeoff' + (isCurrent ? ' is-current' : '') + '">' +
+    '<div class="tradeoff-head"><b>' + (isCurrent ? 'Aktuell' : o.changes.map(key => tuningNames[key] + ' ' +
+      tuningLabel(key, key === "percentile" ? o.percentile : key === "surcharge" ? o.surcharge_mgdl : key === "half_life" ? o.half_life_days : o.lookback_days)).join(' · ')) +
+    '</b><small>' + escapeHTML(strategyText(o)) + '</small>' + (isCurrent ? '' : '<span class="tradeoff-delta">' +
+      deltaText(o.delta_below, "zu tief") + ' · ' + deltaText(o.delta_above, "zu hoch") + '</span>') + '</div>' +
+    rangeBar(o.below, o.in_range, o.above) + rangeCounts(o.below, o.in_range, o.above) +
+    (isCurrent ? '<span class="hint">eingestellt</span>' : applyButton(o.apply)) + '</li>';
+  const alternatives = t.line.filter(o => o.changes.length);
+  tradeoffs.innerHTML = '<div class="tradeoff-layout">' + plot + '<div><ul class="tradeoff-list">' +
+    optionRow(current, true) + alternatives.map(o => optionRow(o, false)).join("") + '</ul>' +
+    '<p class="hint">Jeder Punkt ist eine Kombination der vier Regler, alle auf denselben ' + t.meal_count +
+    ' Mahlzeiten. Auf der Linie liegen die, die keine andere bei „unter 80“ und „über 160“ zugleich schlägt: Nach links weniger zu tief, dafür mehr zu hoch. ' +
+    (t.line.some(o => !o.changes.length) ? 'Deine Einstellung liegt auf der Linie.' : 'Deine Einstellung (Ring) liegt nicht auf der Linie, mindestens eine Alternative ist in beiden Richtungen gleich gut oder besser.') +
+    ' Unterschiede von 1–2 Mahlzeiten können Zufall sein.</p></div></div>';
+
+  $("#tuning-count").textContent = "Je Regler nur dieser geändert";
+  const verdictText = row => row.verdict === "better" ? "besser: " + tuningLabel(row.key, row.options.find(o => o.best).value)
+    : row.verdict === "shift" ? "verschiebt tief ↔ hoch" : "kein Unterschied";
+  tuning.innerHTML = d.tuning.map(row => '<details class="tuning-row"' + (row.verdict !== "none" ? ' open' : '') + '><summary>' +
+    '<b>' + tuningNames[row.key] + '</b><span class="verdict verdict-' + row.verdict + '">' + escapeHTML(verdictText(row)) + '</span>' +
+    '<small>' + row.meal_count + ' Mahlzeiten</small></summary><p class="hint">' + tuningHints[row.key] + '</p>' +
+    '<ul class="tuning-options">' + row.options.map(o => '<li class="' + (o.active ? 'is-active' : '') + (o.best ? ' is-best' : '') + '">' +
+      '<span class="tuning-label">' + escapeHTML(tuningLabel(row.key, o.value)) + (o.active ? ' <small>aktiv</small>' : '') + '</span>' +
+      rangeBar(o.below, o.in_range, o.above) + rangeCounts(o.below, o.in_range, o.above) +
+      (o.active ? '<span></span>' : applyButton(o.apply)) + '</li>').join("") + '</ul></details>').join("") +
+    '<p class="hint range-legend"><span class="range-low">■ unter 80</span> <span class="range-ok">■ 80–160</span> <span class="range-high">■ über 160</span> · ' +
+    'Jede Zeile prüft die Mahlzeiten, die alle ihre Optionen berechnen können. „Kein Unterschied“: die Optionen liegen höchstens ' +
+    num(d.tuning[0].noise_meals, 1) + ' Mahlzeiten auseinander.</p>';
+}
+
+async function applyAutomatik(button) {
+  const change = JSON.parse(button.dataset.apply);
+  const previous = Object.fromEntries(["auto_percentile", "auto_half_life_days", "auto_lookback_days", "auto_method", "auto_surcharge_mgdl"]
+    .map(key => [key, state.settings?.[key]]).filter(([, value]) => value != null));
+  const save = async (payload, message) => {
+    $$("#analysis-automatik [data-apply]").forEach(item => item.disabled = true);
+    try {
+      const result = await api("/api/settings", { method: "POST", body: JSON.stringify(payload) });
+      state.settings = result.settings;
+      toast(message, false, payload === change ? { label: "Rückgängig", run: () => save(previous, "Vorherige Einstellung wiederhergestellt") } : null);
+      await loadSettings();
+      await loadSummary();
+    } catch (error) {
+      toast(error.message, true);
+      $$("#analysis-automatik [data-apply]").forEach(item => item.disabled = false);
+    }
+  };
+  await save(change, "Automatik-Einstellung übernommen");
 }
 
 // Information only: how much more insulin per KE breakfast needs on work days than on free days.
@@ -1980,6 +2131,7 @@ async function loadSummary() {
   $("#night-summary-cards").innerHTML = '<div class="empty">Nachtübersicht wird geladen …</div>';
   $("#night-records").innerHTML = "";
   $("#calculations").innerHTML = "";
+  $("#automatik-status").textContent = "Wird berechnet …";
   try {
     const days = $("#summary-days").value;
     const data = await api("/api/summary?days=" + days);
@@ -2025,6 +2177,8 @@ async function loadSummary() {
     renderAnalysisIc();
     renderSportAnalysis(data.sport_analysis);
     renderSuggestionDerivation(data.suggestion_derivation);
+    renderAutomatik(data.suggestion_derivation);
+    $("#automatik-status").textContent = "";
     renderDayTypeRatio(data.day_type_ratio);
     const calculations = ["breakfast", "lunch", "dinner"]
       .flatMap(kind => data.groups[kind].calculations.map(item => ({ ...item, kind })))
@@ -2141,12 +2295,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   state.day = initialLocation.day;
   state.view = initialLocation.view;
   state.persistDay = initialLocation.persistDay;
+  analysisTab(initialLocation.analysisTab, { updateHistory: false });
   $("#selected-day").value = state.day;
   setDefaultMealTime();
   setDefaultSportTime();
   setSportDuration();
   view(state.view, { updateHistory: false });
   updateLocation(true);
+  $$("[data-analysis-tab]").forEach(button => button.addEventListener("click", () => analysisTab(button.dataset.analysisTab)));
+  $("#analysis-automatik").addEventListener("click", event => {
+    const button = event.target.closest("[data-apply]");
+    if (button) applyAutomatik(button);
+  });
   $$(".tab").forEach(link => link.addEventListener("click", event => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
@@ -2158,6 +2318,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (dayChanged) resetEntryForm();
     state.day = nextLocation.day;
     state.persistDay = nextLocation.persistDay;
+    analysisTab(nextLocation.analysisTab, { updateHistory: false });
     syncTabLinks();
     $("#selected-day").value = state.day;
     setDefaultMealTime();

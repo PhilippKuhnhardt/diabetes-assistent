@@ -129,42 +129,64 @@
       </section>
 
       <section id="analysis-view" class="view" hidden>
-        <div class="page-head"><div><h1>Insulinfaktor je KE</h1></div></div>
-        <div class="analysis-controls">
-          <label>Zeitraum <select id="summary-days"><option value="1">1 Tag</option><option value="3">3 Tage</option><option value="7">7 Tage</option><option value="14" selected>14 Tage</option><option value="30">30 Tage</option></select></label>
-          <button id="sync-range" class="primary" type="button">Zeitraum aus Nightscout laden</button>
-          <span id="sync-progress" class="hint"></span>
+        <div class="page-head"><div><h1>Insulinfaktor je KE</h1></div>
+          <div class="segmented analysis-tabs" role="tablist" aria-label="Analyse">
+            <button type="button" role="tab" data-analysis-tab="werte" aria-selected="true">Werte</button>
+            <button type="button" role="tab" data-analysis-tab="automatik" aria-selected="false">Automatik</button>
+          </div>
         </div>
-        <div id="summary" class="summary-grid"></div>
-        <section class="analysis-list panel">
-          <div class="section-head"><h2>Vorschlagsfaktor · Herleitung</h2><span id="suggestion-method" class="hint"></span></div>
-          <div id="suggestion-derivation"></div>
-        </section>
-        <section class="analysis-list panel">
-          <div class="section-head"><h2>Stressaufschlag beim Frühstück</h2><span id="day-type-ratio-range" class="hint"></span></div>
-          <div id="day-type-ratio"></div>
-        </section>
-        <section class="analysis-list panel analysis-ic-panel">
-          <div class="section-head"><h2>Aktueller Insulinfaktor · Nightscout</h2></div>
-          <div id="analysis-ic-rows" class="analysis-ic-rows"></div>
-          <button type="button" id="save-analysis-ic" class="primary">In Nightscout speichern</button>
-          <span id="analysis-ic-status" class="hint" role="status"></span>
-        </section>
-        <section class="analysis-list panel">
-          <div class="section-head"><h2>Alle Kalkulationen</h2><span id="calculation-count" class="hint"></span></div>
-          <div id="calculations"></div>
-        </section>
-        <section class="analysis-list panel">
-          <div class="section-head"><h2>Sport &amp; Rennsport · Wirkung auf den BG</h2><span id="sport-analysis-count" class="hint"></span></div>
-          <div id="sport-analysis-kinds" class="summary-grid"></div>
-          <div id="sport-analysis-sessions"></div>
-          <p class="hint">Sportwirkung = gemessene BG-Änderung minus erwartete Änderung mit dem Median-Insulinfaktor der Mahlzeiten desselben Typs ohne Sport im Zeitraum. Negativ: BG endete tiefer als üblich, positiv: höher. Modellschätzung, keine Dosierempfehlung.</p>
-        </section>
-        <section class="analysis-list panel">
-          <div class="section-head"><h2>Nachtübersicht</h2><span id="night-summary-count" class="hint"></span></div>
-          <div id="night-summary-cards" class="summary-grid"></div>
-          <div id="night-records"></div>
-        </section>
+        <div id="analysis-werte" class="analysis-pane">
+          <div class="analysis-controls">
+            <label>Zeitraum <select id="summary-days"><option value="1">1 Tag</option><option value="3">3 Tage</option><option value="7">7 Tage</option><option value="14" selected>14 Tage</option><option value="30">30 Tage</option></select></label>
+            <button id="sync-range" class="primary" type="button">Zeitraum aus Nightscout laden</button>
+            <span id="sync-progress" class="hint"></span>
+          </div>
+          <div id="summary" class="summary-grid"></div>
+          <section class="analysis-list panel">
+            <div class="section-head"><h2>Alle Kalkulationen</h2><span id="calculation-count" class="hint"></span></div>
+            <div id="calculations"></div>
+          </section>
+          <section class="analysis-list panel">
+            <div class="section-head"><h2>Sport &amp; Rennsport · Wirkung auf den BG</h2><span id="sport-analysis-count" class="hint"></span></div>
+            <div id="sport-analysis-kinds" class="summary-grid"></div>
+            <div id="sport-analysis-sessions"></div>
+            <p class="hint">Sportwirkung = gemessene BG-Änderung minus erwartete Änderung mit dem Median-Insulinfaktor der Mahlzeiten desselben Typs ohne Sport im Zeitraum. Negativ: BG endete tiefer als üblich, positiv: höher. Modellschätzung, keine Dosierempfehlung.</p>
+          </section>
+          <section class="analysis-list panel">
+            <div class="section-head"><h2>Nachtübersicht</h2><span id="night-summary-count" class="hint"></span></div>
+            <div id="night-summary-cards" class="summary-grid"></div>
+            <div id="night-records"></div>
+          </section>
+          <section class="analysis-list panel analysis-ic-panel">
+            <div class="section-head"><h2>Aktueller Insulinfaktor · Nightscout</h2></div>
+            <div id="analysis-ic-rows" class="analysis-ic-rows"></div>
+            <button type="button" id="save-analysis-ic" class="primary">In Nightscout speichern</button>
+            <span id="analysis-ic-status" class="hint" role="status"></span>
+          </section>
+        </div>
+        <div id="analysis-automatik" class="analysis-pane" hidden>
+          <p class="hint automatik-intro">Rückblick auf die Mahlzeiten der letzten 90 Tage, unabhängig vom Zeitraum unter „Werte“. Gezählt wird, wo der BZ am Endpunkt mit dem jeweiligen Vorschlag gelandet wäre (unter 80, 80–160, über 160 mg/dL). Modellrechnung, keine Dosierempfehlung.</p>
+          <section class="analysis-list panel">
+            <div class="section-head"><h2>So rechnet die Automatik</h2><span id="automatik-status" class="hint" role="status"></span></div>
+            <div id="automatik-explain"></div>
+          </section>
+          <section class="analysis-list panel">
+            <div class="section-head"><h2>Aktuell und Alternativen</h2><span id="tradeoff-count" class="hint"></span></div>
+            <div id="automatik-tradeoffs"></div>
+          </section>
+          <section class="analysis-list panel">
+            <div class="section-head"><h2>Was bringt welcher Regler?</h2><span id="tuning-count" class="hint"></span></div>
+            <div id="automatik-tuning"></div>
+          </section>
+          <details class="analysis-list panel analysis-details">
+            <summary><h2>Alle Kombinationen</h2><span id="suggestion-method" class="hint"></span></summary>
+            <div id="suggestion-derivation"></div>
+          </details>
+          <details class="analysis-list panel analysis-details">
+            <summary><h2>Stressaufschlag beim Frühstück</h2><span id="day-type-ratio-range" class="hint"></span></summary>
+            <div id="day-type-ratio"></div>
+          </details>
+        </div>
       </section>
 
       <section id="settings-view" class="view" hidden>
@@ -220,7 +242,8 @@
                 <option value="percentile">Perzentil</option>
                 <option value="surcharge">Perzentil + Mahlzeitzuschlag</option>
               </select></label>
-              <p class="hint">Mahlzeitzuschlag: je Hauptmahlzeit fest 40 mg/dL für Fett und Eiweiß (etwa 1 IE), bis 40 g KH anteilig weniger; Snacks ohne Zuschlag. Der Faktor wird ohne diesen Anteil berechnet.</p>
+              <label>Mahlzeitzuschlag <span>mg/dL</span><input name="auto_surcharge_mgdl" type="number" min="5" max="150" step="5" required></label>
+              <p class="hint">Gilt mit „Perzentil + Mahlzeitzuschlag“: je Hauptmahlzeit dieser BZ-Anstieg für Fett und Eiweiß (40 mg/dL sind bei KF 35 gut 1 IE), bis 40 g KH anteilig weniger; Snacks ohne Zuschlag. Der Faktor wird ohne diesen Anteil berechnet.</p>
               <label>Automatik-Perzentil <span>%</span><input name="auto_percentile" type="number" min="25" max="50" step="0.5" required></label>
               <p class="hint">25 % unteres Quartil, 50 % Median. Kleiner bedeutet weniger Insulin.</p>
               <label>Automatik-Zeitraum<select name="auto_lookback_days">
