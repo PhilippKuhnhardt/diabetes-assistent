@@ -163,6 +163,7 @@ function view(name, options = {}) {
   $$(".view").forEach(section => section.hidden = section.id !== name + "-view");
   if (changed && options.updateHistory !== false) updateLocation();
   if (name === "analysis") loadSummary();
+  if (changed) releaseEntryTime();
   if (name === "diary") setDefaultMealTime();
 }
 
@@ -188,13 +189,28 @@ function changeDay(day, options = {}) {
   if (options.load !== false) loadDay();
 }
 
-function setDefaultMealTime() {
+// An entry is always "now" unless the time was changed on purpose. That manual time ends with the
+// next saved entry, a view or day change, or after 10 minutes without touching the form.
+const ENTRY_TIME_HOLD_MS = 10 * 60000;
+
+function markEntryActivity() {
+  state.entryActivityAt = Date.now();
+}
+
+function releaseEntryTime() {
+  if (!state.entryTimeTouched) return;
+  state.entryTimeTouched = false;
+  state.entryTimeOpen = false;
+}
+
+function setDefaultMealTime(options = {}) {
+  if (state.entryTimeTouched && Date.now() - (state.entryActivityAt || 0) > ENTRY_TIME_HOLD_MS) releaseEntryTime();
   if (state.entryTimeTouched) return;
   const time = localInputTime(new Date()).slice(11, 16);
   const changed = $("#entry-time").value !== time;
   $("#entry-time").value = time;
   updateEntryChips();
-  if (changed) schedulePreview(0);
+  if (changed && options.preview !== false) schedulePreview(0);
 }
 
 // Time and note stay folded behind chips while the entry is "now"; other days always show the time.
@@ -1451,6 +1467,7 @@ function todayDay() {
 // basal chip, day type and the dose suggestion. A preview for another day or mode is never shown.
 function previewRequest() {
   const form = $("#entry-form");
+  setDefaultMealTime({ preview: false });
   let at = null;
   try { at = toInstant(state.day, form.elements.at.value); } catch (_) { /* The time field is incomplete. */ }
   return {
@@ -1467,9 +1484,6 @@ function currentPreview() {
 
 function renderPreview() {
   renderActiveCard();
-  const notice = currentPreview()?.day_notice;
-  $("#entry-day-notice span").textContent = notice || "";
-  $("#entry-day-notice").hidden = !notice;
   updateEntrySportOption();
   updateEntryDayType();
   updateEntryBasalOption();
@@ -1762,6 +1776,7 @@ async function saveEntry(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const mode = form.elements.kind.value;
+  setDefaultMealTime({ preview: false });
   if (mode === "basal") return saveBasalEntry(form);
   const carbs = mode === "meal" ? Number(form.elements.carbs.value || 0) : 0;
   const insulin = mode === "meal" ? Number(form.elements.insulin.value || 0) : 0;
@@ -1842,6 +1857,7 @@ async function undoEntry(id, restore) {
         !form.elements.carbs.value && !form.elements.insulin.value) {
       form.elements.at.value = restore.time;
       state.entryTimeTouched = true;
+      markEntryActivity();
       form.elements.carbs.value = restore.carbs;
       form.elements.insulin.value = restore.insulin;
       form.elements.notes.value = restore.notes;
@@ -2475,14 +2491,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#next-day").addEventListener("click", () => { const d = new Date(state.day + "T12:00"); d.setDate(d.getDate() + 1); changeDay(d.toLocaleDateString("sv-SE")); });
   $("#selected-day").addEventListener("change", event => changeDay(event.target.value));
   $("#refresh-day").addEventListener("click", loadDay);
-  $("#entry-day-today").addEventListener("click", () => changeDay(todayDay()));
   $("#entry-form").addEventListener("submit", saveEntry);
-  $("#entry-time").addEventListener("change", () => {
+  const touchEntryTime = () => {
     state.entryTimeTouched = true;
+    markEntryActivity();
     updateEntryChips();
     schedulePreview(0);
-  });
+  };
+  $("#entry-time").addEventListener("change", touchEntryTime);
+  $("#entry-time").addEventListener("input", touchEntryTime);
   $("#entry-form").addEventListener("focusin", setDefaultMealTime);
+  for (const type of ["input", "change", "pointerdown", "keydown"]) $("#entry-form").addEventListener(type, markEntryActivity, true);
   $("#entry-assign-chip").addEventListener("click", () => {
     state.entryAs = currentPreview()?.assignment?.snack ? "meal" : "snack";
     schedulePreview(0);
@@ -2672,8 +2691,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   setInterval(() => { if (!document.hidden) loadCurrentGlucose(); }, 60000);
   // "Wirkt noch" and the suggestion age with the active insulin, so today's preview refreshes too.
   setInterval(() => { if (!document.hidden && state.day === todayDay()) updatePreview(); }, 5 * 60000);
+  // A form left open keeps showing "jetzt" with the current clock, and an old manual time expires.
+  setInterval(() => { if (!document.hidden) setDefaultMealTime({ preview: false }); }, 30000);
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) loadCurrentGlucose();
+    if (document.hidden) return;
+    setDefaultMealTime();
+    loadCurrentGlucose();
   });
   window.addEventListener("focus", loadCurrentGlucose);
 });

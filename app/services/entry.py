@@ -14,7 +14,6 @@ from app.services import annotations, basal, day_view, diary, dose_help
 from app.store import config, mirror
 
 MODES = ("meal", "exercise", "basal")
-WEEKDAYS = ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
 DOSE_VARIANTS = ("normal", "cautious", "carbs")
 # The planned second part of a split bolus, offered as its own option while it is open.
 SPLIT_VARIANT = "split"
@@ -186,16 +185,6 @@ def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | N
     return {**result, "options": options, "check": _dose_check(result)}
 
 
-def _day_notice(context: dict) -> str | None:
-    """A visible hint whenever the form saves into another day than today."""
-    if context["day"] == context["today"]:
-        return None
-    shown = date.fromisoformat(context["day"])
-    when = "vergangenen" if context["day"] < context["today"] else "zukünftigen"
-    return (f"Eintrag für einen {when} Tag: {WEEKDAYS[shown.weekday()]}, "
-            f"{shown.day:02d}.{shown.month:02d}.{shown.year}")
-
-
 def _on_board(context: dict, dose: dict) -> dict | None:
     """Today's "Wirkt noch" card, whatever the form currently holds."""
     if context["day"] != context["today"]:
@@ -220,7 +209,6 @@ def preview(payload: dict) -> dict:
     dose = _dose(context, payload, assignment, sport, split)
     return {
         "day": context["day"],
-        "day_notice": _day_notice(context),
         "assignment": assignment and {**assignment, "at": assignment["at"].isoformat()},
         "sport": sport,
         "basal_units": str(_basal_units(context)),
