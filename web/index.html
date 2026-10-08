@@ -234,8 +234,8 @@
             </section>
             <section class="panel">
               <h2>Mahlzeiten</h2>
-              <label>Frühstück endet um <span>24 h</span><input name="breakfast_end" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM" required></label>
-              <label>Mittagessen endet um <span>24 h</span><input name="lunch_end" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM" required></label>
+              <label>Frühstück endet um <span>24 h</span><input name="breakfast_end" type="time" step="60" required></label>
+              <label>Mittagessen endet um <span>24 h</span><input name="lunch_end" type="time" step="60" required></label>
               <label>Auswertung nach <span>min</span><input name="window_minutes" type="number" min="60" max="360" step="1" required></label>
             </section>
             <section class="panel">
@@ -252,7 +252,7 @@
           </div>
           <div class="panel settings-save">
             <label>Gültig ab <span>optional</span><input name="effective_date" type="date"></label>
-            <label>Uhrzeit <span>24 h</span><input name="effective_time" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM"></label>
+            <label>Uhrzeit <span>24 h</span><input name="effective_time" type="time" step="60"></label>
             <button type="submit" class="primary">Einstellungen speichern</button>
             <p id="settings-version" class="hint"></p>
           </div>
@@ -264,7 +264,7 @@
     <form id="edit-form">
       <div class="section-head"><h2 id="edit-dialog-title">Eintrag bearbeiten</h2><button id="close-edit" type="button" class="quiet" aria-label="Schließen">×</button></div>
       <p id="edit-date" class="hint"></p>
-      <label>Zeitpunkt (24 h)<input name="at" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="HH:MM" required></label>
+      <label>Zeitpunkt (24 h)<input name="at" type="time" step="60" required></label>
       <div id="edit-meal-fields" class="field-pair">
         <label>Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"></label>
         <label>Insulin <span>IE</span><input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
