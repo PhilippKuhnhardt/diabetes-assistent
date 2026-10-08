@@ -589,8 +589,8 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 
 /* Analysis sub-pages: Werte | Automatik */
 .segmented { display: inline-flex; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
-.segmented button { border: 0; border-radius: 999px; padding: 7px 18px; background: none; color: var(--muted); font-size: 13px; font-weight: 650; }
-.segmented button[aria-selected="true"] { background: var(--green); color: #fff; }
+.segmented button[role="tab"] { border: 0; border-radius: 999px; padding: 7px 18px; background: none; color: var(--muted); font-size: 13px; font-weight: 650; }
+.segmented button[role="tab"][aria-selected="true"] { background: var(--green); color: #fff; }
 .automatik-intro { margin: 0 0 4px; max-width: 760px; }
 .automatik-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .automatik-chips .chip { padding: 5px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--canvas); font-size: 13px; }
@@ -615,8 +615,8 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .tradeoff-head { display: grid; gap: 2px; min-width: 0; }
 .tradeoff-head small { color: var(--muted); font-size: 12px; }
 .tradeoff.is-current .tradeoff-head b::after { content: " ○"; }
-.apply-button { justify-self: end; padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--green-dark); font-size: 12px; font-weight: 650; }
-.apply-button:hover { border-color: var(--green); }
+#analysis-automatik .apply-button { justify-self: end; padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--green-dark); font-size: 12px; font-weight: 650; }
+#analysis-automatik .apply-button:hover { border-color: var(--green); }
 .tuning-row { border-top: 1px solid var(--line); padding: 10px 0; }
 .tuning-row:first-child { border-top: 0; padding-top: 0; }
 .tuning-row > summary { display: flex; align-items: center; gap: 12px; cursor: pointer; }
