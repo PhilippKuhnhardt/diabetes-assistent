@@ -166,7 +166,7 @@ function changeDay(day, options = {}) {
   if (!validDay(day) || day === state.day) return;
   resetEntryForm();
   state.day = day;
-  if (day < new Date().toLocaleDateString("sv-SE")) state.persistDay = true;
+  state.persistDay = day !== todayDay();
   $("#selected-day").value = day;
   setDefaultMealTime();
   setDefaultSportTime();
@@ -1322,7 +1322,7 @@ function currentPreview() {
 
 function renderPreview() {
   const notice = currentPreview()?.day_notice;
-  $("#entry-day-notice").textContent = notice || "";
+  $("#entry-day-notice span").textContent = notice || "";
   $("#entry-day-notice").hidden = !notice;
   updateEntrySportOption();
   updateEntryDayType();
@@ -2169,6 +2169,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#next-day").addEventListener("click", () => { const d = new Date(state.day + "T12:00"); d.setDate(d.getDate() + 1); changeDay(d.toLocaleDateString("sv-SE")); });
   $("#selected-day").addEventListener("change", event => changeDay(event.target.value));
   $("#refresh-day").addEventListener("click", loadDay);
+  $("#entry-day-today").addEventListener("click", () => changeDay(todayDay()));
   $("#entry-form").addEventListener("submit", saveEntry);
   $("#entry-time").addEventListener("change", () => {
     state.entryTimeTouched = true;

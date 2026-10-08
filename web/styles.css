@@ -451,6 +451,7 @@ span.range-high { color: #9a6410; font-weight: 650; }
 /* Compact entry: chips for time, sport and note; tappable dose suggestions; one save button. */
 .entry-day-notice { margin: -4px 0 12px; padding: 8px 12px; border-radius: 10px; background: var(--amber-light); color: var(--amber); border: 1px solid #f3dfa9; font-size: 14px; font-weight: 650; }
 .entry-day-notice[hidden] { display: none; }
+.entry-day-notice button { margin-left: 4px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline; cursor: pointer; }
 .entry-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 14px; }
 .entry-chips .entry-sport-option, .entry-chips .entry-quality { display: contents; }
 .entry-chips .entry-quality[hidden], .entry-chips[hidden] { display: none; }
