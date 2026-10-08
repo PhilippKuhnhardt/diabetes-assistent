@@ -17,14 +17,12 @@ MODES = ("meal", "exercise", "basal")
 DOSE_VARIANTS = ("normal", "cautious", "carbs")
 # The planned second part of a split bolus, offered as its own option while it is open.
 SPLIT_VARIANT = "split"
-# The fields a shown suggestion depends on; saving a tapped suggestion re-checks them.
+# The fields a shown suggestion depends on; saving a tapped suggestion re-checks them together with the
+# shown option units. Raw totals and expected values are left out: what still acts decays every second,
+# so they never match between showing and saving, while the rounded doses only change for a real reason.
 DOSE_CHECK_KEYS = (
     "carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl",
-    "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "total_units", "cautious_total_units",
-    "entry_units", "cautious_entry_units", "expected_glucose_mgdl", "cautious_expected_glucose_mgdl",
-    "auto_units_per_ke", "auto_total_units", "auto_entry_units", "auto_expected_glucose_mgdl",
-    "auto_cautious_total_units", "auto_cautious_entry_units", "auto_cautious_expected_glucose_mgdl",
-    "carbs_entry_units", "carbs_expected_glucose_mgdl", "auto_carbs_entry_units", "auto_carbs_expected_glucose_mgdl",
+    "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "auto_units_per_ke",
     "recent_rapid_doses")
 DOSE_CHANGED = "Empfehlung geändert. Bitte den neuen Wert prüfen und erneut speichern."
 
@@ -124,8 +122,10 @@ def _basal_units(context: dict) -> Decimal:
     return units
 
 
-def _dose_check(result: dict) -> str:
-    return hashlib.sha256(json.dumps([result.get(key) for key in DOSE_CHECK_KEYS], default=str).encode()).hexdigest()
+def _dose_check(result: dict, options: list[dict]) -> str:
+    shown = [[option.get(key) for key in ("variant", "units", "later_units")] for option in options]
+    return hashlib.sha256(json.dumps([[result.get(key) for key in DOSE_CHECK_KEYS], shown],
+                                     default=str).encode()).hexdigest()
 
 
 def _split(context: dict, assignment: dict | None, payload: dict) -> dict | None:
@@ -182,7 +182,7 @@ def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | N
                            "expected_mgdl": (str(Decimal(forecast) - units * Decimal(result["isf_mgdl_per_unit"]))
                                              if forecast is not None else None),
                            "savable": units <= 100})
-    return {**result, "options": options, "check": _dose_check(result)}
+    return {**result, "options": options, "check": _dose_check(result, options)}
 
 
 def _on_board(context: dict, dose: dict) -> dict | None:
