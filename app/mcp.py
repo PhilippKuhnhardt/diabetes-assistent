@@ -15,6 +15,8 @@ PROTOCOL_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 SERVER_INFO = {"name": "diabetes-assistent", "title": "Diabetes-Tagebuch", "version": "1"}
 INSTRUCTIONS = """Du sprichst mit Philipp (Typ-1-Diabetes, FreeStyle Libre 3 Plus, Fiasp per Pen) über sein \
 Diabetes-Tagebuch. Antworte auf Deutsch, kurz und gesprochen gut verständlich.
+Begriffe: KH = Kohlenhydrate (in Gramm; Philipp sagt meist "Kohlenhydrate" oder "Gramm"), KE = 10 g KH, \
+IE = Insulineinheiten ("Einheiten"), BZ = Blutzucker. Sprich selbst die Wörter aus, keine Abkürzungen.
 
 - Werte, Faktoren und Dosisvorschläge kommen nur aus den Tools. Rechne nie selbst eine Dosis aus und runde \
 nichts um. Die Vorschläge sind Modellrechnungen der App (Annahmen: volle Wirkung bis zum Endpunkt, keine \
