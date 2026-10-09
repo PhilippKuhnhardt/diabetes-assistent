@@ -2,7 +2,7 @@
 
 A fixed, synthetic 40-day dataset is loaded through a fake Nightscout and the app's own
 endpoints at a frozen clock. Every response a user or script sees (diary, analysis,
-dose help, export, read API) is compared with the stored snapshots in tests/golden/.
+dose help, read API) is compared with the stored snapshots in tests/golden/.
 Refactoring must leave them unchanged; a deliberate change regenerates them with
 
     GOLDEN_UPDATE=1 python3 -m unittest tests.test_golden
@@ -10,7 +10,6 @@ Refactoring must leave them unchanged; a deliberate change regenerates them with
 and the diff of tests/golden/ is part of the review.
 """
 import hashlib
-import io
 import json
 import math
 import os
@@ -22,7 +21,6 @@ import unittest
 import urllib.error
 import urllib.parse
 import urllib.request
-import zipfile
 from datetime import datetime as real_datetime, timedelta, timezone
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -288,14 +286,13 @@ class GoldenMasterTests(unittest.TestCase):
         cls.temp.cleanup()
 
     @classmethod
-    def call(cls, path, body=None, raw=False):
+    def call(cls, path, body=None):
         data = json.dumps(body).encode() if body is not None else None
         request = urllib.request.Request(cls.base + path, data=data, method="POST" if body is not None else "GET",
                                          headers={"Content-Type": "application/json"} if data else {})
         try:
             with urllib.request.urlopen(request) as response:
-                content = response.read()
-                return content if raw else json.loads(content)
+                return json.loads(response.read())
         except urllib.error.HTTPError as error:
             payload = {"status": error.code, "body": json.loads(error.read() or b"null")}
             error.close()
@@ -413,9 +410,6 @@ class GoldenMasterTests(unittest.TestCase):
         raw_tables = cls.call("/api/v1/data?days=45")
         record["v1"]["data_tables"] = {name: {"rows": len(rows), "sha256": digest(json.dumps(rows, sort_keys=True).encode())}
                                        for name, rows in raw_tables["tables"].items()}
-        archive = zipfile.ZipFile(io.BytesIO(cls.call("/api/export?days=45", raw=True)))
-        record["export"] = {name: digest(archive.read(name)) for name in sorted(archive.namelist())}
-        record["export_meals_csv"] = archive.read("meals.csv").decode()
         # The same analysis with the surcharge method, then dinner and next-morning dose help.
         record["settings_surcharge_save"] = cls.call("/api/settings", {"auto_method": "surcharge"})
         record["summary_30_surcharge"] = cls.call("/api/summary?days=30")
@@ -459,10 +453,8 @@ class GoldenMasterTests(unittest.TestCase):
     def test_dose_help(self):
         self.check("dose_help")
 
-    def test_read_api_and_export(self):
+    def test_read_api(self):
         self.check("v1")
-        self.check("export")
-        self.check("export_meals_csv")
 
     def test_dataset_covers_the_cases(self):
         """Guards the fixture itself: blocked, excluded, manual, sport and snack cases exist."""

@@ -1,10 +1,6 @@
-"""Read-only data export as a ZIP of CSV files for offline analysis of the factor model."""
+"""Tables of the read API (meals, window events, CGM, treatments, basal) built from stored day payloads."""
 from __future__ import annotations
 
-import csv
-import io
-import json
-import zipfile
 from datetime import date, datetime, timedelta
 from typing import Callable
 from zoneinfo import ZoneInfo
@@ -24,13 +20,13 @@ TREATMENT_COLUMNS = ["id", "at", "eventType", "carbs", "insulin", "basal_units",
 TABLE_COLUMNS = {"meals": MEAL_COLUMNS, "window_events": WINDOW_EVENT_COLUMNS, "entries": ENTRY_COLUMNS,
                  "treatments": TREATMENT_COLUMNS, "basal": BASAL_COLUMNS}
 
-README = """# Datenexport Diabetes-Tagebuch
+README = """# Lese-API Diabetes-Tagebuch
 
 Alle Zeiten in lokaler Zeit mit UTC-Versatz (ISO 8601), Dezimaltrenner Punkt. Die Faktoren
-entsprechen der App zum Exportzeitpunkt (aktuelles Nightscout-Profil für alle Tage, siehe
-profile.json).
+entsprechen der App zum Abrufzeitpunkt (aktuelles Nightscout-Profil für alle Tage, siehe
+/api/v1/profile).
 
-- meals.csv: eine Zeile je Hauptmahlzeit. factor_ie_per_ke = 10 × (delta_mgdl
+- meals: eine Zeile je Hauptmahlzeit. factor_ie_per_ke = 10 × (delta_mgdl
   + sport_effect_mgdl + insulin_effect_mgdl) / carbs_times_isf. sport_effect_mgdl ist positiv
   für eine bestätigte BZ-Senkung durch Sport. g_end_mgdl ist der BZ am Endpunkt.
   excluded = manuell ausgeklammert. blocked_reason ist gesetzt, wenn kein Faktor vorliegt.
@@ -38,13 +34,13 @@ profile.json).
   weighed = gewogen, known = Gericht bekannt oder FDDB-KI-Auswertung, unsure = keine ernsthafte
   Schätzung, leer = nicht angegeben. fat_protein: mindestens ein KH-Eintrag war als
   „fett-/eiweißreich“ markiert.
-- window_events.csv: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.
-- entries.csv: alle gespiegelten CGM-Werte in mg/dL.
-- treatments.csv: alle gespiegelten Nightscout-Behandlungen inklusive Sport (Basal aus der App
+- window_events: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.
+- entries: alle gespiegelten CGM-Werte in mg/dL.
+- treatments: alle gespiegelten Nightscout-Behandlungen inklusive Sport (Basal aus der App
   als Notiz mit basal_units).
-- basal.csv: Basal-Injektionen aus der App (lokal gespeichert, nightscout_synced = auch in
+- basal: Basal-Injektionen aus der App (lokal gespeichert, nightscout_synced = auch in
   Nightscout). Basal zählt nicht in den Mahlzeitenfaktor.
-- profile.json: Einstellungen und Nightscout-Profil (Korrekturfaktor, I:C, Zielbereich).
+- profile: Einstellungen und Nightscout-Profil (Korrekturfaktor, I:C, Zielbereich).
 """
 
 
@@ -55,18 +51,9 @@ def _local(value, zone: ZoneInfo) -> str:
     return moment.astimezone(zone).isoformat(timespec="seconds")
 
 
-def _csv(columns: list[str], rows: list[dict]) -> str:
-    buffer = io.StringIO()
-    writer = csv.DictWriter(buffer, fieldnames=columns, extrasaction="ignore", lineterminator="\n")
-    writer.writeheader()
-    for row in rows:
-        writer.writerow({key: "" if row.get(key) is None else row[key] for key in columns})
-    return buffer.getvalue()
-
-
 def collect(first_day: date, last_day: date, day_payload: Callable[[str], dict],
             excluded: set[str], settings: dict) -> dict[str, list[dict]]:
-    """Rows of every export table for first_day to last_day (inclusive), shared by ZIP and JSON API."""
+    """Rows of every read API table for first_day to last_day (inclusive)."""
     zone = ZoneInfo(settings["timezone"])
     meals, window_events, entries, treatments, basal = [], [], [], [], []
     day = first_day
@@ -114,24 +101,7 @@ def collect(first_day: date, last_day: date, day_payload: Callable[[str], dict],
 
 
 def rows_for(table: str, rows: list[dict]) -> list[dict]:
-    """Rows restricted to the documented columns, as in the CSV files."""
+    """Rows restricted to the documented columns."""
     columns = TABLE_COLUMNS[table]
     return [{key: row.get(key) for key in columns} for row in rows]
 
-
-def build_zip(first_day: date, last_day: date, day_payload: Callable[[str], dict],
-              excluded: set[str], settings: dict) -> bytes:
-    """Collect every day from first_day to last_day (inclusive) into a ZIP of CSV files."""
-    tables = collect(first_day, last_day, day_payload, excluded, settings)
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr("LIESMICH.md", README)
-        archive.writestr("meals.csv", _csv(MEAL_COLUMNS, tables["meals"]))
-        archive.writestr("window_events.csv", _csv(WINDOW_EVENT_COLUMNS, tables["window_events"]))
-        archive.writestr("entries.csv", _csv(ENTRY_COLUMNS, tables["entries"]))
-        archive.writestr("treatments.csv", _csv(TREATMENT_COLUMNS, tables["treatments"]))
-        archive.writestr("basal.csv", _csv(BASAL_COLUMNS, tables["basal"]))
-        archive.writestr("profile.json", json.dumps(
-            {"exported_days": [first_day.isoformat(), last_day.isoformat()], "settings": settings},
-            ensure_ascii=False, indent=2, default=str))
-    return buffer.getvalue()
