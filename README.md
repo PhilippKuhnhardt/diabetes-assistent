@@ -54,7 +54,7 @@ Die Spritzhilfe verwendet I:C und KF aus dem **aktuellen Nightscout-Profil**. De
 
 **Basal** wird in der App selbst gespeichert (SQLite, Tabelle `basal_doses`) und zusätzlich als Nightscout-Notiz (`eventType: Note`, `basal_units`, Marker `[DA2:basal]`) ohne `insulin`-Feld gespiegelt, damit weder Nightscouts IOB noch der Mahlzeitenfaktor es als schnelles Insulin zählt. Bis zum Ende des Frühstücks steht im Formular ein Chip „+ Basal 17 IE“ (Wert in den Einstellungen unter „Basal zum Frühstück“, 0 schaltet ihn aus), solange am Tag noch kein Basal erfasst ist; er ist vorausgewählt, und der Frühstückseintrag oder ein angetippter Vorschlag speichert das Basal mit. „Rückgängig“ entfernt beides. Ohne Frühstück trägt der Modus „Basal“ einen frei wählbaren Wert ein. Ist Nightscout nicht erreichbar, bleibt das Basal lokal und wird beim nächsten Laden des Tages nachgetragen; ein in Nightscout gelöschtes, bereits übertragenes Basal verschwindet auch lokal, und Basal-Notizen aus Nightscout ohne lokalen Eintrag werden übernommen. Gelöscht wird in der Tagesliste.
 
-Das Eintragsformular folgt dem Ablauf Zeit (mit Basal-Chip), dann drei Karten: **Essen**, **Einflüsse** (Sport-Schalter, der beim Einschalten die BZ-Wirkung zum Anpassen öffnet, und Tagesart; nur sichtbar, wenn etwas zutrifft) und Dosis (Empfehlung und eigene IE); die Notiz liegt unauffällig darunter. Unter den Kohlenhydraten liegen in einer Zeile ein Schieberegler für die KH-Sicherheit in drei Stufen (**KH unsicher** = keine ernsthafte Schätzung, **KH halbwegs** = Gericht bekannt oder FDDB-KI-Auswertung, Standard, **KH gewogen**) und der Chip **Fettreich** (fett-/eiweißreich). Sie stehen als `[DAQ:unsure]`, `[DAQ:known]`, `[DAQ:weighed]` bzw. `[DAQ:fat]` in der Nightscout-Notiz; ältere `[DAQ:unsure]`-Einträge bleiben „KH unsicher“, und ein bearbeiteter Eintrag ohne Stufe bleibt ohne, solange der Regler nicht bewegt wird. Eine Mahlzeit zeigt die unsicherste Stufe ihrer markierten KH-Einträge. Die Markierungen sind im Bearbeiten-Dialog änderbar, erscheinen an der Mahlzeit im Tagebuch und im Datenexport. An der Faktorberechnung ändern sie nichts; sie sammeln Daten für die Weiterentwicklung der Formel.
+Das Eintragsformular folgt dem Ablauf Zeit (mit Basal-Chip), dann drei Karten: **Essen**, **Einflüsse** (Sport-Schalter, der beim Einschalten die BZ-Wirkung zum Anpassen öffnet, und Tagesart; nur sichtbar, wenn etwas zutrifft) und Dosis (Empfehlung und eigene IE); die Notiz liegt unauffällig darunter. Unter den Kohlenhydraten liegen in einer Zeile ein Schieberegler für die KH-Sicherheit in drei Stufen (**KH unsicher** = keine ernsthafte Schätzung, **KH halbwegs** = Gericht bekannt oder FDDB-KI-Auswertung, Standard, **KH gewogen**) und der Chip **Fettreich** (fett-/eiweißreich). Sie stehen als `[DAQ:unsure]`, `[DAQ:known]`, `[DAQ:weighed]` bzw. `[DAQ:fat]` in der Nightscout-Notiz; ältere `[DAQ:unsure]`-Einträge bleiben „KH unsicher“, und ein bearbeiteter Eintrag ohne Stufe bleibt ohne, solange der Regler nicht bewegt wird. Eine Mahlzeit zeigt die unsicherste Stufe ihrer markierten KH-Einträge. Die Markierungen sind im Bearbeiten-Dialog änderbar und erscheinen an der Mahlzeit im Tagebuch und in der Lese-API. An der Faktorberechnung ändern sie nichts; sie sammeln Daten für die Weiterentwicklung der Formel.
 
 ## Analyse
 
@@ -70,10 +70,6 @@ Die Analyse zeigt Einzelwerte, Mittelwert, Median, beobachteten Bereich, bei min
 
 Die Berechnung setzt vollständige KH-Wirkung bis zum Endpunkt, vollständige rechnerische Wirkung auch später IE, keinen weiteren Hintergrundtrend und den bestätigten Sporteffekt voraus. Diese Annahmen sind keine Beschreibung des tatsächlichen Wirkverlaufs.
 
-## Datenexport
-
-In **Einstellungen → Datenexport** lädt **Daten exportieren** eine ZIP mit allen lokal gespeicherten Tagen (`/api/export`, optional `?days=N`). Sie enthält `meals.csv` (eine Zeile je Hauptmahlzeit mit Fenster, BZ Start/Ende, KH, IE, KH × KF, Sport, Ausklammerung und Faktor), `window_events.csv` (alle KH und IE, die ins Fenster einer Mahlzeit zählen), `entries.csv` (CGM), `treatments.csv` (alle Behandlungen), `basal.csv` (Basal aus der App), `profile.json` (Einstellungen und Nightscout-Profil) und eine `LIESMICH.md` mit den Spalten. Der Export liest nur SQLite, fragt Nightscout nicht ab und erfordert die normale App-Anmeldung. Er dient zur Weiterentwicklung der Vorhersageformel; die Datei gehört nicht ins Repository.
-
 ## Lese-API für Skripte und Agenten
 
 Ist die Umgebungsvariable `API_READ_KEY` gesetzt (mindestens 32 Zeichen, z. B. `openssl rand -hex 32`), liefert `GET /api/v1/…` mit `Authorization: Bearer <API_READ_KEY>` die Daten als JSON. Der Schlüssel öffnet nur diese Lese-Endpunkte, keine anderen Seiten und keine Änderungen. Ohne die Variable funktioniert `/api/v1` nur mit der normalen Browser-Anmeldung. Wechseln = Variable im Deployment ändern und neu starten.
@@ -83,12 +79,12 @@ curl -H "Authorization: Bearer $DIABETES_API_KEY" "https://deine-domain/api/v1/m
 ```
 
 - `GET /api/v1`: Übersicht mit Endpunkten, Spalten, Zeitzone und erstem gespeicherten Tag.
-- `GET /api/v1/meals`, `/window-events`, `/entries`, `/treatments`, `/basal`: dieselben Zeilen wie die CSV-Dateien des Exports als JSON (`{"from", "to", "timezone", "rows"}`), Zahlen als Dezimal-Strings.
+- `GET /api/v1/meals`, `/window-events`, `/entries`, `/treatments`, `/basal`: je eine Tabelle als JSON (`{"from", "to", "timezone", "rows"}`): Mahlzeiten mit Fenster, BZ Start/Ende, KH, IE, KH × KF, Sport, Ausklammerung und Faktor; alle KH und IE im Fenster einer Mahlzeit; CGM; alle Behandlungen; Basal aus der App, Zahlen als Dezimal-Strings.
 - `GET /api/v1/data`: alle Tabellen auf einmal unter `tables`.
 - `GET /api/v1/profile`: Einstellungen und aktuelles Nightscout-Profil.
 - Zeitraum: `?days=N` (Standard 30) oder `?from=JJJJ-MM-TT&to=JJJJ-MM-TT` (lokale Tage, inklusive, höchstens 3650 Tage).
 
-Die API liest wie der Export nur SQLite und fragt Nightscout nicht ab. Schreibzugriff für einen Agenten hat eine eigene Variable, siehe unten.
+Die API liest nur SQLite und fragt Nightscout nicht ab; sie dient auch zur Weiterentwicklung der Vorhersageformel. Abgerufene Daten sind persönlich und gehören nicht ins Repository. Schreibzugriff für einen Agenten hat eine eigene Variable, siehe unten.
 
 ## MCP-Anbindung für einen Agenten
 
@@ -105,11 +101,11 @@ python3 -m unittest discover -s tests -v
 node --check web/app.js
 ```
 
-Berechnete Tage liegen in SQLite (`day_results`) zusammen mit einem Fingerabdruck aller gelesenen Daten (Spiegel, Basal, Einstellungen, Profil, eigene Markierungen) und des Programmcodes; ändert sich davon etwas, wird der Tag beim nächsten Lesen neu berechnet. Tagebuch, Analyse, Export und Lese-API lesen dieselben gespeicherten Ergebnisse. Die Analyse-Seite (Faktorgruppen, berechneter Faktor, Rückblick-Matrix, Stressaufschlag) liegt je Zeitraum in `summary_results` und gilt, solange heute derselbe Tag ist, die Ausklammerungen gleich sind und keiner der gelesenen Tage sich geändert hat.
+Berechnete Tage liegen in SQLite (`day_results`) zusammen mit einem Fingerabdruck aller gelesenen Daten (Spiegel, Basal, Einstellungen, Profil, eigene Markierungen) und des Programmcodes; ändert sich davon etwas, wird der Tag beim nächsten Lesen neu berechnet. Tagebuch, Analyse und Lese-API lesen dieselben gespeicherten Ergebnisse. Die Analyse-Seite (Faktorgruppen, berechneter Faktor, Rückblick-Matrix, Stressaufschlag) liegt je Zeitraum in `summary_results` und gilt, solange heute derselbe Tag ist, die Ausklammerungen gleich sind und keiner der gelesenen Tage sich geändert hat.
 
 Die Integrationstests verwenden einen lokalen Fake-Nightscout-Server und schreiben nichts in das persönliche Nightscout.
 
-`tests/test_golden.py` lädt 40 Tage synthetische Testdaten bei eingefrorener Uhr und vergleicht Tagebuch, Analyse, Empfehlung, Export und Lese-API mit den Referenzständen in `tests/golden/`. Umbauten müssen sie unverändert bestehen; eine gewollte Änderung erzeugt sie mit `GOLDEN_UPDATE=1 python3 -m unittest tests.test_golden` neu, und der Diff gehört in den Review. Für echte Daten vergleicht `scripts/compare_api.py` die Lese-API vor und nach einem Deployment (`snapshot` vorher und nachher, dann `compare`); die Snapshots enthalten persönliche Daten und gehören nicht ins Repository.
+`tests/test_golden.py` lädt 40 Tage synthetische Testdaten bei eingefrorener Uhr und vergleicht Tagebuch, Analyse, Empfehlung und Lese-API mit den Referenzständen in `tests/golden/`. Umbauten müssen sie unverändert bestehen; eine gewollte Änderung erzeugt sie mit `GOLDEN_UPDATE=1 python3 -m unittest tests.test_golden` neu, und der Diff gehört in den Review. Für echte Daten vergleicht `scripts/compare_api.py` die Lese-API vor und nach einem Deployment (`snapshot` vorher und nachher, dann `compare`); die Snapshots enthalten persönliche Daten und gehören nicht ins Repository.
 
 ## Benachrichtigungen
 

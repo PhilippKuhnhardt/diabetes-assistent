@@ -1,13 +1,10 @@
 import contextlib
-import csv
-import io
 import json
 import os
 import tempfile
 import threading
 import time
 import unittest
-import zipfile
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -676,10 +673,8 @@ class IntegrationTests(unittest.TestCase):
         self.assertNotIn("[DAQ:known]", FakeNightscout.treatments[0]["notes"])
         meal = self.request("/api/day?date=2026-09-23")["meals"][0]
         self.assertEqual(meal["quality"], {"carbs_certainty": None, "fat_protein": True})
-        with urllib.request.urlopen(self.base + "/api/export") as response:
-            archive = zipfile.ZipFile(io.BytesIO(response.read()))
-        row = next(csv.DictReader(io.StringIO(archive.read("meals.csv").decode())))
-        self.assertEqual((row["carbs_certainty"], row["fat_protein"]), ("", "True"))
+        row = self.request("/api/v1/meals?from=2026-09-23&to=2026-09-23")["rows"][0]
+        self.assertEqual((row["carbs_certainty"], row["fat_protein"]), (None, True))
 
     def test_meal_takes_least_certain_carb_level_and_old_unsure_marks_still_count(self):
         self.request("/api/treatment", method="POST", body={
@@ -697,38 +692,7 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/treatment", method="POST", body={
                 "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4", "carbs_certainty": "maybe"})
 
-    def test_export_zip_contains_meals_glucose_treatments_and_profile(self):
-        self.request("/api/treatment", method="POST", body={
-            "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",
-        })
-        meal = self.request("/api/day?date=2026-09-23")["meals"][0]
-        self.request("/api/analysis/exclusion", method="POST", body={"meal_id": meal["id"], "day": "2026-09-23", "excluded": True})
-        with urllib.request.urlopen(self.base + "/api/export") as response:
-            self.assertEqual(response.headers["Content-Type"], "application/zip")
-            archive = zipfile.ZipFile(io.BytesIO(response.read()))
-        self.assertEqual(sorted(archive.namelist()), ["LIESMICH.md", "basal.csv", "entries.csv", "meals.csv",
-                                                      "profile.json", "treatments.csv", "window_events.csv"])
-        meals = list(csv.DictReader(io.StringIO(archive.read("meals.csv").decode())))
-        self.assertEqual(len(meals), 1)
-        self.assertEqual((meals[0]["day"], meals[0]["meal_id"], meals[0]["excluded"]),
-                         ("2026-09-23", meal["id"], "True"))
-        self.assertEqual(meals[0]["factor_ie_per_ke"], meal["calculation"]["factor_units_per_ke"] or "")
-        self.assertTrue(meals[0]["at"].endswith("+02:00"))
-        events = list(csv.DictReader(io.StringIO(archive.read("window_events.csv").decode())))
-        self.assertIn(("insulin", Decimal(4)), [(item["kind"], Decimal(item["units"] or 0)) for item in events])
-        entries = list(csv.DictReader(io.StringIO(archive.read("entries.csv").decode())))
-        self.assertIn("100", [item["sgv"] for item in entries])
-        treatments = list(csv.DictReader(io.StringIO(archive.read("treatments.csv").decode())))
-        self.assertEqual([item["eventType"] for item in treatments], ["Meal Bolus"])
-        profile = json.loads(archive.read("profile.json"))
-        self.assertEqual(profile["exported_days"][0], "2026-09-23")
-        self.assertTrue(profile["settings"]["isf_schedule"])
-        with self.assertRaises(urllib.error.HTTPError) as error:
-            self.request("/api/export?days=0")
-        self.assertEqual(error.exception.code, 400)
-        error.exception.close()
-
-    def test_read_api_needs_the_key_and_returns_export_rows_as_json(self):
+    def test_read_api_needs_the_key_and_returns_table_rows_as_json(self):
         self.request("/api/treatment", method="POST", body={"kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4"})
         meal = self.request("/api/day?date=2026-09-23")["meals"][0]
         key = "k" * 40
@@ -810,10 +774,8 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual([(item["id"], item["basal_units"]) for item in basal_rows], [(dose_id, "17")])
         self.assertEqual(len([item for item in day["timeline"] if item["eventType"] == "Note"]), 0)
         self.assertEqual(day["other_events"], [])
-        with urllib.request.urlopen(self.base + "/api/export") as response:
-            archive = zipfile.ZipFile(io.BytesIO(response.read()))
-        rows = list(csv.DictReader(io.StringIO(archive.read("basal.csv").decode())))
-        self.assertEqual([(row["id"], row["units"], row["nightscout_synced"]) for row in rows], [(dose_id, "17", "True")])
+        rows = self.request("/api/v1/basal?from=2026-09-23&to=2026-09-23")["rows"]
+        self.assertEqual([(row["id"], row["units"], row["nightscout_synced"]) for row in rows], [(dose_id, "17", True)])
         self.request("/api/basal/delete", method="POST", body={"id": dose_id})
         self.assertEqual([item["eventType"] for item in FakeNightscout.treatments], ["Meal Bolus"])
         self.assertEqual(self.request("/api/day?date=2026-09-23")["basal"], [])

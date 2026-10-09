@@ -271,17 +271,6 @@ class Handler(BaseHTTPRequestHandler):
             if path in GET_ROUTES:
                 self._response(200, GET_ROUTES[path](params))
                 return
-            if path == "/api/export":
-                filename, data = read_api.export_zip(params)
-                self.send_response(200)
-                self.send_header("Content-Type", "application/zip")
-                self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
-                self.send_header("Content-Length", str(len(data)))
-                self.send_header("Cache-Control", "no-store")
-                self.send_header("X-Content-Type-Options", "nosniff")
-                self.end_headers()
-                self.wfile.write(data)
-                return
             target = WEB / ("index.html" if path == "/" else path.lstrip("/"))
             if not target.is_file() or not target.resolve().is_relative_to(WEB):
                 self._response(404, {"error": "Nicht gefunden"})

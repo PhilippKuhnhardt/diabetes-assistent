@@ -1,11 +1,11 @@
-"""Read-only views of the local mirror: read API and ZIP export."""
+"""Read-only view of the local mirror for the read API."""
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 from urllib.parse import parse_qs
 from zoneinfo import ZoneInfo
 
-from app import export
+from app import tables as api_tables
 from app.common import parse_instant
 from app.services import day_view
 from app.store import config, marks, mirror
@@ -40,7 +40,7 @@ def api_day_range(params: dict, today: date) -> tuple[date, date]:
 
 
 def api_read(path: str, query: str) -> dict:
-    """Read-only JSON view of the local SQLite mirror (same rows as the ZIP export); never asks Nightscout."""
+    """Read-only JSON view of the local SQLite mirror; never asks Nightscout."""
     _, settings = config.get_settings()
     zone = ZoneInfo(settings["timezone"])
     today = datetime.now(zone).date()
@@ -53,11 +53,11 @@ def api_read(path: str, query: str) -> dict:
             "query": "?days=N (Standard 30) oder ?from=JJJJ-MM-TT&to=JJJJ-MM-TT, lokale Tage inklusive",
             "endpoints": {
                 "/api/v1/data": "alle Tabellen auf einmal",
-                **{f"/api/v1/{name}": f"Spalten: {', '.join(export.TABLE_COLUMNS[table])}"
+                **{f"/api/v1/{name}": f"Spalten: {', '.join(api_tables.TABLE_COLUMNS[table])}"
                    for name, table in API_TABLES.items()},
                 "/api/v1/profile": "Einstellungen und aktuelles Nightscout-Profil",
             },
-            "notes": export.README,
+            "notes": api_tables.README,
         }
     if path == "/api/v1/profile":
         return {"timezone": settings["timezone"], "settings": settings}
@@ -66,27 +66,11 @@ def api_read(path: str, query: str) -> dict:
         raise ApiNotFound(path)
     first, last = api_day_range(parse_qs(query), today)
     loaded_first = max(first, first_cached) if first_cached else last + timedelta(days=1)
-    tables = export.collect(loaded_first, last, lambda day: day_view.day_payload(day, refresh=False),
+    tables = api_tables.collect(loaded_first, last, lambda day: day_view.day_payload(day, refresh=False),
                             marks.analysis_exclusions(), settings)
-    tables = {table: export.rows_for(table, rows) for table, rows in tables.items()}
+    tables = {table: api_tables.rows_for(table, rows) for table, rows in tables.items()}
     result = {"from": first.isoformat(), "to": last.isoformat(), "timezone": settings["timezone"]}
     if name == "data":
         return {**result, "tables": tables}
     return {**result, "rows": tables[API_TABLES[name]]}
 
-
-def export_zip(params: dict) -> tuple[str, bytes]:
-    """ZIP of all locally stored days (or the last `days`); read-only snapshot, no Nightscout requests."""
-    _, settings = config.get_settings()
-    zone = ZoneInfo(settings["timezone"])
-    today = datetime.now(zone).date()
-    first_at = mirror.first_cached_at()
-    first_day = min(today, parse_instant(first_at).astimezone(zone).date()) if first_at else today
-    if "days" in params:
-        days = int(params["days"][0])
-        if not 1 <= days <= 3650:
-            raise ValueError("Ungültiger Zeitraum")
-        first_day = max(first_day, today - timedelta(days=days - 1))
-    data = export.build_zip(first_day, today, lambda day: day_view.day_payload(day, refresh=False),
-                            marks.analysis_exclusions(), settings)
-    return f"diabetes-export-{today.isoformat()}.zip", data
