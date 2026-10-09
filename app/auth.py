@@ -7,7 +7,7 @@ import os
 from http.cookies import SimpleCookie
 
 COOKIE_NAME = "diary_session"
-# A later write key would get its own variable, never reuse the read key.
+# The MCP key (write access for an agent) has its own variable and never reuses the read key.
 MIN_API_KEY_LENGTH = 32
 MAX_AGE = 365 * 24 * 3600
 
@@ -48,4 +48,17 @@ def api_read_authorized(authorization_header: str) -> bool:
     """True for "Authorization: Bearer <API_READ_KEY>"."""
     scheme, _, value = authorization_header.strip().partition(" ")
     expected = read_api_key()
+    return bool(expected) and scheme.lower() == "bearer" and hmac.compare_digest(value.strip().encode(), expected.encode())
+
+
+def mcp_key() -> str:
+    """Key for the agent's MCP endpoint (`MCP_API_KEY`), separate from the read key because it can write."""
+    key = os.environ.get("MCP_API_KEY", "")
+    return key if len(key) >= MIN_API_KEY_LENGTH else ""
+
+
+def mcp_authorized(authorization_header: str) -> bool:
+    """True for "Authorization: Bearer <MCP_API_KEY>"."""
+    scheme, _, value = authorization_header.strip().partition(" ")
+    expected = mcp_key()
     return bool(expected) and scheme.lower() == "bearer" and hmac.compare_digest(value.strip().encode(), expected.encode())

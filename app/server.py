@@ -10,7 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from app import auth
+from app import auth, mcp, oauth
 from app.common import json_safe
 from app.ingestion import nightscout
 from app.services import annotations, background, basal, day_view, diary, dose_help, effects, entry, read_api, settings, summary, sync, window_editor
@@ -83,9 +83,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.end_headers()
 
-    def _response(self, status: int, payload: object):
+    def _response(self, status: int, payload: object, headers: dict | None = None):
         body = json.dumps(json_safe(payload), ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         self.send_response(status)
+        for name, value in (headers or {}).items():
+            self.send_header(name, value)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
@@ -113,6 +115,105 @@ class Handler(BaseHTTPRequestHandler):
         self._response(401, {"error": "Ungültiger API-Schlüssel"})
         return False
 
+    def _mcp(self) -> None:
+        """POST /mcp: one JSON-RPC message for the agent, authorized by MCP_API_KEY or an OAuth token."""
+        origin = self.headers.get("Origin")
+        if origin and urlparse(origin).netloc != self.headers.get("Host"):
+            self._response(403, {"error": "Ungültiger Ursprung"})
+            return
+        header = self.headers.get("Authorization", "")
+        if not (auth.mcp_authorized(header) or oauth.access_authorized(header)):
+            metadata = oauth.base_url(self.headers) + "/.well-known/oauth-protected-resource"
+            self._response(401, {"error": "Ungültiger MCP-Schlüssel"},
+                           {"WWW-Authenticate": f'Bearer resource_metadata="{metadata}"'})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if not 0 < length <= MAX_BODY:
+                raise ValueError
+            message = json.loads(self.rfile.read(length))
+        except (ValueError, UnicodeDecodeError):
+            self._response(400, {"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Ungültiges JSON"}})
+            return
+        answer = mcp.handle(message)
+        if answer is None:
+            self.send_response(202)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self._response(200, answer)
+
+    def _html(self, status: int, page: str) -> None:
+        data = page.encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", "default-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'")
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _form(self) -> dict:
+        length = int(self.headers.get("Content-Length", "0"))
+        if not 0 < length <= 8192:
+            raise ValueError("Ungültige Anfragegröße")
+        return parse_qs(self.rfile.read(length).decode("utf-8"))
+
+    def _oauth_get(self, path: str) -> bool:
+        """OAuth discovery and the connect page; False when the path is not OAuth's."""
+        if path.startswith("/.well-known/oauth-protected-resource") or path == "/.well-known/oauth-authorization-server":
+            if not oauth.enabled():
+                self._response(404, {"error": "Nicht gefunden"})
+            elif path == "/.well-known/oauth-authorization-server":
+                self._response(200, oauth.authorization_server(oauth.base_url(self.headers)))
+            else:
+                self._response(200, oauth.protected_resource(oauth.base_url(self.headers)))
+            return True
+        if path == "/oauth/authorize":
+            try:
+                request = oauth.authorize_request(parse_qs(urlparse(self.path).query))
+            except ValueError as error:
+                self._response(400, {"error": str(error)})
+                return True
+            self._html(200, oauth.authorize_page(request))
+            return True
+        return False
+
+    def _oauth_post(self, path: str) -> bool:
+        if path == "/oauth/register":
+            try:
+                if not oauth.enabled():
+                    raise ValueError("MCP ist nicht eingerichtet")
+                self._response(201, oauth.register(self._body()))
+            except (ValueError, json.JSONDecodeError) as error:
+                self._response(400, {"error": "invalid_client_metadata", "error_description": str(error)})
+            return True
+        if path == "/oauth/token":
+            try:
+                self._response(200, oauth.token(self._form()))
+            except (ValueError, UnicodeDecodeError) as error:
+                self._response(400, {"error": str(error)})
+            return True
+        if path == "/oauth/authorize":
+            origin = self.headers.get("Origin")
+            if origin and origin != "null" and urlparse(origin).netloc != self.headers.get("Host"):
+                self._response(403, {"error": "Ungültiger Ursprung"})
+                return True
+            try:
+                form = self._form()
+                request = oauth.authorize_request(form)
+            except (ValueError, UnicodeDecodeError) as error:
+                self._response(400, {"error": str(error)})
+                return True
+            location = oauth.authorize_confirm(request, form.get("password", [""])[0])
+            if location is None:
+                self._html(200, oauth.authorize_page(request, error=True))
+            else:
+                self._redirect(location)
+            return True
+        return False
+
     def _body(self) -> dict:
         if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
             raise ValueError("JSON-Anfrage erwartet")
@@ -126,6 +227,15 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+        if path == "/mcp":
+            # No server-initiated stream: the agent only POSTs.
+            self.send_response(405)
+            self.send_header("Allow", "POST")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        if self._oauth_get(path):
+            return
         if path == "/health":
             self._response(200, {"ok": True})
             return
@@ -212,6 +322,11 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self._redirect("/login?error=1")
             return
+        if path == "/mcp":
+            self._mcp()
+            return
+        if self._oauth_post(path):
+            return
         if path == "/logout":
             secure = self.headers.get("X-Forwarded-Proto", "") == "https"
             self._redirect("/login", auth.cookie_header(secure=secure, clear=True))
@@ -244,6 +359,8 @@ def main():
     port = int(os.environ.get("APP_PORT", "8765"))
     if os.environ.get("API_READ_KEY") and not auth.read_api_key():
         print(f"API_READ_KEY ist kürzer als {auth.MIN_API_KEY_LENGTH} Zeichen; Lese-API per Schlüssel bleibt aus", flush=True)
+    if os.environ.get("MCP_API_KEY") and not auth.mcp_key():
+        print(f"MCP_API_KEY ist kürzer als {auth.MIN_API_KEY_LENGTH} Zeichen; MCP-Zugang bleibt aus", flush=True)
     if background.start():
         print(f"Hintergrund-Sync alle {background.interval_minutes()} Minuten", flush=True)
     print(f"Diabetes Analysis listening on {host}:{port}", flush=True)
