@@ -13,6 +13,9 @@ Compose liest alle Zugangsdaten direkt aus der Umgebung des Deployment-Prozesses
 | `APP_PASSWORD` | Eigenes Passwort für die App-Anmeldung |
 | `API_READ_KEY` | Optional: Schlüssel für die Lese-API (mindestens 32 Zeichen) |
 | `MCP_API_KEY` | Optional: schaltet die MCP-Anbindung für einen Agenten ein (mindestens 32 Zeichen, siehe `docs/mcp.md`) |
+| `PUSHOVER_APP_TOKEN`, `PUSHOVER_USER_KEY` | Optional: Erinnerungen per Pushover (siehe „Benachrichtigungen“) |
+| `APP_PUBLIC_URL` | Optional: HTTPS-Adresse der App; Pushover-Meldungen verlinken dorthin |
+| `APP_HEARTBEAT_URL` | Optional: HTTPS-Ping-Adresse eines externen Wächters (z. B. Healthchecks.io) |
 | `NIGHTSCOUT_AUTH_MODE` | `secret` (Standard) oder `token` |
 
 Bei `secret` sendet die App den SHA-1-Hash der rohen `API_SECRET` im `api-secret`-Header. Bei `token` wird der rohe Zugangstoken verwendet. Die drei Zugangswerte müssen im Deployment als Umgebungsvariablen gesetzt werden; fehlende Werte stoppen Compose mit einer Fehlermeldung. Gib sie in der Secret-/Environment-Konfiguration deines Hosters an oder exportiere sie in der Shell.
@@ -33,7 +36,7 @@ Die SQLite-Datei bleibt im gemounteten Verzeichnis `APP_DATA_DIR` als `app.sqlit
 
 Für Coolify die Git-Quelle als **Dockerfile-Anwendung** anlegen (Build-Kontext im Projektverzeichnis, Dockerfile `Dockerfile`). `compose.yaml` bleibt für den lokalen Start. In Coolify den internen Port **8765** als „Ports Exposes“ und die Domain beispielsweise als `https://tagebuch.example.de:8765` konfigurieren. Der Port im Domain-Feld ist das interne Proxy-Ziel; im Browser wird die Domain über HTTPS-Port 443 aufgerufen. Keinen Host-Port veröffentlichen. Das Docker-Image setzt `APP_HOST=0.0.0.0` und `APP_DB=/data/app.sqlite3` bereits selbst.
 
-Unter **Environment Variables** `NIGHTSCOUT_URL`, `NIGHTSCOUT_CREDENTIAL` und ein starkes `APP_PASSWORD` als Laufzeitvariablen setzen. Optional: `NIGHTSCOUT_AUTH_MODE=token` statt `secret`, `APP_TIMEZONE=Europe/Berlin`, `API_READ_KEY` für die Lese-API, `MCP_API_KEY` für die Agenten-Anbindung und `APP_SYNC_MINUTES` für den Hintergrund-Sync. Zugangsdaten gehören nicht ins Repository oder in Build-Argumente.
+Unter **Environment Variables** `NIGHTSCOUT_URL`, `NIGHTSCOUT_CREDENTIAL` und ein starkes `APP_PASSWORD` als Laufzeitvariablen setzen. Optional: `NIGHTSCOUT_AUTH_MODE=token` statt `secret`, `APP_TIMEZONE=Europe/Berlin`, `API_READ_KEY` für die Lese-API, `MCP_API_KEY` für die Agenten-Anbindung, `APP_SYNC_MINUTES` für den Hintergrund-Sync sowie `PUSHOVER_APP_TOKEN`, `PUSHOVER_USER_KEY`, `APP_PUBLIC_URL` und `APP_HEARTBEAT_URL` für Benachrichtigungen. Zugangsdaten gehören nicht ins Repository oder in Build-Argumente.
 
 Unter **Configuration → Persistent Storage** einen **Volume Mount** mit einem Namen wie `app-data`, leerem „Source Path“ und „Destination Path“ `/data` anlegen. So bleiben `app.sqlite3` und die zu SQLite-WAL gehörenden Dateien bei einem Redeploy zusammen erhalten. Nur eine laufende App-Instanz soll dieses Verzeichnis beschreiben. Nach dem ersten Deploy im Container prüfen, dass `/data/app.sqlite3` existiert und beschreibbar ist; nach einem weiteren Deploy muss die lokale Einstellungshistorie noch vorhanden sein.
 
@@ -107,3 +110,12 @@ Berechnete Tage liegen in SQLite (`day_results`) zusammen mit einem Fingerabdruc
 Die Integrationstests verwenden einen lokalen Fake-Nightscout-Server und schreiben nichts in das persönliche Nightscout.
 
 `tests/test_golden.py` lädt 40 Tage synthetische Testdaten bei eingefrorener Uhr und vergleicht Tagebuch, Analyse, Empfehlung, Export und Lese-API mit den Referenzständen in `tests/golden/`. Umbauten müssen sie unverändert bestehen; eine gewollte Änderung erzeugt sie mit `GOLDEN_UPDATE=1 python3 -m unittest tests.test_golden` neu, und der Diff gehört in den Review. Für echte Daten vergleicht `scripts/compare_api.py` die Lese-API vor und nach einem Deployment (`snapshot` vorher und nachher, dann `compare`); die Snapshots enthalten persönliche Daten und gehören nicht ins Repository.
+
+## Benachrichtigungen
+
+Mit `PUSHOVER_APP_TOKEN` und `PUSHOVER_USER_KEY` schickt der Hintergrund-Sync Erinnerungen per [Pushover](https://pushover.net) aufs Handy, jede nur einmal und nur nach erfolgreichem Abgleich mit Nightscout:
+
+- **Basal vergessen:** ab Frühstücksende ist heute noch kein Basal erfasst.
+- **2. Split-Teil fällig:** der geplante 2. Teil ist fällig und nach der Mahlzeit wurde noch kein Insulin erfasst.
+
+Beide lassen sich unter **Einstellungen → Benachrichtigungen** einzeln abschalten; dort gibt es auch eine Testmeldung und die letzten gesendeten Meldungen. Meldungen gehen mit hoher Priorität (Pushover-Ruhezeiten werden übergangen); ob sie auf dem iPhone als kritischer Alarm auch im Stumm-Modus klingeln, stellt man in der Pushover-App ein. Ist `APP_HEARTBEAT_URL` gesetzt, ruft die App diese Adresse nach jeder fehlerfreien Runde auf; ein externer Wächter wie Healthchecks.io meldet dann, wenn die App oder der Abgleich ausfällt.

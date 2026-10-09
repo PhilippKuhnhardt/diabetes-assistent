@@ -12,8 +12,8 @@ import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from app.ingestion import nightscout, sync
-from app.services import day_view, summary
+from app.ingestion import nightscout, pushover, sync
+from app.services import day_view, notifications, summary
 from app.store import config
 
 PERIODS = (14, 30, 7, 3, 1)  # the analysis page's default first
@@ -46,7 +46,18 @@ def run_once() -> dict:
         day_view.day_payload((today - timedelta(days=offset)).isoformat(), refresh=False)
     for days in PERIODS:
         summary.summary({"days": [str(days)]})
-    return {"errors": errors}
+    result = {"errors": errors}
+    # Reminders only read a freshly mirrored today, so an injected dose cannot be reminded again.
+    if today.isoformat() not in errors:
+        try:
+            sent = notifications.check()
+            if sent:
+                result["notified"] = [item["kind"] for item in sent]
+        except pushover.PushoverError as error:
+            result["notify_error"] = str(error)
+    if not errors and "notify_error" not in result:
+        pushover.heartbeat()
+    return result
 
 
 def _loop(minutes: int) -> None:
@@ -57,6 +68,8 @@ def _loop(minutes: int) -> None:
             if result.get("errors"):
                 # Only the days: error texts may carry Nightscout details.
                 print("Hintergrund-Sync mit Fehlern für " + ", ".join(sorted(result["errors"])), flush=True)
+            if result.get("notify_error"):
+                print("Benachrichtigung fehlgeschlagen: " + result["notify_error"], flush=True)
         except Exception as error:  # keep the job alive; the next round retries
             print(f"Hintergrund-Sync fehlgeschlagen: {type(error).__name__}", flush=True)
         time.sleep(max(1.0, minutes * 60 - (time.monotonic() - started)))

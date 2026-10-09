@@ -215,6 +215,16 @@
             <p id="vacation-status" class="hint"></p>
           </section>
           <section class="panel">
+            <h2>Benachrichtigungen</h2>
+            <p id="notify-status" class="hint"></p>
+            <label class="check-label"><input type="checkbox" class="notify-toggle" data-kind="basal"> Basal vergessen</label>
+            <p id="notify-basal-hint" class="hint"></p>
+            <label class="check-label"><input type="checkbox" class="notify-toggle" data-kind="split"> 2. Split-Teil fällig</label>
+            <p class="hint">Sobald der geplante 2. Teil fällig ist und noch kein Insulin danach erfasst wurde.</p>
+            <button type="button" id="notify-test">Testmeldung senden</button>
+            <ul id="notify-recent" class="hint"></ul>
+          </section>
+          <section class="panel">
             <h2>Datenexport</h2>
             <p class="hint">ZIP mit CSV-Dateien aller gespeicherten Tage: Mahlzeiten mit Faktor und Fenster, CGM-Werte, Behandlungen und Profil.</p>
             <a class="button" href="/api/export" download>Daten exportieren</a>
