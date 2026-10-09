@@ -80,8 +80,12 @@ input[type=time]::-webkit-date-and-time-value { text-align: left; min-height: 1.
 .entry-switch button.day-type-option { min-height: 40px; padding: 8px 10px; background: var(--canvas); border: 1px solid var(--line); border-radius: 9px; color: var(--ink); font-size: 12px; font-weight: 700; }
 .entry-switch button.day-type-option[aria-pressed="true"] { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
 .entry-day-type .hint { margin: 6px 0 0; }
-.panel > .check-label { display: flex; align-items: center; gap: 9px; font-size: 14px; }
-.panel > .check-label input { width: 18px; height: 18px; min-height: 18px; margin: 0; accent-color: var(--green); }
+.panel > .check-label, .notify-option > .check-label { display: flex; align-items: center; gap: 9px; font-size: 14px; }
+.panel > .check-label input, .notify-option > .check-label input { width: 18px; height: 18px; min-height: 18px; margin: 0; accent-color: var(--green); }
+.settings-grid .panel .notify-status { margin: 0 0 16px; }
+.notify-option { margin-bottom: 18px; }
+.notify-option > .check-label { margin-bottom: 0; }
+.settings-grid .notify-option > .hint { margin: 4px 0 0 27px; }
 
 .banner { background: var(--amber-light); color: #69410a; border: 1px solid #f3dfa9; padding: 12px 15px; border-radius: 9px; margin: 0 0 23px; font-size: 13px; }
 .meal-list { display: grid; gap: 16px; }
