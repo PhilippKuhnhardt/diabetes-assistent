@@ -80,7 +80,7 @@ class McpTests(unittest.TestCase):
             "protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "test", "version": "1"}}})
         self.assertEqual(answer["result"]["protocolVersion"], "2025-06-18")
         self.assertIn("tools", answer["result"]["capabilities"])
-        self.assertIn("preview_entry", answer["result"]["instructions"])
+        self.assertIn("KH = Kohlenhydrate", answer["result"]["instructions"])
         self.assertEqual(self.mcp({"jsonrpc": "2.0", "method": "notifications/initialized"}), (202, None))
         _, tools = self.mcp({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         names = [tool["name"] for tool in tools["result"]["tools"]]

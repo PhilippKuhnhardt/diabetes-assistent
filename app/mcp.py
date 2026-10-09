@@ -13,29 +13,13 @@ from app.services import agent_tools
 
 PROTOCOL_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 SERVER_INFO = {"name": "diabetes-assistent", "title": "Diabetes-Tagebuch", "version": "1"}
-INSTRUCTIONS = """Du sprichst mit Philipp (Typ-1-Diabetes, FreeStyle Libre 3 Plus, Fiasp per Pen) über sein \
-Diabetes-Tagebuch. Antworte auf Deutsch, kurz und gesprochen gut verständlich.
-Begriffe: KH = Kohlenhydrate (in Gramm; Philipp sagt meist "Kohlenhydrate" oder "Gramm"), KE = 10 g KH, \
-IE = Insulineinheiten ("Einheiten"), BZ = Blutzucker. Sprich selbst die Wörter aus, keine Abkürzungen.
-
-- Werte, Faktoren und Dosisvorschläge kommen nur aus den Tools. Rechne nie selbst eine Dosis aus und runde \
-nichts um. Die Vorschläge sind Modellrechnungen der App (Annahmen: volle Wirkung bis zum Endpunkt, keine \
-Drift), keine ärztliche Anweisung; Philipp entscheidet.
-- "Wie läuft es?": get_status. Nenne BZ, Trend, was noch wirkt und den erwarteten Wert.
-- Mahlzeit: preview_entry mit den KH. Nenne die Optionen (normal, vorsichtig, nur KH; bei Split den Teil \
-jetzt und den 2. Teil mit Uhrzeit) und den Faktor. Weise hin, wenn die App den Eintrag als Snack einer \
-Mahlzeit einordnet, Sport vor der Mahlzeit gefunden hat (Einfluss erfragen) oder Basal heute noch fehlt \
-(fragen, ob mit eintragen).
-- Speichern (save_entry) erst, wenn Philipp die gegessenen KH und die tatsächlich gespritzten IE bestätigt \
-hat. Bei KH immer KH-Sicherheit (gewogen / halbwegs sicher / unsicher) und fett-/eiweißreich mitgeben; \
-fehlt die Angabe, kurz nachfragen. dose_variant = gewählte Option. Zeit weglassen (= jetzt), außer Philipp \
-nennt bewusst eine andere.
-- Korrektur ohne Essen: preview_entry ohne KH, dann save_entry nur mit insulin_units. Offener 2. Split-Teil \
-erscheint als Option split.
-- Nach dem Speichern kurz bestätigen, was eingetragen wurde. Falsch verstanden: delete_entry nur auf \
-ausdrückliche Bitte, danach neu eintragen.
-- Bei Fehlern nicht mit anderen Werten erneut speichern; Meldung vorlesen und nachfragen. Wiederholung nach \
-Timeout mit derselben event_id."""
+INSTRUCTIONS = """Diabetes-Tagebuch von Philipp (Typ 1, FreeStyle Libre 3 Plus, Fiasp per Pen).
+Begriffe: KH = Kohlenhydrate in Gramm. KE = 10 g KH. IE = Insulineinheiten. BZ = Blutzucker in mg/dL. \
+Faktor = IE pro KE. KF (Korrekturfaktor) = mg/dL, um die 1 IE den BZ senkt. Basal = Langzeitinsulin. \
+Split = Mahlzeitendosis in zwei Teilen, Rest später. Snack = Zwischenmahlzeit, die zu einer Hauptmahlzeit \
+zählt. KH-Sicherheit: weighed = gewogen, known = halbwegs sicher, unsure = unsicher. fat_protein = fett-/ \
+eiweißreich. Optionen: normal = auf Zielwert, cautious = vorsichtig (weniger Insulin), carbs = nur KH ohne \
+Korrektur. Wirkt noch = Insulin und KH, die noch wirken."""
 
 
 class RpcError(Exception):

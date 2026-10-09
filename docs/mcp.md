@@ -6,7 +6,7 @@ Ziel: Philipp spricht mit einem Agenten (Claude-App, auch per Sprache, oder Clau
 
 - **Eine Rechnung.** Der MCP-Server rechnet nichts selbst. Die Tools übersetzen nur Agent-Argumente in die Aufrufe des Eintragsformulars (`entry.preview`, `entry.save`), der Basal-Eingabe und des Tagebuchs. Snack-Zuordnung, Sport, Basal-Chip, Split, Empfehlung, „Wirkt noch“ und alle Prüfungen sind dieselben wie im UI.
 - **Schreiben nur mit eigenem Schlüssel.** `MCP_API_KEY` (mindestens 32 Zeichen) ist getrennt von `API_READ_KEY`. Ohne `MCP_API_KEY` ist `/mcp` samt Anmeldung aus. Der Schlüssel öffnet nur `/mcp`, keine anderen Seiten.
-- **Bestätigt speichern.** Die Server-Anweisungen an den Agenten verlangen: Empfehlung nur aus den Tools, nie selbst rechnen, speichern erst nach Philipps ausdrücklicher Angabe der gegessenen KH und der tatsächlich gespritzten IE, Zeit = jetzt, außer Philipp nennt bewusst eine andere.
+- **Wenig Prompt.** Die Server-Anweisungen erklären nur die Begriffe (KH, KE, IE, Faktor, KF, Split, KH-Sicherheit, Optionen). Wann gespeichert wird, steht in den Tool-Beschreibungen: `save_entry` nur mit Philipps bestätigten Werten, Zeit = jetzt, außer er nennt bewusst eine andere.
 - **Kein Duplikat bei Wiederholung.** Jeder Eintrag hat eine `event_id`; wiederholt der Agent nach einem Timeout mit derselben, entsteht kein zweiter Eintrag (auch kein zweiter Basal).
 
 ## Tools
