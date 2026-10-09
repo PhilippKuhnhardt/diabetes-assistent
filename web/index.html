@@ -216,11 +216,15 @@
           </section>
           <section class="panel">
             <h2>Benachrichtigungen</h2>
-            <p id="notify-status" class="hint"></p>
-            <label class="check-label"><input type="checkbox" class="notify-toggle" data-kind="basal"> Basal vergessen</label>
-            <p id="notify-basal-hint" class="hint"></p>
-            <label class="check-label"><input type="checkbox" class="notify-toggle" data-kind="split"> 2. Split-Teil fällig</label>
-            <p class="hint">Sobald der geplante 2. Teil fällig ist und noch kein Insulin danach erfasst wurde.</p>
+            <p id="notify-status" class="hint notify-status"></p>
+            <div class="notify-option">
+              <label class="check-label"><input type="checkbox" class="notify-toggle" data-kind="basal"> Basal vergessen</label>
+              <p id="notify-basal-hint" class="hint"></p>
+            </div>
+            <div class="notify-option">
+              <label class="check-label"><input type="checkbox" class="notify-toggle" data-kind="split"> 2. Split-Teil fällig</label>
+              <p class="hint">Sobald der geplante 2. Teil fällig ist und noch kein Insulin danach erfasst wurde.</p>
+            </div>
             <button type="button" id="notify-test">Testmeldung senden</button>
             <ul id="notify-recent" class="hint"></ul>
           </section>
