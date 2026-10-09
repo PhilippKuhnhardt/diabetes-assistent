@@ -137,7 +137,23 @@ def _summary_results(db: sqlite3.Connection) -> None:
     )""")
 
 
-MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results]
+def _notifications(db: sqlite3.Connection) -> None:
+    """Push reminders: which kinds are switched on, and every message sent (one per key, never twice)."""
+    db.execute("""CREATE TABLE IF NOT EXISTS notification_settings (
+        kind TEXT PRIMARY KEY,
+        enabled INTEGER NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS notifications_sent (
+        key TEXT PRIMARY KEY,
+        kind TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        sent_at TEXT NOT NULL
+    )""")
+
+
+MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
+                                                          _notifications]
 
 
 def init() -> None:

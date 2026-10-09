@@ -13,7 +13,7 @@ from urllib.parse import parse_qs, urlparse
 from app import auth, mcp, oauth
 from app.common import json_safe
 from app.ingestion import nightscout
-from app.services import annotations, background, basal, day_view, diary, dose_help, effects, entry, read_api, settings, summary, sync, window_editor
+from app.services import annotations, background, basal, day_view, diary, dose_help, effects, entry, notifications, read_api, settings, summary, sync, window_editor
 from app.store import config, db
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -37,6 +37,7 @@ GET_ROUTES = {
     "/api/test-connection": lambda params: sync.test_connection(),
     "/api/summary": summary.summary,
     "/api/analysis/window-editor": window_editor.editor,
+    "/api/notifications": lambda params: notifications.view(),
 }
 
 POST_ROUTES = {
@@ -58,6 +59,8 @@ POST_ROUTES = {
     "/api/basal/delete": basal.delete_basal_entry,
     "/api/treatment/delete": diary.delete_treatment,
     "/api/settings": settings.save_settings,
+    "/api/notifications": notifications.set_enabled,
+    "/api/notifications/test": notifications.send_test,
     "/api/episode": diary.save_episode,
     "/api/exercise": diary.save_exercise,
     "/api/dose": diary.save_dose,

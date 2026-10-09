@@ -326,6 +326,57 @@ async function saveVacation(event) {
   }
 }
 
+async function loadNotifications() {
+  try {
+    renderNotifications(await api("/api/notifications"));
+  } catch (error) {
+    $("#notify-status").textContent = error.message;
+  }
+}
+
+function renderNotifications(data) {
+  $("#notify-status").textContent = data.configured
+    ? "Pushover ist eingerichtet."
+    : "Pushover ist nicht eingerichtet: PUSHOVER_APP_TOKEN und PUSHOVER_USER_KEY im Deployment setzen.";
+  $$(".notify-toggle").forEach(input => { input.checked = Boolean(data.enabled[input.dataset.kind]); });
+  $("#notify-basal-hint").textContent = "Wenn bis " + data.basal_after + " (Frühstücksende) heute noch kein Basal erfasst ist.";
+  $("#notify-test").disabled = !data.configured;
+  const list = $("#notify-recent");
+  list.replaceChildren(...data.recent.map(item => {
+    const row = document.createElement("li");
+    row.textContent = new Date(item.sent_at).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })
+      + " · " + item.label + ": " + item.message;
+    return row;
+  }));
+}
+
+async function saveNotification(event) {
+  const input = event.target;
+  input.disabled = true;
+  try {
+    renderNotifications(await api("/api/notifications", {
+      method: "POST", body: JSON.stringify({ kind: input.dataset.kind, enabled: input.checked }),
+    }));
+  } catch (error) {
+    input.checked = !input.checked;
+    toast(error.message, true);
+  } finally {
+    input.disabled = false;
+  }
+}
+
+async function sendTestNotification(event) {
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    toast((await api("/api/notifications/test", { method: "POST", body: "{}" })).message);
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function renderVacation(vacation) {
   $("#vacation-toggle").checked = Boolean(vacation?.active);
   $("#vacation-status").textContent = vacation?.active
@@ -485,6 +536,7 @@ async function loadSettings() {
   renderIcRows(data.settings.ic_schedule || []);
   renderTargetRows(data.settings.target_schedule || []);
   renderVacation(data.vacation);
+  await loadNotifications();
 }
 
 function renderTargetRows(rows) {
@@ -2552,6 +2604,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#dose-result").addEventListener("click", selectDoseSuggestion);
   $("#entry-day-type").addEventListener("click", saveEntryDayType);
   $("#vacation-toggle").addEventListener("change", saveVacation);
+  $$(".notify-toggle").forEach(input => input.addEventListener("change", saveNotification));
+  $("#notify-test").addEventListener("click", sendTestNotification);
   $("#entry-form").elements.carbs.addEventListener("input", event => {
     event.target.setCustomValidity("");
     updateEntrySubmitLabel();
