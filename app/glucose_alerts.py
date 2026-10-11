@@ -4,7 +4,7 @@ Analysis and approval 2026-10-11 (project files, analysen/fruehprognose.md, sect
 model (insulin, carbs and surcharge still to act) plus the model's miss over the last 30 minutes, whose
 rate fades out linearly over 60 minutes. Over 31 days it caught 12 of 12 daytime lows (median 17 min
 ahead) and 11 of 12 highs (median 20 min ahead), about 4 warnings a day, about 1 of them needless.
-Nights are left out: the sensor was unreliable there. A rough forecast, not dosing advice.
+Nights are left out: the sensor was unreliable there. No low warning within 30 min after a carb entry. A rough forecast, not dosing advice.
 """
 from __future__ import annotations
 
@@ -23,6 +23,11 @@ MISS_MINUTES, FADE_MINUTES = 30, Decimal(60)
 DAY_FROM, DAY_TO = 6, 23
 # The latest CGM reading must be at most this old.
 FRESH_MINUTES = 10
+# No low warning this soon after a carb entry: the model lets carbs act at once, real absorption starts
+# later, so right after eating the "faster than expected" fall is mostly that lag (24 of ~100 low
+# warnings came within 45 min after carbs, 2 before a real low; a 30-min pause kept 12 of 12 lows,
+# user report 2026-10-11, analysen/fruehprognose.md section 7).
+LOW_PAUSE_AFTER_CARBS = timedelta(minutes=30)
 
 
 def _faded(minutes: Decimal) -> Decimal:
@@ -69,8 +74,10 @@ def warnings(entries: list[dict], found: dict, now: datetime, timezone_name: str
     if result is None:
         return []
     due, glucose = [], result["glucose_mgdl"]
+    last_carbs = max((row["at"] for row in found["carbs"] if row["at"] <= now), default=None)
+    paused = last_carbs is not None and now - last_carbs < LOW_PAUSE_AFTER_CARBS
     low = next((point for point in result["points"] if point["mgdl"] < LOW_MGDL), None)
-    if low and glucose >= LOW_MGDL:
+    if low and glucose >= LOW_MGDL and not paused:
         due.append({"kind": "low", "glucose_mgdl": glucose, "at": low["at"],
                     "mgdl": min(point["mgdl"] for point in result["points"])})
     high = next((point for point in result["points"] if point["mgdl"] > HIGH_MGDL), None)

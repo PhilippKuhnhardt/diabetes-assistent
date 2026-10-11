@@ -161,6 +161,12 @@ class GlucoseAlertTests(unittest.TestCase):
         self.assertEqual(self.kinds(self.entries([125, 120, 115, 110, 105, 100, 95]),
                                     self.found(carbs=[(self.NOW - timedelta(minutes=40), "20")])), [])
 
+    def test_no_low_warning_right_after_carbs(self):
+        falling = self.entries([125, 120, 115, 110, 105, 100, 95])
+        just_eaten = self.found(carbs=[(self.NOW - timedelta(minutes=10), "5")])
+        self.assertEqual(self.kinds(falling, just_eaten), [])
+        self.assertEqual(self.kinds(falling, self.found(carbs=[(self.NOW - timedelta(minutes=31), "5")])), ["low"])
+
     def test_carbs_still_to_come_warn_of_a_high(self):
         found = self.found(carbs=[(self.NOW - timedelta(minutes=10), "60")])
         self.assertEqual(self.kinds(self.entries([200] * 7), found), ["high"])
