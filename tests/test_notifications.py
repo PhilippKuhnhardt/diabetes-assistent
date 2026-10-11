@@ -9,6 +9,9 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 from unittest.mock import patch
 
+from decimal import Decimal
+
+from app import glucose_alerts
 from app.ingestion import pushover
 from app.services import background, notifications
 from app.store import db
@@ -55,13 +58,16 @@ class CheckTests(unittest.TestCase):
         db.init()
         self.env = patch.dict(os.environ, {"PUSHOVER_APP_TOKEN": "t" * 30, "PUSHOVER_USER_KEY": "u" * 30})
         self.env.start()
-        self.inputs = patch.object(notifications, "_today_inputs", return_value=([MEAL], []))
+        self.inputs = patch.object(notifications, "_today_inputs", return_value=([MEAL], [], []))
         self.inputs.start()
+        self.warnings = patch.object(notifications, "glucose_warnings", return_value=[])
+        self.warnings.start()
         self.settings = patch.object(notifications.config, "get_settings", return_value=(1, SETTINGS))
         self.settings.start()
 
     def tearDown(self):
         self.settings.stop()
+        self.warnings.stop()
         self.inputs.stop()
         self.env.stop()
         db.DB_PATH = self.old_path
@@ -83,18 +89,91 @@ class CheckTests(unittest.TestCase):
         self.assertEqual([row["kind"] for row in view["recent"]], ["basal", "split"])
 
     def test_switched_off_kinds_and_missing_setup_send_nothing(self):
-        notifications.set_enabled({"kind": "basal", "enabled": False})
-        notifications.set_enabled({"kind": "split", "enabled": False})
+        for kind in notifications.KINDS:
+            notifications.set_enabled({"kind": kind, "enabled": False})
         with patch.object(pushover, "send") as send:
             self.assertEqual(notifications.check(MEAL_AT + timedelta(minutes=130)), [])
             send.assert_not_called()
-        self.assertEqual(notifications.view()["enabled"], {"basal": False, "split": False})
+        self.assertEqual(notifications.view()["enabled"], {"basal": False, "split": False, "low": False, "high": False})
         with self.assertRaises(ValueError):
-            notifications.set_enabled({"kind": "low", "enabled": True})
+            notifications.set_enabled({"kind": "other", "enabled": True})
         with patch.dict(os.environ, {"PUSHOVER_APP_TOKEN": ""}):
             self.assertFalse(notifications.view()["configured"])
             with self.assertRaisesRegex(ValueError, "nicht eingerichtet"):
                 notifications.send_test({})
+
+
+    def test_priority_per_kind_is_stored_and_used(self):
+        self.assertEqual(notifications.view()["priorities"], {"basal": 1, "split": 1, "low": 1, "high": 1})
+        notifications.set_enabled({"kind": "split", "priority": 2})
+        notifications.set_enabled({"kind": "basal", "priority": -1})
+        view = notifications.view()
+        self.assertEqual(view["priorities"], {"basal": -1, "split": 2, "low": 1, "high": 1})
+        self.assertTrue(view["enabled"]["split"])
+        self.assertEqual([option["value"] for option in view["priority_options"]], [-2, -1, 0, 1, 2])
+        for wrong in (3, "1", True, None):
+            with self.assertRaises(ValueError):
+                notifications.set_enabled({"kind": "low", "priority": wrong})
+        with patch.object(pushover, "send") as send:
+            notifications.check(MEAL_AT + timedelta(minutes=130))
+        self.assertEqual([call.args[2] for call in send.call_args_list], [-1, 2])
+
+    def test_a_glucose_warning_repeats_at_most_once_per_hour(self):
+        notifications.set_enabled({"kind": "basal", "enabled": False})
+        notifications.set_enabled({"kind": "split", "enabled": False})
+        warn = lambda now, *args: [{"key": "low:" + now.isoformat(), "kind": "low", "title": "Tief droht", "message": "x"}]
+        self.warnings.stop()
+        self.warnings = patch.object(notifications, "glucose_warnings", side_effect=warn)
+        self.warnings.start()
+        with patch.object(pushover, "send") as send:
+            for minutes in (0, 5, 55, 61):
+                notifications.check(MEAL_AT + timedelta(minutes=minutes))
+        self.assertEqual(send.call_count, 2)
+
+
+class GlucoseAlertTests(unittest.TestCase):
+    NOW = datetime(2026, 10, 9, 12, 0, tzinfo=timezone.utc)  # 14:00 in Berlin
+
+    def entries(self, values):
+        """Readings every 5 minutes ending at NOW, oldest first."""
+        return [{"at": self.NOW - timedelta(minutes=5 * (len(values) - 1 - index)), "sgv": value}
+                for index, value in enumerate(values)]
+
+    def found(self, doses=(), carbs=()):
+        return {"doses": [{"at": at, "units": Decimal(units), "mgdl_per_unit": Decimal(35)} for at, units in doses],
+                "carbs": [{"at": at, "grams": Decimal(grams), "fat": False, "mgdl_per_gram": Decimal("3.5")}
+                          for at, grams in carbs],
+                "surcharges": [], "fresh_meals": []}
+
+    def kinds(self, entries, found, now=None):
+        return [item["kind"] for item in glucose_alerts.warnings(entries, found, now or self.NOW, "Europe/Berlin")]
+
+    def test_active_insulin_without_carbs_warns_of_a_low(self):
+        found = self.found(doses=[(self.NOW - timedelta(minutes=20), "4")])
+        self.assertEqual(self.kinds(self.entries([110] * 7), found), ["low"])
+        warning = glucose_alerts.warnings(self.entries([110] * 7), found, self.NOW, "Europe/Berlin")[0]
+        self.assertGreater(warning["at"], self.NOW)
+        self.assertLess(warning["mgdl"], 70)
+        self.assertEqual(self.kinds(self.entries([110] * 7), self.found()), [])
+
+    def test_falling_faster_than_the_model_warns_of_a_low(self):
+        self.assertEqual(self.kinds(self.entries([125, 120, 115, 110, 105, 100, 95]), self.found()), ["low"])
+        self.assertEqual(self.kinds(self.entries([125, 120, 115, 110, 105, 100, 95]),
+                                    self.found(carbs=[(self.NOW - timedelta(minutes=40), "20")])), [])
+
+    def test_carbs_still_to_come_warn_of_a_high(self):
+        found = self.found(carbs=[(self.NOW - timedelta(minutes=10), "60")])
+        self.assertEqual(self.kinds(self.entries([200] * 7), found), ["high"])
+        self.assertEqual(self.kinds(self.entries([260] * 7), found), [])
+
+    def test_no_warning_at_night_or_without_a_fresh_reading(self):
+        found = self.found(doses=[(self.NOW - timedelta(minutes=20), "4")])
+        for hours, expected in ((8, ["low"]), (9, []), (10, []), (15, []), (16, ["low"])):  # 22:00, 23:00, 0:00, 5:00, 6:00 local
+            moment = self.NOW + timedelta(hours=hours)
+            shifted = [{**row, "at": row["at"] + timedelta(hours=hours)} for row in self.entries([110] * 7)]
+            self.assertEqual(self.kinds(shifted, self.found(doses=[(moment - timedelta(minutes=20), "4")]), moment),
+                             expected, hours)
+        self.assertEqual(self.kinds(self.entries([110] * 7), found, self.NOW + timedelta(minutes=11)), [])
 
 
 class PushoverTests(unittest.TestCase):
@@ -107,6 +186,12 @@ class PushoverTests(unittest.TestCase):
             body = urlopen.call_args.args[0].data.decode()
             self.assertIn("priority=1", body)
             self.assertIn("url=https%3A%2F%2Faps.example.org", body)
+            self.assertNotIn("retry=", body)
+            pushover.send("Titel", "Text", 2)
+            body = urlopen.call_args.args[0].data.decode()
+            self.assertIn("priority=2", body)
+            self.assertIn("retry=60", body)
+            self.assertIn("expire=1800", body)
             error = urllib.error.HTTPError(pushover.API_URL, 400, "Bad", {},
                                            io.BytesIO(json.dumps({"errors": ["user key is invalid"]}).encode()))
             urlopen.side_effect = error

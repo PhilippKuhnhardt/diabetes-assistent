@@ -1,4 +1,4 @@
-"""Push reminders: on/off per kind and the messages already sent."""
+"""Push reminders: on/off and Pushover priority per kind, and the messages already sent."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -17,6 +17,26 @@ def set_enabled(kind: str, enabled: bool) -> None:
     with connect() as db:
         db.execute("INSERT INTO notification_settings(kind,enabled) VALUES(?,?) "
                    "ON CONFLICT(kind) DO UPDATE SET enabled=excluded.enabled", (kind, int(enabled)))
+
+
+def priorities(defaults: dict[str, int]) -> dict[str, int]:
+    with connect() as db:
+        rows = db.execute("SELECT kind,priority FROM notification_settings WHERE priority IS NOT NULL").fetchall()
+    stored = {row["kind"]: int(row["priority"]) for row in rows}
+    return {kind: stored.get(kind, default) for kind, default in defaults.items()}
+
+
+def set_priority(kind: str, priority: int, enabled_default: bool = True) -> None:
+    """Store a kind's Pushover priority; a kind never switched keeps its default on/off state."""
+    with connect() as db:
+        db.execute("INSERT INTO notification_settings(kind,enabled,priority) VALUES(?,?,?) "
+                   "ON CONFLICT(kind) DO UPDATE SET priority=excluded.priority", (kind, int(enabled_default), priority))
+
+
+def last_sent(kind: str) -> datetime | None:
+    with connect() as db:
+        row = db.execute("SELECT MAX(sent_at) AS at FROM notifications_sent WHERE kind=?", (kind,)).fetchone()
+    return datetime.fromisoformat(row["at"]) if row and row["at"] else None
 
 
 def was_sent(key: str) -> bool:
