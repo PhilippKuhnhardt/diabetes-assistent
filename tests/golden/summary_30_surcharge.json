@@ -143,10 +143,16 @@
      "reason": null,
      "sport": {
       "effect_mgdl": "0",
-      "events": [],
+      "events": [
+       {
+        "at": "2026-10-07T07:40:00+00:00",
+        "id": "ns-0004",
+        "kind": "jogging"
+       }
+      ],
       "status": "auto",
-      "suggested": false,
-      "suggested_effect_mgdl": "0"
+      "suggested": true,
+      "suggested_effect_mgdl": "40"
      },
      "strong_outlier": false,
      "units_per_ke": "1.267137439601996382749640662"
@@ -2118,10 +2124,16 @@
      "reason": null,
      "sport": {
       "effect_mgdl": "0",
-      "events": [],
+      "events": [
+       {
+        "at": "2026-09-15T13:40:00+00:00",
+        "id": "t-0065",
+        "kind": "racing"
+       }
+      ],
       "status": "auto",
-      "suggested": false,
-      "suggested_effect_mgdl": "0"
+      "suggested": true,
+      "suggested_effect_mgdl": "-40"
      },
      "strong_outlier": false,
      "units_per_ke": "1.136558605295076588135794902"
