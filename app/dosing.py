@@ -17,7 +17,8 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
             treatments: list[dict], now: datetime | None = None,
             activity_change: object = 0, units_per_ke: Decimal | None = None,
             auto_units_per_ke: Decimal | None = None, auto_surcharge_mgdl: Decimal | None = None,
-            surcharge_share=None, on_board: dict | None = None) -> dict:
+            surcharge_share=None, on_board: dict | None = None,
+            finger: list[dict] | None = None) -> dict:
     """activity_change is a signed, user-estimated BG change in mg/dL from sport
     (negative lowers BG and therefore the dose; positive, e.g. adrenaline, raises it).
     units_per_ke replaces Nightscout's current I:C, e.g. with the breakfast factor of the day type.
@@ -29,7 +30,9 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     on_board (app.on_board.summary) moves the start glucose by what still acts: normal and carbs only use
     the full forecast (− remaining insulin + remaining carbs and surcharge); cautious uses that forecast
     minus its typical miss (FORECAST_SPREAD_MGDL), but never less than letting the remaining
-    carbs and surcharge only cancel active insulin. Below 70 mg/dL both only cancel active insulin."""
+    carbs and surcharge only cancel active insulin. Below 70 mg/dL both only cancel active insulin.
+    finger holds blood glucose measured by hand ({"at", "mgdl"}); a measurement newer than the latest
+    CGM value is the start glucose instead (same 15-minute freshness, no trend)."""
     now = now or datetime.now(timezone.utc)
     grams = calculation.dec(carbs)
     if not grams.is_finite() or not 0 <= grams <= 500:
@@ -41,6 +44,10 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     points = sorted((entry["at"], calculation.dec(entry["sgv"])) for entry in entries
                     if entry.get("sgv") is not None and entry["at"] <= now)
     latest = points[-1] if points else None
+    checks = sorted((item["at"], calculation.dec(item["mgdl"])) for item in finger or [] if item["at"] <= now)
+    by_hand = bool(checks and (latest is None or checks[-1][0] > latest[0]))
+    if by_hand:
+        latest = checks[-1]
     glucose_at = latest[0] if latest else None
     fresh = bool(latest and now - latest[0] <= timedelta(minutes=15))
     recent = [
@@ -55,7 +62,8 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         "glucose_mgdl": str(latest[1]) if latest else None,
         "glucose_at": glucose_at.isoformat() if glucose_at else None,
         "glucose_fresh": fresh,
-        **(glucose.trend(points) or glucose.NO_TREND),
+        "glucose_source": ("finger" if by_hand else "cgm") if latest else None,
+        **((None if by_hand else glucose.trend(points)) or glucose.NO_TREND),
         "recent_rapid_doses": recent,
         "activity_change_mgdl": str(activity),
     }
@@ -138,5 +146,6 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
             result["auto_cautious_expected_glucose_mgdl"] = str(
                 cautious_start + (auto_carb_units - auto_cautious_entry_units) * isf)
     else:
-        result["reason"] = "Kein aktueller CGM-Wert innerhalb von 15 Minuten"
+        result["reason"] = ("Kein aktueller CGM-Wert innerhalb von 15 Minuten. "
+                            "Ein blutig gemessener Wert kann ihn ersetzen.")
     return result

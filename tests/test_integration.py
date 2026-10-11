@@ -1382,6 +1382,21 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(FakeNightscout.treatments[-1]["eventType"], "Carb Correction")
         self.assertIn("[DA2:snack]", FakeNightscout.treatments[-1]["notes"])
 
+    def test_finger_value_alone_is_saved_as_bg_check(self):
+        self.request("/api/day?date=2026-09-23")
+        body = {"day": "2026-09-23", "at": "2026-09-23T07:00:00Z", "mode": "meal", "carbs": "",
+                "finger_mgdl": "143"}
+        saved = self.request("/api/entry", method="POST", body=body)
+        self.assertEqual((saved["kind"], saved["finger_mgdl"]), ("finger", "143"))
+        check = FakeNightscout.treatments[-1]
+        self.assertEqual((check["eventType"], check["glucose"], check["glucoseType"]), ("BG Check", 143.0, "Finger"))
+        again = self.request("/api/entry", method="POST", body={**body, "event_id": saved["event_id"]})
+        self.assertEqual(sum(item["eventType"] == "BG Check" for item in FakeNightscout.treatments), 1)
+        row = next(item for item in again["day_view"]["timeline"] if item["kind"] == "finger")
+        self.assertEqual(Decimal(row["glucose_mgdl"]), Decimal(143))
+        with self.assertRaises(Exception):
+            self.request("/api/entry", method="POST", body={**body, "finger_mgdl": "5"})
+
     def test_tapped_suggestion_is_saved_only_while_it_is_still_current(self):
         self.request("/api/settings")
         now = datetime.now(timezone.utc)

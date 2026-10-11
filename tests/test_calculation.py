@@ -27,6 +27,17 @@ class CalculationTests(unittest.TestCase):
         result = interpolate_glucose(entries, moment(10, 5))
         self.assertEqual(result["value"], Decimal(110))
 
+    def test_finger_check_stands_in_for_missing_cgm_at_meal_start(self):
+        start = moment(7)
+        entries = [{"at": moment(9, 55), "sgv": 120}, {"at": moment(10, 5), "sgv": 120}]
+        treatments = [{"id": "meal", "at": start, "insulin": 4},
+                      {"id": "check", "at": moment(6, 55), "finger_mgdl": Decimal(150)}]
+        result = calculate_episode({"at": start, "carbs": 40, "source_id": "meal"}, treatments, entries, self.settings)
+        self.assertEqual((Decimal(result["g0"]), result["g0_source"]), (Decimal(150), "finger"))
+        self.assertEqual(Decimal(result["delta_mgdl"]), Decimal(-30))
+        with self.assertRaises(ValueError):
+            calculate_episode({"at": start, "carbs": 40, "source_id": "meal"}, treatments[:1], entries, self.settings)
+
     def test_split_bolus_and_late_correction_count_full_units(self):
         start = moment(10)
         end = moment(13)

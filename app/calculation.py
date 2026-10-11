@@ -67,6 +67,16 @@ def interpolate_glucose(entries: list[dict], moment: datetime, max_gap_minutes: 
     return {"value": value, "before": before[0], "after": after[0]}
 
 
+def finger_glucose(treatments: list[dict], moment: datetime, max_gap_minutes: int = 15) -> dict | None:
+    """The blood glucose measured by hand (Nightscout BG Check) nearest to moment, within the gap."""
+    checks = [(abs(minutes_between(item["at"], moment)), item) for item in treatments if item.get("finger_mgdl")]
+    checks = [(gap, item) for gap, item in checks if gap <= max_gap_minutes]
+    if not checks:
+        return None
+    item = min(checks, key=lambda pair: pair[0])[1]
+    return {"value": dec(item["finger_mgdl"]), "before": item["at"], "after": item["at"]}
+
+
 def automatic_window(episode: dict, all_treatments: list[dict], entries: list[dict], settings: dict) -> dict:
     """Default meal endpoint: fixed window, extended by doses, bounded by the next main meal."""
     start = episode["at"]
@@ -143,7 +153,15 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         start, end = manual_window["start"], manual_window["end"]
         if not meal_at < end or not start < end:
             raise ValueError("Manueller Zeitraum muss nach dem Mahlzeitbeginn enden")
-    g0 = interpolate_glucose(entries, start)
+    try:
+        g0 = interpolate_glucose(entries, start)
+        g0_source = "cgm"
+    except ValueError:
+        # Without CGM at the start (sensor failure or warm-up), a finger measurement close to it stands in.
+        g0 = finger_glucose(all_treatments, start)
+        if g0 is None:
+            raise
+        g0_source = "finger"
     g1 = interpolate_glucose(entries, end)
     delta = g1["value"] - g0["value"]
     carbs = dec(episode["carbs"])
@@ -235,7 +253,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         "carbs": str(carbs), "carbs_total": str(carbs_total),
         "carbs_times_isf_total": str(carbs_times_isf_total),
         "extra_carb_count": len(extra_carbs), "g0": str(g0["value"]), "g3": str(g1["value"]),
-        "g0_sources": [g0["before"].isoformat(), g0["after"].isoformat()],
+        "g0_sources": [g0["before"].isoformat(), g0["after"].isoformat()], "g0_source": g0_source,
         "g3_sources": [g1["before"].isoformat(), g1["after"].isoformat()],
         "delta_mgdl": str(delta), "adjusted_delta_mgdl": str(adjusted_delta),
         "sport_effect_mgdl": str(sport_effect_mgdl), "meal_isf": str(meal_isf),
@@ -245,5 +263,6 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         "blockers": blockers,
         "ratio_g_per_unit": ratio, "factor_units_per_ke": factor, "reason": reason,
         "assumptions": ["alle KH im Fenster wirken bis zum Endpunkt vollständig", "volle IE jeder schnell wirksamen Injektion im Fenster", "alle KH im Fenster teilen einen Insulinfaktor", "kein zusätzlicher Hintergrundtrend", "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"]
-        + (["manuell gewählter Zeitraum statt automatischem Endpunkt"] if manual_window else []),
+        + (["manuell gewählter Zeitraum statt automatischem Endpunkt"] if manual_window else [])
+        + (["Startwert blutig gemessen, weil am Beginn kein CGM-Wert vorlag"] if g0_source == "finger" else []),
     }

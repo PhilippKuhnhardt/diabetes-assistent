@@ -39,6 +39,33 @@ class DosingTests(unittest.TestCase):
         self.assertEqual(Decimal(result["trend_delta_mgdl"]), Decimal(30))
         self.assertEqual(result["trend_direction"], "up_fast")
 
+    def test_finger_check_replaces_stale_cgm_as_start_value(self):
+        entries = [{"at": self.now - timedelta(hours=2), "sgv": 300}]
+        stale = dosing.suggest("20", self.settings, entries, [], self.now)
+        self.assertFalse(stale["glucose_fresh"])
+        self.assertNotIn("entry_units", stale)
+        finger = [{"at": self.now - timedelta(minutes=3), "mgdl": Decimal(150)}]
+        result = dosing.suggest("20", self.settings, entries, [], self.now, finger=finger)
+        self.assertTrue(result["glucose_fresh"])
+        self.assertEqual(result["glucose_source"], "finger")
+        self.assertEqual(Decimal(result["glucose_mgdl"]), Decimal(150))
+        self.assertIsNone(result["trend_direction"])
+        self.assertEqual(Decimal(result["correction_units"]), Decimal("1.25"))
+        # A newer CGM value wins over an older measurement by hand.
+        entries.append({"at": self.now - timedelta(minutes=1), "sgv": 130})
+        result = dosing.suggest("20", self.settings, entries, [], self.now, finger=finger)
+        self.assertEqual(result["glucose_source"], "cgm")
+        self.assertEqual(Decimal(result["glucose_mgdl"]), Decimal(130))
+
+    def test_bg_check_treatment_is_read_as_finger_value(self):
+        raw = [{"_id": "a", "eventType": "BG Check", "created_at": "2026-09-24T10:00:00Z",
+                "glucose": 142, "glucoseType": "Finger", "units": "mg/dl"},
+               {"_id": "b", "eventType": "BG Check", "created_at": "2026-09-24T10:05:00Z",
+                "glucose": 7.9, "units": "mmol"},
+               {"_id": "c", "eventType": "Meal Bolus", "created_at": "2026-09-24T10:06:00Z", "carbs": 20}]
+        rows = episodes.normalize_treatments(raw)
+        self.assertEqual([row["finger_mgdl"] for row in rows], [Decimal(142), Decimal(142), None])
+
     def test_half_unit_tie_rounds_to_next_injectable_amount(self):
         entries = [{"at": self.now, "sgv": 190}]
         result = dosing.suggest("20", self.settings, entries, [], self.now)
