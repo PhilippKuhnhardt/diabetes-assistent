@@ -1359,11 +1359,11 @@ function icon(name) {
   return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths[name] + '</svg>';
 }
 
-function sportReviewHTML(sport, mealId, day, compact = false) {
+function sportReviewHTML(sport, mealId, day, compact = false, inMeal = false) {
   const applied = sport.status === "affected";
   const effect = applied ? sportChange(sport.effect_mgdl) : 0;
   const suggestion = sport.suggested ? sportChange(sport.suggested_effect_mgdl) : 0;
-  return '<div class="sport-review' + (compact ? ' sport-review-table' : '') + '" data-meal-id="' + escapeHTML(mealId) +
+  return '<div class="sport-review' + (compact ? ' sport-review-table' : '') + (inMeal ? ' sport-review-meal' : '') + '" data-meal-id="' + escapeHTML(mealId) +
     '" data-day="' + escapeHTML(day) + '" data-suggestion="' + escapeHTML(suggestion) + '">' +
     '<div class="sport-state' + (applied ? ' is-applied' : '') + '">' +
     (applied ? icon("check") + '<span>Sport ' + escapeHTML(signedChange(effect, 0)) + '</span>' : '<span>Kein Sporteffekt</span>') + '</div>' +
@@ -1474,9 +1474,11 @@ function mealBlockHTML(block, data) {
     '</span>' + (meal.quality?.carbs_certainty ? '<span class="outlier-badge certainty-' + meal.quality.carbs_certainty + '">' + CERTAINTY_LABELS[meal.quality.carbs_certainty] + '</span>' : '') +
     (meal.quality?.fat_protein ? '<span class="outlier-badge">Fett-/eiweißreich</span>' : '') + '</div>' + status + '</div>' +
     items.map(item => entryRowHTML(item, data)).join("") +
+    // Sport is adjusted right on the meal, without opening the curve details.
+    sportReviewHTML(meal.sport || {}, meal.id, state.day, false, true) +
     '<details class="day-meal-details" data-meal-id="' + escapeHTML(meal.id) + '"' + (check ? ' open' : '') +
-    '><summary>Kurve, Zeitraum und Sport</summary>' +
-    sportReviewHTML(meal.sport || {}, meal.id, state.day) + calculationHTML(meal.calculation) + chartFor(meal, data.entries) +
+    '><summary>Kurve und Zeitraum</summary>' +
+    calculationHTML(meal.calculation) + chartFor(meal, data.entries) +
     (meal.notes ? '<p class="meal-note">' + escapeHTML(meal.notes) + '</p>' : '') + '</details></article>';
 }
 
