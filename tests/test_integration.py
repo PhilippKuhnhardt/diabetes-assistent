@@ -423,6 +423,34 @@ class IntegrationTests(unittest.TestCase):
         )
         self.assertEqual(marks.analysis_exclusions(), set())
 
+    def test_sport_inside_meal_window_is_suggested_for_that_meal_and_the_next(self):
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": "2026-09-23T07:00:00Z", "carbs": "40", "insulin": "4",
+        })
+        self.request("/api/treatment", method="POST", body={
+            "kind": "exercise", "at": "2026-09-23T08:20:00Z",
+            "sport_kind": "gym", "duration_minutes": 60,
+        })
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": "2026-09-23T11:00:00Z", "carbs": "40", "insulin": "4",
+        })
+        meals = self.request("/api/day?date=2026-09-23")["meals"]
+        self.assertEqual([meal["meal"] for meal in meals], ["breakfast", "lunch"])
+        for meal in meals:
+            self.assertTrue(meal["sport"]["suggested"], meal["meal"])
+            self.assertEqual(Decimal(meal["sport"]["suggested_effect_mgdl"]), Decimal(40))
+
+    def test_sport_after_the_meal_window_is_not_suggested(self):
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": "2026-09-23T07:00:00Z", "carbs": "40", "insulin": "4",
+        })
+        self.request("/api/treatment", method="POST", body={
+            "kind": "exercise", "at": "2026-09-23T10:10:00Z",
+            "sport_kind": "gym", "duration_minutes": 30,
+        })
+        meal = self.request("/api/day?date=2026-09-23")["meals"][0]
+        self.assertFalse(meal["sport"]["suggested"])
+
     def test_racing_raises_glucose_and_is_subtracted_from_delta(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": "2026-09-23T10:00:00Z", "carbs": "40", "insulin": "4",

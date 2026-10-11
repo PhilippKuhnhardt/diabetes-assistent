@@ -71,26 +71,8 @@ def compute_day(day: str) -> dict:
         meal_settings_id, meal_settings = config.get_settings_at(meal["at"])
         associated = [item for item in treatments if item.get("episode_id") == meal["id"] or item.get("id") == meal["source_id"]]
         output = {**meal}
-        nearby_sport = [
-            item for item in treatments
-            if item.get("eventType") == "Exercise"
-            and item["at"] + timedelta(minutes=int(item.get("duration") or 0)) <= meal["at"]
-            and item["at"] + timedelta(minutes=int(item.get("duration") or 0)) >=
-                meal["at"] - timedelta(minutes=int(meal_settings["sport_lookback_minutes"]))
-        ]
-        proposed_effect = sum((
-            calculation.dec(meal_settings["sport_effects_mgdl"].get(item.get("sport_type"), 0))
-            for item in nearby_sport), Decimal(0))
         mark = sport_marks.get(meal["id"], {})
         confirmed_effect = calculation.dec(mark.get("effect_mgdl", 0)) if mark.get("status") == "affected" else Decimal(0)
-        output["sport"] = {
-            "status": mark.get("status", "auto"),
-            "suggested": bool(nearby_sport),
-            "suggested_effect_mgdl": str(proposed_effect),
-            "effect_mgdl": str(confirmed_effect),
-            "events": [{"id": item["id"], "at": item["at"], "kind": item.get("sport_type")}
-                       for item in nearby_sport],
-        }
         if not meal_settings["isf_schedule"]:
             output["calculation"] = {"reason": "Korrekturfaktor-Profil aus Nightscout fehlt"}
         else:
@@ -112,6 +94,27 @@ def compute_day(day: str) -> dict:
                 "window_start": (manual or automatic)["start"].isoformat(),
                 "window_end": (manual or automatic)["end"].isoformat(),
             })
+        # Sport is suggested when it ended within the lookback before the meal or falls into its window,
+        # so a session during breakfast is offered for breakfast and, when it reaches back, for lunch too.
+        window_end = parse_instant(output["calculation"].get("end") or output["calculation"]["window_end"])
+        lookback = timedelta(minutes=int(meal_settings["sport_lookback_minutes"]))
+        nearby_sport = [
+            item for item in treatments
+            if item.get("eventType") == "Exercise"
+            and item["at"] + timedelta(minutes=int(item.get("duration") or 0)) >= meal["at"] - lookback
+            and item["at"] < window_end
+        ]
+        proposed_effect = sum((
+            calculation.dec(meal_settings["sport_effects_mgdl"].get(item.get("sport_type"), 0))
+            for item in nearby_sport), Decimal(0))
+        output["sport"] = {
+            "status": mark.get("status", "auto"),
+            "suggested": bool(nearby_sport),
+            "suggested_effect_mgdl": str(proposed_effect),
+            "effect_mgdl": str(confirmed_effect),
+            "events": [{"id": item["id"], "at": item["at"], "kind": item.get("sport_type")}
+                       for item in nearby_sport],
+        }
         # A meal carries a data-quality mark when any of its counted carb entries does.
         carb_ids = ({item.get("id") for item in output["calculation"].get("carb_events", [])} | {meal["source_id"]}
                     | {item["id"] for item in associated if calculation.dec(item.get("carbs") or 0) > 0})

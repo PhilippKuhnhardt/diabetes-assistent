@@ -10480,10 +10480,16 @@
     "source_id": "t-0063",
     "sport": {
      "effect_mgdl": "0",
-     "events": [],
+     "events": [
+      {
+       "at": "2026-09-15T13:40:00+00:00",
+       "id": "t-0065",
+       "kind": "racing"
+      }
+     ],
      "status": "auto",
-     "suggested": false,
-     "suggested_effect_mgdl": "0"
+     "suggested": true,
+     "suggested_effect_mgdl": "-40"
     },
     "window": {
      "auto_end": "2026-09-15T15:05:00+00:00",
@@ -24217,10 +24223,16 @@
     "source_id": "t-0145",
     "sport": {
      "effect_mgdl": "0",
-     "events": [],
+     "events": [
+      {
+       "at": "2026-10-07T07:40:00+00:00",
+       "id": "ns-0004",
+       "kind": "jogging"
+      }
+     ],
      "status": "auto",
-     "suggested": false,
-     "suggested_effect_mgdl": "0"
+     "suggested": true,
+     "suggested_effect_mgdl": "40"
     },
     "window": {
      "auto_end": "2026-10-07T09:00:00+00:00",

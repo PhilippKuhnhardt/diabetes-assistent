@@ -349,6 +349,7 @@ span.range-high { color: #9a6410; font-weight: 650; }
 .sport-custom-fields label span { display: block; font-size: 11px; }
 .sport-custom-fields input { width: 100px; min-height: 32px; margin-top: 4px; padding: 5px 7px; }
 .sport-custom-fields button { min-height: 32px; padding: 5px 9px; }
+.sport-events { font-weight: 500; }
 .sport-review-meal { margin: 4px 0 8px; }
 .sport-review-table { margin: 0; padding: 0; min-width: 195px; background: transparent; white-space: normal; }
 .sport-review-table .sport-custom-fields input { width: 78px; }

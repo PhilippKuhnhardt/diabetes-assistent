@@ -1366,7 +1366,9 @@ function sportReviewHTML(sport, mealId, day, compact = false, inMeal = false) {
   return '<div class="sport-review' + (compact ? ' sport-review-table' : '') + (inMeal ? ' sport-review-meal' : '') + '" data-meal-id="' + escapeHTML(mealId) +
     '" data-day="' + escapeHTML(day) + '" data-suggestion="' + escapeHTML(suggestion) + '">' +
     '<div class="sport-state' + (applied ? ' is-applied' : '') + '">' +
-    (applied ? icon("check") + '<span>Sport ' + escapeHTML(signedChange(effect, 0)) + '</span>' : '<span>Kein Sporteffekt</span>') + '</div>' +
+    (applied ? icon("check") + '<span>Sport ' + escapeHTML(signedChange(effect, 0)) + '</span>' : '<span>Kein Sporteffekt</span>') +
+    ((sport.events || []).length ? '<span class="sport-events">· ' + escapeHTML(sport.events.map(item =>
+      (sportNames[item.kind] || "Sport") + " " + timeOnly(item.at)).join(", ")) + '</span>' : '') + '</div>' +
     (applied ? '<button type="button" class="sport-remove icon-button" aria-label="Sporteinfluss entfernen" title="Sporteinfluss entfernen">' + icon("remove") + '</button>' : '') +
     (!applied && suggestion ? '<button type="button" class="sport-suggestion">' + icon("plus") + ' Vorschlag ' + escapeHTML(signedChange(suggestion, 0)) + ' übernehmen</button>' : '') +
     '<details class="sport-custom"><summary>' + (applied ? 'Wert ändern' : 'Eigenen Wert setzen') + '</summary>' +
