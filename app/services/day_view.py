@@ -174,6 +174,8 @@ def compute_day(day: str) -> dict:
             kind = "basal"
         elif event_type == "Exercise":
             kind = "exercise"
+        elif item.get("finger_mgdl"):
+            kind = "finger"
         elif event_type == "Meal Bolus" and calculation.dec(item["carbs"]) > 0:
             kind = "meal"
         elif event_type == "Snack Bolus" or "[DA2:snack]" in item["notes"]:
@@ -191,14 +193,20 @@ def compute_day(day: str) -> dict:
                 note = note[len(label):].lstrip(" —")
                 break
         try:
-            glucose = calculation.interpolate_glucose(entries, item["at"])["value"]
-            glucose_at = item["at"]
+            if kind == "finger":
+                glucose, glucose_at = item["finger_mgdl"], item["at"]
+            else:
+                glucose = calculation.interpolate_glucose(entries, item["at"])["value"]
+                glucose_at = item["at"]
         except ValueError:
             previous = [point for point in entries
                         if point["at"] <= item["at"]
                         and item["at"] - point["at"] <= timedelta(minutes=15)]
             glucose = calculation.dec(previous[-1]["sgv"]) if previous else None
             glucose_at = previous[-1]["at"] if previous else None
+            finger = None if previous else calculation.finger_glucose(treatments, item["at"])
+            if finger:
+                glucose, glucose_at = finger["value"], finger["before"]
         timeline.append({
             "id": item["id"], "at": item["at"], "kind": kind, "eventType": event_type,
             "carbs": item["carbs"], "insulin": item["insulin"],

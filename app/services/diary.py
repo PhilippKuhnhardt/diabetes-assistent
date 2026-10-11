@@ -152,6 +152,23 @@ def save_diary_treatment(payload: dict) -> dict:
     return {"id": record_id or None, "event_id": event_id, "day": day}
 
 
+def save_glucose_check(at: datetime, mgdl: Decimal, event_id: str) -> None:
+    """Blood glucose measured by hand, as a Nightscout BG Check. It is a start value for the dose
+    help only; meal factors and the CGM curve never read it."""
+    if not nightscout.is_configured():
+        raise ValueError("Zuerst Nightscout verbinden")
+    if not mgdl.is_finite() or not 20 <= mgdl <= 600:
+        raise ValueError("Blutzucker muss zwischen 20 und 600 mg/dL liegen")
+    _, settings = config.get_settings()
+    day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+    if not ensure_not_duplicate(day, event_id):
+        nightscout.write_treatment({
+            "eventType": "BG Check", "created_at": at.isoformat().replace("+00:00", "Z"),
+            "glucose": float(mgdl), "glucoseType": "Finger", "units": "mg/dl",
+            "notes": f"[DAE:{event_id}]", "enteredBy": "Diabetes Diary", "identifier": event_id,
+        })
+
+
 def delete_treatment(payload: dict) -> dict:
     if not nightscout.is_configured():
         raise ValueError("Zuerst Nightscout verbinden")

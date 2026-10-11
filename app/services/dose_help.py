@@ -24,6 +24,11 @@ def dose_help(payload: dict) -> dict:
     treatments = [{"at": parse_instant(row["at"]), **{k: v for k, v in row.items() if k != "at"}}
                   for row in current_day["treatments"]]
     now = datetime.now(timezone.utc)
+    finger = [{"at": row["at"], "mgdl": row["finger_mgdl"]} for row in treatments if row.get("finger_mgdl")]
+    if payload.get("finger_mgdl") is not None:
+        # A value typed in the entry form counts before it is saved, at the entry's time.
+        at = payload.get("finger_at") or now
+        finger.append({"at": min(at, now), "mgdl": Decimal(str(payload["finger_mgdl"]))})
     local_now = now.astimezone(ZoneInfo(current_settings["timezone"]))
     overrides, periods = marks.analysis_day_types(), marks.vacation_periods()
     day_type, day_type_source = marks.day_type_for(today, overrides, periods)
@@ -63,7 +68,7 @@ def dose_help(payload: dict) -> dict:
                             units_per_ke=factor["median_units_per_ke"] if use_factor else None,
                             auto_units_per_ke=auto_value,
                             auto_surcharge_mgdl=surcharge_mgdl if surcharge else None,
-                            surcharge_share=forecast.surcharge_share, on_board=active)
+                            surcharge_share=forecast.surcharge_share, on_board=active, finger=finger)
     plan = split.open_plan(treatments, now)
     result["split_plan"] = plan and {"meal_at": plan["meal_at"].isoformat(), "units": str(plan["units"]),
                                      "due_at": plan["due_at"].isoformat()}
@@ -93,6 +98,7 @@ def on_board_view(active: dict, result: dict) -> dict:
     fresh = result.get("glucose_fresh")
     return {
         "glucose_mgdl": result.get("glucose_mgdl"), "glucose_fresh": bool(fresh),
+        "glucose_source": result.get("glucose_source"),
         "insulin_units": str(active["insulin_units"]),
         "lowering_mgdl": str(active["lowering_mgdl"]), "lowering_until": instant(active["lowering_until"]),
         "raising_mgdl": str(active["raising_mgdl"]), "raising_until": instant(active["raising_until"]),
