@@ -30,8 +30,7 @@ class DueReminderTests(unittest.TestCase):
         self.assertEqual(before, [])
         due = notifications.due_reminders(datetime(2026, 10, 9, 9, tzinfo=timezone.utc), SETTINGS, [], [], ON)
         self.assertEqual([item["key"] for item in due], ["basal:2026-10-09"])
-        self.assertIn("Bis 11:00", due[0]["message"])
-        self.assertIn("17 IE", due[0]["message"])
+        self.assertEqual("Üblich 17 IE", due[0]["message"])
         dose = {"at": datetime(2026, 10, 9, 6, tzinfo=timezone.utc), "units": "17"}
         self.assertEqual(notifications.due_reminders(datetime(2026, 10, 9, 9, tzinfo=timezone.utc),
                                                      SETTINGS, [], [dose], ON), [])
@@ -44,10 +43,27 @@ class DueReminderTests(unittest.TestCase):
         due = notifications.due_reminders(MEAL_AT + timedelta(minutes=120), SETTINGS, [MEAL], [{"units": "17"}], ON)
         self.assertEqual([item["kind"] for item in due], ["split"])
         self.assertEqual(due[0]["key"], "split:2026-10-09T10:30:00+00:00")
-        self.assertIn("4,5 IE zur Mahlzeit um 12:30", due[0]["message"])
+        self.assertEqual("4,5 IE zur Mahlzeit um 12:30", due[0]["message"])
         second = {"at": MEAL_AT + timedelta(minutes=121), "insulin": "4", "eventType": "Correction Bolus"}
         self.assertEqual(notifications.due_reminders(MEAL_AT + timedelta(minutes=125), SETTINGS, [MEAL, second],
                                                      [{"units": "17"}], ON), [])
+
+    def test_glucose_warning_shows_only_the_numbers(self):
+        now = datetime(2026, 10, 9, 12, tzinfo=timezone.utc)
+        found = [{"kind": "low", "at": now + timedelta(minutes=25), "glucose_mgdl": 95, "mgdl": 62},
+                 {"kind": "high", "at": now + timedelta(minutes=40), "glucose_mgdl": 210, "mgdl": 268}]
+        with patch.object(notifications.marks, "analysis_day_types", return_value={}), \
+                patch.object(notifications.marks, "vacation_periods", return_value=[]), \
+                patch.object(notifications.marks, "day_type_for", return_value=("work",)), \
+                patch.object(notifications.factors, "forecast_settings", return_value=(None, None, 30)), \
+                patch.object(notifications.factors, "meal_points", return_value=[]), \
+                patch.object(notifications.factors, "carb_factor", return_value=None), \
+                patch.object(notifications.on_board, "sources", return_value=[]), \
+                patch.object(notifications.glucose_alerts, "warnings", return_value=found):
+            due = notifications.glucose_warnings(now, SETTINGS, [], [], {"low": True, "high": True})
+        self.assertEqual([item["message"] for item in due],
+                         ["BZ 95, unter 70 um 14:25 (in 25 min), Tiefstwert 62",
+                          "BZ 210, über 250 um 14:40 (in 40 min), Höchstwert 268"])
 
 
 class CheckTests(unittest.TestCase):
