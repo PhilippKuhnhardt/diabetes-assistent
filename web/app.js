@@ -340,6 +340,10 @@ function renderNotifications(data) {
     ? "Pushover ist eingerichtet."
     : "Pushover ist nicht eingerichtet: PUSHOVER_APP_TOKEN und PUSHOVER_USER_KEY im Deployment setzen.";
   $$(".notify-toggle").forEach(input => { input.checked = Boolean(data.enabled[input.dataset.kind]); });
+  $$(".notify-priority").forEach(select => {
+    select.replaceChildren(...data.priority_options.map(option => new Option("Stufe: " + option.label, String(option.value))));
+    select.value = String(data.priorities[select.dataset.kind]);
+  });
   $("#notify-basal-hint").textContent = "Wenn bis " + data.basal_after + " (Frühstücksende) heute noch kein Basal erfasst ist.";
   $("#notify-test").disabled = !data.configured;
   const list = $("#notify-recent");
@@ -363,6 +367,21 @@ async function saveNotification(event) {
     toast(error.message, true);
   } finally {
     input.disabled = false;
+  }
+}
+
+async function saveNotificationPriority(event) {
+  const select = event.target;
+  select.disabled = true;
+  try {
+    renderNotifications(await api("/api/notifications", {
+      method: "POST", body: JSON.stringify({ kind: select.dataset.kind, priority: Number(select.value) }),
+    }));
+  } catch (error) {
+    toast(error.message, true);
+    loadNotifications();
+  } finally {
+    select.disabled = false;
   }
 }
 
@@ -2634,6 +2653,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#entry-day-type").addEventListener("click", saveEntryDayType);
   $("#vacation-toggle").addEventListener("change", saveVacation);
   $$(".notify-toggle").forEach(input => input.addEventListener("change", saveNotification));
+  $$(".notify-priority").forEach(select => select.addEventListener("change", saveNotificationPriority));
   $("#notify-test").addEventListener("click", sendTestNotification);
   $("#entry-form").elements.carbs.addEventListener("input", event => {
     event.target.setCustomValidity("");
