@@ -204,6 +204,9 @@ def compute_day(day: str) -> dict:
                         and item["at"] - point["at"] <= timedelta(minutes=15)]
             glucose = calculation.dec(previous[-1]["sgv"]) if previous else None
             glucose_at = previous[-1]["at"] if previous else None
+            finger = None if previous else calculation.finger_glucose(treatments, item["at"])
+            if finger:
+                glucose, glucose_at = finger["value"], finger["before"]
         timeline.append({
             "id": item["id"], "at": item["at"], "kind": kind, "eventType": event_type,
             "carbs": item["carbs"], "insulin": item["insulin"],
