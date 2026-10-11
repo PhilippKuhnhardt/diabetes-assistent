@@ -113,6 +113,14 @@ class OnBoardTests(unittest.TestCase):
         self.assertEqual(active["settled_at"], active["lowering_until"])
 
 
+class ForecastBandTests(unittest.TestCase):
+    def test_band_widens_with_what_still_acts(self):
+        self.assertEqual(on_board.forecast_band(Decimal(0), Decimal(0)), (Decimal(30), Decimal(30)))
+        self.assertEqual(on_board.forecast_band(Decimal(20), Decimal(19)), (Decimal(30), Decimal(30)))
+        self.assertEqual(on_board.forecast_band(Decimal(30), Decimal(10)), (Decimal(50), Decimal(60)))
+        self.assertEqual(on_board.forecast_band(Decimal(100), Decimal(60)), (Decimal(75), Decimal(90)))
+
+
 class TimelineTests(unittest.TestCase):
     def setUp(self):
         self.start = datetime(2026, 10, 8, 10, tzinfo=timezone.utc)

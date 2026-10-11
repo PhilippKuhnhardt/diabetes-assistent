@@ -32,6 +32,12 @@ SURCHARGE_FROM = Decimal(120)
 SURCHARGE_TO, SURCHARGE_TO_FAT = Decimal(300), Decimal(360)
 # Typical forecast miss after a post-meal correction (11 corrections, analysis 2026-10-08).
 FORECAST_SPREAD_MGDL = Decimal(60)
+# Likely range of the expected value (8 of 10 cases, P10..P90 of the miss), by how much still acts in
+# total (insulin + carbs + surcharge, mg/dL): (from, below expected, above expected). Estimated offline
+# from 23 days, analysis in the project files analysen/fruehprognose.md (2026-10-11).
+FORECAST_BAND = ((Decimal(150), Decimal(75), Decimal(90)),
+                 (Decimal(40), Decimal(50), Decimal(60)),
+                 (Decimal(0), Decimal(30), Decimal(30)))
 # Within this time after a main meal the carbs still rise and the forecast is least certain.
 FRESH_MEAL_MINUTES = 90
 # An effect counts as finished once less than this is left.
@@ -130,6 +136,15 @@ def effects_at(found: dict, moment: datetime, cutoff: datetime | None = None) ->
                      for row in found["surcharges"]), Decimal(0))
     return {"insulin_units": units, "lowering_mgdl": lowering, "carbs_mgdl": carbs,
             "surcharge_mgdl": surcharge, "raising_mgdl": carbs + surcharge}
+
+
+def forecast_band(lowering_mgdl: Decimal, raising_mgdl: Decimal) -> tuple[Decimal, Decimal]:
+    """How far below and above the expected value glucose likely ends (8 of 10 cases)."""
+    acting = lowering_mgdl + raising_mgdl
+    for start, below, above in FORECAST_BAND:
+        if acting >= start:
+            return below, above
+    return FORECAST_BAND[-1][1], FORECAST_BAND[-1][2]
 
 
 def _until(found: dict, now: datetime, key: str) -> datetime | None:

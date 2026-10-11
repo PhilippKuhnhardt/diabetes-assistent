@@ -1016,7 +1016,8 @@ function activeCardHTML(active) {
        "Fett/Eiweiß +" + num(active.surcharge_mgdl, 0), until(active.raising_until)]) +
     item("Erwartet", active.expected_mgdl == null ? "—" : value("≈ ", active.expected_mgdl),
       active.expected_mgdl == null ? ["kein aktueller CGM-Wert"]
-        : [(active.expected_at ? "um " + timeOnly(active.expected_at) : "jetzt"), "±" + num(active.spread_mgdl, 0) + " mg/dL"],
+        : [(active.expected_at ? "um " + timeOnly(active.expected_at) : "jetzt"),
+           "wahrscheinlich " + num(active.expected_low_mgdl, 0) + "–" + num(active.expected_high_mgdl, 0) + " mg/dL"],
       " expected") +
     (nothing ? '<p class="hint">Nichts wirkt mehr nach.</p>' : '') +
     (active.split_plan ? '<p class="hint">2. Teil geplant: ' + escapeHTML(num(active.split_plan.units, 1)) + ' IE um ' +

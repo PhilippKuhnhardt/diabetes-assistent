@@ -93,9 +93,11 @@ def dose_help(payload: dict) -> dict:
 
 def on_board_view(active: dict, result: dict) -> dict:
     """The diary's "Wirkt noch" card: what still lowers and raises glucose, until when, and the
-    expected value once all of it has acted (normal forecast, with its typical spread)."""
+    expected value once all of it has acted (normal forecast, with its likely range)."""
     instant = lambda value: value.isoformat() if value else None
     fresh = result.get("glucose_fresh")
+    expected = (Decimal(result["glucose_mgdl"]) - active["lowering_mgdl"] + active["raising_mgdl"]) if fresh else None
+    below, above = on_board.forecast_band(active["lowering_mgdl"], active["raising_mgdl"])
     return {
         "glucose_mgdl": result.get("glucose_mgdl"), "glucose_fresh": bool(fresh),
         "glucose_source": result.get("glucose_source"),
@@ -104,10 +106,10 @@ def on_board_view(active: dict, result: dict) -> dict:
         "raising_mgdl": str(active["raising_mgdl"]), "raising_until": instant(active["raising_until"]),
         "carbs_mgdl": str(active["carbs_mgdl"]), "surcharge_mgdl": str(active["surcharge_mgdl"]),
         "carbs_remaining_g": str(sum((row["remaining_grams"] for row in active["carbs"]), Decimal(0))),
-        "expected_mgdl": (str(Decimal(result["glucose_mgdl"]) - active["lowering_mgdl"] + active["raising_mgdl"])
-                          if fresh else None),
+        "expected_mgdl": str(expected) if expected is not None else None,
+        "expected_low_mgdl": str(expected - below) if expected is not None else None,
+        "expected_high_mgdl": str(expected + above) if expected is not None else None,
         "expected_at": instant(active["settled_at"]),
-        "spread_mgdl": str(on_board.FORECAST_SPREAD_MGDL),
         "fresh_meal_at": instant(active["fresh_meal_at"]),
         "split_plan": result.get("split_plan"),
         "doses": [{"at": dose["at"].isoformat(), "units": str(dose["units"]),
