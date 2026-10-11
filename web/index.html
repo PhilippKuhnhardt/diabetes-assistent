@@ -105,11 +105,12 @@
                 </div>
                 </section>
               <section id="entry-dose" class="entry-card entry-dose-card" aria-label="Dosis">
+                <label id="entry-finger-field" hidden>BZ blutig gemessen <span>mg/dL</span><input name="finger_mgdl" type="number" min="20" max="600" step="1" inputmode="numeric"></label>
                 <div id="dose-result" class="help-result" aria-live="polite"></div>
                 <label id="entry-insulin-field">Eigene IE<input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
               </section>
               <label id="entry-note-field" hidden>Notiz <span>optional</span><input name="notes" type="text" maxlength="500"></label>
-              <div class="entry-chips"><button type="button" id="entry-note-chip" class="chip quiet-chip" aria-controls="entry-note-field" aria-expanded="false">+ Notiz</button></div>
+              <div class="entry-chips"><button type="button" id="entry-finger-chip" class="chip quiet-chip" aria-controls="entry-finger-field" aria-expanded="false" hidden>+ BZ blutig</button><button type="button" id="entry-note-chip" class="chip quiet-chip" aria-controls="entry-note-field" aria-expanded="false">+ Notiz</button></div>
               <div class="form-actions entry-actions"><button class="primary" type="submit" id="entry-submit">In Nightscout speichern</button></div>
             </form>
           </section>

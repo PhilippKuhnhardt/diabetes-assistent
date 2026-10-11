@@ -23,7 +23,7 @@ SPORT_KINDS = list(episodes.SPORT_LABELS)
 READ_TABLES = ["meals", "window-events", "entries", "treatments", "basal", "data", "profile"]
 # The dose fields a conversation needs; the rest of dose_help's answer is intermediate values.
 DOSE_KEYS = (
-    "message", "reason", "options", "carbs_g", "glucose_mgdl", "glucose_at", "glucose_fresh",
+    "message", "reason", "options", "carbs_g", "glucose_mgdl", "glucose_at", "glucose_fresh", "glucose_source",
     "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl", "forecast_mgdl", "cautious_forecast_mgdl",
     "activity_change_mgdl", "recent_rapid_doses", "auto_meal", "auto_method", "auto_factor_count",
     "auto_factor_min_meals", "auto_surcharge_units", "day_type", "day_type_source", "split_plan")
@@ -161,6 +161,7 @@ def _form(args: dict, at: datetime) -> dict:
         "day": at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat(), "at": at.isoformat(),
         "mode": "meal", "carbs": str(carbs), "as": "meal" if own_meal else None, "split": split,
         "consider_sport": change is not None, "sport_effect_mgdl": str(change or 0),
+        "finger_mgdl": _number(args, "finger_mgdl", Decimal(20), Decimal(600)),
     }
 
 
@@ -284,6 +285,10 @@ FORM = {
     "sport_change_mgdl": {"type": "number", "minimum": -500, "maximum": 500,
                           "description": "Nur wenn die Vorschau Sport vor der Mahlzeit meldet und Philipp den "
                                          "Einfluss bestätigt: geschätzte BZ-Änderung, −40 senkt, +40 hebt."},
+    "finger_mgdl": {"type": "number", "minimum": 20, "maximum": 600,
+                    "description": "Blutig gemessener BZ in mg/dL (z. B. Sensor ausgefallen). Ersetzt für die "
+                                   "Empfehlung einen fehlenden oder älteren CGM-Wert; save_entry speichert ihn als "
+                                   "Nightscout-BG-Check, auch ohne KH und Insulin."},
 }
 
 TOOLS = [

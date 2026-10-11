@@ -226,6 +226,7 @@ function updateEntryChips() {
   $("#entry-note-field").hidden = !noteOpen;
   $("#entry-note-chip").hidden = noteOpen;
   $("#entry-note-chip").setAttribute("aria-expanded", String(noteOpen));
+  updateEntryFinger();
   updateEntryBasalOption();
   updateEntrySubmitLabel();
 }
@@ -1042,6 +1043,7 @@ function recentEntriesHTML(treatments) {
       const parts = item.eventType === "Exercise"
         ? [(sportNames[item.sport_type] || "Sport") + (Number(item.duration) ? " " + num(item.duration, 0) + " min" : "")]
         : item.basal ? ["Basal " + num(item.basal, 1) + " IE"]
+        : item.finger_mgdl ? ["BZ blutig " + num(item.finger_mgdl, 0) + " mg/dL"]
         : [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 2) + " IE" : ""].filter(Boolean);
       return parts.length ? '<span class="recent-chip"><time>' + escapeHTML(timeOnly(item.at)) + '</time> ' + escapeHTML(parts.join(" + ")) + '</span>' : "";
     }).filter(Boolean);
@@ -1412,7 +1414,7 @@ function renderDay(data) {
   renderVisibleCharts();
 }
 
-const entryLabels = { basal: "Basal", meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur / Bolus", exercise: "Sport", other: "Weiterer Eintrag" };
+const entryLabels = { finger: "BZ blutig", basal: "Basal", meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur / Bolus", exercise: "Sport", other: "Weiterer Eintrag" };
 
 function entryLabel(item, data) {
   if (item.kind === "exercise") return sportNames[item.sport_kind] || "Sport";
@@ -1430,7 +1432,9 @@ function entryRowHTML(item, data) {
       ? (item.glucose_at === item.at ? "BZ " : "BZ um " + timeOnly(item.glucose_at) + ": ") + num(item.glucose_mgdl, 0) + " mg/dL" : "",
   ].filter(Boolean).join(" · ");
   const label = entryLabel(item, data);
-  const action = item.kind === "other" ? "" : item.kind === "basal"
+  const action = item.kind === "other" ? "" : item.kind === "finger"
+    ? '<button type="button" class="delete-treatment quiet" data-id="' + escapeHTML(item.id) + '" data-label="BZ blutig" data-at="' +
+      escapeHTML(item.at) + '" aria-label="' + escapeHTML("Blutige Messung um " + timeOnly(item.at) + " löschen") + '">Löschen</button>' : item.kind === "basal"
     ? '<button type="button" class="delete-basal quiet" data-id="' + escapeHTML(item.id) + '" data-at="' + escapeHTML(item.at) +
       '" aria-label="' + escapeHTML("Basal um " + timeOnly(item.at) + " löschen") + '">Löschen</button>' :
     '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '" aria-label="' +
@@ -1524,6 +1528,7 @@ function previewRequest() {
   try { at = toInstant(state.day, form.elements.at.value); } catch (_) { /* The time field is incomplete. */ }
   return {
     day: state.day, at, mode: form.elements.kind.value, carbs: form.elements.carbs.value, as: state.entryAs || null,
+    finger_mgdl: form.elements.finger_mgdl.disabled ? null : form.elements.finger_mgdl.value || null,
     split: state.split ?? null,
     consider_sport: form.elements.consider_sport.checked, sport_effect_mgdl: form.elements.sport_effect_mgdl.value || "0",
   };
@@ -1534,7 +1539,21 @@ function currentPreview() {
   return preview && preview.day === state.day && preview.mode === $("#entry-form").elements.kind.value ? preview : null;
 }
 
+// Blood glucose measured by hand: the field opens when the server offers it (no fresh CGM value),
+// when the chip was tapped or a value is typed; otherwise a chip offers it in meal mode.
+function updateEntryFinger() {
+  const form = $("#entry-form");
+  const meal = form.elements.kind.value === "meal" && state.day === todayDay();
+  const open = meal && (Boolean(state.entryFingerOpen) || Boolean(form.elements.finger_mgdl.value) ||
+    Boolean(currentPreview()?.dose?.finger_offer));
+  $("#entry-finger-field").hidden = !open;
+  form.elements.finger_mgdl.disabled = !meal;
+  $("#entry-finger-chip").hidden = !meal || open;
+  $("#entry-finger-chip").setAttribute("aria-expanded", String(open));
+}
+
 function renderPreview() {
+  updateEntryFinger();
   renderActiveCard();
   updateEntrySportOption();
   updateEntryDayType();
@@ -1623,6 +1642,8 @@ function doseHelpHTML(data) {
   return '<div class="dose-head"><span class="dose-heading">' + (withCarbs ? "Empfehlung" : "Korrektur ohne Essen") +
     '</span>' + (options ? '<span class="dose-hint">Antippen speichert direkt</span>' : '') + '</div>' +
     factorLine(data) +
+    (data.glucose_source === "finger" && data.glucose_fresh ? '<p class="dose-factor">Startwert blutig <strong>' +
+      escapeHTML(num(data.glucose_mgdl, 0)) + ' mg/dL</strong> um ' + escapeHTML(timeOnly(data.glucose_at)) + '</p>' : '') +
     (options ? '<div class="dose-options">' + options + '</div>' : '') +
     (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport <strong>' +
       escapeHTML(signedChange(data.activity_change_mgdl, 0)) + '</strong> · ' + escapeHTML((Number(data.activity_units) > 0 ? "+" : "") + num(data.activity_units, 2)) + ' IE</p>' : '') +
@@ -1666,6 +1687,7 @@ function resetEntryForm() {
   state.entryTimeTouched = false;
   state.entryTimeOpen = false;
   state.entryNoteOpen = false;
+  state.entryFingerOpen = false;
   state.doseChoice = null;
   state.entryAs = null;
   state.split = null;
@@ -1832,7 +1854,8 @@ async function saveEntry(event) {
   if (mode === "basal") return saveBasalEntry(form);
   const carbs = mode === "meal" ? Number(form.elements.carbs.value || 0) : 0;
   const insulin = mode === "meal" ? Number(form.elements.insulin.value || 0) : 0;
-  if (mode === "meal" && carbs <= 0 && insulin <= 0) {
+  const finger = mode === "meal" && !form.elements.finger_mgdl.disabled ? Number(form.elements.finger_mgdl.value || 0) : 0;
+  if (mode === "meal" && carbs <= 0 && insulin <= 0 && !finger) {
     form.elements.carbs.setCustomValidity("Bitte Kohlenhydrate, Insulin oder beides eintragen.");
     form.elements.carbs.reportValidity();
     return;
@@ -1878,7 +1901,8 @@ async function saveEntry(event) {
       insulin: form.elements.insulin.value, notes: form.elements.notes.value };
     resetEntryForm();
     const basal = result.basal;
-    const message = (result.kind === "exercise" ? "Sport" : [carbs > 0 ? num(carbs, 0) + " g" : "", insulin > 0 ? num(insulin, 2) + " IE" : ""]
+    const message = (result.kind === "exercise" ? "Sport" : [result.finger_mgdl != null ? "BZ " + num(result.finger_mgdl, 0) + " mg/dL" : "",
+      carbs > 0 ? num(carbs, 0) + " g" : "", insulin > 0 ? num(insulin, 2) + " IE" : ""]
       .filter(Boolean).join(" + ")) + (basal ? " + Basal " + num(basal.units, 1) + " IE" : "") + " gespeichert" +
       (result.split_units ? " · 2. Teil " + num(result.split_units, 1) + " IE vorgemerkt" : "") +
       (result.sport_marked ? " · Sport berücksichtigt" : "") +
@@ -2627,6 +2651,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     state.entryTimeOpen = true;
     updateEntryChips();
     $("#entry-time").focus();
+  });
+  $("#entry-finger-chip").addEventListener("click", () => {
+    state.entryFingerOpen = true;
+    updateEntryFinger();
+    $("#entry-form").elements.finger_mgdl.focus();
+  });
+  $("#entry-form").elements.finger_mgdl.addEventListener("input", () => {
+    $("#entry-form").elements.carbs.setCustomValidity("");
+    schedulePreview();
   });
   $("#entry-note-chip").addEventListener("click", () => {
     state.entryNoteOpen = true;

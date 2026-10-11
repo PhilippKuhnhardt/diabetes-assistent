@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import uuid
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from zoneinfo import ZoneInfo
@@ -48,6 +49,20 @@ def _sport_change(payload: dict) -> Decimal | None:
     return value if value.is_finite() and -500 <= value <= 500 else None
 
 
+def _finger(payload: dict) -> Decimal | None:
+    """Blood glucose measured by hand in the form; empty means none, out of range raises."""
+    raw = str(payload.get("finger_mgdl") if payload.get("finger_mgdl") is not None else "").strip()
+    if raw == "":
+        return None
+    try:
+        value = Decimal(raw)
+    except InvalidOperation:
+        value = Decimal("NaN")
+    if not value.is_finite() or not 20 <= value <= 600:
+        raise ValueError("Blutig gemessener BZ muss zwischen 20 und 600 mg/dL liegen")
+    return value
+
+
 def _context(payload: dict) -> dict:
     day = str(payload.get("day", ""))
     date.fromisoformat(day)
@@ -67,7 +82,8 @@ def _context(payload: dict) -> dict:
     at = parse_instant(str(payload["at"])) if payload.get("at") else None
     treatments = [{**row, "at": parse_instant(row["at"])} for row in current["treatments"]]
     return {"day": day, "mode": mode, "settings": settings, "zone": zone, "today": today,
-            "current": current, "at": at, "treatments": treatments, "carbs": _carbs(payload)}
+            "current": current, "at": at, "treatments": treatments, "carbs": _carbs(payload),
+            "finger": _finger(payload) if mode == "meal" else None}
 
 
 def _assignment(context: dict, payload: dict) -> dict | None:
@@ -152,7 +168,8 @@ def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | N
     if change is None:
         return {"message": "Der geschätzte Sporteinfluss liegt außerhalb des erlaubten Bereichs."}
     result = dose_help.dose_help({"carbs": str(carbs), "activity_change_mgdl": str(change),
-                                  "snack": bool(assignment and assignment["snack"])})
+                                  "snack": bool(assignment and assignment["snack"]),
+                                  "finger_mgdl": context["finger"], "finger_at": context["at"]})
     # With carbs every option uses the calculated factor; until it has enough meals the
     # breakfast day-type median or Nightscout's I:C stands in.
     prefix = "auto_" if carbs > 0 and result.get("auto_units_per_ke") is not None else ""
@@ -182,7 +199,9 @@ def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | N
                            "expected_mgdl": (str(Decimal(forecast) - units * Decimal(result["isf_mgdl_per_unit"]))
                                              if forecast is not None else None),
                            "savable": units <= 100})
-    return {**result, "options": options, "check": _dose_check(result, options)}
+    # Without a fresh CGM value the form offers its field for blood glucose measured by hand.
+    finger_offer = not result.get("glucose_fresh") or result.get("glucose_source") == "finger"
+    return {**result, "options": options, "check": _dose_check(result, options), "finger_offer": finger_offer}
 
 
 def _on_board(context: dict, dose: dict) -> dict | None:
@@ -230,10 +249,22 @@ def save(payload: dict) -> dict:
     if carbs is None:
         raise ValueError("KH oder Insulin außerhalb des erlaubten Bereichs")
     insulin = calculation.dec(payload.get("insulin") or 0) if mode == "meal" else Decimal(0)
-    if mode == "meal" and carbs <= 0 and insulin <= 0:
+    finger = context["finger"]
+    if mode == "meal" and carbs <= 0 and insulin <= 0 and finger is None:
         raise ValueError("Bitte Kohlenhydrate, Insulin oder beides eintragen.")
     if context["at"] is None:
         raise ValueError("Zeit fehlt")
+    if finger is not None:
+        # Saved first so the dose re-check below and later suggestions see the same start value.
+        event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
+        diary.save_glucose_check(context["at"], finger, str(uuid.uuid5(uuid.UUID(event_id), "finger")))
+        payload = {**payload, "event_id": event_id}
+        if carbs <= 0 and insulin <= 0:
+            day = context["at"].astimezone(context["zone"]).date().isoformat()
+            return {"day": day, "kind": "finger", "event_id": event_id, "id": None, "split_units": None,
+                    "carbs": "0", "insulin": "0", "finger_mgdl": str(finger), "basal": None,
+                    "basal_error": None, "sport_marked": False, "sport_error": None,
+                    "day_view": day_view.day_payload(day)}
     assignment = _assignment(context, payload)
     sport = _sport(context, assignment)
     basal_units = _basal_units(context) if payload.get("with_basal") else Decimal(0)
@@ -297,7 +328,7 @@ def save(payload: dict) -> dict:
     return {
         "day": day, "kind": kind, "event_id": saved["event_id"], "id": treatment and treatment["id"],
         "split_units": split_units if kind == "meal" else None,
-        "carbs": str(carbs), "insulin": str(insulin),
+        "carbs": str(carbs), "insulin": str(insulin), "finger_mgdl": str(finger) if finger is not None else None,
         "basal": basal_result and {**basal_result, "units": str(basal_units)}, "basal_error": basal_error,
         "sport_marked": consider_sport and sport_error is None, "sport_error": sport_error,
         "day_view": current,

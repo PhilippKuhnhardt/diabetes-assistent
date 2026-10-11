@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime, timezone, timedelta
+from decimal import Decimal, InvalidOperation
 from zoneinfo import ZoneInfo
 
 TAG = re.compile(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction|snack)\]")
@@ -77,6 +78,21 @@ def normalize_entries(raw: list[dict]) -> list[dict]:
     return sorted(result, key=lambda x: x["at"])
 
 
+def finger_mgdl(item: dict) -> Decimal | None:
+    """A Nightscout BG Check (blood glucose measured by hand) in mg/dL, else None."""
+    if item.get("eventType") != "BG Check":
+        return None
+    try:
+        value = Decimal(str(item.get("glucose")))
+    except (InvalidOperation, ValueError):
+        return None
+    if not value.is_finite() or value <= 0:
+        return None
+    if "mmol" in str(item.get("units") or "").lower():
+        value = (value * Decimal("18.0182")).quantize(Decimal(1))
+    return value
+
+
 def normalize_treatments(raw: list[dict]) -> list[dict]:
     result = []
     for item in raw:
@@ -109,6 +125,7 @@ def normalize_treatments(raw: list[dict]) -> list[dict]:
             "carbs_certainty": carbs_certainty(str(item.get("notes") or "")),
             **{flag: tag in str(item.get("notes") or "") for flag, tag in QUALITY_MARKERS.items()},
             "split": split_plan(str(item.get("notes") or "")),
+            "finger_mgdl": finger_mgdl(item),
             **marker,
         })
     return sorted(result, key=lambda x: x["at"])
