@@ -152,8 +152,13 @@ def _notifications(db: sqlite3.Connection) -> None:
     )""")
 
 
+def _notification_priority(db: sqlite3.Connection) -> None:
+    """Pushover priority per reminder kind (NULL = the kind's default)."""
+    db.execute("ALTER TABLE notification_settings ADD COLUMN priority INTEGER")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
-                                                          _notifications]
+                                                          _notifications, _notification_priority]
 
 
 def init() -> None:

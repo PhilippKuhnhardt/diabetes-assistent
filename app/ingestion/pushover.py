@@ -11,6 +11,9 @@ import urllib.request
 API_URL = "https://api.pushover.net/1/messages.json"
 # High priority: skips Pushover's quiet hours; the iOS app can play it as a critical alert if enabled there.
 PRIORITY = 1
+# Emergency (2) repeats until acknowledged: every RETRY seconds, for at most EXPIRE seconds.
+EMERGENCY = 2
+EMERGENCY_RETRY, EMERGENCY_EXPIRE = 60, 1800
 
 
 class PushoverError(Exception):
@@ -27,6 +30,8 @@ def send(title: str, message: str, priority: int = PRIORITY) -> None:
         raise PushoverError("Pushover ist nicht eingerichtet")
     fields = {"token": os.environ["PUSHOVER_APP_TOKEN"], "user": os.environ["PUSHOVER_USER_KEY"],
               "title": title[:250], "message": message[:1024], "priority": str(priority)}
+    if priority == EMERGENCY:
+        fields.update({"retry": str(EMERGENCY_RETRY), "expire": str(EMERGENCY_EXPIRE)})
     public_url = os.environ.get("APP_PUBLIC_URL", "").strip()
     if public_url.startswith("https://"):
         fields.update({"url": public_url, "url_title": "App öffnen"})
