@@ -45,9 +45,8 @@ def due_reminders(now: datetime, settings: dict, treatments: list[dict], basal_t
     breakfast_end = int(settings["breakfast_end_minute"])
     if enabled.get("basal") and local.hour * 60 + local.minute >= breakfast_end and not basal_today:
         usual = calculation.dec(settings.get("basal_default_units", config.DEFAULT_BASAL_UNITS))
-        message = f"Bis {breakfast_end // 60:02d}:{breakfast_end % 60:02d} ist heute noch kein Basal eingetragen."
-        if usual > 0:
-            message += f" Üblich sind {_units(usual)} IE."
+        # Only the facts (user request 2026-10-11): Philipp knows the app, the title says what is due.
+        message = f"Üblich {_units(usual)} IE" if usual > 0 else "Heute noch kein Basal"
         reminders.append({"key": f"basal:{local.date().isoformat()}", "kind": "basal",
                           "title": LABELS["basal"], "message": message})
     plan = split.open_plan(treatments, now) if enabled.get("split") else None
@@ -55,8 +54,7 @@ def due_reminders(now: datetime, settings: dict, treatments: list[dict], basal_t
         reminders.append({
             "key": f"split:{plan['meal_at'].astimezone(timezone.utc).isoformat()}", "kind": "split",
             "title": LABELS["split"],
-            "message": (f"Geplant sind {_units(plan['units'])} IE zur Mahlzeit um {_clock(plan['meal_at'], zone)}. "
-                        "Die App rechnet den 2. Teil mit dem aktuellen BZ nach."),
+            "message": f"{_units(plan['units'])} IE zur Mahlzeit um {_clock(plan['meal_at'], zone)}",
         })
     return reminders
 
@@ -84,16 +82,14 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
         if not enabled.get(warning["kind"]):
             continue
         minutes = max(0, round((warning["at"] - now).total_seconds() / 60))
-        glucose = f"BZ {warning['glucose_mgdl']:.0f} mg/dL"
         if warning["kind"] == "low":
-            message = (f"{glucose}. Prognose unter {glucose_alerts.LOW_MGDL} um {_clock(warning['at'], zone)} "
-                       f"(in etwa {minutes} min), tiefster Wert in der nächsten Stunde etwa {warning['mgdl']:.0f}.")
+            crossing, extreme = f"unter {glucose_alerts.LOW_MGDL}", "Tiefstwert"
         else:
-            message = (f"{glucose}. Prognose über {glucose_alerts.HIGH_MGDL} um {_clock(warning['at'], zone)} "
-                       f"(in etwa {minutes} min), höchster Wert in der nächsten Stunde etwa {warning['mgdl']:.0f}.")
+            crossing, extreme = f"über {glucose_alerts.HIGH_MGDL}", "Höchstwert"
+        message = (f"BZ {warning['glucose_mgdl']:.0f}, {crossing} um {_clock(warning['at'], zone)} "
+                   f"(in {minutes} min), {extreme} {warning['mgdl']:.0f}")
         reminders.append({"key": f"{warning['kind']}:{now.astimezone(timezone.utc).isoformat()}",
-                          "kind": warning["kind"], "title": LABELS[warning["kind"]],
-                          "message": message + " Grobe Prognose aus Insulin, KH und Verlauf."})
+                          "kind": warning["kind"], "title": LABELS[warning["kind"]], "message": message})
     return reminders
 
 
