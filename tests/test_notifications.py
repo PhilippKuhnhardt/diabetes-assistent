@@ -229,9 +229,7 @@ class BackgroundTests(unittest.TestCase):
         status = {"sync_error": None, "basal_sync_error": None}
         with patch.object(background.nightscout, "is_configured", return_value=True), \
                 patch.object(background.config, "get_settings", return_value=(1, SETTINGS)), \
-                patch.object(background.summary, "history_days", return_value=0), \
-                patch.object(background.summary, "summary"), \
-                patch.object(background.day_view, "day_payload"), \
+                patch.object(background, "_precompute", return_value=False), \
                 patch.object(background.pushover, "heartbeat") as heartbeat, \
                 patch.object(background.notifications, "check", return_value=[]) as check:
             with patch.object(background.sync, "sync_day",
