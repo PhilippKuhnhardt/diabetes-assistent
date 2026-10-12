@@ -51,7 +51,7 @@ def day_inputs(start: datetime, end: datetime, day: str) -> list:
             for table in ("entries", "treatments")]
         queries = [
             ("SELECT id,at,units,notes,nightscout_synced FROM basal_doses WHERE at>=? AND at<? ORDER BY id", (lo, hi)),
-            ("SELECT synced_at FROM synced_days WHERE day=?", (day,)),
+            ("SELECT 1 FROM synced_days WHERE day=?", (day,)),
             ("SELECT id,effective_at FROM settings_versions ORDER BY id", ()),
             ("SELECT start_at,profile_id,profile_name,timezone,isf_schedule,ic_schedule,target_schedule "
              "FROM nightscout_profiles ORDER BY start_at", ()),

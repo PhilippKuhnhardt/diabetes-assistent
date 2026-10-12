@@ -1,8 +1,9 @@
 """Background job: keep the local copy and the stored analysis current without an open app.
 
 Every APP_SYNC_MINUTES (default 5, 0 switches it off) it mirrors yesterday and today from
-Nightscout, then makes sure every day the analysis reads and the analysis page of every
-period are stored. Opening the app or calling the read API then finds current results.
+Nightscout and checks the reminders. Only when yesterday or today read something new does it
+make sure every day the analysis reads and the analysis page of every period are stored.
+Opening the app or calling the read API then finds current results.
 """
 from __future__ import annotations
 
@@ -17,6 +18,8 @@ from app.services import day_view, notifications, summary
 from app.store import config
 
 PERIODS = (14, 30, 7, 3, 1)  # the analysis page's default first
+# What the last precompute saw; while it is unchanged a round only checks the reminders.
+_last_inputs: tuple | None = None
 
 
 def interval_minutes() -> int:
@@ -42,11 +45,7 @@ def run_once() -> dict:
         failure = status["sync_error"] or status["basal_sync_error"]
         if failure:
             errors[day.isoformat()] = failure
-    for offset in range(summary.history_days(max(PERIODS)) + 1):
-        day_view.day_payload((today - timedelta(days=offset)).isoformat(), refresh=False)
-    for days in PERIODS:
-        summary.summary({"days": [str(days)]})
-    result = {"errors": errors}
+    result = {"errors": errors, "computed": _precompute(today)}
     # Reminders only read a freshly mirrored today, so an injected dose cannot be reminded again.
     if today.isoformat() not in errors:
         try:
@@ -58,6 +57,23 @@ def run_once() -> dict:
     if not errors and "notify_error" not in result:
         pushover.heartbeat()
     return result
+
+
+def _precompute(today) -> bool:
+    """Store every day the analysis reads and the analysis page of every period, but only when
+    yesterday or today read something new. Their fingerprints also cover the settings, profile,
+    marks and code, so an unchanged pair means the stored results are still current."""
+    global _last_inputs
+    inputs = (today.isoformat(), *(day_view.day_fingerprint((today - timedelta(days=offset)).isoformat())
+                                   for offset in (1, 0)))
+    if inputs == _last_inputs:
+        return False
+    for offset in range(summary.history_days(max(PERIODS)) + 1):
+        day_view.day_payload((today - timedelta(days=offset)).isoformat(), refresh=False)
+    for days in PERIODS:
+        summary.summary({"days": [str(days)]})
+    _last_inputs = inputs
+    return True
 
 
 def _loop(minutes: int) -> None:
