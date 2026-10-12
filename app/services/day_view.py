@@ -34,6 +34,7 @@ def day_payload(day: str, refresh: bool = True) -> dict:
         results.save_day_result(day, fingerprint, payload)
     # Request-specific fields are never stored with the result.
     payload.update({
+        "synced_at": mirror.synced_at(day),
         "connected": nightscout.is_configured(),
         "sync_error": status.get("sync_error"), "profile_sync_error": status.get("profile_sync_error"),
         "basal_sync_error": status.get("basal_sync_error"),

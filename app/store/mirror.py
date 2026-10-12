@@ -12,20 +12,30 @@ def _utc_iso(value: str) -> str:
 
 
 def mirror_day(day: str, entries: list[dict], treatments: list[dict], start: datetime, end: datetime) -> None:
-    """Replace authoritative records in the fetched range; preserve other days."""
+    """Replace authoritative records in the fetched range; preserve other days. A table whose rows
+    come back unchanged is left alone, so its synced_at, and with it every stored result that
+    reads the day, stays valid until Nightscout really has something new."""
     now = datetime.now(timezone.utc).isoformat()
     lo, hi = start.isoformat(), end.isoformat()
+    rows = {
+        "entries": [(str(entry.get("_id") or f"entry:{entry.get('date')}:{entry.get('type')}"),
+                     _utc_iso(entry["dateString"]) if entry.get("dateString")
+                     else datetime.fromtimestamp(entry["date"] / 1000, timezone.utc).isoformat(), json.dumps(entry))
+                    for entry in entries],
+        "treatments": [],
+    }
+    for treatment in treatments:
+        at = _utc_iso(treatment["created_at"]) if treatment.get("created_at") else datetime.fromtimestamp(treatment["date"] / 1000, timezone.utc).isoformat()
+        key = str(treatment.get("_id") or treatment.get("identifier") or f"treatment:{at}:{treatment.get('eventType')}")
+        rows["treatments"].append((key, at, json.dumps(treatment)))
     with connect() as db:
-        db.execute("DELETE FROM entries WHERE at>=? AND at<?", (lo, hi))
-        db.execute("DELETE FROM treatments WHERE at>=? AND at<?", (lo, hi))
-        for entry in entries:
-            at = _utc_iso(entry["dateString"]) if entry.get("dateString") else datetime.fromtimestamp(entry["date"] / 1000, timezone.utc).isoformat()
-            key = str(entry.get("_id") or f"entry:{entry.get('date')}:{entry.get('type')}")
-            db.execute("INSERT OR REPLACE INTO entries(id,at,payload,synced_at) VALUES(?,?,?,?)", (key, at, json.dumps(entry), now))
-        for treatment in treatments:
-            at = _utc_iso(treatment["created_at"]) if treatment.get("created_at") else datetime.fromtimestamp(treatment["date"] / 1000, timezone.utc).isoformat()
-            key = str(treatment.get("_id") or treatment.get("identifier") or f"treatment:{at}:{treatment.get('eventType')}")
-            db.execute("INSERT OR REPLACE INTO treatments(id,at,payload,synced_at) VALUES(?,?,?,?)", (key, at, json.dumps(treatment), now))
+        for table, fresh in rows.items():
+            stored = {tuple(row) for row in db.execute(f"SELECT id,at,payload FROM {table} WHERE at>=? AND at<?", (lo, hi))}
+            if stored == set(fresh):
+                continue
+            db.execute(f"DELETE FROM {table} WHERE at>=? AND at<?", (lo, hi))
+            for key, at, payload in fresh:
+                db.execute(f"INSERT OR REPLACE INTO {table}(id,at,payload,synced_at) VALUES(?,?,?,?)", (key, at, payload, now))
         db.execute("INSERT INTO synced_days(day,synced_at) VALUES(?,?) ON CONFLICT(day) DO UPDATE SET synced_at=excluded.synced_at", (day, now))
 
 

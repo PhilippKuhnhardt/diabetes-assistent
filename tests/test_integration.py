@@ -559,8 +559,13 @@ class IntegrationTests(unittest.TestCase):
                     self.assertEqual(compute.call_count, calls + 1)
                     day_view.day_payload("2026-09-23", refresh=False)
                     self.assertEqual(compute.call_count, calls + 1)
-            # A fresh Nightscout read rewrites the mirror, so the day is calculated again.
+            # A fresh Nightscout read without new data keeps the stored day; a new reading does not.
+            self.request("/api/day?date=2026-09-23")  # brings the basal note just sent to Nightscout
             calls = compute.call_count
+            self.request("/api/day?date=2026-09-23")
+            self.assertEqual(compute.call_count, calls)
+            FakeNightscout.entries.append({"_id": "glucose-new", "date": int(datetime(
+                2026, 9, 23, 16, tzinfo=timezone.utc).timestamp() * 1000), "type": "sgv", "sgv": 130})
             self.request("/api/day?date=2026-09-23")
             self.assertEqual(compute.call_count, calls + 1)
             with patch("app.services.day_view.CODE_VERSION", "other code"):
@@ -588,7 +593,12 @@ class IntegrationTests(unittest.TestCase):
                          body={"meal_id": meal_id, "day": "2026-09-23", "excluded": True})
             excluded = self.request("/api/summary?days=30")
             self.assertEqual(compute.call_count, 3)
-            self.request("/api/day?date=2026-09-23")  # fresh Nightscout read
+            self.request("/api/day?date=2026-09-23")  # fresh Nightscout read, nothing new
+            self.request("/api/summary?days=30")
+            self.assertEqual(compute.call_count, 3)
+            FakeNightscout.entries.append({"_id": "glucose-new", "date": int(datetime(
+                2026, 9, 23, 16, tzinfo=timezone.utc).timestamp() * 1000), "type": "sgv", "sgv": 130})
+            self.request("/api/day?date=2026-09-23")
             self.request("/api/summary?days=30")
             self.assertEqual(compute.call_count, 4)
         self.assertNotEqual(excluded, first)
@@ -597,7 +607,8 @@ class IntegrationTests(unittest.TestCase):
         from app.services import background, summary
         today = datetime.now(ZoneInfo("Europe/Berlin")).date()
         self.assertIsNone(mirror.synced_at(today.isoformat()))
-        self.assertEqual(background.run_once(), {"errors": {}})
+        background._last_inputs = None
+        self.assertEqual(background.run_once(), {"errors": {}, "computed": True})
         for day in (today, today - timedelta(days=1)):
             self.assertIsNotNone(mirror.synced_at(day.isoformat()))
         with db.connect() as connection:
@@ -611,6 +622,14 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/summary?days=14")
             compute.assert_not_called()
             compute_day.assert_not_called()
+        # Without new data a round only syncs and checks reminders; a new reading precomputes again.
+        with patch("app.services.background.summary.summary") as page:
+            self.assertEqual(background.run_once(), {"errors": {}, "computed": False})
+            page.assert_not_called()
+            FakeNightscout.entries.append({"_id": "glucose-today", "type": "sgv", "sgv": 110,
+                                           "date": int(datetime.now(timezone.utc).timestamp() * 1000) - 60000})
+            self.assertEqual(background.run_once(), {"errors": {}, "computed": True})
+            self.assertEqual(page.call_count, 5)
         with patch.dict(os.environ, {"APP_SYNC_MINUTES": "0"}):
             self.assertIsNone(background.start())
         with patch.dict(os.environ, {"APP_SYNC_MINUTES": "soon"}):
