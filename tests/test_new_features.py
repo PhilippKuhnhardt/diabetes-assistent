@@ -207,11 +207,14 @@ class MealClassificationTests(unittest.TestCase):
         settings = {"timezone": "Europe/Berlin"}
         episodes.group_diary_followups(treatments, settings)
         meals = episodes.meals_for_day(treatments, "2026-10-13", "Europe/Berlin", settings)
-        self.assertEqual([(meal["source_id"], meal["meal"]) for meal in meals], [("1", "breakfast"), ("5", "lunch")])
+        # The 12:20 entry was stored as snack of 10:53; with 10:53 no main meal it is lunch.
+        self.assertEqual([(meal["source_id"], meal["meal"]) for meal in meals], [("1", "breakfast"), ("4", "lunch")])
         free = treatments[2]
         self.assertEqual((free["eventType"], "[DA2:snack]" in free["notes"]), ("Snack Bolus", True))
-        self.assertIsNone(episodes.preceding_meal(at(10, 53), treatments, settings))
         self.assertEqual(episodes.taken_meal(at(10, 53), treatments, settings)["id"], "1")
+        self.assertEqual(treatments[1]["notes"].count("[DA2:snack]"), 1)  # breakfast snack stays its snack
+        self.assertEqual(treatments[1]["eventType"], "Carb Correction")
+        self.assertEqual(treatments[4]["eventType"], "Carb Correction")  # lunch is taken at 15:45
         self.assertEqual(treatments[5]["eventType"], "Snack Bolus")  # own main meal, but lunch is taken
 
 

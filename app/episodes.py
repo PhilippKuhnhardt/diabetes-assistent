@@ -141,22 +141,42 @@ def group_diary_followups(treatments: list[dict], settings: dict) -> None:
     once per day. Imported Nightscout meals, explicitly tagged roots and
     entries the user marked as main meal ([DA2:meal]) of a free kind remain
     distinct, so a second main meal can still block an overlapping analysis.
+    A diary snack stored as such ([DA2:snack]) whose meal became a snack of
+    no meal this way is classified afresh, so it can become the main meal.
     """
-    for item in treatments:
-        classify_diary_entry(item, treatments, settings)
+    free = set()
+    for item in sorted(treatments, key=lambda x: x["at"]):
+        notes = item.get("notes") or ""
+        if "[DA2:snack]" in notes:
+            if not free or item.get("episode_id") or float(item.get("carbs") or 0) <= 0:
+                continue
+            # Which meal the snack joined when it was saved: freed entries still count as main meals.
+            view = [{**other, "eventType": "Meal Bolus"} if other.get("id") in free else other
+                    for other in treatments if other is not item]
+            joined = preceding_meal(item["at"], view, settings)
+            if joined is None or joined["id"] not in free:
+                continue
+            item["eventType"] = "Meal Bolus"
+            item["notes"] = re.sub(r"\s*\[DA2:snack\]", "", notes).strip()
+        root = classify_diary_entry(item, treatments, settings)
+        if root is not None and root.get("free"):
+            free.add(item.get("id"))
 
 
 def classify_diary_entry(item: dict, treatments: list[dict], settings: dict) -> dict | None:
-    """Reclassify one diary main meal in place; return the meal it joins as snack."""
+    """Reclassify one diary main meal in place; return the meal it joins as snack.
+
+    A snack of no meal (its kind is taken, no meal precedes it closely) returns that
+    taken meal marked `free`."""
     if item.get("eventType") != "Meal Bolus" or float(item.get("carbs") or 0) <= 0:
         return None
     notes = item.get("notes") or ""
     if not EVENT_TAG.search(notes) or item.get("episode_id"):
         return None
     others = [other for other in treatments if other is not item]
-    root = taken_meal(item["at"], others, settings)
-    if root is None and "[DA2:meal]" not in notes:
-        root = preceding_meal(item["at"], others, settings)
+    regular = None if "[DA2:meal]" in notes else preceding_meal(item["at"], others, settings)
+    taken = taken_meal(item["at"], others, settings)
+    root = regular or (taken and {**taken, "free": True})
     if root is None:
         return None
     item["eventType"] = "Snack Bolus" if float(item.get("insulin") or 0) > 0 else "Carb Correction"
