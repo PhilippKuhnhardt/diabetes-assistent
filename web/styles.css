@@ -473,6 +473,7 @@ span.range-high { color: #9a6410; font-weight: 650; }
 .entry-chips button.chip.quiet-chip { background: none; border-style: dashed; color: var(--muted); }
 #edit-quality { margin: 0 0 14px; }
 .entry-chips button.chip, .entry-chips label.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; margin: 0; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--canvas); color: var(--ink); font-size: 12px; font-weight: 650; cursor: pointer; }
+.entry-chips button.chip:disabled { cursor: default; color: var(--muted); }
 label.chip span { color: inherit; font-weight: inherit; }
 label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accent-color: var(--green); }
 .entry-chips label.chip:has(input:checked) { background: var(--amber-light); border-color: #e0c27a; color: var(--amber); }

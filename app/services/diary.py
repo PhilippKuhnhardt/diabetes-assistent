@@ -121,7 +121,7 @@ def save_diary_treatment(payload: dict) -> dict:
         "notes": notes, "enteredBy": "Diabetes Diary", "identifier": event_id,
         "carbs": float(carbs), "insulin": float(units),
     })
-    if kind == "meal" and not existing and "[DA2:meal]" not in notes:
+    if kind == "meal" and not existing:  # also a [DA2:meal] entry when its kind is taken that day
         start, end = local_day_range(day, settings["timezone"])
         _, nearby = nightscout.fetch_range(start, end)
         classified = episodes.normalize_treatments(nearby + [record])
