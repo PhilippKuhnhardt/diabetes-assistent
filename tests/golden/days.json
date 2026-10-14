@@ -105,6 +105,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0001",
@@ -119,6 +120,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -240,6 +242,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0002",
@@ -254,6 +257,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -375,6 +379,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0003",
@@ -389,6 +394,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -437,6 +443,7 @@
    "start_glucose": "92.87266971973857245759071655"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -473,6 +480,7 @@
     "kind": "meal",
     "meal_id": "t-0001",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -491,6 +499,7 @@
     "kind": "meal",
     "meal_id": "t-0002",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -509,6 +518,7 @@
     "kind": "meal",
     "meal_id": "t-0003",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -521,6 +531,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0001",
@@ -538,6 +549,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0002",
@@ -555,6 +567,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0003",
@@ -572,6 +585,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0004",
@@ -589,6 +603,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0005",
@@ -712,6 +727,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0004",
@@ -726,6 +742,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -864,6 +881,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0005",
@@ -880,6 +898,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Snack Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0006",
@@ -894,6 +913,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -1015,6 +1035,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0007",
@@ -1029,6 +1050,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -1077,6 +1099,7 @@
    "start_glucose": "89.03409647996531656967534308"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -1113,6 +1136,7 @@
     "kind": "meal",
     "meal_id": "t-0004",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -1131,6 +1155,7 @@
     "kind": "meal",
     "meal_id": "t-0005",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -1149,6 +1174,7 @@
     "kind": "snack",
     "meal_id": "t-0005",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -1167,6 +1193,7 @@
     "kind": "meal",
     "meal_id": "t-0007",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -1179,6 +1206,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0003",
@@ -1196,6 +1224,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0004",
@@ -1213,6 +1242,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0005",
@@ -1230,6 +1260,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0006",
@@ -1247,6 +1278,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0007",
@@ -1264,6 +1296,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0008",
@@ -1281,6 +1314,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0009",
@@ -1404,6 +1438,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0008",
@@ -1418,6 +1453,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -1539,6 +1575,7 @@
       "carbs_certainty": "unsure",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": true,
       "finger_mgdl": null,
       "id": "t-0009",
@@ -1553,6 +1590,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "Pizza",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "unsure",
@@ -1674,6 +1712,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0010",
@@ -1688,6 +1727,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -1736,6 +1776,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -1772,6 +1813,7 @@
     "kind": "meal",
     "meal_id": "t-0008",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -1790,6 +1832,7 @@
     "kind": "meal",
     "meal_id": "t-0009",
     "notes": "Pizza",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -1808,6 +1851,7 @@
     "kind": "meal",
     "meal_id": "t-0010",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -1820,6 +1864,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0006",
@@ -1837,6 +1882,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0007",
@@ -1854,6 +1900,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0008",
@@ -1871,6 +1918,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0009",
@@ -1888,6 +1936,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0010",
@@ -1905,6 +1954,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0011",
@@ -1922,6 +1972,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0012",
@@ -2045,6 +2096,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0011",
@@ -2059,6 +2111,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -2180,6 +2233,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0012",
@@ -2194,6 +2248,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -2324,6 +2379,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0013",
@@ -2340,6 +2396,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Correction Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0014",
@@ -2354,6 +2411,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -2393,6 +2451,7 @@
    "reason": "Für den folgenden Tag ist kein Frühstück erfasst."
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -2429,6 +2488,7 @@
     "kind": "meal",
     "meal_id": "t-0011",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -2447,6 +2507,7 @@
     "kind": "meal",
     "meal_id": "t-0012",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -2465,6 +2526,7 @@
     "kind": "meal",
     "meal_id": "t-0013",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -2483,6 +2545,7 @@
     "kind": "correction",
     "meal_id": "t-0013",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -2495,6 +2558,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0010",
@@ -2512,6 +2576,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0011",
@@ -2529,6 +2594,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0012",
@@ -2546,6 +2612,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0013",
@@ -2563,6 +2630,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0014",
@@ -2580,6 +2648,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0015",
@@ -2703,6 +2772,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0015",
@@ -2717,6 +2787,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -2838,6 +2909,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0016",
@@ -2852,6 +2924,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -2900,6 +2973,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -2936,6 +3010,7 @@
     "kind": "meal",
     "meal_id": "t-0015",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -2954,6 +3029,7 @@
     "kind": "meal",
     "meal_id": "t-0016",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -2966,6 +3042,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0013",
@@ -2983,6 +3060,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0014",
@@ -3000,6 +3078,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0015",
@@ -3017,6 +3096,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0016",
@@ -3034,6 +3114,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0017",
@@ -3051,6 +3132,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0018",
@@ -3068,6 +3150,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0019",
@@ -3199,6 +3282,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0017",
@@ -3215,6 +3299,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Carb Correction",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0018",
@@ -3229,6 +3314,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -3367,6 +3453,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0019",
@@ -3383,6 +3470,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Snack Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0020",
@@ -3397,6 +3485,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -3518,6 +3607,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0021",
@@ -3532,6 +3622,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -3580,6 +3671,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -3616,6 +3708,7 @@
     "kind": "meal",
     "meal_id": "t-0017",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -3634,6 +3727,7 @@
     "kind": "carbs",
     "meal_id": "t-0017",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -3652,6 +3746,7 @@
     "kind": "meal",
     "meal_id": "t-0019",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -3670,6 +3765,7 @@
     "kind": "snack",
     "meal_id": "t-0019",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -3688,6 +3784,7 @@
     "kind": "meal",
     "meal_id": "t-0021",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -3700,6 +3797,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0016",
@@ -3717,6 +3815,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0017",
@@ -3734,6 +3833,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0018",
@@ -3751,6 +3851,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0019",
@@ -3768,6 +3869,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0020",
@@ -3785,6 +3887,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0021",
@@ -3802,6 +3905,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0022",
@@ -3819,6 +3923,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0023",
@@ -3950,6 +4055,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0022",
@@ -3964,6 +4070,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -4085,6 +4192,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0023",
@@ -4099,6 +4207,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -4220,6 +4329,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0025",
@@ -4234,6 +4344,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -4288,6 +4399,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -4324,6 +4436,7 @@
     "kind": "meal",
     "meal_id": "t-0022",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -4342,6 +4455,7 @@
     "kind": "meal",
     "meal_id": "t-0023",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -4360,6 +4474,7 @@
     "kind": "exercise",
     "meal_id": null,
     "notes": "",
+    "place": null,
     "sport_kind": "gym"
    },
    {
@@ -4378,6 +4493,7 @@
     "kind": "meal",
     "meal_id": "t-0025",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -4390,6 +4506,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0021",
@@ -4407,6 +4524,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0022",
@@ -4424,6 +4542,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0023",
@@ -4441,6 +4560,7 @@
     "carbs_certainty": null,
     "duration": 60,
     "eventType": "Exercise",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0024",
@@ -4458,6 +4578,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0025",
@@ -4475,6 +4596,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0026",
@@ -4492,6 +4614,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0027",
@@ -4622,6 +4745,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0026",
@@ -4636,6 +4760,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -4757,6 +4882,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0027",
@@ -4771,6 +4897,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -4892,6 +5019,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0028",
@@ -4906,6 +5034,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -4954,6 +5083,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -4990,6 +5120,7 @@
     "kind": "meal",
     "meal_id": "t-0026",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -5008,6 +5139,7 @@
     "kind": "meal",
     "meal_id": "t-0027",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -5026,6 +5158,7 @@
     "kind": "meal",
     "meal_id": "t-0028",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -5038,6 +5171,7 @@
     "carbs_certainty": null,
     "duration": 60,
     "eventType": "Exercise",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0024",
@@ -5055,6 +5189,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0025",
@@ -5072,6 +5207,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0026",
@@ -5089,6 +5225,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0027",
@@ -5106,6 +5243,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0028",
@@ -5123,6 +5261,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Note",
+    "event_id": "00000000-0000-4000-8000-000000000008",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0032",
@@ -5140,6 +5279,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0029",
@@ -5157,6 +5297,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0030",
@@ -5288,6 +5429,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0029",
@@ -5302,6 +5444,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -5423,6 +5566,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0030",
@@ -5437,6 +5581,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -5558,6 +5703,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0031",
@@ -5572,6 +5718,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -5620,6 +5767,7 @@
    "start_glucose": "143.0000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -5657,6 +5805,7 @@
     "meal_id": null,
     "nightscout_synced": true,
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -5675,6 +5824,7 @@
     "kind": "meal",
     "meal_id": "t-0029",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -5693,6 +5843,7 @@
     "kind": "meal",
     "meal_id": "t-0030",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -5711,6 +5862,7 @@
     "kind": "meal",
     "meal_id": "t-0031",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -5723,6 +5875,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0028",
@@ -5740,6 +5893,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Note",
+    "event_id": "00000000-0000-4000-8000-000000000008",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0032",
@@ -5757,6 +5911,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0029",
@@ -5774,6 +5929,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0030",
@@ -5791,6 +5947,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0031",
@@ -5808,6 +5965,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0033",
@@ -5825,6 +5983,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0034",
@@ -5881,6 +6040,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0033",
@@ -5895,6 +6055,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -6032,6 +6193,7 @@
       "carbs_certainty": "unsure",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": true,
       "finger_mgdl": null,
       "id": "t-0034",
@@ -6048,6 +6210,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Snack Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0035",
@@ -6062,6 +6225,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "Pizza",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "unsure",
@@ -6192,6 +6356,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0036",
@@ -6208,6 +6373,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Correction Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0037",
@@ -6222,6 +6388,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -6270,6 +6437,7 @@
    "start_glucose": "68.74985942393656956708855193"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 1,
@@ -6306,6 +6474,7 @@
     "kind": "meal",
     "meal_id": "t-0033",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -6324,6 +6493,7 @@
     "kind": "meal",
     "meal_id": "t-0034",
     "notes": "Pizza",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -6342,6 +6512,7 @@
     "kind": "snack",
     "meal_id": "t-0034",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -6360,6 +6531,7 @@
     "kind": "meal",
     "meal_id": "t-0036",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -6378,6 +6550,7 @@
     "kind": "correction",
     "meal_id": "t-0036",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -6390,6 +6563,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0031",
@@ -6407,6 +6581,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0033",
@@ -6424,6 +6599,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0034",
@@ -6441,6 +6617,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0035",
@@ -6458,6 +6635,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0036",
@@ -6475,6 +6653,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0037",
@@ -6492,6 +6671,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0038",
@@ -6509,6 +6689,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0039",
@@ -6631,6 +6812,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0038",
@@ -6645,6 +6827,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -6766,6 +6949,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0039",
@@ -6780,6 +6964,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -6902,6 +7087,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0040",
@@ -6916,6 +7102,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -6964,6 +7151,7 @@
    "start_glucose": "156.9506374733312490766857571"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -7000,6 +7188,7 @@
     "kind": "meal",
     "meal_id": "t-0038",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -7018,6 +7207,7 @@
     "kind": "meal",
     "meal_id": "t-0039",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -7036,6 +7226,7 @@
     "kind": "meal",
     "meal_id": "t-0040",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -7048,6 +7239,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0036",
@@ -7065,6 +7257,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0037",
@@ -7082,6 +7275,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0038",
@@ -7099,6 +7293,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0039",
@@ -7116,6 +7311,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0040",
@@ -7133,6 +7329,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0041",
@@ -7150,6 +7347,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0042",
@@ -7272,6 +7470,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0041",
@@ -7286,6 +7485,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -7407,6 +7607,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0042",
@@ -7421,6 +7622,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -7542,6 +7744,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0043",
@@ -7556,6 +7759,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -7604,6 +7808,7 @@
    "start_glucose": "87.77044828483195154975421372"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -7640,6 +7845,7 @@
     "kind": "meal",
     "meal_id": "t-0041",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -7658,6 +7864,7 @@
     "kind": "meal",
     "meal_id": "t-0042",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -7676,6 +7883,7 @@
     "kind": "meal",
     "meal_id": "t-0043",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -7688,6 +7896,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0040",
@@ -7705,6 +7914,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0041",
@@ -7722,6 +7932,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0042",
@@ -7739,6 +7950,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0043",
@@ -7756,6 +7968,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0044",
@@ -7773,6 +7986,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0045",
@@ -7790,6 +8004,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0046",
@@ -7913,6 +8128,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0044",
@@ -7927,6 +8143,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -8048,6 +8265,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0047",
@@ -8062,6 +8280,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -8120,6 +8339,7 @@
     "notes": ""
    }
   ],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -8156,6 +8376,7 @@
     "kind": "meal",
     "meal_id": "t-0044",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -8174,6 +8395,7 @@
     "kind": "carbs",
     "meal_id": null,
     "notes": "nur KH",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -8192,6 +8414,7 @@
     "kind": "correction",
     "meal_id": null,
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -8210,6 +8433,7 @@
     "kind": "meal",
     "meal_id": "t-0047",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -8222,6 +8446,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0043",
@@ -8239,6 +8464,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0044",
@@ -8256,6 +8482,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0045",
@@ -8273,6 +8500,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0046",
@@ -8290,6 +8518,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0047",
@@ -8307,6 +8536,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0048",
@@ -8447,6 +8677,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0048",
@@ -8463,6 +8694,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Snack Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0049",
@@ -8477,6 +8709,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -8598,6 +8831,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0050",
@@ -8612,6 +8846,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -8660,6 +8895,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -8696,6 +8932,7 @@
     "kind": "meal",
     "meal_id": "t-0048",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -8714,6 +8951,7 @@
     "kind": "snack",
     "meal_id": "t-0048",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -8732,6 +8970,7 @@
     "kind": "meal",
     "meal_id": "t-0050",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -8744,6 +8983,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0047",
@@ -8761,6 +9001,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0048",
@@ -8778,6 +9019,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0049",
@@ -8795,6 +9037,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0050",
@@ -8812,6 +9055,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0051",
@@ -8829,6 +9073,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0052",
@@ -8952,6 +9197,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0051",
@@ -8966,6 +9212,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -9087,6 +9334,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0052",
@@ -9101,6 +9349,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -9222,6 +9471,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0053",
@@ -9236,6 +9486,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -9284,6 +9535,7 @@
    "start_glucose": "128.9365198899921375562728699"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -9320,6 +9572,7 @@
     "kind": "meal",
     "meal_id": "t-0051",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -9338,6 +9591,7 @@
     "kind": "meal",
     "meal_id": "t-0052",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -9356,6 +9610,7 @@
     "kind": "meal",
     "meal_id": "t-0053",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -9368,6 +9623,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0050",
@@ -9385,6 +9641,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0051",
@@ -9402,6 +9659,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0052",
@@ -9419,6 +9677,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0053",
@@ -9436,6 +9695,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0054",
@@ -9453,6 +9713,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0055",
@@ -9576,6 +9837,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0054",
@@ -9590,6 +9852,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -9711,6 +9974,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0055",
@@ -9725,6 +9989,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -9864,6 +10129,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0056",
@@ -9880,6 +10146,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Correction Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0057",
@@ -9896,6 +10163,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Correction Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0058",
@@ -9910,6 +10178,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -9958,6 +10227,7 @@
    "start_glucose": "81.94399719985999299964998250"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -9994,6 +10264,7 @@
     "kind": "meal",
     "meal_id": "t-0054",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -10012,6 +10283,7 @@
     "kind": "meal",
     "meal_id": "t-0055",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -10030,6 +10302,7 @@
     "kind": "meal",
     "meal_id": "t-0056",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -10048,6 +10321,7 @@
     "kind": "correction",
     "meal_id": "t-0056",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -10066,6 +10340,7 @@
     "kind": "correction",
     "meal_id": "t-0056",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -10078,6 +10353,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0053",
@@ -10095,6 +10371,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0054",
@@ -10112,6 +10389,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0055",
@@ -10129,6 +10407,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0056",
@@ -10146,6 +10425,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0057",
@@ -10163,6 +10443,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0058",
@@ -10180,6 +10461,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0059",
@@ -10197,6 +10479,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0060",
@@ -10320,6 +10603,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0059",
@@ -10334,6 +10618,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -10455,6 +10740,7 @@
       "carbs_certainty": "unsure",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": true,
       "finger_mgdl": null,
       "id": "t-0060",
@@ -10469,6 +10755,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "Pizza",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "unsure",
@@ -10590,6 +10877,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0061",
@@ -10604,6 +10892,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -10652,6 +10941,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -10688,6 +10978,7 @@
     "kind": "meal",
     "meal_id": "t-0059",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -10706,6 +10997,7 @@
     "kind": "meal",
     "meal_id": "t-0060",
     "notes": "Pizza",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -10724,6 +11016,7 @@
     "kind": "meal",
     "meal_id": "t-0061",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -10736,6 +11029,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0056",
@@ -10753,6 +11047,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0057",
@@ -10770,6 +11065,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0058",
@@ -10787,6 +11083,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0059",
@@ -10804,6 +11101,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0060",
@@ -10821,6 +11119,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0061",
@@ -10838,6 +11137,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0062",
@@ -10855,6 +11155,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0063",
@@ -10995,6 +11296,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0062",
@@ -11009,6 +11311,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -11147,6 +11450,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0063",
@@ -11163,6 +11467,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Snack Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0064",
@@ -11177,6 +11482,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -11306,6 +11612,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0066",
@@ -11320,6 +11627,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -11374,6 +11682,7 @@
    "start_glucose": "147.4928853351045485317222087"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -11410,6 +11719,7 @@
     "kind": "meal",
     "meal_id": "t-0062",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -11428,6 +11738,7 @@
     "kind": "meal",
     "meal_id": "t-0063",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -11446,6 +11757,7 @@
     "kind": "snack",
     "meal_id": "t-0063",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -11464,6 +11776,7 @@
     "kind": "exercise",
     "meal_id": "t-0063",
     "notes": "Racing",
+    "place": null,
     "sport_kind": "racing"
    },
    {
@@ -11482,6 +11795,7 @@
     "kind": "meal",
     "meal_id": "t-0066",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -11494,6 +11808,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0061",
@@ -11511,6 +11826,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0062",
@@ -11528,6 +11844,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0063",
@@ -11545,6 +11862,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0064",
@@ -11562,6 +11880,7 @@
     "carbs_certainty": null,
     "duration": 60,
     "eventType": "Exercise",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0065",
@@ -11579,6 +11898,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0066",
@@ -11596,6 +11916,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Note",
+    "event_id": "00000000-0000-4000-8000-000000000018",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0070",
@@ -11613,6 +11934,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0067",
@@ -11630,6 +11952,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0068",
@@ -11761,6 +12084,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0067",
@@ -11775,6 +12099,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -11896,6 +12221,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0068",
@@ -11910,6 +12236,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -12031,6 +12358,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0069",
@@ -12045,6 +12373,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -12093,6 +12422,7 @@
    "start_glucose": "96.04159757474643689152483749"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -12130,6 +12460,7 @@
     "meal_id": null,
     "nightscout_synced": true,
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -12148,6 +12479,7 @@
     "kind": "meal",
     "meal_id": "t-0067",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -12166,6 +12498,7 @@
     "kind": "meal",
     "meal_id": "t-0068",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -12184,6 +12517,7 @@
     "kind": "meal",
     "meal_id": "t-0069",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -12196,6 +12530,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0064",
@@ -12213,6 +12548,7 @@
     "carbs_certainty": null,
     "duration": 60,
     "eventType": "Exercise",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0065",
@@ -12230,6 +12566,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0066",
@@ -12247,6 +12584,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Note",
+    "event_id": "00000000-0000-4000-8000-000000000018",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0070",
@@ -12264,6 +12602,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0067",
@@ -12281,6 +12620,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0068",
@@ -12298,6 +12638,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0069",
@@ -12315,6 +12656,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0071",
@@ -12332,6 +12674,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0072",
@@ -12455,6 +12798,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0071",
@@ -12469,6 +12813,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -12590,6 +12935,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0072",
@@ -12604,6 +12950,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -12725,6 +13072,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0073",
@@ -12739,6 +13087,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -12787,6 +13136,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -12823,6 +13173,7 @@
     "kind": "meal",
     "meal_id": "t-0071",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -12841,6 +13192,7 @@
     "kind": "meal",
     "meal_id": "t-0072",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -12859,6 +13211,7 @@
     "kind": "meal",
     "meal_id": "t-0073",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -12871,6 +13224,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0069",
@@ -12888,6 +13242,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0071",
@@ -12905,6 +13260,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0072",
@@ -12922,6 +13278,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0073",
@@ -12939,6 +13296,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0074",
@@ -12956,6 +13314,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0075",
@@ -13079,6 +13438,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0074",
@@ -13093,6 +13453,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -13214,6 +13575,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0075",
@@ -13228,6 +13590,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -13349,6 +13712,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0076",
@@ -13363,6 +13727,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -13411,6 +13776,7 @@
    "start_glucose": "84.91820814057975837854028688"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -13447,6 +13813,7 @@
     "kind": "meal",
     "meal_id": "t-0074",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -13465,6 +13832,7 @@
     "kind": "meal",
     "meal_id": "t-0075",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -13483,6 +13851,7 @@
     "kind": "meal",
     "meal_id": "t-0076",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -13495,6 +13864,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0073",
@@ -13512,6 +13882,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0074",
@@ -13529,6 +13900,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0075",
@@ -13546,6 +13918,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0076",
@@ -13563,6 +13936,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0077",
@@ -13580,6 +13954,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0078",
@@ -13597,6 +13972,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0079",
@@ -13727,6 +14103,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0077",
@@ -13743,6 +14120,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Carb Correction",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0078",
@@ -13757,6 +14135,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -13895,6 +14274,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0079",
@@ -13911,6 +14291,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Snack Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0080",
@@ -13925,6 +14306,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -14055,6 +14437,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0081",
@@ -14071,6 +14454,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Correction Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0082",
@@ -14085,6 +14469,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -14124,6 +14509,7 @@
    "reason": "Für den folgenden Tag ist kein Frühstück erfasst."
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -14160,6 +14546,7 @@
     "kind": "meal",
     "meal_id": "t-0077",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -14178,6 +14565,7 @@
     "kind": "carbs",
     "meal_id": "t-0077",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -14196,6 +14584,7 @@
     "kind": "meal",
     "meal_id": "t-0079",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -14214,6 +14603,7 @@
     "kind": "snack",
     "meal_id": "t-0079",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -14232,6 +14622,7 @@
     "kind": "meal",
     "meal_id": "t-0081",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -14250,6 +14641,7 @@
     "kind": "correction",
     "meal_id": "t-0081",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -14262,6 +14654,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0076",
@@ -14279,6 +14672,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0077",
@@ -14296,6 +14690,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0078",
@@ -14313,6 +14708,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0079",
@@ -14330,6 +14726,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0080",
@@ -14347,6 +14744,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0081",
@@ -14364,6 +14762,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0082",
@@ -14381,6 +14780,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0083",
@@ -14529,6 +14929,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0083",
@@ -14543,6 +14944,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -14666,6 +15068,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0084",
@@ -14680,6 +15083,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -14801,6 +15205,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0085",
@@ -14815,6 +15220,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -14863,6 +15269,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 1,
@@ -14899,6 +15306,7 @@
     "kind": "meal",
     "meal_id": "t-0083",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -14917,6 +15325,7 @@
     "kind": "meal",
     "meal_id": "t-0084",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -14935,6 +15344,7 @@
     "kind": "meal",
     "meal_id": "t-0085",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -14947,6 +15357,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0081",
@@ -14964,6 +15375,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0082",
@@ -14981,6 +15393,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0083",
@@ -14998,6 +15411,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0084",
@@ -15015,6 +15429,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0085",
@@ -15032,6 +15447,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0086",
@@ -15049,6 +15465,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0087",
@@ -15171,6 +15588,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0086",
@@ -15185,6 +15603,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -15306,6 +15725,7 @@
       "carbs_certainty": "unsure",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": true,
       "finger_mgdl": null,
       "id": "t-0087",
@@ -15320,6 +15740,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "Pizza",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "unsure",
@@ -15441,6 +15862,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0088",
@@ -15455,6 +15877,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -15503,6 +15926,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -15539,6 +15963,7 @@
     "kind": "meal",
     "meal_id": "t-0086",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -15557,6 +15982,7 @@
     "kind": "meal",
     "meal_id": "t-0087",
     "notes": "Pizza",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -15575,6 +16001,7 @@
     "kind": "meal",
     "meal_id": "t-0088",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -15587,6 +16014,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0085",
@@ -15604,6 +16032,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0086",
@@ -15621,6 +16050,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0087",
@@ -15638,6 +16068,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0088",
@@ -15655,6 +16086,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0089",
@@ -15672,6 +16104,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0090",
@@ -15794,6 +16227,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0089",
@@ -15808,6 +16242,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -15929,6 +16364,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0090",
@@ -15943,6 +16379,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -16064,6 +16501,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0091",
@@ -16078,6 +16516,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -16126,6 +16565,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -16162,6 +16602,7 @@
     "kind": "meal",
     "meal_id": "t-0089",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -16180,6 +16621,7 @@
     "kind": "meal",
     "meal_id": "t-0090",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -16198,6 +16640,7 @@
     "kind": "meal",
     "meal_id": "t-0091",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -16210,6 +16653,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0088",
@@ -16227,6 +16671,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0089",
@@ -16244,6 +16689,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0090",
@@ -16261,6 +16707,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0091",
@@ -16278,6 +16725,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0092",
@@ -16295,6 +16743,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0093",
@@ -16417,6 +16866,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0092",
@@ -16431,6 +16881,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -16569,6 +17020,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0093",
@@ -16585,6 +17037,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Snack Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0094",
@@ -16599,6 +17052,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -16720,6 +17174,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0095",
@@ -16734,6 +17189,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -16782,6 +17238,7 @@
    "start_glucose": "97.82968029170611817321058039"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -16818,6 +17275,7 @@
     "kind": "meal",
     "meal_id": "t-0092",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -16836,6 +17294,7 @@
     "kind": "meal",
     "meal_id": "t-0093",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -16854,6 +17313,7 @@
     "kind": "snack",
     "meal_id": "t-0093",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -16872,6 +17332,7 @@
     "kind": "meal",
     "meal_id": "t-0095",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -16884,6 +17345,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0091",
@@ -16901,6 +17363,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0092",
@@ -16918,6 +17381,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0093",
@@ -16935,6 +17399,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0094",
@@ -16952,6 +17417,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0095",
@@ -16969,6 +17435,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0096",
@@ -16986,6 +17453,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0097",
@@ -17109,6 +17577,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0096",
@@ -17123,6 +17592,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -17177,6 +17647,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0097",
@@ -17191,6 +17662,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -17311,6 +17783,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0098",
@@ -17325,6 +17798,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -17373,6 +17847,7 @@
    "start_glucose": "181.9861694659527875860479249"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 1,
@@ -17409,6 +17884,7 @@
     "kind": "meal",
     "meal_id": "t-0096",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -17427,6 +17903,7 @@
     "kind": "meal",
     "meal_id": "t-0097",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -17445,6 +17922,7 @@
     "kind": "meal",
     "meal_id": "t-0098",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -17457,6 +17935,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0095",
@@ -17474,6 +17953,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0096",
@@ -17491,6 +17971,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0097",
@@ -17508,6 +17989,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0098",
@@ -17525,6 +18007,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0099",
@@ -17542,6 +18025,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0100",
@@ -17673,6 +18157,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0099",
@@ -17687,6 +18172,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -17808,6 +18294,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0100",
@@ -17822,6 +18309,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -17952,6 +18440,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0101",
@@ -17968,6 +18457,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Correction Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0102",
@@ -17982,6 +18472,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -18030,6 +18521,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -18066,6 +18558,7 @@
     "kind": "meal",
     "meal_id": "t-0099",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -18084,6 +18577,7 @@
     "kind": "meal",
     "meal_id": "t-0100",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -18102,6 +18596,7 @@
     "kind": "meal",
     "meal_id": "t-0101",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -18120,6 +18615,7 @@
     "kind": "correction",
     "meal_id": "t-0101",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -18132,6 +18628,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0098",
@@ -18149,6 +18646,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0099",
@@ -18166,6 +18664,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0100",
@@ -18183,6 +18682,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0101",
@@ -18200,6 +18700,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0102",
@@ -18217,6 +18718,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Note",
+    "event_id": "00000000-0000-4000-8000-000000000028",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0107",
@@ -18234,6 +18736,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0103",
@@ -18251,6 +18754,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0104",
@@ -18391,6 +18895,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0103",
@@ -18405,6 +18910,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -18526,6 +19032,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0104",
@@ -18540,6 +19047,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -18661,6 +19169,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0106",
@@ -18675,6 +19184,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -18729,6 +19239,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -18766,6 +19277,7 @@
     "meal_id": null,
     "nightscout_synced": true,
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -18784,6 +19296,7 @@
     "kind": "meal",
     "meal_id": "t-0103",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -18802,6 +19315,7 @@
     "kind": "meal",
     "meal_id": "t-0104",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -18820,6 +19334,7 @@
     "kind": "exercise",
     "meal_id": null,
     "notes": "",
+    "place": null,
     "sport_kind": "gym"
    },
    {
@@ -18838,6 +19353,7 @@
     "kind": "meal",
     "meal_id": "t-0106",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -18850,6 +19366,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0101",
@@ -18867,6 +19384,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0102",
@@ -18884,6 +19402,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Note",
+    "event_id": "00000000-0000-4000-8000-000000000028",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0107",
@@ -18901,6 +19420,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0103",
@@ -18918,6 +19438,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0104",
@@ -18935,6 +19456,7 @@
     "carbs_certainty": null,
     "duration": 60,
     "eventType": "Exercise",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0105",
@@ -18952,6 +19474,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0106",
@@ -18969,6 +19492,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0108",
@@ -18986,6 +19510,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0109",
@@ -19003,6 +19528,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0110",
@@ -19133,6 +19659,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0108",
@@ -19149,6 +19676,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Carb Correction",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0109",
@@ -19163,6 +19691,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -19301,6 +19830,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0110",
@@ -19317,6 +19847,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Snack Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0111",
@@ -19331,6 +19862,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -19452,6 +19984,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0112",
@@ -19466,6 +19999,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -19514,6 +20048,7 @@
    "start_glucose": "40.97575608291183447326420640"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -19550,6 +20085,7 @@
     "kind": "meal",
     "meal_id": "t-0108",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -19568,6 +20104,7 @@
     "kind": "carbs",
     "meal_id": "t-0108",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -19586,6 +20123,7 @@
     "kind": "meal",
     "meal_id": "t-0110",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -19604,6 +20142,7 @@
     "kind": "snack",
     "meal_id": "t-0110",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -19622,6 +20161,7 @@
     "kind": "meal",
     "meal_id": "t-0112",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -19634,6 +20174,7 @@
     "carbs_certainty": null,
     "duration": 60,
     "eventType": "Exercise",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0105",
@@ -19651,6 +20192,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0106",
@@ -19668,6 +20210,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0108",
@@ -19685,6 +20228,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0109",
@@ -19702,6 +20246,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0110",
@@ -19719,6 +20264,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0111",
@@ -19736,6 +20282,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0112",
@@ -19753,6 +20300,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0113",
@@ -19770,6 +20318,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0114",
@@ -19892,6 +20441,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0113",
@@ -19906,6 +20456,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -20027,6 +20578,7 @@
       "carbs_certainty": "unsure",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": true,
       "finger_mgdl": null,
       "id": "t-0114",
@@ -20041,6 +20593,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "Pizza",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "unsure",
@@ -20162,6 +20715,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0115",
@@ -20176,6 +20730,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -20225,6 +20780,7 @@
     "notes": "ignored"
    }
   ],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -20261,6 +20817,7 @@
     "kind": "meal",
     "meal_id": "t-0113",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -20279,6 +20836,7 @@
     "kind": "meal",
     "meal_id": "t-0114",
     "notes": "Pizza",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -20297,6 +20855,7 @@
     "kind": "other",
     "meal_id": "t-0114",
     "notes": "ignored",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -20315,6 +20874,7 @@
     "kind": "meal",
     "meal_id": "t-0115",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -20327,6 +20887,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0112",
@@ -20344,6 +20905,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0113",
@@ -20361,6 +20923,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0114",
@@ -20378,6 +20941,7 @@
     "carbs_certainty": null,
     "duration": 30,
     "eventType": "Temp Basal",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0116",
@@ -20395,6 +20959,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0115",
@@ -20412,6 +20977,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0117",
@@ -20534,6 +21100,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0117",
@@ -20548,6 +21115,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -20669,6 +21237,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0118",
@@ -20683,6 +21252,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -20731,6 +21301,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -20767,6 +21338,7 @@
     "kind": "meal",
     "meal_id": "t-0117",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -20785,6 +21357,7 @@
     "kind": "meal",
     "meal_id": "t-0118",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -20797,6 +21370,7 @@
     "carbs_certainty": null,
     "duration": 30,
     "eventType": "Temp Basal",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0116",
@@ -20814,6 +21388,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0115",
@@ -20831,6 +21406,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0117",
@@ -20848,6 +21424,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0118",
@@ -20865,6 +21442,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0119",
@@ -20882,6 +21460,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0120",
@@ -21004,6 +21583,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0119",
@@ -21018,6 +21598,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -21139,6 +21720,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0120",
@@ -21153,6 +21735,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -21274,6 +21857,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0121",
@@ -21288,6 +21872,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -21336,6 +21921,7 @@
    "start_glucose": "155.8406482197946267769108867"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -21372,6 +21958,7 @@
     "kind": "meal",
     "meal_id": "t-0119",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -21390,6 +21977,7 @@
     "kind": "meal",
     "meal_id": "t-0120",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -21408,6 +21996,7 @@
     "kind": "meal",
     "meal_id": "t-0121",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -21420,6 +22009,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0118",
@@ -21437,6 +22027,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0119",
@@ -21454,6 +22045,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0120",
@@ -21471,6 +22063,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0121",
@@ -21488,6 +22081,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0122",
@@ -21505,6 +22099,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0123",
@@ -21627,6 +22222,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0122",
@@ -21641,6 +22237,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -21779,6 +22376,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0123",
@@ -21795,6 +22393,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Snack Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0124",
@@ -21809,6 +22408,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -21939,6 +22539,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0125",
@@ -21955,6 +22556,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Correction Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0126",
@@ -21969,6 +22571,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -22017,6 +22620,7 @@
    "start_glucose": "56.04673387427260060650766331"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -22053,6 +22657,7 @@
     "kind": "meal",
     "meal_id": "t-0122",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -22071,6 +22676,7 @@
     "kind": "meal",
     "meal_id": "t-0123",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -22089,6 +22695,7 @@
     "kind": "snack",
     "meal_id": "t-0123",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -22107,6 +22714,7 @@
     "kind": "meal",
     "meal_id": "t-0125",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -22125,6 +22733,7 @@
     "kind": "correction",
     "meal_id": "t-0125",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -22137,6 +22746,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0121",
@@ -22154,6 +22764,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0122",
@@ -22171,6 +22782,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0123",
@@ -22188,6 +22800,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0124",
@@ -22205,6 +22818,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0125",
@@ -22222,6 +22836,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0126",
@@ -22239,6 +22854,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0127",
@@ -22256,6 +22872,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0128",
@@ -22379,6 +22996,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0127",
@@ -22393,6 +23011,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -22514,6 +23133,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0128",
@@ -22528,6 +23148,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -22649,6 +23270,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0129",
@@ -22663,6 +23285,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -22711,6 +23334,7 @@
    "start_glucose": "114.0376396205148090579579175"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -22747,6 +23371,7 @@
     "kind": "meal",
     "meal_id": "t-0127",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -22765,6 +23390,7 @@
     "kind": "meal",
     "meal_id": "t-0128",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -22783,6 +23409,7 @@
     "kind": "meal",
     "meal_id": "t-0129",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -22795,6 +23422,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0124",
@@ -22812,6 +23440,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0125",
@@ -22829,6 +23458,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0126",
@@ -22846,6 +23476,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0127",
@@ -22863,6 +23494,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0128",
@@ -22880,6 +23512,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0129",
@@ -22897,6 +23530,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0130",
@@ -22914,6 +23548,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0131",
@@ -23037,6 +23672,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0130",
@@ -23051,6 +23687,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -23172,6 +23809,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0131",
@@ -23186,6 +23824,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -23307,6 +23946,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0132",
@@ -23321,6 +23961,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -23369,6 +24010,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -23405,6 +24047,7 @@
     "kind": "meal",
     "meal_id": "t-0130",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -23423,6 +24066,7 @@
     "kind": "meal",
     "meal_id": "t-0131",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -23441,6 +24085,7 @@
     "kind": "meal",
     "meal_id": "t-0132",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -23453,6 +24098,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0129",
@@ -23470,6 +24116,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0130",
@@ -23487,6 +24134,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0131",
@@ -23504,6 +24152,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0132",
@@ -23521,6 +24170,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0133",
@@ -23538,6 +24188,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0134",
@@ -23661,6 +24312,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0133",
@@ -23675,6 +24327,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -23796,6 +24449,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0134",
@@ -23810,6 +24464,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -23931,6 +24586,7 @@
       "carbs_certainty": "weighed",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0135",
@@ -23945,6 +24601,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "weighed",
@@ -23993,6 +24650,7 @@
    "start_glucose": "40.00000000000000000000000000"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -24029,6 +24687,7 @@
     "kind": "meal",
     "meal_id": "t-0133",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -24047,6 +24706,7 @@
     "kind": "meal",
     "meal_id": "t-0134",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -24065,6 +24725,7 @@
     "kind": "meal",
     "meal_id": "t-0135",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -24077,6 +24738,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0132",
@@ -24094,6 +24756,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0133",
@@ -24111,6 +24774,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0134",
@@ -24128,6 +24792,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0135",
@@ -24145,6 +24810,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0136",
@@ -24162,6 +24828,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0137",
@@ -24179,6 +24846,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0138",
@@ -24318,6 +24986,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0136",
@@ -24334,6 +25003,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Carb Correction",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0137",
@@ -24348,6 +25018,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -24486,6 +25157,7 @@
       "carbs_certainty": "unsure",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": true,
       "finger_mgdl": null,
       "id": "t-0138",
@@ -24502,6 +25174,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Snack Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0139",
@@ -24516,6 +25189,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "Pizza",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "unsure",
@@ -24637,6 +25311,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0140",
@@ -24651,6 +25326,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -24699,6 +25375,7 @@
    "start_glucose": "115.9905722181392518298543100"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -24735,6 +25412,7 @@
     "kind": "meal",
     "meal_id": "t-0136",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -24753,6 +25431,7 @@
     "kind": "carbs",
     "meal_id": "t-0136",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -24771,6 +25450,7 @@
     "kind": "meal",
     "meal_id": "t-0138",
     "notes": "Pizza",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -24789,6 +25469,7 @@
     "kind": "snack",
     "meal_id": "t-0138",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -24807,6 +25488,7 @@
     "kind": "meal",
     "meal_id": "t-0140",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -24819,6 +25501,7 @@
     "carbs_certainty": "weighed",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0135",
@@ -24836,6 +25519,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0136",
@@ -24853,6 +25537,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0137",
@@ -24870,6 +25555,7 @@
     "carbs_certainty": "unsure",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0138",
@@ -24887,6 +25573,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0139",
@@ -24904,6 +25591,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0140",
@@ -24921,6 +25609,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Note",
+    "event_id": "00000000-0000-4000-8000-000000000038",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0144",
@@ -24938,6 +25627,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0141",
@@ -24955,6 +25645,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0142",
@@ -25093,6 +25784,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0141",
@@ -25107,6 +25799,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -25228,6 +25921,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0142",
@@ -25242,6 +25936,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -25363,6 +26058,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0143",
@@ -25377,6 +26073,7 @@
     "imported": true,
     "meal": "dinner",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -25425,6 +26122,7 @@
    "start_glucose": "84.27056561876760490984230113"
   },
   "other_events": [],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 0,
@@ -25462,6 +26160,7 @@
     "meal_id": null,
     "nightscout_synced": true,
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -25480,6 +26179,7 @@
     "kind": "meal",
     "meal_id": "t-0141",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -25498,6 +26198,7 @@
     "kind": "meal",
     "meal_id": "t-0142",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -25516,6 +26217,7 @@
     "kind": "meal",
     "meal_id": "t-0143",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -25528,6 +26230,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0139",
@@ -25545,6 +26248,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0140",
@@ -25562,6 +26266,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Note",
+    "event_id": "00000000-0000-4000-8000-000000000038",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0144",
@@ -25579,6 +26284,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0141",
@@ -25596,6 +26302,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0142",
@@ -25613,6 +26320,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0143",
@@ -25630,6 +26338,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Note",
+    "event_id": "11111111-1111-4111-8111-111111111111",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "ns-0001",
@@ -25647,6 +26356,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0145",
@@ -25664,6 +26374,7 @@
     "carbs_certainty": null,
     "duration": 40,
     "eventType": "Exercise",
+    "event_id": "44444444-4444-4444-8444-444444444444",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "ns-0004",
@@ -25681,6 +26392,7 @@
     "carbs_certainty": "known",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": "22222222-2222-4222-8222-222222222222",
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "ns-0002",
@@ -25698,6 +26410,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": "33333333-3333-4333-8333-333333333333",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "ns-0003",
@@ -25837,6 +26550,7 @@
       "carbs_certainty": null,
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": null,
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0145",
@@ -25851,6 +26565,7 @@
     "imported": true,
     "meal": "breakfast",
     "notes": "",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": null,
@@ -25913,6 +26628,7 @@
       "carbs_certainty": "known",
       "duration": 0,
       "eventType": "Meal Bolus",
+      "event_id": "22222222-2222-4222-8222-222222222222",
       "fat_protein": true,
       "finger_mgdl": null,
       "id": "ns-0002",
@@ -25927,6 +26643,7 @@
     "imported": true,
     "meal": "lunch",
     "notes": "Mittag",
+    "place": null,
     "quality": {
      "alcohol": false,
      "carbs_certainty": "known",
@@ -25982,6 +26699,7 @@
     "notes": ""
    }
   ],
+  "place_options": [],
   "profile_sync_error": null,
   "review": {
    "blocked": 1,
@@ -26019,6 +26737,7 @@
     "meal_id": null,
     "nightscout_synced": true,
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -26037,6 +26756,7 @@
     "kind": "meal",
     "meal_id": "t-0145",
     "notes": "",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -26055,6 +26775,7 @@
     "kind": "exercise",
     "meal_id": "t-0145",
     "notes": "Runde",
+    "place": null,
     "sport_kind": "jogging"
    },
    {
@@ -26073,6 +26794,7 @@
     "kind": "meal",
     "meal_id": "ns-0002",
     "notes": "Mittag",
+    "place": null,
     "sport_kind": null
    },
    {
@@ -26091,6 +26813,7 @@
     "kind": "snack",
     "meal_id": "ns-0002",
     "notes": "",
+    "place": null,
     "sport_kind": null
    }
   ],
@@ -26103,6 +26826,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0143",
@@ -26120,6 +26844,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Note",
+    "event_id": "11111111-1111-4111-8111-111111111111",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "ns-0001",
@@ -26137,6 +26862,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0145",
@@ -26154,6 +26880,7 @@
     "carbs_certainty": null,
     "duration": 40,
     "eventType": "Exercise",
+    "event_id": "44444444-4444-4444-8444-444444444444",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "ns-0004",
@@ -26171,6 +26898,7 @@
     "carbs_certainty": "known",
     "duration": 0,
     "eventType": "Meal Bolus",
+    "event_id": "22222222-2222-4222-8222-222222222222",
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "ns-0002",
@@ -26188,6 +26916,7 @@
     "carbs_certainty": null,
     "duration": 0,
     "eventType": "Carb Correction",
+    "event_id": "33333333-3333-4333-8333-333333333333",
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "ns-0003",

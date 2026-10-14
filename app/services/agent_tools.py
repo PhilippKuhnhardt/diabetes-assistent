@@ -16,7 +16,7 @@ from app import episodes
 from app.common import parse_instant
 from app.ingestion import nightscout
 from app.services import basal, day_view, diary, entry, read_api, sync
-from app.store import config
+from app.store import config, places as place_store
 
 CERTAINTIES = list(episodes.CERTAINTIES)
 SPORT_KINDS = list(episodes.SPORT_LABELS)
@@ -117,8 +117,9 @@ def _dose_view(dose: dict) -> dict:
 
 def _entries(current: dict) -> list[dict]:
     keep = ("id", "at", "kind", "carbs", "insulin", "basal_units", "duration_minutes", "sport_kind", "notes",
-            "carbs_certainty", "fat_protein", "alcohol", "glucose_mgdl", "meal_id", "nightscout_synced")
-    return [{key: (_local(item[key]) if key == "at" else item[key]) for key in keep if key in item}
+            "carbs_certainty", "fat_protein", "alcohol", "place", "glucose_mgdl", "meal_id", "nightscout_synced")
+    return [{key: (_local(item[key]) if key == "at" else (item[key] or {}).get("name") if key == "place"
+                   else item[key]) for key in keep if key in item}
             for item in current["timeline"]]
 
 
@@ -127,7 +128,8 @@ def _meals(day: str) -> list[dict]:
     rows = read_api.api_read("/api/v1/meals", urlencode({"from": day, "to": day}))["rows"]
     keep = ("meal_id", "meal", "at", "day_type", "window_start", "window_end", "end_reason", "excluded",
             "carbs_meal_g", "carbs_total_g", "rapid_units", "g0_mgdl", "g_end_mgdl", "delta_mgdl",
-            "sport_effect_mgdl", "factor_ie_per_ke", "blocked_reason", "carbs_certainty", "fat_protein", "alcohol")
+            "sport_effect_mgdl", "factor_ie_per_ke", "blocked_reason", "carbs_certainty", "fat_protein", "alcohol",
+            "place")
     return [{key: row.get(key) for key in keep} for row in rows]
 
 
@@ -169,6 +171,19 @@ def _form(args: dict, at: datetime) -> dict:
     }
 
 
+def _place_id(args: dict) -> int | None:
+    """The place chip named by the agent; an unknown name lists the existing ones."""
+    name = " ".join(str(args.get("place") or "").split())
+    if not name:
+        return None
+    options = place_store.all_places()
+    found = next((place for place in options if place["name"].casefold() == name.casefold()), None)
+    if found is None:
+        raise ToolError("Unbekannter Ort. Vorhandene Orte: " + (", ".join(place["name"] for place in options)
+                                                                 or "keine, Philipp legt sie in den Einstellungen an"))
+    return found["id"]
+
+
 def preview_entry(args: dict) -> dict:
     """What the entry form shows for these carbs: snack or main meal, sport, basal, split, dose options."""
     at = _at(args)
@@ -180,6 +195,7 @@ def preview_entry(args: dict) -> dict:
         "sport": result["sport"], "basal_suggestion_units": result["basal_units"],
         "day_type": result["day_type"], "split": result["split"],
         "dose": _dose_view(result["dose"]), "on_board": result["on_board"],
+        "places": [place["name"] for place in place_store.all_places()],
     }
 
 
@@ -194,7 +210,7 @@ def save_entry(args: dict) -> dict:
     payload.update({
         "mode": kind, "insulin": str(insulin), "with_basal": with_basal is True,
         "dose_variant": _choice(args, "dose_variant", list(entry.DOSE_VARIANTS)),
-        "notes": str(args.get("notes") or "")[:500], "event_id": event_id,
+        "notes": str(args.get("notes") or "")[:500], "event_id": event_id, "place_id": _place_id(args),
         # A retry with the same event_id must not add a second basal dose either.
         "basal_event_id": str(uuid.uuid5(uuid.UUID(event_id), "basal")),
     })
@@ -296,6 +312,9 @@ FORM = {
                                        "FDDB-KI), unsure = keine ernsthafte Schätzung."},
     "fat_protein": {"type": "boolean", "description": "true = fett-/eiweißreich."},
     "alcohol": {"type": "boolean", "description": "true = Alkohol zur Mahlzeit (nur erfasst, ändert keine Rechnung)."},
+    "place": {"type": "string",
+              "description": "Ort-Chip, an dem gegessen wurde (z. B. Kantine, Restaurant), nur bei KH. Die Vorschau "
+                             "listet die vorhandenen Orte in places; weglassen, wenn Philipp keinen nennt."},
 }
 
 TOOLS = [

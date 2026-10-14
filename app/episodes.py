@@ -20,6 +20,13 @@ QUALITY_MARKERS = {"fat_protein": "[DAQ:fat]", "alcohol": "[DAQ:alcohol]"}
 # Most to least certain; a meal takes the least certain level of its marked carb entries.
 CERTAINTIES = ("weighed", "known", "unsure")
 CERTAINTY_TAG = re.compile(r"\[DAQ:(weighed|known|unsure)\]")
+DAE_TAG = re.compile(r"\[DAE:([a-f0-9-]{36})\]")
+
+
+def event_id(item: dict) -> str | None:
+    """The app's own id of a Nightscout treatment (its [DAE:…] note marker), stable across edits."""
+    match = DAE_TAG.search(str(item.get("notes") or ""))
+    return match.group(1) if match else None
 
 
 def carbs_certainty(notes: str) -> str | None:
@@ -126,6 +133,7 @@ def normalize_treatments(raw: list[dict]) -> list[dict]:
             **{flag: tag in str(item.get("notes") or "") for flag, tag in QUALITY_MARKERS.items()},
             "split": split_plan(str(item.get("notes") or "")),
             "finger_mgdl": finger_mgdl(item),
+            "event_id": event_id(item),
             **marker,
         })
     return sorted(result, key=lambda x: x["at"])

@@ -16,6 +16,22 @@ function factorIconsHTML(marks) {
   return '<span class="factor-icons" title="' + escapeHTML(label) + '" role="img" aria-label="' + escapeHTML(label) + '">' +
     on.map(key => '<span class="factor-icon factor-' + key + '"></span>').join("") + '</span>';
 }
+// Where a carb entry was eaten; the place chip's name.
+const placeBadgeHTML = place => place ? '<span class="place-badge" title="Ort">' + escapeHTML(place.name) + '</span>' : "";
+
+// The browser position for the place suggestion and for adding a spot to a place.
+function currentPosition() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) { reject({ code: 0 }); return; }
+    navigator.geolocation.getCurrentPosition(position => resolve({
+      lat: position.coords.latitude, lon: position.coords.longitude,
+      accuracy_m: Math.round(position.coords.accuracy), captured_at: new Date(position.timestamp).toISOString(),
+    }), reject, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+  });
+}
+
+const osmLink = (lat, lon) => "https://www.openstreetmap.org/?mlat=" + lat + "&mlon=" + lon + "#map=18/" + lat + "/" + lon;
+
 const num = (value, digits = 2) => Number(value).toLocaleString("de-DE", { maximumFractionDigits: digits, minimumFractionDigits: 0 });
 const factorNum = value => Number(value).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 const signedChange = (value, digits = 1) => value == null ? "—" : (Number(value) > 0 ? "+" : "") + num(value, digits) + " mg/dL";
@@ -497,6 +513,66 @@ document.addEventListener("input", event => {
   showCertainty(event.target);
 });
 
+// The place row: the server names the chips and which one the position suggests; a tap overrides it.
+const POSITION_MAX_AGE_MS = 2 * 60000;
+
+function requestEntryPosition() {
+  const form = $("#entry-form");
+  if (form.elements.kind.value !== "meal" || !(Number(form.elements.carbs.value) > 0) || state.entryTimeTouched
+      || state.day !== todayDay() || state.entryPositionPending) return;
+  if (state.entryPosition && Date.now() - state.entryPositionAt < POSITION_MAX_AGE_MS) return;
+  state.entryPositionPending = true;
+  updateEntryPlace();
+  currentPosition().then(position => {
+    state.entryPosition = position;
+    state.entryPositionAt = Date.now();
+    state.entryPositionError = null;
+  }).catch(error => {
+    state.entryPositionError = error?.code === 1 ? "denied" : "failed";
+  }).finally(() => {
+    state.entryPositionPending = false;
+    schedulePreview(0);
+  });
+}
+
+function entryPlaceId() {
+  if (!(Number($("#entry-form").elements.carbs.value) > 0) || state.entryPlace === "none") return null;
+  return state.entryPlace ?? currentPreview()?.place?.place_id ?? null;
+}
+
+const positionHints = { denied: "Standort nicht freigegeben, Ort bitte selbst wählen",
+  failed: "Standort nicht ermittelt, Ort bitte selbst wählen" };
+
+function updateEntryPlace() {
+  const box = $("#entry-place");
+  const place = $("#entry-form").elements.kind.value === "meal" ? currentPreview()?.place : null;
+  box.hidden = !place;
+  if (!place) return;
+  const selected = entryPlaceId();
+  // Quick places have their own chip; another chosen or suggested place joins them, the rest sit behind "Weitere".
+  const chips = place.options.filter(option => option.quick || option.id === selected);
+  const more = place.options.filter(option => !chips.includes(option));
+  $("#entry-place-chips").innerHTML = chips.map(option =>
+    '<button type="button" class="chip place-chip" data-place-id="' + option.id + '" aria-pressed="' +
+    (option.id === selected) + '">' + escapeHTML(option.name) + '</button>').join("") +
+    (more.length ? '<select class="chip place-more" aria-label="Weitere Orte"><option value="">Weitere …</option>' +
+      more.map(option => '<option value="' + option.id + '">' + escapeHTML(option.name) + '</option>').join("") + '</select>' : "");
+  const hint = !place.options.length ? "Noch keine Orte, in den Einstellungen anlegen"
+    : state.entryPositionPending ? "Standort wird ermittelt …"
+    : state.entryPlace !== undefined ? (state.entryPlace === "none" ? "kein Ort" : "selbst gewählt")
+    : place.status === "none" && state.entryPositionError ? positionHints[state.entryPositionError]
+    : place.hint;
+  $("#entry-place-hint").textContent = "Ort: " + hint;
+}
+
+function toggleEntryPlace(event) {
+  const chip = event.target.closest(".place-chip");
+  if (!chip) return;
+  const id = Number(chip.dataset.placeId);
+  state.entryPlace = entryPlaceId() === id ? "none" : id;
+  updateEntryPlace();
+}
+
 function updateEntryQuality() {
   const form = $("#entry-form");
   $("#entry-quality").hidden = !(form.elements.kind.value === "meal" && Number(form.elements.carbs.value) > 0);
@@ -506,6 +582,7 @@ function updateEntrySportOption() {
   updateEntryAssignment();
   updateEntrySplit();
   updateEntryQuality();
+  updateEntryPlace();
   const form = $("#entry-form");
   const option = $("#entry-sport-option");
   const checkbox = form.elements.consider_sport;
@@ -595,6 +672,92 @@ async function loadSettings() {
   renderTargetRows(data.settings.target_schedule || []);
   renderVacation(data.vacation);
   await loadNotifications();
+  renderPlaces(await api("/api/places"));
+}
+
+// Place management: chips with their spots, and unknown positions that can join a chip or become one.
+function spotHTML(spot, index) {
+  return '<li class="place-spot"><a href="' + osmLink(spot.lat, spot.lon) + '" target="_blank" rel="noopener">Standort ' +
+    (index + 1) + '</a>' +
+    '<button type="button" class="quiet" data-place-action="delete_spot" data-spot-id="' + spot.id + '">Entfernen</button></li>';
+}
+
+function renderPlaces(data) {
+  state.places = data;
+  $("#places-list").innerHTML = data.places.length ? data.places.map(place =>
+    '<div class="place-item" data-place-id="' + place.id + '"><div class="place-head">' +
+    '<input type="text" class="place-name" maxlength="40" value="' + escapeHTML(place.name) + '" aria-label="Name des Orts">' +
+    '<span class="hint">' + place.count + (place.count === 1 ? ' Eintrag' : ' Einträge') + '</span>' +
+    '<label class="check-label place-quick"><input type="checkbox" class="place-quick-toggle"' + (place.quick ? ' checked' : '') +
+    '> Schnellauswahl</label>' +
+    '<button type="button" class="quiet delete-treatment" data-place-action="delete" data-place-id="' + place.id + '">Löschen</button></div>' +
+    (place.spots.length ? '<ul class="place-spots">' + place.spots.map((spot, index) => spotHTML(spot, index)).join("") + '</ul>'
+      : '<p class="hint">Ohne Standort: nur von Hand wählbar.</p>') +
+    '<button type="button" class="quiet" data-place-action="here" data-place-id="' + place.id + '">+ Aktuellen Standort hinzufügen</button></div>'
+  ).join("") : '<p class="hint">Noch keine Orte.</p>';
+  const options = data.places.map(place => '<option value="' + place.id + '">' + escapeHTML(place.name) + '</option>').join("");
+  $("#places-unknown").innerHTML = data.unknown.length ? data.unknown.map((group, index) =>
+    '<div class="place-unknown" data-index="' + index + '"><p>' + group.count + '× · zuletzt ' +
+    escapeHTML(new Date(group.last_at).toLocaleString("de-DE", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })) +
+    (group.nearest_place ? ' · ' + escapeHTML(num(group.nearest_place.distance_m >= 1000 ? group.nearest_place.distance_m / 1000 : group.nearest_place.distance_m, 1)) +
+      (group.nearest_place.distance_m >= 1000 ? ' km' : ' m') + ' von ' + escapeHTML(group.nearest_place.name) : '') +
+    ' · <a href="' + osmLink(group.lat, group.lon) + '" target="_blank" rel="noopener">Karte</a></p>' +
+    '<div class="place-assign"><select class="unknown-target" aria-label="Zu welchem Ort"><option value="">Neuer Ort …</option>' +
+    options + '</select><input type="text" class="unknown-name" maxlength="40" placeholder="Name, z. B. Schulung" aria-label="Name des neuen Orts"><button type="button" data-place-action="adopt" data-index="' + index + '">Zuordnen</button></div></div>'
+  ).join("") : '<p class="hint">Keine. Einträge, deren Standort zu keinem Ort passt, erscheinen hier.</p>';
+}
+
+async function placeAction(body) {
+  try {
+    renderPlaces(await api("/api/places", { method: "POST", body: JSON.stringify(body) }));
+    if (state.dayData) loadDay();
+    schedulePreview(0);
+    return true;
+  } catch (error) {
+    toast(error.message, true);
+    return false;
+  }
+}
+
+async function placeClick(event) {
+  const button = event.target.closest("[data-place-action]");
+  if (!button) return;
+  const action = button.dataset.placeAction;
+  if (action === "delete") {
+    const name = button.closest(".place-item").querySelector(".place-name").value;
+    if (!confirm("Ort „" + name + "“ löschen? Einträge mit Standort erscheinen danach wieder als unbekannt.")) return;
+    await placeAction({ action, id: button.dataset.placeId });
+  } else if (action === "delete_spot") {
+    await placeAction({ action, spot_id: button.dataset.spotId });
+  } else if (action === "here") {
+    button.disabled = true;
+    try {
+      const position = await currentPosition();
+      if (position.accuracy_m > state.places.max_accuracy_m)
+        throw new Error("Standort zu ungenau (± " + position.accuracy_m + " m). Bitte draußen oder mit WLAN erneut versuchen.");
+      await placeAction({ action: "add_spot", place_id: button.dataset.placeId, lat: position.lat, lon: position.lon });
+    } catch (error) {
+      toast(error?.code === 1 ? "Standort nicht freigegeben" : error?.message || "Standort nicht ermittelt", true);
+    } finally {
+      button.disabled = false;
+    }
+  } else if (action === "adopt") {
+    const group = state.places.unknown[Number(button.dataset.index)];
+    const row = button.closest(".place-unknown");
+    const target = $(".unknown-target", row).value;
+    await placeAction({ action: "add_spot", place_id: target || null, name: $(".unknown-name", row).value,
+      lat: group.lat, lon: group.lon });
+  }
+}
+
+async function placeChange(event) {
+  if (event.target.matches(".place-name")) {
+    await placeAction({ action: "rename", id: event.target.closest(".place-item").dataset.placeId, name: event.target.value });
+  } else if (event.target.matches(".place-quick-toggle")) {
+    await placeAction({ action: "quick", id: event.target.closest(".place-item").dataset.placeId, quick: event.target.checked });
+  } else if (event.target.matches(".unknown-target")) {
+    $(".unknown-name", event.target.closest(".place-unknown")).hidden = event.target.value !== "";
+  }
 }
 
 function renderTargetRows(rows) {
@@ -1504,7 +1667,7 @@ function entryRowHTML(item, data) {
     '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '" aria-label="' +
     escapeHTML(label + " um " + timeOnly(item.at) + " bearbeiten") + '">Bearbeiten</button>';
   return '<article class="timeline-item"><time>' + escapeHTML(timeOnly(item.at)) +
-    '</time><div><strong>' + escapeHTML(label) + factorIconsHTML(item) + '</strong><p>' + escapeHTML(details || item.eventType) +
+    '</time><div><strong>' + escapeHTML(label) + factorIconsHTML(item) + placeBadgeHTML(item.place) + '</strong><p>' + escapeHTML(details || item.eventType) +
     '</p>' + (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') +
     '</div><div class="timeline-actions">' + action + '</div></article>';
 }
@@ -1542,7 +1705,7 @@ function mealBlockHTML(block, data) {
     ? '<span class="day-meal-status">' + escapeHTML(calc.reason || "Noch keine Berechnung") + '</span>'
     : '<span class="day-meal-factor">' + escapeHTML(factorNum(calc.factor_units_per_ke)) + ' <small>IE/KE</small></span>';
   return '<article class="day-meal' + (check ? ' needs-check' : '') + (meal.excluded ? ' is-excluded' : '') + '" id="meal-' + escapeHTML(meal.id) + '">' +
-    '<div class="day-meal-head"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' + factorIconsHTML(meal.quality) +
+    '<div class="day-meal-head"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' + factorIconsHTML(meal.quality) + placeBadgeHTML(meal.place) +
     '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") +
     '</span>' + (meal.quality?.carbs_certainty ? '<span class="outlier-badge certainty-' + meal.quality.carbs_certainty + '">' + CERTAINTY_LABELS[meal.quality.carbs_certainty] + '</span>' : '') +
     '</div><div class="day-meal-result">' + status +
@@ -1613,6 +1776,9 @@ function previewRequest() {
     carbs_certainty: Number(form.elements.carbs.value) > 0 ? certaintyValue(form) : null,
     fat_protein: Number(form.elements.carbs.value) > 0 && form.elements.fat_protein.checked,
     alcohol: Number(form.elements.carbs.value) > 0 && form.elements.alcohol.checked,
+    // A position only rides along while the entry is "now"; the server checks that again.
+    position: !state.entryTimeTouched && state.entryPosition ? state.entryPosition : null,
+    place_id: entryPlaceId(),
   };
 }
 
@@ -1775,6 +1941,7 @@ function resetEntryForm() {
   state.doseChoice = null;
   state.entryAs = null;
   state.split = null;
+  state.entryPlace = undefined;
   setDefaultMealTime();
   updateEntryFields();
   if ($("#edit-dialog").open) closeEditDialog();
@@ -1797,8 +1964,13 @@ function editEntry(id) {
   setCertainty(form, item.carbs_certainty);
   form.elements.fat_protein.checked = Boolean(item.fat_protein);
   form.elements.alcohol.checked = Boolean(item.alcohol);
+  const placeSelect = form.elements.place_id;
+  placeSelect.innerHTML = '<option value="">Kein Ort</option>' + (state.dayData.place_options || []).map(option =>
+    '<option value="' + option.id + '">' + escapeHTML(option.name) + '</option>').join("");
+  placeSelect.value = item.place ? String(item.place.id) : "";
   const sport = item.kind === "exercise";
   $("#edit-quality").hidden = sport || !(Number(item.carbs) > 0);
+  updateEditPlace();
   $("#edit-meal-fields").hidden = sport;
   $("#edit-sport-field").hidden = !sport;
   $("#edit-duration-field").hidden = !sport;
@@ -1815,6 +1987,15 @@ function editEntry(id) {
   $("#edit-dialog").showModal();
   // On touch screens a focused field would pop up the keyboard or picker before anything was tapped.
   if (matchMedia("(pointer: fine)").matches) form.elements.at.focus();
+}
+
+// Places can be set afterwards, e.g. for meals eaten before places existed.
+function updateEditPlace() {
+  const form = $("#edit-form");
+  const hidden = state.editing?.kind === "exercise" || !(Number(form.elements.carbs.value) > 0)
+    || !(state.dayData?.place_options || []).length;
+  $("#edit-place-field").hidden = hidden;
+  form.elements.place_id.disabled = hidden;
 }
 
 async function saveEditedEntry(event) {
@@ -1844,6 +2025,7 @@ async function saveEditedEntry(event) {
     carbs_certainty: carbs > 0 ? certaintyValue(form) : null,
     fat_protein: carbs > 0 && form.elements.fat_protein.checked,
     alcohol: carbs > 0 && form.elements.alcohol.checked,
+    place_id: form.elements.place_id.disabled ? undefined : form.elements.place_id.value || null,
   };
   const button = $('button[type="submit"]', form);
   button.disabled = true;
@@ -2652,6 +2834,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setPickerBase(event.target, 1);
     event.target.setCustomValidity("");
     $("#edit-quality").hidden = state.editing?.kind === "exercise" || !(Number(event.target.value) > 0);
+    updateEditPlace();
   });
   $("#edit-form").elements.insulin.addEventListener("input", event => {
     setPickerBase(event.target, 0.5);
@@ -2681,11 +2864,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   $$(".notify-toggle").forEach(input => input.addEventListener("change", saveNotification));
   $$(".notify-priority").forEach(select => select.addEventListener("change", saveNotificationPriority));
   $("#notify-test").addEventListener("click", sendTestNotification);
+  $(".places-panel").addEventListener("click", placeClick);
+  $(".places-panel").addEventListener("change", placeChange);
+  $("#place-new").addEventListener("submit", async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (await placeAction({ action: "create", name: form.elements.name.value })) form.reset();
+  });
   $("#entry-form").elements.carbs.addEventListener("input", event => {
     event.target.setCustomValidity("");
     updateEntrySubmitLabel();
     updateEntryQuality();
+    requestEntryPosition();
     schedulePreview();
+  });
+  $("#entry-place-chips").addEventListener("click", toggleEntryPlace);
+  $("#entry-place-chips").addEventListener("change", event => {
+    if (!event.target.matches(".place-more") || !event.target.value) return;
+    state.entryPlace = Number(event.target.value);
+    updateEntryPlace();
   });
   $("#entry-form").elements.insulin.addEventListener("input", () => {
     $("#entry-form").elements.carbs.setCustomValidity("");

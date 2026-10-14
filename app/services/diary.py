@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 from app import calculation, episodes
 from app.common import MEALS, local_day_range, parse_instant, unit_text
 from app.ingestion import nightscout
-from app.services import day_view
+from app.services import day_view, places
 from app.store import config, mirror
 
 
@@ -149,6 +149,9 @@ def save_diary_treatment(payload: dict) -> dict:
         mirror.delete_cached_treatment(record_id)
     elif not ensure_not_duplicate(day, event_id):
         nightscout.write_treatment(record)
+    if "place_id" in payload and carbs > 0:
+        # The edit dialog's place; a position stored with the entry is kept.
+        places.record(event_id, at, {"place_id": payload["place_id"]})
     return {"id": record_id or None, "event_id": event_id, "day": day}
 
 

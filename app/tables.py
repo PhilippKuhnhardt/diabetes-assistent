@@ -10,13 +10,13 @@ MEAL_COLUMNS = [
     "manual_window", "excluded", "sport_status", "sport_effect_mgdl", "g0_mgdl", "g_end_mgdl",
     "delta_mgdl", "carbs_meal_g", "carbs_total_g", "extra_carb_count", "carbs_times_isf",
     "rapid_units", "insulin_effect_mgdl", "meal_isf", "factor_ie_per_ke", "blocked_reason",
-    "carbs_certainty", "fat_protein", "alcohol",
+    "carbs_certainty", "fat_protein", "alcohol", "place",
 ]
 WINDOW_EVENT_COLUMNS = ["meal_id", "kind", "at", "carbs_g", "units", "isf", "event_type"]
 ENTRY_COLUMNS = ["at", "sgv"]
 BASAL_COLUMNS = ["id", "at", "units", "nightscout_synced", "notes"]
 TREATMENT_COLUMNS = ["id", "at", "eventType", "carbs", "insulin", "basal_units", "duration",
-                     "sport_type", "role", "meal", "episode_id", "carbs_certainty", "fat_protein", "alcohol", "notes"]
+                     "sport_type", "role", "meal", "episode_id", "carbs_certainty", "fat_protein", "alcohol", "place", "notes"]
 TABLE_COLUMNS = {"meals": MEAL_COLUMNS, "window_events": WINDOW_EVENT_COLUMNS, "entries": ENTRY_COLUMNS,
                  "treatments": TREATMENT_COLUMNS, "basal": BASAL_COLUMNS}
 
@@ -34,6 +34,8 @@ entsprechen der App zum Abrufzeitpunkt (aktuelles Nightscout-Profil für alle Ta
   weighed = gewogen, known = Gericht bekannt oder FDDB-KI-Auswertung, unsure = keine ernsthafte
   Schätzung, leer = nicht angegeben. fat_protein: mindestens ein KH-Eintrag war als
   „fett-/eiweißreich“ markiert. alcohol: mindestens ein KH-Eintrag war mit „Alkohol“ markiert.
+  place: Ort-Chip der Mahlzeit (ihr eigener Eintrag, sonst der erste gezählte KH-Eintrag mit Ort),
+  leer = kein Ort. Orte und Standorte liegen nur in der App, nicht in Nightscout.
 - window_events: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.
 - entries: alle gespiegelten CGM-Werte in mg/dL.
 - treatments: alle gespiegelten Nightscout-Behandlungen inklusive Sport (Basal aus der App
@@ -78,6 +80,7 @@ def collect(first_day: date, last_day: date, day_payload: Callable[[str], dict],
                 "factor_ie_per_ke": result.get("factor_units_per_ke"),
                 "blocked_reason": None if result.get("factor_units_per_ke") else result.get("reason"),
                 **(meal.get("quality") or {}),
+                "place": (meal.get("place") or {}).get("name"),
             })
             for item in result.get("carb_events", []):
                 window_events.append({"meal_id": meal["id"], "kind": "carbs", "at": _local(item["at"], zone),
@@ -89,9 +92,10 @@ def collect(first_day: date, last_day: date, day_payload: Callable[[str], dict],
         # A day payload also covers parts of the neighbouring days; keep only the rows of this
         # local day so each reading or treatment appears once across a multi-day range.
         own = payload["day"]
+        places = {item["id"]: item["place"]["name"] for item in payload.get("timeline", []) if item.get("place")}
         entries.extend(row for row in ({"at": _local(item["at"], zone), "sgv": item["sgv"]}
                                        for item in payload.get("entries", [])) if row["at"][:10] == own)
-        treatments.extend(row for row in ({**item, "at": _local(item["at"], zone)}
+        treatments.extend(row for row in ({**item, "at": _local(item["at"], zone), "place": places.get(item["id"])}
                                           for item in payload.get("treatments", [])) if row["at"][:10] == own)
         basal.extend(row for row in ({**item, "at": _local(item["at"], zone)}
                                      for item in payload.get("basal", [])) if row["at"][:10] == own)

@@ -157,8 +157,36 @@ def _notification_priority(db: sqlite3.Connection) -> None:
     db.execute("ALTER TABLE notification_settings ADD COLUMN priority INTEGER")
 
 
+def _places(db: sqlite3.Connection) -> None:
+    """Eating places (chips) with their spots, and where each diary carb entry was eaten (by its
+    event id); positions stay local."""
+    db.execute("""CREATE TABLE IF NOT EXISTS places (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        quick INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS place_spots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        place_id INTEGER NOT NULL,
+        lat REAL NOT NULL,
+        lon REAL NOT NULL,
+        created_at TEXT NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS entry_locations (
+        event_id TEXT PRIMARY KEY,
+        at TEXT NOT NULL,
+        lat REAL,
+        lon REAL,
+        accuracy_m REAL,
+        place_id INTEGER,
+        updated_at TEXT NOT NULL
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS entry_locations_at ON entry_locations(at)")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
-                                                          _notifications, _notification_priority]
+                                                          _notifications, _notification_priority, _places]
 
 
 def init() -> None:

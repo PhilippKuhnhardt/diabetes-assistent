@@ -14,7 +14,7 @@ from app import glucose as cgm
 from app.common import json_safe, local_day_range, parse_instant
 from app.ingestion import nightscout, sync
 from app.services import settings as settings_service
-from app.store import basal_doses as basal_store, config, marks, mirror, results
+from app.store import basal_doses as basal_store, config, marks, mirror, places as place_store, results
 from app.analysis.night import night_analysis
 
 # Any change to the app's code recalculates stored days once, so a stored result never
@@ -64,6 +64,13 @@ def compute_day(day: str) -> dict:
     sport_marks = marks.analysis_sport_marks()
     manual_windows = marks.analysis_windows()
     exclusions = marks.analysis_exclusions()
+    place_names = {place["id"]: place["name"] for place in place_store.all_places()}
+    entry_places = place_store.entry_places()
+
+    def place_of(item: dict) -> dict | None:
+        place_id = entry_places.get(item.get("event_id") or "")
+        return {"id": place_id, "name": place_names[place_id]} if place_id in place_names else None
+
     rendered = []
     main_meal_ids = {item["id"] for item in treatments
                      if (item.get("role") == "meal" or item.get("eventType") == "Meal Bolus")
@@ -123,6 +130,10 @@ def compute_day(day: str) -> dict:
         output["quality"] = {
             "carbs_certainty": episodes.least_certain(item.get("carbs_certainty") for item in treatments if item["id"] in carb_ids),
             **{flag: any(item.get(flag) for item in treatments if item["id"] in carb_ids) for flag in episodes.QUALITY_MARKERS}}
+        # Where the meal was eaten: its own entry's place, else that of its first counted carb entry with one.
+        carb_entries = sorted((item for item in treatments if item["id"] in carb_ids),
+                              key=lambda item: (item["id"] != meal["source_id"], item["at"]))
+        output["place"] = next((place for place in map(place_of, carb_entries) if place), None)
         output["excluded"] = meal["id"] in exclusions
         output["review"] = meal_review(output)
         calculation_events = output["calculation"]
@@ -220,7 +231,7 @@ def compute_day(day: str) -> dict:
             "basal_units": item["basal_units"], "duration_minutes": item["duration"],
             "sport_kind": item.get("sport_type"), "notes": note,
             "carbs_certainty": item.get("carbs_certainty"), "fat_protein": item.get("fat_protein", False),
-            "alcohol": item.get("alcohol", False),
+            "alcohol": item.get("alcohol", False), "place": place_of(item),
             "glucose_mgdl": glucose, "glucose_at": glucose_at,
             **({"nightscout_synced": item["nightscout_synced"]} if kind == "basal" else {}),
         })
@@ -245,6 +256,7 @@ def compute_day(day: str) -> dict:
         "treatments": [{**episodes.serialize_treatment(item), "rapid": calculation.is_rapid_insulin(item)}
                        for item in treatments],
         "window_limits": settings_service.MANUAL_WINDOW_LIMITS,
+        "place_options": [{"id": place_id, "name": name} for place_id, name in place_names.items()],
     })
 
 
