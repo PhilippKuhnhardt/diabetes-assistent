@@ -325,11 +325,6 @@ span.range-high { color: #9a6410; font-weight: 650; }
 .summary-card .summary-metric strong { font-size: 20px; }
 .summary-card > p { margin: 12px 0 0; }
 .breakfast-subcard > small { font-size: 11px; }
-.analysis-ic-rows { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-bottom: 16px; }
-.analysis-ic-row { display: flex; align-items: center; gap: 8px; margin: 0; }
-.analysis-ic-row input { width: 86px; min-height: 36px; margin: 0; padding: 6px 8px; }
-.analysis-ic-row > span:last-child { color: var(--muted); font-weight: 500; }
-.analysis-ic-panel #analysis-ic-status { margin-left: 10px; }
 
 .ui-icon { width: 16px; height: 16px; flex: none; vertical-align: middle; }
 .analysis-table .icon-button { display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 5px; color: var(--green-dark); }
@@ -353,7 +348,6 @@ span.range-high { color: #9a6410; font-weight: 650; }
 .sport-events { font-weight: 500; }
 .sport-review-meal { margin: 4px 0 8px; }
 @media (max-width: 650px) {
-  .analysis-ic-panel #analysis-ic-status { display: block; margin: 9px 0 0; }
 }
 
 /* Meal window chart and editor */

@@ -2146,45 +2146,6 @@ function renderNightSummary(night) {
     : '<div class="empty">Für diesen Zeitraum liegen keine Nächte vor.</div>';
 }
 
-function renderAnalysisIc() {
-  const rows = state.settings?.ic_schedule || [];
-  $("#analysis-ic-rows").innerHTML = rows.length
-    ? rows.map(row => {
-      const time = minuteClock(Number(row.start_minute));
-      const display = Number((10 / Number(row.grams_per_unit)).toFixed(2));
-      return '<label class="analysis-ic-row"><span>Ab ' + escapeHTML(time) + '</span>' +
-        '<input type="number" min="' + escapeHTML(pickerMinimum(display, 0.1, true)) + '" max="1000" step="0.1" required data-start-minute="' +
-        escapeHTML(row.start_minute) + '" data-grams-per-unit="' + escapeHTML(row.grams_per_unit) +
-        '" data-original-display="' + escapeHTML(display) + '" value="' + escapeHTML(display) +
-        '" aria-label="Aktueller Insulinfaktor ab ' + escapeHTML(time) + ' in IE je KE"><span>IE/KE</span></label>';
-    }).join("")
-    : '<p class="hint">Kein Insulinfaktor im aktuellen Nightscout-Profil verfügbar.</p>';
-  $("#save-analysis-ic").disabled = !rows.length || !state.settings?.nightscout_profile?.profile_id;
-}
-
-async function saveAnalysisIc() {
-  const button = $("#save-analysis-ic");
-  const inputs = $$("#analysis-ic-rows input");
-  if (!inputs.length || !inputs.every(input => input.reportValidity())) return;
-  button.disabled = true;
-  $("#analysis-ic-status").textContent = "Wird in Nightscout gespeichert …";
-  try {
-    const result = await api("/api/profile/ic", { method: "POST", body: JSON.stringify({
-      profile_id: state.settings.nightscout_profile.profile_id,
-      ic_schedule: inputs.map(icScheduleRow),
-    }) });
-    await loadSettings();
-    await loadSummary();
-    $("#analysis-ic-status").textContent = result.message;
-    toast(result.message);
-  } catch (error) {
-    $("#analysis-ic-status").textContent = error.message;
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
-}
-
 function renderSportAnalysis(analysis) {
   const sessions = analysis?.sessions || [];
   const kinds = analysis?.kinds || [];
@@ -2499,7 +2460,6 @@ async function loadSummary() {
         (kind === "breakfast" ? '' : ' · ' + escapeHTML(suggestionNote(row.suggestion))) + '</p>' +
         (kind === "breakfast" ? breakfastSubcards() : '') + '</div>';
     }).join("");
-    renderAnalysisIc();
     renderSportAnalysis(data.sport_analysis);
     renderSuggestionDerivation(data.suggestion_derivation);
     renderAutomatik(data.suggestion_derivation);
@@ -2697,11 +2657,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     setPickerBase(event.target, 0.5);
     $("#edit-form").elements.carbs.setCustomValidity("");
   });
-  for (const selector of ["#ic-rows", "#analysis-ic-rows"]) {
-    $(selector).addEventListener("input", event => {
-      if (event.target.matches("input")) setPickerBase(event.target, 0.1, true);
-    });
-  }
+  $("#ic-rows").addEventListener("input", event => {
+    if (event.target.matches("input")) setPickerBase(event.target, 0.1, true);
+  });
   $("#cancel-edit").addEventListener("click", closeEditDialog);
   $("#delete-edit").addEventListener("click", deleteTreatment);
   $$("[data-diary-mode]").forEach(button => button.addEventListener("click", () => {
@@ -2836,7 +2794,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
   $("#summary-days").addEventListener("change", loadSummary);
-  $("#save-analysis-ic").addEventListener("click", saveAnalysisIc);
   $("#sync-range").addEventListener("click", syncRange);
   $("#calculations").addEventListener("click", saveExclusion);
   $("#calculations").addEventListener("change", saveDayType);
