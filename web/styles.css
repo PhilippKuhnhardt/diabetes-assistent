@@ -662,7 +662,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .factor-icon { display: inline-block; width: 15px; height: 15px; flex: none; background: currentColor; vertical-align: -2px;
   -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; }
 .factor-alcohol { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 2h10l-.6 6.5a4.4 4.4 0 0 1-8.8 0z'/%3E%3Cpath d='M7.4 7h9.2' /%3E%3Cpath d='M12 13v8M8 21h8'/%3E%3C/svg%3E"); }
-.factor-fat_protein { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M12 2.5S5.5 9.6 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 9.6 12 2.5 12 2.5z'/%3E%3C/svg%3E"); }
+.factor-fat_protein { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 10.5a8 6 0 0 1 16 0z'/%3E%3Cpath d='M3 14.5c1.5-1.2 3-1.2 4.5 0s3 1.2 4.5 0 3-1.2 4.5 0 3 1.2 4.5 0'/%3E%3Cpath d='M4.5 18h15a0 0 0 0 1 0 0 2.5 2.5 0 0 1-2.5 2.5H7A2.5 2.5 0 0 1 4.5 18z'/%3E%3C/svg%3E"); }
 .factor-icons { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
 .factor-icons .factor-alcohol, .entry-chips label.factor-chip:has(input[name="alcohol"]:checked) { color: #7a3b8f; }
 .factor-icons .factor-fat_protein { color: var(--amber); }
@@ -717,6 +717,10 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 #entry-form .entry-carbs-row input[name=carbs] { width: 92px; }
 .entry-card .entry-carbs-row .entry-factor-chips { margin: 0; flex-wrap: nowrap; gap: 5px; min-width: 0; }
 .entry-carbs-row .factor-chip { min-height: 42px; padding: 5px 9px; }
-/* On the narrowest phones the factor chips show their icon only; the title still names them. */
-@media (max-width: 359px) { .entry-carbs-row .factor-chip > span:last-child { display: none; } }
+/* On phones the factor chips show their icon only; title and aria-label still name them. */
+@media (max-width: 640px) {
+  .entry-carbs-row .factor-chip > span:last-child { display: none; }
+  .entry-carbs-row .factor-chip { width: 42px; justify-content: center; padding: 0; }
+  .entry-carbs-row .factor-chip .factor-icon { width: 20px; height: 20px; }
+}
 .entry-carbs-row #entry-carbs-field { flex: none; width: 92px; white-space: nowrap; }
