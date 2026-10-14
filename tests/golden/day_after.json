@@ -13,6 +13,13 @@
  },
  "other_events": [],
  "profile_sync_error": null,
+ "review": {
+  "blocked": 0,
+  "calculated": 0,
+  "excluded": 0,
+  "first_open": null,
+  "sport_open": 0
+ },
  "settings_version": 2,
  "sync_error": null,
  "synced_at": "2026-10-07T10:40:00+00:00",

@@ -352,9 +352,6 @@ span.range-high { color: #9a6410; font-weight: 650; }
 .sport-custom-fields button { min-height: 32px; padding: 5px 9px; }
 .sport-events { font-weight: 500; }
 .sport-review-meal { margin: 4px 0 8px; }
-.sport-review-table { margin: 0; padding: 0; min-width: 195px; background: transparent; white-space: normal; }
-.sport-review-table .sport-custom-fields input { width: 78px; }
-.sport-review-table .sport-suggestion { white-space: normal; text-align: left; }
 @media (max-width: 650px) {
   .analysis-ic-panel #analysis-ic-status { display: block; margin: 9px 0 0; }
 }
@@ -683,3 +680,17 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .entry-chips label.factor-chip:has(input[name="alcohol"]:checked) { background: #f4eaf7; border-color: #d4b3df; }
 .entry-chips label.factor-chip:not(:has(input:checked)) .factor-icon { opacity: .55; }
 .day-meal-head .factor-icons { margin: 0 8px 0 -2px; }
+
+/* "Tag durchgehen" as the day's cockpit: day type, check list, exclusion on each meal. */
+.review-day-type { margin: 0 0 12px; }
+.review-day-type .entry-switch { margin-bottom: 4px; max-width: 360px; }
+.review-day-type .hint { margin: 0; }
+.review-chip.is-clean { display: inline-flex; align-items: center; gap: 4px; background: var(--green-light); border-color: #bdd8c5; color: var(--green-dark); }
+.review-chip .ui-icon { width: 14px; height: 14px; }
+.analysis-table button.review-chip { cursor: pointer; min-height: 0; padding: 4px 10px; background: var(--amber-light); border-color: #e0c27a; color: var(--amber); font-size: 12px; white-space: nowrap; }
+.day-meal-result { display: flex; align-items: center; gap: 10px; }
+.day-meal .exclude-meal, .analysis-table .exclude-meal { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 5px 8px; border-color: #bdd8c5; background: var(--green-light); color: var(--green-dark); font-size: 11px; white-space: nowrap; }
+.day-meal .exclude-meal.is-excluded { background: #f3f4f1; border-color: var(--line); color: var(--muted); }
+.day-meal.is-excluded .day-meal-factor { color: var(--muted); text-decoration: line-through; }
+.sport-review .sport-none { min-height: 32px; padding: 5px 10px; font-size: 12px; }
+@media (max-width: 650px) { .day-meal-result { flex-basis: 100%; justify-content: space-between; } }

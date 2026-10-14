@@ -114,6 +114,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0001",
     "imported": true,
     "meal": "breakfast",
@@ -122,6 +123,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0001",
     "sport": {
@@ -243,6 +249,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0002",
     "imported": true,
     "meal": "lunch",
@@ -251,6 +258,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0002",
     "sport": {
@@ -372,6 +384,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0003",
     "imported": true,
     "meal": "dinner",
@@ -380,6 +393,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0003",
     "sport": {
@@ -420,6 +438,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -696,6 +721,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0004",
     "imported": true,
     "meal": "breakfast",
@@ -704,6 +730,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0004",
     "sport": {
@@ -858,6 +889,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0005",
     "imported": true,
     "meal": "lunch",
@@ -866,6 +898,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0005",
     "sport": {
@@ -987,6 +1024,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0007",
     "imported": true,
     "meal": "dinner",
@@ -995,6 +1033,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0007",
     "sport": {
@@ -1035,6 +1078,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -1363,6 +1413,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0008",
     "imported": true,
     "meal": "breakfast",
@@ -1371,6 +1422,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0008",
     "sport": {
@@ -1492,6 +1548,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0009",
     "imported": true,
     "meal": "lunch",
@@ -1500,6 +1557,11 @@
      "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0009",
     "sport": {
@@ -1621,6 +1683,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0010",
     "imported": true,
     "meal": "dinner",
@@ -1629,6 +1692,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0010",
     "sport": {
@@ -1669,6 +1737,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -1979,6 +2054,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0011",
     "imported": true,
     "meal": "breakfast",
@@ -1987,6 +2063,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0011",
     "sport": {
@@ -2108,6 +2189,7 @@
       "sport_type": null
      }
     ],
+    "excluded": true,
     "id": "t-0012",
     "imported": true,
     "meal": "lunch",
@@ -2116,6 +2198,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0012",
     "sport": {
@@ -2262,6 +2349,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0013",
     "imported": true,
     "meal": "dinner",
@@ -2270,6 +2358,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0013",
     "sport": {
@@ -2301,6 +2394,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 2,
+   "excluded": 1,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -2612,6 +2712,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0015",
     "imported": true,
     "meal": "lunch",
@@ -2620,6 +2721,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0015",
     "sport": {
@@ -2741,6 +2847,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0016",
     "imported": true,
     "meal": "dinner",
@@ -2749,6 +2856,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0016",
     "sport": {
@@ -2789,6 +2901,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 2,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -3105,6 +3224,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0017",
     "imported": true,
     "meal": "breakfast",
@@ -3113,6 +3233,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0017",
     "sport": {
@@ -3267,6 +3392,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0019",
     "imported": true,
     "meal": "lunch",
@@ -3275,6 +3401,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0019",
     "sport": {
@@ -3396,6 +3527,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0021",
     "imported": true,
     "meal": "dinner",
@@ -3404,6 +3536,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0021",
     "sport": {
@@ -3444,6 +3581,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -3815,6 +3959,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0022",
     "imported": true,
     "meal": "breakfast",
@@ -3823,6 +3968,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0022",
     "sport": {
@@ -3944,6 +4094,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0023",
     "imported": true,
     "meal": "lunch",
@@ -3952,6 +4103,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0023",
     "sport": {
@@ -4073,6 +4229,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0025",
     "imported": true,
     "meal": "dinner",
@@ -4081,6 +4238,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0025",
     "sport": {
@@ -4127,6 +4289,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -4462,6 +4631,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0026",
     "imported": true,
     "meal": "breakfast",
@@ -4470,6 +4640,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0026",
     "sport": {
@@ -4591,6 +4766,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0027",
     "imported": true,
     "meal": "lunch",
@@ -4599,6 +4775,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0027",
     "sport": {
@@ -4720,6 +4901,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0028",
     "imported": true,
     "meal": "dinner",
@@ -4728,6 +4910,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0028",
     "sport": {
@@ -4768,6 +4955,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -5103,6 +5297,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0029",
     "imported": true,
     "meal": "breakfast",
@@ -5111,6 +5306,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0029",
     "sport": {
@@ -5232,6 +5432,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0030",
     "imported": true,
     "meal": "lunch",
@@ -5240,6 +5441,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0030",
     "sport": {
@@ -5361,6 +5567,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0031",
     "imported": true,
     "meal": "dinner",
@@ -5369,6 +5576,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0031",
     "sport": {
@@ -5409,6 +5621,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -5671,6 +5890,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0033",
     "imported": true,
     "meal": "breakfast",
@@ -5679,6 +5899,13 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": false,
+     "excludable": false,
+     "open": [
+      "blocked"
+     ]
     },
     "source_id": "t-0033",
     "sport": {
@@ -5830,6 +6057,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0034",
     "imported": true,
     "meal": "lunch",
@@ -5838,6 +6066,11 @@
      "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0034",
     "sport": {
@@ -5984,6 +6217,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0036",
     "imported": true,
     "meal": "dinner",
@@ -5992,6 +6226,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0036",
     "sport": {
@@ -6032,6 +6271,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 1,
+   "calculated": 2,
+   "excluded": 0,
+   "first_open": "t-0033",
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -6394,6 +6640,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0038",
     "imported": true,
     "meal": "breakfast",
@@ -6402,6 +6649,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0038",
     "sport": {
@@ -6523,6 +6775,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0039",
     "imported": true,
     "meal": "lunch",
@@ -6531,6 +6784,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0039",
     "sport": {
@@ -6653,6 +6911,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0040",
     "imported": true,
     "meal": "dinner",
@@ -6661,6 +6920,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0040",
     "sport": {
@@ -6701,6 +6965,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -7010,6 +7281,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0041",
     "imported": true,
     "meal": "breakfast",
@@ -7018,6 +7290,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0041",
     "sport": {
@@ -7139,6 +7416,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0042",
     "imported": true,
     "meal": "lunch",
@@ -7147,6 +7425,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0042",
     "sport": {
@@ -7268,6 +7551,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0043",
     "imported": true,
     "meal": "dinner",
@@ -7276,6 +7560,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0043",
     "sport": {
@@ -7316,6 +7605,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -7626,6 +7922,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0044",
     "imported": true,
     "meal": "breakfast",
@@ -7634,6 +7931,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0044",
     "sport": {
@@ -7755,6 +8057,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0047",
     "imported": true,
     "meal": "dinner",
@@ -7763,6 +8066,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0047",
     "sport": {
@@ -7813,6 +8121,13 @@
    }
   ],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 2,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -8157,6 +8472,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0048",
     "imported": true,
     "meal": "lunch",
@@ -8165,6 +8481,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0048",
     "sport": {
@@ -8286,6 +8607,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0050",
     "imported": true,
     "meal": "dinner",
@@ -8294,6 +8616,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0050",
     "sport": {
@@ -8334,6 +8661,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 2,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -8627,6 +8961,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0051",
     "imported": true,
     "meal": "breakfast",
@@ -8635,6 +8970,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0051",
     "sport": {
@@ -8756,6 +9096,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0052",
     "imported": true,
     "meal": "lunch",
@@ -8764,6 +9105,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0052",
     "sport": {
@@ -8885,6 +9231,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0053",
     "imported": true,
     "meal": "dinner",
@@ -8893,6 +9240,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0053",
     "sport": {
@@ -8933,6 +9285,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -9226,6 +9585,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0054",
     "imported": true,
     "meal": "breakfast",
@@ -9234,6 +9594,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0054",
     "sport": {
@@ -9355,6 +9720,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0055",
     "imported": true,
     "meal": "lunch",
@@ -9363,6 +9729,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0055",
     "sport": {
@@ -9534,6 +9905,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0056",
     "imported": true,
     "meal": "dinner",
@@ -9542,6 +9914,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0056",
     "sport": {
@@ -9582,6 +9959,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -9945,6 +10329,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0059",
     "imported": true,
     "meal": "breakfast",
@@ -9953,6 +10338,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0059",
     "sport": {
@@ -10074,6 +10464,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0060",
     "imported": true,
     "meal": "lunch",
@@ -10082,6 +10473,11 @@
      "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0060",
     "sport": {
@@ -10203,6 +10599,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0061",
     "imported": true,
     "meal": "dinner",
@@ -10211,6 +10608,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0061",
     "sport": {
@@ -10251,6 +10653,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -10595,6 +11004,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0062",
     "imported": true,
     "meal": "breakfast",
@@ -10603,6 +11013,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0062",
     "sport": {
@@ -10757,6 +11172,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0063",
     "imported": true,
     "meal": "lunch",
@@ -10765,6 +11181,13 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": [
+      "sport"
+     ]
     },
     "source_id": "t-0063",
     "sport": {
@@ -10892,6 +11315,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0066",
     "imported": true,
     "meal": "dinner",
@@ -10900,6 +11324,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0066",
     "sport": {
@@ -10946,6 +11375,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": "t-0063",
+   "sport_open": 1
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -11334,6 +11770,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0067",
     "imported": true,
     "meal": "breakfast",
@@ -11342,6 +11779,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0067",
     "sport": {
@@ -11463,6 +11905,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0068",
     "imported": true,
     "meal": "lunch",
@@ -11471,6 +11914,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0068",
     "sport": {
@@ -11592,6 +12040,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0069",
     "imported": true,
     "meal": "dinner",
@@ -11600,6 +12049,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0069",
     "sport": {
@@ -11640,6 +12094,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -12003,6 +12464,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0071",
     "imported": true,
     "meal": "breakfast",
@@ -12011,6 +12473,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0071",
     "sport": {
@@ -12132,6 +12599,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0072",
     "imported": true,
     "meal": "lunch",
@@ -12140,6 +12608,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0072",
     "sport": {
@@ -12261,6 +12734,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0073",
     "imported": true,
     "meal": "dinner",
@@ -12269,6 +12743,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0073",
     "sport": {
@@ -12309,6 +12788,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -12602,6 +13088,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0074",
     "imported": true,
     "meal": "breakfast",
@@ -12610,6 +13097,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0074",
     "sport": {
@@ -12731,6 +13223,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0075",
     "imported": true,
     "meal": "lunch",
@@ -12739,6 +13232,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0075",
     "sport": {
@@ -12860,6 +13358,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0076",
     "imported": true,
     "meal": "dinner",
@@ -12868,6 +13367,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0076",
     "sport": {
@@ -12908,6 +13412,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -13241,6 +13752,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0077",
     "imported": true,
     "meal": "breakfast",
@@ -13249,6 +13761,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0077",
     "sport": {
@@ -13403,6 +13920,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0079",
     "imported": true,
     "meal": "lunch",
@@ -13411,6 +13929,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0079",
     "sport": {
@@ -13557,6 +14080,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0081",
     "imported": true,
     "meal": "dinner",
@@ -13565,6 +14089,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0081",
     "sport": {
@@ -13596,6 +14125,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -14002,6 +14538,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0083",
     "imported": true,
     "meal": "lunch",
@@ -14010,6 +14547,13 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": false,
+     "excludable": false,
+     "open": [
+      "blocked"
+     ]
     },
     "source_id": "t-0083",
     "sport": {
@@ -14131,6 +14675,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0084",
     "imported": true,
     "meal": "lunch",
@@ -14139,6 +14684,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0084",
     "sport": {
@@ -14260,6 +14810,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0085",
     "imported": true,
     "meal": "dinner",
@@ -14268,6 +14819,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0085",
     "sport": {
@@ -14308,6 +14864,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 1,
+   "calculated": 2,
+   "excluded": 0,
+   "first_open": "t-0083",
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -14617,6 +15180,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0086",
     "imported": true,
     "meal": "breakfast",
@@ -14625,6 +15189,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0086",
     "sport": {
@@ -14746,6 +15315,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0087",
     "imported": true,
     "meal": "lunch",
@@ -14754,6 +15324,11 @@
      "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0087",
     "sport": {
@@ -14875,6 +15450,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0088",
     "imported": true,
     "meal": "dinner",
@@ -14883,6 +15459,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0088",
     "sport": {
@@ -14923,6 +15504,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -15215,6 +15803,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0089",
     "imported": true,
     "meal": "breakfast",
@@ -15223,6 +15812,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0089",
     "sport": {
@@ -15344,6 +15938,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0090",
     "imported": true,
     "meal": "lunch",
@@ -15352,6 +15947,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0090",
     "sport": {
@@ -15473,6 +16073,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0091",
     "imported": true,
     "meal": "dinner",
@@ -15481,6 +16082,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0091",
     "sport": {
@@ -15521,6 +16127,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -15813,6 +16426,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0092",
     "imported": true,
     "meal": "breakfast",
@@ -15821,6 +16435,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0092",
     "sport": {
@@ -15975,6 +16594,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0093",
     "imported": true,
     "meal": "lunch",
@@ -15983,6 +16603,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0093",
     "sport": {
@@ -16104,6 +16729,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0095",
     "imported": true,
     "meal": "dinner",
@@ -16112,6 +16738,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0095",
     "sport": {
@@ -16152,6 +16783,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -16480,6 +17118,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0096",
     "imported": true,
     "meal": "breakfast",
@@ -16488,6 +17127,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0096",
     "sport": {
@@ -16542,6 +17186,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0097",
     "imported": true,
     "meal": "lunch",
@@ -16550,6 +17195,13 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": false,
+     "excludable": false,
+     "open": [
+      "blocked"
+     ]
     },
     "source_id": "t-0097",
     "sport": {
@@ -16668,6 +17320,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0098",
     "imported": true,
     "meal": "dinner",
@@ -16676,6 +17329,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0098",
     "sport": {
@@ -16716,6 +17374,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 1,
+   "calculated": 2,
+   "excluded": 0,
+   "first_open": "t-0097",
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -17017,6 +17682,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0099",
     "imported": true,
     "meal": "breakfast",
@@ -17025,6 +17691,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0099",
     "sport": {
@@ -17146,6 +17817,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0100",
     "imported": true,
     "meal": "lunch",
@@ -17154,6 +17826,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0100",
     "sport": {
@@ -17300,6 +17977,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0101",
     "imported": true,
     "meal": "dinner",
@@ -17308,6 +17986,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0101",
     "sport": {
@@ -17348,6 +18031,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -17710,6 +18400,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0103",
     "imported": true,
     "meal": "breakfast",
@@ -17718,6 +18409,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0103",
     "sport": {
@@ -17839,6 +18535,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0104",
     "imported": true,
     "meal": "lunch",
@@ -17847,6 +18544,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0104",
     "sport": {
@@ -17968,6 +18670,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0106",
     "imported": true,
     "meal": "dinner",
@@ -17976,6 +18679,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0106",
     "sport": {
@@ -18022,6 +18730,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -18443,6 +19158,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0108",
     "imported": true,
     "meal": "breakfast",
@@ -18451,6 +19167,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0108",
     "sport": {
@@ -18605,6 +19326,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0110",
     "imported": true,
     "meal": "lunch",
@@ -18613,6 +19335,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0110",
     "sport": {
@@ -18734,6 +19461,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0112",
     "imported": true,
     "meal": "dinner",
@@ -18742,6 +19470,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0112",
     "sport": {
@@ -18782,6 +19515,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -19161,6 +19901,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0113",
     "imported": true,
     "meal": "breakfast",
@@ -19169,6 +19910,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0113",
     "sport": {
@@ -19290,6 +20036,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0114",
     "imported": true,
     "meal": "lunch",
@@ -19298,6 +20045,11 @@
      "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0114",
     "sport": {
@@ -19419,6 +20171,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0115",
     "imported": true,
     "meal": "dinner",
@@ -19427,6 +20180,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0115",
     "sport": {
@@ -19468,6 +20226,13 @@
    }
   ],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -19778,6 +20543,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0117",
     "imported": true,
     "meal": "lunch",
@@ -19786,6 +20552,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0117",
     "sport": {
@@ -19907,6 +20678,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0118",
     "imported": true,
     "meal": "dinner",
@@ -19915,6 +20687,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0118",
     "sport": {
@@ -19955,6 +20732,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 2,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -20229,6 +21013,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0119",
     "imported": true,
     "meal": "breakfast",
@@ -20237,6 +21022,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0119",
     "sport": {
@@ -20358,6 +21148,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0120",
     "imported": true,
     "meal": "lunch",
@@ -20366,6 +21157,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0120",
     "sport": {
@@ -20487,6 +21283,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0121",
     "imported": true,
     "meal": "dinner",
@@ -20495,6 +21292,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0121",
     "sport": {
@@ -20535,6 +21337,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -20827,6 +21636,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0122",
     "imported": true,
     "meal": "breakfast",
@@ -20835,6 +21645,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0122",
     "sport": {
@@ -20989,6 +21804,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0123",
     "imported": true,
     "meal": "lunch",
@@ -20997,6 +21813,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0123",
     "sport": {
@@ -21143,6 +21964,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0125",
     "imported": true,
     "meal": "dinner",
@@ -21151,6 +21973,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0125",
     "sport": {
@@ -21191,6 +22018,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -21554,6 +22388,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0127",
     "imported": true,
     "meal": "breakfast",
@@ -21562,6 +22397,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0127",
     "sport": {
@@ -21683,6 +22523,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0128",
     "imported": true,
     "meal": "lunch",
@@ -21691,6 +22532,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0128",
     "sport": {
@@ -21812,6 +22658,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0129",
     "imported": true,
     "meal": "dinner",
@@ -21820,6 +22667,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0129",
     "sport": {
@@ -21860,6 +22712,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -22187,6 +23046,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0130",
     "imported": true,
     "meal": "breakfast",
@@ -22195,6 +23055,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0130",
     "sport": {
@@ -22316,6 +23181,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0131",
     "imported": true,
     "meal": "lunch",
@@ -22324,6 +23190,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0131",
     "sport": {
@@ -22445,6 +23316,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0132",
     "imported": true,
     "meal": "dinner",
@@ -22453,6 +23325,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0132",
     "sport": {
@@ -22493,6 +23370,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -22786,6 +23670,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0133",
     "imported": true,
     "meal": "breakfast",
@@ -22794,6 +23679,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0133",
     "sport": {
@@ -22915,6 +23805,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0134",
     "imported": true,
     "meal": "lunch",
@@ -22923,6 +23814,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0134",
     "sport": {
@@ -23044,6 +23940,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0135",
     "imported": true,
     "meal": "dinner",
@@ -23052,6 +23949,11 @@
      "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0135",
     "sport": {
@@ -23092,6 +23994,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -23434,6 +24343,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0136",
     "imported": true,
     "meal": "breakfast",
@@ -23442,6 +24352,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0136",
     "sport": {
@@ -23596,6 +24511,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0138",
     "imported": true,
     "meal": "lunch",
@@ -23604,6 +24520,11 @@
      "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0138",
     "sport": {
@@ -23725,6 +24646,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0140",
     "imported": true,
     "meal": "dinner",
@@ -23733,6 +24655,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0140",
     "sport": {
@@ -23773,6 +24700,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -24168,6 +25102,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0141",
     "imported": true,
     "meal": "breakfast",
@@ -24176,6 +25111,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0141",
     "sport": {
@@ -24297,6 +25237,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0142",
     "imported": true,
     "meal": "lunch",
@@ -24305,6 +25246,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0142",
     "sport": {
@@ -24426,6 +25372,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0143",
     "imported": true,
     "meal": "dinner",
@@ -24434,6 +25381,11 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": []
     },
     "source_id": "t-0143",
     "sport": {
@@ -24474,6 +25426,13 @@
   },
   "other_events": [],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 0,
+   "calculated": 3,
+   "excluded": 0,
+   "first_open": null,
+   "sport_open": 0
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
@@ -24887,6 +25846,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "t-0145",
     "imported": true,
     "meal": "breakfast",
@@ -24895,6 +25855,13 @@
      "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
+    },
+    "review": {
+     "calculated": true,
+     "excludable": true,
+     "open": [
+      "sport"
+     ]
     },
     "source_id": "t-0145",
     "sport": {
@@ -24955,6 +25922,7 @@
       "sport_type": null
      }
     ],
+    "excluded": false,
     "id": "ns-0002",
     "imported": true,
     "meal": "lunch",
@@ -24963,6 +25931,14 @@
      "alcohol": false,
      "carbs_certainty": "known",
      "fat_protein": true
+    },
+    "review": {
+     "calculated": false,
+     "excludable": false,
+     "open": [
+      "blocked",
+      "sport"
+     ]
     },
     "source_id": "ns-0002",
     "sport": {
@@ -25007,6 +25983,13 @@
    }
   ],
   "profile_sync_error": null,
+  "review": {
+   "blocked": 1,
+   "calculated": 1,
+   "excluded": 0,
+   "first_open": "t-0145",
+   "sport_open": 2
+  },
   "settings_version": 2,
   "sync_error": null,
   "synced_at": "2026-10-07T10:40:00+00:00",
