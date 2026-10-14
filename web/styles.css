@@ -28,7 +28,7 @@ button:focus-visible, .tab:focus-visible, input:focus-visible, select:focus-visi
 .status { font-size: 12px; font-weight: 650; color: var(--amber); background: var(--amber-light); border-radius: 999px; padding: 8px 13px; white-space: nowrap; }
 .topbar { position: sticky; top: 0; z-index: 20; background: var(--canvas); }
 .glucose-widget { min-width: 230px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 11px; background: #edf1ee; color: #44564d; }
-.glucose-caption, .glucose-widget small { display: block; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+.glucose-widget small { display: block; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
 .glucose-main { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
 .glucose-main strong { font-size: 22px; letter-spacing: -.04em; white-space: nowrap; }
 .glucose-main span { font-size: 12px; font-weight: 700; }
