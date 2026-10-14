@@ -23,6 +23,7 @@ LOW_TARGET_MAX_GRAMS = Decimal(30)
 LOW_BLOCKED = {
     "low": "BZ unter 70 mg/dL",
     "falling": "BZ fällt",
+    "evening": "nur 6–20 Uhr",
     "acting": "es wirkt noch zu viel",
     "unsure": "KH unsicher",
     "fat": "fett-/eiweißreich",

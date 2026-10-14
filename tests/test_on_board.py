@@ -93,11 +93,18 @@ class OnBoardTests(unittest.TestCase):
         self.assertEqual(Decimal(result["entry_units"]), 2)              # (190 − 120) / 35
         self.assertEqual(Decimal(result["low_entry_units"]), Decimal("2.5"))  # (190 − 100) / 35 = 2.57
         self.assertEqual(Decimal(result["low_expected_glucose_mgdl"]), Decimal("102.5"))
-        # A correction 40 min ago still lowers by > 40 mg/dL: the likely range would reach below 70.
+        # 2 IE 40 min ago still lower by about 60 mg/dL: offered; 5 IE (≥ 150 mg/dL) are too much.
         doses = [{"id": "c", "at": self.now - timedelta(minutes=40), "eventType": "Correction Bolus", "insulin": 2}]
-        acting = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 250}], doses, self.now,
+        some = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 250}], doses, self.now,
+                              on_board=self.active(doses))
+        self.assertNotIn("low_blocked", some)
+        doses[0]["insulin"] = 5
+        acting = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 300}], doses, self.now,
                                 on_board=self.active(doses))
         self.assertEqual(acting["low_blocked"], "acting")
+        evening = dosing.suggest("0", self.settings, [{"at": self.now + timedelta(hours=6), "sgv": 190}], [],
+                                 self.now + timedelta(hours=6))   # 20:00 in Berlin
+        self.assertEqual(evening["low_blocked"], "evening")
         falling = dosing.suggest("0", self.settings, [{"at": self.now - timedelta(minutes=10), "sgv": 220},
                                                       {"at": self.now, "sgv": 190}], [], self.now)
         self.assertEqual(falling["low_blocked"], "falling")

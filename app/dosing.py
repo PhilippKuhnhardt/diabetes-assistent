@@ -2,13 +2,19 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from decimal import Decimal, ROUND_HALF_UP
 
 from app import calculation, glucose
-from app.on_board import FORECAST_SPREAD_MGDL, forecast_band
+from app.on_board import FORECAST_SPREAD_MGDL
 
 # Trends that rule out the lower target: glucose already falls without what still acts.
 FALLING = ("down", "down_fast")
+# The lower target only by day and while less than this still acts (insulin + carbs + surcharge): in the
+# data of 11.09.–14.10. all lows followed corrections from 19:50, and the extra lows at target 100 all had
+# ≥ 96 mg/dL still acting (analysis in the project files analysen/tiefer-zielwert.md, 2026-10-14).
+LOW_TARGET_HOURS = (6, 20)
+LOW_TARGET_MAX_ACTING_MGDL = Decimal(150)
 
 
 def half_units(units: Decimal) -> Decimal:
@@ -31,8 +37,8 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     For each factor the result holds four variants: correction to the normal target, correction to
     the cautious target, correction to the lower target (dose_low_target_mgdl, from the same forecast as
     normal) and carbs only (plus sport, no BG correction; needs no fresh CGM value). low_blocked says why
-    the glucose rules out the lower target: below 70 mg/dL, falling, or so much still acting that the
-    likely range around the lower target (app.on_board.forecast_band) reaches below 70 mg/dL.
+    the lower target is ruled out: below 70 mg/dL, falling, evening or night (LOW_TARGET_HOURS), or
+    LOW_TARGET_MAX_ACTING_MGDL or more still acting.
     on_board (app.on_board.summary) moves the start glucose by what still acts: normal and carbs only use
     the full forecast (− remaining insulin + remaining carbs and surcharge); cautious uses that forecast
     minus its typical miss (FORECAST_SPREAD_MGDL), but never less than letting the remaining
@@ -113,14 +119,16 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         low = latest[1] < glucose.LOW_MGDL
         cautious_start = guarded if low else max(guarded, full - FORECAST_SPREAD_MGDL)
         start = guarded if low else full
-        below, _ = forecast_band(lowering, raising)
+        hour = now.astimezone(ZoneInfo(timezone_name)).hour
         if low_target >= target:
             result["low_blocked"] = "off"
         elif low:
             result["low_blocked"] = "low"
         elif result.get("trend_direction") in FALLING:
             result["low_blocked"] = "falling"
-        elif low_target - below < glucose.LOW_MGDL:
+        elif not LOW_TARGET_HOURS[0] <= hour < LOW_TARGET_HOURS[1]:
+            result["low_blocked"] = "evening"
+        elif lowering + raising >= LOW_TARGET_MAX_ACTING_MGDL:
             result["low_blocked"] = "acting"
     for prefix, units in (("", carb_units), ("auto_", auto_carb_units)):
         if units is not None:

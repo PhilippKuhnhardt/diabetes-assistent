@@ -1498,7 +1498,8 @@ class IntegrationTests(unittest.TestCase):
         }
         entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "", "as": "meal"}
         variants = lambda dose: [item["variant"] for item in dose["options"]]
-        with fake_days(return_value=current_day):
+        # The lower target is offered by day only; the test runs at any hour.
+        with fake_days(return_value=current_day), patch.object(dosing, "LOW_TARGET_HOURS", (0, 24)):
             correction = self.request("/api/entry/preview", method="POST", body=entry)["dose"]
             self.assertEqual(variants(correction), ["normal", "low", "cautious"])
             low = correction["options"][1]
