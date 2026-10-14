@@ -717,10 +717,6 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 #entry-form .entry-carbs-row input[name=carbs] { width: 92px; }
 .entry-card .entry-carbs-row .entry-factor-chips { margin: 0; flex-wrap: nowrap; gap: 5px; min-width: 0; }
 .entry-carbs-row .factor-chip { min-height: 42px; padding: 5px 9px; }
-/* On phones the factor chips show their icon only; title and aria-label still name them. */
-@media (max-width: 640px) {
-  .entry-carbs-row .factor-chip > span:last-child { display: none; }
-  .entry-carbs-row .factor-chip { width: 42px; justify-content: center; padding: 0; }
-  .entry-carbs-row .factor-chip .factor-icon { width: 20px; height: 20px; }
-}
+/* On the narrowest phones the factor chips show their icon only; the title still names them. */
+@media (max-width: 359px) { .entry-carbs-row .factor-chip > span:last-child { display: none; } }
 .entry-carbs-row #entry-carbs-field { flex: none; width: 92px; white-space: nowrap; }
