@@ -102,6 +102,11 @@ class OnBoardTests(unittest.TestCase):
         acting = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 300}], doses, self.now,
                                 on_board=self.active(doses))
         self.assertEqual(acting["low_blocked"], "acting")
+        # Two hours after the last dose the model's rest no longer holds the option back.
+        later = self.now + timedelta(minutes=85)
+        settled = dosing.suggest("0", self.settings, [{"at": later, "sgv": 300}], doses, later,
+                                 on_board={"lowering_mgdl": Decimal(160), "raising_mgdl": Decimal(0)})
+        self.assertNotIn("low_blocked", settled)
         evening = dosing.suggest("0", self.settings, [{"at": self.now + timedelta(hours=6), "sgv": 190}], [],
                                  self.now + timedelta(hours=6))   # 20:00 in Berlin
         self.assertEqual(evening["low_blocked"], "evening")

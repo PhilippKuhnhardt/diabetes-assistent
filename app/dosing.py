@@ -15,6 +15,9 @@ FALLING = ("down", "down_fast")
 # ≥ 96 mg/dL still acting (analysis in the project files analysen/tiefer-zielwert.md, 2026-10-14).
 LOW_TARGET_HOURS = (6, 20)
 LOW_TARGET_MAX_ACTING_MGDL = Decimal(150)
+# ... or once the last carbs and rapid dose are this long ago, whatever the model still counts as acting:
+# 6 such daytime corrections stayed above 70 even at target 80.
+LOW_TARGET_SETTLED = timedelta(hours=2)
 
 
 def half_units(units: Decimal) -> Decimal:
@@ -38,7 +41,8 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     the cautious target, correction to the lower target (dose_low_target_mgdl, from the same forecast as
     normal) and carbs only (plus sport, no BG correction; needs no fresh CGM value). low_blocked says why
     the lower target is ruled out: below 70 mg/dL, falling, evening or night (LOW_TARGET_HOURS), or
-    LOW_TARGET_MAX_ACTING_MGDL or more still acting.
+    LOW_TARGET_MAX_ACTING_MGDL or more still acting while carbs or a rapid dose are less than
+    LOW_TARGET_SETTLED ago.
     on_board (app.on_board.summary) moves the start glucose by what still acts: normal and carbs only use
     the full forecast (− remaining insulin + remaining carbs and surcharge); cautious uses that forecast
     minus its typical miss (FORECAST_SPREAD_MGDL), but never less than letting the remaining
@@ -128,7 +132,11 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
             result["low_blocked"] = "falling"
         elif not LOW_TARGET_HOURS[0] <= hour < LOW_TARGET_HOURS[1]:
             result["low_blocked"] = "evening"
-        elif lowering + raising >= LOW_TARGET_MAX_ACTING_MGDL:
+        elif lowering + raising >= LOW_TARGET_MAX_ACTING_MGDL and any(
+                now - LOW_TARGET_SETTLED < item["at"] <= now
+                and (calculation.dec(item.get("carbs") or 0) > 0
+                     or (calculation.dec(item.get("insulin") or 0) > 0 and calculation.is_rapid_insulin(item)))
+                for item in treatments):
             result["low_blocked"] = "acting"
     for prefix, units in (("", carb_units), ("auto_", auto_carb_units)):
         if units is not None:
