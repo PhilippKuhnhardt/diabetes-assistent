@@ -136,9 +136,11 @@ def group_diary_followups(treatments: list[dict], settings: dict) -> None:
 
     A diary entry becomes a snack when it starts less than 2 h after the
     previous main meal, or inside the analysis window of a main meal of the
-    same clock-based meal kind. Imported Nightscout meals, explicitly tagged
-    roots and entries the user marked as main meal ([DA2:meal]) remain distinct,
-    so a second main meal can still block an overlapping analysis.
+    same clock-based meal kind. A diary entry whose meal kind already has a
+    main meal that day becomes a snack of no meal, so each kind appears at most
+    once per day. Imported Nightscout meals, explicitly tagged roots and
+    entries the user marked as main meal ([DA2:meal]) of a free kind remain
+    distinct, so a second main meal can still block an overlapping analysis.
     """
     for item in treatments:
         classify_diary_entry(item, treatments, settings)
@@ -149,9 +151,12 @@ def classify_diary_entry(item: dict, treatments: list[dict], settings: dict) -> 
     if item.get("eventType") != "Meal Bolus" or float(item.get("carbs") or 0) <= 0:
         return None
     notes = item.get("notes") or ""
-    if not EVENT_TAG.search(notes) or item.get("episode_id") or "[DA2:meal]" in notes:
+    if not EVENT_TAG.search(notes) or item.get("episode_id"):
         return None
-    root = preceding_meal(item["at"], [other for other in treatments if other is not item], settings)
+    others = [other for other in treatments if other is not item]
+    root = taken_meal(item["at"], others, settings)
+    if root is None and "[DA2:meal]" not in notes:
+        root = preceding_meal(item["at"], others, settings)
     if root is None:
         return None
     item["eventType"] = "Snack Bolus" if float(item.get("insulin") or 0) > 0 else "Carb Correction"
@@ -187,6 +192,18 @@ def preceding_meal(at: datetime, treatments: list[dict], settings: dict) -> dict
         return None
     if at - root["at"] < SNACK_GAP or (root["same_kind"] and at < root["end"]):
         return root
+    return None
+
+
+def taken_meal(at: datetime, treatments: list[dict], settings: dict) -> dict | None:
+    """An earlier main meal of the same day and clock-based kind as `at`; each kind counts once a day."""
+    kind = meal_kind_at(at, settings)
+    for item in sorted(treatments, key=lambda x: x["at"]):
+        if item["at"] >= at:
+            break
+        if (item.get("eventType") == "Meal Bolus" and float(item.get("carbs") or 0) > 0
+                and meal_kind_at(item["at"], settings) == kind):
+            return {"id": item.get("id"), "at": item["at"], "meal": item.get("meal") or kind[1]}
     return None
 
 
