@@ -583,7 +583,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .factor-facts.compact { grid-template-columns: 1fr; gap: 4px; margin-top: 8px; padding-top: 7px; }
 .factor-facts.compact dd { font-size: 14px; white-space: nowrap; }
 /* KH-Sicherheit: three-stop slider with its current label, on one line with the fat mark. */
-.certainty-slider { flex: 1 1 180px; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.certainty-slider { flex: 1 1 100%; display: flex; align-items: center; gap: 8px; min-width: 0; }
 /* Colour-coded scale: red unsure, yellow roughly known, green weighed; thumb and label take the chosen colour. */
 .certainty-slider { --certainty: #b98a00; --certainty-text: #8a6700; }
 .certainty-slider[data-level="unsure"] { --certainty: #c0392b; --certainty-text: #a8322a; }
@@ -709,3 +709,14 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .place-head .place-quick { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 600; }
 .place-head .place-quick input { width: 18px; height: 18px; min-height: 18px; margin: 0; accent-color: var(--green); }
 .entry-chips select.place-more { width: auto; min-height: 0; padding: 7px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+
+/* Carbs input with the meal factors beside it. */
+.entry-carbs-row { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.entry-carbs-row #entry-carbs-field { margin: 0; }
+.entry-carbs-row { flex-wrap: nowrap; gap: 8px; }
+#entry-form .entry-carbs-row input[name=carbs] { width: 92px; }
+.entry-card .entry-carbs-row .entry-factor-chips { margin: 0; flex-wrap: nowrap; gap: 5px; min-width: 0; }
+.entry-carbs-row .factor-chip { min-height: 42px; padding: 5px 9px; }
+/* On the narrowest phones the factor chips show their icon only; the title still names them. */
+@media (max-width: 359px) { .entry-carbs-row .factor-chip > span:last-child { display: none; } }
+.entry-carbs-row #entry-carbs-field { flex: none; width: 92px; white-space: nowrap; }
