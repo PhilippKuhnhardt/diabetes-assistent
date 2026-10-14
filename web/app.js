@@ -538,6 +538,7 @@ async function loadSettings() {
   form.elements.window_minutes.value = data.settings.window_minutes;
   form.elements.dose_target_mgdl.value = data.settings.dose_target_mgdl;
   form.elements.dose_cautious_target_mgdl.value = data.settings.dose_cautious_target_mgdl;
+  form.elements.dose_low_target_mgdl.value = data.settings.dose_low_target_mgdl ?? 100;
   form.elements.auto_method.value = data.settings.auto_method || "percentile";
   form.elements.auto_percentile.value = data.settings.auto_percentile;
   form.elements.auto_lookback_days.value = String(data.settings.auto_lookback_days);
@@ -1556,6 +1557,9 @@ function previewRequest() {
     finger_mgdl: form.elements.finger_mgdl.disabled ? null : form.elements.finger_mgdl.value || null,
     split: state.split ?? null,
     consider_sport: form.elements.consider_sport.checked, sport_effect_mgdl: form.elements.sport_effect_mgdl.value || "0",
+    // Saving re-checks the shown options with these, so the preview must send the same marks.
+    carbs_certainty: Number(form.elements.carbs.value) > 0 ? certaintyValue(form) : null,
+    fat_protein: Number(form.elements.carbs.value) > 0 && form.elements.fat_protein.checked,
   };
 }
 
@@ -1649,7 +1653,7 @@ function selectDoseSuggestion(event) {
   form.requestSubmit($("#entry-submit"));
 }
 
-const doseLabels = { split: "2. Teil", normal: "Normal", cautious: "Vorsichtig", carbs: "Nur KH" };
+const doseLabels = { split: "2. Teil", normal: "Normal", low: "Tiefer", cautious: "Vorsichtig", carbs: "Nur KH" };
 
 function doseHelpHTML(data) {
   const withCarbs = Number(data.carbs_g) > 0;
@@ -1675,6 +1679,8 @@ function doseHelpHTML(data) {
     (data.on_board && (data.on_board.lowering_until || data.on_board.raising_until)
       ? '<p class="dose-factor">Wirkt noch <strong>−' + escapeHTML(num(data.on_board.lowering_mgdl, 0)) + ' / +' +
         escapeHTML(num(data.on_board.raising_mgdl, 0)) + ' mg/dL</strong> · eingerechnet</p>' : '') +
+    (data.low_note ? '<p class="dose-factor">Tiefer (' + escapeHTML(num(data.low_target_mgdl, 0)) + ' mg/dL) nicht angeboten: ' +
+      escapeHTML(data.low_note) + '</p>' : '') +
     (data.reason ? '<p class="hint">' + escapeHTML(data.reason) + '</p>' : '');
 }
 
@@ -2026,6 +2032,7 @@ async function saveSettings(event) {
     window_minutes: Number(form.elements.window_minutes.value),
     dose_target_mgdl: form.elements.dose_target_mgdl.value,
     dose_cautious_target_mgdl: form.elements.dose_cautious_target_mgdl.value,
+    dose_low_target_mgdl: form.elements.dose_low_target_mgdl.value,
     auto_method: form.elements.auto_method.value,
     auto_percentile: form.elements.auto_percentile.value,
     auto_lookback_days: Number(form.elements.auto_lookback_days.value),
@@ -2616,6 +2623,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     schedulePreview(0);
   });
   $("#entry-form").elements.sport_effect_mgdl.addEventListener("input", () => schedulePreview());
+  // Carb certainty and the fat mark decide whether the lower target is offered.
+  $("#entry-form").elements.certainty_level.addEventListener("change", () => schedulePreview(0));
+  $("#entry-form").elements.fat_protein.addEventListener("change", () => schedulePreview(0));
   $$(".entry-mode").forEach(button => button.addEventListener("click", () => {
     $("#entry-kind").value = button.dataset.entryMode;
     updateEntryFields();

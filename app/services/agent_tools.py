@@ -24,7 +24,7 @@ READ_TABLES = ["meals", "window-events", "entries", "treatments", "basal", "data
 # The dose fields a conversation needs; the rest of dose_help's answer is intermediate values.
 DOSE_KEYS = (
     "message", "reason", "options", "carbs_g", "glucose_mgdl", "glucose_at", "glucose_fresh", "glucose_source",
-    "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl", "forecast_mgdl", "cautious_forecast_mgdl",
+    "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl", "low_target_mgdl", "low_note", "forecast_mgdl", "cautious_forecast_mgdl",
     "activity_change_mgdl", "recent_rapid_doses", "auto_meal", "auto_method", "auto_factor_count",
     "auto_factor_min_meals", "auto_surcharge_units", "day_type", "day_type_source", "split_plan")
 
@@ -162,6 +162,9 @@ def _form(args: dict, at: datetime) -> dict:
         "mode": "meal", "carbs": str(carbs), "as": "meal" if own_meal else None, "split": split,
         "consider_sport": change is not None, "sport_effect_mgdl": str(change or 0),
         "finger_mgdl": _number(args, "finger_mgdl", Decimal(20), Decimal(600)),
+        # Certainty and fat decide whether the lower target is offered, so the preview needs them too.
+        "carbs_certainty": _choice(args, "carbs_certainty", CERTAINTIES) if carbs > 0 else None,
+        "fat_protein": carbs > 0 and _bool(args, "fat_protein") is True,
     }
 
 
@@ -186,11 +189,9 @@ def save_entry(args: dict) -> dict:
     event_id = _event_id(args)
     payload = _form(args, at)
     insulin = _number(args, "insulin_units", Decimal(0), Decimal(100)) or Decimal(0)
-    certainty = _choice(args, "carbs_certainty", CERTAINTIES)
     with_basal = _bool(args, "with_basal")
     payload.update({
-        "mode": kind, "insulin": str(insulin), "carbs_certainty": certainty,
-        "fat_protein": _bool(args, "fat_protein") is True, "with_basal": with_basal is True,
+        "mode": kind, "insulin": str(insulin), "with_basal": with_basal is True,
         "dose_variant": _choice(args, "dose_variant", list(entry.DOSE_VARIANTS)),
         "notes": str(args.get("notes") or "")[:500], "event_id": event_id,
         # A retry with the same event_id must not add a second basal dose either.
@@ -289,6 +290,10 @@ FORM = {
                     "description": "Blutig gemessener BZ in mg/dL (z. B. Sensor ausgefallen). Ersetzt für die "
                                    "Empfehlung einen fehlenden oder älteren CGM-Wert; save_entry speichert ihn als "
                                    "Nightscout-BG-Check, auch ohne KH und Insulin."},
+    "carbs_certainty": {"type": "string", "enum": CERTAINTIES,
+                        "description": "weighed = gewogen, known = halbwegs sicher (bekanntes Gericht, "
+                                       "FDDB-KI), unsure = keine ernsthafte Schätzung."},
+    "fat_protein": {"type": "boolean", "description": "true = fett-/eiweißreich."},
 }
 
 TOOLS = [
@@ -310,7 +315,8 @@ TOOLS = [
                        "die eigene Mahlzeit heute schon eingetragen ist) oder eigene Mahlzeit; sport = Sport "
                        "vor der Mahlzeit gefunden (Einfluss erfragen); basal_suggestion_units > 0 = Basal heute "
                        "noch offen (fragen, ob mit eintragen); split = Split-Bolus vorgeschlagen; dose.options = "
-                       "normal / cautious (vorsichtig) / carbs (nur KH), bei Split units = jetzt und "
+                       "normal / low (tieferer Zielwert, nur ohne KH-Unsicherheit) / cautious (vorsichtig) / carbs (nur KH), "
+                       "bei Split units = jetzt und "
                        "later_units/later_at = zweiter Teil; ohne KH ggf. Option split = geplanter 2. Teil. "
                        "Speichert nichts.",
         "inputSchema": {"type": "object", "properties": FORM, "additionalProperties": False},
@@ -331,10 +337,6 @@ TOOLS = [
             **FORM,
             "insulin_units": {"type": "number", "minimum": 0, "maximum": 100,
                               "description": "Tatsächlich gespritzte schnelle IE (Fiasp)."},
-            "carbs_certainty": {"type": "string", "enum": CERTAINTIES,
-                                "description": "weighed = gewogen, known = halbwegs sicher (bekanntes Gericht, "
-                                               "FDDB-KI), unsure = keine ernsthafte Schätzung."},
-            "fat_protein": {"type": "boolean", "description": "true = fett-/eiweißreich."},
             "dose_variant": {"type": "string", "enum": list(entry.DOSE_VARIANTS),
                              "description": "Welcher Vorschlag gewählt wurde (bestimmt beim Split den 2. Teil)."},
             "with_basal": {"type": "boolean",

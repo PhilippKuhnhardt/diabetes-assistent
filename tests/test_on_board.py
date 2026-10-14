@@ -85,6 +85,28 @@ class OnBoardTests(unittest.TestCase):
         self.assertGreater(Decimal(result["cautious_entry_units"]), 3)
         self.assertLess(Decimal(result["cautious_entry_units"]), Decimal(result["entry_units"]))
 
+    def test_lower_target_corrects_the_same_forecast_only_while_little_acts(self):
+        result = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 190}], [], self.now,
+                                on_board=self.active([]))
+        self.assertNotIn("low_blocked", result)
+        self.assertEqual(Decimal(result["low_target_mgdl"]), 100)
+        self.assertEqual(Decimal(result["entry_units"]), 2)              # (190 − 120) / 35
+        self.assertEqual(Decimal(result["low_entry_units"]), Decimal("2.5"))  # (190 − 100) / 35 = 2.57
+        self.assertEqual(Decimal(result["low_expected_glucose_mgdl"]), Decimal("102.5"))
+        # A correction 40 min ago still lowers by > 40 mg/dL: the likely range would reach below 70.
+        doses = [{"id": "c", "at": self.now - timedelta(minutes=40), "eventType": "Correction Bolus", "insulin": 2}]
+        acting = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 250}], doses, self.now,
+                                on_board=self.active(doses))
+        self.assertEqual(acting["low_blocked"], "acting")
+        falling = dosing.suggest("0", self.settings, [{"at": self.now - timedelta(minutes=10), "sgv": 220},
+                                                      {"at": self.now, "sgv": 190}], [], self.now)
+        self.assertEqual(falling["low_blocked"], "falling")
+        low = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 65}], [], self.now)
+        self.assertEqual(low["low_blocked"], "low")
+        off = dosing.suggest("0", {**self.settings, "dose_low_target_mgdl": "120"},
+                             [{"at": self.now, "sgv": 190}], [], self.now)
+        self.assertEqual(off["low_blocked"], "off")
+
     def test_low_glucose_never_doses_for_carbs_still_to_come(self):
         meal = [{"id": "m", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 80,
                  "insulin": 2}]

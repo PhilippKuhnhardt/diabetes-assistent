@@ -228,6 +228,12 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/settings", method="POST", body={"dose_target_mgdl": "141"})
         self.assertEqual(high.exception.code, 400)
         high.exception.close()
+        with self.assertRaises(urllib.error.HTTPError) as above:
+            self.request("/api/settings", method="POST", body={"dose_low_target_mgdl": "116"})
+        self.assertEqual(above.exception.code, 400)
+        above.exception.close()
+        lower = self.request("/api/settings", method="POST", body={"dose_low_target_mgdl": "95"})
+        self.assertEqual(Decimal(lower["settings"]["dose_low_target_mgdl"]), Decimal(95))
 
     def test_dose_help_suggestion_can_be_written_once_to_nightscout(self):
         self.request("/api/settings")  # Sync the current Nightscout I:C and KF schedules.
@@ -1480,6 +1486,41 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/entry", method="POST", body={
                 **entry, "insulin": fresh["entry_units"], "dose_check": fresh["check"]})
         self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["insulin"])), Decimal(fresh["entry_units"]))
+
+    def test_lower_target_is_offered_only_without_carb_uncertainty(self):
+        self.request("/api/settings")
+        self.request("/api/settings", method="POST", body={"dose_target_mgdl": "120"})
+        now = datetime.now(timezone.utc)
+        today = now.astimezone(ZoneInfo("Europe/Berlin")).date().isoformat()
+        current_day = {
+            "day": today, "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 190}],
+            "treatments": [], "basal": [], "day_type": "work", "day_type_source": "weekday", "meals": [],
+        }
+        entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "", "as": "meal"}
+        variants = lambda dose: [item["variant"] for item in dose["options"]]
+        with fake_days(return_value=current_day):
+            correction = self.request("/api/entry/preview", method="POST", body=entry)["dose"]
+            self.assertEqual(variants(correction), ["normal", "low", "cautious"])
+            low = correction["options"][1]
+            self.assertGreater(Decimal(low["units"]), Decimal(correction["options"][0]["units"]))
+            self.assertIsNone(correction["low_note"])
+            small = self.request("/api/entry/preview", method="POST",
+                                 body={**entry, "carbs": "20", "carbs_certainty": "known"})["dose"]
+            self.assertEqual(variants(small), ["normal", "low", "cautious", "carbs"])
+            unsure = self.request("/api/entry/preview", method="POST",
+                                  body={**entry, "carbs": "20", "carbs_certainty": "unsure"})["dose"]
+            self.assertEqual(variants(unsure), ["normal", "cautious", "carbs"])
+            self.assertEqual(unsure["low_note"], "KH unsicher")
+            fat = self.request("/api/entry/preview", method="POST",
+                               body={**entry, "carbs": "20", "fat_protein": True})["dose"]
+            self.assertEqual(fat["low_blocked"], "fat")
+            meal = self.request("/api/entry/preview", method="POST", body={**entry, "carbs": "60"})["dose"]
+            self.assertEqual(variants(meal), ["normal", "cautious", "carbs"])
+            self.assertIsNone(meal["low_note"])
+            # A tapped lower-target suggestion saves like any other.
+            self.request("/api/entry", method="POST", body={
+                **entry, "insulin": low["units"], "dose_check": correction["check"], "dose_variant": "low"})
+        self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["insulin"])), Decimal(low["units"]))
 
     def test_tapped_suggestion_saves_while_earlier_insulin_still_acts(self):
         # What still acts decays every second; the shown doses stay the same, so saving must not fail.

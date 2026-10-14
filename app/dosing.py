@@ -5,7 +5,10 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
 from app import calculation, glucose
-from app.on_board import FORECAST_SPREAD_MGDL
+from app.on_board import FORECAST_SPREAD_MGDL, forecast_band
+
+# Trends that rule out the lower target: glucose already falls without what still acts.
+FALLING = ("down", "down_fast")
 
 
 def half_units(units: Decimal) -> Decimal:
@@ -25,8 +28,11 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     auto_units_per_ke is the cautious percentile of recent calculated meal factors (Automatik).
     auto_surcharge_mgdl, when given, adds the fixed main-meal surcharge to the auto dose:
     surcharge_mgdl × surcharge_share(grams) / KF IE (surcharge method; never for snacks).
-    For each factor the result holds three variants: correction to the normal target, correction to
-    the cautious target, and carbs only (plus sport, no BG correction; needs no fresh CGM value).
+    For each factor the result holds four variants: correction to the normal target, correction to
+    the cautious target, correction to the lower target (dose_low_target_mgdl, from the same forecast as
+    normal) and carbs only (plus sport, no BG correction; needs no fresh CGM value). low_blocked says why
+    the glucose rules out the lower target: below 70 mg/dL, falling, or so much still acting that the
+    likely range around the lower target (app.on_board.forecast_band) reaches below 70 mg/dL.
     on_board (app.on_board.summary) moves the start glucose by what still acts: normal and carbs only use
     the full forecast (− remaining insulin + remaining carbs and surcharge); cautious uses that forecast
     minus its typical miss (FORECAST_SPREAD_MGDL), but never less than letting the remaining
@@ -83,9 +89,11 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     })
     target = calculation.dec(settings.get("dose_target_mgdl", 100))
     cautious_target = calculation.dec(settings.get("dose_cautious_target_mgdl", 140))
+    low_target = calculation.dec(settings.get("dose_low_target_mgdl", 100))
     result.update({
         "target_mgdl": str(target),
         "cautious_target_mgdl": str(cautious_target),
+        "low_target_mgdl": str(low_target),
     })
     auto_carb_units = grams * auto_units_per_ke / 10 if auto_units_per_ke is not None else None
     if auto_carb_units is not None:
@@ -105,6 +113,15 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         low = latest[1] < glucose.LOW_MGDL
         cautious_start = guarded if low else max(guarded, full - FORECAST_SPREAD_MGDL)
         start = guarded if low else full
+        below, _ = forecast_band(lowering, raising)
+        if low_target >= target:
+            result["low_blocked"] = "off"
+        elif low:
+            result["low_blocked"] = "low"
+        elif result.get("trend_direction") in FALLING:
+            result["low_blocked"] = "falling"
+        elif low_target - below < glucose.LOW_MGDL:
+            result["low_blocked"] = "acting"
     for prefix, units in (("", carb_units), ("auto_", auto_carb_units)):
         if units is not None:
             carbs_total = max(Decimal(0), units + activity / isf)
@@ -132,7 +149,18 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         result["cautious_total_units"] = str(cautious_total)
         result["cautious_entry_units"] = str(cautious_entry_units)
         result["cautious_expected_glucose_mgdl"] = str(cautious_start + (carb_units - cautious_entry_units) * isf)
+        low_correction_units = (start - low_target) / isf
+        low_total = max(Decimal(0), carb_units + low_correction_units)
+        result["low_correction_units"] = str(low_correction_units)
+        result["low_total_units"] = str(low_total)
+        result["low_entry_units"] = str(half_units(low_total))
+        result["low_expected_glucose_mgdl"] = str(start + (carb_units - half_units(low_total)) * isf)
         if auto_carb_units is not None:
+            auto_low_total = max(Decimal(0), auto_carb_units + low_correction_units)
+            result["auto_low_total_units"] = str(auto_low_total)
+            result["auto_low_entry_units"] = str(half_units(auto_low_total))
+            result["auto_low_expected_glucose_mgdl"] = str(
+                start + (auto_carb_units - half_units(auto_low_total)) * isf)
             auto_total = max(Decimal(0), auto_carb_units + correction_units)
             auto_entry_units = (auto_total * 2).quantize(Decimal("1"), rounding=ROUND_HALF_UP) / 2
             result["auto_total_units"] = str(auto_total)
