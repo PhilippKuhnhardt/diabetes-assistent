@@ -668,3 +668,18 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .delta-good { color: var(--green); }
 .delta-bad { color: #b23a33; }
 .range-nums .range-median { display: block; color: var(--muted); font-size: 11px; font-weight: 500; }
+
+/* Meal factors: one icon each, drawn in the current text colour. */
+.factor-icon { display: inline-block; width: 15px; height: 15px; flex: none; background: currentColor; vertical-align: -2px;
+  -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; }
+.factor-alcohol { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 2h10l-.6 6.5a4.4 4.4 0 0 1-8.8 0z'/%3E%3Cpath d='M7.4 7h9.2' /%3E%3Cpath d='M12 13v8M8 21h8'/%3E%3C/svg%3E"); }
+.factor-fat_protein { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M12 2.5S5.5 9.6 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 9.6 12 2.5 12 2.5z'/%3E%3C/svg%3E"); }
+.factor-icons { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
+.factor-icons .factor-alcohol, .entry-chips label.factor-chip:has(input[name="alcohol"]:checked) { color: #7a3b8f; }
+.factor-icons .factor-fat_protein { color: var(--amber); }
+.entry-chips label.factor-chip { position: relative; gap: 5px; }
+.entry-chips label.factor-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.entry-chips label.factor-chip:has(input:focus-visible) { outline: 2px solid var(--green); outline-offset: 2px; }
+.entry-chips label.factor-chip:has(input[name="alcohol"]:checked) { background: #f4eaf7; border-color: #d4b3df; }
+.entry-chips label.factor-chip:not(:has(input:checked)) .factor-icon { opacity: .55; }
+.day-meal-head .factor-icons { margin: 0 8px 0 -2px; }

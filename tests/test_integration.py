@@ -709,25 +709,27 @@ class IntegrationTests(unittest.TestCase):
     def test_quality_marks_are_stored_in_nightscout_and_shown_per_meal(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4", "notes": "Pizza",
-            "carbs_certainty": "known", "fat_protein": True,
+            "carbs_certainty": "known", "fat_protein": True, "alcohol": True,
         })
         notes = FakeNightscout.treatments[0]["notes"]
         self.assertIn("[DAQ:known]", notes)
         self.assertIn("[DAQ:fat]", notes)
+        self.assertIn("[DAQ:alcohol]", notes)
         day = self.request("/api/day?date=2026-09-23")
-        self.assertEqual(day["meals"][0]["quality"], {"carbs_certainty": "known", "fat_protein": True})
+        self.assertEqual(day["meals"][0]["quality"], {"carbs_certainty": "known", "fat_protein": True, "alcohol": True})
         entry = next(item for item in day["timeline"] if item["kind"] == "meal")
         self.assertEqual(entry["notes"], "Pizza")
         self.assertEqual(entry["carbs_certainty"], "known")
+        self.assertTrue(entry["alcohol"])
         self.request("/api/treatment", method="POST", body={
             "id": entry["id"], "original_day": "2026-09-23", "kind": "meal", "at": MEAL_AT,
             "carbs": "40", "insulin": "4", "notes": "Pizza", "carbs_certainty": None, "fat_protein": True,
         })
         self.assertNotIn("[DAQ:known]", FakeNightscout.treatments[0]["notes"])
         meal = self.request("/api/day?date=2026-09-23")["meals"][0]
-        self.assertEqual(meal["quality"], {"carbs_certainty": None, "fat_protein": True})
+        self.assertEqual(meal["quality"], {"carbs_certainty": None, "fat_protein": True, "alcohol": False})
         row = self.request("/api/v1/meals?from=2026-09-23&to=2026-09-23")["rows"][0]
-        self.assertEqual((row["carbs_certainty"], row["fat_protein"]), (None, True))
+        self.assertEqual((row["carbs_certainty"], row["fat_protein"], row["alcohol"]), (None, True, False))
 
     def test_meal_takes_least_certain_carb_level_and_old_unsure_marks_still_count(self):
         self.request("/api/treatment", method="POST", body={

@@ -117,7 +117,7 @@ def _dose_view(dose: dict) -> dict:
 
 def _entries(current: dict) -> list[dict]:
     keep = ("id", "at", "kind", "carbs", "insulin", "basal_units", "duration_minutes", "sport_kind", "notes",
-            "carbs_certainty", "fat_protein", "glucose_mgdl", "meal_id", "nightscout_synced")
+            "carbs_certainty", "fat_protein", "alcohol", "glucose_mgdl", "meal_id", "nightscout_synced")
     return [{key: (_local(item[key]) if key == "at" else item[key]) for key in keep if key in item}
             for item in current["timeline"]]
 
@@ -127,7 +127,7 @@ def _meals(day: str) -> list[dict]:
     rows = read_api.api_read("/api/v1/meals", urlencode({"from": day, "to": day}))["rows"]
     keep = ("meal_id", "meal", "at", "day_type", "window_start", "window_end", "end_reason", "excluded",
             "carbs_meal_g", "carbs_total_g", "rapid_units", "g0_mgdl", "g_end_mgdl", "delta_mgdl",
-            "sport_effect_mgdl", "factor_ie_per_ke", "blocked_reason", "carbs_certainty", "fat_protein")
+            "sport_effect_mgdl", "factor_ie_per_ke", "blocked_reason", "carbs_certainty", "fat_protein", "alcohol")
     return [{key: row.get(key) for key in keep} for row in rows]
 
 
@@ -165,6 +165,7 @@ def _form(args: dict, at: datetime) -> dict:
         # Certainty and fat decide whether the lower target is offered, so the preview needs them too.
         "carbs_certainty": _choice(args, "carbs_certainty", CERTAINTIES) if carbs > 0 else None,
         "fat_protein": carbs > 0 and _bool(args, "fat_protein") is True,
+        "alcohol": carbs > 0 and _bool(args, "alcohol") is True,
     }
 
 
@@ -294,6 +295,7 @@ FORM = {
                         "description": "weighed = gewogen, known = halbwegs sicher (bekanntes Gericht, "
                                        "FDDB-KI), unsure = keine ernsthafte Schätzung."},
     "fat_protein": {"type": "boolean", "description": "true = fett-/eiweißreich."},
+    "alcohol": {"type": "boolean", "description": "true = Alkohol zur Mahlzeit (nur erfasst, ändert keine Rechnung)."},
 }
 
 TOOLS = [
