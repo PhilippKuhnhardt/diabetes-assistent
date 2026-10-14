@@ -2,10 +2,22 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from decimal import Decimal, ROUND_HALF_UP
 
 from app import calculation, glucose
 from app.on_board import FORECAST_SPREAD_MGDL
+
+# Trends that rule out the lower target: glucose already falls without what still acts.
+FALLING = ("down", "down_fast")
+# The lower target only by day and while less than this still acts (insulin + carbs + surcharge): in the
+# data of 11.09.–14.10. all lows followed corrections from 19:50, and the extra lows at target 100 all had
+# ≥ 96 mg/dL still acting (analysis in the project files analysen/tiefer-zielwert.md, 2026-10-14).
+LOW_TARGET_HOURS = (6, 20)
+LOW_TARGET_MAX_ACTING_MGDL = Decimal(150)
+# ... or once the last carbs and rapid dose are this long ago, whatever the model still counts as acting:
+# 6 such daytime corrections stayed above 70 even at target 80.
+LOW_TARGET_SETTLED = timedelta(hours=2)
 
 
 def half_units(units: Decimal) -> Decimal:
@@ -25,8 +37,12 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     auto_units_per_ke is the cautious percentile of recent calculated meal factors (Automatik).
     auto_surcharge_mgdl, when given, adds the fixed main-meal surcharge to the auto dose:
     surcharge_mgdl × surcharge_share(grams) / KF IE (surcharge method; never for snacks).
-    For each factor the result holds three variants: correction to the normal target, correction to
-    the cautious target, and carbs only (plus sport, no BG correction; needs no fresh CGM value).
+    For each factor the result holds four variants: correction to the normal target, correction to
+    the cautious target, correction to the lower target (dose_low_target_mgdl, from the same forecast as
+    normal) and carbs only (plus sport, no BG correction; needs no fresh CGM value). low_blocked says why
+    the lower target is ruled out: below 70 mg/dL, falling, evening or night (LOW_TARGET_HOURS), or
+    LOW_TARGET_MAX_ACTING_MGDL or more still acting while carbs or a rapid dose are less than
+    LOW_TARGET_SETTLED ago.
     on_board (app.on_board.summary) moves the start glucose by what still acts: normal and carbs only use
     the full forecast (− remaining insulin + remaining carbs and surcharge); cautious uses that forecast
     minus its typical miss (FORECAST_SPREAD_MGDL), but never less than letting the remaining
@@ -83,9 +99,11 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     })
     target = calculation.dec(settings.get("dose_target_mgdl", 100))
     cautious_target = calculation.dec(settings.get("dose_cautious_target_mgdl", 140))
+    low_target = calculation.dec(settings.get("dose_low_target_mgdl", 100))
     result.update({
         "target_mgdl": str(target),
         "cautious_target_mgdl": str(cautious_target),
+        "low_target_mgdl": str(low_target),
     })
     auto_carb_units = grams * auto_units_per_ke / 10 if auto_units_per_ke is not None else None
     if auto_carb_units is not None:
@@ -105,6 +123,21 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         low = latest[1] < glucose.LOW_MGDL
         cautious_start = guarded if low else max(guarded, full - FORECAST_SPREAD_MGDL)
         start = guarded if low else full
+        hour = now.astimezone(ZoneInfo(timezone_name)).hour
+        if low_target >= target:
+            result["low_blocked"] = "off"
+        elif low:
+            result["low_blocked"] = "low"
+        elif result.get("trend_direction") in FALLING:
+            result["low_blocked"] = "falling"
+        elif not LOW_TARGET_HOURS[0] <= hour < LOW_TARGET_HOURS[1]:
+            result["low_blocked"] = "evening"
+        elif lowering + raising >= LOW_TARGET_MAX_ACTING_MGDL and any(
+                now - LOW_TARGET_SETTLED < item["at"] <= now
+                and (calculation.dec(item.get("carbs") or 0) > 0
+                     or (calculation.dec(item.get("insulin") or 0) > 0 and calculation.is_rapid_insulin(item)))
+                for item in treatments):
+            result["low_blocked"] = "acting"
     for prefix, units in (("", carb_units), ("auto_", auto_carb_units)):
         if units is not None:
             carbs_total = max(Decimal(0), units + activity / isf)
@@ -132,7 +165,18 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         result["cautious_total_units"] = str(cautious_total)
         result["cautious_entry_units"] = str(cautious_entry_units)
         result["cautious_expected_glucose_mgdl"] = str(cautious_start + (carb_units - cautious_entry_units) * isf)
+        low_correction_units = (start - low_target) / isf
+        low_total = max(Decimal(0), carb_units + low_correction_units)
+        result["low_correction_units"] = str(low_correction_units)
+        result["low_total_units"] = str(low_total)
+        result["low_entry_units"] = str(half_units(low_total))
+        result["low_expected_glucose_mgdl"] = str(start + (carb_units - half_units(low_total)) * isf)
         if auto_carb_units is not None:
+            auto_low_total = max(Decimal(0), auto_carb_units + low_correction_units)
+            result["auto_low_total_units"] = str(auto_low_total)
+            result["auto_low_entry_units"] = str(half_units(auto_low_total))
+            result["auto_low_expected_glucose_mgdl"] = str(
+                start + (auto_carb_units - half_units(auto_low_total)) * isf)
             auto_total = max(Decimal(0), auto_carb_units + correction_units)
             auto_entry_units = (auto_total * 2).quantize(Decimal("1"), rounding=ROUND_HALF_UP) / 2
             result["auto_total_units"] = str(auto_total)

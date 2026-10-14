@@ -27,6 +27,7 @@ def default_settings() -> dict:
         "window_minutes": 180,
         "dose_target_mgdl": 100,
         "dose_cautious_target_mgdl": 140,
+        "dose_low_target_mgdl": 100,
         "auto_percentile": "37.5",
         "auto_lookback_days": 30,
         "auto_half_life_days": "7",
@@ -71,6 +72,7 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result.setdefault("breakfast_end_minute", 660)
     result.setdefault("dose_target_mgdl", 100)
     result.setdefault("dose_cautious_target_mgdl", 140)
+    result.setdefault("dose_low_target_mgdl", 100)
     result.setdefault("auto_percentile", "37.5")
     # Older versions stored methods that were removed (day shift, equal weights): back to the percentile.
     if result.get("auto_method") not in ("percentile", "surcharge"):

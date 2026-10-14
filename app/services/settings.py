@@ -17,7 +17,8 @@ def validate_settings(value: dict) -> dict:
     result = dict(old)
     for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes",
                 "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
-                "sport_effects_mgdl", "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile",
+                "sport_effects_mgdl", "dose_target_mgdl", "dose_cautious_target_mgdl", "dose_low_target_mgdl",
+                "auto_percentile",
                 "auto_half_life_days", "auto_lookback_days", "auto_method", "auto_surcharge_mgdl",
                 "basal_default_units", "split_min_grams", "split_first_percent", "split_delay_minutes"):
         if key in value:
@@ -44,6 +45,9 @@ def validate_settings(value: dict) -> dict:
     cautious_target = calculation.dec(result["dose_cautious_target_mgdl"])
     if not cautious_target.is_finite() or not dose_target <= cautious_target <= 250:
         raise ValueError("Vorsichtiger Zielwert muss zwischen dem Zielwert und 250 mg/dL liegen")
+    low_target = calculation.dec(result.get("dose_low_target_mgdl", 100))
+    if not low_target.is_finite() or not 60 <= low_target <= dose_target:
+        raise ValueError("Tieferer Zielwert muss zwischen 60 mg/dL und dem Zielwert liegen (gleich = aus)")
     auto_percentile = calculation.dec(result["auto_percentile"])
     if not auto_percentile.is_finite() or not 25 <= auto_percentile <= 50:
         raise ValueError("Perzentil der Automatik muss zwischen 25 und 50 % liegen")
@@ -80,6 +84,7 @@ def validate_settings(value: dict) -> dict:
         "sport_lookback_minutes": lookback, "sport_effects_mgdl": clean_effects,
         "dose_target_mgdl": str(dose_target),
         "dose_cautious_target_mgdl": str(cautious_target),
+        "dose_low_target_mgdl": str(low_target),
         "auto_percentile": str(auto_percentile),
         "auto_half_life_days": str(half_life),
         "auto_lookback_days": auto_lookback,
