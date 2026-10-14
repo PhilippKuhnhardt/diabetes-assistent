@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 from app import calculation, episodes, split as split_bolus
 from app.common import parse_instant
 from app.ingestion import nightscout
-from app.services import annotations, basal, day_view, diary, dose_help
+from app.services import annotations, basal, day_view, diary, dose_help, places
 from app.store import config, mirror
 
 MODES = ("meal", "exercise", "basal")
@@ -281,6 +281,8 @@ def preview(payload: dict) -> dict:
         "day_type": ({"value": current["day_type"], "source": current["day_type_source"]}
                      if day_type_visible else None),
         "split": split,
+        "place": (places.chips(payload, context["at"])
+                  if context["mode"] == "meal" and context["carbs"] and context["carbs"] > 0 else None),
         "dose": dose,
         "on_board": _on_board(context, dose),
     }
@@ -352,6 +354,8 @@ def save(payload: dict) -> dict:
            if split_units and kind == "meal" else {}),
     })
     day = saved["day"]
+    if carbs > 0:
+        places.record(saved["event_id"], context["at"], payload)
     basal_result = basal_error = None
     if basal_units > 0:
         try:
