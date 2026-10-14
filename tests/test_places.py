@@ -1,0 +1,68 @@
+import unittest
+from datetime import datetime, timedelta, timezone
+
+from app import places
+
+
+NOW = datetime(2026, 10, 14, 10, 30, tzinfo=timezone.utc)
+CANTEEN = {"id": 1, "place_id": 1, "lat": 49.0, "lon": 8.4, "radius_m": 150}
+RESTAURANT_A = {"id": 2, "place_id": 2, "lat": 49.01, "lon": 8.41, "radius_m": 100}
+RESTAURANT_B = {"id": 3, "place_id": 2, "lat": 48.99, "lon": 8.38, "radius_m": 100}
+
+
+def position(lat, lon, accuracy=20, captured=NOW):
+    return places.parse_position({"lat": lat, "lon": lon, "accuracy_m": accuracy,
+                                  "captured_at": captured.isoformat()})
+
+
+class PlaceRuleTests(unittest.TestCase):
+    def test_distance_is_metres_on_the_globe(self):
+        # 0.001° latitude ≈ 111 m.
+        self.assertAlmostEqual(places.distance_m(49.0, 8.4, 49.001, 8.4), 111.2, delta=0.5)
+
+    def test_position_inside_a_spot_suggests_its_place_and_any_spot_of_a_place_counts(self):
+        spots = [CANTEEN, RESTAURANT_A, RESTAURANT_B]
+        self.assertEqual(places.suggestion(position(49.0005, 8.4), NOW, NOW, spots)["place_id"], 1)
+        self.assertEqual(places.suggestion(position(48.9902, 8.38), NOW, NOW, spots)["place_id"], 2)
+        far = places.suggestion(position(49.2, 8.4), NOW, NOW, spots)
+        self.assertEqual((far["status"], far["place_id"]), ("unknown", None))
+
+    def test_overlapping_spots_take_the_nearest(self):
+        near = {**RESTAURANT_A, "lat": 49.0012, "lon": 8.4, "radius_m": 300}
+        self.assertEqual(places.match(position(49.001, 8.4), [CANTEEN, near])["id"], near["id"])
+
+    def test_position_is_used_only_for_an_entry_timed_now_with_a_precise_fresh_fix(self):
+        spots = [CANTEEN]
+        self.assertEqual(places.suggestion(position(49.0, 8.4), NOW - timedelta(hours=2), NOW, spots)["status"], "offset")
+        stale = position(49.0, 8.4, captured=NOW - timedelta(minutes=10))
+        self.assertEqual(places.suggestion(stale, NOW, NOW, spots)["status"], "offset")
+        self.assertEqual(places.suggestion(position(49.0, 8.4, accuracy=900), NOW, NOW, spots)["status"], "inaccurate")
+        self.assertEqual(places.suggestion(None, NOW, NOW, spots)["status"], "none")
+
+    def test_invalid_positions_are_dropped(self):
+        for raw in (None, {}, {"lat": "x", "lon": 1}, {"lat": 95, "lon": 1}, {"lat": float("nan"), "lon": 1}):
+            self.assertIsNone(places.parse_position(raw))
+
+    def test_unknown_positions_group_by_distance_and_name_the_nearest_place(self):
+        rows = [{"at": "2026-10-13T10:00:00+00:00", "lat": 49.1, "lon": 8.4},
+                {"at": "2026-10-14T10:00:00+00:00", "lat": 49.1005, "lon": 8.4},
+                {"at": "2026-10-12T10:00:00+00:00", "lat": 49.3, "lon": 8.4}]
+        groups = places.clusters(rows, [CANTEEN], {1: "Kantine"})
+        self.assertEqual([group["count"] for group in groups], [2, 1])
+        self.assertEqual(groups[0]["last_at"], "2026-10-14T10:00:00+00:00")
+        self.assertEqual(groups[0]["nearest_place"]["name"], "Kantine")
+        self.assertAlmostEqual(groups[0]["nearest_place"]["distance_m"], 11147, delta=30)
+
+    def test_spot_and_name_validation(self):
+        self.assertEqual(places.validate_name("  Kantine   Nord "), "Kantine Nord")
+        with self.assertRaises(ValueError):
+            places.validate_name(" ")
+        self.assertEqual(places.validate_spot({"lat": 49, "lon": 8.4})["radius_m"], places.DEFAULT_RADIUS_M)
+        with self.assertRaises(ValueError):
+            places.validate_spot({"lat": 49, "lon": 8.4, "radius_m": 5})
+        with self.assertRaises(ValueError):
+            places.validate_spot({"lat": None, "lon": 8.4})
+
+
+if __name__ == "__main__":
+    unittest.main()

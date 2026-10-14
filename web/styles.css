@@ -686,3 +686,25 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .day-meal.is-excluded .day-meal-factor { color: var(--muted); text-decoration: line-through; }
 .sport-review .sport-none { min-height: 32px; padding: 5px 10px; font-size: 12px; }
 @media (max-width: 650px) { .day-meal-result { flex-basis: 100%; justify-content: space-between; } }
+
+/* Places: chips in the entry form, a badge on meals and entries, management in settings. */
+.entry-place { margin-top: 10px; }
+.entry-place .hint { margin: 4px 0 0; }
+.entry-chips button.place-chip[aria-pressed="true"] { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+.place-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 11px; font-weight: 600; vertical-align: middle; }
+.place-badge::before { content: "⌖ "; }
+.place-item { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.place-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.place-head .place-name { flex: 1 1 140px; min-width: 0; }
+.place-spots { list-style: none; margin: 6px 0; padding: 0; }
+.place-spot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 3px 0; font-size: 13px; }
+.place-spot .spot-radius { width: 80px; }
+.place-new, .place-assign { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.place-new input, .place-assign input, .place-assign select { flex: 1 1 140px; min-width: 0; }
+.places-subhead { margin: 18px 0 4px; font-size: 14px; }
+.place-unknown { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.place-unknown p { margin: 0; font-size: 13px; }
+.place-spot label { display: inline-flex; align-items: center; gap: 4px; margin: 0; }
+.place-spot button { padding: 5px 10px; }
+.place-item > button { margin-top: 6px; padding: 6px 10px; font-size: 13px; }
+.day-meal-head .place-badge { margin-right: 6px; }

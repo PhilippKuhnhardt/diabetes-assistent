@@ -1449,6 +1449,58 @@ class IntegrationTests(unittest.TestCase):
         row = next(item for item in saved["day_view"]["timeline"] if item["id"] == saved["id"])
         self.assertEqual((row["kind"], row["meal_id"]), ("snack", None))
 
+    def test_place_is_suggested_from_position_stored_locally_and_unknown_positions_join_a_place(self):
+        self.request("/api/settings")
+        canteen = self.request("/api/places", method="POST", body={"action": "create", "name": "Kantine"})
+        canteen_id = canteen["places"][0]["id"]
+        self.request("/api/places", method="POST", body={
+            "action": "add_spot", "place_id": canteen_id, "lat": 49.0, "lon": 8.4, "radius_m": 150})
+        view = self.request("/api/places", method="POST", body={"action": "create", "name": "Restaurant"})
+        restaurant_id = next(place["id"] for place in view["places"] if place["name"] == "Restaurant")
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        today = now.astimezone(ZoneInfo("Europe/Berlin")).date().isoformat()
+        here = {"lat": 49.0005, "lon": 8.4, "accuracy_m": 20, "captured_at": now.isoformat()}
+        entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "50", "position": here}
+        place = self.request("/api/entry/preview", method="POST", body=entry)["place"]
+        self.assertEqual((place["status"], place["place_id"]), ("matched", canteen_id))
+        self.assertEqual([option["name"] for option in place["options"]], ["Kantine", "Restaurant"])
+        backdated = self.request("/api/entry/preview", method="POST", body={
+            **entry, "at": (now - timedelta(hours=3)).isoformat()})["place"]
+        self.assertEqual((backdated["status"], backdated["place_id"]), ("offset", None))
+
+        saved = self.request("/api/entry", method="POST", body={**entry, "insulin": "5", "place_id": canteen_id})
+        row = next(item for item in saved["day_view"]["timeline"] if item["id"] == saved["id"])
+        self.assertEqual(row["place"], {"id": canteen_id, "name": "Kantine"})
+        self.assertEqual(saved["day_view"]["meals"][0]["place"]["name"], "Kantine")
+        # Nightscout never sees a place or a position.
+        self.assertNotIn("Kantine", json.dumps(FakeNightscout.treatments))
+        self.assertNotIn("49.0005", json.dumps(FakeNightscout.treatments))
+
+        # A position that fits no place waits as unknown until it joins a place.
+        away = {**here, "lat": 49.1}
+        snack = self.request("/api/entry", method="POST", body={**entry, "carbs": "10", "position": away})
+        unknown = self.request("/api/places")["unknown"]
+        self.assertEqual([group["count"] for group in unknown], [1])
+        self.assertEqual(unknown[0]["nearest_place"]["name"], "Kantine")
+        view = self.request("/api/places", method="POST", body={
+            "action": "add_spot", "place_id": restaurant_id, "lat": unknown[0]["lat"], "lon": unknown[0]["lon"]})
+        self.assertEqual(view["unknown"], [])
+        self.assertEqual({place["name"]: place["count"] for place in view["places"]}, {"Kantine": 1, "Restaurant": 1})
+        day = self.request("/api/day?date=" + today)
+        self.assertEqual(next(item for item in day["timeline"] if item["id"] == snack["id"])["place"]["name"], "Restaurant")
+
+        # The edit dialog changes the place afterwards and keeps the stored position.
+        self.request("/api/treatment", method="POST", body={
+            "id": saved["id"], "original_day": today, "kind": "meal", "at": now.isoformat(),
+            "carbs": "50", "insulin": "5", "place_id": restaurant_id})
+        meal = self.request("/api/v1/meals?days=1")["rows"][0]
+        self.assertEqual(meal["place"], "Restaurant")
+        # Deleting a place turns entries with a position back into unknown positions.
+        view = self.request("/api/places", method="POST", body={"action": "delete", "id": restaurant_id})
+        self.assertEqual(sum(group["count"] for group in view["unknown"]), 2)
+        with self.assertRaises(urllib.error.HTTPError):
+            self.request("/api/places", method="POST", body={"action": "create", "name": "kantine"})
+
     def test_finger_value_alone_is_saved_as_bg_check(self):
         self.request("/api/day?date=2026-09-23")
         body = {"day": "2026-09-23", "at": "2026-09-23T07:00:00Z", "mode": "meal", "carbs": "",

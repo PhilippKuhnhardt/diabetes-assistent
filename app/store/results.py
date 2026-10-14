@@ -60,6 +60,8 @@ def day_inputs(start: datetime, end: datetime, day: str) -> list:
             ("SELECT meal_id FROM analysis_exclusions ORDER BY meal_id", ()),
             ("SELECT day,day_type FROM analysis_day_types ORDER BY day", ()),
             ("SELECT start_day,end_day FROM vacation_periods ORDER BY id", ()),
+            ("SELECT id,name FROM places ORDER BY id", ()),
+            ("SELECT event_id,place_id FROM entry_locations WHERE at>=? AND at<? ORDER BY event_id", (lo, hi)),
         ]
         rows += [[tuple(row) for row in db.execute(sql, args).fetchall()] for sql, args in queries]
     return rows
