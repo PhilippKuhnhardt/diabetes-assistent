@@ -239,3 +239,28 @@ class AuthTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DayReviewTests(unittest.TestCase):
+    """"Tag durchgehen" lists what is still open on a day: blocked meals and undecided sport."""
+
+    @staticmethod
+    def meal(meal_id, factor=None, status="auto", suggested=False, excluded=False):
+        from app.services import day_view
+        output = {"id": meal_id, "calculation": {"factor_units_per_ke": factor},
+                  "sport": {"status": status, "suggested": suggested}, "excluded": excluded}
+        output["review"] = day_view.meal_review(output)
+        return output
+
+    def test_open_items_and_counts(self):
+        from app.services import day_view
+        meals = [
+            self.meal("a", factor="1.2", suggested=True),
+            self.meal("b", factor="1.0", status="unaffected", suggested=True, excluded=True),
+            self.meal("c"),
+        ]
+        self.assertEqual(meals[0]["review"], {"open": ["sport"], "calculated": True, "excludable": True})
+        self.assertEqual(meals[1]["review"]["open"], [])
+        self.assertEqual(meals[2]["review"], {"open": ["blocked"], "calculated": False, "excludable": False})
+        self.assertEqual(day_view.day_review(meals), {
+            "blocked": 1, "sport_open": 1, "calculated": 1, "excluded": 1, "first_open": "a"})

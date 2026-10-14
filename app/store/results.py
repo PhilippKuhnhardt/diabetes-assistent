@@ -57,6 +57,7 @@ def day_inputs(start: datetime, end: datetime, day: str) -> list:
              "FROM nightscout_profiles ORDER BY start_at", ()),
             ("SELECT meal_id,status,effect_mgdl FROM analysis_sport_marks ORDER BY meal_id", ()),
             ("SELECT meal_id,start_at,end_at FROM analysis_windows ORDER BY meal_id", ()),
+            ("SELECT meal_id FROM analysis_exclusions ORDER BY meal_id", ()),
             ("SELECT day,day_type FROM analysis_day_types ORDER BY day", ()),
             ("SELECT start_day,end_day FROM vacation_periods ORDER BY id", ()),
         ]

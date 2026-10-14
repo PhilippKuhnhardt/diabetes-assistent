@@ -48,8 +48,8 @@
         <div class="diary-grid">
           <section class="panel entry-panel">
             <div id="day-overview" class="day-overview">
-              <div class="section-head"><h2>Tagesübersicht</h2>
-                <div class="overview-span" role="group" aria-label="Zeitraum der Tagesübersicht">
+              <div class="section-head"><h2>Verlauf</h2>
+                <div class="overview-span" role="group" aria-label="Zeitraum des Verlaufs">
                   <button type="button" data-overview-hours="3" aria-pressed="true">3 h</button>
                   <button type="button" data-overview-hours="6" aria-pressed="false">6 h</button>
                   <button type="button" data-overview-hours="24" aria-pressed="false">Tag</button>
@@ -117,8 +117,15 @@
           <section class="records review-panel">
             <section class="panel">
               <div class="section-head"><h2>Tag durchgehen</h2><span id="record-count" class="hint"></span></div>
-              <div id="review-chart" class="day-overview-chart review-chart"></div>
+              <div id="review-day-type" class="review-day-type" hidden>
+                <div class="entry-switch" role="group" aria-label="Tagesart">
+                  <button type="button" class="day-type-option" data-review-day-type="work" aria-pressed="false">Arbeitstag</button>
+                  <button type="button" class="day-type-option" data-review-day-type="free" aria-pressed="false">Freier Tag</button>
+                </div>
+                <p id="review-day-type-hint" class="hint"></p>
+              </div>
               <div id="review-summary" class="review-summary" aria-live="polite"></div>
+              <div id="review-chart" class="day-overview-chart review-chart"></div>
               <details id="effects-card" class="effects-card" open hidden>
                 <summary>Wirkungen über den Tag <span id="effects-summary" class="hint"></span></summary>
                 <div id="effects-chart" class="effects-chart"></div>
@@ -164,12 +171,6 @@
             <div class="section-head"><h2>Nachtübersicht</h2><span id="night-summary-count" class="hint"></span></div>
             <div id="night-summary-cards" class="summary-grid"></div>
             <div id="night-records"></div>
-          </section>
-          <section class="analysis-list panel analysis-ic-panel">
-            <div class="section-head"><h2>Aktueller Insulinfaktor · Nightscout</h2></div>
-            <div id="analysis-ic-rows" class="analysis-ic-rows"></div>
-            <button type="button" id="save-analysis-ic" class="primary">In Nightscout speichern</button>
-            <span id="analysis-ic-status" class="hint" role="status"></span>
           </section>
         </div>
         <div id="analysis-automatik" class="analysis-pane" hidden>
