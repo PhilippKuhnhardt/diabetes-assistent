@@ -10,13 +10,13 @@ MEAL_COLUMNS = [
     "manual_window", "excluded", "sport_status", "sport_effect_mgdl", "g0_mgdl", "g_end_mgdl",
     "delta_mgdl", "carbs_meal_g", "carbs_total_g", "extra_carb_count", "carbs_times_isf",
     "rapid_units", "insulin_effect_mgdl", "meal_isf", "factor_ie_per_ke", "blocked_reason",
-    "carbs_certainty", "fat_protein",
+    "carbs_certainty", "fat_protein", "alcohol",
 ]
 WINDOW_EVENT_COLUMNS = ["meal_id", "kind", "at", "carbs_g", "units", "isf", "event_type"]
 ENTRY_COLUMNS = ["at", "sgv"]
 BASAL_COLUMNS = ["id", "at", "units", "nightscout_synced", "notes"]
 TREATMENT_COLUMNS = ["id", "at", "eventType", "carbs", "insulin", "basal_units", "duration",
-                     "sport_type", "role", "meal", "episode_id", "carbs_certainty", "fat_protein", "notes"]
+                     "sport_type", "role", "meal", "episode_id", "carbs_certainty", "fat_protein", "alcohol", "notes"]
 TABLE_COLUMNS = {"meals": MEAL_COLUMNS, "window_events": WINDOW_EVENT_COLUMNS, "entries": ENTRY_COLUMNS,
                  "treatments": TREATMENT_COLUMNS, "basal": BASAL_COLUMNS}
 
@@ -33,7 +33,7 @@ entsprechen der App zum Abrufzeitpunkt (aktuelles Nightscout-Profil für alle Ta
   carbs_certainty: KH-Sicherheit, die unsicherste Stufe der markierten KH-Einträge im Fenster:
   weighed = gewogen, known = Gericht bekannt oder FDDB-KI-Auswertung, unsure = keine ernsthafte
   Schätzung, leer = nicht angegeben. fat_protein: mindestens ein KH-Eintrag war als
-  „fett-/eiweißreich“ markiert.
+  „fett-/eiweißreich“ markiert. alcohol: mindestens ein KH-Eintrag war mit „Alkohol“ markiert.
 - window_events: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.
 - entries: alle gespiegelten CGM-Werte in mg/dL.
 - treatments: alle gespiegelten Nightscout-Behandlungen inklusive Sport (Basal aus der App

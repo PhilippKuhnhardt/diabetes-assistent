@@ -217,6 +217,7 @@ def compute_day(day: str) -> dict:
             "basal_units": item["basal_units"], "duration_minutes": item["duration"],
             "sport_kind": item.get("sport_type"), "notes": note,
             "carbs_certainty": item.get("carbs_certainty"), "fat_protein": item.get("fat_protein", False),
+            "alcohol": item.get("alcohol", False),
             "glucose_mgdl": glucose, "glucose_at": glucose_at,
             **({"nightscout_synced": item["nightscout_synced"]} if kind == "basal" else {}),
         })
