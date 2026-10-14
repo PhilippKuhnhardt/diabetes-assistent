@@ -347,8 +347,6 @@ span.range-high { color: #9a6410; font-weight: 650; }
 .sport-custom-fields button { min-height: 32px; padding: 5px 9px; }
 .sport-events { font-weight: 500; }
 .sport-review-meal { margin: 4px 0 8px; }
-@media (max-width: 650px) {
-}
 
 /* Meal window chart and editor */
 .meal-chart { margin: 15px 0 5px; }
