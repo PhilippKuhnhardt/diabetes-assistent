@@ -15,7 +15,20 @@ from app.services import annotations, basal, day_view, diary, dose_help
 from app.store import config, mirror
 
 MODES = ("meal", "exercise", "basal")
-DOSE_VARIANTS = ("normal", "cautious", "carbs")
+DOSE_VARIANTS = ("normal", "low", "cautious", "carbs")
+# The lower target is offered for corrections and for small carb amounts only: up to this many grams,
+# not marked unsure and not fat-/protein-rich, so no carb uncertainty asks for a cautious estimate.
+LOW_TARGET_MAX_GRAMS = Decimal(30)
+# Why the lower target is not offered, for the hint under the options (off, equal doses and larger meals stay silent).
+LOW_BLOCKED = {
+    "low": "BZ unter 70 mg/dL",
+    "falling": "BZ fällt",
+    "evening": "nur 6–20 Uhr",
+    "acting": "es wirkt noch zu viel",
+    "unsure": "KH unsicher",
+    "fat": "fett-/eiweißreich",
+    "split": "2. Split-Teil offen",
+}
 # The planned second part of a split bolus, offered as its own option while it is open.
 SPLIT_VARIANT = "split"
 # The fields a shown suggestion depends on; saving a tapped suggestion re-checks them together with the
@@ -23,7 +36,7 @@ SPLIT_VARIANT = "split"
 # so they never match between showing and saving, while the rounded doses only change for a real reason.
 DOSE_CHECK_KEYS = (
     "carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl",
-    "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "auto_units_per_ke",
+    "low_target_mgdl", "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "auto_units_per_ke",
     "recent_rapid_doses")
 DOSE_CHANGED = "Empfehlung geändert. Bitte den neuen Wert prüfen und erneut speichern."
 
@@ -165,6 +178,22 @@ def _split(context: dict, assignment: dict | None, payload: dict) -> dict | None
             "due_at": (at + timedelta(minutes=offer["delay_minutes"])).isoformat()}
 
 
+def _low_blocked(carbs: Decimal, payload: dict, result: dict, split: dict | None) -> str | None:
+    """Why the lower target is not offered; None when it is. Glucose reasons come from dosing.suggest."""
+    if result.get("low_blocked"):
+        return result["low_blocked"]
+    if carbs > 0 and payload.get("fat_protein") is True:
+        return "fat"
+    if carbs > 0 and payload.get("carbs_certainty") == "unsure":
+        return "unsure"
+    if carbs > LOW_TARGET_MAX_GRAMS:
+        return "carbs"
+    if result.get("split_plan") or (split and split["active"]):
+        # The planned second part is not in the forecast.
+        return "split"
+    return None
+
+
 def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | None,
           split: dict | None = None) -> dict:
     """The suggestion for today, with the three options already resolved for display."""
@@ -183,11 +212,17 @@ def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | N
     # breakfast day-type median or Nightscout's I:C stands in.
     prefix = "auto_" if carbs > 0 and result.get("auto_units_per_ke") is not None else ""
     keys = {"normal": ("entry_units", "expected_glucose_mgdl"),
+            "low": ("low_entry_units", "low_expected_glucose_mgdl"),
             "cautious": ("cautious_entry_units", "cautious_expected_glucose_mgdl"),
             "carbs": ("carbs_entry_units", "carbs_expected_glucose_mgdl")}
+    low_blocked = _low_blocked(carbs, payload, result, split)
+    if low_blocked is None and result.get(prefix + "low_entry_units") == result.get(prefix + "entry_units"):
+        low_blocked = "same"
     options = []
     for variant in DOSE_VARIANTS:
         if variant == "carbs" and carbs <= 0:
+            continue
+        if variant == "low" and low_blocked is not None:
             continue
         units = result.get(prefix + keys[variant][0])
         if units is None:
@@ -210,7 +245,10 @@ def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | N
                            "savable": units <= 100})
     # Without a fresh CGM value the form offers its field for blood glucose measured by hand.
     finger_offer = not result.get("glucose_fresh") or result.get("glucose_source") == "finger"
-    return {**result, "options": options, "check": _dose_check(result, options), "finger_offer": finger_offer}
+    low_note = (LOW_BLOCKED.get(low_blocked) if result.get("glucose_fresh") and result.get("isf_mgdl_per_unit")
+                else None)
+    return {**result, "options": options, "check": _dose_check(result, options), "finger_offer": finger_offer,
+            "low_blocked": low_blocked, "low_note": low_note}
 
 
 def _on_board(context: dict, dose: dict) -> dict | None:

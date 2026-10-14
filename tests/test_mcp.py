@@ -100,6 +100,8 @@ class McpTests(unittest.TestCase):
         self.assertGreater(Decimal(options["normal"]["units"]), Decimal(options["cautious"]["units"]))
         self.assertIsNone(preview["split"])
         self.assertIn("units_per_ke", preview["dose"]["factor"])
+        marked = self.call("preview_entry", carbs_g=20, carbs_certainty="unsure", fat_protein=True)
+        self.assertNotIn("low", [option["variant"] for option in marked["dose"]["options"]])
         self.assertEqual(FakeNightscout.treatments, [])
         event_id = "4a0e7a1e-8b0f-4c55-9c62-3f2f0c0e5d11"
         saved = self.call("save_entry", carbs_g=45, insulin_units=5, carbs_certainty="known", fat_protein=True,
