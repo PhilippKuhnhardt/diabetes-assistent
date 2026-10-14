@@ -306,7 +306,8 @@ TOOLS = [
         "name": "preview_entry",
         "title": "Empfehlung berechnen",
         "description": "Vor jedem Eintrag aufrufen: zeigt, was das Eintragsformular für diese KH zeigt. "
-                       "assignment = Snack einer Hauptmahlzeit (snack=true) oder eigene Mahlzeit; sport = Sport "
+                       "assignment = Snack einer Hauptmahlzeit (snack=true; meal=null = Snack ohne Mahlzeit, weil "
+                       "die eigene Mahlzeit heute schon eingetragen ist) oder eigene Mahlzeit; sport = Sport "
                        "vor der Mahlzeit gefunden (Einfluss erfragen); basal_suggestion_units > 0 = Basal heute "
                        "noch offen (fragen, ob mit eintragen); split = Split-Bolus vorgeschlagen; dose.options = "
                        "normal / cautious (vorsichtig) / carbs (nur KH), bei Split units = jetzt und "

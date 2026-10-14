@@ -414,9 +414,10 @@ function updateEntryAssignment() {
   const assignment = form.elements.kind.value === "meal" ? currentPreview()?.assignment : null;
   chip.hidden = !assignment;
   if (!assignment) return;
-  chip.textContent = "Zählt als: " + (assignment.snack
-    ? "Snack zu " + names[assignment.meal] + " " + timeOnly(assignment.at)
-    : "eigenes " + names[assignment.own_meal]) + " ⇄";
+  const snack = assignment.meal ? "Snack zu " + names[assignment.meal] + " " + timeOnly(assignment.at) : "Snack ohne Mahlzeit";
+  chip.textContent = "Zählt als: " + (assignment.snack ? snack : "eigenes " + names[assignment.own_meal])
+    + (assignment.own_meal_taken ? " (" + names[assignment.own_meal] + " heute schon eingetragen)" : " ⇄");
+  chip.disabled = Boolean(assignment.own_meal_taken);
 }
 
 // The server offers a split bolus for a large main meal; the chip switches it off and on.

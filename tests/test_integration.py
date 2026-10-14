@@ -1422,12 +1422,24 @@ class IntegrationTests(unittest.TestCase):
         preview = self.request("/api/entry/preview", method="POST", body=snack)
         self.assertEqual((preview["assignment"]["meal"], preview["assignment"]["snack"]), ("breakfast", True))
         self.assertEqual((preview["sport"], preview["basal_units"]), (None, "0"))
+        # Breakfast is taken, so the entry cannot be flipped to its own breakfast.
         own = self.request("/api/entry/preview", method="POST", body={**snack, "as": "meal"})
-        self.assertFalse(own["assignment"]["snack"])
-        self.assertIsNotNone(own["sport"])
+        self.assertEqual((own["assignment"]["snack"], own["assignment"]["own_meal_taken"]), (True, True))
         self.assertEqual(self.request("/api/entry", method="POST", body=snack)["kind"], "snack")
         self.assertEqual(FakeNightscout.treatments[-1]["eventType"], "Carb Correction")
         self.assertIn("[DA2:snack]", FakeNightscout.treatments[-1]["notes"])
+
+        # Lunch at 12:00 is taken: at 16:00, after its window, an entry is a snack of no meal.
+        self.request("/api/entry", method="POST", body={**entry, "at": "2026-09-23T10:00:00Z", "insulin": "3"})
+        late = {**entry, "at": "2026-09-23T14:00:00Z", "carbs": "10"}
+        preview = self.request("/api/entry/preview", method="POST", body={**late, "as": "meal"})
+        self.assertEqual({key: preview["assignment"][key] for key in ("meal", "at", "snack", "own_meal_taken")},
+                         {"meal": None, "at": None, "snack": True, "own_meal_taken": True})
+        saved = self.request("/api/entry", method="POST", body={**late, "insulin": "1"})
+        self.assertEqual(saved["kind"], "snack")
+        self.assertEqual([meal["meal"] for meal in saved["day_view"]["meals"]], ["breakfast", "lunch"])
+        row = next(item for item in saved["day_view"]["timeline"] if item["id"] == saved["id"])
+        self.assertEqual((row["kind"], row["meal_id"]), ("snack", None))
 
     def test_finger_value_alone_is_saved_as_bg_check(self):
         self.request("/api/day?date=2026-09-23")

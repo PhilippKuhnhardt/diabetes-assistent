@@ -186,6 +186,37 @@ class MealClassificationTests(unittest.TestCase):
         meals = episodes.meals_for_day(treatments, "2026-09-24", "Europe/Berlin", settings)
         self.assertEqual(meals[0]["meal"], "lunch")
 
+    def test_each_meal_kind_counts_once_a_day(self):
+        # 13.10.: breakfast 07:20 with a snack, then 10:53 (still breakfast by clock, but 3.5 h later
+        # and after the window) and the 12:20 snack saved for it. Times are Berlin summer time.
+        def at(hour, minute):
+            return datetime(2026, 10, 13, hour - 2, minute, tzinfo=timezone.utc)
+
+        def diary(item_id, moment, event_type, carbs, insulin, extra=""):
+            return {"id": item_id, "at": moment, "eventType": event_type, "carbs": carbs, "insulin": insulin,
+                    "notes": f"{extra} [DAE:{item_id:0>36}]".strip()}
+
+        treatments = [
+            diary("1", at(7, 20), "Meal Bolus", 80, 7),
+            diary("2", at(8, 55), "Carb Correction", 10, 0, "[DA2:snack]"),
+            diary("3", at(10, 53), "Meal Bolus", 10, 1.5),
+            diary("4", at(12, 20), "Snack Bolus", 100, 7, "[DA2:snack]"),
+            diary("5", at(15, 45), "Meal Bolus", 7, 0),
+            diary("6", at(16, 0), "Meal Bolus", 20, 2, "[DA2:meal]"),
+        ]
+        settings = {"timezone": "Europe/Berlin"}
+        episodes.group_diary_followups(treatments, settings)
+        meals = episodes.meals_for_day(treatments, "2026-10-13", "Europe/Berlin", settings)
+        # The 12:20 entry was stored as snack of 10:53; with 10:53 no main meal it is lunch.
+        self.assertEqual([(meal["source_id"], meal["meal"]) for meal in meals], [("1", "breakfast"), ("4", "lunch")])
+        free = treatments[2]
+        self.assertEqual((free["eventType"], "[DA2:snack]" in free["notes"]), ("Snack Bolus", True))
+        self.assertEqual(episodes.taken_meal(at(10, 53), treatments, settings)["id"], "1")
+        self.assertEqual(treatments[1]["notes"].count("[DA2:snack]"), 1)  # breakfast snack stays its snack
+        self.assertEqual(treatments[1]["eventType"], "Carb Correction")
+        self.assertEqual(treatments[4]["eventType"], "Carb Correction")  # lunch is taken at 15:45
+        self.assertEqual(treatments[5]["eventType"], "Snack Bolus")  # own main meal, but lunch is taken
+
 
 class AuthTests(unittest.TestCase):
     def test_server_refuses_to_start_without_password(self):

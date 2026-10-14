@@ -87,15 +87,24 @@ def _context(payload: dict) -> dict:
 
 
 def _assignment(context: dict, payload: dict) -> dict | None:
-    """A new carb entry right after a main meal counts as its snack unless flipped to its own meal."""
+    """A new carb entry right after a main meal counts as its snack unless flipped to its own meal.
+
+    When the day already has a main meal of the entry's own kind, it can only be a snack
+    (of the preceding meal, or of no meal), so each kind counts once a day."""
     at, carbs = context["at"], context["carbs"]
     if context["mode"] != "meal" or at is None or not carbs or carbs <= 0:
         return None
-    root = episodes.preceding_meal(at, context["treatments"], context["settings"])
-    if root is None:
+    settings = context["settings"]
+    own_meal = episodes.meal_kind_at(at, settings)[1]
+    taken = episodes.taken_meal(at, context["treatments"], settings)
+    root = episodes.preceding_meal(at, context["treatments"], settings)
+    if root is None and taken is None:
         return None
-    return {"meal": root["meal"], "at": root["at"], "own_meal": episodes.meal_kind_at(at, context["settings"])[1],
-            "snack": payload.get("as") != "meal"}
+    if taken is not None:
+        return {"meal": root["meal"] if root else None, "at": root["at"] if root else None,
+                "own_meal": own_meal, "snack": True, "own_meal_taken": True}
+    return {"meal": root["meal"], "at": root["at"], "own_meal": own_meal,
+            "snack": payload.get("as") != "meal", "own_meal_taken": False}
 
 
 def _minute(context: dict) -> int | None:
@@ -228,7 +237,7 @@ def preview(payload: dict) -> dict:
     dose = _dose(context, payload, assignment, sport, split)
     return {
         "day": context["day"],
-        "assignment": assignment and {**assignment, "at": assignment["at"].isoformat()},
+        "assignment": assignment and {**assignment, "at": assignment["at"] and assignment["at"].isoformat()},
         "sport": sport,
         "basal_units": str(_basal_units(context)),
         "day_type": ({"value": current["day_type"], "source": current["day_type_source"]}
