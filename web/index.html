@@ -78,11 +78,16 @@
               <!-- Cards follow the entry flow: meal, outside factors, dose (recommendation and own IE). -->
               <section id="entry-meal-fields" class="entry-card" aria-label="Essen">
                 <p class="entry-card-title">Essen</p>
-                <label id="entry-carbs-field">Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"></label>
+                <!-- Meal factors sit beside the carbs input so the certainty slider below keeps the full width. -->
+                <div class="entry-carbs-row">
+                  <label id="entry-carbs-field">Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"></label>
+                  <div id="entry-factors" class="entry-chips entry-factor-chips" hidden>
+                    <label class="chip chip-toggle factor-chip" title="Alkohol zur Mahlzeit"><input type="checkbox" name="alcohol"><span class="factor-icon factor-alcohol" aria-hidden="true"></span><span>Alkohol</span></label>
+                    <label class="chip chip-toggle factor-chip" title="Fett- oder eiweißreiche Mahlzeit"><input type="checkbox" name="fat_protein"><span class="factor-icon factor-fat_protein" aria-hidden="true"></span><span>Fettreich</span></label>
+                  </div>
+                </div>
                 <div id="entry-quality" class="entry-chips entry-quality-row" hidden>
                   <span class="certainty-slider"><input type="range" name="certainty_level" min="0" max="2" step="1" value="1" aria-label="KH-Sicherheit: unsicher, halbwegs sicher, gewogen"><output class="certainty-label">KH halbwegs</output></span>
-                  <label class="chip chip-toggle factor-chip" title="Alkohol zur Mahlzeit"><input type="checkbox" name="alcohol"><span class="factor-icon factor-alcohol" aria-hidden="true"></span><span>Alkohol</span></label>
-                  <label class="chip chip-toggle factor-chip" title="Fett- oder eiweißreiche Mahlzeit"><input type="checkbox" name="fat_protein"><span class="factor-icon factor-fat_protein" aria-hidden="true"></span><span>Fettreich</span></label>
                 </div>
                 <div id="entry-place" class="entry-place" hidden>
                   <div id="entry-place-chips" class="entry-chips" role="group" aria-label="Ort"></div>

@@ -557,12 +557,13 @@ function updateEntryPlace() {
     (option.id === selected) + '">' + escapeHTML(option.name) + '</button>').join("") +
     (more.length ? '<select class="chip place-more" aria-label="Weitere Orte"><option value="">Weitere …</option>' +
       more.map(option => '<option value="' + option.id + '">' + escapeHTML(option.name) + '</option>').join("") + '</select>' : "");
+  // Only what needs a look gets a line: no places yet, no position, or a position that is no place yet.
   const hint = !place.options.length ? "Noch keine Orte, in den Einstellungen anlegen"
-    : state.entryPositionPending ? "Standort wird ermittelt …"
-    : state.entryPlace !== undefined ? (state.entryPlace === "none" ? "kein Ort" : "selbst gewählt")
+    : state.entryPlace !== undefined || state.entryPositionPending || place.status === "matched" ? ""
     : place.status === "none" && state.entryPositionError ? positionHints[state.entryPositionError]
-    : place.hint;
-  $("#entry-place-hint").textContent = "Ort: " + hint;
+    : place.status === "unknown" ? place.hint : "";
+  $("#entry-place-hint").textContent = hint ? "Ort: " + hint : "";
+  $("#entry-place-hint").hidden = !hint;
 }
 
 function toggleEntryPlace(event) {
@@ -575,7 +576,9 @@ function toggleEntryPlace(event) {
 
 function updateEntryQuality() {
   const form = $("#entry-form");
-  $("#entry-quality").hidden = !(form.elements.kind.value === "meal" && Number(form.elements.carbs.value) > 0);
+  const hidden = !(form.elements.kind.value === "meal" && Number(form.elements.carbs.value) > 0);
+  $("#entry-quality").hidden = hidden;
+  $("#entry-factors").hidden = hidden;
 }
 
 function updateEntrySportOption() {
