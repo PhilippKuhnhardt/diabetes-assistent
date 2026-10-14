@@ -2,7 +2,7 @@
 positions that match no place yet so they can become one.
 
 A place is a chip (Kantine, Restaurant, Zuhause); it has any number of spots, each a centre with
-a radius, so one chip can gather many restaurants while a regular one keeps its own chip.
+a fixed radius, so one chip can gather many restaurants while a regular one keeps its own chip.
 
 Positions stay in SQLite; Nightscout never sees them. A place only labels entries, it changes
 no calculation until Philipp approves a use."""
@@ -12,8 +12,8 @@ import math
 from datetime import datetime, timedelta
 
 EARTH_RADIUS_M = 6_371_000
-DEFAULT_RADIUS_M = 150
-RADIUS_LIMITS = (30, 1000)
+# Every spot holds positions within this distance of its centre (a canteen, a restaurant).
+SPOT_RADIUS_M = 150
 # Coarser fixes (indoor Wi-Fi off, cell only) say too little about which canteen it was.
 MAX_ACCURACY_M = 250
 # A position belongs to an entry only when the entry is timed close to now; a backdated entry
@@ -85,9 +85,9 @@ def nearest(position: dict, spots: list[dict]) -> tuple[dict | None, float | Non
 
 
 def match(position: dict, spots: list[dict]) -> dict | None:
-    """The spot whose radius holds the position (the nearest when several do)."""
+    """The spot within SPOT_RADIUS_M of the position (the nearest when several do)."""
     inside = [(distance_m(position["lat"], position["lon"], spot["lat"], spot["lon"]), spot) for spot in spots]
-    inside = [(distance, spot) for distance, spot in inside if distance <= spot["radius_m"]]
+    inside = [(distance, spot) for distance, spot in inside if distance <= SPOT_RADIUS_M]
     return min(inside, key=lambda item: item[0])[1] if inside else None
 
 
@@ -135,14 +135,8 @@ def validate_name(value) -> str:
 
 
 def validate_spot(value: dict) -> dict:
-    """Coordinates and radius of one spot of a place."""
-    try:
-        radius = int(value.get("radius_m") or DEFAULT_RADIUS_M)
-    except (TypeError, ValueError):
-        raise ValueError("Radius muss eine ganze Zahl in Metern sein") from None
-    if not RADIUS_LIMITS[0] <= radius <= RADIUS_LIMITS[1]:
-        raise ValueError(f"Radius muss zwischen {RADIUS_LIMITS[0]} und {RADIUS_LIMITS[1]} m liegen")
+    """Coordinates of one spot of a place."""
     position = parse_position({"lat": value.get("lat"), "lon": value.get("lon")})
     if position is None:
         raise ValueError("Ungültige Koordinaten")
-    return {"lat": position["lat"], "lon": position["lon"], "radius_m": radius}
+    return {"lat": position["lat"], "lon": position["lon"]}

@@ -549,9 +549,14 @@ function updateEntryPlace() {
   box.hidden = !place;
   if (!place) return;
   const selected = entryPlaceId();
-  $("#entry-place-chips").innerHTML = place.options.map(option =>
+  // Quick places have their own chip; another chosen or suggested place joins them, the rest sit behind "Weitere".
+  const chips = place.options.filter(option => option.quick || option.id === selected);
+  const more = place.options.filter(option => !chips.includes(option));
+  $("#entry-place-chips").innerHTML = chips.map(option =>
     '<button type="button" class="chip place-chip" data-place-id="' + option.id + '" aria-pressed="' +
-    (option.id === selected) + '">' + escapeHTML(option.name) + '</button>').join("");
+    (option.id === selected) + '">' + escapeHTML(option.name) + '</button>').join("") +
+    (more.length ? '<select class="chip place-more" aria-label="Weitere Orte"><option value="">Weitere …</option>' +
+      more.map(option => '<option value="' + option.id + '">' + escapeHTML(option.name) + '</option>').join("") + '</select>' : "");
   const hint = !place.options.length ? "Noch keine Orte, in den Einstellungen anlegen"
     : state.entryPositionPending ? "Standort wird ermittelt …"
     : state.entryPlace !== undefined ? (state.entryPlace === "none" ? "kein Ort" : "selbst gewählt")
@@ -671,10 +676,9 @@ async function loadSettings() {
 }
 
 // Place management: chips with their spots, and unknown positions that can join a chip or become one.
-function spotHTML(spot, index, limits) {
+function spotHTML(spot, index) {
   return '<li class="place-spot"><a href="' + osmLink(spot.lat, spot.lon) + '" target="_blank" rel="noopener">Standort ' +
-    (index + 1) + '</a><label class="inline-unit"><input type="number" class="spot-radius" data-spot-id="' + spot.id +
-    '" min="' + limits[0] + '" max="' + limits[1] + '" step="10" value="' + spot.radius_m + '" aria-label="Radius in Metern"><span>m</span></label>' +
+    (index + 1) + '</a>' +
     '<button type="button" class="quiet" data-place-action="delete_spot" data-spot-id="' + spot.id + '">Entfernen</button></li>';
 }
 
@@ -684,8 +688,10 @@ function renderPlaces(data) {
     '<div class="place-item" data-place-id="' + place.id + '"><div class="place-head">' +
     '<input type="text" class="place-name" maxlength="40" value="' + escapeHTML(place.name) + '" aria-label="Name des Orts">' +
     '<span class="hint">' + place.count + (place.count === 1 ? ' Eintrag' : ' Einträge') + '</span>' +
+    '<label class="check-label place-quick"><input type="checkbox" class="place-quick-toggle"' + (place.quick ? ' checked' : '') +
+    '> Schnellauswahl</label>' +
     '<button type="button" class="quiet delete-treatment" data-place-action="delete" data-place-id="' + place.id + '">Löschen</button></div>' +
-    (place.spots.length ? '<ul class="place-spots">' + place.spots.map((spot, index) => spotHTML(spot, index, data.radius_limits)).join("") + '</ul>'
+    (place.spots.length ? '<ul class="place-spots">' + place.spots.map((spot, index) => spotHTML(spot, index)).join("") + '</ul>'
       : '<p class="hint">Ohne Standort: nur von Hand wählbar.</p>') +
     '<button type="button" class="quiet" data-place-action="here" data-place-id="' + place.id + '">+ Aktuellen Standort hinzufügen</button></div>'
   ).join("") : '<p class="hint">Noch keine Orte.</p>';
@@ -729,8 +735,7 @@ async function placeClick(event) {
       const position = await currentPosition();
       if (position.accuracy_m > state.places.max_accuracy_m)
         throw new Error("Standort zu ungenau (± " + position.accuracy_m + " m). Bitte draußen oder mit WLAN erneut versuchen.");
-      await placeAction({ action: "add_spot", place_id: button.dataset.placeId, lat: position.lat, lon: position.lon,
-        radius_m: state.places.default_radius_m });
+      await placeAction({ action: "add_spot", place_id: button.dataset.placeId, lat: position.lat, lon: position.lon });
     } catch (error) {
       toast(error?.code === 1 ? "Standort nicht freigegeben" : error?.message || "Standort nicht ermittelt", true);
     } finally {
@@ -741,15 +746,15 @@ async function placeClick(event) {
     const row = button.closest(".place-unknown");
     const target = $(".unknown-target", row).value;
     await placeAction({ action: "add_spot", place_id: target || null, name: $(".unknown-name", row).value,
-      lat: group.lat, lon: group.lon, radius_m: state.places.default_radius_m });
+      lat: group.lat, lon: group.lon });
   }
 }
 
 async function placeChange(event) {
   if (event.target.matches(".place-name")) {
     await placeAction({ action: "rename", id: event.target.closest(".place-item").dataset.placeId, name: event.target.value });
-  } else if (event.target.matches(".spot-radius")) {
-    await placeAction({ action: "spot_radius", spot_id: event.target.dataset.spotId, radius_m: event.target.value });
+  } else if (event.target.matches(".place-quick-toggle")) {
+    await placeAction({ action: "quick", id: event.target.closest(".place-item").dataset.placeId, quick: event.target.checked });
   } else if (event.target.matches(".unknown-target")) {
     $(".unknown-name", event.target.closest(".place-unknown")).hidden = event.target.value !== "";
   }
@@ -2874,6 +2879,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     schedulePreview();
   });
   $("#entry-place-chips").addEventListener("click", toggleEntryPlace);
+  $("#entry-place-chips").addEventListener("change", event => {
+    if (!event.target.matches(".place-more") || !event.target.value) return;
+    state.entryPlace = Number(event.target.value);
+    updateEntryPlace();
+  });
   $("#entry-form").elements.insulin.addEventListener("input", () => {
     $("#entry-form").elements.carbs.setCustomValidity("");
     state.doseChoice = null;

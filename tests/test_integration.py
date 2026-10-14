@@ -1454,7 +1454,7 @@ class IntegrationTests(unittest.TestCase):
         canteen = self.request("/api/places", method="POST", body={"action": "create", "name": "Kantine"})
         canteen_id = canteen["places"][0]["id"]
         self.request("/api/places", method="POST", body={
-            "action": "add_spot", "place_id": canteen_id, "lat": 49.0, "lon": 8.4, "radius_m": 150})
+            "action": "add_spot", "place_id": canteen_id, "lat": 49.0, "lon": 8.4})
         view = self.request("/api/places", method="POST", body={"action": "create", "name": "Restaurant"})
         restaurant_id = next(place["id"] for place in view["places"] if place["name"] == "Restaurant")
         now = datetime.now(timezone.utc).replace(microsecond=0)
@@ -1464,6 +1464,10 @@ class IntegrationTests(unittest.TestCase):
         place = self.request("/api/entry/preview", method="POST", body=entry)["place"]
         self.assertEqual((place["status"], place["place_id"]), ("matched", canteen_id))
         self.assertEqual([option["name"] for option in place["options"]], ["Kantine", "Restaurant"])
+        self.request("/api/places", method="POST", body={"action": "quick", "id": restaurant_id, "quick": False})
+        options = self.request("/api/entry/preview", method="POST", body=entry)["place"]["options"]
+        self.assertEqual([(option["name"], option["quick"]) for option in options],
+                         [("Kantine", True), ("Restaurant", False)])
         backdated = self.request("/api/entry/preview", method="POST", body={
             **entry, "at": (now - timedelta(hours=3)).isoformat()})["place"]
         self.assertEqual((backdated["status"], backdated["place_id"]), ("offset", None))

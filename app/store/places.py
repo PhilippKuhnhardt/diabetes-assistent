@@ -15,13 +15,13 @@ def _now() -> str:
 
 def all_places() -> list[dict]:
     with connect() as db:
-        rows = db.execute("SELECT id,name FROM places ORDER BY name COLLATE NOCASE,id").fetchall()
-    return [dict(row) for row in rows]
+        rows = db.execute("SELECT id,name,quick FROM places ORDER BY name COLLATE NOCASE,id").fetchall()
+    return [{**dict(row), "quick": bool(row["quick"])} for row in rows]
 
 
 def all_spots() -> list[dict]:
     with connect() as db:
-        rows = db.execute("SELECT id,place_id,lat,lon,radius_m FROM place_spots ORDER BY id").fetchall()
+        rows = db.execute("SELECT id,place_id,lat,lon FROM place_spots ORDER BY id").fetchall()
     return [dict(row) for row in rows]
 
 
@@ -43,7 +43,7 @@ def _check_place(db: sqlite3.Connection, place_id: int) -> None:
 
 
 def _join_unassigned(db: sqlite3.Connection, spot: dict) -> None:
-    """Positions without a place inside a spot's radius join its place."""
+    """Positions without a place near a spot join its place."""
     rows = db.execute("SELECT event_id,lat,lon FROM entry_locations WHERE place_id IS NULL AND lat IS NOT NULL")
     joined = [row["event_id"] for row in rows.fetchall()
               if place_rules.match({"lat": row["lat"], "lon": row["lon"]}, [spot])]
@@ -64,6 +64,13 @@ def rename_place(place_id: int, name: str) -> None:
         db.execute("UPDATE places SET name=? WHERE id=?", (name, place_id))
 
 
+def set_quick(place_id: int, quick: bool) -> None:
+    """Whether the place has its own chip in the entry form; the others sit behind "Weitere"."""
+    with connect() as db:
+        _check_place(db, place_id)
+        db.execute("UPDATE places SET quick=? WHERE id=?", (int(quick), place_id))
+
+
 def delete_place(place_id: int) -> None:
     """Entries of a deleted place keep their position and become unknown again."""
     with connect() as db:
@@ -77,19 +84,10 @@ def delete_place(place_id: int) -> None:
 def add_spot(place_id: int, spot: dict) -> int:
     with connect() as db:
         _check_place(db, place_id)
-        spot_id = db.execute("INSERT INTO place_spots(place_id,lat,lon,radius_m,created_at) VALUES(?,?,?,?,?)",
-                             (place_id, spot["lat"], spot["lon"], spot["radius_m"], _now())).lastrowid
+        spot_id = db.execute("INSERT INTO place_spots(place_id,lat,lon,created_at) VALUES(?,?,?,?)",
+                             (place_id, spot["lat"], spot["lon"], _now())).lastrowid
         _join_unassigned(db, {**spot, "place_id": place_id})
     return spot_id
-
-
-def set_spot_radius(spot_id: int, radius_m: int) -> None:
-    with connect() as db:
-        row = db.execute("SELECT place_id,lat,lon FROM place_spots WHERE id=?", (spot_id,)).fetchone()
-        if row is None:
-            raise ValueError("Standort nicht gefunden")
-        db.execute("UPDATE place_spots SET radius_m=? WHERE id=?", (radius_m, spot_id))
-        _join_unassigned(db, {**dict(row), "radius_m": radius_m})
 
 
 def delete_spot(spot_id: int) -> None:

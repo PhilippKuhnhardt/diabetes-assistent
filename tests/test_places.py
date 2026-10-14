@@ -5,9 +5,9 @@ from app import places
 
 
 NOW = datetime(2026, 10, 14, 10, 30, tzinfo=timezone.utc)
-CANTEEN = {"id": 1, "place_id": 1, "lat": 49.0, "lon": 8.4, "radius_m": 150}
-RESTAURANT_A = {"id": 2, "place_id": 2, "lat": 49.01, "lon": 8.41, "radius_m": 100}
-RESTAURANT_B = {"id": 3, "place_id": 2, "lat": 48.99, "lon": 8.38, "radius_m": 100}
+CANTEEN = {"id": 1, "place_id": 1, "lat": 49.0, "lon": 8.4}
+RESTAURANT_A = {"id": 2, "place_id": 2, "lat": 49.01, "lon": 8.41}
+RESTAURANT_B = {"id": 3, "place_id": 2, "lat": 48.99, "lon": 8.38}
 
 
 def position(lat, lon, accuracy=20, captured=NOW):
@@ -28,7 +28,7 @@ class PlaceRuleTests(unittest.TestCase):
         self.assertEqual((far["status"], far["place_id"]), ("unknown", None))
 
     def test_overlapping_spots_take_the_nearest(self):
-        near = {**RESTAURANT_A, "lat": 49.0012, "lon": 8.4, "radius_m": 300}
+        near = {**RESTAURANT_A, "lat": 49.0012, "lon": 8.4}
         self.assertEqual(places.match(position(49.001, 8.4), [CANTEEN, near])["id"], near["id"])
 
     def test_position_is_used_only_for_an_entry_timed_now_with_a_precise_fresh_fix(self):
@@ -57,9 +57,7 @@ class PlaceRuleTests(unittest.TestCase):
         self.assertEqual(places.validate_name("  Kantine   Nord "), "Kantine Nord")
         with self.assertRaises(ValueError):
             places.validate_name(" ")
-        self.assertEqual(places.validate_spot({"lat": 49, "lon": 8.4})["radius_m"], places.DEFAULT_RADIUS_M)
-        with self.assertRaises(ValueError):
-            places.validate_spot({"lat": 49, "lon": 8.4, "radius_m": 5})
+        self.assertEqual(places.validate_spot({"lat": 49, "lon": 8.4}), {"lat": 49, "lon": 8.4})
         with self.assertRaises(ValueError):
             places.validate_spot({"lat": None, "lon": 8.4})
 

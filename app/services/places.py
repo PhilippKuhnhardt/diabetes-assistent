@@ -21,16 +21,15 @@ def view() -> dict:
             group[key] = datetime.fromisoformat(group[key]).astimezone(zone).isoformat(timespec="minutes")
     return {
         "places": [{**place, "count": counts.get(place["id"], 0),
-                    "spots": [{key: spot[key] for key in ("id", "lat", "lon", "radius_m")}
+                    "spots": [{key: spot[key] for key in ("id", "lat", "lon")}
                               for spot in spots if spot["place_id"] == place["id"]]}
                    for place in places],
         "unknown": groups,
-        "default_radius_m": rules.DEFAULT_RADIUS_M, "radius_limits": rules.RADIUS_LIMITS,
         "max_accuracy_m": rules.MAX_ACCURACY_M,
     }
 
 
-ACTIONS = ("create", "rename", "delete", "add_spot", "spot_radius", "delete_spot")
+ACTIONS = ("create", "rename", "quick", "delete", "add_spot", "delete_spot")
 
 
 def _id(payload: dict, key: str) -> int:
@@ -52,6 +51,8 @@ def save(payload: dict) -> dict:
         store.create_place(rules.validate_name(payload.get("name")))
     elif action == "rename":
         store.rename_place(_id(payload, "id"), rules.validate_name(payload.get("name")))
+    elif action == "quick":
+        store.set_quick(_id(payload, "id"), payload.get("quick") is True)
     elif action == "delete":
         store.delete_place(_id(payload, "id"))
     elif action == "add_spot":
@@ -59,8 +60,6 @@ def save(payload: dict) -> dict:
         target = (_id(payload, "place_id") if payload.get("place_id") not in (None, "")
                   else store.create_place(rules.validate_name(payload.get("name"))))
         store.add_spot(target, spot)
-    elif action == "spot_radius":
-        store.set_spot_radius(_id(payload, "spot_id"), rules.validate_spot({**payload, "lat": 0, "lon": 0})["radius_m"])
     else:
         store.delete_spot(_id(payload, "spot_id"))
     return view()
@@ -81,7 +80,8 @@ def chips(payload: dict, at: datetime | None) -> dict:
     places = store.all_places()
     position = rules.parse_position(payload.get("position"))
     suggestion = rules.suggestion(position, at, datetime.now(timezone.utc), store.all_spots())
-    return {"options": [{"id": place["id"], "name": place["name"]} for place in places], **suggestion}
+    return {"options": [{"id": place["id"], "name": place["name"], "quick": place["quick"]} for place in places],
+            **suggestion}
 
 
 def record(event_id: str, at: datetime, payload: dict) -> None:

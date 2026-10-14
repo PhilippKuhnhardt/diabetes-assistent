@@ -163,6 +163,7 @@ def _places(db: sqlite3.Connection) -> None:
     db.execute("""CREATE TABLE IF NOT EXISTS places (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
+        quick INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL
     )""")
     db.execute("""CREATE TABLE IF NOT EXISTS place_spots (
@@ -170,7 +171,6 @@ def _places(db: sqlite3.Connection) -> None:
         place_id INTEGER NOT NULL,
         lat REAL NOT NULL,
         lon REAL NOT NULL,
-        radius_m INTEGER NOT NULL,
         created_at TEXT NOT NULL
     )""")
     db.execute("""CREATE TABLE IF NOT EXISTS entry_locations (
