@@ -63,6 +63,7 @@ def compute_day(day: str) -> dict:
     meals = episodes.meals_for_day(treatments, day, settings["timezone"], settings)
     sport_marks = marks.analysis_sport_marks()
     manual_windows = marks.analysis_windows()
+    exclusions = marks.analysis_exclusions()
     rendered = []
     main_meal_ids = {item["id"] for item in treatments
                      if (item.get("role") == "meal" or item.get("eventType") == "Meal Bolus")
@@ -122,6 +123,8 @@ def compute_day(day: str) -> dict:
         output["quality"] = {
             "carbs_certainty": episodes.least_certain(item.get("carbs_certainty") for item in treatments if item["id"] in carb_ids),
             **{flag: any(item.get(flag) for item in treatments if item["id"] in carb_ids) for flag in episodes.QUALITY_MARKERS}}
+        output["excluded"] = meal["id"] in exclusions
+        output["review"] = meal_review(output)
         calculation_events = output["calculation"]
         included_ids = {item["id"] for key in ("carb_events", "doses")
                         for item in calculation_events.get(key, [])
@@ -227,6 +230,7 @@ def compute_day(day: str) -> dict:
     return json_safe({
         "day": day, "connected": nightscout.is_configured(),
         "day_type": day_type, "day_type_source": day_type_source,
+        "review": day_review(rendered),
         "synced_at": mirror.synced_at(day), "sync_error": sync_error,
         "profile_sync_error": profile_sync_error,
         "settings_version": settings_id, "meals": rendered, "exercises": exercises, "other_events": other_events,
@@ -242,6 +246,28 @@ def compute_day(day: str) -> dict:
                        for item in treatments],
         "window_limits": settings_service.MANUAL_WINDOW_LIMITS,
     })
+
+
+def meal_review(meal: dict) -> dict:
+    """What is still open on a meal before its day counts as clean: a blocked factor or an
+    undecided sport suggestion. Only a calculated factor can be excluded from the analysis."""
+    calculated = meal["calculation"].get("factor_units_per_ke") is not None
+    sport = meal["sport"]
+    open_items = ([] if calculated else ["blocked"]) + (
+        ["sport"] if sport["suggested"] and sport["status"] == "auto" else [])
+    return {"open": open_items, "calculated": calculated, "excludable": calculated}
+
+
+def day_review(meals: list[dict]) -> dict:
+    """The day's check list: what still needs a look, and what is done."""
+    open_meals = [meal for meal in meals if meal["review"]["open"]]
+    return {
+        "blocked": sum("blocked" in meal["review"]["open"] for meal in meals),
+        "sport_open": sum("sport" in meal["review"]["open"] for meal in meals),
+        "calculated": sum(meal["review"]["calculated"] and not meal["excluded"] for meal in meals),
+        "excluded": sum(meal["review"]["calculated"] and meal["excluded"] for meal in meals),
+        "first_open": open_meals[0]["id"] if open_meals else None,
+    }
 
 
 def _instant(value):

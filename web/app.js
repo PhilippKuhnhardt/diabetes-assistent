@@ -299,7 +299,7 @@ function updateEntryDayType() {
   $("#entry-day-type").hidden = !dayType;
   updateEntryInfluences();
   if (!dayType) return;
-  $$(".day-type-option").forEach(button =>
+  $$(".day-type-option", $("#entry-day-type")).forEach(button =>
     button.setAttribute("aria-pressed", String(button.dataset.dayType === dayType.value)));
   $("#entry-day-type-hint").textContent = (dayTypeSources[dayType.source] || "") + " · bestimmt den Frühstücksfaktor";
 }
@@ -308,7 +308,8 @@ async function saveEntryDayType(event) {
   const button = event.target.closest(".day-type-option");
   if (!button) return;
   const day = state.day;
-  $$(".day-type-option").forEach(item => { item.disabled = true; });
+  const buttons = $$(".day-type-option", $("#entry-day-type"));
+  buttons.forEach(item => { item.disabled = true; });
   try {
     await api("/api/analysis/day-type", {
       method: "POST", body: JSON.stringify({ day, day_type: button.dataset.dayType }),
@@ -317,7 +318,32 @@ async function saveEntryDayType(event) {
   } catch (error) {
     toast(error.message, true);
   } finally {
-    $$(".day-type-option").forEach(item => { item.disabled = false; });
+    buttons.forEach(item => { item.disabled = false; });
+  }
+}
+
+// "Tag durchgehen" is where a day's data is kept clean: its day type is set here too.
+function renderReviewDayType(data) {
+  const box = $("#review-day-type");
+  box.hidden = !data.day_type;
+  if (!data.day_type) return;
+  $$("[data-review-day-type]").forEach(button =>
+    button.setAttribute("aria-pressed", String(button.dataset.reviewDayType === data.day_type)));
+  $("#review-day-type-hint").textContent = (dayTypeSources[data.day_type_source] || "") + " · bestimmt den Frühstücksfaktor";
+}
+
+async function saveReviewDayType(button) {
+  const buttons = $$("[data-review-day-type]");
+  buttons.forEach(item => { item.disabled = true; });
+  try {
+    await api("/api/analysis/day-type", {
+      method: "POST", body: JSON.stringify({ day: state.day, day_type: button.dataset.reviewDayType }),
+    });
+    await loadDay();
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    buttons.forEach(item => { item.disabled = false; });
   }
 }
 
@@ -1391,18 +1417,21 @@ function icon(name) {
   return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths[name] + '</svg>';
 }
 
-function sportReviewHTML(sport, mealId, day, compact = false, inMeal = false) {
+function sportReviewHTML(sport, mealId, day) {
   const applied = sport.status === "affected";
   const effect = applied ? sportChange(sport.effect_mgdl) : 0;
   const suggestion = sport.suggested ? sportChange(sport.suggested_effect_mgdl) : 0;
-  return '<div class="sport-review' + (compact ? ' sport-review-table' : '') + (inMeal ? ' sport-review-meal' : '') + '" data-meal-id="' + escapeHTML(mealId) +
+  return '<div class="sport-review sport-review-meal" data-meal-id="' + escapeHTML(mealId) +
     '" data-day="' + escapeHTML(day) + '" data-suggestion="' + escapeHTML(suggestion) + '">' +
     '<div class="sport-state' + (applied ? ' is-applied' : '') + '">' +
-    (applied ? icon("check") + '<span>Sport ' + escapeHTML(signedChange(effect, 0)) + '</span>' : '<span>Kein Sporteffekt</span>') +
+    (applied ? icon("check") + '<span>Sport ' + escapeHTML(signedChange(effect, 0)) + '</span>'
+      : sport.status === "unaffected" && suggestion ? icon("check") + '<span>Kein Sporteinfluss</span>'
+      : sport.status === "auto" && suggestion ? '<span>Sport offen</span>' : '<span>Kein Sporteffekt</span>') +
     ((sport.events || []).length ? '<span class="sport-events">· ' + escapeHTML(sport.events.map(item =>
       (sportNames[item.kind] || "Sport") + " " + timeOnly(item.at)).join(", ")) + '</span>' : '') + '</div>' +
     (applied ? '<button type="button" class="sport-remove icon-button" aria-label="Sporteinfluss entfernen" title="Sporteinfluss entfernen">' + icon("remove") + '</button>' : '') +
     (!applied && suggestion ? '<button type="button" class="sport-suggestion">' + icon("plus") + ' Vorschlag ' + escapeHTML(signedChange(suggestion, 0)) + ' übernehmen</button>' : '') +
+    (sport.status === "auto" && suggestion ? '<button type="button" class="sport-none quiet">Kein Einfluss</button>' : '') +
     '<details class="sport-custom"><summary>' + (applied ? 'Wert ändern' : 'Eigenen Wert setzen') + '</summary>' +
     '<div class="sport-custom-fields"><label><span>BZ-Wirkung in mg/dL (− senkt, + hebt)</span><input class="sport-effect" type="number" min="-500" max="500" step="1" value="' +
     escapeHTML(applied ? effect : (suggestion || "")) +
@@ -1444,6 +1473,7 @@ function renderDay(data) {
     : errors.length ? "Nightscout konnte nicht vollständig aktualisiert werden: " + errors.join(" · ") + ". Lokale Daten werden angezeigt." : "";
   applyDiaryMode();
   $("#timeline").innerHTML = dayListHTML(data);
+  renderReviewDayType(data);
   renderReviewSummary(data);
   renderVisibleCharts();
 }
@@ -1492,25 +1522,35 @@ function dayBlocks(data) {
 }
 
 function mealNeedsCheck(meal) {
-  return meal.calculation?.factor_units_per_ke == null;
+  return (meal.review?.open || []).length > 0;
+}
+
+function excludeButtonHTML(mealId, day, excluded) {
+  const label = excluded ? 'Mahlzeit wieder berücksichtigen' : 'Mahlzeit ausklammern';
+  return '<button type="button" class="exclude-meal' + (excluded ? ' is-excluded' : '') +
+    '" data-meal-id="' + escapeHTML(mealId) + '" data-day="' + escapeHTML(day) +
+    '" data-excluded="' + excluded + '" aria-pressed="' + excluded + '" aria-label="' + label + '" title="' + label + '">' +
+    icon(excluded ? "exclude" : "check") + '<span>' + (excluded ? 'Ausgeklammert' : 'Berücksichtigt') + '</span></button>';
 }
 
 function mealBlockHTML(block, data) {
   const { meal, range, items } = block;
   const calc = meal.calculation || {};
   const check = mealNeedsCheck(meal);
-  const status = check
+  const calculated = Boolean(meal.review?.calculated);
+  const status = !calculated
     ? '<span class="day-meal-status">' + escapeHTML(calc.reason || "Noch keine Berechnung") + '</span>'
     : '<span class="day-meal-factor">' + escapeHTML(factorNum(calc.factor_units_per_ke)) + ' <small>IE/KE</small></span>';
-  return '<article class="day-meal' + (check ? ' needs-check' : '') + '" id="meal-' + escapeHTML(meal.id) + '">' +
+  return '<article class="day-meal' + (check ? ' needs-check' : '') + (meal.excluded ? ' is-excluded' : '') + '" id="meal-' + escapeHTML(meal.id) + '">' +
     '<div class="day-meal-head"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' + factorIconsHTML(meal.quality) +
     '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") +
     '</span>' + (meal.quality?.carbs_certainty ? '<span class="outlier-badge certainty-' + meal.quality.carbs_certainty + '">' + CERTAINTY_LABELS[meal.quality.carbs_certainty] + '</span>' : '') +
-    '</div>' + status + '</div>' +
+    '</div><div class="day-meal-result">' + status +
+    (meal.review?.excludable ? excludeButtonHTML(meal.id, state.day, meal.excluded) : '') + '</div></div>' +
     items.map(item => entryRowHTML(item, data)).join("") +
     // Sport is adjusted right on the meal, without opening the curve details.
-    sportReviewHTML(meal.sport || {}, meal.id, state.day, false, true) +
-    '<details class="day-meal-details" data-meal-id="' + escapeHTML(meal.id) + '"' + (check ? ' open' : '') +
+    sportReviewHTML(meal.sport || {}, meal.id, state.day) +
+    '<details class="day-meal-details" data-meal-id="' + escapeHTML(meal.id) + '"' + (calculated ? '' : ' open') +
     '><summary>Kurve und Zeitraum</summary>' +
     calculationHTML(meal.calculation) + chartFor(meal, data.entries) +
     (meal.notes ? '<p class="meal-note">' + escapeHTML(meal.notes) + '</p>' : '') + '</details></article>';
@@ -1523,12 +1563,14 @@ function dayListHTML(data) {
 
 function renderReviewSummary(data) {
   $("#record-count").textContent = data.timeline.length + (data.timeline.length === 1 ? " Eintrag" : " Einträge");
-  const open = data.meals.filter(mealNeedsCheck);
-  const done = data.meals.length - open.length;
+  const review = data.review || {};
+  const link = text => '<a class="review-chip needs-check" href="#meal-' + escapeHTML(review.first_open) + '">' + text + '</a>';
   const chips = [
-    open.length ? '<a class="review-chip needs-check" href="#meal-' + escapeHTML(open[0].id) + '">' +
-      (open.length === 1 ? "1 Mahlzeit braucht Prüfung" : open.length + " Mahlzeiten brauchen Prüfung") + '</a>' : "",
-    done ? '<span class="review-chip">' + (done === 1 ? "1 Faktor berechnet" : done + " Faktoren berechnet") + '</span>' : "",
+    review.blocked ? link(review.blocked === 1 ? "1 Mahlzeit nicht berechenbar" : review.blocked + " Mahlzeiten nicht berechenbar") : "",
+    review.sport_open ? link(review.sport_open === 1 ? "1 Sportvorschlag offen" : review.sport_open + " Sportvorschläge offen") : "",
+    review.calculated ? '<span class="review-chip">' + (review.calculated === 1 ? "1 Faktor zählt" : review.calculated + " Faktoren zählen") + '</span>' : "",
+    review.excluded ? '<span class="review-chip">' + review.excluded + ' ausgeklammert</span>' : "",
+    data.meals.length && !review.blocked && !review.sport_open ? '<span class="review-chip is-clean">' + icon("check") + ' Tag geprüft</span>' : "",
   ].filter(Boolean);
   $("#review-summary").innerHTML = chips.join("");
 }
@@ -2010,10 +2052,10 @@ async function deleteTreatment(event) {
 }
 
 async function saveSportMark(event) {
-  const button = event.target.closest(".sport-save, .sport-suggestion, .sport-remove");
+  const button = event.target.closest(".sport-save, .sport-suggestion, .sport-remove, .sport-none");
   const block = button?.closest(".sport-review");
   if (!block) return;
-  const remove = button.matches(".sport-remove");
+  const remove = button.matches(".sport-remove, .sport-none");
   const suggestion = button.matches(".sport-suggestion");
   const effect = $(".sport-effect", block);
   const amount = remove ? 0 : Number(suggestion ? block.dataset.suggestion : effect.value);
@@ -2029,7 +2071,7 @@ async function saveSportMark(event) {
       meal_id: block.dataset.mealId, day: block.dataset.day,
       status: remove ? "unaffected" : "affected", effect_mgdl: sportChange(amount),
     }) });
-    toast(remove ? "Sporteinfluss entfernt" : "Sporteinfluss gespeichert");
+    toast(button.matches(".sport-none") ? "Kein Sporteinfluss vermerkt" : remove ? "Sporteinfluss entfernt" : "Sporteinfluss gespeichert");
     await loadDay();
     if (state.view === "analysis") await loadSummary();
   } catch (error) {
@@ -2102,45 +2144,6 @@ function renderNightSummary(night) {
   $("#night-records").innerHTML = rows
     ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Nacht</th><th>Startwert</th><th>Endwert</th><th>Veränderung</th><th>Minimalwert</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
     : '<div class="empty">Für diesen Zeitraum liegen keine Nächte vor.</div>';
-}
-
-function renderAnalysisIc() {
-  const rows = state.settings?.ic_schedule || [];
-  $("#analysis-ic-rows").innerHTML = rows.length
-    ? rows.map(row => {
-      const time = minuteClock(Number(row.start_minute));
-      const display = Number((10 / Number(row.grams_per_unit)).toFixed(2));
-      return '<label class="analysis-ic-row"><span>Ab ' + escapeHTML(time) + '</span>' +
-        '<input type="number" min="' + escapeHTML(pickerMinimum(display, 0.1, true)) + '" max="1000" step="0.1" required data-start-minute="' +
-        escapeHTML(row.start_minute) + '" data-grams-per-unit="' + escapeHTML(row.grams_per_unit) +
-        '" data-original-display="' + escapeHTML(display) + '" value="' + escapeHTML(display) +
-        '" aria-label="Aktueller Insulinfaktor ab ' + escapeHTML(time) + ' in IE je KE"><span>IE/KE</span></label>';
-    }).join("")
-    : '<p class="hint">Kein Insulinfaktor im aktuellen Nightscout-Profil verfügbar.</p>';
-  $("#save-analysis-ic").disabled = !rows.length || !state.settings?.nightscout_profile?.profile_id;
-}
-
-async function saveAnalysisIc() {
-  const button = $("#save-analysis-ic");
-  const inputs = $$("#analysis-ic-rows input");
-  if (!inputs.length || !inputs.every(input => input.reportValidity())) return;
-  button.disabled = true;
-  $("#analysis-ic-status").textContent = "Wird in Nightscout gespeichert …";
-  try {
-    const result = await api("/api/profile/ic", { method: "POST", body: JSON.stringify({
-      profile_id: state.settings.nightscout_profile.profile_id,
-      ic_schedule: inputs.map(icScheduleRow),
-    }) });
-    await loadSettings();
-    await loadSummary();
-    $("#analysis-ic-status").textContent = result.message;
-    toast(result.message);
-  } catch (error) {
-    $("#analysis-ic-status").textContent = error.message;
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
 }
 
 function renderSportAnalysis(analysis) {
@@ -2457,7 +2460,6 @@ async function loadSummary() {
         (kind === "breakfast" ? '' : ' · ' + escapeHTML(suggestionNote(row.suggestion))) + '</p>' +
         (kind === "breakfast" ? breakfastSubcards() : '') + '</div>';
     }).join("");
-    renderAnalysisIc();
     renderSportAnalysis(data.sport_analysis);
     renderSuggestionDerivation(data.suggestion_derivation);
     renderAutomatik(data.suggestion_derivation);
@@ -2489,7 +2491,14 @@ async function loadSummary() {
                 (item.manual_window ? ' <span class="manual-badge">Zeitraum manuell</span>' : '')
               : '<span class="summary-unavailable">Nicht berechenbar: ' + escapeHTML(item.reason || "Kein Faktor") + '</span>';
             const excluded = item.units_per_ke != null && item.excluded;
-            const sportReview = sportReviewHTML(item.sport || {}, item.id, item.day, true);
+            const sport = item.sport || {};
+            // Read only here: sport is set on the meal in "Tag durchgehen".
+            const sportReview = sport.status === "affected"
+              ? '<span class="sport-state is-applied">' + icon("check") + escapeHTML(signedChange(sportChange(sport.effect_mgdl), 0)) + '</span>'
+              : sport.status === "auto" && sport.suggested
+                ? '<button type="button" class="review-chip needs-check open-meal-day" data-day="' + escapeHTML(item.day) +
+                  '" data-meal-id="' + escapeHTML(item.id) + '">Sport offen</button>'
+                : '—';
             return dayHeading + '<tr class="' + (excluded ? "analysis-excluded " : "") +
               (item.strong_outlier ? "analysis-outlier" : "") + '">' +
             '<td>' + escapeHTML(names[item.kind]) + '</td><td><b>' + factor + '</b></td>' +
@@ -2499,16 +2508,9 @@ async function loadSummary() {
             '<td>' + glucoseChangeHTML(item.expected_delta_mgdl) + '</td>' +
             '<td>' + glucoseChangeHTML(item.deviation_mgdl) + '</td>' +
             '<td>' + sportReview + '</td>' +
-            '<td>' + (item.units_per_ke == null ? "—" :
-              '<button type="button" class="exclude-meal' + (excluded ? ' is-excluded' : '') +
-              '" data-meal-id="' + escapeHTML(item.id) + '" data-day="' + escapeHTML(item.day) +
-              '" data-excluded="' + excluded + '" aria-pressed="' + excluded + '" aria-label="' +
-              (excluded ? 'Mahlzeit wieder berücksichtigen' : 'Mahlzeit ausklammern') + '" title="' +
-              (excluded ? 'Mahlzeit wieder berücksichtigen' : 'Mahlzeit ausklammern') + '">' +
-              icon(excluded ? "exclude" : "check") + '<span>' +
-              (excluded ? 'Ausgeklammert' : 'Berücksichtigt') + '</span></button>') + '</td>' +
+            '<td>' + (item.units_per_ke == null ? "—" : excludeButtonHTML(item.id, item.day, excluded)) + '</td>' +
             '<td><button type="button" class="icon-button open-meal-day" data-day="' + escapeHTML(item.day) +
-              '" aria-label="Tagebuch öffnen" title="Tagebuch öffnen">' + icon("diary") + '</button></td></tr>';
+              '" data-meal-id="' + escapeHTML(item.id) + '" aria-label="Im Tag durchgehen öffnen" title="Im Tag durchgehen öffnen">' + icon("diary") + '</button></td></tr>';
           }).join("");
         })() + '</tbody></table></div>'
       : '<div class="empty">Für diesen Zeitraum sind keine Mahlzeiten im lokalen Datenbestand.</div>';
@@ -2523,7 +2525,7 @@ async function loadSummary() {
   }
 }
 
-async function saveAnalysisExclusion(event) {
+async function saveExclusion(event) {
   const button = event.target.closest(".exclude-meal");
   if (!button) return;
   button.disabled = true;
@@ -2532,7 +2534,8 @@ async function saveAnalysisExclusion(event) {
       method: "POST",
       body: JSON.stringify({ meal_id: button.dataset.mealId, day: button.dataset.day, excluded: button.dataset.excluded !== "true" }),
     });
-    await loadSummary();
+    if (state.view === "analysis") await loadSummary();
+    else await loadDay();
   } catch (error) {
     button.disabled = false;
     toast(error.message, true);
@@ -2654,11 +2657,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     setPickerBase(event.target, 0.5);
     $("#edit-form").elements.carbs.setCustomValidity("");
   });
-  for (const selector of ["#ic-rows", "#analysis-ic-rows"]) {
-    $(selector).addEventListener("input", event => {
-      if (event.target.matches("input")) setPickerBase(event.target, 0.1, true);
-    });
-  }
+  $("#ic-rows").addEventListener("input", event => {
+    if (event.target.matches("input")) setPickerBase(event.target, 0.1, true);
+  });
   $("#cancel-edit").addEventListener("click", closeEditDialog);
   $("#delete-edit").addEventListener("click", deleteTreatment);
   $$("[data-diary-mode]").forEach(button => button.addEventListener("click", () => {
@@ -2722,7 +2723,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (basalButton) deleteBasalRow(basalButton);
     const edit = event.target.closest(".edit-entry");
     if (edit) editEntry(edit.dataset.id);
-    if (event.target.closest(".sport-save, .sport-suggestion, .sport-remove")) saveSportMark(event);
+    if (event.target.closest(".sport-save, .sport-suggestion, .sport-remove, .sport-none")) saveSportMark(event);
+    if (event.target.closest(".exclude-meal")) saveExclusion(event);
+    const dayTypeButton = event.target.closest("[data-review-day-type]");
+    if (dayTypeButton) saveReviewDayType(dayTypeButton);
     const windowButton = event.target.closest(".open-window-editor");
     if (windowButton) openWindowEditor(windowButton.dataset.mealId);
   });
@@ -2790,22 +2794,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
   $("#summary-days").addEventListener("change", loadSummary);
-  $("#save-analysis-ic").addEventListener("click", saveAnalysisIc);
   $("#sync-range").addEventListener("click", syncRange);
-  $("#calculations").addEventListener("click", saveAnalysisExclusion);
+  $("#calculations").addEventListener("click", saveExclusion);
   $("#calculations").addEventListener("change", saveDayType);
-  $("#calculations").addEventListener("click", event => {
+  // A meal is corrected on its day: the analysis row opens "Tag durchgehen" at that meal.
+  $("#calculations").addEventListener("click", async event => {
     if (event.target.closest(".exclude-meal")) return;
-    if (event.target.closest(".sport-save, .sport-suggestion, .sport-remove")) {
-      saveSportMark(event);
-      return;
-    }
     const button = event.target.closest(".open-meal-day");
     if (!button) return;
     state.day = button.dataset.day;
+    state.persistDay = true;
+    state.modeDay = state.day;
+    state.diaryMode = "review";
+    $("#selected-day").value = state.day;
     setDefaultMealTime();
     view("diary");
-    loadDay();
+    await loadDay();
+    $("#meal-" + CSS.escape(button.dataset.mealId))?.scrollIntoView({ block: "start" });
   });
   $("#test-connection").addEventListener("click", async () => {
     $("#test-result").textContent = "Prüfe …";
