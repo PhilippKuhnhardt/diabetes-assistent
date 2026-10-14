@@ -98,6 +98,7 @@
     "carbs": 85,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-08-29T05:25:00+00:00",
       "basal_units": 0,
       "carbs": 85,
@@ -118,6 +119,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -225,6 +227,7 @@
     "carbs": 70,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-08-29T09:50:00+00:00",
       "basal_units": 0,
       "carbs": 70,
@@ -245,6 +248,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -352,6 +356,7 @@
     "carbs": 45,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-08-29T16:25:00+00:00",
       "basal_units": 0,
       "carbs": 45,
@@ -372,6 +377,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -427,6 +433,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-08-29T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -444,6 +451,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-29T09:50:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -461,6 +469,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-29T16:25:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -480,6 +489,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-08-29T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -496,6 +506,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-29T09:50:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -512,6 +523,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-29T16:25:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -528,6 +540,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-30T05:05:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -544,6 +557,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-30T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -666,6 +680,7 @@
     "carbs": 55,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-08-30T05:05:00+00:00",
       "basal_units": 0,
       "carbs": 55,
@@ -686,6 +701,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -810,6 +826,7 @@
     "carbs": 105,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-08-30T10:30:00+00:00",
       "basal_units": 0,
       "carbs": 105,
@@ -825,6 +842,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-08-30T12:05:00+00:00",
       "basal_units": 0,
       "carbs": 10,
@@ -845,6 +863,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -952,6 +971,7 @@
     "carbs": 35,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-08-30T16:20:00+00:00",
       "basal_units": 0,
       "carbs": 35,
@@ -972,6 +992,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -1027,6 +1048,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-08-30T05:05:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -1044,6 +1066,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-30T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -1061,6 +1084,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-30T12:05:00+00:00",
     "basal_units": 0,
     "carbs": 10,
@@ -1078,6 +1102,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-30T16:20:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -1097,6 +1122,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-08-29T16:25:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -1113,6 +1139,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-30T05:05:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -1129,6 +1156,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-30T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -1145,6 +1173,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-30T12:05:00+00:00",
     "basal_units": 0,
     "carbs": 10,
@@ -1161,6 +1190,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-30T16:20:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -1177,6 +1207,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-31T04:50:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -1193,6 +1224,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-31T10:25:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -1315,6 +1347,7 @@
     "carbs": 100,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-08-31T04:50:00+00:00",
       "basal_units": 0,
       "carbs": 100,
@@ -1335,6 +1368,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -1442,6 +1476,7 @@
     "carbs": 35,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-08-31T10:25:00+00:00",
       "basal_units": 0,
       "carbs": 35,
@@ -1462,6 +1497,7 @@
     "meal": "lunch",
     "notes": "Pizza",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
     },
@@ -1569,6 +1605,7 @@
     "carbs": 110,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-08-31T17:10:00+00:00",
       "basal_units": 0,
       "carbs": 110,
@@ -1589,6 +1626,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -1644,6 +1682,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-08-31T04:50:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -1661,6 +1700,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-31T10:25:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -1678,6 +1718,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-31T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -1697,6 +1738,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-08-30T12:05:00+00:00",
     "basal_units": 0,
     "carbs": 10,
@@ -1713,6 +1755,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-30T16:20:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -1729,6 +1772,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-31T04:50:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -1745,6 +1789,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-31T10:25:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -1761,6 +1806,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-08-31T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -1777,6 +1823,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-01T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -1793,6 +1840,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-01T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -1915,6 +1963,7 @@
     "carbs": 50,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-01T05:50:00+00:00",
       "basal_units": 0,
       "carbs": 50,
@@ -1935,6 +1984,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -2042,6 +2092,7 @@
     "carbs": 100,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-01T09:40:00+00:00",
       "basal_units": 0,
       "carbs": 100,
@@ -2062,6 +2113,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -2178,6 +2230,7 @@
     "carbs": 85,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-01T17:15:00+00:00",
       "basal_units": 0,
       "carbs": 85,
@@ -2193,6 +2246,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-01T19:35:00+00:00",
       "basal_units": 0,
       "carbs": 0,
@@ -2213,6 +2267,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -2259,6 +2314,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-01T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -2276,6 +2332,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-01T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -2293,6 +2350,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-01T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -2310,6 +2368,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-01T19:35:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -2329,6 +2388,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-08-31T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -2345,6 +2405,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-01T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -2361,6 +2422,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-01T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -2377,6 +2439,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-01T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -2393,6 +2456,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-01T19:35:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -2409,6 +2473,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-02T10:35:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -2531,6 +2596,7 @@
     "carbs": 95,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-02T10:35:00+00:00",
       "basal_units": 0,
       "carbs": 95,
@@ -2551,6 +2617,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -2658,6 +2725,7 @@
     "carbs": 80,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-02T16:30:00+00:00",
       "basal_units": 0,
       "carbs": 80,
@@ -2678,6 +2746,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -2733,6 +2802,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-02T10:35:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -2750,6 +2820,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-02T16:30:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -2769,6 +2840,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-01T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -2785,6 +2857,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-01T19:35:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -2801,6 +2874,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-02T10:35:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -2817,6 +2891,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-02T16:30:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -2833,6 +2908,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -2849,6 +2925,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T06:20:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -2865,6 +2942,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T10:15:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -2995,6 +3073,7 @@
     "carbs": 70,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-03T05:20:00+00:00",
       "basal_units": 0,
       "carbs": 70,
@@ -3010,6 +3089,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-03T06:20:00+00:00",
       "basal_units": 0,
       "carbs": 15,
@@ -3030,6 +3110,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -3154,6 +3235,7 @@
     "carbs": 75,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-03T10:15:00+00:00",
       "basal_units": 0,
       "carbs": 75,
@@ -3169,6 +3251,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-03T11:50:00+00:00",
       "basal_units": 0,
       "carbs": 15,
@@ -3189,6 +3272,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -3296,6 +3380,7 @@
     "carbs": 80,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-03T17:30:00+00:00",
       "basal_units": 0,
       "carbs": 80,
@@ -3316,6 +3401,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -3371,6 +3457,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-03T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -3388,6 +3475,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T06:20:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -3405,6 +3493,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T10:15:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -3422,6 +3511,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T11:50:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -3439,6 +3529,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T17:30:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -3458,6 +3549,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-02T16:30:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -3474,6 +3566,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -3490,6 +3583,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T06:20:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -3506,6 +3600,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T10:15:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -3522,6 +3617,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T11:50:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -3538,6 +3634,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-03T17:30:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -3554,6 +3651,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-04T06:10:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -3570,6 +3668,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-04T09:35:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -3700,6 +3799,7 @@
     "carbs": 110,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-04T06:10:00+00:00",
       "basal_units": 0,
       "carbs": 110,
@@ -3720,6 +3820,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -3827,6 +3928,7 @@
     "carbs": 35,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-04T09:35:00+00:00",
       "basal_units": 0,
       "carbs": 35,
@@ -3847,6 +3949,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -3954,6 +4057,7 @@
     "carbs": 45,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-04T16:20:00+00:00",
       "basal_units": 0,
       "carbs": 45,
@@ -3974,6 +4078,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -4035,6 +4140,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-04T06:10:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -4052,6 +4158,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-04T09:35:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -4069,6 +4176,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-04T13:50:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -4086,6 +4194,7 @@
     "sport_kind": "gym"
    },
    {
+    "alcohol": false,
     "at": "2026-09-04T16:20:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -4105,6 +4214,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-03T17:30:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -4121,6 +4231,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-04T06:10:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -4137,6 +4248,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-04T09:35:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -4153,6 +4265,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-04T13:50:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -4169,6 +4282,7 @@
     "sport_type": "gym"
    },
    {
+    "alcohol": false,
     "at": "2026-09-04T16:20:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -4185,6 +4299,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-05T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -4201,6 +4316,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-05T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -4330,6 +4446,7 @@
     "carbs": 55,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-05T05:50:00+00:00",
       "basal_units": 0,
       "carbs": 55,
@@ -4350,6 +4467,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -4457,6 +4575,7 @@
     "carbs": 45,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-05T10:30:00+00:00",
       "basal_units": 0,
       "carbs": 45,
@@ -4477,6 +4596,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -4584,6 +4704,7 @@
     "carbs": 110,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-05T17:30:00+00:00",
       "basal_units": 0,
       "carbs": 110,
@@ -4604,6 +4725,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -4659,6 +4781,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-05T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -4676,6 +4799,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-05T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -4693,6 +4817,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-05T17:30:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -4712,6 +4837,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-04T13:50:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -4728,6 +4854,7 @@
     "sport_type": "gym"
    },
    {
+    "alcohol": false,
     "at": "2026-09-04T16:20:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -4744,6 +4871,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-05T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -4760,6 +4888,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-05T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -4776,6 +4905,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-05T17:30:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -4792,6 +4922,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-06T05:05:00+00:00",
     "basal_units": 17,
     "carbs": 0,
@@ -4808,6 +4939,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-06T05:55:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -4824,6 +4956,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-06T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -4954,6 +5087,7 @@
     "carbs": 65,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-06T05:55:00+00:00",
       "basal_units": 0,
       "carbs": 65,
@@ -4974,6 +5108,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -5081,6 +5216,7 @@
     "carbs": 30,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-06T09:45:00+00:00",
       "basal_units": 0,
       "carbs": 30,
@@ -5101,6 +5237,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -5208,6 +5345,7 @@
     "carbs": 95,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-06T17:10:00+00:00",
       "basal_units": 0,
       "carbs": 95,
@@ -5228,6 +5366,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -5283,6 +5422,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-06T05:05:00+00:00",
     "basal_units": "17",
     "carbs": 0,
@@ -5301,6 +5441,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-06T05:55:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -5318,6 +5459,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-06T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -5335,6 +5477,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-06T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -5354,6 +5497,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-05T17:30:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -5370,6 +5514,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-06T05:05:00+00:00",
     "basal_units": 17,
     "carbs": 0,
@@ -5386,6 +5531,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-06T05:55:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -5402,6 +5548,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-06T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -5418,6 +5565,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-06T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -5434,6 +5582,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T05:10:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -5450,6 +5599,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -5505,6 +5655,7 @@
     "carbs": 70,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-07T05:10:00+00:00",
       "basal_units": 0,
       "carbs": 70,
@@ -5525,6 +5676,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -5646,6 +5798,7 @@
     "carbs": 50,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-07T09:45:00+00:00",
       "basal_units": 0,
       "carbs": 50,
@@ -5661,6 +5814,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-07T11:20:00+00:00",
       "basal_units": 0,
       "carbs": 15,
@@ -5681,6 +5835,7 @@
     "meal": "lunch",
     "notes": "Pizza",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
     },
@@ -5797,6 +5952,7 @@
     "carbs": 35,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-07T17:20:00+00:00",
       "basal_units": 0,
       "carbs": 35,
@@ -5812,6 +5968,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-07T19:40:00+00:00",
       "basal_units": 0,
       "carbs": 0,
@@ -5832,6 +5989,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -5887,6 +6045,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-07T05:10:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -5904,6 +6063,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -5921,6 +6081,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T11:20:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -5938,6 +6099,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T17:20:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -5955,6 +6117,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T19:40:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -5974,6 +6137,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-06T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -5990,6 +6154,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T05:10:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -6006,6 +6171,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -6022,6 +6188,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T11:20:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -6038,6 +6205,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T17:20:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -6054,6 +6222,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T19:40:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -6070,6 +6239,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-08T06:10:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -6086,6 +6256,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-08T09:35:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -6207,6 +6378,7 @@
     "carbs": 65,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-08T06:10:00+00:00",
       "basal_units": 0,
       "carbs": 65,
@@ -6227,6 +6399,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -6334,6 +6507,7 @@
     "carbs": 75,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-08T09:35:00+00:00",
       "basal_units": 0,
       "carbs": 75,
@@ -6354,6 +6528,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -6462,6 +6637,7 @@
     "carbs": 80,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-08T16:40:00+00:00",
       "basal_units": 0,
       "carbs": 80,
@@ -6482,6 +6658,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -6537,6 +6714,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-08T06:10:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -6554,6 +6732,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-08T09:35:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -6571,6 +6750,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-08T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -6590,6 +6770,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-07T17:20:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -6606,6 +6787,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-07T19:40:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -6622,6 +6804,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-08T06:10:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -6638,6 +6821,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-08T09:35:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -6654,6 +6838,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-08T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -6670,6 +6855,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-09T06:05:00+00:00",
     "basal_units": 0,
     "carbs": 60,
@@ -6686,6 +6872,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-09T10:50:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -6807,6 +6994,7 @@
     "carbs": 60,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-09T06:05:00+00:00",
       "basal_units": 0,
       "carbs": 60,
@@ -6827,6 +7015,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -6934,6 +7123,7 @@
     "carbs": 55,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-09T10:50:00+00:00",
       "basal_units": 0,
       "carbs": 55,
@@ -6954,6 +7144,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -7061,6 +7252,7 @@
     "carbs": 75,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-09T16:45:00+00:00",
       "basal_units": 0,
       "carbs": 75,
@@ -7081,6 +7273,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -7136,6 +7329,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-09T06:05:00+00:00",
     "basal_units": 0,
     "carbs": 60,
@@ -7153,6 +7347,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-09T10:50:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -7170,6 +7365,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-09T16:45:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -7189,6 +7385,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-08T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -7205,6 +7402,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-09T06:05:00+00:00",
     "basal_units": 0,
     "carbs": 60,
@@ -7221,6 +7419,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-09T10:50:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -7237,6 +7436,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-09T16:45:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -7253,6 +7453,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-10T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -7269,6 +7470,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-10T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -7285,6 +7487,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-10T10:15:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -7407,6 +7610,7 @@
     "carbs": 75,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-10T05:20:00+00:00",
       "basal_units": 0,
       "carbs": 75,
@@ -7427,6 +7631,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -7534,6 +7739,7 @@
     "carbs": 65,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-10T17:15:00+00:00",
       "basal_units": 0,
       "carbs": 65,
@@ -7554,6 +7760,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -7619,6 +7826,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-10T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -7636,6 +7844,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-10T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -7653,6 +7862,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-10T10:15:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -7670,6 +7880,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-10T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -7689,6 +7900,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-09T16:45:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -7705,6 +7917,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-10T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -7721,6 +7934,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-10T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -7737,6 +7951,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-10T10:15:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -7753,6 +7968,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-10T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -7769,6 +7985,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-11T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -7908,6 +8125,7 @@
     "carbs": 100,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-11T09:40:00+00:00",
       "basal_units": 0,
       "carbs": 100,
@@ -7923,6 +8141,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-11T11:15:00+00:00",
       "basal_units": 0,
       "carbs": 25,
@@ -7943,6 +8162,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -8050,6 +8270,7 @@
     "carbs": 110,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-11T16:35:00+00:00",
       "basal_units": 0,
       "carbs": 110,
@@ -8070,6 +8291,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -8125,6 +8347,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-11T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -8142,6 +8365,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-11T11:15:00+00:00",
     "basal_units": 0,
     "carbs": 25,
@@ -8159,6 +8383,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-11T16:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -8178,6 +8403,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-10T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -8194,6 +8420,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-11T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -8210,6 +8437,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-11T11:15:00+00:00",
     "basal_units": 0,
     "carbs": 25,
@@ -8226,6 +8454,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-11T16:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -8242,6 +8471,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-12T06:05:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -8258,6 +8488,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-12T10:45:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -8380,6 +8611,7 @@
     "carbs": 95,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-12T06:05:00+00:00",
       "basal_units": 0,
       "carbs": 95,
@@ -8400,6 +8632,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -8507,6 +8740,7 @@
     "carbs": 110,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-12T10:45:00+00:00",
       "basal_units": 0,
       "carbs": 110,
@@ -8527,6 +8761,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -8634,6 +8869,7 @@
     "carbs": 105,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-12T17:25:00+00:00",
       "basal_units": 0,
       "carbs": 105,
@@ -8654,6 +8890,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -8709,6 +8946,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-12T06:05:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -8726,6 +8964,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-12T10:45:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -8743,6 +8982,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-12T17:25:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -8762,6 +9002,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-11T16:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -8778,6 +9019,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-12T06:05:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -8794,6 +9036,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-12T10:45:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -8810,6 +9053,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-12T17:25:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -8826,6 +9070,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -8842,6 +9087,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T10:55:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -8964,6 +9210,7 @@
     "carbs": 35,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-13T05:25:00+00:00",
       "basal_units": 0,
       "carbs": 35,
@@ -8984,6 +9231,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -9091,6 +9339,7 @@
     "carbs": 95,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-13T10:55:00+00:00",
       "basal_units": 0,
       "carbs": 95,
@@ -9111,6 +9360,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -9236,6 +9486,7 @@
     "carbs": 90,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-13T16:55:00+00:00",
       "basal_units": 0,
       "carbs": 90,
@@ -9251,6 +9502,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-13T17:20:00+00:00",
       "basal_units": 0,
       "carbs": 0,
@@ -9266,6 +9518,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-13T19:15:00+00:00",
       "basal_units": 0,
       "carbs": 0,
@@ -9286,6 +9539,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -9341,6 +9595,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-13T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -9358,6 +9613,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T10:55:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -9375,6 +9631,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T16:55:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -9392,6 +9649,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T17:20:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -9409,6 +9667,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T19:15:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -9428,6 +9687,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-12T17:25:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -9444,6 +9704,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -9460,6 +9721,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T10:55:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -9476,6 +9738,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T16:55:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -9492,6 +9755,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T17:20:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -9508,6 +9772,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T19:15:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -9524,6 +9789,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-14T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -9540,6 +9806,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-14T10:25:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -9662,6 +9929,7 @@
     "carbs": 45,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-14T05:25:00+00:00",
       "basal_units": 0,
       "carbs": 45,
@@ -9682,6 +9950,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -9789,6 +10058,7 @@
     "carbs": 90,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-14T10:25:00+00:00",
       "basal_units": 0,
       "carbs": 90,
@@ -9809,6 +10079,7 @@
     "meal": "lunch",
     "notes": "Pizza",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
     },
@@ -9916,6 +10187,7 @@
     "carbs": 110,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-14T16:35:00+00:00",
       "basal_units": 0,
       "carbs": 110,
@@ -9936,6 +10208,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -9991,6 +10264,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-14T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -10008,6 +10282,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-14T10:25:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -10025,6 +10300,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-14T16:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -10044,6 +10320,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-13T16:55:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -10060,6 +10337,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T17:20:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -10076,6 +10354,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-13T19:15:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -10092,6 +10371,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-14T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -10108,6 +10388,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-14T10:25:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -10124,6 +10405,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-14T16:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -10140,6 +10422,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -10156,6 +10439,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -10295,6 +10579,7 @@
     "carbs": 30,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-15T05:50:00+00:00",
       "basal_units": 0,
       "carbs": 30,
@@ -10315,6 +10600,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -10439,6 +10725,7 @@
     "carbs": 45,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-15T10:30:00+00:00",
       "basal_units": 0,
       "carbs": 45,
@@ -10454,6 +10741,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-15T12:05:00+00:00",
       "basal_units": 0,
       "carbs": 25,
@@ -10474,6 +10762,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -10587,6 +10876,7 @@
     "carbs": 75,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-15T16:10:00+00:00",
       "basal_units": 0,
       "carbs": 75,
@@ -10607,6 +10897,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -10668,6 +10959,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-15T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -10685,6 +10977,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -10702,6 +10995,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T12:05:00+00:00",
     "basal_units": 0,
     "carbs": 25,
@@ -10719,6 +11013,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T13:40:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -10736,6 +11031,7 @@
     "sport_kind": "racing"
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T16:10:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -10755,6 +11051,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-14T16:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -10771,6 +11068,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -10787,6 +11085,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -10803,6 +11102,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T12:05:00+00:00",
     "basal_units": 0,
     "carbs": 25,
@@ -10819,6 +11119,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T13:40:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -10835,6 +11136,7 @@
     "sport_type": "racing"
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T16:10:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -10851,6 +11153,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-16T05:05:00+00:00",
     "basal_units": 17,
     "carbs": 0,
@@ -10867,6 +11170,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-16T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -10883,6 +11187,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-16T10:00:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -11013,6 +11318,7 @@
     "carbs": 80,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-16T05:25:00+00:00",
       "basal_units": 0,
       "carbs": 80,
@@ -11033,6 +11339,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -11140,6 +11447,7 @@
     "carbs": 30,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-16T10:00:00+00:00",
       "basal_units": 0,
       "carbs": 30,
@@ -11160,6 +11468,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -11267,6 +11576,7 @@
     "carbs": 70,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-16T17:25:00+00:00",
       "basal_units": 0,
       "carbs": 70,
@@ -11287,6 +11597,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -11342,6 +11653,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-16T05:05:00+00:00",
     "basal_units": "17",
     "carbs": 0,
@@ -11360,6 +11672,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-16T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -11377,6 +11690,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-16T10:00:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -11394,6 +11708,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-16T17:25:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -11413,6 +11728,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-15T12:05:00+00:00",
     "basal_units": 0,
     "carbs": 25,
@@ -11429,6 +11745,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T13:40:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -11445,6 +11762,7 @@
     "sport_type": "racing"
    },
    {
+    "alcohol": false,
     "at": "2026-09-15T16:10:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -11461,6 +11779,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-16T05:05:00+00:00",
     "basal_units": 17,
     "carbs": 0,
@@ -11477,6 +11796,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-16T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -11493,6 +11813,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-16T10:00:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -11509,6 +11830,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-16T17:25:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -11525,6 +11847,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-17T04:55:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -11541,6 +11864,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-17T09:55:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -11663,6 +11987,7 @@
     "carbs": 30,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-17T04:55:00+00:00",
       "basal_units": 0,
       "carbs": 30,
@@ -11683,6 +12008,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -11790,6 +12116,7 @@
     "carbs": 95,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-17T09:55:00+00:00",
       "basal_units": 0,
       "carbs": 95,
@@ -11810,6 +12137,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -11917,6 +12245,7 @@
     "carbs": 90,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-17T17:05:00+00:00",
       "basal_units": 0,
       "carbs": 90,
@@ -11937,6 +12266,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -11992,6 +12322,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-17T04:55:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -12009,6 +12340,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-17T09:55:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -12026,6 +12358,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-17T17:05:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -12045,6 +12378,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-16T17:25:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -12061,6 +12395,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-17T04:55:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -12077,6 +12412,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-17T09:55:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -12093,6 +12429,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-17T17:05:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -12109,6 +12446,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-18T05:00:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -12125,6 +12463,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-18T10:35:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -12247,6 +12586,7 @@
     "carbs": 30,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-18T05:00:00+00:00",
       "basal_units": 0,
       "carbs": 30,
@@ -12267,6 +12607,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -12374,6 +12715,7 @@
     "carbs": 35,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-18T10:35:00+00:00",
       "basal_units": 0,
       "carbs": 35,
@@ -12394,6 +12736,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -12501,6 +12844,7 @@
     "carbs": 95,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-18T17:10:00+00:00",
       "basal_units": 0,
       "carbs": 95,
@@ -12521,6 +12865,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -12576,6 +12921,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-18T05:00:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -12593,6 +12939,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-18T10:35:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -12610,6 +12957,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-18T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -12629,6 +12977,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-17T17:05:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -12645,6 +12994,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-18T05:00:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -12661,6 +13011,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-18T10:35:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -12677,6 +13028,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-18T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -12693,6 +13045,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T05:15:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -12709,6 +13062,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T06:15:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -12725,6 +13079,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -12854,6 +13209,7 @@
     "carbs": 110,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-19T05:15:00+00:00",
       "basal_units": 0,
       "carbs": 110,
@@ -12869,6 +13225,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-19T06:15:00+00:00",
       "basal_units": 0,
       "carbs": 15,
@@ -12889,6 +13246,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -13013,6 +13371,7 @@
     "carbs": 65,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-19T09:45:00+00:00",
       "basal_units": 0,
       "carbs": 65,
@@ -13028,6 +13387,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-19T11:20:00+00:00",
       "basal_units": 0,
       "carbs": 25,
@@ -13048,6 +13408,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -13164,6 +13525,7 @@
     "carbs": 40,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-19T16:40:00+00:00",
       "basal_units": 0,
       "carbs": 40,
@@ -13179,6 +13541,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-19T19:00:00+00:00",
       "basal_units": 0,
       "carbs": 0,
@@ -13199,6 +13562,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -13245,6 +13609,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-19T05:15:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -13262,6 +13627,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T06:15:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -13279,6 +13645,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -13296,6 +13663,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T11:20:00+00:00",
     "basal_units": 0,
     "carbs": 25,
@@ -13313,6 +13681,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -13330,6 +13699,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T19:00:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -13349,6 +13719,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-18T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -13365,6 +13736,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T05:15:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -13381,6 +13753,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T06:15:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -13397,6 +13770,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -13413,6 +13787,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T11:20:00+00:00",
     "basal_units": 0,
     "carbs": 25,
@@ -13429,6 +13804,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -13445,6 +13821,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T19:00:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -13461,6 +13838,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-20T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -13608,6 +13986,7 @@
     "carbs": 70,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-20T10:05:00+00:00",
       "basal_units": 0,
       "carbs": 70,
@@ -13628,6 +14007,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -13735,6 +14115,7 @@
     "carbs": 40,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-20T11:15:00+00:00",
       "basal_units": 0,
       "carbs": 40,
@@ -13755,6 +14136,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -13862,6 +14244,7 @@
     "carbs": 35,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-20T16:50:00+00:00",
       "basal_units": 0,
       "carbs": 35,
@@ -13882,6 +14265,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -13937,6 +14321,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-20T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -13954,6 +14339,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-20T11:15:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -13971,6 +14357,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-20T16:50:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -13990,6 +14377,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-19T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -14006,6 +14394,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-19T19:00:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -14022,6 +14411,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-20T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -14038,6 +14428,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-20T11:15:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -14054,6 +14445,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-20T16:50:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -14070,6 +14462,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-21T06:05:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -14086,6 +14479,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-21T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -14207,6 +14601,7 @@
     "carbs": 65,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-21T06:05:00+00:00",
       "basal_units": 0,
       "carbs": 65,
@@ -14227,6 +14622,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -14334,6 +14730,7 @@
     "carbs": 80,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-21T09:40:00+00:00",
       "basal_units": 0,
       "carbs": 80,
@@ -14354,6 +14751,7 @@
     "meal": "lunch",
     "notes": "Pizza",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
     },
@@ -14461,6 +14859,7 @@
     "carbs": 90,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-21T16:25:00+00:00",
       "basal_units": 0,
       "carbs": 90,
@@ -14481,6 +14880,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -14536,6 +14936,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-21T06:05:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -14553,6 +14954,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-21T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -14570,6 +14972,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-21T16:25:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -14589,6 +14992,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-20T16:50:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -14605,6 +15009,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-21T06:05:00+00:00",
     "basal_units": 0,
     "carbs": 65,
@@ -14621,6 +15026,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-21T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -14637,6 +15043,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-21T16:25:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -14653,6 +15060,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-22T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -14669,6 +15077,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-22T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -14790,6 +15199,7 @@
     "carbs": 40,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-22T05:20:00+00:00",
       "basal_units": 0,
       "carbs": 40,
@@ -14810,6 +15220,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -14917,6 +15328,7 @@
     "carbs": 90,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-22T09:40:00+00:00",
       "basal_units": 0,
       "carbs": 90,
@@ -14937,6 +15349,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -15044,6 +15457,7 @@
     "carbs": 40,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-22T16:55:00+00:00",
       "basal_units": 0,
       "carbs": 40,
@@ -15064,6 +15478,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -15119,6 +15534,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-22T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -15136,6 +15552,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-22T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -15153,6 +15570,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-22T16:55:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -15172,6 +15590,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-21T16:25:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -15188,6 +15607,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-22T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -15204,6 +15624,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-22T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -15220,6 +15641,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-22T16:55:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -15236,6 +15658,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-23T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -15252,6 +15675,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-23T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -15373,6 +15797,7 @@
     "carbs": 35,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-23T05:25:00+00:00",
       "basal_units": 0,
       "carbs": 35,
@@ -15393,6 +15818,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -15517,6 +15943,7 @@
     "carbs": 45,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-23T09:40:00+00:00",
       "basal_units": 0,
       "carbs": 45,
@@ -15532,6 +15959,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-23T11:15:00+00:00",
       "basal_units": 0,
       "carbs": 10,
@@ -15552,6 +15980,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -15659,6 +16088,7 @@
     "carbs": 30,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-23T16:40:00+00:00",
       "basal_units": 0,
       "carbs": 30,
@@ -15679,6 +16109,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -15734,6 +16165,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-23T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -15751,6 +16183,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-23T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -15768,6 +16201,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-23T11:15:00+00:00",
     "basal_units": 0,
     "carbs": 10,
@@ -15785,6 +16219,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-23T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -15804,6 +16239,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-22T16:55:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -15820,6 +16256,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-23T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -15836,6 +16273,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-23T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 45,
@@ -15852,6 +16290,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-23T11:15:00+00:00",
     "basal_units": 0,
     "carbs": 10,
@@ -15868,6 +16307,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-23T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -15884,6 +16324,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-24T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -15900,6 +16341,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-24T10:40:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -16022,6 +16464,7 @@
     "carbs": 105,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-24T05:25:00+00:00",
       "basal_units": 0,
       "carbs": 105,
@@ -16042,6 +16485,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -16082,6 +16526,7 @@
     "carbs": 90,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-24T10:40:00+00:00",
       "basal_units": 0,
       "carbs": 90,
@@ -16102,6 +16547,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -16206,6 +16652,7 @@
     "carbs": 110,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-24T17:05:00+00:00",
       "basal_units": 0,
       "carbs": 110,
@@ -16226,6 +16673,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -16281,6 +16729,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-24T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -16298,6 +16747,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-24T10:40:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -16315,6 +16765,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-24T17:05:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -16334,6 +16785,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-23T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 30,
@@ -16350,6 +16802,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-24T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -16366,6 +16819,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-24T10:40:00+00:00",
     "basal_units": 0,
     "carbs": 90,
@@ -16382,6 +16836,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-24T17:05:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -16398,6 +16853,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-25T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -16414,6 +16870,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-25T09:55:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -16544,6 +17001,7 @@
     "carbs": 40,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-25T05:25:00+00:00",
       "basal_units": 0,
       "carbs": 40,
@@ -16564,6 +17022,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -16671,6 +17130,7 @@
     "carbs": 85,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-25T09:55:00+00:00",
       "basal_units": 0,
       "carbs": 85,
@@ -16691,6 +17151,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -16807,6 +17268,7 @@
     "carbs": 85,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-25T16:40:00+00:00",
       "basal_units": 0,
       "carbs": 85,
@@ -16822,6 +17284,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-25T19:00:00+00:00",
       "basal_units": 0,
       "carbs": 0,
@@ -16842,6 +17305,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -16897,6 +17361,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-25T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -16914,6 +17379,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-25T09:55:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -16931,6 +17397,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-25T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -16948,6 +17415,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-25T19:00:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -16967,6 +17435,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-24T17:05:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -16983,6 +17452,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-25T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -16999,6 +17469,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-25T09:55:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -17015,6 +17486,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-25T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -17031,6 +17503,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-25T19:00:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -17047,6 +17520,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T05:05:00+00:00",
     "basal_units": 17,
     "carbs": 0,
@@ -17063,6 +17537,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T05:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -17079,6 +17554,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -17218,6 +17694,7 @@
     "carbs": 110,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-26T05:35:00+00:00",
       "basal_units": 0,
       "carbs": 110,
@@ -17238,6 +17715,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -17345,6 +17823,7 @@
     "carbs": 105,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-26T09:45:00+00:00",
       "basal_units": 0,
       "carbs": 105,
@@ -17365,6 +17844,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -17472,6 +17952,7 @@
     "carbs": 110,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-26T16:15:00+00:00",
       "basal_units": 0,
       "carbs": 110,
@@ -17492,6 +17973,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -17553,6 +18035,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-26T05:05:00+00:00",
     "basal_units": "17",
     "carbs": 0,
@@ -17571,6 +18054,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T05:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -17588,6 +18072,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -17605,6 +18090,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T13:45:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -17622,6 +18108,7 @@
     "sport_kind": "gym"
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T16:15:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -17641,6 +18128,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-25T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -17657,6 +18145,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-25T19:00:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -17673,6 +18162,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T05:05:00+00:00",
     "basal_units": 17,
     "carbs": 0,
@@ -17689,6 +18179,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T05:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -17705,6 +18196,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -17721,6 +18213,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T13:45:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -17737,6 +18230,7 @@
     "sport_type": "gym"
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T16:15:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -17753,6 +18247,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -17769,6 +18264,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T06:25:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -17785,6 +18281,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -17914,6 +18411,7 @@
     "carbs": 55,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-27T05:25:00+00:00",
       "basal_units": 0,
       "carbs": 55,
@@ -17929,6 +18427,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-27T06:25:00+00:00",
       "basal_units": 0,
       "carbs": 15,
@@ -17949,6 +18448,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -18073,6 +18573,7 @@
     "carbs": 35,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-27T10:05:00+00:00",
       "basal_units": 0,
       "carbs": 35,
@@ -18088,6 +18589,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-09-27T11:40:00+00:00",
       "basal_units": 0,
       "carbs": 25,
@@ -18108,6 +18610,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -18215,6 +18718,7 @@
     "carbs": 60,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-27T17:05:00+00:00",
       "basal_units": 0,
       "carbs": 60,
@@ -18235,6 +18739,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -18290,6 +18795,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-27T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -18307,6 +18813,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T06:25:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -18324,6 +18831,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -18341,6 +18849,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T11:40:00+00:00",
     "basal_units": 0,
     "carbs": 25,
@@ -18358,6 +18867,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T17:05:00+00:00",
     "basal_units": 0,
     "carbs": 60,
@@ -18377,6 +18887,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-26T13:45:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -18393,6 +18904,7 @@
     "sport_type": "gym"
    },
    {
+    "alcohol": false,
     "at": "2026-09-26T16:15:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -18409,6 +18921,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T05:25:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -18425,6 +18938,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T06:25:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -18441,6 +18955,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -18457,6 +18972,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T11:40:00+00:00",
     "basal_units": 0,
     "carbs": 25,
@@ -18473,6 +18989,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-27T17:05:00+00:00",
     "basal_units": 0,
     "carbs": 60,
@@ -18489,6 +19006,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-28T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -18505,6 +19023,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-28T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -18626,6 +19145,7 @@
     "carbs": 70,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-28T05:20:00+00:00",
       "basal_units": 0,
       "carbs": 70,
@@ -18646,6 +19166,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -18753,6 +19274,7 @@
     "carbs": 75,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-28T10:30:00+00:00",
       "basal_units": 0,
       "carbs": 75,
@@ -18773,6 +19295,7 @@
     "meal": "lunch",
     "notes": "Pizza",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
     },
@@ -18880,6 +19403,7 @@
     "carbs": 70,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-28T16:15:00+00:00",
       "basal_units": 0,
       "carbs": 70,
@@ -18900,6 +19424,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -18956,6 +19481,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-28T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -18973,6 +19499,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-28T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -18990,6 +19517,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-28T13:00:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -19007,6 +19535,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-28T16:15:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -19026,6 +19555,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-27T17:05:00+00:00",
     "basal_units": 0,
     "carbs": 60,
@@ -19042,6 +19572,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-28T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -19058,6 +19589,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-28T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -19074,6 +19606,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-28T13:00:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -19090,6 +19623,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-28T16:15:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -19106,6 +19640,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-29T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -19227,6 +19762,7 @@
     "carbs": 95,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-29T09:45:00+00:00",
       "basal_units": 0,
       "carbs": 95,
@@ -19247,6 +19783,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -19354,6 +19891,7 @@
     "carbs": 50,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-29T16:40:00+00:00",
       "basal_units": 0,
       "carbs": 50,
@@ -19374,6 +19912,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -19429,6 +19968,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-29T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -19446,6 +19986,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-29T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -19465,6 +20006,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-28T13:00:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -19481,6 +20023,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-28T16:15:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -19497,6 +20040,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-29T09:45:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -19513,6 +20057,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-29T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -19529,6 +20074,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-30T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -19545,6 +20091,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-30T10:00:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -19666,6 +20213,7 @@
     "carbs": 80,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-30T05:50:00+00:00",
       "basal_units": 0,
       "carbs": 80,
@@ -19686,6 +20234,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -19793,6 +20342,7 @@
     "carbs": 35,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-30T10:00:00+00:00",
       "basal_units": 0,
       "carbs": 35,
@@ -19813,6 +20363,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -19920,6 +20471,7 @@
     "carbs": 70,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-09-30T16:20:00+00:00",
       "basal_units": 0,
       "carbs": 70,
@@ -19940,6 +20492,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -19995,6 +20548,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-09-30T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -20012,6 +20566,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-30T10:00:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -20029,6 +20584,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-30T16:20:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -20048,6 +20604,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-29T16:40:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -20064,6 +20621,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-30T05:50:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -20080,6 +20638,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-30T10:00:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -20096,6 +20655,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-09-30T16:20:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -20112,6 +20672,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -20128,6 +20689,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T10:40:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -20249,6 +20811,7 @@
     "carbs": 100,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-01T05:20:00+00:00",
       "basal_units": 0,
       "carbs": 100,
@@ -20269,6 +20832,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -20393,6 +20957,7 @@
     "carbs": 95,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-01T10:40:00+00:00",
       "basal_units": 0,
       "carbs": 95,
@@ -20408,6 +20973,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-10-01T12:15:00+00:00",
       "basal_units": 0,
       "carbs": 20,
@@ -20428,6 +20994,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -20544,6 +21111,7 @@
     "carbs": 50,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-01T16:25:00+00:00",
       "basal_units": 0,
       "carbs": 50,
@@ -20559,6 +21127,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-10-01T18:45:00+00:00",
       "basal_units": 0,
       "carbs": 0,
@@ -20579,6 +21148,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -20634,6 +21204,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-10-01T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -20651,6 +21222,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T10:40:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -20668,6 +21240,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T12:15:00+00:00",
     "basal_units": 0,
     "carbs": 20,
@@ -20685,6 +21258,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T16:25:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -20702,6 +21276,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T18:45:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -20721,6 +21296,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-09-30T16:20:00+00:00",
     "basal_units": 0,
     "carbs": 70,
@@ -20737,6 +21313,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -20753,6 +21330,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T10:40:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -20769,6 +21347,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T12:15:00+00:00",
     "basal_units": 0,
     "carbs": 20,
@@ -20785,6 +21364,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T16:25:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -20801,6 +21381,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T18:45:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -20817,6 +21398,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-02T05:55:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -20833,6 +21415,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-02T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -20955,6 +21538,7 @@
     "carbs": 35,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-02T05:55:00+00:00",
       "basal_units": 0,
       "carbs": 35,
@@ -20975,6 +21559,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -21082,6 +21667,7 @@
     "carbs": 100,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-02T10:30:00+00:00",
       "basal_units": 0,
       "carbs": 100,
@@ -21102,6 +21688,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -21209,6 +21796,7 @@
     "carbs": 100,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-02T17:15:00+00:00",
       "basal_units": 0,
       "carbs": 100,
@@ -21229,6 +21817,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -21284,6 +21873,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-10-02T05:55:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -21301,6 +21891,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-02T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -21318,6 +21909,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-02T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -21337,6 +21929,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-10-01T12:15:00+00:00",
     "basal_units": 0,
     "carbs": 20,
@@ -21353,6 +21946,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T16:25:00+00:00",
     "basal_units": 0,
     "carbs": 50,
@@ -21369,6 +21963,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-01T18:45:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -21385,6 +21980,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-02T05:55:00+00:00",
     "basal_units": 0,
     "carbs": 35,
@@ -21401,6 +21997,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-02T10:30:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -21417,6 +22014,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-02T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -21433,6 +22031,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-03T06:00:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -21449,6 +22048,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-03T10:55:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -21571,6 +22171,7 @@
     "carbs": 105,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-03T06:00:00+00:00",
       "basal_units": 0,
       "carbs": 105,
@@ -21591,6 +22192,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -21698,6 +22300,7 @@
     "carbs": 55,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-03T10:55:00+00:00",
       "basal_units": 0,
       "carbs": 55,
@@ -21718,6 +22321,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -21825,6 +22429,7 @@
     "carbs": 110,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-03T16:35:00+00:00",
       "basal_units": 0,
       "carbs": 110,
@@ -21845,6 +22450,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -21900,6 +22506,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-10-03T06:00:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -21917,6 +22524,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-03T10:55:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -21934,6 +22542,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-03T16:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -21953,6 +22562,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-10-02T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -21969,6 +22579,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-03T06:00:00+00:00",
     "basal_units": 0,
     "carbs": 105,
@@ -21985,6 +22596,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-03T10:55:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -22001,6 +22613,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-03T16:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -22017,6 +22630,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-04T05:45:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -22033,6 +22647,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-04T09:50:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -22155,6 +22770,7 @@
     "carbs": 80,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-04T05:45:00+00:00",
       "basal_units": 0,
       "carbs": 80,
@@ -22175,6 +22791,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -22282,6 +22899,7 @@
     "carbs": 95,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-04T09:50:00+00:00",
       "basal_units": 0,
       "carbs": 95,
@@ -22302,6 +22920,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -22409,6 +23028,7 @@
     "carbs": 75,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-04T17:10:00+00:00",
       "basal_units": 0,
       "carbs": 75,
@@ -22429,6 +23049,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "weighed",
      "fat_protein": false
     },
@@ -22484,6 +23105,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-10-04T05:45:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -22501,6 +23123,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-04T09:50:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -22518,6 +23141,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-04T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -22537,6 +23161,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-10-03T16:35:00+00:00",
     "basal_units": 0,
     "carbs": 110,
@@ -22553,6 +23178,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-04T05:45:00+00:00",
     "basal_units": 0,
     "carbs": 80,
@@ -22569,6 +23195,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-04T09:50:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -22585,6 +23212,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-04T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -22601,6 +23229,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T05:55:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -22617,6 +23246,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T06:55:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -22633,6 +23263,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T10:40:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -22771,6 +23402,7 @@
     "carbs": 85,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-05T05:55:00+00:00",
       "basal_units": 0,
       "carbs": 85,
@@ -22786,6 +23418,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-10-05T06:55:00+00:00",
       "basal_units": 0,
       "carbs": 15,
@@ -22806,6 +23439,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -22930,6 +23564,7 @@
     "carbs": 100,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-05T10:40:00+00:00",
       "basal_units": 0,
       "carbs": 100,
@@ -22945,6 +23580,7 @@
       "sport_type": null
      },
      {
+      "alcohol": false,
       "at": "2026-10-05T12:15:00+00:00",
       "basal_units": 0,
       "carbs": 10,
@@ -22965,6 +23601,7 @@
     "meal": "lunch",
     "notes": "Pizza",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "unsure",
      "fat_protein": true
     },
@@ -23072,6 +23709,7 @@
     "carbs": 95,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-05T17:15:00+00:00",
       "basal_units": 0,
       "carbs": 95,
@@ -23092,6 +23730,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -23147,6 +23786,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-10-05T05:55:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -23164,6 +23804,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T06:55:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -23181,6 +23822,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T10:40:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -23198,6 +23840,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T12:15:00+00:00",
     "basal_units": 0,
     "carbs": 10,
@@ -23215,6 +23858,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -23234,6 +23878,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-10-04T17:10:00+00:00",
     "basal_units": 0,
     "carbs": 75,
@@ -23250,6 +23895,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T05:55:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -23266,6 +23912,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T06:55:00+00:00",
     "basal_units": 0,
     "carbs": 15,
@@ -23282,6 +23929,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T10:40:00+00:00",
     "basal_units": 0,
     "carbs": 100,
@@ -23298,6 +23946,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T12:15:00+00:00",
     "basal_units": 0,
     "carbs": 10,
@@ -23314,6 +23963,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -23330,6 +23980,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-06T05:05:00+00:00",
     "basal_units": 17,
     "carbs": 0,
@@ -23346,6 +23997,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-06T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -23362,6 +24014,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-06T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -23499,6 +24152,7 @@
     "carbs": 85,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-06T05:20:00+00:00",
       "basal_units": 0,
       "carbs": 85,
@@ -23519,6 +24173,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -23626,6 +24281,7 @@
     "carbs": 55,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-06T09:40:00+00:00",
       "basal_units": 0,
       "carbs": 55,
@@ -23646,6 +24302,7 @@
     "meal": "lunch",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -23753,6 +24410,7 @@
     "carbs": 60,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-06T16:50:00+00:00",
       "basal_units": 0,
       "carbs": 60,
@@ -23773,6 +24431,7 @@
     "meal": "dinner",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -23828,6 +24487,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-10-06T05:05:00+00:00",
     "basal_units": "17",
     "carbs": 0,
@@ -23846,6 +24506,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-06T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -23863,6 +24524,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-06T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -23880,6 +24542,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-06T16:50:00+00:00",
     "basal_units": 0,
     "carbs": 60,
@@ -23899,6 +24562,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-10-05T12:15:00+00:00",
     "basal_units": 0,
     "carbs": 10,
@@ -23915,6 +24579,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-05T17:15:00+00:00",
     "basal_units": 0,
     "carbs": 95,
@@ -23931,6 +24596,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-06T05:05:00+00:00",
     "basal_units": 17,
     "carbs": 0,
@@ -23947,6 +24613,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-06T05:20:00+00:00",
     "basal_units": 0,
     "carbs": 85,
@@ -23963,6 +24630,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-06T09:40:00+00:00",
     "basal_units": 0,
     "carbs": 55,
@@ -23979,6 +24647,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-06T16:50:00+00:00",
     "basal_units": 0,
     "carbs": 60,
@@ -23995,6 +24664,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T05:10:00+00:00",
     "basal_units": 17.0,
     "carbs": 0,
@@ -24011,6 +24681,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T06:10:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -24027,6 +24698,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T07:40:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -24043,6 +24715,7 @@
     "sport_type": "jogging"
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 70.0,
@@ -24059,6 +24732,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T10:35:00+00:00",
     "basal_units": 0,
     "carbs": 15.0,
@@ -24197,6 +24871,7 @@
     "carbs": 40,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-07T06:10:00+00:00",
       "basal_units": 0,
       "carbs": 40,
@@ -24217,6 +24892,7 @@
     "meal": "breakfast",
     "notes": "",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": null,
      "fat_protein": false
     },
@@ -24263,6 +24939,7 @@
     "carbs": 70.0,
     "events": [
      {
+      "alcohol": false,
       "at": "2026-10-07T10:05:00+00:00",
       "basal_units": 0,
       "carbs": 70.0,
@@ -24283,6 +24960,7 @@
     "meal": "lunch",
     "notes": "Mittag",
     "quality": {
+     "alcohol": false,
      "carbs_certainty": "known",
      "fat_protein": true
     },
@@ -24342,6 +25020,7 @@
   ],
   "timeline": [
    {
+    "alcohol": false,
     "at": "2026-10-07T05:10:00+00:00",
     "basal_units": "17",
     "carbs": 0,
@@ -24360,6 +25039,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T06:10:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -24377,6 +25057,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T07:40:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -24394,6 +25075,7 @@
     "sport_kind": "jogging"
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 70.0,
@@ -24411,6 +25093,7 @@
     "sport_kind": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T10:35:00+00:00",
     "basal_units": 0,
     "carbs": 15.0,
@@ -24430,6 +25113,7 @@
   ],
   "treatments": [
    {
+    "alcohol": false,
     "at": "2026-10-06T16:50:00+00:00",
     "basal_units": 0,
     "carbs": 60,
@@ -24446,6 +25130,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T05:10:00+00:00",
     "basal_units": 17.0,
     "carbs": 0,
@@ -24462,6 +25147,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T06:10:00+00:00",
     "basal_units": 0,
     "carbs": 40,
@@ -24478,6 +25164,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T07:40:00+00:00",
     "basal_units": 0,
     "carbs": 0,
@@ -24494,6 +25181,7 @@
     "sport_type": "jogging"
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T10:05:00+00:00",
     "basal_units": 0,
     "carbs": 70.0,
@@ -24510,6 +25198,7 @@
     "sport_type": null
    },
    {
+    "alcohol": false,
     "at": "2026-10-07T10:35:00+00:00",
     "basal_units": 0,
     "carbs": 15.0,

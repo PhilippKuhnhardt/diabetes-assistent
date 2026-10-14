@@ -6,6 +6,16 @@ const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", anal
 const views = new Set(["diary", "analysis", "settings"]);
 const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 const CERTAINTY_LABELS = { weighed: "Gewogen", known: "Halbwegs sicher", unsure: "KH unsicher" };
+// Meal factors picked on a carb entry; shown as icons wherever the meal or entry appears.
+const MEAL_FACTORS = { alcohol: "Alkohol", fat_protein: "Fettreich" };
+
+function factorIconsHTML(marks) {
+  const on = Object.keys(MEAL_FACTORS).filter(key => marks?.[key]);
+  if (!on.length) return "";
+  const label = on.map(key => MEAL_FACTORS[key]).join(", ");
+  return '<span class="factor-icons" title="' + escapeHTML(label) + '" role="img" aria-label="' + escapeHTML(label) + '">' +
+    on.map(key => '<span class="factor-icon factor-' + key + '"></span>').join("") + '</span>';
+}
 const num = (value, digits = 2) => Number(value).toLocaleString("de-DE", { maximumFractionDigits: digits, minimumFractionDigits: 0 });
 const factorNum = value => Number(value).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 const signedChange = (value, digits = 1) => value == null ? "—" : (Number(value) > 0 ? "+" : "") + num(value, digits) + " mg/dL";
@@ -1067,7 +1077,7 @@ function recentEntriesHTML(treatments) {
         : item.basal ? ["Basal " + num(item.basal, 1) + " IE"]
         : item.finger_mgdl ? ["BZ blutig " + num(item.finger_mgdl, 0) + " mg/dL"]
         : [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 2) + " IE" : ""].filter(Boolean);
-      return parts.length ? '<span class="recent-chip"><time>' + escapeHTML(timeOnly(item.at)) + '</time> ' + escapeHTML(parts.join(" + ")) + '</span>' : "";
+      return parts.length ? '<span class="recent-chip"><time>' + escapeHTML(timeOnly(item.at)) + '</time> ' + escapeHTML(parts.join(" + ")) + factorIconsHTML(item) + '</span>' : "";
     }).filter(Boolean);
   return items.length ? '<span class="recent-label">Letzte 3 h</span>' + items.join("")
     : '<span class="recent-label">Letzte 3 h: keine Einträge</span>';
@@ -1464,7 +1474,7 @@ function entryRowHTML(item, data) {
     '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '" aria-label="' +
     escapeHTML(label + " um " + timeOnly(item.at) + " bearbeiten") + '">Bearbeiten</button>';
   return '<article class="timeline-item"><time>' + escapeHTML(timeOnly(item.at)) +
-    '</time><div><strong>' + escapeHTML(label) + '</strong><p>' + escapeHTML(details || item.eventType) +
+    '</time><div><strong>' + escapeHTML(label) + factorIconsHTML(item) + '</strong><p>' + escapeHTML(details || item.eventType) +
     '</p>' + (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') +
     '</div><div class="timeline-actions">' + action + '</div></article>';
 }
@@ -1493,10 +1503,10 @@ function mealBlockHTML(block, data) {
     ? '<span class="day-meal-status">' + escapeHTML(calc.reason || "Noch keine Berechnung") + '</span>'
     : '<span class="day-meal-factor">' + escapeHTML(factorNum(calc.factor_units_per_ke)) + ' <small>IE/KE</small></span>';
   return '<article class="day-meal' + (check ? ' needs-check' : '') + '" id="meal-' + escapeHTML(meal.id) + '">' +
-    '<div class="day-meal-head"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' +
+    '<div class="day-meal-head"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' + factorIconsHTML(meal.quality) +
     '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") +
     '</span>' + (meal.quality?.carbs_certainty ? '<span class="outlier-badge certainty-' + meal.quality.carbs_certainty + '">' + CERTAINTY_LABELS[meal.quality.carbs_certainty] + '</span>' : '') +
-    (meal.quality?.fat_protein ? '<span class="outlier-badge">Fett-/eiweißreich</span>' : '') + '</div>' + status + '</div>' +
+    '</div>' + status + '</div>' +
     items.map(item => entryRowHTML(item, data)).join("") +
     // Sport is adjusted right on the meal, without opening the curve details.
     sportReviewHTML(meal.sport || {}, meal.id, state.day, false, true) +
@@ -1560,6 +1570,7 @@ function previewRequest() {
     // Saving re-checks the shown options with these, so the preview must send the same marks.
     carbs_certainty: Number(form.elements.carbs.value) > 0 ? certaintyValue(form) : null,
     fat_protein: Number(form.elements.carbs.value) > 0 && form.elements.fat_protein.checked,
+    alcohol: Number(form.elements.carbs.value) > 0 && form.elements.alcohol.checked,
   };
 }
 
@@ -1743,6 +1754,7 @@ function editEntry(id) {
   form.elements.notes.value = item.notes || "";
   setCertainty(form, item.carbs_certainty);
   form.elements.fat_protein.checked = Boolean(item.fat_protein);
+  form.elements.alcohol.checked = Boolean(item.alcohol);
   const sport = item.kind === "exercise";
   $("#edit-quality").hidden = sport || !(Number(item.carbs) > 0);
   $("#edit-meal-fields").hidden = sport;
@@ -1789,6 +1801,7 @@ async function saveEditedEntry(event) {
     notes: form.elements.notes.value,
     carbs_certainty: carbs > 0 ? certaintyValue(form) : null,
     fat_protein: carbs > 0 && form.elements.fat_protein.checked,
+    alcohol: carbs > 0 && form.elements.alcohol.checked,
   };
   const button = $('button[type="submit"]', form);
   button.disabled = true;
@@ -1906,6 +1919,7 @@ async function saveEntry(event) {
     notes: form.elements.notes.value,
     carbs_certainty: carbs > 0 ? certaintyValue(form) : null,
     fat_protein: carbs > 0 && form.elements.fat_protein.checked,
+    alcohol: carbs > 0 && form.elements.alcohol.checked,
     event_id: state.pendingEventId || crypto.randomUUID(),
     basal_event_id: basalUnits > 0 ? state.pendingBasalId || crypto.randomUUID() : null,
     dose_check: chosen != null && Number(chosen) === insulin ? doseHelp.check : null,
