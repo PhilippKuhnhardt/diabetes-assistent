@@ -535,6 +535,20 @@ function requestEntryPosition() {
   });
 }
 
+// Saving refreshes a position older than the cache, so a dose decided over several minutes still
+// stores where the entry was typed; a fix that does not come quickly keeps the cached one.
+async function freshEntryPosition() {
+  const form = $("#entry-form");
+  if (form.elements.kind.value !== "meal" || !(Number(form.elements.carbs.value) > 0) || state.entryTimeTouched
+      || state.day !== todayDay()) return;
+  if (state.entryPosition && Date.now() - state.entryPositionAt < POSITION_MAX_AGE_MS) return;
+  try {
+    state.entryPosition = await Promise.race([currentPosition(),
+      new Promise((_, reject) => setTimeout(() => reject({ code: 3 }), 5000))]);
+    state.entryPositionAt = Date.now();
+  } catch (_) { /* The cached position, if any, rides along. */ }
+}
+
 function entryPlaceId() {
   if (!(Number($("#entry-form").elements.carbs.value) > 0) || state.entryPlace === "none") return null;
   return state.entryPlace ?? currentPreview()?.place?.place_id ?? null;
@@ -2137,6 +2151,9 @@ async function saveEntry(event) {
   const basalUnits = entryBasalUnits();
   const considerSport = mode === "meal" && form.elements.consider_sport.checked && !$("#entry-sport-option").hidden;
   const chosen = mode === "meal" && state.doseChoice && doseHelp ? doseUnits(doseHelp, state.doseChoice) : null;
+  const submit = $('button[type="submit"]', form);
+  submit.disabled = true;
+  try { await freshEntryPosition(); } finally { submit.disabled = false; }
   const payload = {
     ...previewRequest(), at,
     carbs: form.elements.carbs.value, insulin: form.elements.insulin.value,

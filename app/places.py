@@ -16,10 +16,9 @@ EARTH_RADIUS_M = 6_371_000
 SPOT_RADIUS_M = 150
 # Coarser fixes (indoor Wi-Fi off, cell only) say too little about which canteen it was.
 MAX_ACCURACY_M = 250
-# A position belongs to an entry only when the entry is timed close to now; a backdated entry
-# was eaten somewhere else than where it is typed.
+# A position belongs to an entry only when the entry is timed close to now and the fix was taken
+# close to the entry time; a backdated entry was eaten somewhere else than where it is typed.
 MAX_ENTRY_OFFSET = timedelta(minutes=30)
-MAX_POSITION_AGE = timedelta(minutes=5)
 # Unknown positions closer than this to a group's centre join that group.
 CLUSTER_RADIUS_M = 150
 NAME_MAX = 40
@@ -67,7 +66,7 @@ def usable(position: dict | None, at: datetime | None, now: datetime) -> str:
     if position is None or at is None:
         return "none"
     captured = position.get("captured_at")
-    if abs(at - now) > MAX_ENTRY_OFFSET or (captured and abs(now - captured) > MAX_POSITION_AGE):
+    if abs(at - now) > MAX_ENTRY_OFFSET or (captured and abs(at - captured) > MAX_ENTRY_OFFSET):
         return "offset"
     if position["accuracy_m"] > MAX_ACCURACY_M:
         return "inaccurate"
