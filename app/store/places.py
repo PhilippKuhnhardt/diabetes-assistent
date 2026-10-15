@@ -44,7 +44,8 @@ def _check_place(db: sqlite3.Connection, place_id: int) -> None:
 
 def _join_unassigned(db: sqlite3.Connection, spot: dict) -> None:
     """Positions without a place near a spot join its place."""
-    rows = db.execute("SELECT event_id,lat,lon FROM entry_locations WHERE place_id IS NULL AND lat IS NOT NULL")
+    rows = db.execute("SELECT event_id,lat,lon FROM entry_locations WHERE place_id IS NULL AND lat IS NOT NULL "
+                      "AND accuracy_m <= ?", (place_rules.MAX_ACCURACY_M,))
     joined = [row["event_id"] for row in rows.fetchall()
               if place_rules.match({"lat": row["lat"], "lon": row["lon"]}, [spot])]
     db.executemany("UPDATE entry_locations SET place_id=?,updated_at=? WHERE event_id=?",
@@ -105,8 +106,9 @@ def entry_places() -> dict[str, int]:
 
 def unassigned_locations() -> list[dict]:
     with connect() as db:
-        rows = db.execute("SELECT event_id,at,lat,lon FROM entry_locations "
-                          "WHERE place_id IS NULL AND lat IS NOT NULL ORDER BY at").fetchall()
+        rows = db.execute("SELECT event_id,at,lat,lon FROM entry_locations WHERE place_id IS NULL "
+                          "AND lat IS NOT NULL AND accuracy_m <= ? ORDER BY at",
+                          (place_rules.MAX_ACCURACY_M,)).fetchall()
     return [dict(row) for row in rows]
 
 
