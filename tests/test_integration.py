@@ -1504,6 +1504,16 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(sum(group["count"] for group in view["unknown"]), 2)
         with self.assertRaises(urllib.error.HTTPError):
             self.request("/api/places", method="POST", body={"action": "create", "name": "kantine"})
+        # A chip picked for a precise position that fits no spot learns it as a new spot.
+        self.request("/api/entry", method="POST", body={
+            **entry, "carbs": "20", "position": {**here, "lat": 49.3}, "place_id": canteen_id})
+        view = self.request("/api/places")
+        self.assertEqual(len(view["places"][0]["spots"]), 2)
+        self.assertEqual(view["places"][0]["count"], 1)
+        # A coarse position is stored but never grouped with the unknown ones.
+        self.request("/api/entry", method="POST", body={
+            **entry, "carbs": "15", "position": {**here, "lat": 49.4, "accuracy_m": 900}})
+        self.assertEqual(sum(group["count"] for group in self.request("/api/places")["unknown"]), 2)
 
     def test_finger_value_alone_is_saved_as_bg_check(self):
         self.request("/api/day?date=2026-09-23")

@@ -34,7 +34,10 @@ class PlaceRuleTests(unittest.TestCase):
     def test_position_is_used_only_for_an_entry_timed_now_with_a_precise_fresh_fix(self):
         spots = [CANTEEN]
         self.assertEqual(places.suggestion(position(49.0, 8.4), NOW - timedelta(hours=2), NOW, spots)["status"], "offset")
-        stale = position(49.0, 8.4, captured=NOW - timedelta(minutes=10))
+        # A fix taken while typing still counts when the entry is saved minutes later.
+        typed = position(49.0, 8.4, captured=NOW - timedelta(minutes=12))
+        self.assertEqual(places.suggestion(typed, NOW, NOW, spots)["status"], "matched")
+        stale = position(49.0, 8.4, captured=NOW - timedelta(minutes=45))
         self.assertEqual(places.suggestion(stale, NOW, NOW, spots)["status"], "offset")
         self.assertEqual(places.suggestion(position(49.0, 8.4, accuracy=900), NOW, NOW, spots)["status"], "inaccurate")
         self.assertEqual(places.suggestion(None, NOW, NOW, spots)["status"], "none")

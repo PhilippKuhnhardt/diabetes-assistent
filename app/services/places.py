@@ -85,8 +85,16 @@ def chips(payload: dict, at: datetime | None) -> dict:
 
 
 def record(event_id: str, at: datetime, payload: dict) -> None:
-    """Store the chosen place and, for an entry timed close to now, the position it was typed at."""
+    """Store the chosen place and, for an entry timed close to now, the position it was typed at.
+
+    A coarse position is kept with its accuracy but never matched. A place chosen for a precise
+    position that fits no spot yet gets that position as a new spot, so picking the chip once
+    teaches it (deleted in the settings like any spot)."""
     position = rules.parse_position(payload.get("position"))
-    if rules.usable(position, at, datetime.now(timezone.utc)) != "ok":
+    status = rules.usable(position, at, datetime.now(timezone.utc))
+    if status not in ("ok", "inaccurate"):
         position = None
-    store.set_entry_location(event_id, at, place_id(payload.get("place_id")), position)
+    chosen = place_id(payload.get("place_id"))
+    store.set_entry_location(event_id, at, chosen, position)
+    if chosen is not None and status == "ok" and rules.match(position, store.all_spots()) is None:
+        store.add_spot(chosen, {"lat": position["lat"], "lon": position["lon"]})
