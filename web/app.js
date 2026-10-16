@@ -2,7 +2,7 @@
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
-const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", analysisTab: "werte", persistDay: false, settings: null, dayData: null, pendingMealId: null, pendingSportId: null, entryTimeTouched: false };
+const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", analysisTab: "werte", dayChosenAt: 0, settings: null, dayData: null, pendingMealId: null, pendingSportId: null, entryTimeTouched: false };
 const views = new Set(["diary", "analysis", "settings"]);
 const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 const CERTAINTY_LABELS = { weighed: "Gewogen", known: "Halbwegs sicher", unsure: "KH unsicher" };
@@ -139,18 +139,17 @@ function validDay(value) {
   return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day;
 }
 
+// The URL carries only the view, never a day: an old link or a reloaded tab must not open an old day
+// by accident (user request 2026-10-16). A chosen day lives in this page only; a reload, a new visit or
+// DAY_HOLD_MS without touching the page brings back today.
+const DAY_HOLD_MS = 30 * 60000;
+
 function locationState() {
   const params = new URLSearchParams(window.location.search);
   const requestedView = params.get("view");
-  const requestedDay = params.get("date");
-  const currentView = views.has(requestedView) ? requestedView : "diary";
-  const urlDay = currentView === "diary" && validDay(requestedDay) ? requestedDay : null;
-  const historyDay = currentView !== "diary" && validDay(window.history.state?.day) ? window.history.state.day : null;
   return {
-    view: currentView,
+    view: views.has(requestedView) ? requestedView : "diary",
     analysisTab: params.get("tab") === "automatik" ? "automatik" : "werte",
-    day: urlDay || historyDay || new Date().toLocaleDateString("sv-SE"),
-    persistDay: Boolean(urlDay || (historyDay && window.history.state?.persistDay)),
   };
 }
 
@@ -159,8 +158,7 @@ function syncTabLinks(url = new URL(window.location.href)) {
     const linkURL = new URL(url);
     linkURL.searchParams.set("view", link.dataset.view);
     linkURL.searchParams.delete("tab");
-    if (link.dataset.view === "diary" && state.persistDay) linkURL.searchParams.set("date", state.day);
-    else linkURL.searchParams.delete("date");
+    linkURL.searchParams.delete("date");
     link.href = linkURL.href;
   });
 }
@@ -168,12 +166,23 @@ function syncTabLinks(url = new URL(window.location.href)) {
 function updateLocation(replace = false) {
   const url = new URL(window.location.href);
   url.searchParams.set("view", state.view);
-  if (state.view === "diary" && state.persistDay) url.searchParams.set("date", state.day);
-  else url.searchParams.delete("date");
+  url.searchParams.delete("date");
   if (state.view === "analysis" && state.analysisTab === "automatik") url.searchParams.set("tab", "automatik");
   else url.searchParams.delete("tab");
   syncTabLinks(url);
-  window.history[replace ? "replaceState" : "pushState"]({ view: state.view, day: state.day, persistDay: state.persistDay }, "", url);
+  window.history[replace ? "replaceState" : "pushState"]({ view: state.view }, "", url);
+}
+
+function markDayActivity() {
+  state.dayChosenAt = Date.now();
+}
+
+// Back to today once the page was left untouched for DAY_HOLD_MS while showing another day, which also
+// covers a page left open past midnight. Never while someone is working on the page.
+function returnToToday() {
+  const today = todayDay();
+  if (state.day === today || Date.now() - state.dayChosenAt < DAY_HOLD_MS) return;
+  changeDay(today);
 }
 
 function view(name, options = {}) {
@@ -207,11 +216,10 @@ function changeDay(day, options = {}) {
   if (!validDay(day) || day === state.day) return;
   resetEntryForm();
   state.day = day;
-  if (day < new Date().toLocaleDateString("sv-SE")) state.persistDay = true;
+  state.dayChosenAt = Date.now();
   $("#selected-day").value = day;
   setDefaultMealTime();
   setDefaultSportTime();
-  if (options.updateHistory !== false) updateLocation(Boolean(options.replaceHistory));
   if (options.load !== false) loadDay();
 }
 
@@ -2780,9 +2788,8 @@ async function syncRange() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   const initialLocation = locationState();
-  state.day = initialLocation.day;
+  state.day = todayDay();
   state.view = initialLocation.view;
-  state.persistDay = initialLocation.persistDay;
   analysisTab(initialLocation.analysisTab, { updateHistory: false });
   $("#selected-day").value = state.day;
   setDefaultMealTime();
@@ -2802,17 +2809,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   }));
   window.addEventListener("popstate", () => {
     const nextLocation = locationState();
-    const dayChanged = state.day !== nextLocation.day;
-    if (dayChanged) resetEntryForm();
-    state.day = nextLocation.day;
-    state.persistDay = nextLocation.persistDay;
     analysisTab(nextLocation.analysisTab, { updateHistory: false });
     syncTabLinks();
-    $("#selected-day").value = state.day;
-    setDefaultMealTime();
-    setDefaultSportTime();
     view(nextLocation.view, { updateHistory: false });
-    if (dayChanged || nextLocation.view === "diary") loadDay();
+    if (nextLocation.view === "diary") loadDay();
   });
   $("#prev-day").addEventListener("click", () => { const d = new Date(state.day + "T12:00"); d.setDate(d.getDate() - 1); changeDay(d.toLocaleDateString("sv-SE")); });
   $("#next-day").addEventListener("click", () => { const d = new Date(state.day + "T12:00"); d.setDate(d.getDate() + 1); changeDay(d.toLocaleDateString("sv-SE")); });
@@ -3020,7 +3020,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const button = event.target.closest(".open-meal-day");
     if (!button) return;
     state.day = button.dataset.day;
-    state.persistDay = true;
+    state.dayChosenAt = Date.now();
     state.modeDay = state.day;
     state.diaryMode = "review";
     $("#selected-day").value = state.day;
@@ -3052,8 +3052,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   setInterval(() => { if (!document.hidden && state.day === todayDay()) updatePreview(); }, 5 * 60000);
   // A form left open keeps showing "jetzt" with the current clock, and an old manual time expires.
   setInterval(() => { if (!document.hidden) setDefaultMealTime({ preview: false }); }, 30000);
+  setInterval(returnToToday, 60000);
+  document.addEventListener("pointerdown", markDayActivity, true);
+  document.addEventListener("keydown", markDayActivity, true);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) return;
+    returnToToday();
     setDefaultMealTime();
     loadCurrentGlucose();
   });
