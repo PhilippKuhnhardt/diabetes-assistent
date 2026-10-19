@@ -1429,22 +1429,36 @@ class IntegrationTests(unittest.TestCase):
         snack = {**entry, "at": "2026-09-23T07:30:00Z", "carbs": "10"}
         preview = self.request("/api/entry/preview", method="POST", body=snack)
         self.assertEqual((preview["assignment"]["meal"], preview["assignment"]["snack"]), ("breakfast", True))
-        self.assertEqual((preview["sport"], preview["basal_units"]), (None, "0"))
+        self.assertEqual(preview["basal_units"], "0")
+        # A snack can count the sport too; it is marked on the main meal whose window holds it.
+        self.assertEqual([item["sport_type"] for item in preview["sport"]["events"]], ["gym"])
         # Breakfast is taken, so the entry cannot be flipped to its own breakfast.
         own = self.request("/api/entry/preview", method="POST", body={**snack, "as": "meal"})
         self.assertEqual((own["assignment"]["snack"], own["assignment"]["own_meal_taken"]), (True, True))
-        self.assertEqual(self.request("/api/entry", method="POST", body=snack)["kind"], "snack")
+        saved = self.request("/api/entry", method="POST", body={
+            **snack, "consider_sport": True, "sport_effect_mgdl": "-30"})
+        self.assertEqual((saved["kind"], saved["sport_marked"], saved["sport_error"]), ("snack", True, None))
+        meal = saved["day_view"]["meals"][0]
+        self.assertEqual((meal["sport"]["status"], Decimal(meal["sport"]["effect_mgdl"])), ("affected", Decimal(30)))
         self.assertEqual(FakeNightscout.treatments[-1]["eventType"], "Carb Correction")
         self.assertIn("[DA2:snack]", FakeNightscout.treatments[-1]["notes"])
 
         # Lunch at 12:00 is taken: at 16:00, after its window, an entry is a snack of no meal.
         self.request("/api/entry", method="POST", body={**entry, "at": "2026-09-23T10:00:00Z", "insulin": "3"})
         late = {**entry, "at": "2026-09-23T14:00:00Z", "carbs": "10"}
+        self.request("/api/treatment", method="POST", body={
+            "kind": "exercise", "at": "2026-09-23T13:00:00Z", "sport_kind": "jogging", "duration_minutes": 30,
+        })
         preview = self.request("/api/entry/preview", method="POST", body={**late, "as": "meal"})
         self.assertEqual({key: preview["assignment"][key] for key in ("meal", "at", "snack", "own_meal_taken")},
                          {"meal": None, "at": None, "snack": True, "own_meal_taken": True})
-        saved = self.request("/api/entry", method="POST", body={**late, "insulin": "1"})
-        self.assertEqual(saved["kind"], "snack")
+        self.request("/api/day?date=2026-09-23")
+        self.assertIsNotNone(self.request("/api/entry/preview", method="POST", body=late)["sport"])
+        saved = self.request("/api/entry", method="POST", body={
+            **late, "insulin": "1", "consider_sport": True, "sport_effect_mgdl": "-20"})
+        # A snack of no meal has no meal to carry the sport; it only lowers its own dose.
+        self.assertEqual((saved["kind"], saved["sport_marked"], saved["sport_error"]), ("snack", False, None))
+        self.assertTrue(all(meal["sport"].get("status") != "affected" for meal in saved["day_view"]["meals"][1:]))
         self.assertEqual([meal["meal"] for meal in saved["day_view"]["meals"]], ["breakfast", "lunch"])
         row = next(item for item in saved["day_view"]["timeline"] if item["id"] == saved["id"])
         self.assertEqual((row["kind"], row["meal_id"]), ("snack", None))
