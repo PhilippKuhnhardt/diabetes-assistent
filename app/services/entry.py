@@ -19,6 +19,8 @@ DOSE_VARIANTS = ("normal", "low", "cautious", "carbs")
 # The lower target is offered for corrections and for small carb amounts only: up to this many grams,
 # not marked unsure and not fat-/protein-rich, so no carb uncertainty asks for a cautious estimate.
 LOW_TARGET_MAX_GRAMS = Decimal(30)
+# A carb entry below this that would start a main meal defaults to a snack of no meal (user request 2026-10-19).
+SMALL_SNACK_GRAMS = Decimal(20)
 # Why the lower target is not offered, for the hint under the options (off, equal doses and larger meals stay silent).
 LOW_BLOCKED = {
     "low": "BZ unter 70 mg/dL",
@@ -103,7 +105,9 @@ def _assignment(context: dict, payload: dict) -> dict | None:
     """A new carb entry right after a main meal counts as its snack unless flipped to its own meal.
 
     When the day already has a main meal of the entry's own kind, it can only be a snack
-    (of the preceding meal, or of no meal), so each kind counts once a day."""
+    (of the preceding meal, or of no meal), so each kind counts once a day. An entry
+    below SMALL_SNACK_GRAMS that would start a main meal is a snack of no meal until
+    flipped, so a bite before sport does not take the day's meal."""
     at, carbs = context["at"], context["carbs"]
     if context["mode"] != "meal" or at is None or not carbs or carbs <= 0:
         return None
@@ -112,7 +116,10 @@ def _assignment(context: dict, payload: dict) -> dict | None:
     taken = episodes.taken_meal(at, context["treatments"], settings)
     root = episodes.preceding_meal(at, context["treatments"], settings)
     if root is None and taken is None:
-        return None
+        if carbs >= SMALL_SNACK_GRAMS:
+            return None
+        return {"meal": None, "at": None, "own_meal": own_meal,
+                "snack": payload.get("as") != "meal", "own_meal_taken": False}
     if taken is not None:
         return {"meal": root["meal"] if root else None, "at": root["at"] if root else None,
                 "own_meal": own_meal, "snack": True, "own_meal_taken": True}
