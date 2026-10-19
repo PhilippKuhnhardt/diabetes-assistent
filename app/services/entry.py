@@ -134,9 +134,9 @@ def _before_breakfast_end(context: dict) -> bool:
 
 
 def _sport(context: dict, assignment: dict | None) -> dict | None:
-    """Sport that ended within the lookback before a main meal; a snack never gets it."""
+    """Sport that ended within the lookback before a carb entry, main meal or snack alike."""
     at, carbs, settings = context["at"], context["carbs"], context["settings"]
-    if context["mode"] != "meal" or at is None or not carbs or carbs <= 0 or (assignment and assignment["snack"]):
+    if context["mode"] != "meal" or at is None or not carbs or carbs <= 0:
         return None
     lookback = timedelta(minutes=int(settings["sport_lookback_minutes"]))
     events = [item for item in context["treatments"]
@@ -367,8 +367,14 @@ def save(payload: dict) -> dict:
     marker = f"[DAE:{saved['event_id']}]"
     treatment = next((item for item in current["treatments"] if marker in str(item.get("notes") or "")), None)
     sport_error = None
-    if consider_sport:
-        meal = next((item for item in current["meals"] if treatment and item["source_id"] == treatment["id"]), None)
+    marked = False
+    if consider_sport and not (assignment and assignment["snack"] and assignment["meal"] is None):
+        # A snack's sport counts for the main meal whose window holds it; a snack of no meal
+        # only lowers its own dose.
+        row = next((item for item in current["timeline"] if treatment and item["id"] == treatment["id"]), None)
+        meal_id = row and row.get("meal_id")
+        meal = next((item for item in current["meals"]
+                     if treatment and (item["source_id"] == treatment["id"] or item["id"] == meal_id)), None)
         if meal is None:
             sport_error = ("Eintrag gespeichert, aber die Sportzuordnung konnte nicht gefunden werden. "
                            "Bitte im Mahlzeitenfaktor prüfen.")
@@ -377,11 +383,12 @@ def save(payload: dict) -> dict:
             annotations.set_sport_mark({"meal_id": meal["id"], "day": day, "status": "affected",
                                         "effect_mgdl": str(-sport_change)})
             current = day_view.day_payload(day, refresh=False)
+            marked = True
     return {
         "day": day, "kind": kind, "event_id": saved["event_id"], "id": treatment and treatment["id"],
         "split_units": split_units if kind == "meal" else None,
         "carbs": str(carbs), "insulin": str(insulin), "finger_mgdl": str(finger) if finger is not None else None,
         "basal": basal_result and {**basal_result, "units": str(basal_units)}, "basal_error": basal_error,
-        "sport_marked": consider_sport and sport_error is None, "sport_error": sport_error,
+        "sport_marked": marked, "sport_error": sport_error,
         "day_view": current,
     }
