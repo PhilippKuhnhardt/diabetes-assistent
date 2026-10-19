@@ -1398,6 +1398,27 @@ class IntegrationTests(unittest.TestCase):
             sparse_group = self.request("/api/summary?days=14")["groups"]["lunch"]
         self.assertEqual(sparse_group["strong_outlier_count"], 0)
 
+    def test_small_carb_entry_defaults_to_snack_of_no_meal(self):
+        self.request("/api/day?date=2026-09-23")
+        small = {"day": "2026-09-23", "at": "2026-09-23T15:30:00Z", "mode": "meal", "carbs": "10"}
+        preview = self.request("/api/entry/preview", method="POST", body=small)
+        self.assertEqual({key: preview["assignment"][key] for key in ("meal", "snack", "own_meal", "own_meal_taken")},
+                         {"meal": None, "snack": True, "own_meal": "dinner", "own_meal_taken": False})
+        flipped = self.request("/api/entry/preview", method="POST", body={**small, "as": "meal"})
+        self.assertFalse(flipped["assignment"]["snack"])
+        large = self.request("/api/entry/preview", method="POST", body={**small, "carbs": "20"})
+        self.assertIsNone(large["assignment"])
+
+        saved = self.request("/api/entry", method="POST", body=small)
+        self.assertEqual(saved["kind"], "snack")
+        self.assertEqual(saved["day_view"]["meals"], [])
+        # The real dinner later is still the day's dinner.
+        dinner = {**small, "at": "2026-09-23T17:45:00Z", "carbs": "66", "insulin": "5"}
+        self.assertIsNone(self.request("/api/entry/preview", method="POST", body=dinner)["assignment"])
+        saved = self.request("/api/entry", method="POST", body=dinner)
+        self.assertEqual((saved["kind"], [meal["meal"] for meal in saved["day_view"]["meals"]]), ("meal", ["dinner"]))
+        self.assertEqual(len(self.request("/api/day?date=2026-09-23")["meals"]), 1)
+
     def test_entry_preview_offers_sport_basal_and_day_type_and_save_stores_all_in_one_call(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "exercise", "at": "2026-09-23T06:00:00Z", "sport_kind": "gym", "duration_minutes": 30,
@@ -1511,6 +1532,7 @@ class IntegrationTests(unittest.TestCase):
         self.request("/api/treatment", method="POST", body={
             "id": saved["id"], "original_day": today, "kind": "meal", "at": now.isoformat(),
             "carbs": "50", "insulin": "5", "place_id": restaurant_id})
+        self.request("/api/day?date=" + today)  # The edit is mirrored on the next day load.
         meal = self.request("/api/v1/meals?days=1")["rows"][0]
         self.assertEqual(meal["place"], "Restaurant")
         # Deleting a place turns entries with a position back into unknown positions.
