@@ -185,8 +185,17 @@ def _places(db: sqlite3.Connection) -> None:
     db.execute("CREATE INDEX IF NOT EXISTS entry_locations_at ON entry_locations(at)")
 
 
+def _inbox_seen(db: sqlite3.Connection) -> None:
+    """Hints on the diary's start page that were opened once, so they lose their highlight."""
+    db.execute("""CREATE TABLE IF NOT EXISTS inbox_seen (
+        key TEXT PRIMARY KEY,
+        seen_at TEXT NOT NULL
+    )""")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
-                                                          _notifications, _notification_priority, _places]
+                                                          _notifications, _notification_priority, _places,
+                                                          _inbox_seen]
 
 
 def init() -> None:
