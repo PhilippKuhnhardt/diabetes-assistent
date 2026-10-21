@@ -333,20 +333,15 @@ span.range-high { color: #9a6410; font-weight: 650; }
 .analysis-table .exclude-meal.is-excluded { background: #f3f4f1; border-color: var(--line); color: var(--muted); }
 .analysis-table .analysis-outlier td:nth-child(2) { color: var(--amber); }
 
-.sport-review { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 15px; padding: 11px; border-radius: 9px; background: var(--canvas); font-size: 12px; }
 .sport-state { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-weight: 650; }
 .sport-state.is-applied { color: var(--green-dark); }
-.sport-review .sport-remove { padding: 4px 7px; min-height: 28px; height: 28px; }
 .sport-review .sport-suggestion { display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px; min-height: 31px; color: var(--green-dark); border-color: #bdd8c5; background: var(--green-light); font-size: 11px; }
-.sport-custom { flex-basis: 100%; }
 .sport-custom summary { width: fit-content; color: var(--green); font-size: 11px; font-weight: 650; cursor: pointer; }
 .sport-custom-fields { display: flex; align-items: end; gap: 7px; margin-top: 9px; }
 .sport-custom-fields label { margin: 0; }
 .sport-custom-fields label span { display: block; font-size: 11px; }
 .sport-custom-fields input { width: 100px; min-height: 32px; margin-top: 4px; padding: 5px 7px; }
 .sport-custom-fields button { min-height: 32px; padding: 5px 9px; }
-.sport-events { font-weight: 500; }
-.sport-review-meal { margin: 4px 0 8px; }
 
 /* Meal window chart and editor */
 .meal-chart { margin: 15px 0 5px; }
@@ -553,26 +548,17 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .review-chip.needs-check { background: var(--amber-light); border-color: #e0c27a; color: var(--amber); }
 .records .night-card { margin: 0 0 12px; background: var(--canvas); border: 0; }
 .day-list { display: grid; gap: 10px; }
-.day-list > .timeline-item { padding: 8px 0; border-top: 0; }
 .day-meal { padding: 4px 13px 10px; border: 1px solid var(--line); border-left: 4px solid var(--green); border-radius: 11px; background: var(--surface); scroll-margin-top: 170px; }
 .day-meal.needs-check { border-left-color: #d9a441; }
-.day-meal-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 9px 0 4px; }
-.day-meal-head .meal-type { margin-right: 8px; }
 .day-meal-window { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .day-meal-factor { color: var(--green-dark); font-size: 18px; font-weight: 750; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .day-meal-factor small { font-size: 11px; font-weight: 600; }
-.day-meal-status { max-width: 55%; color: var(--amber); font-size: 12px; font-weight: 650; text-align: right; }
-.day-meal .timeline-item { padding: 8px 0; }
 .day-meal .timeline-item:first-of-type { border-top: 1px solid var(--line); }
 .day-meal-details { margin-top: 4px; border-top: 1px solid var(--line); padding-top: 8px; }
 .day-meal-details summary { cursor: pointer; color: var(--green-dark); font-size: 12px; font-weight: 700; padding: 2px 0 4px; }
 .day-meal-details[open] summary { margin-bottom: 8px; }
 #delete-edit { margin-top: 12px; width: 100%; }
-.day-list .timeline-item { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
-.day-list .timeline-item p { margin: 2px 0 0; }
-.day-list .timeline-actions { grid-column: auto; }
 @media (max-width: 650px) { .records .night-values { grid-template-columns: 1fr 1fr; } .records .night-card .section-head { display: block; } }
-@media (max-width: 650px) { .day-meal-head { flex-wrap: wrap; } .day-meal-status { flex-basis: 100%; max-width: none; text-align: left; } }
 
 /* Factor facts in the analysis summary cards */
 .factor-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 13px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
@@ -671,7 +657,6 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .entry-chips label.factor-chip:has(input:focus-visible) { outline: 2px solid var(--green); outline-offset: 2px; }
 .entry-chips label.factor-chip:has(input[name="alcohol"]:checked) { background: #f4eaf7; border-color: #d4b3df; }
 .entry-chips label.factor-chip:not(:has(input:checked)) .factor-icon { opacity: .55; }
-.day-meal-head .factor-icons { margin: 0 8px 0 -2px; }
 
 /* "Tag durchgehen" as the day's cockpit: day type, check list, exclusion on each meal. */
 .review-day-type { margin: 0 0 12px; }
@@ -680,12 +665,10 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .review-chip.is-clean { display: inline-flex; align-items: center; gap: 4px; background: var(--green-light); border-color: #bdd8c5; color: var(--green-dark); }
 .review-chip .ui-icon { width: 14px; height: 14px; }
 .analysis-table button.review-chip { cursor: pointer; min-height: 0; padding: 4px 10px; background: var(--amber-light); border-color: #e0c27a; color: var(--amber); font-size: 12px; white-space: nowrap; }
-.day-meal-result { display: flex; align-items: center; gap: 10px; }
 .day-meal .exclude-meal, .analysis-table .exclude-meal { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 5px 8px; border-color: #bdd8c5; background: var(--green-light); color: var(--green-dark); font-size: 11px; white-space: nowrap; }
 .day-meal .exclude-meal.is-excluded { background: #f3f4f1; border-color: var(--line); color: var(--muted); }
 .day-meal.is-excluded .day-meal-factor { color: var(--muted); text-decoration: line-through; }
 .sport-review .sport-none { min-height: 32px; padding: 5px 10px; font-size: 12px; }
-@media (max-width: 650px) { .day-meal-result { flex-basis: 100%; justify-content: space-between; } }
 
 /* Places: chips in the entry form, a badge on meals and entries, management in settings. */
 .entry-place { margin-top: 10px; }
@@ -705,7 +688,6 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .place-unknown p { margin: 0; font-size: 13px; }
 .place-spot button { padding: 5px 10px; }
 .place-item > button { margin-top: 6px; padding: 6px 10px; font-size: 13px; }
-.day-meal-head .place-badge { margin-right: 6px; }
 .place-head .place-quick { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 600; }
 .place-head .place-quick input { width: 18px; height: 18px; min-height: 18px; margin: 0; accent-color: var(--green); }
 .entry-chips select.place-more { width: auto; min-height: 0; padding: 7px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; }
@@ -720,3 +702,34 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 /* On the narrowest phones the factor chips show their icon only; the title still names them. */
 @media (max-width: 359px) { .entry-carbs-row .factor-chip > span:last-child { display: none; } }
 .entry-carbs-row #entry-carbs-field { flex: none; width: 92px; white-space: nowrap; }
+
+/* Tag durchgehen: one grid for every row. Time, title and button sit in the same columns inside
+   and outside a meal (the loose rows get the meal's inset), chips wrap below the title. */
+.day-list .timeline-item { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 0; }
+.day-list > .timeline-item { padding: 8px 14px 8px 17px; border-top: 0; }
+.day-list .timeline-item time { padding-top: 0; font-variant-numeric: tabular-nums; }
+.day-list .timeline-item p { margin: 3px 0 0; }
+.day-list .timeline-item p span { white-space: nowrap; }
+.day-list .timeline-actions { grid-column: auto; }
+.day-list .timeline-actions button { min-width: 88px; justify-content: center; }
+.entry-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.entry-title .factor-icons, .entry-title .place-badge, .entry-title .outlier-badge, .day-meal-tags .place-badge, .day-meal-tags .outlier-badge, .day-meal-title .factor-icons { margin: 0; }
+.day-meal-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 6px; align-items: center; padding: 11px 0 9px; }
+.day-meal-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.day-meal-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; grid-column: 1; }
+.day-meal-result { display: flex; align-items: center; justify-content: flex-end; gap: 10px; grid-column: 2; grid-row: 1 / span 2; }
+.day-meal-status { color: var(--amber); font-size: 12px; font-weight: 650; }
+.sport-review { display: grid; gap: 8px; margin: 10px 0 8px; padding: 10px 11px; border-radius: 9px; background: var(--canvas); font-size: 12px; }
+.sport-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 28px; }
+.sport-state { flex-wrap: wrap; gap: 4px 6px; }
+.sport-source { flex-basis: 100%; color: var(--muted); font-weight: 500; }
+.sport-state:has(> .ui-icon) .sport-source { padding-left: 22px; }
+.sport-review .sport-remove { min-height: 28px; padding: 4px 9px; font-size: 11px; }
+.sport-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+@media (max-width: 650px) {
+  /* On the phone the head stacks: name and window, place and certainty, then factor and switch on one line. */
+  .day-meal-head { grid-template-columns: minmax(0, 1fr); }
+  .day-meal-title { justify-content: space-between; }
+  .day-meal-tags { grid-column: 1; }
+  .day-meal-result { grid-column: 1; grid-row: auto; justify-content: space-between; }
+}

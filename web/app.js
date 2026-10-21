@@ -1609,17 +1609,21 @@ function sportReviewHTML(sport, mealId, day) {
   const applied = sport.status === "affected";
   const effect = applied ? sportChange(sport.effect_mgdl) : 0;
   const suggestion = sport.suggested ? sportChange(sport.suggested_effect_mgdl) : 0;
+  const actions = [
+    !applied && suggestion ? '<button type="button" class="sport-suggestion">' + icon("plus") + ' Vorschlag ' + escapeHTML(signedChange(suggestion, 0)) + ' übernehmen</button>' : '',
+    sport.status === "auto" && suggestion ? '<button type="button" class="sport-none quiet">Kein Einfluss</button>' : '',
+  ].join("");
+  // One line with the state and the sessions behind it, then the choices, then the own value.
   return '<div class="sport-review sport-review-meal" data-meal-id="' + escapeHTML(mealId) +
     '" data-day="' + escapeHTML(day) + '" data-suggestion="' + escapeHTML(suggestion) + '">' +
-    '<div class="sport-state' + (applied ? ' is-applied' : '') + '">' +
+    '<div class="sport-line"><div class="sport-state' + (applied ? ' is-applied' : '') + '">' +
     (applied ? icon("check") + '<span>Sport ' + escapeHTML(signedChange(effect, 0)) + '</span>'
       : sport.status === "unaffected" && suggestion ? icon("check") + '<span>Kein Sporteinfluss</span>'
       : sport.status === "auto" && suggestion ? '<span>Sport offen</span>' : '<span>Kein Sporteffekt</span>') +
-    ((sport.events || []).length ? '<span class="sport-events">· ' + escapeHTML(sport.events.map(item =>
+    ((sport.events || []).length ? '<span class="sport-source">' + escapeHTML(sport.events.map(item =>
       (sportNames[item.kind] || "Sport") + " " + timeOnly(item.at)).join(", ")) + '</span>' : '') + '</div>' +
-    (applied ? '<button type="button" class="sport-remove icon-button" aria-label="Sporteinfluss entfernen" title="Sporteinfluss entfernen">' + icon("remove") + '</button>' : '') +
-    (!applied && suggestion ? '<button type="button" class="sport-suggestion">' + icon("plus") + ' Vorschlag ' + escapeHTML(signedChange(suggestion, 0)) + ' übernehmen</button>' : '') +
-    (sport.status === "auto" && suggestion ? '<button type="button" class="sport-none quiet">Kein Einfluss</button>' : '') +
+    (applied ? '<button type="button" class="sport-remove quiet" aria-label="Sporteinfluss entfernen">Entfernen</button>' : '') + '</div>' +
+    (actions ? '<div class="sport-actions">' + actions + '</div>' : '') +
     '<details class="sport-custom"><summary>' + (applied ? 'Wert ändern' : 'Eigenen Wert setzen') + '</summary>' +
     '<div class="sport-custom-fields"><label><span>BZ-Wirkung in mg/dL (− senkt, + hebt)</span><input class="sport-effect" type="number" min="-500" max="500" step="1" value="' +
     escapeHTML(applied ? effect : (suggestion || "")) +
@@ -1674,7 +1678,8 @@ function entryLabel(item, data) {
   return meal ? names[meal.meal] : entryLabels[item.kind];
 }
 
-function entryRowHTML(item, data) {
+// Inside a meal, an entry names its place and carb certainty only where they differ from the meal head.
+function entryRowHTML(item, data, meal = null) {
   const details = [
     Number(item.carbs) ? num(item.carbs) + " g KH" : "",
     Number(item.insulin) ? num(item.insulin) + " IE" : "",
@@ -1682,7 +1687,7 @@ function entryRowHTML(item, data) {
     item.kind === "exercise" ? num(item.duration_minutes, 0) + " min" : "",
     item.glucose_mgdl != null
       ? (item.glucose_at === item.at ? "BZ " : "BZ um " + timeOnly(item.glucose_at) + ": ") + num(item.glucose_mgdl, 0) + " mg/dL" : "",
-  ].filter(Boolean).join(" · ");
+  ].filter(Boolean);
   const label = entryLabel(item, data);
   const action = item.kind === "other" ? "" : item.kind === "finger"
     ? '<button type="button" class="delete-treatment quiet" data-id="' + escapeHTML(item.id) + '" data-label="BZ blutig" data-at="' +
@@ -1691,8 +1696,13 @@ function entryRowHTML(item, data) {
       '" aria-label="' + escapeHTML("Basal um " + timeOnly(item.at) + " löschen") + '">Löschen</button>' :
     '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '" aria-label="' +
     escapeHTML(label + " um " + timeOnly(item.at) + " bearbeiten") + '">Bearbeiten</button>';
+  const place = item.place && (!meal || item.place.id !== meal.place?.id) ? placeBadgeHTML(item.place) : "";
+  const certainty = meal && item.carbs_certainty && item.carbs_certainty !== meal.quality?.carbs_certainty
+    ? '<span class="outlier-badge certainty-' + item.carbs_certainty + '">' + CERTAINTY_LABELS[item.carbs_certainty] + '</span>' : "";
   return '<article class="timeline-item"><time>' + escapeHTML(timeOnly(item.at)) +
-    '</time><div><strong>' + escapeHTML(label) + factorIconsHTML(item) + placeBadgeHTML(item.place) + '</strong><p>' + escapeHTML(details || item.eventType) +
+    '</time><div><div class="entry-title"><strong>' + escapeHTML(label) + '</strong>' + factorIconsHTML(item) + place + certainty +
+    // Each value stays on one line, so "84 mg/dL" never breaks between number and unit.
+    '</div><p>' + (details.length ? details.map(part => '<span>' + escapeHTML(part) + '</span>').join(" · ") : escapeHTML(item.eventType)) +
     '</p>' + (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') +
     '</div><div class="timeline-actions">' + action + '</div></article>';
 }
@@ -1730,12 +1740,14 @@ function mealBlockHTML(block, data) {
     ? '<span class="day-meal-status">' + escapeHTML(calc.reason || "Noch keine Berechnung") + '</span>'
     : '<span class="day-meal-factor">' + escapeHTML(factorNum(calc.factor_units_per_ke)) + ' <small>IE/KE</small></span>';
   return '<article class="day-meal' + (check ? ' needs-check' : '') + (meal.excluded ? ' is-excluded' : '') + '" id="meal-' + escapeHTML(meal.id) + '">' +
-    '<div class="day-meal-head"><div><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' + factorIconsHTML(meal.quality) + placeBadgeHTML(meal.place) +
-    '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") +
-    '</span>' + (meal.quality?.carbs_certainty ? '<span class="outlier-badge certainty-' + meal.quality.carbs_certainty + '">' + CERTAINTY_LABELS[meal.quality.carbs_certainty] + '</span>' : '') +
-    '</div><div class="day-meal-result">' + status +
+    // Head: name and window, then where and how certain (the main meal's place leads), then factor and exclusion.
+    '<div class="day-meal-head"><div class="day-meal-title"><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' + factorIconsHTML(meal.quality) +
+    '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") + '</span></div>' +
+    (meal.place || meal.quality?.carbs_certainty ? '<div class="day-meal-tags">' + placeBadgeHTML(meal.place) +
+      (meal.quality?.carbs_certainty ? '<span class="outlier-badge certainty-' + meal.quality.carbs_certainty + '">' + CERTAINTY_LABELS[meal.quality.carbs_certainty] + '</span>' : '') + '</div>' : '') +
+    '<div class="day-meal-result">' + status +
     (meal.review?.excludable ? excludeButtonHTML(meal.id, state.day, meal.excluded) : '') + '</div></div>' +
-    items.map(item => entryRowHTML(item, data)).join("") +
+    items.map(item => entryRowHTML(item, data, meal)).join("") +
     // Sport is adjusted right on the meal, without opening the curve details.
     sportReviewHTML(meal.sport || {}, meal.id, state.day) +
     '<details class="day-meal-details" data-meal-id="' + escapeHTML(meal.id) + '"' + (calculated ? '' : ' open') +
