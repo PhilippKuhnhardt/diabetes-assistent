@@ -20,7 +20,7 @@
         <div class="glucose-main"><strong id="glucose-value">—</strong><span id="glucose-trend">Trend nicht verfügbar</span></div>
         <small id="glucose-meta" hidden></small>
       </div>
-      <div class="topbar-actions"><div id="connection" class="status" hidden></div><form id="logout-form" action="/logout" method="post" hidden><button class="quiet" type="submit">Abmelden</button></form></div>
+      <div class="topbar-actions"><button type="button" id="inbox-badge" class="inbox-badge" hidden></button><div id="connection" class="status" hidden></div></div>
     </header>
 
     <nav class="tabs" aria-label="Bereiche">
@@ -45,6 +45,12 @@
           <button type="button" data-diary-mode="review" aria-pressed="false">Tag durchgehen</button>
         </div>
         <div id="banner" class="banner" hidden></div>
+        <!-- Things that need an action, across the last days; filled by /api/inbox. -->
+        <section id="inbox" class="inbox" aria-label="Zu erledigen" hidden>
+          <h2 class="inbox-title">Zu erledigen <span id="inbox-count" class="inbox-count"></span></h2>
+          <ul id="inbox-new" class="inbox-list"></ul>
+          <details id="inbox-seen" class="inbox-seen" hidden><summary></summary><ul class="inbox-list"></ul></details>
+        </section>
         <div class="diary-grid">
           <section class="panel entry-panel">
             <div id="day-overview" class="day-overview">
@@ -337,6 +343,8 @@
             <p id="settings-version" class="hint"></p>
           </div>
         </form>
+        <!-- Rarely needed, so it sits at the end of the settings instead of the header (user request 2026-10-21). -->
+        <form id="logout-form" class="logout-row" action="/logout" method="post" hidden><button class="quiet" type="submit">Abmelden</button></form>
       </section>
     </main>
   </div>

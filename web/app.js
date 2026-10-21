@@ -1775,6 +1775,69 @@ function renderReviewSummary(data) {
   $("#review-summary").innerHTML = chips.join("");
 }
 
+// "Zu erledigen": what needs an action across the last days (user request 2026-10-21). The server decides what
+// is open; an opened hint folds away, and a done one is no longer listed.
+function inboxDayLabel(day) {
+  const today = todayDay();
+  const yesterday = new Date(new Date(today + "T12:00:00").getTime() - 24 * 60 * MINUTE).toLocaleDateString("sv-SE");
+  if (day === today) return "heute";
+  if (day === yesterday) return "gestern";
+  return new Date(day + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" });
+}
+
+function inboxItemHTML(item) {
+  return '<li><button type="button" class="inbox-item" data-key="' + escapeHTML(item.key) + '" data-day="' +
+    escapeHTML(item.day) + '" data-meal-id="' + escapeHTML(item.meal_id) + '"><span><strong>' +
+    escapeHTML(names[item.meal] + " " + inboxDayLabel(item.day) + ", " + timeOnly(item.at)) + '</strong>' +
+    item.reasons.map(reason => '<small>' + escapeHTML(reason.text) + '</small>').join("") +
+    '</span><span class="inbox-go" aria-hidden="true">›</span></button></li>';
+}
+
+function renderInbox(data) {
+  const fresh = data.items.filter(item => !item.seen);
+  const seen = data.items.filter(item => item.seen);
+  const box = $("#inbox");
+  box.hidden = !data.items.length;
+  box.classList.toggle("is-quiet", !fresh.length);
+  $("#inbox-count").textContent = fresh.length || "";
+  // The header names new hints on every page, since the list itself sits in the diary.
+  const badge = $("#inbox-badge");
+  badge.hidden = !fresh.length;
+  badge.textContent = fresh.length + " zu erledigen";
+  $("#inbox-new").innerHTML = fresh.map(inboxItemHTML).join("");
+  const folded = $("#inbox-seen");
+  folded.hidden = !seen.length;
+  $("summary", folded).textContent = seen.length + (seen.length === 1 ? " Mahlzeit noch offen, schon angesehen" : " Mahlzeiten noch offen, schon angesehen");
+  $("ul", folded).innerHTML = seen.map(inboxItemHTML).join("");
+}
+
+async function loadInbox() {
+  try {
+    renderInbox(await api("/api/inbox"));
+  } catch {
+    // The hint list is extra; the diary works without it.
+  }
+}
+
+// A hint opens "Tag durchgehen" at its meal and counts as seen from then on.
+async function openInboxItem(event) {
+  const button = event.target.closest(".inbox-item");
+  if (!button) return;
+  api("/api/inbox/seen", { method: "POST", body: JSON.stringify({ key: button.dataset.key }) })
+    .then(renderInbox).catch(() => {});
+  state.modeDay = button.dataset.day;
+  state.diaryMode = "review";
+  if (state.day !== button.dataset.day) changeDay(button.dataset.day, { load: false });
+  else markDayActivity();
+  applyDiaryMode();
+  await loadDay();
+  const meal = $("#meal-" + CSS.escape(button.dataset.mealId));
+  if (!meal) return;
+  meal.scrollIntoView({ block: "start" });
+  meal.classList.add("is-target");
+  setTimeout(() => meal.classList.remove("is-target"), 2500);
+}
+
 async function loadDay() {
   $("#selected-day").value = state.day;
   $("#timeline").innerHTML = '<div class="empty">Nightscout-Daten werden geladen …</div>';
@@ -1782,6 +1845,7 @@ async function loadDay() {
   try {
     renderDay(await api("/api/day?date=" + encodeURIComponent(state.day)));
     loadEffects();
+    loadInbox();
     await updatePreview();
   } catch (error) {
     $("#timeline").innerHTML = '<div class="empty">Daten konnten nicht geladen werden.</div>';
@@ -2888,6 +2952,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (event.target.matches(".day-meal-details") && event.target.open) renderMealCharts();
   }, true);
   $("#effects-card").addEventListener("toggle", renderEffects);
+  $("#inbox").addEventListener("click", openInboxItem);
+  $("#inbox-badge").addEventListener("click", () => {
+    view("diary");
+    $("#inbox").scrollIntoView({ block: "start" });
+  });
   $("#close-edit").addEventListener("click", closeEditDialog);
   $("#edit-dialog").addEventListener("close", () => { state.editing = null; });
   $("#dose-result").addEventListener("click", selectDoseSuggestion);
@@ -3065,6 +3134,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // A form left open keeps showing "jetzt" with the current clock, and an old manual time expires.
   setInterval(() => { if (!document.hidden) setDefaultMealTime({ preview: false }); }, 30000);
   setInterval(returnToToday, 60000);
+  // A meal finishes on its own, so its hint can appear without a reload.
+  setInterval(() => { if (!document.hidden) loadInbox(); }, 5 * 60000);
   document.addEventListener("pointerdown", markDayActivity, true);
   document.addEventListener("keydown", markDayActivity, true);
   document.addEventListener("visibilitychange", () => {
@@ -3072,6 +3143,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     returnToToday();
     setDefaultMealTime();
     loadCurrentGlucose();
+    loadInbox();
   });
   window.addEventListener("focus", loadCurrentGlucose);
 });

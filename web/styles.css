@@ -275,8 +275,8 @@ span.range-high { color: #9a6410; font-weight: 650; }
 
 /* Rebuilt diary */
 .topbar-actions { display: flex; align-items: center; gap: 10px; }
-.topbar-actions form { margin: 0; }
-.topbar-actions button { font-size: 12px; }
+.logout-row { display: flex; justify-content: flex-end; margin: 18px 0 32px; }
+.logout-row button { font-size: 13px; }
 
 .records > .panel { margin-bottom: 18px; }
 .timeline-item { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 13px 0; border-top: 1px solid var(--line); }
@@ -303,7 +303,6 @@ span.range-high { color: #9a6410; font-weight: 650; }
   .timeline-item { grid-template-columns: 50px minmax(0, 1fr); }
   .timeline-actions { grid-column: 2; }
   .topbar-actions { flex-direction: column; gap: 5px; }
-  .topbar-actions button { padding: 5px 8px !important; }
   .diary-analysis .meal-list { grid-template-columns: 1fr; }
 }
 
@@ -733,3 +732,31 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
   .day-meal-tags { grid-column: 1; }
   .day-meal-result { grid-column: 1; grid-row: auto; justify-content: space-between; }
 }
+
+/* "Zu erledigen": things that need an action (user request 2026-10-21). New ones stand out, opened ones fold away. */
+.inbox { margin: 0 0 16px; padding: 12px 14px; border: 1px solid #e0c27a; border-radius: 13px; background: var(--amber-light); }
+.inbox.is-quiet { padding: 8px 14px; border-color: var(--line); background: var(--surface); }
+.inbox-title { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 14px; }
+.inbox.is-quiet .inbox-title { display: none; }
+.inbox-count { min-width: 20px; padding: 1px 7px; border-radius: 999px; background: var(--amber); color: #fff; font-size: 12px; text-align: center; }
+.inbox-count:empty { display: none; }
+.inbox-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.inbox-list:empty { display: none; }
+#inbox button.inbox-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px 10px; width: 100%; min-height: 48px; padding: 8px 12px; border: 1px solid #e0c27a; border-radius: 10px; background: var(--surface); color: var(--ink); text-align: left; }
+#inbox button.inbox-item:hover { border-color: var(--amber); }
+.inbox-item::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+.inbox-item strong { font-size: 14px; }
+.inbox-item small { display: block; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.inbox-item .inbox-go { color: var(--amber); font-size: 18px; line-height: 1; }
+#inbox .inbox-seen button.inbox-item { border-color: var(--line); background: var(--canvas); }
+.inbox-seen .inbox-item::before { background: transparent; border: 1.5px solid #b9c6bf; }
+.inbox-seen .inbox-item .inbox-go { color: var(--muted); }
+.topbar-actions button.inbox-badge { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 5px 12px; border: 1px solid #e0c27a; border-radius: 999px; background: var(--amber-light); color: var(--amber); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.inbox-badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+.topbar-actions button.inbox-badge[hidden] { display: none; }
+#inbox { scroll-margin-top: 170px; }
+.inbox-seen summary { cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 650; }
+.inbox-seen[open] summary { margin-bottom: 8px; }
+.inbox-list + .inbox-seen { margin-top: 8px; }
+@media (min-width: 951px) { .inbox-list { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } }
+.day-meal.is-target { box-shadow: 0 0 0 3px #e0c27a; transition: box-shadow .3s; }
