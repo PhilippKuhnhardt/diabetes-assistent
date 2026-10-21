@@ -13,7 +13,7 @@ from urllib.parse import parse_qs, urlparse
 from app import auth, mcp, oauth
 from app.common import json_safe
 from app.ingestion import nightscout
-from app.services import annotations, background, basal, day_view, diary, dose_help, effects, entry, notifications, places, read_api, settings, summary, sync, window_editor
+from app.services import annotations, background, basal, day_view, diary, dose_help, effects, entry, inbox, notifications, places, read_api, settings, summary, sync, window_editor
 from app.store import config, db
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -39,6 +39,7 @@ GET_ROUTES = {
     "/api/analysis/window-editor": window_editor.editor,
     "/api/notifications": lambda params: notifications.view(),
     "/api/places": lambda params: places.view(),
+    "/api/inbox": inbox.view,
 }
 
 POST_ROUTES = {
@@ -63,6 +64,7 @@ POST_ROUTES = {
     "/api/notifications": notifications.set_enabled,
     "/api/notifications/test": notifications.send_test,
     "/api/places": places.save,
+    "/api/inbox/seen": inbox.mark_seen,
     "/api/episode": diary.save_episode,
     "/api/exercise": diary.save_exercise,
     "/api/dose": diary.save_dose,
