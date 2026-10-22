@@ -58,7 +58,7 @@
   },
   "meals": {
    "rows": 115,
-   "sha256": "7fe4ab38b4b155dda95c0ccb5be2910262c0f565f400135f8b1d51fc50ed8867"
+   "sha256": "7b115a2033a24f77e1eeceb67337639fd2f3f5164b57b77e655baf74cee73062"
   },
   "treatments": {
    "rows": 149,
@@ -1573,7 +1573,7 @@
     "end_reason": "after_last_injection",
     "excluded": false,
     "extra_carb_count": 1,
-    "factor_ie_per_ke": "1.136558605295076588135794902",
+    "factor_ie_per_ke": "1.122953163118205839836475174",
     "fat_protein": false,
     "g0_mgdl": "108.9256022066435534186994977",
     "g_end_mgdl": "159.8824605039373175119692486",
@@ -1584,7 +1584,7 @@
     "meal_isf": "35",
     "place": null,
     "rapid_units": "6.5",
-    "sport_effect_mgdl": "0",
+    "sport_effect_mgdl": "-3.333333333333333333333333332",
     "sport_status": "auto",
     "window_end": "2026-09-15T17:05:00+02:00",
     "window_start": "2026-09-15T12:30:00+02:00"
@@ -3493,7 +3493,7 @@
     "end_reason": "fixed_window",
     "excluded": false,
     "extra_carb_count": 0,
-    "factor_ie_per_ke": "1.267137439601996382749640662",
+    "factor_ie_per_ke": "1.311581884046440827194085106",
     "fat_protein": false,
     "g0_mgdl": "127.9435072477604340700431206",
     "g_end_mgdl": "40.00000000000000000000000000",
@@ -3504,7 +3504,7 @@
     "meal_isf": "30",
     "place": null,
     "rapid_units": "8.0",
-    "sport_effect_mgdl": "0",
+    "sport_effect_mgdl": "5.333333333333333333333333332",
     "sport_status": "auto",
     "window_end": "2026-10-07T11:00:00+02:00",
     "window_start": "2026-10-07T08:10:00+02:00"

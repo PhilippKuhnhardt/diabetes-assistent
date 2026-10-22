@@ -449,8 +449,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -1105,8 +1104,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -1782,8 +1780,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -2457,8 +2454,7 @@
    "blocked": 0,
    "calculated": 2,
    "excluded": 1,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -2979,8 +2975,7 @@
    "blocked": 0,
    "calculated": 2,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -3677,8 +3672,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -3964,7 +3958,10 @@
     "id": "t-0024",
     "kind": "gym",
     "label": "Gym",
-    "notes": ""
+    "notes": "",
+    "sport_effect_custom": false,
+    "sport_effect_default_mgdl": "40",
+    "sport_effect_mgdl": "40"
    }
   ],
   "meals": [
@@ -4361,13 +4358,14 @@
      "events": [
       {
        "at": "2026-09-04T13:50:00+00:00",
+       "effect_mgdl": "24.0",
        "id": "t-0024",
        "kind": "gym"
       }
      ],
      "status": "affected",
      "suggested": true,
-     "suggested_effect_mgdl": "40"
+     "suggested_effect_mgdl": "24.0"
     },
     "window": {
      "auto_end": "2026-09-04T19:20:00+00:00",
@@ -4405,8 +4403,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -4475,6 +4472,9 @@
     "meal_id": null,
     "notes": "",
     "place": null,
+    "sport_effect_custom": false,
+    "sport_effect_default_mgdl": "40",
+    "sport_effect_mgdl": "40",
     "sport_kind": "gym"
    },
    {
@@ -5089,8 +5089,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -5773,8 +5772,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -6443,8 +6441,7 @@
    "blocked": 1,
    "calculated": 2,
    "excluded": 0,
-   "first_open": "t-0033",
-   "sport_open": 0
+   "first_open": "t-0033"
   },
   "settings_version": 2,
   "sync_error": null,
@@ -7157,8 +7154,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -7814,8 +7810,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -8345,8 +8340,7 @@
    "blocked": 0,
    "calculated": 2,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -8901,8 +8895,7 @@
    "blocked": 0,
    "calculated": 2,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -9541,8 +9534,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -10233,8 +10225,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -10947,8 +10938,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -11205,7 +11195,10 @@
     "id": "t-0065",
     "kind": "racing",
     "label": "Rennsport",
-    "notes": "Racing"
+    "notes": "Racing",
+    "sport_effect_custom": false,
+    "sport_effect_default_mgdl": "-40",
+    "sport_effect_mgdl": "-40"
    }
   ],
   "meals": [
@@ -11350,7 +11343,7 @@
     "at": "2026-09-15T10:30:00+00:00",
     "calculation": {
      "actual_window_minutes": "275",
-     "adjusted_delta_mgdl": "50.9568582972937640932697509",
+     "adjusted_delta_mgdl": "47.62352496396043075993641757",
      "algorithm": "endpoint-full-dose-v1",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -11384,7 +11377,7 @@
      "carbs_times_isf_total": "2450",
      "carbs_total": "70",
      "delta_mgdl": "50.9568582972937640932697509",
-     "denominator_mgdl": "278.4568582972937640932697509",
+     "denominator_mgdl": "275.1235249639604307599364176",
      "doses": [
       {
        "at": "2026-09-15T10:30:00+00:00",
@@ -11409,7 +11402,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-09-15T15:05:00+00:00",
      "extra_carb_count": 1,
-     "factor_units_per_ke": "1.136558605295076588135794902",
+     "factor_units_per_ke": "1.122953163118205839836475174",
      "g0": "108.9256022066435534186994977",
      "g0_source": "cgm",
      "g0_sources": [
@@ -11433,10 +11426,10 @@
      },
      "nominal_end": "2026-09-15T13:30:00+00:00",
      "rapid_units_in_window": "6.5",
-     "ratio_g_per_unit": "8.798490419597651514186236369",
+     "ratio_g_per_unit": "8.905090905334015476400448646",
      "reason": null,
      "settings_version": 1,
-     "sport_effect_mgdl": "0",
+     "sport_effect_mgdl": "-3.333333333333333333333333332",
      "start": "2026-09-15T10:30:00+00:00",
      "window_minutes": 180
     },
@@ -11491,23 +11484,22 @@
     "review": {
      "calculated": true,
      "excludable": true,
-     "open": [
-      "sport"
-     ]
+     "open": []
     },
     "source_id": "t-0063",
     "sport": {
-     "effect_mgdl": "0",
+     "effect_mgdl": "-3.333333333333333333333333332",
      "events": [
       {
        "at": "2026-09-15T13:40:00+00:00",
+       "effect_mgdl": "-3.333333333333333333333333332",
        "id": "t-0065",
        "kind": "racing"
       }
      ],
      "status": "auto",
      "suggested": true,
-     "suggested_effect_mgdl": "-40"
+     "suggested_effect_mgdl": "-3.333333333333333333333333332"
     },
     "window": {
      "auto_end": "2026-09-15T15:05:00+00:00",
@@ -11644,13 +11636,14 @@
      "events": [
       {
        "at": "2026-09-15T13:40:00+00:00",
+       "effect_mgdl": "-24.0",
        "id": "t-0065",
        "kind": "racing"
       }
      ],
      "status": "affected",
      "suggested": true,
-     "suggested_effect_mgdl": "-40"
+     "suggested_effect_mgdl": "-24.0"
     },
     "window": {
      "auto_end": "2026-09-15T19:10:00+00:00",
@@ -11688,8 +11681,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": "t-0063",
-   "sport_open": 1
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -11777,6 +11769,9 @@
     "meal_id": "t-0063",
     "notes": "Racing",
     "place": null,
+    "sport_effect_custom": false,
+    "sport_effect_default_mgdl": "-40",
+    "sport_effect_mgdl": "-40",
     "sport_kind": "racing"
    },
    {
@@ -12428,8 +12423,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -13142,8 +13136,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -13782,8 +13775,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -14515,8 +14507,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -15275,8 +15266,7 @@
    "blocked": 1,
    "calculated": 2,
    "excluded": 0,
-   "first_open": "t-0083",
-   "sport_open": 0
+   "first_open": "t-0083"
   },
   "settings_version": 2,
   "sync_error": null,
@@ -15932,8 +15922,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -16571,8 +16560,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -17244,8 +17232,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -17853,8 +17840,7 @@
    "blocked": 1,
    "calculated": 2,
    "excluded": 0,
-   "first_open": "t-0097",
-   "sport_open": 0
+   "first_open": "t-0097"
   },
   "settings_version": 2,
   "sync_error": null,
@@ -18527,8 +18513,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -18804,7 +18789,10 @@
     "id": "t-0105",
     "kind": "gym",
     "label": "Gym",
-    "notes": ""
+    "notes": "",
+    "sport_effect_custom": false,
+    "sport_effect_default_mgdl": "40",
+    "sport_effect_mgdl": "40"
    }
   ],
   "meals": [
@@ -19201,13 +19189,14 @@
      "events": [
       {
        "at": "2026-09-26T13:45:00+00:00",
+       "effect_mgdl": "22.66666666666666666666666667",
        "id": "t-0105",
        "kind": "gym"
       }
      ],
      "status": "unaffected",
      "suggested": true,
-     "suggested_effect_mgdl": "40"
+     "suggested_effect_mgdl": "22.66666666666666666666666667"
     },
     "window": {
      "auto_end": "2026-09-26T19:05:00+00:00",
@@ -19245,8 +19234,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -19335,6 +19323,9 @@
     "meal_id": null,
     "notes": "",
     "place": null,
+    "sport_effect_custom": false,
+    "sport_effect_default_mgdl": "40",
+    "sport_effect_mgdl": "40",
     "sport_kind": "gym"
    },
    {
@@ -20054,8 +20045,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -20786,8 +20776,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -21307,8 +21296,7 @@
    "blocked": 0,
    "calculated": 2,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -21927,8 +21915,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -22626,8 +22613,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -23340,8 +23326,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -24016,8 +24001,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -24656,8 +24640,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -25381,8 +25364,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -26128,8 +26110,7 @@
    "blocked": 0,
    "calculated": 3,
    "excluded": 0,
-   "first_open": null,
-   "sport_open": 0
+   "first_open": null
   },
   "settings_version": 2,
   "sync_error": null,
@@ -26459,7 +26440,10 @@
     "id": "ns-0004",
     "kind": "jogging",
     "label": "Joggen",
-    "notes": "Runde"
+    "notes": "Runde",
+    "sport_effect_custom": false,
+    "sport_effect_default_mgdl": "40",
+    "sport_effect_mgdl": "40"
    }
   ],
   "meals": [
@@ -26467,7 +26451,7 @@
     "at": "2026-10-07T06:10:00+00:00",
     "calculation": {
      "actual_window_minutes": "170",
-     "adjusted_delta_mgdl": "-87.94350724776043407004312060",
+     "adjusted_delta_mgdl": "-82.61017391442710073670978727",
      "algorithm": "endpoint-full-dose-v1",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -26493,7 +26477,7 @@
      "carbs_times_isf_total": "1200",
      "carbs_total": "40",
      "delta_mgdl": "-87.94350724776043407004312060",
-     "denominator_mgdl": "152.0564927522395659299568794",
+     "denominator_mgdl": "157.3898260855728992632902127",
      "doses": [
       {
        "at": "2026-10-07T06:10:00+00:00",
@@ -26509,7 +26493,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-10-07T09:00:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.267137439601996382749640662",
+     "factor_units_per_ke": "1.311581884046440827194085106",
      "g0": "127.9435072477604340700431206",
      "g0_source": "cgm",
      "g0_sources": [
@@ -26533,10 +26517,10 @@
      },
      "nominal_end": "2026-10-07T09:00:00+00:00",
      "rapid_units_in_window": "8.0",
-     "ratio_g_per_unit": "7.891803751881063856718353089",
+     "ratio_g_per_unit": "7.624381002540530240656442218",
      "reason": null,
      "settings_version": 2,
-     "sport_effect_mgdl": "0",
+     "sport_effect_mgdl": "5.333333333333333333333333332",
      "start": "2026-10-07T06:10:00+00:00",
      "window_minutes": 170
     },
@@ -26574,23 +26558,22 @@
     "review": {
      "calculated": true,
      "excludable": true,
-     "open": [
-      "sport"
-     ]
+     "open": []
     },
     "source_id": "t-0145",
     "sport": {
-     "effect_mgdl": "0",
+     "effect_mgdl": "5.333333333333333333333333332",
      "events": [
       {
        "at": "2026-10-07T07:40:00+00:00",
+       "effect_mgdl": "5.333333333333333333333333332",
        "id": "ns-0004",
        "kind": "jogging"
       }
      ],
      "status": "auto",
      "suggested": true,
-     "suggested_effect_mgdl": "40"
+     "suggested_effect_mgdl": "5.333333333333333333333333332"
     },
     "window": {
      "auto_end": "2026-10-07T09:00:00+00:00",
@@ -26653,23 +26636,23 @@
      "calculated": false,
      "excludable": false,
      "open": [
-      "blocked",
-      "sport"
+      "blocked"
      ]
     },
     "source_id": "ns-0002",
     "sport": {
-     "effect_mgdl": "0",
+     "effect_mgdl": "22.66666666666666666666666667",
      "events": [
       {
        "at": "2026-10-07T07:40:00+00:00",
+       "effect_mgdl": "22.66666666666666666666666667",
        "id": "ns-0004",
        "kind": "jogging"
       }
      ],
      "status": "auto",
      "suggested": true,
-     "suggested_effect_mgdl": "40"
+     "suggested_effect_mgdl": "22.66666666666666666666666667"
     },
     "window": {
      "auto_end": "2026-10-07T12:55:00+00:00",
@@ -26705,8 +26688,7 @@
    "blocked": 1,
    "calculated": 1,
    "excluded": 0,
-   "first_open": "t-0145",
-   "sport_open": 2
+   "first_open": "ns-0002"
   },
   "settings_version": 2,
   "sync_error": null,
@@ -26776,6 +26758,9 @@
     "meal_id": "t-0145",
     "notes": "Runde",
     "place": null,
+    "sport_effect_custom": false,
+    "sport_effect_default_mgdl": "40",
+    "sport_effect_mgdl": "40",
     "sport_kind": "jogging"
    },
    {

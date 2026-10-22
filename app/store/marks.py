@@ -87,6 +87,23 @@ def set_analysis_sport_mark(meal_id: str, status: str, effect_mgdl: str = "0") -
                        (meal_id, status, effect_mgdl))
 
 
+def sport_session_effects() -> dict[str, str]:
+    """Glucose drop per sport session set in "Tag durchgehen"; other sessions use their kind's setting."""
+    with connect() as db:
+        rows = db.execute("SELECT session_id,effect_mgdl FROM sport_session_effects").fetchall()
+    return {row["session_id"]: row["effect_mgdl"] for row in rows}
+
+
+def set_sport_session_effect(session_id: str, effect_mgdl: str | None) -> None:
+    with connect() as db:
+        if effect_mgdl is None:
+            db.execute("DELETE FROM sport_session_effects WHERE session_id=?", (session_id,))
+        else:
+            db.execute("INSERT INTO sport_session_effects(session_id,effect_mgdl) VALUES(?,?) "
+                       "ON CONFLICT(session_id) DO UPDATE SET effect_mgdl=excluded.effect_mgdl",
+                       (session_id, effect_mgdl))
+
+
 def analysis_windows() -> dict[str, dict]:
     """Manually chosen meal windows; local analysis cleanup, never sent to Nightscout."""
     with connect() as db:

@@ -334,7 +334,6 @@ span.range-high { color: #9a6410; font-weight: 650; }
 
 .sport-state { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-weight: 650; }
 .sport-state.is-applied { color: var(--green-dark); }
-.sport-review .sport-suggestion { display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px; min-height: 31px; color: var(--green-dark); border-color: #bdd8c5; background: var(--green-light); font-size: 11px; }
 .sport-custom summary { width: fit-content; color: var(--green); font-size: 11px; font-weight: 650; cursor: pointer; }
 .sport-custom-fields { display: flex; align-items: end; gap: 7px; margin-top: 9px; }
 .sport-custom-fields label { margin: 0; }
@@ -667,7 +666,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .day-meal .exclude-meal, .analysis-table .exclude-meal { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 5px 8px; border-color: #bdd8c5; background: var(--green-light); color: var(--green-dark); font-size: 11px; white-space: nowrap; }
 .day-meal .exclude-meal.is-excluded { background: #f3f4f1; border-color: var(--line); color: var(--muted); }
 .day-meal.is-excluded .day-meal-factor { color: var(--muted); text-decoration: line-through; }
-.sport-review .sport-none { min-height: 32px; padding: 5px 10px; font-size: 12px; }
+.sport-review .sport-none, .sport-review .sport-auto { min-height: 32px; padding: 5px 10px; font-size: 12px; }
 
 /* Places: chips in the entry form, a badge on meals and entries, management in settings. */
 .entry-place { margin-top: 10px; }
@@ -723,7 +722,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .sport-state { flex-wrap: wrap; gap: 4px 6px; }
 .sport-source { flex-basis: 100%; color: var(--muted); font-weight: 500; }
 .sport-state:has(> .ui-icon) .sport-source { padding-left: 22px; }
-.sport-review .sport-remove { min-height: 28px; padding: 4px 9px; font-size: 11px; }
+.sport-session { margin-top: 6px; }
 .sport-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 @media (max-width: 650px) {
   /* On the phone the head stacks: name and window, place and certainty, then factor and switch on one line. */

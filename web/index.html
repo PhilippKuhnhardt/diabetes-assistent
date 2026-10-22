@@ -105,12 +105,10 @@
                 <select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select>
               </label>
               <label id="entry-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
+              <label id="entry-sport-effect-field" hidden>Einfluss <span>mg/dL, − senkt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1" aria-describedby="entry-sport-effect-hint"></label>
+              <p id="entry-sport-effect-hint" class="hint" hidden>Wirkt automatisch über 5 Stunden nach dem Ende auf Vorhersage und Dosis. Später änderbar in „Tag durchgehen“.</p>
               <section id="entry-influences" class="entry-card" aria-label="Einflüsse" hidden>
                 <p class="entry-card-title">Einflüsse</p>
-                <div id="entry-sport-option" class="entry-chips entry-sport-row" hidden>
-                  <label class="chip chip-toggle"><input type="checkbox" name="consider_sport"> <span id="entry-sport-hint"></span></label>
-                </div>
-                <label id="entry-sport-effect-field" class="inline-unit" hidden><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1" aria-label="BZ-Wirkung durch Sport in mg/dL"><span>mg/dL BZ-Wirkung, − senkt</span></label>
                 <div id="entry-day-type" class="entry-day-type" hidden>
                   <div class="entry-switch" role="group" aria-label="Tagesart für das Frühstück">
                     <button type="button" class="day-type-option" data-day-type="work" aria-pressed="false">Arbeitstag</button>
@@ -332,8 +330,8 @@
                 <label>Cardio<input name="sport_light_cardio" type="number" min="-500" max="500" step="1" required></label>
                 <label>Rennsport<input name="sport_racing" type="number" min="-500" max="500" step="1" required></label>
               </div>
-              <label>Berücksichtigen bis vor Mahlzeit <span>min</span><input name="sport_lookback_minutes" type="number" min="0" max="1440" step="1" required></label>
-              <p class="hint">Negativ senkt, positiv hebt den Blutzucker.</p>
+              <label>Sport-Auswertung: Mahlzeiten bis <span>min danach</span><input name="sport_lookback_minutes" type="number" min="0" max="1440" step="1" required></label>
+              <p class="hint">Negativ senkt, positiv hebt den Blutzucker. Standard je Einheit; er wirkt automatisch über 5 Stunden nach dem Ende auf „Wirkt noch“, Dosis, Warnungen und Mahlzeitfaktor. Eine einzelne Einheit änderst du beim Eintragen oder in „Tag durchgehen“.</p>
             </section>
           </div>
           <div class="panel settings-save">
