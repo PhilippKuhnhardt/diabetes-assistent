@@ -1682,7 +1682,11 @@ class IntegrationTests(unittest.TestCase):
         with fake_days(return_value=current_day):
             dose = self.request("/api/entry/preview", method="POST", body={**entry, "carbs": "0"})["dose"]
         self.assertEqual(dose["options"][0]["variant"], "split")
-        self.assertEqual(Decimal(dose["options"][0]["units"]), later)
+        # The second part's amount is the current forecast's correction; the plan stays as orientation.
+        normal = next(option for option in dose["options"] if option["variant"] == "normal")
+        self.assertEqual(Decimal(dose["options"][0]["units"]), Decimal(normal["units"]))
+        self.assertEqual(Decimal(dose["options"][0]["planned_units"]), later)
+        self.assertEqual(dose["split_plan"]["state"], "later")
         self.assertEqual(dose["split_plan"]["due_at"], (meal_at + timedelta(minutes=120)).isoformat())
 
     def test_window_editor_reads_cgm_per_minute_and_counts_a_candidate_window(self):

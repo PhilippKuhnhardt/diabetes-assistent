@@ -8,18 +8,22 @@ Each kind has its own Pushover priority (-2 to 2, user request 2026-10-11).
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, time, timedelta, timezone
+from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from app import calculation, forecast, glucose_alerts, on_board, split
 from app.common import parse_instant, unit_text
 from app.ingestion import pushover
-from app.services import day_view, factors
+from app.services import day_view, dose_help, factors
 from app.store import basal_doses, config, marks
 from app.store import notifications as store
 
 KINDS = {"basal": True, "split": True, "low": True, "high": True}
 LABELS = {"basal": "Basal vergessen", "split": "2. Split-Teil fällig", "low": "Tief droht", "high": "Hoch droht"}
+# A second split part due before its planned time: glucose high and rising fast (app/split.py).
+EARLY_SPLIT_TITLE = "2. Split-Teil jetzt: BZ steigt schnell"
 WARNINGS = ("low", "high")
 WARNING_REPEAT = timedelta(minutes=60)
 # Pushover priorities (https://pushover.net/api#priority); default 1 skips the quiet hours as before.
@@ -37,8 +41,10 @@ def _clock(at: datetime, zone: ZoneInfo) -> str:
 
 
 def due_reminders(now: datetime, settings: dict, treatments: list[dict], basal_today: list[dict],
-                  enabled: dict[str, bool]) -> list[dict]:
-    """The reminders that are due now, before checking which were already sent."""
+                  enabled: dict[str, bool], entries: list[dict] | None = None,
+                  second_part: Callable[[], Decimal | None] | None = None) -> list[dict]:
+    """The reminders that are due now, before checking which were already sent. second_part gives the
+    second split part's IE from the current forecast (None without a fresh glucose value)."""
     zone = ZoneInfo(settings["timezone"])
     local = now.astimezone(zone)
     reminders = []
@@ -50,11 +56,21 @@ def due_reminders(now: datetime, settings: dict, treatments: list[dict], basal_t
         reminders.append({"key": f"basal:{local.date().isoformat()}", "kind": "basal",
                           "title": LABELS["basal"], "message": message})
     plan = split.open_plan(treatments, now) if enabled.get("split") else None
-    if plan and now >= plan["due_at"]:
+    state = split.timing(plan, entries or [], settings, now)["state"] if plan else None
+    if state in ("early", "due"):
+        # The amount comes from the current forecast (user approval 2026-10-22), the plan stays as orientation.
+        units = second_part() if second_part else None
+        meal = f"Mahlzeit um {_clock(plan['meal_at'], zone)}"
+        if units is None:
+            message = f"{_units(plan['units'])} IE zur {meal}"
+        elif units > 0:
+            message = f"{_units(units)} IE laut Prognose (geplant {_units(plan['units'])}) zur {meal}"
+        else:
+            message = f"Laut Prognose nicht nötig (geplant {_units(plan['units'])}) zur {meal}"
+        # One reminder per plan: an early one is not repeated at the planned time.
         reminders.append({
             "key": f"split:{plan['meal_at'].astimezone(timezone.utc).isoformat()}", "kind": "split",
-            "title": LABELS["split"],
-            "message": f"{_units(plan['units'])} IE zur Mahlzeit um {_clock(plan['meal_at'], zone)}",
+            "title": EARLY_SPLIT_TITLE if state == "early" else LABELS["split"], "message": message,
         })
     return reminders
 
@@ -105,6 +121,15 @@ def _today_inputs(now: datetime, settings: dict) -> tuple[list[dict], list[dict]
     return treatments, basal_today, entries
 
 
+def _second_part() -> Decimal | None:
+    """The correction the dose help suggests now without food, which is the second split part's amount."""
+    try:
+        units = dose_help.dose_help({"carbs": "0"}).get("entry_units")
+    except ValueError:
+        return None
+    return calculation.dec(units) if units is not None else None
+
+
 def check(now: datetime | None = None) -> list[dict]:
     """Send every due reminder once. Returns what was sent; a failed send is retried next round."""
     if not pushover.is_configured():
@@ -117,7 +142,7 @@ def check(now: datetime | None = None) -> list[dict]:
     treatments, basal_today, entries = _today_inputs(now, settings)
     priorities = store.priorities(PRIORITIES)
     sent = []
-    for reminder in (due_reminders(now, settings, treatments, basal_today, enabled)
+    for reminder in (due_reminders(now, settings, treatments, basal_today, enabled, entries, _second_part)
                      + glucose_warnings(now, settings, treatments, entries, enabled)):
         if store.was_sent(reminder["key"]):
             continue
