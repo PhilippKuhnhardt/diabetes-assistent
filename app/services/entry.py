@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from zoneinfo import ZoneInfo
 
@@ -12,7 +12,7 @@ from app import calculation, episodes, split as split_bolus
 from app.common import parse_instant
 from app.ingestion import nightscout
 from app.services import basal, day_view, diary, dose_help, places
-from app.store import config, marks, mirror
+from app.store import config, marks
 
 MODES = ("meal", "exercise", "basal")
 DOSE_VARIANTS = ("normal", "low", "cautious", "carbs")
@@ -93,13 +93,8 @@ def _context(payload: dict) -> dict:
     _, settings = config.get_settings()
     zone = ZoneInfo(settings["timezone"])
     today = datetime.now(zone).date().isoformat()
-    if day == today:
-        # Same freshness rule as the dose help, so the suggestion below reuses this sync.
-        synced = mirror.synced_at(day)
-        recent = bool(synced and datetime.now(timezone.utc) - parse_instant(synced) < timedelta(minutes=1))
-        current = day_view.day_payload(day, refresh=not recent)
-    else:
-        current = day_view.day_payload(day, refresh=False)
+    # Today follows the local copy while the background job keeps it current; same rule as the dose help.
+    current = day_view.day_payload(day, refresh=day == today and not day_view.mirror_current(day))
     at = parse_instant(str(payload["at"])) if payload.get("at") else None
     treatments = [{**row, "at": parse_instant(row["at"])} for row in current["treatments"]]
     return {"day": day, "mode": mode, "settings": settings, "zone": zone, "today": today,

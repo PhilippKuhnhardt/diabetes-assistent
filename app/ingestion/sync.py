@@ -6,6 +6,15 @@ from app.ingestion import basal_sync, nightscout
 from app.store import config, mirror
 
 
+# Per local day: the Nightscout write count when it was last mirrored in this process.
+_mirrored: dict[str, int] = {}
+
+
+def mirrored_after_writes(day: str) -> bool:
+    """Whether the day was mirrored in this process after its last write to Nightscout."""
+    return _mirrored.get(day) == nightscout.write_count()
+
+
 def sync_profile_cache(force: bool = False) -> None:
     if not nightscout.is_configured():
         raise nightscout.NightscoutError("Nightscout-Zugang in Umgebungsvariablen fehlt")
@@ -28,9 +37,11 @@ def sync_day(day: str) -> dict:
         status["profile_sync_error"] = str(error)
     _, settings = config.get_settings()
     start, end = local_day_range(day, settings["timezone"])
+    writes = nightscout.write_count()
     try:
         raw_entries, raw_treatments = nightscout.fetch_range(start, end)
         mirror.mirror_day(day, raw_entries, raw_treatments, start, end)
+        _mirrored[day] = writes
     except nightscout.NightscoutError as error:
         status["sync_error"] = str(error)
         return status
@@ -46,9 +57,11 @@ def mirror_days(days: list[str], timezone_name: str) -> tuple[int, list[dict]]:
     synced = 0
     for day in days:
         start, end = local_day_range(day, timezone_name)
+        writes = nightscout.write_count()
         try:
             entries, treatments = nightscout.fetch_range(start, end)
             mirror.mirror_day(day, entries, treatments, start, end)
+            _mirrored[day] = writes
             synced += 1
         except nightscout.NightscoutError as error:
             errors.append({"day": day, "error": str(error)})

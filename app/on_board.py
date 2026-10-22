@@ -235,9 +235,11 @@ def timeline(found: dict, entries: list[dict], start: datetime, end: datetime,
     """Every STEP from start to end: how fast insulin lowers and carbs plus surcharge raise glucose
     (mg/dL per hour over the step), the measured glucose and the model's value from the glucose
     `horizon` earlier: G(t − h) − insulin acted + carbs and surcharge acted since then."""
+    glucose_at = calculation.glucose_interpolator(entries)
+
     def reading(moment):
         try:
-            return calculation.interpolate_glucose(entries, moment)["value"]
+            return glucose_at(moment)["value"]
         except ValueError:
             return None
     per_hour = Decimal(3600) / Decimal(str(STEP.total_seconds()))

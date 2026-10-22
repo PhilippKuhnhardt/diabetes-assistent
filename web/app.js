@@ -1855,12 +1855,13 @@ async function openInboxItem(event) {
   setTimeout(() => meal.classList.remove("is-target"), 2500);
 }
 
-async function loadDay() {
+// The server reads its local copy, which the background sync keeps current; refresh asks Nightscout first.
+async function loadDay({ refresh = false } = {}) {
   $("#selected-day").value = state.day;
   $("#timeline").innerHTML = '<div class="empty">Nightscout-Daten werden geladen …</div>';
   $("#night-card").hidden = true;
   try {
-    renderDay(await api("/api/day?date=" + encodeURIComponent(state.day)));
+    renderDay(await api("/api/day?date=" + encodeURIComponent(state.day) + (refresh ? "&refresh=1" : "")));
     loadEffects();
     loadInbox();
     await updatePreview();
@@ -2950,7 +2951,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#prev-day").addEventListener("click", () => { const d = new Date(state.day + "T12:00"); d.setDate(d.getDate() - 1); changeDay(d.toLocaleDateString("sv-SE")); });
   $("#next-day").addEventListener("click", () => { const d = new Date(state.day + "T12:00"); d.setDate(d.getDate() + 1); changeDay(d.toLocaleDateString("sv-SE")); });
   $("#selected-day").addEventListener("change", event => changeDay(event.target.value));
-  $("#refresh-day").addEventListener("click", loadDay);
+  $("#refresh-day").addEventListener("click", () => loadDay({ refresh: true }));
   $("#entry-form").addEventListener("submit", saveEntry);
   const touchEntryTime = () => {
     state.entryTimeTouched = true;
