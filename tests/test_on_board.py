@@ -159,6 +159,17 @@ class OnBoardTests(unittest.TestCase):
         active = self.active([racing])
         self.assertEqual((active["sport_mgdl"], active["raising_mgdl"], active["lowering_mgdl"]), (-40, 40, 0))
 
+    def test_sport_duration_is_set_per_kind(self):
+        self.settings["sport_effects_mgdl"] = {"gym": "70"}
+        self.settings["sport_durations_minutes"] = {"gym": 120}
+        gym = {"id": "g", "at": self.now - timedelta(minutes=120), "eventType": "Exercise", "duration": 60,
+               "sport_type": "gym"}
+        # Ended 60 of 120 minutes ago: half is still to come; after 2 h nothing is left.
+        self.assertEqual(self.active([gym])["sport_mgdl"], 35)
+        self.assertEqual(self.active([{**gym, "at": self.now - timedelta(minutes=180)}])["sports"], [])
+        self.assertEqual(on_board.sport_share(gym, self.now - timedelta(minutes=60), self.now, Decimal(120)),
+                         Decimal("0.5"))
+
     def test_sport_share_of_a_window(self):
         gym = {"at": self.now, "duration": 60}
         end = self.now + timedelta(minutes=60)

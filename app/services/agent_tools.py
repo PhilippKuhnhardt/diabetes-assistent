@@ -364,7 +364,7 @@ TOOLS = [
             "sport_change_mgdl": {"type": "number", "minimum": -500, "maximum": 500,
                                   "description": "Nur für kind=exercise, wenn Philipp einen eigenen Einfluss nennt: "
                                                  "BZ-Änderung in mg/dL, −70 senkt, +40 hebt. Weglassen = Standard "
-                                                 "der Sportart. Wirkt automatisch über 5 h nach dem Ende."},
+                                                 "der Sportart. Wirkt automatisch über die Wirkdauer der Sportart nach dem Ende."},
             "notes": {"type": "string", "maxLength": 500, "description": "Notiz, z. B. was gegessen wurde."},
             "event_id": {"type": "string", "description": "UUID. Bei Wiederholung nach Fehler/Timeout dieselbe "
                                                           "event_id verwenden, dann entsteht kein Duplikat."},

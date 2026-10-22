@@ -17,7 +17,7 @@ def validate_settings(value: dict) -> dict:
     result = dict(old)
     for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes",
                 "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
-                "sport_effects_mgdl", "dose_target_mgdl", "dose_cautious_target_mgdl", "dose_low_target_mgdl",
+                "sport_effects_mgdl", "sport_durations_minutes", "dose_target_mgdl", "dose_cautious_target_mgdl", "dose_low_target_mgdl",
                 "auto_percentile",
                 "auto_half_life_days", "auto_lookback_days", "auto_method", "auto_surcharge_mgdl",
                 "basal_default_units", "split_min_grams", "split_first_percent", "split_delay_minutes"):
@@ -78,10 +78,20 @@ def validate_settings(value: dict) -> dict:
         if not effect.is_finite() or not -500 <= effect <= 500:
             raise ValueError("Ungültiger Sporteffekt")
         clean_effects[kind] = str(effect)
+    durations = result.get("sport_durations_minutes") or dict(config.DEFAULT_SPORT_DURATIONS)
+    if not isinstance(durations, dict) or set(durations) != set(episodes.SPORT_LABELS):
+        raise ValueError("Ungültige Sportarten")
+    clean_durations = {}
+    for kind, minutes in durations.items():
+        text = str(minutes)
+        if not text.isdigit() or not 30 <= int(text) <= 1440:
+            raise ValueError("Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen")
+        clean_durations[kind] = int(text)
     result.update({
         "window_minutes": window, "peak_minutes": peak, "duration_minutes": duration,
         "breakfast_end_minute": breakfast_end, "lunch_end_minute": lunch_end,
         "sport_lookback_minutes": lookback, "sport_effects_mgdl": clean_effects,
+        "sport_durations_minutes": clean_durations,
         "dose_target_mgdl": str(dose_target),
         "dose_cautious_target_mgdl": str(cautious_target),
         "dose_low_target_mgdl": str(low_target),

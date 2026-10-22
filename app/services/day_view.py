@@ -89,10 +89,10 @@ def compute_day(day: str) -> dict:
         except (ValueError, KeyError):
             span = {"start": meal["at"], "end": meal["at"] + timedelta(minutes=int(meal_settings["window_minutes"]))}
         sport_parts = [
-            (item, on_board.sport_effect(item, meal_settings, session_effects) * on_board.sport_share(item, span["start"], span["end"]))
+            (item, on_board.sport_effect(item, meal_settings, session_effects)
+             * on_board.sport_share(item, span["start"], span["end"], on_board.sport_minutes(item, meal_settings)))
             for item in treatments
-            if item.get("eventType") == "Exercise" and item.get("sport_type")
-            and item["at"] < span["end"] and on_board.sport_share(item, span["start"], span["end"]) > 0]
+            if item.get("eventType") == "Exercise" and item.get("sport_type") and item["at"] < span["end"]]
         sport_parts = [(item, effect) for item, effect in sport_parts if effect != 0]
         auto_effect = sum((effect for _, effect in sport_parts), Decimal(0))
         status = mark.get("status", "auto")

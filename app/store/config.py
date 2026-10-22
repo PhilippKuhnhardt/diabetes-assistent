@@ -11,6 +11,9 @@ from app.store.db import connect
 # Suggested glucose drop per sport type in mg/dL; negative values raise glucose
 # (racing adrenaline).
 DEFAULT_SPORT_EFFECTS = {"jogging": 40, "gym": 40, "light_cardio": 20, "racing": -40}
+# Minutes after a session's end over which its effect acts (linearly), per sport type
+# (user request 2026-10-22: configurable once the kinds show different data).
+DEFAULT_SPORT_DURATIONS = {"jogging": 300, "gym": 300, "light_cardio": 300, "racing": 300}
 
 
 # Usual daily basal dose offered with breakfast (IE); configurable in the settings.
@@ -39,6 +42,7 @@ def default_settings() -> dict:
         "lunch_end_minute": 1020,
         "sport_lookback_minutes": 360,
         "sport_effects_mgdl": dict(DEFAULT_SPORT_EFFECTS),
+        "sport_durations_minutes": dict(DEFAULT_SPORT_DURATIONS),
         "basal_default_units": DEFAULT_BASAL_UNITS,
         **DEFAULT_SPLIT,
     }
@@ -89,6 +93,7 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result.setdefault("sport_lookback_minutes", 360)
     # Older settings versions predate newer sport types such as racing.
     result["sport_effects_mgdl"] = {**DEFAULT_SPORT_EFFECTS, **result.get("sport_effects_mgdl", {})}
+    result["sport_durations_minutes"] = {**DEFAULT_SPORT_DURATIONS, **result.get("sport_durations_minutes", {})}
     result["nightscout_profile"] = ({
         "start_at": profile["start_at"], "profile_id": profile["profile_id"],
         "profile_name": profile["profile_name"], "timezone": profile["timezone"],

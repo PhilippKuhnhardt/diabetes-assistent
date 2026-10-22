@@ -15,7 +15,8 @@ Surcharge (surcharge method only): the main meal's surcharge × share acts linea
 after the meal start (6 h with a fat/protein mark). Snacks never carry it.
 
 Sport: each session lowers glucose by its effect (the setting of its kind, or the value Philipp set on the
-session in "Tag durchgehen"; negative raises, e.g. racing), linearly over 5 h from the session's end. After
+session in "Tag durchgehen"; negative raises, e.g. racing), linearly from the session's end over its kind's
+duration (setting, default 5 h). After
 gym the glucose fell about 130 mg/dL more than on days without sport by 6 h after the start, mostly 1-5 h after
 the end (10 sessions, analysen/pruefstand-2026-10/gym.md, 2026-10-22). A session entered ahead counts already.
 
@@ -35,7 +36,7 @@ CARBS_SHORT_MINUTES, CARBS_SHORT_GRAMS = Decimal(120), Decimal(40)
 CARBS_LONG_MINUTES, CARBS_LONG_GRAMS = Decimal(180), Decimal(100)
 SURCHARGE_FROM = Decimal(120)
 SURCHARGE_TO, SURCHARGE_TO_FAT = Decimal(300), Decimal(360)
-SPORT_MINUTES = Decimal(300)
+SPORT_MINUTES = Decimal(300)  # default; settings sport_durations_minutes per kind
 # Sessions entered for later count once they start within this time.
 SPORT_AHEAD = timedelta(hours=6)
 # Typical forecast miss after a post-meal correction (11 corrections, analysis 2026-10-08).
@@ -88,10 +89,15 @@ def surcharge_remaining(minutes: Decimal, fat: bool = False) -> Decimal:
     return max(Decimal(0), (end - minutes) / (end - SURCHARGE_FROM))
 
 
-def sport_remaining(minutes_after_end: Decimal) -> Decimal:
+def sport_remaining(minutes_after_end: Decimal, duration: Decimal = SPORT_MINUTES) -> Decimal:
     if minutes_after_end <= 0:
         return Decimal(1)
-    return max(Decimal(0), 1 - minutes_after_end / SPORT_MINUTES)
+    return max(Decimal(0), 1 - minutes_after_end / duration)
+
+
+def sport_minutes(item: dict, settings: dict) -> Decimal:
+    """Minutes after its end over which a session acts: the setting of its kind."""
+    return Decimal(int(settings.get("sport_durations_minutes", {}).get(item.get("sport_type"), SPORT_MINUTES)))
 
 
 def sport_effect(item: dict, settings: dict, overrides: dict | None = None) -> Decimal:
@@ -105,10 +111,10 @@ def sport_end(item: dict) -> datetime:
     return item["at"] + timedelta(minutes=int(item.get("duration") or 0))
 
 
-def sport_share(item: dict, start: datetime, end: datetime) -> Decimal:
+def sport_share(item: dict, start: datetime, end: datetime, duration: Decimal = SPORT_MINUTES) -> Decimal:
     """Share of a session's effect that acts between start and end."""
     finish = sport_end(item)
-    return sport_remaining(_minutes(start, finish)) - sport_remaining(_minutes(end, finish))
+    return sport_remaining(_minutes(start, finish), duration) - sport_remaining(_minutes(end, finish), duration)
 
 
 def _minutes(later: datetime, earlier: datetime) -> Decimal:
@@ -136,11 +142,12 @@ def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, 
         if item.get("eventType") == "Exercise" and item.get("sport_type"):
             seen.add(key)
             effect = sport_effect(item, settings, sport_overrides)
+            duration = sport_minutes(item, settings)
             ahead = timedelta(0) if keep_all else SPORT_AHEAD
             if (effect != 0 and item["at"] <= now + ahead
-                    and (keep_all or _minutes(now, sport_end(item)) < SPORT_MINUTES)):
+                    and (keep_all or _minutes(now, sport_end(item)) < duration)):
                 sports.append({"id": item.get("id"), "at": item["at"], "end": sport_end(item),
-                               "kind": item["sport_type"], "mgdl": effect})
+                               "kind": item["sport_type"], "mgdl": effect, "minutes": duration})
             continue
         if item["at"] > now:
             continue
@@ -178,7 +185,8 @@ def effects_at(found: dict, moment: datetime, cutoff: datetime | None = None) ->
                  for row in found["carbs"]), Decimal(0))
     surcharge = sum((row["mgdl"] * surcharge_remaining(_minutes(moment, row["at"]), row["fat"])
                      for row in found["surcharges"]), Decimal(0))
-    sport = sum((row["mgdl"] * sport_remaining(_minutes(moment, row["end"])) for row in sports), Decimal(0))
+    sport = sum((row["mgdl"] * sport_remaining(_minutes(moment, row["end"]), row["minutes"]) for row in sports),
+                Decimal(0))
     return {"insulin_units": units, "lowering_mgdl": lowering + max(sport, Decimal(0)), "carbs_mgdl": carbs,
             "surcharge_mgdl": surcharge, "sport_mgdl": sport,
             "raising_mgdl": carbs + surcharge + max(-sport, Decimal(0))}
@@ -218,7 +226,7 @@ def summary(found: dict, now: datetime) -> dict:
             "carbs": [{"at": row["at"], "grams": row["grams"],
                        "remaining_grams": row["grams"] * carb_remaining(_minutes(now, row["at"]), row["grams"])}
                       for row in found["carbs"]],
-            "sports": [{**row, "remaining_mgdl": row["mgdl"] * sport_remaining(_minutes(now, row["end"]))}
+            "sports": [{**row, "remaining_mgdl": row["mgdl"] * sport_remaining(_minutes(now, row["end"]), row["minutes"])}
                        for row in found.get("sports", [])]}
 
 
