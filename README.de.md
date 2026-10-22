@@ -114,6 +114,6 @@ Die Integrationstests verwenden einen lokalen Fake-Nightscout-Server und schreib
 Mit `PUSHOVER_APP_TOKEN` und `PUSHOVER_USER_KEY` schickt der Hintergrund-Sync Erinnerungen per [Pushover](https://pushover.net) aufs Handy, jede nur einmal und nur nach erfolgreichem Abgleich mit Nightscout:
 
 - **Basal vergessen:** ab Frühstücksende ist heute noch kein Basal erfasst.
-- **2. Split-Teil fällig:** der geplante 2. Teil ist fällig und nach der Mahlzeit wurde noch kein Insulin erfasst.
+- **2. Split-Teil fällig:** der 2. Teil ist fällig und nach der Mahlzeit wurde noch kein Insulin erfasst. Steigt der BZ 60–105 min nach der Mahlzeit über 180 schnell, kommt die Meldung früher; ist er zum geplanten Zeitpunkt unter 110 oder fällt, bis zu 60 min später. Die Meldung nennt die Menge aus der aktuellen Prognose und die geplante.
 
 Beide lassen sich unter **Einstellungen → Benachrichtigungen** einzeln abschalten; dort gibt es auch eine Testmeldung und die letzten gesendeten Meldungen. Meldungen gehen mit hoher Priorität (Pushover-Ruhezeiten werden übergangen); ob sie auf dem iPhone als kritischer Alarm auch im Stumm-Modus klingeln, stellt man in der Pushover-App ein. Ist `APP_HEARTBEAT_URL` gesetzt, ruft die App diese Adresse nach jeder fehlerfreien Runde auf; ein externer Wächter wie Healthchecks.io meldet dann, wenn die App oder der Abgleich ausfällt.
