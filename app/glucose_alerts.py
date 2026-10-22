@@ -5,6 +5,12 @@ model (insulin, carbs and surcharge still to act) plus the model's miss over the
 rate fades out linearly over 60 minutes. Over 31 days it caught 12 of 12 daytime lows (median 17 min
 ahead) and 11 of 12 highs (median 20 min ahead), about 4 warnings a day, about 1 of them needless.
 Nights are left out: the sensor was unreliable there. No low warning within 30 min after a carb entry. A rough forecast, not dosing advice.
+
+Review 2026-10-22 with 31 days (analysen/alarme-2026-10.md, Philipp's go for the daytime changes): since the
+CGM sends a reading every minute (12.10.) the miss is measured over 15 instead of 30 minutes and fades over
+45 instead of 60, and the low pause follows only carb entries of at least 20 g, so a small carb correction
+eaten because BG falls no longer mutes the warning. Daytime lows caught 16 -> 18 of 19 (median 20 -> 23 min
+ahead), highs 10 -> 11 of 13, warnings 2.9 -> 3.0 a day.
 """
 from __future__ import annotations
 
@@ -18,7 +24,7 @@ LOW_MGDL, HIGH_MGDL = Decimal(70), Decimal(250)
 HORIZON_MINUTES = 60
 STEP_MINUTES = 5
 # How far back the model's miss is measured, and over how long its rate fades out.
-MISS_MINUTES, FADE_MINUTES = 30, Decimal(60)
+MISS_MINUTES, FADE_MINUTES = 15, Decimal(45)
 # Warnings only from DAY_FROM to DAY_TO local time (hours).
 DAY_FROM, DAY_TO = 6, 23
 # The latest CGM reading must be at most this old.
@@ -26,8 +32,11 @@ FRESH_MINUTES = 10
 # No low warning this soon after a carb entry: the model lets carbs act at once, real absorption starts
 # later, so right after eating the "faster than expected" fall is mostly that lag (24 of ~100 low
 # warnings came within 45 min after carbs, 2 before a real low; a 30-min pause kept 12 of 12 lows,
-# user report 2026-10-11, analysen/fruehprognose.md section 7).
+# user report 2026-10-11, analysen/fruehprognose.md section 7). Only after a meal-sized entry: a small carb
+# correction eaten because BG falls must not mute the warning (18.10. 12:17: 10 g, forecast 41, silent, low at
+# 12:31; analysen/alarme-2026-10.md).
 LOW_PAUSE_AFTER_CARBS = timedelta(minutes=30)
+LOW_PAUSE_MIN_GRAMS = Decimal(20)
 
 
 def _faded(minutes: Decimal) -> Decimal:
@@ -74,7 +83,8 @@ def warnings(entries: list[dict], found: dict, now: datetime, timezone_name: str
     if result is None:
         return []
     due, glucose = [], result["glucose_mgdl"]
-    last_carbs = max((row["at"] for row in found["carbs"] if row["at"] <= now), default=None)
+    last_carbs = max((row["at"] for row in found["carbs"] if row["at"] <= now and row["grams"] >= LOW_PAUSE_MIN_GRAMS),
+                     default=None)
     paused = last_carbs is not None and now - last_carbs < LOW_PAUSE_AFTER_CARBS
     low = next((point for point in result["points"] if point["mgdl"] < LOW_MGDL), None)
     if low and glucose >= LOW_MGDL and not paused:
