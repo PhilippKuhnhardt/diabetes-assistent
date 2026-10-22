@@ -54,6 +54,12 @@
   "split_delay_minutes": 120,
   "split_first_percent": 60,
   "split_min_grams": 80,
+  "sport_durations_minutes": {
+   "gym": 300,
+   "jogging": 300,
+   "light_cardio": 300,
+   "racing": 300
+  },
   "sport_effects_mgdl": {
    "gym": "40",
    "jogging": "40",

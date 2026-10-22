@@ -15,8 +15,7 @@ ZONE = ZoneInfo("Europe/Berlin")
 def meal(meal_id, open_items, end="2026-10-21T14:00:00+00:00", excluded=False, at="2026-10-21T10:30:00+00:00"):
     return {"id": meal_id, "meal": "lunch", "at": at, "excluded": excluded,
             "review": {"open": open_items}, "window": {"end": end},
-            "calculation": {"reason": "CGM-Lücke am Messzeitpunkt ist zu groß"},
-            "sport": {"events": [{"kind": "jogging", "at": "2026-10-21T08:00:00+00:00"}]}}
+            "calculation": {"reason": "CGM-Lücke am Messzeitpunkt ist zu groß"}}
 
 
 class MealItemTests(unittest.TestCase):
@@ -24,21 +23,15 @@ class MealItemTests(unittest.TestCase):
 
     def test_only_finished_open_meals_that_count(self):
         day = {"day": "2026-10-21", "meals": [
-            meal("open", ["sport"]),
+            meal("open", ["blocked"]),
             meal("clean", []),
-            meal("running", ["sport"], end="2026-10-21T19:00:00+00:00"),
-            meal("excluded", ["sport"], excluded=True),
+            meal("running", ["blocked"], end="2026-10-21T19:00:00+00:00"),
+            meal("excluded", ["blocked"], excluded=True),
         ]}
         items = inbox.meal_items(day, NOW, ZONE)
         self.assertEqual([item["meal_id"] for item in items], ["open"])
-        self.assertEqual(items[0]["key"], "meal:open:sport")
-        self.assertEqual(items[0]["reasons"], [{"kind": "sport", "text": "Sport berücksichtigen (Joggen 10:00)"}])
-
-    def test_a_new_reason_gives_a_new_key(self):
-        day = {"day": "2026-10-21", "meals": [meal("m", ["blocked", "sport"])]}
-        item = inbox.meal_items(day, NOW, ZONE)[0]
-        self.assertEqual(item["key"], "meal:m:blocked,sport")
-        self.assertEqual(item["reasons"][1]["text"], "Faktor nicht berechenbar: CGM-Lücke am Messzeitpunkt ist zu groß")
+        self.assertEqual(items[0]["key"], "meal:open:blocked")
+        self.assertEqual(items[0]["reasons"], [{"kind": "blocked", "text": "Faktor nicht berechenbar: CGM-Lücke am Messzeitpunkt ist zu groß"}])
 
 
 class ViewTests(unittest.TestCase):
@@ -53,7 +46,7 @@ class ViewTests(unittest.TestCase):
         self.temp.cleanup()
 
     def test_opened_hint_loses_its_highlight_and_vanishes_once_done(self):
-        days = {"2026-10-21": {"day": "2026-10-21", "meals": [meal("m", ["sport"])]},
+        days = {"2026-10-21": {"day": "2026-10-21", "meals": [meal("m", ["blocked"])]},
                 "2026-10-20": {"day": "2026-10-20", "meals": [
                     meal("y", ["blocked"], end="2026-10-20T14:00:00+00:00", at="2026-10-20T10:30:00+00:00")]}}
         payload = lambda day, refresh: days.get(day, {"day": day, "meals": []})
@@ -61,7 +54,7 @@ class ViewTests(unittest.TestCase):
             first = inbox.view(now=NOW)
             self.assertEqual([item["meal_id"] for item in first["items"]], ["m", "y"])
             self.assertEqual(first["new"], 2)
-            inbox.store.mark_seen("meal:m:sport")
+            inbox.store.mark_seen("meal:m:blocked")
             second = inbox.view(now=NOW)
             self.assertEqual([item["seen"] for item in second["items"]], [True, False])
             self.assertEqual(second["new"], 1)

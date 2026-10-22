@@ -11,8 +11,8 @@ from zoneinfo import ZoneInfo
 from app import calculation, episodes, split as split_bolus
 from app.common import parse_instant
 from app.ingestion import nightscout
-from app.services import annotations, basal, day_view, diary, dose_help, places
-from app.store import config, mirror
+from app.services import basal, day_view, diary, dose_help, places
+from app.store import config, marks, mirror
 
 MODES = ("meal", "exercise", "basal")
 DOSE_VARIANTS = ("normal", "low", "cautious", "carbs")
@@ -55,13 +55,19 @@ def _carbs(payload: dict) -> Decimal | None:
     return carbs if carbs.is_finite() and 0 <= carbs <= 500 else None
 
 
-def _sport_change(payload: dict) -> Decimal | None:
-    """The signed BG change typed for the sport (−40 lowers); None when out of range."""
-    try:
-        value = Decimal(str(payload.get("sport_effect_mgdl") or 0))
-    except InvalidOperation:
+def _sport_drop(payload: dict) -> Decimal | None:
+    """The glucose drop typed for a sport session (the form shows the signed change, −70 lowers);
+    None when left empty, so the session follows the setting of its kind."""
+    raw = str(payload.get("sport_effect_mgdl") if payload.get("sport_effect_mgdl") is not None else "").strip()
+    if raw == "":
         return None
-    return value if value.is_finite() and -500 <= value <= 500 else None
+    try:
+        change = Decimal(raw)
+    except InvalidOperation:
+        raise ValueError("Ungültiger Sporteinfluss") from None
+    if not change.is_finite() or not -500 <= change <= 500:
+        raise ValueError("Sporteinfluss muss zwischen −500 und 500 mg/dL liegen")
+    return -change
 
 
 def _finger(payload: dict) -> Decimal | None:
@@ -140,24 +146,6 @@ def _before_breakfast_end(context: dict) -> bool:
     return minute is not None and minute < int(context["settings"]["breakfast_end_minute"])
 
 
-def _sport(context: dict, assignment: dict | None) -> dict | None:
-    """Sport that ended within the lookback before a carb entry, main meal or snack alike."""
-    at, carbs, settings = context["at"], context["carbs"], context["settings"]
-    if context["mode"] != "meal" or at is None or not carbs or carbs <= 0:
-        return None
-    lookback = timedelta(minutes=int(settings["sport_lookback_minutes"]))
-    events = [item for item in context["treatments"]
-              if item.get("eventType") == "Exercise" and item.get("sport_type")
-              and at - lookback <= item["at"] + timedelta(minutes=int(item.get("duration") or 0)) <= at]
-    if not events:
-        return None
-    # Stored effects are drops; the form shows the signed BG change.
-    change = -sum((calculation.dec(settings["sport_effects_mgdl"].get(item["sport_type"], 0)) for item in events),
-                  Decimal(0))
-    return {"events": [{"sport_type": item["sport_type"], "at": item["at"].isoformat()} for item in events],
-            "suggested_change_mgdl": str(change)}
-
-
 def _basal_units(context: dict) -> Decimal:
     """Before breakfast end, while the day has no basal yet, the usual dose rides along."""
     units = calculation.dec(context["settings"].get("basal_default_units", 17))
@@ -201,18 +189,15 @@ def _low_blocked(carbs: Decimal, payload: dict, result: dict, split: dict | None
     return None
 
 
-def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | None,
-          split: dict | None = None) -> dict:
+def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | None = None) -> dict:
     """The suggestion for today, with the three options already resolved for display."""
     carbs = context["carbs"]
     if context["mode"] != "meal" or carbs is None:
         return {"message": ""}
     if context["day"] != context["today"]:
         return {"message": "Eine aktuelle Empfehlung gibt es nur für den heutigen Tag." if carbs > 0 else ""}
-    change = _sport_change(payload) if sport and payload.get("consider_sport") else Decimal(0)
-    if change is None:
-        return {"message": "Der geschätzte Sporteinfluss liegt außerhalb des erlaubten Bereichs."}
-    result = dose_help.dose_help({"carbs": str(carbs), "activity_change_mgdl": str(change),
+    # Sport is part of what still acts (app.on_board), so it needs no extra input here.
+    result = dose_help.dose_help({"carbs": str(carbs),
                                   "snack": bool(assignment and assignment["snack"]),
                                   "finger_mgdl": context["finger"], "finger_at": context["at"]})
     # With carbs every option uses the calculated factor; until it has enough meals the
@@ -279,16 +264,14 @@ def preview(payload: dict) -> dict:
     """Everything the entry form shows for the values typed so far."""
     context = _context(payload)
     assignment = _assignment(context, payload)
-    sport = _sport(context, assignment)
     current = context["current"]
     day_type_visible = (context["mode"] == "meal" and bool(current.get("day_type"))
                         and _before_breakfast_end(context))
     split = _split(context, assignment, payload)
-    dose = _dose(context, payload, assignment, sport, split)
+    dose = _dose(context, payload, assignment, split)
     return {
         "day": context["day"],
         "assignment": assignment and {**assignment, "at": assignment["at"] and assignment["at"].isoformat()},
-        "sport": sport,
         "basal_units": str(_basal_units(context)),
         "day_type": ({"value": current["day_type"], "source": current["day_type_source"]}
                      if day_type_visible else None),
@@ -301,7 +284,7 @@ def preview(payload: dict) -> dict:
 
 
 def save(payload: dict) -> dict:
-    """Save a diary entry with the basal riding along and the confirmed sport in one call."""
+    """Save a diary entry with the basal riding along in one call."""
     context = _context(payload)
     mode = context["mode"]
     if mode == "basal":
@@ -324,17 +307,13 @@ def save(payload: dict) -> dict:
             day = context["at"].astimezone(context["zone"]).date().isoformat()
             return {"day": day, "kind": "finger", "event_id": event_id, "id": None, "split_units": None,
                     "carbs": "0", "insulin": "0", "finger_mgdl": str(finger), "basal": None,
-                    "basal_error": None, "sport_marked": False, "sport_error": None,
+                    "basal_error": None,
                     "day_view": day_view.day_payload(day)}
     assignment = _assignment(context, payload)
-    sport = _sport(context, assignment)
     basal_units = _basal_units(context) if payload.get("with_basal") else Decimal(0)
-    consider_sport = bool(sport and payload.get("consider_sport"))
-    sport_change = _sport_change(payload) if consider_sport else Decimal(0)
-    if sport_change is None:
-        raise ValueError("Der geschätzte Sporteinfluss liegt außerhalb des erlaubten Bereichs.")
+    sport_drop = _sport_drop(payload) if mode == "exercise" else None
     split = _split(context, assignment, payload) if carbs > 0 else None
-    dose = (_dose(context, payload, assignment, sport, split)
+    dose = (_dose(context, payload, assignment, split)
             if payload.get("dose_check") or (split and split["active"]) else {})
     if payload.get("dose_check"):
         # A tapped suggestion must still match the current one (new CGM value, new dose, profile change).
@@ -378,29 +357,14 @@ def save(payload: dict) -> dict:
     current = day_view.day_payload(day)
     marker = f"[DAE:{saved['event_id']}]"
     treatment = next((item for item in current["treatments"] if marker in str(item.get("notes") or "")), None)
-    sport_error = None
-    marked = False
-    if consider_sport and not (assignment and assignment["snack"] and assignment["meal"] is None):
-        # A snack's sport counts for the main meal whose window holds it; a snack of no meal
-        # only lowers its own dose.
-        row = next((item for item in current["timeline"] if treatment and item["id"] == treatment["id"]), None)
-        meal_id = row and row.get("meal_id")
-        meal = next((item for item in current["meals"]
-                     if treatment and (item["source_id"] == treatment["id"] or item["id"] == meal_id)), None)
-        if meal is None:
-            sport_error = ("Eintrag gespeichert, aber die Sportzuordnung konnte nicht gefunden werden. "
-                           "Bitte im Mahlzeitenfaktor prüfen.")
-        else:
-            # Internally a sport effect is a drop; the form holds the signed BG change.
-            annotations.set_sport_mark({"meal_id": meal["id"], "day": day, "status": "affected",
-                                        "effect_mgdl": str(-sport_change)})
+    if treatment and sport_drop is not None:
+        if sport_drop != calculation.dec(context["settings"]["sport_effects_mgdl"].get(payload.get("sport_kind"), 0)):
+            marks.set_sport_session_effect(treatment["id"], str(sport_drop))
             current = day_view.day_payload(day, refresh=False)
-            marked = True
     return {
         "day": day, "kind": kind, "event_id": saved["event_id"], "id": treatment and treatment["id"],
         "split_units": split_units if kind == "meal" else None,
         "carbs": str(carbs), "insulin": str(insulin), "finger_mgdl": str(finger) if finger is not None else None,
         "basal": basal_result and {**basal_result, "units": str(basal_units)}, "basal_error": basal_error,
-        "sport_marked": marked, "sport_error": sport_error,
         "day_view": current,
     }

@@ -9,7 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from app import calculation, episodes
+from app import calculation, episodes, on_board
 from app import glucose as cgm
 from app.common import json_safe, local_day_range, parse_instant
 from app.ingestion import nightscout, sync
@@ -62,6 +62,7 @@ def compute_day(day: str) -> dict:
     episodes.group_diary_followups(treatments, settings)
     meals = episodes.meals_for_day(treatments, day, settings["timezone"], settings)
     sport_marks = marks.analysis_sport_marks()
+    session_effects = marks.sport_session_effects()
     manual_windows = marks.analysis_windows()
     exclusions = marks.analysis_exclusions()
     place_names = {place["id"]: place["name"] for place in place_store.all_places()}
@@ -81,7 +82,22 @@ def compute_day(day: str) -> dict:
         associated = [item for item in treatments if item.get("episode_id") == meal["id"] or item.get("id") == meal["source_id"]]
         output = {**meal}
         mark = sport_marks.get(meal["id"], {})
-        confirmed_effect = calculation.dec(mark.get("effect_mgdl", 0)) if mark.get("status") == "affected" else Decimal(0)
+        # Sport counts automatically with the share of each session's effect that acts inside the meal's
+        # window (the same curve as "Wirkt noch"); a value set on the meal replaces it, "unaffected" drops it.
+        try:
+            span = manual_windows.get(meal["id"]) or calculation.automatic_window(meal, treatments, entries, meal_settings)
+        except (ValueError, KeyError):
+            span = {"start": meal["at"], "end": meal["at"] + timedelta(minutes=int(meal_settings["window_minutes"]))}
+        sport_parts = [
+            (item, on_board.sport_effect(item, meal_settings, session_effects)
+             * on_board.sport_share(item, span["start"], span["end"], on_board.sport_minutes(item, meal_settings)))
+            for item in treatments
+            if item.get("eventType") == "Exercise" and item.get("sport_type") and item["at"] < span["end"]]
+        sport_parts = [(item, effect) for item, effect in sport_parts if effect != 0]
+        auto_effect = sum((effect for _, effect in sport_parts), Decimal(0))
+        status = mark.get("status", "auto")
+        confirmed_effect = (calculation.dec(mark.get("effect_mgdl", 0)) if status == "affected"
+                            else auto_effect if status == "auto" else Decimal(0))
         if not meal_settings["isf_schedule"]:
             output["calculation"] = {"reason": "Korrekturfaktor-Profil aus Nightscout fehlt"}
         else:
@@ -103,26 +119,13 @@ def compute_day(day: str) -> dict:
                 "window_start": (manual or automatic)["start"].isoformat(),
                 "window_end": (manual or automatic)["end"].isoformat(),
             })
-        # Sport is suggested when it ended within the lookback before the meal or falls into its window,
-        # so a session during breakfast is offered for breakfast and, when it reaches back, for lunch too.
-        window_end = parse_instant(output["calculation"].get("end") or output["calculation"]["window_end"])
-        lookback = timedelta(minutes=int(meal_settings["sport_lookback_minutes"]))
-        nearby_sport = [
-            item for item in treatments
-            if item.get("eventType") == "Exercise"
-            and item["at"] + timedelta(minutes=int(item.get("duration") or 0)) >= meal["at"] - lookback
-            and item["at"] < window_end
-        ]
-        proposed_effect = sum((
-            calculation.dec(meal_settings["sport_effects_mgdl"].get(item.get("sport_type"), 0))
-            for item in nearby_sport), Decimal(0))
         output["sport"] = {
-            "status": mark.get("status", "auto"),
-            "suggested": bool(nearby_sport),
-            "suggested_effect_mgdl": str(proposed_effect),
+            "status": status,
+            "suggested": bool(sport_parts),
+            "suggested_effect_mgdl": str(auto_effect),
             "effect_mgdl": str(confirmed_effect),
-            "events": [{"id": item["id"], "at": item["at"], "kind": item.get("sport_type")}
-                       for item in nearby_sport],
+            "events": [{"id": item["id"], "at": item["at"], "kind": item.get("sport_type"), "effect_mgdl": str(effect)}
+                       for item, effect in sport_parts],
         }
         # A meal carries a data-quality mark when any of its counted carb entries does.
         carb_ids = ({item.get("id") for item in output["calculation"].get("carb_events", [])} | {meal["source_id"]}
@@ -171,6 +174,7 @@ def compute_day(day: str) -> dict:
                 "id": item["id"], "at": item["at"],
                 "kind": kind, "label": episodes.SPORT_LABELS.get(kind, "Sportart unbekannt"),
                 "duration_minutes": item["duration"], "notes": note,
+                **sport_session(item, settings, session_effects),
             })
             continue
         other_events.append({
@@ -230,6 +234,7 @@ def compute_day(day: str) -> dict:
             "carbs": item["carbs"], "insulin": item["insulin"],
             "basal_units": item["basal_units"], "duration_minutes": item["duration"],
             "sport_kind": item.get("sport_type"), "notes": note,
+            **(sport_session(item, settings, session_effects) if kind == "exercise" else {}),
             "carbs_certainty": item.get("carbs_certainty"), "fat_protein": item.get("fat_protein", False),
             "alcohol": item.get("alcohol", False), "place": place_of(item),
             "glucose_mgdl": glucose, "glucose_at": glucose_at,
@@ -260,13 +265,18 @@ def compute_day(day: str) -> dict:
     })
 
 
+def sport_session(item: dict, settings: dict, session_effects: dict) -> dict:
+    """A session's glucose drop as it counts, and whether Philipp set it himself."""
+    return {"sport_effect_mgdl": str(on_board.sport_effect(item, settings, session_effects)),
+            "sport_effect_default_mgdl": str(on_board.sport_effect(item, settings)),
+            "sport_effect_custom": item["id"] in session_effects}
+
+
 def meal_review(meal: dict) -> dict:
-    """What is still open on a meal before its day counts as clean: a blocked factor or an
-    undecided sport suggestion. Only a calculated factor can be excluded from the analysis."""
+    """What is still open on a meal before its day counts as clean: a blocked factor (sport now counts
+    automatically). Only a calculated factor can be excluded from the analysis."""
     calculated = meal["calculation"].get("factor_units_per_ke") is not None
-    sport = meal["sport"]
-    open_items = ([] if calculated else ["blocked"]) + (
-        ["sport"] if sport["suggested"] and sport["status"] == "auto" else [])
+    open_items = [] if calculated else ["blocked"]
     return {"open": open_items, "calculated": calculated, "excludable": calculated}
 
 
@@ -275,7 +285,6 @@ def day_review(meals: list[dict]) -> dict:
     open_meals = [meal for meal in meals if meal["review"]["open"]]
     return {
         "blocked": sum("blocked" in meal["review"]["open"] for meal in meals),
-        "sport_open": sum("sport" in meal["review"]["open"] for meal in meals),
         "calculated": sum(meal["review"]["calculated"] and not meal["excluded"] for meal in meals),
         "excluded": sum(meal["review"]["calculated"] and meal["excluded"] for meal in meals),
         "first_open": open_meals[0]["id"] if open_meals else None,
