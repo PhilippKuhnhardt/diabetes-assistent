@@ -5,11 +5,10 @@ import tempfile
 import unittest
 import urllib.error
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from pathlib import Path
 from zoneinfo import ZoneInfo
 from unittest.mock import patch
-
-from decimal import Decimal
 
 from app import glucose_alerts
 from app.ingestion import pushover
@@ -48,6 +47,25 @@ class DueReminderTests(unittest.TestCase):
         self.assertEqual(notifications.due_reminders(MEAL_AT + timedelta(minutes=125), SETTINGS, [MEAL, second],
                                                      [{"units": "17"}], ON), [])
 
+    def test_split_reminder_follows_the_glucose_course_and_names_the_forecast_amount(self):
+        cgm = lambda minutes, values: [{"at": MEAL_AT + timedelta(minutes=minutes - 15 + 5 * step), "sgv": value}
+                                       for step, value in enumerate(values)]
+        due = lambda minutes, values, units=None: notifications.due_reminders(
+            MEAL_AT + timedelta(minutes=minutes), SETTINGS, [MEAL], [{"units": "17"}], ON, cgm(minutes, values),
+            (lambda: units))
+        # 75 min after the meal: high and rising fast means the second part now.
+        early = due(75, [170, 180, 190, 200], Decimal("5.5"))
+        self.assertEqual([item["title"] for item in early], [notifications.EARLY_SPLIT_TITLE])
+        self.assertEqual(early[0]["message"], "5,5 IE laut Prognose (geplant 4,5) zur Mahlzeit um 12:30")
+        self.assertEqual(due(75, [180, 182, 184, 186]), [])
+        self.assertEqual(due(50, [170, 180, 190, 200]), [])
+        # At the planned time: low or falling waits up to an hour, then it is due anyway.
+        self.assertEqual(due(120, [104, 104, 105, 105]), [])
+        self.assertEqual(due(130, [150, 145, 140, 135]), [])
+        late = due(180, [104, 104, 105, 105], Decimal(0))
+        self.assertEqual(late[0]["message"], "Laut Prognose nicht nötig (geplant 4,5) zur Mahlzeit um 12:30")
+        self.assertEqual(len(due(120, [140, 141, 142, 143], Decimal(3))), 1)
+
     def test_glucose_warning_shows_only_the_numbers(self):
         now = datetime(2026, 10, 9, 12, tzinfo=timezone.utc)
         found = [{"kind": "low", "at": now + timedelta(minutes=25), "glucose_mgdl": 95, "mgdl": 62},
@@ -81,8 +99,11 @@ class CheckTests(unittest.TestCase):
         self.warnings.start()
         self.settings = patch.object(notifications.config, "get_settings", return_value=(1, SETTINGS))
         self.settings.start()
+        self.second = patch.object(notifications, "_second_part", return_value=None)
+        self.second.start()
 
     def tearDown(self):
+        self.second.stop()
         self.settings.stop()
         self.warnings.stop()
         self.inputs.stop()
