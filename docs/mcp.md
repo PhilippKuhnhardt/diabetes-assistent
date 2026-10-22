@@ -14,8 +14,8 @@ Ziel: Philipp spricht mit einem Agenten (Claude-App, auch per Sprache, oder Clau
 | Tool | Zweck | Schreibt? |
 | --- | --- | --- |
 | `get_status` | Aktueller CGM-Wert mit Trend, „Wirkt noch“ (Insulin, KH, Aufschlag, erwarteter Wert), offener 2. Split-Teil, Korrekturvorschlag ohne Essen, Basal heute, alle Einträge und Mahlzeitfaktoren von heute | nein |
-| `preview_entry` | Was das Formular für diese KH zeigt: Snack oder Hauptmahlzeit, Sport vor der Mahlzeit, Basal offen, Tagesart, Split, Optionen normal / tiefer (nur ohne KH-Unsicherheit) / vorsichtig / nur KH mit Faktor, bei Split Teil jetzt + 2. Teil mit Uhrzeit | nein |
-| `save_entry` | Mahlzeit, Snack, Korrektur oder Sport speichern, mit KH-Sicherheit (`weighed`/`known`/`unsure`), fett-/eiweißreich, gewählter Option, Split, Basal und bestätigtem Sporteinfluss | ja |
+| `preview_entry` | Was das Formular für diese KH zeigt: Snack oder Hauptmahlzeit, Basal offen, Tagesart, Split, Optionen normal / tiefer (nur ohne KH-Unsicherheit) / vorsichtig / nur KH mit Faktor, bei Split Teil jetzt + 2. Teil mit Uhrzeit | nein |
+| `save_entry` | Mahlzeit, Snack, Korrektur oder Sport speichern, mit KH-Sicherheit (`weighed`/`known`/`unsure`), fett-/eiweißreich, gewählter Option, Split und Basal; Sport mit Sportart, Dauer und optional eigenem Einfluss (`sport_change_mgdl`, sonst Standard der Sportart) | ja |
 | `save_basal` | Basal-Injektion beliebiger Menge | ja |
 | `delete_entry` | Einen falsch verstandenen Eintrag löschen (nur auf ausdrückliche Bitte) | ja |
 | `get_day` | Ein Tag: Einträge mit id, Mahlzeiten mit Faktor oder Blockgrund, BZ-Kennzahlen | nein |
@@ -24,7 +24,7 @@ Ziel: Philipp spricht mit einem Agenten (Claude-App, auch per Sprache, oder Clau
 Ein Gespräch läuft so:
 
 1. „Wie läuft's?“ → `get_status`: „132, leicht steigend, es wirken noch 1,5 IE, erwartet um 21:40 etwa 110.“
-2. „Ich esse jetzt 45 g.“ → `preview_entry(carbs_g=45)`: Optionen und Faktor; Hinweise, wenn die App es als Snack einordnet, Sport gefunden hat oder Basal fehlt.
+2. „Ich esse jetzt 45 g.“ → `preview_entry(carbs_g=45)`: Optionen und Faktor; Hinweise, wenn die App es als Snack einordnet oder Basal fehlt. Noch wirkender Sport steckt automatisch in `on_board` und der Dosis.
 3. „Ich spritze 5 Einheiten, halbwegs sicher geschätzt, fettreich.“ → `save_entry(carbs_g=45, insulin_units=5, carbs_certainty="known", fat_protein=true, dose_variant="normal")`.
 4. Ab 80 g schlägt die App Split vor: Teil jetzt, Rest nach 120 min. Gespeichert wird der jetzt gespritzte Teil; der Rest der gewählten Option wird wie im UI als geplanter 2. Teil vermerkt und erscheint später in `get_status` und als Option `split` in `preview_entry` ohne KH.
 

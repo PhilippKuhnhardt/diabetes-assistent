@@ -603,32 +603,24 @@ function updateEntryQuality() {
   $("#entry-factors").hidden = hidden;
 }
 
-function updateEntrySportOption() {
+function updateEntryOptions() {
   updateEntryAssignment();
   updateEntrySplit();
   updateEntryQuality();
   updateEntryPlace();
-  const form = $("#entry-form");
-  const option = $("#entry-sport-option");
-  const checkbox = form.elements.consider_sport;
-  const sport = form.elements.kind.value === "meal" ? currentPreview()?.sport : null;
-  option.hidden = !sport;
-  if (!sport) {
-    checkbox.checked = false;
-    $("#entry-sport-effect-field").hidden = true;
-    updateEntryInfluences();
-    return;
-  }
-  // The chip only says whether the sport counts; ticking it opens the editable BZ change.
-  $("#entry-sport-hint").textContent = sport.events.map(item =>
-    sportNames[item.sport_type] + " " + timeOnly(item.at)).join(", ") + (checkbox.checked ? " berücksichtigt" : " berücksichtigen");
-  if (!checkbox.checked) form.elements.sport_effect_mgdl.value = Number(sport.suggested_change_mgdl);
-  $("#entry-sport-effect-field").hidden = !checkbox.checked;
   updateEntryInfluences();
 }
 
 function updateEntryInfluences() {
-  $("#entry-influences").hidden = $("#entry-sport-option").hidden && $("#entry-day-type").hidden;
+  $("#entry-influences").hidden = $("#entry-day-type").hidden;
+}
+
+// A sport entry starts with its kind's setting; a typed value stays until the entry is saved.
+function setSportEffectDefault() {
+  const form = $("#entry-form");
+  if (form.elements.sport_effect_mgdl.dataset.touched) return;
+  const effects = state.settings?.sport_effects_mgdl || {};
+  form.elements.sport_effect_mgdl.value = sportChange(effects[form.elements.sport_kind.value]);
 }
 
 function minuteClock(minute) {
@@ -653,6 +645,10 @@ function updateEntryFields() {
   if (mode === "basal" && !form.elements.basal_units.value && basalDefault() > 0) form.elements.basal_units.value = basalDefault();
   $("#entry-sport-field").hidden = mode !== "exercise";
   $("#entry-duration-field").hidden = mode !== "exercise";
+  $("#entry-sport-effect-field").hidden = mode !== "exercise";
+  $("#entry-sport-effect-hint").hidden = mode !== "exercise";
+  form.elements.sport_effect_mgdl.disabled = mode !== "exercise";
+  if (mode === "exercise") setSportEffectDefault();
   form.elements.carbs.disabled = mode !== "meal";
   form.elements.insulin.disabled = mode !== "meal";
   form.elements.sport_kind.disabled = mode !== "exercise";
@@ -691,6 +687,7 @@ async function loadSettings() {
   form.elements.sport_lookback_minutes.value = data.settings.sport_lookback_minutes;
   for (const kind of sportKinds) {
     form.elements["sport_" + kind].value = sportChange(data.settings.sport_effects_mgdl[kind]);
+    form.elements["sport_minutes_" + kind].value = data.settings.sport_durations_minutes?.[kind] ?? 300;
   }
   renderIsfRows(data.settings.isf_schedule, data.settings.nightscout_profile, data.profile_sync_at, data.profile_sync_error);
   renderIcRows(data.settings.ic_schedule || []);
@@ -1255,7 +1252,10 @@ function activeCardHTML(active) {
   const item = (label, strong, lines, extra = "") => '<div class="active-item' + extra + '"><span>' + label + '</span><strong>' +
     strong + '</strong>' + lines.map(line => '<small>' + escapeHTML(line) + '</small>').join("") + '</div>';
   return item("Senkt noch", value("−", active.lowering_mgdl),
-      ["Insulin " + num(active.insulin_units, 1) + " IE", until(active.lowering_until)]) +
+      ["Insulin " + num(active.insulin_units, 1) + " IE",
+       ...(active.sports || []).filter(row => Number(row.remaining_mgdl) > 0).map(row =>
+         (sportNames[row.kind] || "Sport") + " " + timeOnly(row.at) + " −" + num(row.remaining_mgdl, 0)),
+       until(active.lowering_until)]) +
     item("Hebt noch", value("+", active.raising_mgdl),
       ["KH " + num(active.carbs_remaining_g, 0) + " g +" + num(active.carbs_mgdl, 0),
        "Fett/Eiweiß +" + num(active.surcharge_mgdl, 0), until(active.raising_until)]) +
@@ -1605,29 +1605,41 @@ function icon(name) {
   return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths[name] + '</svg>';
 }
 
+// Sport counts by itself with the share of each session acting in the meal window; the meal can take
+// its own value or none, and "Automatisch" goes back to the sessions.
 function sportReviewHTML(sport, mealId, day) {
-  const applied = sport.status === "affected";
-  const effect = applied ? sportChange(sport.effect_mgdl) : 0;
-  const suggestion = sport.suggested ? sportChange(sport.suggested_effect_mgdl) : 0;
+  const status = sport.status || "auto";
+  const auto = sportChange(sport.suggested_effect_mgdl);
+  if (status === "auto" && !sport.suggested) return "";
+  const own = status === "affected";
+  const effect = own ? sportChange(sport.effect_mgdl) : status === "auto" ? auto : 0;
+  const state = status === "unaffected" ? '<span>Kein Sporteinfluss</span>'
+    : icon("check") + '<span>Sport ' + escapeHTML(signedChange(effect, 0)) + (own ? ' · eigener Wert' : ' · automatisch') + '</span>';
   const actions = [
-    !applied && suggestion ? '<button type="button" class="sport-suggestion">' + icon("plus") + ' Vorschlag ' + escapeHTML(signedChange(suggestion, 0)) + ' übernehmen</button>' : '',
-    sport.status === "auto" && suggestion ? '<button type="button" class="sport-none quiet">Kein Einfluss</button>' : '',
+    status !== "auto" && sport.suggested ? '<button type="button" class="sport-auto quiet">Automatisch ' + escapeHTML(signedChange(auto, 0)) + '</button>' : '',
+    status !== "unaffected" ? '<button type="button" class="sport-none quiet">Kein Einfluss</button>' : '',
   ].join("");
-  // One line with the state and the sessions behind it, then the choices, then the own value.
   return '<div class="sport-review sport-review-meal" data-meal-id="' + escapeHTML(mealId) +
-    '" data-day="' + escapeHTML(day) + '" data-suggestion="' + escapeHTML(suggestion) + '">' +
-    '<div class="sport-line"><div class="sport-state' + (applied ? ' is-applied' : '') + '">' +
-    (applied ? icon("check") + '<span>Sport ' + escapeHTML(signedChange(effect, 0)) + '</span>'
-      : sport.status === "unaffected" && suggestion ? icon("check") + '<span>Kein Sporteinfluss</span>'
-      : sport.status === "auto" && suggestion ? '<span>Sport offen</span>' : '<span>Kein Sporteffekt</span>') +
+    '" data-day="' + escapeHTML(day) + '">' +
+    '<div class="sport-line"><div class="sport-state' + (status === "unaffected" ? '' : ' is-applied') + '">' + state +
     ((sport.events || []).length ? '<span class="sport-source">' + escapeHTML(sport.events.map(item =>
-      (sportNames[item.kind] || "Sport") + " " + timeOnly(item.at)).join(", ")) + '</span>' : '') + '</div>' +
-    (applied ? '<button type="button" class="sport-remove quiet" aria-label="Sporteinfluss entfernen">Entfernen</button>' : '') + '</div>' +
+      (sportNames[item.kind] || "Sport") + " " + timeOnly(item.at) + " " + signedChange(sportChange(item.effect_mgdl), 0)).join(", ")) + '</span>' : '') +
+    '</div></div>' +
     (actions ? '<div class="sport-actions">' + actions + '</div>' : '') +
-    '<details class="sport-custom"><summary>' + (applied ? 'Wert ändern' : 'Eigenen Wert setzen') + '</summary>' +
+    '<details class="sport-custom"><summary>Eigenen Wert für diese Mahlzeit</summary>' +
     '<div class="sport-custom-fields"><label><span>BZ-Wirkung in mg/dL (− senkt, + hebt)</span><input class="sport-effect" type="number" min="-500" max="500" step="1" value="' +
-    escapeHTML(applied ? effect : (suggestion || "")) +
-    '"></label><button type="button" class="sport-save">' + (applied ? 'Ändern' : 'Setzen') + '</button></div></details></div>';
+    escapeHTML(effect || "") + '"></label><button type="button" class="sport-save">Setzen</button></div></details></div>';
+}
+
+// A sport session's own effect: what it lowers over the 5 h after it ends, default from its kind.
+function sportSessionHTML(item) {
+  const effect = sportChange(item.sport_effect_mgdl);
+  return '<details class="sport-custom sport-session" data-id="' + escapeHTML(item.id) + '" data-day="' + escapeHTML(state.day) + '">' +
+    '<summary>Einfluss ändern</summary><div class="sport-custom-fields"><label><span>BZ-Wirkung in mg/dL (− senkt, + hebt)</span>' +
+    '<input class="sport-effect" type="number" min="-500" max="500" step="1" value="' + escapeHTML(effect) + '"></label>' +
+    '<button type="button" class="sport-session-save">Setzen</button>' +
+    (item.sport_effect_custom ? '<button type="button" class="sport-session-reset quiet">Standard ' +
+      escapeHTML(signedChange(sportChange(item.sport_effect_default_mgdl), 0)) + '</button>' : '') + '</div></details>';
 }
 
 function renderNight(night) {
@@ -1685,6 +1697,8 @@ function entryRowHTML(item, data, meal = null) {
     Number(item.insulin) ? num(item.insulin) + " IE" : "",
     item.kind === "basal" ? num(item.basal_units) + " IE" + (item.nightscout_synced ? "" : " · nur lokal, noch nicht in Nightscout") : "",
     item.kind === "exercise" ? num(item.duration_minutes, 0) + " min" : "",
+    item.kind === "exercise" && item.sport_effect_mgdl != null
+      ? "Einfluss " + signedChange(sportChange(item.sport_effect_mgdl), 0) + (item.sport_effect_custom ? " (eigener Wert)" : "") : "",
     item.glucose_mgdl != null
       ? (item.glucose_at === item.at ? "BZ " : "BZ um " + timeOnly(item.glucose_at) + ": ") + num(item.glucose_mgdl, 0) + " mg/dL" : "",
   ].filter(Boolean);
@@ -1704,6 +1718,7 @@ function entryRowHTML(item, data, meal = null) {
     // Each value stays on one line, so "84 mg/dL" never breaks between number and unit.
     '</div><p>' + (details.length ? details.map(part => '<span>' + escapeHTML(part) + '</span>').join(" · ") : escapeHTML(item.eventType)) +
     '</p>' + (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') +
+    (item.kind === "exercise" && item.sport_effect_mgdl != null ? sportSessionHTML(item) : '') +
     '</div><div class="timeline-actions">' + action + '</div></article>';
 }
 
@@ -1767,10 +1782,9 @@ function renderReviewSummary(data) {
   const link = text => '<a class="review-chip needs-check" href="#meal-' + escapeHTML(review.first_open) + '">' + text + '</a>';
   const chips = [
     review.blocked ? link(review.blocked === 1 ? "1 Mahlzeit nicht berechenbar" : review.blocked + " Mahlzeiten nicht berechenbar") : "",
-    review.sport_open ? link(review.sport_open === 1 ? "1 Sportvorschlag offen" : review.sport_open + " Sportvorschläge offen") : "",
     review.calculated ? '<span class="review-chip">' + (review.calculated === 1 ? "1 Faktor zählt" : review.calculated + " Faktoren zählen") + '</span>' : "",
     review.excluded ? '<span class="review-chip">' + review.excluded + ' ausgeklammert</span>' : "",
-    data.meals.length && !review.blocked && !review.sport_open ? '<span class="review-chip is-clean">' + icon("check") + ' Tag geprüft</span>' : "",
+    data.meals.length && !review.blocked ? '<span class="review-chip is-clean">' + icon("check") + ' Tag geprüft</span>' : "",
   ].filter(Boolean);
   $("#review-summary").innerHTML = chips.join("");
 }
@@ -1872,7 +1886,6 @@ function previewRequest() {
     day: state.day, at, mode: form.elements.kind.value, carbs: form.elements.carbs.value, as: state.entryAs || null,
     finger_mgdl: form.elements.finger_mgdl.disabled ? null : form.elements.finger_mgdl.value || null,
     split: state.split ?? null,
-    consider_sport: form.elements.consider_sport.checked, sport_effect_mgdl: form.elements.sport_effect_mgdl.value || "0",
     // Saving re-checks the shown options with these, so the preview must send the same marks.
     carbs_certainty: Number(form.elements.carbs.value) > 0 ? certaintyValue(form) : null,
     fat_protein: Number(form.elements.carbs.value) > 0 && form.elements.fat_protein.checked,
@@ -1904,7 +1917,7 @@ function updateEntryFinger() {
 function renderPreview() {
   updateEntryFinger();
   renderActiveCard();
-  updateEntrySportOption();
+  updateEntryOptions();
   updateEntryDayType();
   updateEntryBasalOption();
   const output = $("#dose-result");
@@ -2043,6 +2056,7 @@ function resetEntryForm() {
   state.entryAs = null;
   state.split = null;
   state.entryPlace = undefined;
+  delete form.elements.sport_effect_mgdl.dataset.touched;
   setDefaultMealTime();
   updateEntryFields();
   if ($("#edit-dialog").open) closeEditDialog();
@@ -2233,7 +2247,6 @@ async function saveEntry(event) {
   try { at = toInstant(state.day, form.elements.at.value); }
   catch (error) { toast(error.message, true); return; }
   const basalUnits = entryBasalUnits();
-  const considerSport = mode === "meal" && form.elements.consider_sport.checked && !$("#entry-sport-option").hidden;
   const chosen = mode === "meal" && state.doseChoice && doseHelp ? doseUnits(doseHelp, state.doseChoice) : null;
   const submit = $('button[type="submit"]', form);
   submit.disabled = true;
@@ -2241,8 +2254,12 @@ async function saveEntry(event) {
   const payload = {
     ...previewRequest(), at,
     carbs: form.elements.carbs.value, insulin: form.elements.insulin.value,
-    consider_sport: considerSport, with_basal: basalUnits > 0,
+    with_basal: basalUnits > 0,
     sport_kind: form.elements.sport_kind.value,
+    // Only a changed value is stored on the session; the default keeps following the setting.
+    sport_effect_mgdl: mode === "exercise" && form.elements.sport_effect_mgdl.value !== ""
+      && Number(form.elements.sport_effect_mgdl.value) !== sportChange(state.settings?.sport_effects_mgdl?.[form.elements.sport_kind.value])
+      ? form.elements.sport_effect_mgdl.value : null,
     duration_minutes: form.elements.duration_minutes.value || 0,
     notes: form.elements.notes.value,
     carbs_certainty: carbs > 0 ? certaintyValue(form) : null,
@@ -2278,16 +2295,14 @@ async function saveEntry(event) {
       carbs > 0 ? num(carbs, 0) + " g" : "", insulin > 0 ? num(insulin, 2) + " IE" : ""]
       .filter(Boolean).join(" + ")) + (basal ? " + Basal " + num(basal.units, 1) + " IE" : "") + " gespeichert" +
       (result.split_units ? " · 2. Teil " + num(result.split_units, 1) + " IE vorgemerkt" : "") +
-      (result.sport_marked ? " · Sport berücksichtigt" : "") +
       (basal && !basal.nightscout_synced ? " · Basal vorerst nur lokal" : "") +
-      (result.basal_error ? " · Basal nicht gespeichert: " + result.basal_error : "") +
-      (result.sport_error ? " · " + result.sport_error : "");
+      (result.basal_error ? " · Basal nicht gespeichert: " + result.basal_error : "");
     const undo = async () => {
       if (basal) await deleteBasal(basal.id).catch(error => toast(error.message, true));
       if (result.id) await undoEntry(result.id, restore);
       else if (basal) await loadDay();
     };
-    toast(message, Boolean(result.basal_error || result.sport_error),
+    toast(message, Boolean(result.basal_error),
       result.id || basal ? { label: "Rückgängig", run: undo } : null);
   } catch (error) {
     toast(error.message, true);
@@ -2338,14 +2353,13 @@ async function deleteTreatment(event) {
 }
 
 async function saveSportMark(event) {
-  const button = event.target.closest(".sport-save, .sport-suggestion, .sport-remove, .sport-none");
+  const button = event.target.closest(".sport-save, .sport-auto, .sport-none");
   const block = button?.closest(".sport-review");
   if (!block) return;
-  const remove = button.matches(".sport-remove, .sport-none");
-  const suggestion = button.matches(".sport-suggestion");
+  const status = button.matches(".sport-auto") ? "auto" : button.matches(".sport-none") ? "unaffected" : "affected";
   const effect = $(".sport-effect", block);
-  const amount = remove ? 0 : Number(suggestion ? block.dataset.suggestion : effect.value);
-  if (!remove && (!Number.isInteger(amount) || amount === 0 || Math.abs(amount) > 500)) {
+  const amount = status === "affected" ? Number(effect.value) : 0;
+  if (status === "affected" && (!Number.isInteger(amount) || amount === 0 || Math.abs(amount) > 500)) {
     effect.setCustomValidity("Bitte eine BZ-Wirkung zwischen −500 und +500 mg/dL eingeben, nicht 0.");
     effect.reportValidity();
     return;
@@ -2354,10 +2368,35 @@ async function saveSportMark(event) {
   button.disabled = true;
   try {
     await api("/api/analysis/sport", { method: "POST", body: JSON.stringify({
-      meal_id: block.dataset.mealId, day: block.dataset.day,
-      status: remove ? "unaffected" : "affected", effect_mgdl: sportChange(amount),
+      meal_id: block.dataset.mealId, day: block.dataset.day, status, effect_mgdl: sportChange(amount),
     }) });
-    toast(button.matches(".sport-none") ? "Kein Sporteinfluss vermerkt" : remove ? "Sporteinfluss entfernt" : "Sporteinfluss gespeichert");
+    toast(status === "unaffected" ? "Kein Sporteinfluss vermerkt" : status === "auto" ? "Sport wieder automatisch" : "Sporteinfluss gespeichert");
+    await loadDay();
+    if (state.view === "analysis") await loadSummary();
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function saveSportSession(button) {
+  const block = button.closest(".sport-session");
+  const reset = button.matches(".sport-session-reset");
+  const effect = $(".sport-effect", block);
+  const amount = Number(effect.value);
+  if (!reset && (effect.value === "" || !Number.isInteger(amount) || Math.abs(amount) > 500)) {
+    effect.setCustomValidity("Bitte eine BZ-Wirkung zwischen −500 und +500 mg/dL eingeben (0 = kein Einfluss).");
+    effect.reportValidity();
+    return;
+  }
+  effect.setCustomValidity("");
+  button.disabled = true;
+  try {
+    await api("/api/analysis/sport-session", { method: "POST", body: JSON.stringify(reset
+      ? { id: block.dataset.id, day: block.dataset.day, reset: true }
+      : { id: block.dataset.id, day: block.dataset.day, effect_mgdl: sportChange(amount) }) });
+    toast(reset ? "Sporteinfluss wieder Standard" : "Sporteinfluss gespeichert");
     await loadDay();
     if (state.view === "analysis") await loadSummary();
   } catch (error) {
@@ -2389,6 +2428,8 @@ async function saveSettings(event) {
     sport_lookback_minutes: Number(form.elements.sport_lookback_minutes.value),
     sport_effects_mgdl: Object.fromEntries(sportKinds
       .map(kind => [kind, sportChange(form.elements["sport_" + kind].value)])),
+    sport_durations_minutes: Object.fromEntries(sportKinds
+      .map(kind => [kind, Number(form.elements["sport_minutes_" + kind].value)])),
     effective_at: form.elements.effective_date.value ? toInstant(form.elements.effective_date.value, form.elements.effective_time.value || "00:00") : null,
   };
   try {
@@ -2779,12 +2820,10 @@ async function loadSummary() {
             const excluded = item.units_per_ke != null && item.excluded;
             const sport = item.sport || {};
             // Read only here: sport is set on the meal in "Tag durchgehen".
-            const sportReview = sport.status === "affected"
-              ? '<span class="sport-state is-applied">' + icon("check") + escapeHTML(signedChange(sportChange(sport.effect_mgdl), 0)) + '</span>'
-              : sport.status === "auto" && sport.suggested
-                ? '<button type="button" class="review-chip needs-check open-meal-day" data-day="' + escapeHTML(item.day) +
-                  '" data-meal-id="' + escapeHTML(item.id) + '">Sport offen</button>'
-                : '—';
+            const sportReview = sport.status === "affected" || (sport.status === "auto" && sport.suggested)
+              ? '<span class="sport-state is-applied">' + icon("check") + escapeHTML(signedChange(sportChange(sport.effect_mgdl), 0)) +
+                (sport.status === "auto" ? ' <small>auto</small>' : '') + '</span>'
+              : '—';
             return dayHeading + '<tr class="' + (excluded ? "analysis-excluded " : "") +
               (item.strong_outlier ? "analysis-outlier" : "") + '">' +
             '<td>' + escapeHTML(names[item.kind]) + '</td><td><b>' + factor + '</b></td>' +
@@ -2913,11 +2952,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     state.split = !currentPreview()?.split?.active;
     schedulePreview(0);
   });
-  $("#entry-form").elements.consider_sport.addEventListener("change", () => {
-    updateEntrySportOption();
-    schedulePreview(0);
-  });
-  $("#entry-form").elements.sport_effect_mgdl.addEventListener("input", () => schedulePreview());
+  $("#entry-form").elements.sport_effect_mgdl.addEventListener("input", event => { event.target.dataset.touched = "1"; });
+  $("#entry-form").elements.sport_kind.addEventListener("change", setSportEffectDefault);
   // Carb certainty and the fat mark decide whether the lower target is offered.
   $("#entry-form").elements.certainty_level.addEventListener("change", () => schedulePreview(0));
   $("#entry-form").elements.fat_protein.addEventListener("change", () => schedulePreview(0));
@@ -3021,7 +3057,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (basalButton) deleteBasalRow(basalButton);
     const edit = event.target.closest(".edit-entry");
     if (edit) editEntry(edit.dataset.id);
-    if (event.target.closest(".sport-save, .sport-suggestion, .sport-remove, .sport-none")) saveSportMark(event);
+    if (event.target.closest(".sport-save, .sport-auto, .sport-none")) saveSportMark(event);
+    const sessionButton = event.target.closest(".sport-session-save, .sport-session-reset");
+    if (sessionButton) saveSportSession(sessionButton);
     if (event.target.closest(".exclude-meal")) saveExclusion(event);
     const dayTypeButton = event.target.closest("[data-review-day-type]");
     if (dayTypeButton) saveReviewDayType(dayTypeButton);

@@ -1,8 +1,8 @@
 """Hints on the diary's start page: things that need an action from Philipp (user request 2026-10-21).
 
 A general list so later kinds (say, a better factor found) can join. The first kind is a finished
-meal that is still open in "Tag durchgehen": an undecided sport suggestion or a factor that cannot be
-calculated. A hint disappears once its action is done elsewhere (it is simply no longer open) and
+meal that is still open in "Tag durchgehen": a factor that cannot be calculated (sport counts
+automatically since 2026-10-22). A hint disappears once its action is done elsewhere (it is simply no longer open) and
 loses its highlight once opened; a meal that becomes open for a new reason is highlighted again.
 """
 from __future__ import annotations
@@ -11,7 +11,6 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from app.common import parse_instant
-from app.episodes import SPORT_LABELS
 from app.services import day_view
 from app.store import config
 from app.store import inbox as store
@@ -28,11 +27,6 @@ def meal_items(day: dict, now: datetime, zone: ZoneInfo) -> list[dict]:
         if not open_items or meal.get("excluded") or parse_instant(meal["window"]["end"]) > now:
             continue
         reasons = []
-        if "sport" in open_items:
-            events = ", ".join(SPORT_LABELS.get(item.get("kind"), "Sport") + " "
-                               + parse_instant(item["at"]).astimezone(zone).strftime("%H:%M")
-                               for item in meal["sport"].get("events", []))
-            reasons.append({"kind": "sport", "text": "Sport berücksichtigen" + (f" ({events})" if events else "")})
         if "blocked" in open_items:
             reasons.append({"kind": "blocked", "text": "Faktor nicht berechenbar: "
                             + (meal["calculation"].get("reason") or "Grund unbekannt")})

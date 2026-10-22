@@ -49,6 +49,7 @@ POST_ROUTES = {
     "/api/vacation": settings.set_vacation,
     "/api/treatment": diary.save_diary_treatment,
     "/api/analysis/sport": annotations.set_sport_mark,
+    "/api/analysis/sport-session": annotations.set_sport_session,
     "/api/analysis/window": annotations.set_window,
     "/api/analysis/window/preview": window_editor.preview,
     "/api/analysis/day-type": annotations.set_day_type,

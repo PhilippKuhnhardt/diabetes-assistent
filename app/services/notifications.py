@@ -74,7 +74,7 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
     try:
         found = on_board.sources(treatments, now, settings, factors.carb_factor(settings, today, points, day_type),
                                  factors.surcharge_mgdl(settings) if method == forecast.SURCHARGE else None,
-                                 forecast.surcharge_share)
+                                 forecast.surcharge_share, sport_overrides=marks.sport_session_effects())
     except ValueError:
         return []
     reminders = []
