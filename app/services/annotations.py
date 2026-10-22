@@ -25,6 +25,26 @@ def set_sport_mark(payload: dict) -> dict:
     return {"meal_id": meal_id, "status": status, "effect_mgdl": str(effect)}
 
 
+def set_sport_session(payload: dict) -> dict:
+    """Philipp's glucose drop for one sport session (reset: back to the setting of its kind)."""
+    session_id = payload.get("id")
+    day = str(payload.get("day", ""))
+    date.fromisoformat(day)
+    if not isinstance(session_id, str) or not 0 < len(session_id) <= 200:
+        raise ValueError("Ungültige Sporteinheit")
+    if session_id not in {item["id"] for item in day_view.day_payload(day, refresh=False)["timeline"]
+                          if item["kind"] == "exercise"}:
+        raise ValueError("Sporteinheit nicht gefunden")
+    if payload.get("reset"):
+        marks.set_sport_session_effect(session_id, None)
+        return {"id": session_id, "effect_mgdl": None}
+    effect = calculation.dec(payload.get("effect_mgdl", 0))
+    if not effect.is_finite() or not -500 <= effect <= 500:
+        raise ValueError("Ungültiger Sporteffekt")
+    marks.set_sport_session_effect(session_id, str(effect))
+    return {"id": session_id, "effect_mgdl": str(effect)}
+
+
 def set_window(payload: dict) -> dict:
     meal_id = payload.get("meal_id")
     day = str(payload.get("day", ""))

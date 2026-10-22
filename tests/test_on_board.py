@@ -127,6 +127,56 @@ class OnBoardTests(unittest.TestCase):
         self.assertEqual(Decimal(result["entry_units"]), 0)
         self.assertEqual(result["forecast_mgdl"], result["cautious_forecast_mgdl"])
 
+    def test_gym_lowers_the_forecast_over_five_hours_after_it_ends(self):
+        # Philipp's report 2026-10-22: after gym the expected value ignored it and a correction came out too high.
+        self.settings["sport_effects_mgdl"] = {"gym": "70", "racing": "-40"}
+        gym = {"id": "g", "at": self.now - timedelta(minutes=120), "eventType": "Exercise", "duration": 60,
+               "sport_type": "gym"}
+        active = self.active([gym])
+        # Ended 60 of 300 minutes ago: 80 % of the 70 mg/dL are still to come.
+        self.assertEqual(active["sport_mgdl"], 56)
+        self.assertEqual((active["lowering_mgdl"], active["raising_mgdl"], active["insulin_units"]), (56, 0, 0))
+        self.assertEqual(active["lowering_until"], self.now + timedelta(minutes=220))  # less than 5 mg/dL left
+        result = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 200}], [gym], self.now, on_board=active)
+        self.assertEqual(Decimal(result["forecast_mgdl"]), 144)
+        # Philipp's own value for the session wins; 0 leaves it out.
+        found = on_board.sources([gym], self.now, self.settings, lambda at: None, None, None,
+                                 sport_overrides={"g": "30"})
+        self.assertEqual(on_board.summary(found, self.now)["sport_mgdl"], 24)
+        found = on_board.sources([gym], self.now, self.settings, lambda at: None, None, None,
+                                 sport_overrides={"g": "0"})
+        self.assertEqual(found["sports"], [])
+
+    def test_sport_entered_ahead_counts_in_full_and_racing_raises(self):
+        self.settings["sport_effects_mgdl"] = {"gym": "70", "racing": "-40"}
+        later = {"id": "g", "at": self.now + timedelta(minutes=30), "eventType": "Exercise", "duration": 60,
+                 "sport_type": "gym"}
+        done = {"id": "r", "at": self.now - timedelta(hours=7), "eventType": "Exercise", "duration": 90,
+                "sport_type": "racing"}
+        racing = {**done, "at": self.now - timedelta(minutes=90)}
+        self.assertEqual(self.active([later])["sport_mgdl"], 70)
+        self.assertEqual(self.active([done])["sports"], [])
+        active = self.active([racing])
+        self.assertEqual((active["sport_mgdl"], active["raising_mgdl"], active["lowering_mgdl"]), (-40, 40, 0))
+
+    def test_sport_duration_is_set_per_kind(self):
+        self.settings["sport_effects_mgdl"] = {"gym": "70"}
+        self.settings["sport_durations_minutes"] = {"gym": 120}
+        gym = {"id": "g", "at": self.now - timedelta(minutes=120), "eventType": "Exercise", "duration": 60,
+               "sport_type": "gym"}
+        # Ended 60 of 120 minutes ago: half is still to come; after 2 h nothing is left.
+        self.assertEqual(self.active([gym])["sport_mgdl"], 35)
+        self.assertEqual(self.active([{**gym, "at": self.now - timedelta(minutes=180)}])["sports"], [])
+        self.assertEqual(on_board.sport_share(gym, self.now - timedelta(minutes=60), self.now, Decimal(120)),
+                         Decimal("0.5"))
+
+    def test_sport_share_of_a_window(self):
+        gym = {"at": self.now, "duration": 60}
+        end = self.now + timedelta(minutes=60)
+        self.assertEqual(on_board.sport_share(gym, self.now, end), 0)
+        self.assertEqual(on_board.sport_share(gym, end + timedelta(hours=1), end + timedelta(hours=4)), Decimal("0.6"))
+        self.assertEqual(on_board.sport_share(gym, self.now, end + timedelta(hours=8)), 1)
+
     def test_snacks_basal_and_old_entries_carry_no_effect(self):
         treatments = [
             {"id": "s", "at": self.now - timedelta(minutes=30), "eventType": "Snack Bolus", "carbs": 20, "insulin": 1},

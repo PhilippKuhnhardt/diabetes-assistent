@@ -404,7 +404,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(after["meals"][0]["id"], episode_id)
         self.assertEqual(len(FakeNightscout.treatments), 1)
 
-    def test_sport_effect_is_confirmed_per_meal_and_does_not_exclude_it(self):
+    def test_sport_counts_automatically_with_its_share_in_the_meal_window(self):
         meal_at = "2026-09-23T10:00:00Z"
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": meal_at, "carbs": "40", "insulin": "4",
@@ -413,12 +413,29 @@ class IntegrationTests(unittest.TestCase):
             "kind": "exercise", "at": "2026-09-23T08:00:00Z",
             "sport_kind": "gym", "duration_minutes": 60,
         })
-        before = self.request("/api/day?date=2026-09-23")["meals"][0]
-        self.assertTrue(before["sport"]["suggested"])
-        self.assertEqual(Decimal(before["sport"]["suggested_effect_mgdl"]), Decimal(40))
-        self.assertEqual(Decimal(before["calculation"]["sport_effect_mgdl"]), Decimal(0))
+        # Gym ends 09:00 and acts linearly over 5 h; the window 10:00–13:00 holds 3 of those 5 h.
+        before = self.request("/api/day?date=2026-09-23")
+        meal = before["meals"][0]
+        self.assertTrue(meal["sport"]["suggested"])
+        self.assertEqual(Decimal(meal["sport"]["suggested_effect_mgdl"]), Decimal(24))
+        self.assertEqual(Decimal(meal["calculation"]["sport_effect_mgdl"]), Decimal(24))
+        self.assertEqual(meal["review"]["open"], [])
+        session = next(item for item in before["timeline"] if item["kind"] == "exercise")
+        self.assertEqual((Decimal(session["sport_effect_mgdl"]), session["sport_effect_custom"]), (Decimal(40), False))
+        # Philipp sets the session's own effect in "Tag durchgehen"; the meal follows.
+        self.request("/api/analysis/sport-session", method="POST", body={
+            "id": session["id"], "day": "2026-09-23", "effect_mgdl": "100"})
+        after = self.request("/api/day?date=2026-09-23")
+        self.assertEqual(Decimal(after["meals"][0]["calculation"]["sport_effect_mgdl"]), Decimal(60))
+        session = next(item for item in after["timeline"] if item["kind"] == "exercise")
+        self.assertEqual((Decimal(session["sport_effect_mgdl"]), session["sport_effect_custom"]), (Decimal(100), True))
+        self.request("/api/analysis/sport-session", method="POST", body={
+            "id": session["id"], "day": "2026-09-23", "reset": True})
+        self.assertEqual(Decimal(self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]["sport_effect_mgdl"]),
+                         Decimal(24))
+        # A value on the meal still replaces it, and "Kein Einfluss" drops it.
         self.request("/api/analysis/sport", method="POST", body={
-            "meal_id": before["id"], "day": "2026-09-23", "status": "affected",
+            "meal_id": meal["id"], "day": "2026-09-23", "status": "affected",
             "effect_mgdl": "35",
         })
         after = self.request("/api/day?date=2026-09-23")["meals"][0]
@@ -427,9 +444,27 @@ class IntegrationTests(unittest.TestCase):
             Decimal(after["calculation"]["adjusted_delta_mgdl"]),
             Decimal(after["calculation"]["delta_mgdl"]) + 35,
         )
+        self.request("/api/analysis/sport", method="POST", body={
+            "meal_id": meal["id"], "day": "2026-09-23", "status": "unaffected"})
+        self.assertEqual(Decimal(self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]["sport_effect_mgdl"]),
+                         Decimal(0))
         self.assertEqual(marks.analysis_exclusions(), set())
+        with self.assertRaises(urllib.error.HTTPError):
+            self.request("/api/analysis/sport-session", method="POST", body={
+                "id": "unknown", "day": "2026-09-23", "effect_mgdl": "10"})
 
-    def test_sport_inside_meal_window_is_suggested_for_that_meal_and_the_next(self):
+    def test_sport_entry_takes_its_own_effect(self):
+        self.request("/api/settings")
+        body = {"day": "2026-09-23", "mode": "exercise", "sport_kind": "gym", "duration_minutes": 60}
+        self.request("/api/entry", method="POST", body={**body, "at": "2026-09-23T08:00:00Z", "sport_effect_mgdl": "-90"})
+        self.request("/api/entry", method="POST", body={**body, "at": "2026-09-23T14:00:00Z", "sport_effect_mgdl": "-40"})
+        sessions = [item for item in self.request("/api/day?date=2026-09-23")["timeline"] if item["kind"] == "exercise"]
+        self.assertEqual([(Decimal(item["sport_effect_mgdl"]), item["sport_effect_custom"]) for item in sessions],
+                         [(Decimal(90), True), (Decimal(40), False)])
+        with self.assertRaises(urllib.error.HTTPError):
+            self.request("/api/entry", method="POST", body={**body, "at": "2026-09-23T16:00:00Z", "sport_effect_mgdl": "x"})
+
+    def test_sport_inside_meal_window_counts_for_that_meal_and_the_next(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": "2026-09-23T07:00:00Z", "carbs": "40", "insulin": "4",
         })
@@ -442,9 +477,9 @@ class IntegrationTests(unittest.TestCase):
         })
         meals = self.request("/api/day?date=2026-09-23")["meals"]
         self.assertEqual([meal["meal"] for meal in meals], ["breakfast", "lunch"])
-        for meal in meals:
-            self.assertTrue(meal["sport"]["suggested"], meal["meal"])
-            self.assertEqual(Decimal(meal["sport"]["suggested_effect_mgdl"]), Decimal(40))
+        # Gym ends 09:20: breakfast (to 10:00) holds 40 of its 300 minutes, lunch (11:00–14:00) 180.
+        self.assertEqual([round(Decimal(meal["sport"]["suggested_effect_mgdl"]), 2) for meal in meals],
+                         [Decimal("5.33"), Decimal(24)])
 
     def test_sport_after_the_meal_window_is_not_suggested(self):
         self.request("/api/treatment", method="POST", body={
@@ -470,7 +505,7 @@ class IntegrationTests(unittest.TestCase):
         racing = next(item for item in day["timeline"] if item["kind"] == "exercise")
         self.assertEqual(racing["sport_kind"], "racing")
         meal = day["meals"][0]
-        self.assertEqual(Decimal(meal["sport"]["suggested_effect_mgdl"]), Decimal(-40))
+        self.assertEqual(Decimal(meal["sport"]["suggested_effect_mgdl"]), Decimal(-24))
         self.request("/api/analysis/sport", method="POST", body={
             "meal_id": meal["id"], "day": "2026-09-23", "status": "affected",
             "effect_mgdl": "-30",
@@ -493,6 +528,14 @@ class IntegrationTests(unittest.TestCase):
         })
         effects = self.request("/api/settings")["settings"]["sport_effects_mgdl"]
         self.assertEqual(Decimal(effects["racing"]), Decimal(-60))
+        settings = self.request("/api/settings")["settings"]
+        self.assertEqual(settings["sport_durations_minutes"]["gym"], 300)
+        self.request("/api/settings", method="POST", body={
+            "sport_durations_minutes": {**settings["sport_durations_minutes"], "gym": 240}})
+        self.assertEqual(self.request("/api/settings")["settings"]["sport_durations_minutes"]["gym"], 240)
+        with self.assertRaises(urllib.error.HTTPError):
+            self.request("/api/settings", method="POST", body={
+                "sport_durations_minutes": {**settings["sport_durations_minutes"], "gym": 10}})
 
     def test_former_lookbacks_map_to_the_offered_ones(self):
         _, current = config.get_settings()
@@ -1419,7 +1462,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual((saved["kind"], [meal["meal"] for meal in saved["day_view"]["meals"]]), ("meal", ["dinner"]))
         self.assertEqual(len(self.request("/api/day?date=2026-09-23")["meals"]), 1)
 
-    def test_entry_preview_offers_sport_basal_and_day_type_and_save_stores_all_in_one_call(self):
+    def test_entry_preview_offers_basal_and_day_type_and_save_stores_all_in_one_call(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "exercise", "at": "2026-09-23T06:00:00Z", "sport_kind": "gym", "duration_minutes": 30,
         })
@@ -1427,59 +1470,45 @@ class IntegrationTests(unittest.TestCase):
         entry = {"day": "2026-09-23", "at": "2026-09-23T07:00:00Z", "mode": "meal", "carbs": "40"}
         preview = self.request("/api/entry/preview", method="POST", body=entry)
         self.assertIsNone(preview["assignment"])
-        self.assertEqual([item["sport_type"] for item in preview["sport"]["events"]], ["gym"])
-        self.assertEqual(Decimal(preview["sport"]["suggested_change_mgdl"]), Decimal(-40))
+        self.assertNotIn("sport", preview)
         self.assertEqual(Decimal(preview["basal_units"]), Decimal(17))
         self.assertEqual(preview["day_type"], {"value": "work", "source": "weekday"})
         self.assertEqual(preview["dose"]["message"], "Eine aktuelle Empfehlung gibt es nur für den heutigen Tag.")
         later = self.request("/api/entry/preview", method="POST", body={**entry, "at": "2026-09-23T13:00:00Z"})
-        self.assertEqual((later["basal_units"], later["day_type"], later["sport"]), ("0", None, None))
+        self.assertEqual((later["basal_units"], later["day_type"]), ("0", None))
 
         saved = self.request("/api/entry", method="POST", body={
-            **entry, "insulin": "3", "consider_sport": True, "sport_effect_mgdl": "-25", "with_basal": True,
-            "carbs_certainty": "known"})
-        self.assertEqual((saved["kind"], saved["sport_marked"], saved["basal_error"]), ("meal", True, None))
+            **entry, "insulin": "3", "with_basal": True, "carbs_certainty": "known"})
+        self.assertEqual((saved["kind"], saved["basal_error"]), ("meal", None))
         self.assertTrue(saved["basal"]["nightscout_synced"])
         notes = [item["notes"] for item in FakeNightscout.treatments]
         self.assertTrue(any("[DA2:basal]" in note for note in notes))
         meal = saved["day_view"]["meals"][0]
         self.assertEqual(meal["source_id"], saved["id"])
-        self.assertEqual((meal["sport"]["status"], Decimal(meal["sport"]["effect_mgdl"])), ("affected", Decimal(25)))
+        # The gym before it counts by itself, no confirmation needed.
+        self.assertEqual((meal["sport"]["status"], meal["sport"]["suggested"]), ("auto", True))
         self.assertEqual(len(saved["day_view"]["basal"]), 1)
 
         snack = {**entry, "at": "2026-09-23T07:30:00Z", "carbs": "10"}
         preview = self.request("/api/entry/preview", method="POST", body=snack)
         self.assertEqual((preview["assignment"]["meal"], preview["assignment"]["snack"]), ("breakfast", True))
         self.assertEqual(preview["basal_units"], "0")
-        # A snack can count the sport too; it is marked on the main meal whose window holds it.
-        self.assertEqual([item["sport_type"] for item in preview["sport"]["events"]], ["gym"])
         # Breakfast is taken, so the entry cannot be flipped to its own breakfast.
         own = self.request("/api/entry/preview", method="POST", body={**snack, "as": "meal"})
         self.assertEqual((own["assignment"]["snack"], own["assignment"]["own_meal_taken"]), (True, True))
-        saved = self.request("/api/entry", method="POST", body={
-            **snack, "consider_sport": True, "sport_effect_mgdl": "-30"})
-        self.assertEqual((saved["kind"], saved["sport_marked"], saved["sport_error"]), ("snack", True, None))
-        meal = saved["day_view"]["meals"][0]
-        self.assertEqual((meal["sport"]["status"], Decimal(meal["sport"]["effect_mgdl"])), ("affected", Decimal(30)))
+        saved = self.request("/api/entry", method="POST", body=snack)
+        self.assertEqual(saved["kind"], "snack")
         self.assertEqual(FakeNightscout.treatments[-1]["eventType"], "Carb Correction")
         self.assertIn("[DA2:snack]", FakeNightscout.treatments[-1]["notes"])
 
         # Lunch at 12:00 is taken: at 16:00, after its window, an entry is a snack of no meal.
         self.request("/api/entry", method="POST", body={**entry, "at": "2026-09-23T10:00:00Z", "insulin": "3"})
         late = {**entry, "at": "2026-09-23T14:00:00Z", "carbs": "10"}
-        self.request("/api/treatment", method="POST", body={
-            "kind": "exercise", "at": "2026-09-23T13:00:00Z", "sport_kind": "jogging", "duration_minutes": 30,
-        })
         preview = self.request("/api/entry/preview", method="POST", body={**late, "as": "meal"})
         self.assertEqual({key: preview["assignment"][key] for key in ("meal", "at", "snack", "own_meal_taken")},
                          {"meal": None, "at": None, "snack": True, "own_meal_taken": True})
-        self.request("/api/day?date=2026-09-23")
-        self.assertIsNotNone(self.request("/api/entry/preview", method="POST", body=late)["sport"])
-        saved = self.request("/api/entry", method="POST", body={
-            **late, "insulin": "1", "consider_sport": True, "sport_effect_mgdl": "-20"})
-        # A snack of no meal has no meal to carry the sport; it only lowers its own dose.
-        self.assertEqual((saved["kind"], saved["sport_marked"], saved["sport_error"]), ("snack", False, None))
-        self.assertTrue(all(meal["sport"].get("status") != "affected" for meal in saved["day_view"]["meals"][1:]))
+        saved = self.request("/api/entry", method="POST", body={**late, "insulin": "1"})
+        self.assertEqual(saved["kind"], "snack")
         self.assertEqual([meal["meal"] for meal in saved["day_view"]["meals"]], ["breakfast", "lunch"])
         row = next(item for item in saved["day_view"]["timeline"] if item["id"] == saved["id"])
         self.assertEqual((row["kind"], row["meal_id"]), ("snack", None))

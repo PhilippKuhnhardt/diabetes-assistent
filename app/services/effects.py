@@ -36,7 +36,8 @@ def day_effects(params: dict) -> dict:
     try:
         found = on_board.sources(treatments, end, settings, factors.carb_factor(settings, parsed, points, day_type),
                                  factors.surcharge_mgdl(settings) if method == forecast.SURCHARGE else None,
-                                 forecast.surcharge_share, keep_all=True)
+                                 forecast.surcharge_share, keep_all=True,
+                                 sport_overrides=marks.sport_session_effects())
     except ValueError:
         return {"day": day, "rows": [], "reason": "Korrekturfaktor-Profil aus Nightscout fehlt"}
     rows = on_board.timeline(found, entries, start, end, HORIZON) if end > start else []

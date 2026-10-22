@@ -18,8 +18,7 @@
   "blocked": 0,
   "calculated": 0,
   "excluded": 0,
-  "first_open": null,
-  "sport_open": 0
+  "first_open": null
  },
  "settings_version": 2,
  "sync_error": null,
