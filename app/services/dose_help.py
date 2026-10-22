@@ -57,7 +57,8 @@ def dose_help(payload: dict) -> dict:
     try:
         active = on_board.summary(on_board.sources(
             treatments, now, current_settings, carb_factor,
-            surcharge_mgdl if method == forecast.SURCHARGE else None, forecast.surcharge_share), now)
+            surcharge_mgdl if method == forecast.SURCHARGE else None, forecast.surcharge_share,
+            sport_overrides=marks.sport_session_effects()), now)
     except ValueError:
         active = None
     # The surcharge belongs once to each main meal; a snack of a meal gets the factor only.
@@ -105,6 +106,9 @@ def on_board_view(active: dict, result: dict) -> dict:
         "lowering_mgdl": str(active["lowering_mgdl"]), "lowering_until": instant(active["lowering_until"]),
         "raising_mgdl": str(active["raising_mgdl"]), "raising_until": instant(active["raising_until"]),
         "carbs_mgdl": str(active["carbs_mgdl"]), "surcharge_mgdl": str(active["surcharge_mgdl"]),
+        "sport_mgdl": str(active["sport_mgdl"]),
+        "sports": [{"at": row["at"].isoformat(), "end": row["end"].isoformat(), "kind": row["kind"],
+                    "mgdl": str(row["mgdl"]), "remaining_mgdl": str(row["remaining_mgdl"])} for row in active["sports"]],
         "carbs_remaining_g": str(sum((row["remaining_grams"] for row in active["carbs"]), Decimal(0))),
         "expected_mgdl": str(expected) if expected is not None else None,
         "expected_low_mgdl": str(expected - below) if expected is not None else None,

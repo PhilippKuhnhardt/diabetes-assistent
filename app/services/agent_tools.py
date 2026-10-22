@@ -25,7 +25,7 @@ READ_TABLES = ["meals", "window-events", "entries", "treatments", "basal", "data
 DOSE_KEYS = (
     "message", "reason", "options", "carbs_g", "glucose_mgdl", "glucose_at", "glucose_fresh", "glucose_source",
     "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl", "low_target_mgdl", "low_note", "forecast_mgdl", "cautious_forecast_mgdl",
-    "activity_change_mgdl", "recent_rapid_doses", "auto_meal", "auto_method", "auto_factor_count",
+    "recent_rapid_doses", "auto_meal", "auto_method", "auto_factor_count",
     "auto_factor_min_meals", "auto_surcharge_units", "day_type", "day_type_source", "split_plan")
 
 
@@ -157,12 +157,10 @@ def _form(args: dict, at: datetime) -> dict:
     """Shared arguments of preview and save in the entry form's payload."""
     _, settings = config.get_settings()
     carbs = _number(args, "carbs_g", Decimal(0), Decimal(500)) or Decimal(0)
-    change = _number(args, "sport_change_mgdl", Decimal(-500), Decimal(500))
     own_meal, split = _bool(args, "own_main_meal"), _bool(args, "split")
     return {
         "day": at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat(), "at": at.isoformat(),
         "mode": "meal", "carbs": str(carbs), "as": "meal" if own_meal else None, "split": split,
-        "consider_sport": change is not None, "sport_effect_mgdl": str(change or 0),
         "finger_mgdl": _number(args, "finger_mgdl", Decimal(20), Decimal(600)),
         # Certainty and fat decide whether the lower target is offered, so the preview needs them too.
         "carbs_certainty": _choice(args, "carbs_certainty", CERTAINTIES) if carbs > 0 else None,
@@ -185,14 +183,14 @@ def _place_id(args: dict) -> int | None:
 
 
 def preview_entry(args: dict) -> dict:
-    """What the entry form shows for these carbs: snack or main meal, sport, basal, split, dose options."""
+    """What the entry form shows for these carbs: snack or main meal, basal, split, dose options."""
     at = _at(args)
     result = entry.preview(_form(args, at))
     assignment = result["assignment"]
     return {
         "at": _local(at), "day": result["day"],
         "assignment": assignment and {**assignment, "at": _local(assignment["at"])},
-        "sport": result["sport"], "basal_suggestion_units": result["basal_units"],
+        "basal_suggestion_units": result["basal_units"],
         "day_type": result["day_type"], "split": result["split"],
         "dose": _dose_view(result["dose"]), "on_board": result["on_board"],
         "places": [place["name"] for place in place_store.all_places()],
@@ -219,7 +217,9 @@ def save_entry(args: dict) -> dict:
         minutes = _number(args, "duration_minutes", Decimal(1), Decimal(1440))
         if sport_kind is None or minutes is None or minutes % 1:
             raise ToolError("Sport braucht sport_kind und duration_minutes (ganze Minuten)")
-        payload.update({"sport_kind": sport_kind, "duration_minutes": int(minutes), "consider_sport": False})
+        change = _number(args, "sport_change_mgdl", Decimal(-500), Decimal(500))
+        payload.update({"sport_kind": sport_kind, "duration_minutes": int(minutes),
+                        "sport_effect_mgdl": str(change) if change is not None else None})
     saved = entry.save(payload)
     current = saved["day_view"]
     _, settings = config.get_settings()
@@ -230,8 +230,7 @@ def save_entry(args: dict) -> dict:
         "id": saved["id"], "carbs_g": saved["carbs"], "insulin_units": saved["insulin"],
         "split_second_part_units": saved["split_units"], "split_due_at": _local(split_due),
         "basal": saved["basal"],
-        "basal_error": saved["basal_error"], "sport_marked": saved["sport_marked"],
-        "sport_error": saved["sport_error"],
+        "basal_error": saved["basal_error"],
         "entry": next((item for item in _entries(current) if item["id"] == saved["id"]), None),
     }
 
@@ -300,9 +299,6 @@ FORM = {
                                      "eine eigene Hauptmahlzeit sein soll."},
     "split": {"type": "boolean",
               "description": "Split-Bolus an/aus. Weglassen = App-Vorgabe (ab split_min_grams KH an)."},
-    "sport_change_mgdl": {"type": "number", "minimum": -500, "maximum": 500,
-                          "description": "Nur wenn die Vorschau Sport vor der Mahlzeit meldet und Philipp den "
-                                         "Einfluss bestätigt: geschätzte BZ-Änderung, −40 senkt, +40 hebt."},
     "finger_mgdl": {"type": "number", "minimum": 20, "maximum": 600,
                     "description": "Blutig gemessener BZ in mg/dL (z. B. Sensor ausgefallen). Ersetzt für die "
                                    "Empfehlung einen fehlenden oder älteren CGM-Wert; save_entry speichert ihn als "
@@ -333,8 +329,8 @@ TOOLS = [
         "title": "Empfehlung berechnen",
         "description": "Vor jedem Eintrag aufrufen: zeigt, was das Eintragsformular für diese KH zeigt. "
                        "assignment = Snack einer Hauptmahlzeit (snack=true; meal=null = Snack ohne Mahlzeit, weil "
-                       "die eigene Mahlzeit heute schon eingetragen ist) oder eigene Mahlzeit; sport = Sport "
-                       "vor der Mahlzeit gefunden (Einfluss erfragen); basal_suggestion_units > 0 = Basal heute "
+                       "die eigene Mahlzeit heute schon eingetragen ist) oder eigene Mahlzeit; Sport steckt "
+                       "automatisch in on_board.sport_mgdl und der Dosis; basal_suggestion_units > 0 = Basal heute "
                        "noch offen (fragen, ob mit eintragen); split = Split-Bolus vorgeschlagen; dose.options = "
                        "normal / low (tieferer Zielwert, nur ohne KH-Unsicherheit) / cautious (vorsichtig) / carbs (nur KH), "
                        "bei Split units = jetzt und "
@@ -365,6 +361,10 @@ TOOLS = [
             "sport_kind": {"type": "string", "enum": SPORT_KINDS, "description": "Nur für kind=exercise."},
             "duration_minutes": {"type": "integer", "minimum": 1, "maximum": 1440,
                                  "description": "Nur für kind=exercise."},
+            "sport_change_mgdl": {"type": "number", "minimum": -500, "maximum": 500,
+                                  "description": "Nur für kind=exercise, wenn Philipp einen eigenen Einfluss nennt: "
+                                                 "BZ-Änderung in mg/dL, −70 senkt, +40 hebt. Weglassen = Standard "
+                                                 "der Sportart. Wirkt automatisch über 5 h nach dem Ende."},
             "notes": {"type": "string", "maxLength": 500, "description": "Notiz, z. B. was gegessen wurde."},
             "event_id": {"type": "string", "description": "UUID. Bei Wiederholung nach Fehler/Timeout dieselbe "
                                                           "event_id verwenden, dann entsteht kein Duplikat."},
