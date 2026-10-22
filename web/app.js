@@ -1266,7 +1266,10 @@ function activeCardHTML(active) {
       " expected") +
     (nothing ? '<p class="hint">Nichts wirkt mehr nach.</p>' : '') +
     (active.split_plan ? '<p class="hint">2. Teil geplant: ' + escapeHTML(num(active.split_plan.units, 1)) + ' IE um ' +
-      escapeHTML(timeOnly(active.split_plan.due_at)) + ', in der Prognose noch nicht enthalten.</p>' : '') +
+      escapeHTML(timeOnly(active.split_plan.due_at)) + ', in der Prognose noch nicht enthalten' +
+      escapeHTML(active.split_plan.state === "later" ? "" : " (" + (active.split_plan.state === "wait"
+        ? splitTiming.wait + " bis " + timeOnly(active.split_plan.latest_at) : splitTiming[active.split_plan.state]) + ")") +
+      '. Die Menge kommt aus der Prognose.</p>' : '') +
     (active.fresh_meal_at ? '<p class="hint">Mahlzeit um ' + escapeHTML(timeOnly(active.fresh_meal_at)) +
       ': Die KH steigen noch, die Prognose ist hier am unsichersten.</p>' : '');
 }
@@ -1987,6 +1990,21 @@ function selectDoseSuggestion(event) {
   form.requestSubmit($("#entry-submit"));
 }
 
+// The second split part's amount comes from the forecast; the note names the plan and when it fits.
+const splitTiming = {
+  early: "jetzt: BZ steigt schnell",
+  due: "jetzt fällig",
+  wait: "BZ tief oder fallend: lieber warten",
+  later: "",
+};
+
+function splitOptionNote(option) {
+  const planned = "geplant " + num(option.planned_units, 1) + " IE um " + timeOnly(option.due_at);
+  const when = option.state === "wait" ? splitTiming.wait + " bis " + timeOnly(option.latest_at) : splitTiming[option.state];
+  return [option.from_forecast && Number(option.units) <= 0 ? "laut Prognose nicht nötig" : "", planned, when]
+    .filter(Boolean).join(" · ");
+}
+
 const doseLabels = { split: "2. Teil", normal: "Normal", low: "Tiefer", cautious: "Vorsichtig", carbs: "Nur KH" };
 
 function doseHelpHTML(data) {
@@ -2000,7 +2018,7 @@ function doseHelpHTML(data) {
     (option.expected_mgdl != null ? '→ ' + escapeHTML(num(option.expected_mgdl, 0)) + ' mg/dL' : 'ohne Korrektur') + '</span>' +
     (option.later_units != null ? '<span class="dose-expected">+ ' + escapeHTML(num(option.later_units, 1)) + ' IE um ' +
       escapeHTML(timeOnly(option.later_at)) + '</span>' : '') +
-    (option.due_at ? '<span class="dose-expected">geplant ' + escapeHTML(timeOnly(option.due_at)) + '</span>' : '') + '</button>';
+    (option.variant === "split" ? '<span class="dose-expected">' + escapeHTML(splitOptionNote(option)) + '</span>' : '') + '</button>';
   }).join("");
   return '<div class="dose-head"><span class="dose-heading">' + (withCarbs ? "Empfehlung" : "Korrektur ohne Essen") +
     '</span>' + (options ? '<span class="dose-hint">Antippen speichert direkt</span>' : '') + '</div>' +

@@ -58,7 +58,16 @@ später  = Empfehlung − jetzt, um Mahlzeit + split_delay_minutes            (S
 
 - Der erwartete Wert der Option gilt für die volle Empfehlung, also beide Teile.
 - Gespeichert wird beim Eintrag für heute `später = gewählte Empfehlung − tatsächlich eingetragene IE` als Markierung `[DASP:<IE>@<min>]` in der Nightscout-Notiz der Mahlzeit.
-- Der Plan ist offen, bis eine schnelle Insulingabe mehr als 15 min nach der Mahlzeit eingetragen ist oder 3 h nach dem geplanten Zeitpunkt. Solange zeigt die Karte „Wirkt noch“ den 2. Teil (nicht in der Prognose enthalten), und ein Eintrag ohne KH bietet zuerst die Option „2. Teil“ mit der geplanten Menge an; daneben stehen Normal und Vorsichtig aus der aktuellen Prognose (aktives Insulin und offene KH).
+- Der Plan ist offen, bis eine schnelle Insulingabe mehr als 15 min nach der Mahlzeit eingetragen ist oder 3 h nach dem geplanten Zeitpunkt. Solange zeigt die Karte „Wirkt noch“ den 2. Teil (nicht in der Prognose enthalten), und ein Eintrag ohne KH bietet zuerst die Option „2. Teil“ an; daneben stehen Normal und Vorsichtig aus der aktuellen Prognose (aktives Insulin und offene KH).
+- Menge und Zeitpunkt des 2. Teils folgen dem Verlauf (freigegeben 22.10., Auswertung in den Projektdateien `analysen/pruefstand-2026-10/split-bolus.md`). Die Menge ist die Korrektur aus der aktuellen Prognose (wie Normal), die geplante Menge steht nur zur Orientierung daneben; ohne frischen CGM-Wert gilt die geplante Menge.
+
+```text
+früh    60 min nach der Mahlzeit bis 15 min vor dem geplanten Zeitpunkt:
+        BZ ≥ 180 und steigt ≥ 15 mg/dL in 15 min       → jetzt (KH wirken schneller oder waren mehr)
+fällig  ab dem geplanten Zeitpunkt
+warten  ab dem geplanten Zeitpunkt, BZ < 110 oder fällt mehr als 5 mg/dL in 15 min
+        → bis höchstens 60 min danach warten, dann fällig (erster Teil senkt noch genug)
+```
 
 Vor dem Ende des Frühstücksfensters hängt `R` von der Tagesart ab (Arbeitstag oder freier Tag). Liegen in den letzten 28 Tagen vor heute mindestens drei berechnete, nicht ausgeklammerte Frühstücke derselben Tagesart vor, gilt `KH-Anteil = KH × F / 10` mit `F` = Median dieser Frühstücksfaktoren in IE/KE; sonst bleibt der Nightscout-Wert. Die Tagesart ist standardmäßig Montag bis Freitag Arbeitstag, Samstag und Sonntag frei. Ist in den Einstellungen Urlaub aktiv, zählt jeder Tag ab dem Einschalten als frei; beim Ausschalten endet der Urlaub am Vortag. Eine manuelle Auswahl für einen Tag hat immer Vorrang. Die Tagesart wird nur lokal gespeichert, nicht in Nightscout.
 
