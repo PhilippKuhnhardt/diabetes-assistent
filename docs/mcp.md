@@ -26,7 +26,7 @@ Ein Gespräch läuft so:
 1. „Wie läuft's?“ → `get_status`: „132, leicht steigend, es wirken noch 1,5 IE, erwartet um 21:40 etwa 110.“
 2. „Ich esse jetzt 45 g.“ → `preview_entry(carbs_g=45)`: Optionen und Faktor; Hinweise, wenn die App es als Snack einordnet oder Basal fehlt. Noch wirkender Sport steckt automatisch in `on_board` und der Dosis.
 3. „Ich spritze 5 Einheiten, halbwegs sicher geschätzt, fettreich.“ → `save_entry(carbs_g=45, insulin_units=5, carbs_certainty="known", fat_protein=true, dose_variant="normal")`.
-4. Ab 80 g schlägt die App Split vor: Teil jetzt, Rest nach 120 min. Gespeichert wird der jetzt gespritzte Teil; der Rest der gewählten Option wird wie im UI als geplanter 2. Teil vermerkt und erscheint später in `get_status` und als Option `split` in `preview_entry` ohne KH.
+4. Ab 80 g schlägt die App Split vor: Teil jetzt, Rest nach 120 min. Gespeichert wird der jetzt gespritzte Teil; der Rest der gewählten Option wird wie im UI als geplanter 2. Teil vermerkt und erscheint später in `get_status` und als Option `split` in `preview_entry` ohne KH; deren Menge kommt aus der aktuellen Prognose (`planned_units` = geplant, `state` = early/due/wait/later).
 
 Unterschied zum UI: Die Prüfung „angetippter Vorschlag noch aktuell“ (`dose_check`) entfällt. Im Gespräch nennt Philipp die Menge, die er tatsächlich gespritzt hat; die wird eingetragen, auch wenn sich der Vorschlag inzwischen leicht geändert hat.
 
