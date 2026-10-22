@@ -193,9 +193,17 @@ def _inbox_seen(db: sqlite3.Connection) -> None:
     )""")
 
 
+def _sport_sessions(db: sqlite3.Connection) -> None:
+    """Philipp's own glucose drop for one sport session (Nightscout id), instead of its kind's setting."""
+    db.execute("""CREATE TABLE IF NOT EXISTS sport_session_effects (
+        session_id TEXT PRIMARY KEY,
+        effect_mgdl TEXT NOT NULL
+    )""")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
                                                           _notifications, _notification_priority, _places,
-                                                          _inbox_seen]
+                                                          _inbox_seen, _sport_sessions]
 
 
 def init() -> None:
