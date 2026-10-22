@@ -6,8 +6,9 @@ Insulin: exponential activity curve as Loop's Fiasp preset (peak 55 min after a 
 6 h duration); Philipp's data fit it (about 0 % after 30 min, 50 % after 90 min, 75 % after 2 h,
 nearly all after 4 h). Remaining effect = Σ rapid IE × still-active share × KF at the dose.
 
-Carbs: each entry is absorbed linearly, over 2.5 h up to 40 g and 3.5 h from 100 g (linear in
-between); a fat/protein mark stretches that by half. Remaining effect = remaining KE × meal factor
+Carbs: each entry is absorbed linearly, over 2 h up to 40 g and 3 h from 100 g (linear in between;
+re-estimated 2026-10-22, analysen/pruefstand-2026-10/annahmen.md: the former 2.5–3.5 h and the fat/protein
+stretch by half made the forecast too high after meals). Remaining effect = remaining KE × meal factor
 × KF at the entry (the model equation: one KE raises glucose by factor × KF).
 
 Surcharge (surcharge method only): the main meal's surcharge × share acts linearly from 2 h to 5 h
@@ -25,9 +26,8 @@ from app import calculation
 INSULIN_PEAK = Decimal(55)
 INSULIN_DURATION = Decimal(360)
 INSULIN_DELAY = Decimal(10)
-CARBS_SHORT_MINUTES, CARBS_SHORT_GRAMS = Decimal(150), Decimal(40)
-CARBS_LONG_MINUTES, CARBS_LONG_GRAMS = Decimal(210), Decimal(100)
-FAT_STRETCH = Decimal("1.5")
+CARBS_SHORT_MINUTES, CARBS_SHORT_GRAMS = Decimal(120), Decimal(40)
+CARBS_LONG_MINUTES, CARBS_LONG_GRAMS = Decimal(180), Decimal(100)
 SURCHARGE_FROM = Decimal(120)
 SURCHARGE_TO, SURCHARGE_TO_FAT = Decimal(300), Decimal(360)
 # Typical forecast miss after a post-meal correction (11 corrections, analysis 2026-10-08).
@@ -61,17 +61,17 @@ def insulin_remaining(minutes: Decimal) -> Decimal:
     return min(Decimal(1), max(Decimal(0), 1 - used))
 
 
-def carb_minutes(grams: Decimal, fat: bool = False) -> Decimal:
-    """Absorption time of one carb entry: longer for larger amounts and fat/protein-rich meals."""
+def carb_minutes(grams: Decimal) -> Decimal:
+    """Absorption time of one carb entry: longer for larger amounts."""
     share = min(Decimal(1), max(Decimal(0), (grams - CARBS_SHORT_GRAMS) / (CARBS_LONG_GRAMS - CARBS_SHORT_GRAMS)))
     minutes = CARBS_SHORT_MINUTES + share * (CARBS_LONG_MINUTES - CARBS_SHORT_MINUTES)
-    return minutes * FAT_STRETCH if fat else minutes
+    return minutes
 
 
-def carb_remaining(minutes: Decimal, grams: Decimal, fat: bool = False) -> Decimal:
+def carb_remaining(minutes: Decimal, grams: Decimal) -> Decimal:
     if minutes <= 0:
         return Decimal(1)
-    return max(Decimal(0), 1 - minutes / carb_minutes(grams, fat))
+    return max(Decimal(0), 1 - minutes / carb_minutes(grams))
 
 
 def surcharge_remaining(minutes: Decimal, fat: bool = False) -> Decimal:
@@ -109,10 +109,10 @@ def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, 
             doses.append({"at": item["at"], "units": units, "mgdl_per_unit": isf(item["at"])})
         grams = calculation.dec(item.get("carbs") or 0)
         fat = bool(item.get("fat_protein"))
-        if grams > 0 and age < carb_minutes(grams, fat):
+        if grams > 0 and age < carb_minutes(grams):
             factor = carb_factor(item["at"])
             if factor is not None:
-                carbs.append({"at": item["at"], "grams": grams, "fat": fat,
+                carbs.append({"at": item["at"], "grams": grams,
                               "mgdl_per_gram": factor * isf(item["at"]) / 10})
         if is_main_meal(item) and age < FRESH_MEAL_MINUTES:
             meals.append(item["at"])
@@ -130,7 +130,7 @@ def effects_at(found: dict, moment: datetime, cutoff: datetime | None = None) ->
     units = sum((dose["units"] * insulin_remaining(_minutes(moment, dose["at"])) for dose in found["doses"]), Decimal(0))
     lowering = sum((dose["units"] * insulin_remaining(_minutes(moment, dose["at"])) * dose["mgdl_per_unit"]
                     for dose in found["doses"]), Decimal(0))
-    carbs = sum((row["grams"] * carb_remaining(_minutes(moment, row["at"]), row["grams"], row["fat"]) * row["mgdl_per_gram"]
+    carbs = sum((row["grams"] * carb_remaining(_minutes(moment, row["at"]), row["grams"]) * row["mgdl_per_gram"]
                  for row in found["carbs"]), Decimal(0))
     surcharge = sum((row["mgdl"] * surcharge_remaining(_minutes(moment, row["at"]), row["fat"])
                      for row in found["surcharges"]), Decimal(0))
@@ -170,7 +170,7 @@ def summary(found: dict, now: datetime) -> dict:
                        "remaining_units": dose["units"] * insulin_remaining(_minutes(now, dose["at"]))}
                       for dose in found["doses"]],
             "carbs": [{"at": row["at"], "grams": row["grams"],
-                       "remaining_grams": row["grams"] * carb_remaining(_minutes(now, row["at"]), row["grams"], row["fat"])}
+                       "remaining_grams": row["grams"] * carb_remaining(_minutes(now, row["at"]), row["grams"])}
                       for row in found["carbs"]]}
 
 
