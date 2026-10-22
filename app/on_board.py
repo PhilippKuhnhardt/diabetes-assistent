@@ -64,8 +64,7 @@ def insulin_remaining(minutes: Decimal) -> Decimal:
 def carb_minutes(grams: Decimal) -> Decimal:
     """Absorption time of one carb entry: longer for larger amounts."""
     share = min(Decimal(1), max(Decimal(0), (grams - CARBS_SHORT_GRAMS) / (CARBS_LONG_GRAMS - CARBS_SHORT_GRAMS)))
-    minutes = CARBS_SHORT_MINUTES + share * (CARBS_LONG_MINUTES - CARBS_SHORT_MINUTES)
-    return minutes
+    return CARBS_SHORT_MINUTES + share * (CARBS_LONG_MINUTES - CARBS_SHORT_MINUTES)
 
 
 def carb_remaining(minutes: Decimal, grams: Decimal) -> Decimal:
