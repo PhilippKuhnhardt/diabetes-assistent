@@ -1,9 +1,11 @@
 """Background job: keep the local copy and the stored analysis current without an open app.
 
-Every APP_SYNC_MINUTES (default 5, 0 switches it off) it mirrors yesterday and today from
+Every APP_SYNC_MINUTES (default 2, 0 switches it off) it mirrors yesterday and today from
 Nightscout and checks the reminders. Only when yesterday or today read something new does it
-make sure every day the analysis reads and the analysis page of every period are stored.
-Opening the app or calling the read API then finds current results.
+make sure every day the analysis reads and the analysis page of every period are stored; today's
+"Wirkungen" are stored every round. Opening the app or calling the read API then finds current
+results and reads yesterday and today from the local copy without asking Nightscout
+(day_view.mirror_current).
 """
 from __future__ import annotations
 
@@ -14,7 +16,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from app.ingestion import nightscout, pushover, sync
-from app.services import day_view, notifications, summary
+from app.services import day_view, effects, notifications, summary
 from app.store import config
 
 PERIODS = (14, 30, 7, 3, 1)  # the analysis page's default first
@@ -23,7 +25,7 @@ _last_inputs: tuple | None = None
 
 
 def interval_minutes() -> int:
-    value = os.environ.get("APP_SYNC_MINUTES", "5")
+    value = os.environ.get("APP_SYNC_MINUTES", "2")
     try:
         minutes = int(value)
     except ValueError:
@@ -56,6 +58,9 @@ def run_once() -> dict:
             result["notify_error"] = str(error)
     if not errors and "notify_error" not in result:
         pushover.heartbeat()
+    if today.isoformat() not in errors:
+        # Today's effects end at this sync, so they are stored afresh each round for the page to read.
+        effects.day_effects({"date": [today.isoformat()]})
     return result
 
 

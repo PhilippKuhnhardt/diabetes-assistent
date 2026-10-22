@@ -1,24 +1,21 @@
 """Dose suggestion for an entry being typed today."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from app import dosing, forecast, on_board, split
 from app.common import parse_instant
 from app.services import day_view, factors
-from app.store import config, marks, mirror
+from app.store import config, marks
 from app.analysis.stats import median, quartile
 
 
 def dose_help(payload: dict) -> dict:
     _, current_settings = config.get_settings()
     today = datetime.now(ZoneInfo(current_settings["timezone"])).date().isoformat()
-    synced = mirror.synced_at(today)
-    cached_recently = bool(synced and datetime.now(timezone.utc) -
-                           parse_instant(synced) < timedelta(minutes=1))
-    current_day = day_view.day_payload(today, refresh=not cached_recently)
+    current_day = day_view.day_payload(today, refresh=not day_view.mirror_current(today))
     entries = [{"at": parse_instant(row["at"]), "sgv": row["sgv"]}
                for row in current_day["entries"]]
     treatments = [{"at": parse_instant(row["at"]), **{k: v for k, v in row.items() if k != "at"}}

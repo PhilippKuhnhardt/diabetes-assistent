@@ -20,6 +20,7 @@ from app import dosing, episodes, forecast
 from app.common import unit_text
 from app.analysis.night import night_analysis
 from app.services import day_view
+from app.ingestion import nightscout
 from app.store import config, db, marks, mirror
 from app.server import Handler
 
@@ -615,7 +616,10 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(compute.call_count, calls)
             FakeNightscout.entries.append({"_id": "glucose-new", "date": int(datetime(
                 2026, 9, 23, 16, tzinfo=timezone.utc).timestamp() * 1000), "type": "sgv", "sgv": 130})
+            # A change made elsewhere waits for the background round or "Aktualisieren".
             self.request("/api/day?date=2026-09-23")
+            self.assertEqual(compute.call_count, calls)
+            self.request("/api/day?date=2026-09-23&refresh=1")
             self.assertEqual(compute.call_count, calls + 1)
             with patch("app.services.day_view.CODE_VERSION", "other code"):
                 day_view.day_payload("2026-09-23", refresh=False)
@@ -647,7 +651,7 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(compute.call_count, 3)
             FakeNightscout.entries.append({"_id": "glucose-new", "date": int(datetime(
                 2026, 9, 23, 16, tzinfo=timezone.utc).timestamp() * 1000), "type": "sgv", "sgv": 130})
-            self.request("/api/day?date=2026-09-23")
+            self.request("/api/day?date=2026-09-23&refresh=1")
             self.request("/api/summary?days=30")
             self.assertEqual(compute.call_count, 4)
         self.assertNotEqual(excluded, first)
@@ -664,13 +668,33 @@ class IntegrationTests(unittest.TestCase):
             days = connection.execute("SELECT COUNT(*) FROM day_results").fetchone()[0]
             pages = {row[0] for row in connection.execute("SELECT key FROM summary_results")}
         self.assertEqual(days, summary.history_days(30) + 1)
-        self.assertEqual(pages, {"1", "3", "7", "14", "30"})
+        self.assertEqual(pages, {"1", "3", "7", "14", "30", "effects:" + today.isoformat()})
         # Stored results answer the next request without calculating again.
         with patch("app.services.summary.compute_summary") as compute, \
                 patch("app.services.day_view.compute_day") as compute_day:
             self.request("/api/summary?days=14")
             compute.assert_not_called()
             compute_day.assert_not_called()
+        # The diary page reads what the round mirrored and stored: no Nightscout read, no recalculation.
+        with patch("app.ingestion.nightscout.fetch_range") as fetch, \
+                patch("app.services.day_view.compute_day") as compute_day, \
+                patch("app.services.effects._compute") as compute_effects:
+            self.request("/api/day?date=" + today.isoformat())
+            self.request("/api/day/effects?date=" + today.isoformat())
+            self.request("/api/entry/preview", method="POST", body={
+                "day": today.isoformat(), "mode": "meal", "carbs": "",
+                "at": datetime.now(timezone.utc).isoformat()})
+            fetch.assert_not_called()
+            compute_day.assert_not_called()
+            compute_effects.assert_not_called()
+        # "Aktualisieren" and a write to Nightscout ask Nightscout again.
+        with patch("app.ingestion.nightscout.fetch_range", return_value=([], [])) as fetch:
+            self.request("/api/day?date=" + today.isoformat() + "&refresh=1")
+            self.assertEqual(fetch.call_count, 1)
+            with patch.object(nightscout, "_writes", nightscout.write_count() + 1):
+                self.request("/api/day?date=" + today.isoformat())
+            self.assertEqual(fetch.call_count, 2)
+        background.run_once()
         # Without new data a round only syncs and checks reminders; a new reading precomputes again.
         with patch("app.services.background.summary.summary") as page:
             self.assertEqual(background.run_once(), {"errors": {}, "computed": False})
@@ -900,7 +924,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(len(FakeNightscout.treatments), 1)
         # Deleted in Nightscout: a synced dose disappears locally too.
         FakeNightscout.treatments = []
-        self.assertEqual(self.request("/api/day?date=2026-09-23")["basal"], [])
+        self.assertEqual(self.request("/api/day?date=2026-09-23&refresh=1")["basal"], [])
 
     def test_basal_note_known_only_to_nightscout_is_adopted(self):
         dose_id = "0b9a7e7c-1d2e-4f3a-8b5c-6d7e8f9a0b1c"
