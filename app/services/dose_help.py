@@ -70,8 +70,10 @@ def dose_help(payload: dict) -> dict:
                             auto_surcharge_mgdl=surcharge_mgdl if surcharge else None,
                             surcharge_share=forecast.surcharge_share, on_board=active, finger=finger)
     plan = split.open_plan(treatments, now)
+    when = split.timing(plan, entries, current_settings, now) if plan else None
     result["split_plan"] = plan and {"meal_at": plan["meal_at"].isoformat(), "units": str(plan["units"]),
-                                     "due_at": plan["due_at"].isoformat()}
+                                     "due_at": plan["due_at"].isoformat(), "state": when["state"],
+                                     "latest_at": when["latest_at"].isoformat()}
     result["on_board"] = on_board_view(active, result) if active else None
     result.update({
         "auto_meal": meal_kind, "auto_factor_count": prediction["count"], "auto_method": method,

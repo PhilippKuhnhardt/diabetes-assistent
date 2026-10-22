@@ -244,12 +244,17 @@ def _dose(context: dict, payload: dict, assignment: dict | None, sport: dict | N
         options.append(option)
     plan = result.get("split_plan")
     if plan and carbs == 0:
-        units = Decimal(plan["units"])
+        # The second part is what the current forecast asks for (user approval 2026-10-22); the planned IE
+        # only stand in without a fresh glucose value.
+        forecast_units = result.get("entry_units")
+        units = Decimal(str(forecast_units)) if forecast_units is not None else Decimal(plan["units"])
         forecast = result.get("forecast_mgdl")
-        options.insert(0, {"variant": SPLIT_VARIANT, "units": plan["units"], "due_at": plan["due_at"],
+        options.insert(0, {"variant": SPLIT_VARIANT, "units": str(units), "due_at": plan["due_at"],
+                           "planned_units": plan["units"], "state": plan["state"], "latest_at": plan["latest_at"],
+                           "from_forecast": forecast_units is not None,
                            "expected_mgdl": (str(Decimal(forecast) - units * Decimal(result["isf_mgdl_per_unit"]))
                                              if forecast is not None else None),
-                           "savable": units <= 100})
+                           "savable": 0 < units <= 100})
     # Without a fresh CGM value the form offers its field for blood glucose measured by hand.
     finger_offer = not result.get("glucose_fresh") or result.get("glucose_source") == "finger"
     low_note = (LOW_BLOCKED.get(low_blocked) if result.get("glucose_fresh") and result.get("isf_mgdl_per_unit")
