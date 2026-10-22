@@ -174,15 +174,16 @@ class GlucoseAlertTests(unittest.TestCase):
         self.assertEqual(self.kinds(self.entries([110] * 7), self.found()), [])
 
     def test_falling_faster_than_the_model_warns_of_a_low(self):
-        self.assertEqual(self.kinds(self.entries([125, 120, 115, 110, 105, 100, 95]), self.found()), ["low"])
-        self.assertEqual(self.kinds(self.entries([125, 120, 115, 110, 105, 100, 95]),
+        self.assertEqual(self.kinds(self.entries([130, 124, 118, 112, 106, 100, 94]), self.found()), ["low"])
+        self.assertEqual(self.kinds(self.entries([130, 124, 118, 112, 106, 100, 94]),
                                     self.found(carbs=[(self.NOW - timedelta(minutes=40), "20")])), [])
 
     def test_no_low_warning_right_after_carbs(self):
-        falling = self.entries([125, 120, 115, 110, 105, 100, 95])
-        just_eaten = self.found(carbs=[(self.NOW - timedelta(minutes=10), "5")])
+        falling = self.entries([140, 132, 124, 116, 108, 100, 92])
+        just_eaten = self.found(carbs=[(self.NOW - timedelta(minutes=10), "20")])
         self.assertEqual(self.kinds(falling, just_eaten), [])
-        self.assertEqual(self.kinds(falling, self.found(carbs=[(self.NOW - timedelta(minutes=31), "5")])), ["low"])
+        # A small carb correction eaten because BG falls does not pause the warning.
+        self.assertEqual(self.kinds(falling, self.found(carbs=[(self.NOW - timedelta(minutes=10), "5")])), ["low"])
 
     def test_carbs_still_to_come_warn_of_a_high(self):
         found = self.found(carbs=[(self.NOW - timedelta(minutes=10), "60")])
