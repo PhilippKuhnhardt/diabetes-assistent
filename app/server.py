@@ -25,7 +25,8 @@ def day_view_request(params: dict) -> dict:
     if day is None:
         raise ValueError("Datum fehlt")
     date.fromisoformat(day)
-    return day_view.day_payload(day)
+    # The page reads the local copy the background job keeps current; "Aktualisieren" asks Nightscout.
+    return day_view.day_payload(day, refresh=params.get("refresh") == ["1"] or not day_view.mirror_current(day))
 
 
 GET_ROUTES = {

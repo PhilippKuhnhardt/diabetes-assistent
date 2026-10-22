@@ -233,6 +233,7 @@ class BackgroundTests(unittest.TestCase):
                 patch.object(background.config, "get_settings", return_value=(1, SETTINGS)), \
                 patch.object(background, "_precompute", return_value=False), \
                 patch.object(background.pushover, "heartbeat") as heartbeat, \
+                patch.object(background.effects, "day_effects"), \
                 patch.object(background.notifications, "check", return_value=[]) as check:
             with patch.object(background.sync, "sync_day",
                               side_effect=lambda day: {**status, "sync_error": "kaputt"} if day == today.isoformat()
