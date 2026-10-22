@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -40,6 +40,18 @@ def day_payload(day: str, refresh: bool = True) -> dict:
         "basal_sync_error": status.get("basal_sync_error"),
     })
     return payload
+
+
+def mirror_current(day: str) -> bool:
+    """Whether a request can read the day from the local copy instead of asking Nightscout first:
+    mirrored by this process after its last write to Nightscout and within one background round
+    (plus a minute of slack; one minute without the job). Opening the app thus never waits on
+    Nightscout while the background job keeps yesterday and today current."""
+    from app.services import background
+    synced = mirror.synced_at(day)
+    if not synced or not sync.mirrored_after_writes(day):
+        return False
+    return datetime.now(timezone.utc) - parse_instant(synced) < timedelta(minutes=background.interval_minutes() + 1)
 
 
 def day_fingerprint(day: str) -> str:

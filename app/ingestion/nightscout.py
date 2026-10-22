@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import threading
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -16,11 +17,21 @@ class NightscoutError(Exception):
     pass
 
 
+# How often this process has written to Nightscout. A local copy mirrored before a write may miss it.
+_writes = 0
+_writes_lock = threading.Lock()
+
+
+def write_count() -> int:
+    return _writes
+
+
 def is_configured() -> bool:
     return bool(os.environ.get("NIGHTSCOUT_URL", "").strip() and os.environ.get("NIGHTSCOUT_CREDENTIAL", "").strip())
 
 
 def _request(method: str, path: str, query: dict | None = None, body: object | None = None):
+    global _writes
     base = os.environ.get("NIGHTSCOUT_URL", "").strip().rstrip("/")
     credential = os.environ.get("NIGHTSCOUT_CREDENTIAL", "").strip()
     if not base or not credential:
@@ -46,6 +57,9 @@ def _request(method: str, path: str, query: dict | None = None, body: object | N
     if data is not None:
         headers["Content-Type"] = "application/json"
     request = urllib.request.Request(url, data=data, headers=headers, method=method)
+    if method != "GET":
+        with _writes_lock:
+            _writes += 1
     try:
         with urllib.request.urlopen(request, timeout=18) as response:
             raw = response.read()

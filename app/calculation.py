@@ -5,6 +5,7 @@ absorption and full dose effect at the endpoint are explicit assumptions.
 """
 from __future__ import annotations
 
+from bisect import bisect_left
 from datetime import datetime, timedelta
 from decimal import Decimal, getcontext
 from zoneinfo import ZoneInfo
@@ -51,20 +52,28 @@ def is_rapid_insulin(treatment: dict) -> bool:
 
 def interpolate_glucose(entries: list[dict], moment: datetime, max_gap_minutes: int = 15) -> dict:
     """Piecewise linear interpolation; no silent nearest-reading substitution."""
+    return glucose_interpolator(entries, max_gap_minutes)(moment)
+
+
+def glucose_interpolator(entries: list[dict], max_gap_minutes: int = 15):
+    """interpolate_glucose for many moments over the same readings, sorted only once."""
     points = sorted((entry["at"], dec(entry["sgv"])) for entry in entries if entry.get("sgv") is not None)
-    for at, glucose in points:
-        if at == moment:
-            return {"value": glucose, "before": at, "after": at}
-    before = next(((at, glucose) for at, glucose in reversed(points) if at < moment), None)
-    after = next(((at, glucose) for at, glucose in points if at > moment), None)
-    if before is None or after is None:
-        raise ValueError("CGM-Werte um den Messzeitpunkt fehlen")
-    gap = minutes_between(after[0], before[0])
-    if gap > max_gap_minutes:
-        raise ValueError("CGM-Lücke am Messzeitpunkt ist zu groß")
-    fraction = minutes_between(moment, before[0]) / gap
-    value = before[1] + (after[1] - before[1]) * fraction
-    return {"value": value, "before": before[0], "after": after[0]}
+    times = [at for at, _ in points]
+
+    def at_moment(moment: datetime) -> dict:
+        index = bisect_left(times, moment)
+        if index < len(times) and times[index] == moment:
+            return {"value": points[index][1], "before": moment, "after": moment}
+        if index == 0 or index == len(times):
+            raise ValueError("CGM-Werte um den Messzeitpunkt fehlen")
+        before, after = points[index - 1], points[index]
+        gap = minutes_between(after[0], before[0])
+        if gap > max_gap_minutes:
+            raise ValueError("CGM-Lücke am Messzeitpunkt ist zu groß")
+        fraction = minutes_between(moment, before[0]) / gap
+        value = before[1] + (after[1] - before[1]) * fraction
+        return {"value": value, "before": before[0], "after": after[0]}
+    return at_moment
 
 
 def finger_glucose(treatments: list[dict], moment: datetime, max_gap_minutes: int = 15) -> dict | None:
