@@ -10,7 +10,7 @@
     "glucose_mgdl": "121.0",
     "insulin_units": "0.1",
     "lowering_per_hour": "8.2",
-    "model_mgdl": "243.1",
+    "model_mgdl": "210.4",
     "raising_per_hour": "0.0"
    },
    {
@@ -18,7 +18,7 @@
     "glucose_mgdl": "120.0",
     "insulin_units": "0.0",
     "lowering_per_hour": "1.1",
-    "model_mgdl": "122.0",
+    "model_mgdl": "70.6",
     "raising_per_hour": "0.0"
    },
    {
@@ -74,31 +74,31 @@
     "glucose_mgdl": "190.4",
     "insulin_units": "11.1",
     "lowering_per_hour": "143.5",
-    "model_mgdl": "139.0",
-    "raising_per_hour": "79.5"
+    "model_mgdl": "148.6",
+    "raising_per_hour": "94.0"
    },
    {
     "at": "2026-10-06T07:00:00+00:00",
     "glucose_mgdl": "235.2",
     "insulin_units": "6.0",
     "lowering_per_hour": "136.6",
-    "model_mgdl": "62.6",
-    "raising_per_hour": "79.5"
+    "model_mgdl": "86.7",
+    "raising_per_hour": "94.0"
    },
    {
     "at": "2026-10-06T08:00:00+00:00",
     "glucose_mgdl": "113.2",
     "insulin_units": "2.4",
     "lowering_per_hour": "71.4",
-    "model_mgdl": "35.3",
-    "raising_per_hour": "79.5"
+    "model_mgdl": "73.8",
+    "raising_per_hour": "94.0"
    },
    {
     "at": "2026-10-06T09:00:00+00:00",
     "glucose_mgdl": "114.0",
     "insulin_units": "0.8",
     "lowering_per_hour": "28.9",
-    "model_mgdl": "86.1",
+    "model_mgdl": "76.5",
     "raising_per_hour": "0.0"
    },
    {
@@ -106,31 +106,31 @@
     "glucose_mgdl": "140.0",
     "insulin_units": "5.1",
     "lowering_per_hour": "45.8",
-    "model_mgdl": "212.6",
-    "raising_per_hour": "84.6"
+    "model_mgdl": "194.7",
+    "raising_per_hour": "103.4"
    },
    {
     "at": "2026-10-06T11:00:00+00:00",
     "glucose_mgdl": "197.9",
     "insulin_units": "3.1",
     "lowering_per_hour": "73.7",
-    "model_mgdl": "131.2",
-    "raising_per_hour": "84.6"
+    "model_mgdl": "117.8",
+    "raising_per_hour": "103.4"
    },
    {
     "at": "2026-10-06T12:00:00+00:00",
     "glucose_mgdl": "155.4",
     "insulin_units": "1.3",
     "lowering_per_hour": "42.8",
-    "model_mgdl": "160.1",
-    "raising_per_hour": "84.6"
+    "model_mgdl": "195.4",
+    "raising_per_hour": "0.0"
    },
    {
     "at": "2026-10-06T13:00:00+00:00",
     "glucose_mgdl": "148.0",
     "insulin_units": "0.5",
     "lowering_per_hour": "18.7",
-    "model_mgdl": "183.6",
+    "model_mgdl": "177.3",
     "raising_per_hour": "0.0"
    },
    {
@@ -138,7 +138,7 @@
     "glucose_mgdl": "141.5",
     "insulin_units": "0.1",
     "lowering_per_hour": "6.4",
-    "model_mgdl": "215.0",
+    "model_mgdl": "190.0",
     "raising_per_hour": "0.0"
    },
    {
@@ -146,7 +146,7 @@
     "glucose_mgdl": "129.9",
     "insulin_units": "0.0",
     "lowering_per_hour": "1.4",
-    "model_mgdl": "143.9",
+    "model_mgdl": "108.6",
     "raising_per_hour": "0.0"
    },
    {
@@ -162,31 +162,31 @@
     "glucose_mgdl": "109.9",
     "insulin_units": "6.0",
     "lowering_per_hour": "10.4",
-    "model_mgdl": "151.1",
-    "raising_per_hour": "83.0"
+    "model_mgdl": "154.0",
+    "raising_per_hour": "100.8"
    },
    {
     "at": "2026-10-06T18:00:00+00:00",
     "glucose_mgdl": "144.0",
     "insulin_units": "4.1",
     "lowering_per_hour": "89.8",
-    "model_mgdl": "159.1",
-    "raising_per_hour": "83.0"
+    "model_mgdl": "179.9",
+    "raising_per_hour": "100.8"
    },
    {
     "at": "2026-10-06T19:00:00+00:00",
     "glucose_mgdl": "111.5",
     "insulin_units": "1.9",
     "lowering_per_hour": "57.5",
-    "model_mgdl": "146.7",
-    "raising_per_hour": "83.0"
+    "model_mgdl": "185.2",
+    "raising_per_hour": "100.8"
    },
    {
     "at": "2026-10-06T20:00:00+00:00",
     "glucose_mgdl": "91.2",
     "insulin_units": "0.7",
     "lowering_per_hour": "26.2",
-    "model_mgdl": "145.2",
+    "model_mgdl": "142.3",
     "raising_per_hour": "0.0"
    },
    {
@@ -194,7 +194,7 @@
     "glucose_mgdl": "95.0",
     "insulin_units": "0.2",
     "lowering_per_hour": "9.4",
-    "model_mgdl": "146.0",
+    "model_mgdl": "125.2",
     "raising_per_hour": "0.0"
    },
    {
@@ -202,7 +202,7 @@
     "glucose_mgdl": "95.3",
     "insulin_units": "0.0",
     "lowering_per_hour": "2.4",
-    "model_mgdl": "101.8",
+    "model_mgdl": "63.3",
     "raising_per_hour": "0.0"
    }
   ],
@@ -210,15 +210,15 @@
   "summary": {
    "count": 289,
    "max_above": {
-    "at": "2026-10-06T06:55:00+00:00",
-    "mgdl": "179"
+    "at": "2026-10-06T06:50:00+00:00",
+    "mgdl": "157"
    },
    "max_below": {
-    "at": "2026-10-05T22:00:00+00:00",
-    "mgdl": "-122"
+    "at": "2026-10-06T19:20:00+00:00",
+    "mgdl": "-97"
    },
-   "mean_abs_mgdl": "39",
-   "mean_mgdl": "-2"
+   "mean_abs_mgdl": "35",
+   "mean_mgdl": "0"
   },
   "to": "2026-10-06T22:00:00+00:00"
  },
@@ -233,7 +233,7 @@
     "glucose_mgdl": "95.3",
     "insulin_units": "0.0",
     "lowering_per_hour": "2.4",
-    "model_mgdl": "97.4",
+    "model_mgdl": "61.9",
     "raising_per_hour": "0.0"
    },
    {
@@ -305,16 +305,16 @@
     "glucose_mgdl": "133.0",
     "insulin_units": "6.6",
     "lowering_per_hour": "100.4",
-    "model_mgdl": "126.6",
-    "raising_per_hour": "51.1"
+    "model_mgdl": "137.2",
+    "raising_per_hour": "63.9"
    },
    {
     "at": "2026-10-07T08:00:00+00:00",
     "glucose_mgdl": "93.7",
     "insulin_units": "3.3",
     "lowering_per_hour": "80.3",
-    "model_mgdl": "84.0",
-    "raising_per_hour": "51.1"
+    "model_mgdl": "107.5",
+    "raising_per_hour": "63.9"
    },
    {
     "at": "2026-10-07T09:00:00+00:00",
@@ -329,7 +329,7 @@
     "glucose_mgdl": "40.0",
     "insulin_units": "0.4",
     "lowering_per_hour": "15.6",
-    "model_mgdl": "32.9",
+    "model_mgdl": "22.2",
     "raising_per_hour": "0.0"
    }
   ],
@@ -337,12 +337,15 @@
   "summary": {
    "count": 153,
    "max_above": {
-    "at": "2026-10-06T22:35:00+00:00",
-    "mgdl": "48"
+    "at": "2026-10-06T22:20:00+00:00",
+    "mgdl": "64"
    },
-   "max_below": null,
-   "mean_abs_mgdl": "17",
-   "mean_mgdl": "11"
+   "max_below": {
+    "at": "2026-10-07T10:35:00+00:00",
+    "mgdl": "-43"
+   },
+   "mean_abs_mgdl": "18",
+   "mean_mgdl": "10"
   },
   "to": "2026-10-07T10:40:00+00:00"
  }

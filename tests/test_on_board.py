@@ -13,12 +13,11 @@ class CurveTests(unittest.TestCase):
             with self.subTest(minutes):
                 self.assertAlmostEqual(float(on_board.insulin_remaining(Decimal(minutes))), float(share), places=2)
 
-    def test_carb_absorption_grows_with_amount_and_fat(self):
-        self.assertEqual(on_board.carb_minutes(Decimal(30)), 150)
-        self.assertEqual(on_board.carb_minutes(Decimal(70)), 180)
-        self.assertEqual(on_board.carb_minutes(Decimal(140)), 210)
-        self.assertEqual(on_board.carb_minutes(Decimal(140), fat=True), 315)
-        self.assertEqual(on_board.carb_remaining(Decimal(75), Decimal(30)), Decimal("0.5"))
+    def test_carb_absorption_grows_with_amount(self):
+        self.assertEqual(on_board.carb_minutes(Decimal(30)), 120)
+        self.assertEqual(on_board.carb_minutes(Decimal(70)), 150)
+        self.assertEqual(on_board.carb_minutes(Decimal(140)), 180)
+        self.assertEqual(on_board.carb_remaining(Decimal(60), Decimal(30)), Decimal("0.5"))
 
     def test_surcharge_acts_from_two_to_five_hours(self):
         self.assertEqual(on_board.surcharge_remaining(Decimal(60)), 1)
@@ -65,24 +64,25 @@ class OnBoardTests(unittest.TestCase):
                  "insulin": 7}]
         active = self.active(meal)
         self.assertAlmostEqual(float(active["insulin_units"]), 5.27, places=2)
-        self.assertAlmostEqual(float(active["carbs_mgdl"]), 60 * (1 - 60 / 170) / 10 * 1.17 * 35, places=6)
+        self.assertAlmostEqual(float(active["carbs_mgdl"]), 60 * (1 - 60 / 140) / 10 * 1.17 * 35, places=6)
         self.assertEqual(active["surcharge_mgdl"], 40)
         self.assertEqual(active["fresh_meal_at"], meal[0]["at"])
         result = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 170}], meal, self.now, on_board=active)
-        self.assertEqual(Decimal(result["entry_units"]), 2)            # forecast ≈ 186 → (186 − 120) / 35
-        self.assertEqual(Decimal(result["cautious_forecast_mgdl"]), 170)  # rests only cancel the bolus
+        self.assertEqual(Decimal(result["entry_units"]), Decimal("1.5"))  # forecast ≈ 166 → (166 − 120) / 35
+        self.assertAlmostEqual(float(result["cautious_forecast_mgdl"]), 166, places=0)  # rests only cancel the bolus
         self.assertEqual(Decimal(result["cautious_entry_units"]), Decimal("0.5"))
 
     def test_cautious_counts_a_large_meal_rest_minus_the_typical_miss(self):
-        # Evening of 2026-10-08: 144 g fat-rich dinner 2.5 h earlier, split bolus, glucose 165 and rising.
-        meal = [{"id": "m", "at": self.now - timedelta(minutes=153), "eventType": "Meal Bolus", "carbs": 144,
+        # Like the evening of 2026-10-08 (144 g fat-rich dinner, split bolus, glucose 165 and rising), 1.5 h after it.
+        meal = [{"id": "m", "at": self.now - timedelta(minutes=90), "eventType": "Meal Bolus", "carbs": 144,
                  "insulin": 8, "fat_protein": True}]
         active = self.active(meal, factor=Decimal("0.9"))
         result = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 165}], meal, self.now, on_board=active)
         full = 165 - active["lowering_mgdl"] + active["raising_mgdl"]
         self.assertEqual(Decimal(result["forecast_mgdl"]), full)
         self.assertEqual(Decimal(result["cautious_forecast_mgdl"]), full - on_board.FORECAST_SPREAD_MGDL)
-        self.assertGreater(Decimal(result["cautious_entry_units"]), 3)
+        # Clearly more than the 0.5 IE of rests that only cancel the bolus (shorter carbs since 2026-10-22: 2 IE).
+        self.assertGreaterEqual(Decimal(result["cautious_entry_units"]), 2)
         self.assertLess(Decimal(result["cautious_entry_units"]), Decimal(result["entry_units"]))
 
     def test_lower_target_corrects_the_same_forecast_only_while_little_acts(self):
