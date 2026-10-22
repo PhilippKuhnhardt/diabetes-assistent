@@ -687,6 +687,7 @@ async function loadSettings() {
   form.elements.sport_lookback_minutes.value = data.settings.sport_lookback_minutes;
   for (const kind of sportKinds) {
     form.elements["sport_" + kind].value = sportChange(data.settings.sport_effects_mgdl[kind]);
+    form.elements["sport_minutes_" + kind].value = data.settings.sport_durations_minutes?.[kind] ?? 300;
   }
   renderIsfRows(data.settings.isf_schedule, data.settings.nightscout_profile, data.profile_sync_at, data.profile_sync_error);
   renderIcRows(data.settings.ic_schedule || []);
@@ -2427,6 +2428,8 @@ async function saveSettings(event) {
     sport_lookback_minutes: Number(form.elements.sport_lookback_minutes.value),
     sport_effects_mgdl: Object.fromEntries(sportKinds
       .map(kind => [kind, sportChange(form.elements["sport_" + kind].value)])),
+    sport_durations_minutes: Object.fromEntries(sportKinds
+      .map(kind => [kind, Number(form.elements["sport_minutes_" + kind].value)])),
     effective_at: form.elements.effective_date.value ? toInstant(form.elements.effective_date.value, form.elements.effective_time.value || "00:00") : null,
   };
   try {

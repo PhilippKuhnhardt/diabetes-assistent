@@ -682,6 +682,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .place-new, .place-assign { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .place-new input, .place-assign input, .place-assign select { flex: 1 1 140px; min-width: 0; }
 .places-subhead { margin: 18px 0 4px; font-size: 14px; }
+.settings-subhead { margin: 14px 0 6px; font-size: 14px; letter-spacing: 0; }
 .place-unknown { padding: 8px 0; border-bottom: 1px solid var(--line); }
 .place-unknown p { margin: 0; font-size: 13px; }
 .place-spot button { padding: 5px 10px; }

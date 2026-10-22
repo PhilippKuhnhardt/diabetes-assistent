@@ -528,6 +528,14 @@ class IntegrationTests(unittest.TestCase):
         })
         effects = self.request("/api/settings")["settings"]["sport_effects_mgdl"]
         self.assertEqual(Decimal(effects["racing"]), Decimal(-60))
+        settings = self.request("/api/settings")["settings"]
+        self.assertEqual(settings["sport_durations_minutes"]["gym"], 300)
+        self.request("/api/settings", method="POST", body={
+            "sport_durations_minutes": {**settings["sport_durations_minutes"], "gym": 240}})
+        self.assertEqual(self.request("/api/settings")["settings"]["sport_durations_minutes"]["gym"], 240)
+        with self.assertRaises(urllib.error.HTTPError):
+            self.request("/api/settings", method="POST", body={
+                "sport_durations_minutes": {**settings["sport_durations_minutes"], "gym": 10}})
 
     def test_former_lookbacks_map_to_the_offered_ones(self):
         _, current = config.get_settings()

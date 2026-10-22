@@ -106,7 +106,7 @@
               </label>
               <label id="entry-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
               <label id="entry-sport-effect-field" hidden>Einfluss <span>mg/dL, − senkt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1" aria-describedby="entry-sport-effect-hint"></label>
-              <p id="entry-sport-effect-hint" class="hint" hidden>Wirkt automatisch über 5 Stunden nach dem Ende auf Vorhersage und Dosis. Später änderbar in „Tag durchgehen“.</p>
+              <p id="entry-sport-effect-hint" class="hint" hidden>Wirkt automatisch über die Wirkdauer der Sportart (Einstellungen) nach dem Ende auf Vorhersage und Dosis. Später änderbar in „Tag durchgehen“.</p>
               <section id="entry-influences" class="entry-card" aria-label="Einflüsse" hidden>
                 <p class="entry-card-title">Einflüsse</p>
                 <div id="entry-day-type" class="entry-day-type" hidden>
@@ -330,8 +330,15 @@
                 <label>Cardio<input name="sport_light_cardio" type="number" min="-500" max="500" step="1" required></label>
                 <label>Rennsport<input name="sport_racing" type="number" min="-500" max="500" step="1" required></label>
               </div>
+              <h3 class="settings-subhead">Wirkdauer nach dem Ende <span class="unit">min</span></h3>
+              <div class="field-pair">
+                <label>Joggen<input name="sport_minutes_jogging" type="number" min="30" max="1440" step="1" required></label>
+                <label>Gym<input name="sport_minutes_gym" type="number" min="30" max="1440" step="1" required></label>
+                <label>Cardio<input name="sport_minutes_light_cardio" type="number" min="30" max="1440" step="1" required></label>
+                <label>Rennsport<input name="sport_minutes_racing" type="number" min="30" max="1440" step="1" required></label>
+              </div>
               <label>Sport-Auswertung: Mahlzeiten bis <span>min danach</span><input name="sport_lookback_minutes" type="number" min="0" max="1440" step="1" required></label>
-              <p class="hint">Negativ senkt, positiv hebt den Blutzucker. Standard je Einheit; er wirkt automatisch über 5 Stunden nach dem Ende auf „Wirkt noch“, Dosis, Warnungen und Mahlzeitfaktor. Eine einzelne Einheit änderst du beim Eintragen oder in „Tag durchgehen“.</p>
+              <p class="hint">Negativ senkt, positiv hebt den Blutzucker. Standard je Einheit; er wirkt automatisch, gleichmäßig über die Wirkdauer nach dem Ende, auf „Wirkt noch“, Dosis, Warnungen und Mahlzeitfaktor. Eine einzelne Einheit änderst du beim Eintragen oder in „Tag durchgehen“.</p>
             </section>
           </div>
           <div class="panel settings-save">
