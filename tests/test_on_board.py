@@ -119,13 +119,19 @@ class OnBoardTests(unittest.TestCase):
                              [{"at": self.now, "sgv": 190}], [], self.now)
         self.assertEqual(off["low_blocked"], "off")
 
-    def test_low_glucose_never_doses_for_carbs_still_to_come(self):
+    def test_low_glucose_uses_the_same_forecast(self):
+        # Philipp's report 2026-10-23: at 68 mg/dL with a hypo snack still acting, 34 g gave 0.5 IE because the
+        # snack was ignored and the low still corrected in full; no special rule below 70 any more.
         meal = [{"id": "m", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 80,
                  "insulin": 2}]
+        active = self.active(meal)
         result = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 65}], meal, self.now,
-                                on_board=self.active(meal))
-        self.assertEqual(Decimal(result["entry_units"]), 0)
-        self.assertEqual(result["forecast_mgdl"], result["cautious_forecast_mgdl"])
+                                on_board=active)
+        self.assertEqual(Decimal(result["forecast_mgdl"]), 65 - active["lowering_mgdl"] + active["raising_mgdl"])
+        self.assertGreater(Decimal(result["entry_units"]), 0)
+        self.assertEqual(Decimal(result["cautious_forecast_mgdl"]),
+                         max(65 - max(Decimal(0), active["lowering_mgdl"] - active["raising_mgdl"]),
+                             Decimal(result["forecast_mgdl"]) - on_board.FORECAST_SPREAD_MGDL))
 
     def test_gym_lowers_the_forecast_over_five_hours_after_it_ends(self):
         # Philipp's report 2026-10-22: after gym the expected value ignored it and a correction came out too high.
