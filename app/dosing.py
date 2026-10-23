@@ -46,7 +46,8 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     on_board (app.on_board.summary) moves the start glucose by what still acts: normal and carbs only use
     the full forecast (− remaining insulin + remaining carbs and surcharge); cautious uses that forecast
     minus its typical miss (FORECAST_SPREAD_MGDL), but never less than letting the remaining
-    carbs and surcharge only cancel active insulin. Below 70 mg/dL both only cancel active insulin.
+    carbs and surcharge only cancel active insulin. Below 70 mg/dL the same forecast applies (no special rule,
+    user request 2026-10-23).
     finger holds blood glucose measured by hand ({"at", "mgdl"}); a measurement newer than the latest
     CGM value is the start glucose instead (same 15-minute freshness, no trend)."""
     now = now or datetime.now(timezone.utc)
@@ -118,11 +119,11 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     if fresh:
         guarded = latest[1] + activity - max(Decimal(0), lowering - raising)
         full = latest[1] + activity - lowering + raising
-        # Cautious starts from the lower edge of the forecast's typical miss; below 70 mg/dL carbs
-        # still to come never justify insulin now, for either suggestion.
+        # Cautious starts from the lower edge of the forecast's typical miss. Below 70 mg/dL the same
+        # forecast applies (the former guard there doubled the low, user request 2026-10-23).
         low = latest[1] < glucose.LOW_MGDL
-        cautious_start = guarded if low else max(guarded, full - FORECAST_SPREAD_MGDL)
-        start = guarded if low else full
+        cautious_start = max(guarded, full - FORECAST_SPREAD_MGDL)
+        start = full
         hour = now.astimezone(ZoneInfo(timezone_name)).hour
         if low_target >= target:
             result["low_blocked"] = "off"

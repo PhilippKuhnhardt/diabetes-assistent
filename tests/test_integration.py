@@ -571,7 +571,13 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(manual["end"], "2026-09-23T14:00:00+00:00")
         self.assertEqual(manual["auto_end"], "2026-09-23T13:00:00+00:00")
         self.assertEqual(manual["end_reason"], "manual")
-        summary = self.request("/api/summary?days=30")
+        # The analysis page counts back from today; pin it so the fixed meal day stays inside 30 days.
+        class Today(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return datetime(2026, 9, 30, 12, tzinfo=timezone.utc).astimezone(tz)
+        with patch("app.services.summary.datetime", Today):
+            summary = self.request("/api/summary?days=30")
         self.assertTrue(any(item["manual_window"] for group in summary["groups"].values()
                             for item in group["calculations"]))
         self.request("/api/analysis/window", method="POST", body={
