@@ -260,8 +260,10 @@ def preview(payload: dict) -> dict:
     context = _context(payload)
     assignment = _assignment(context, payload)
     current = context["current"]
+    # The day type is asked once, with the day's first meal; later it is changed in "Tag durchgehen".
+    first_meal = not any(float(item.get("carbs") or 0) > 0 for item in context["treatments"])
     day_type_visible = (context["mode"] == "meal" and bool(current.get("day_type"))
-                        and _before_breakfast_end(context))
+                        and _before_breakfast_end(context) and first_meal)
     split = _split(context, assignment, payload)
     dose = _dose(context, payload, assignment, split)
     return {
