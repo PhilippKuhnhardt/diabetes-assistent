@@ -1523,6 +1523,8 @@ class IntegrationTests(unittest.TestCase):
         preview = self.request("/api/entry/preview", method="POST", body=snack)
         self.assertEqual((preview["assignment"]["meal"], preview["assignment"]["snack"]), ("breakfast", True))
         self.assertEqual(preview["basal_units"], "0")
+        # The day type was asked with the first meal; later entries take it over.
+        self.assertIsNone(preview["day_type"])
         # Breakfast is taken, so the entry cannot be flipped to its own breakfast.
         own = self.request("/api/entry/preview", method="POST", body={**snack, "as": "meal"})
         self.assertEqual((own["assignment"]["snack"], own["assignment"]["own_meal_taken"]), (True, True))
