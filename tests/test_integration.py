@@ -642,7 +642,13 @@ class IntegrationTests(unittest.TestCase):
             "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",
         })
         meal_id = self.request("/api/day?date=2026-09-23")["meals"][0]["id"]
-        with patch("app.services.summary.compute_summary", wraps=summary.compute_summary) as compute:
+        # The analysis page counts back from today; pin it so the fixed meal day stays inside 30 days.
+        class Today(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return datetime(2026, 9, 30, 12, tzinfo=timezone.utc).astimezone(tz)
+        with patch("app.services.summary.compute_summary", wraps=summary.compute_summary) as compute, \
+                patch("app.services.summary.datetime", Today):
             first = self.request("/api/summary?days=30")
             self.assertEqual(self.request("/api/summary?days=30"), first)
             self.assertEqual(compute.call_count, 1)
@@ -1523,6 +1529,8 @@ class IntegrationTests(unittest.TestCase):
         preview = self.request("/api/entry/preview", method="POST", body=snack)
         self.assertEqual((preview["assignment"]["meal"], preview["assignment"]["snack"]), ("breakfast", True))
         self.assertEqual(preview["basal_units"], "0")
+        # The day type was asked with the first meal; later entries take it over.
+        self.assertIsNone(preview["day_type"])
         # Breakfast is taken, so the entry cannot be flipped to its own breakfast.
         own = self.request("/api/entry/preview", method="POST", body={**snack, "as": "meal"})
         self.assertEqual((own["assignment"]["snack"], own["assignment"]["own_meal_taken"]), (True, True))
