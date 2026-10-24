@@ -642,7 +642,13 @@ class IntegrationTests(unittest.TestCase):
             "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",
         })
         meal_id = self.request("/api/day?date=2026-09-23")["meals"][0]["id"]
-        with patch("app.services.summary.compute_summary", wraps=summary.compute_summary) as compute:
+        # The analysis page counts back from today; pin it so the fixed meal day stays inside 30 days.
+        class Today(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return datetime(2026, 9, 30, 12, tzinfo=timezone.utc).astimezone(tz)
+        with patch("app.services.summary.compute_summary", wraps=summary.compute_summary) as compute, \
+                patch("app.services.summary.datetime", Today):
             first = self.request("/api/summary?days=30")
             self.assertEqual(self.request("/api/summary?days=30"), first)
             self.assertEqual(compute.call_count, 1)
