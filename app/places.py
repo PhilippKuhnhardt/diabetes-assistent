@@ -1,11 +1,9 @@
-"""Where a meal was eaten: matching a browser position to the user's places, and grouping
-positions that match no place yet so they can become one.
+"""Where a meal was eaten: matching a browser position to the spots Philipp defined for his places.
 
-A place is a chip (Kantine, Restaurant, Zuhause); it has any number of spots, each a centre with
-a fixed radius, so one chip can gather many restaurants while a regular one keeps its own chip.
-
-Positions stay in SQLite; Nightscout never sees them. A place only labels entries, it changes
-no calculation until Philipp approves a use."""
+A place is a chip (Büro, Zuhause, Kantine); it has any number of spots, each a centre with a fixed
+radius. One place can be the fallback (Auswärts): it is preselected when a precise position lies
+in no spot. Positions only pick the chip and are never stored (user request 2026-10-29); a place
+only labels entries, it changes no calculation until Philipp approves a use."""
 from __future__ import annotations
 
 import math
@@ -19,13 +17,12 @@ MAX_ACCURACY_M = 250
 # A position belongs to an entry only when the entry is timed close to now and the fix was taken
 # close to the entry time; a backdated entry was eaten somewhere else than where it is typed.
 MAX_ENTRY_OFFSET = timedelta(minutes=30)
-# Unknown positions closer than this to a group's centre join that group.
-CLUSTER_RADIUS_M = 150
 NAME_MAX = 40
 
 STATUS_HINTS = {
     "matched": "per Standort erkannt",
-    "unknown": "Standort ist noch kein Ort, später in den Einstellungen benennbar",
+    "away": "an keinem Standort",
+    "unknown": "an keinem Standort, in den Einstellungen einen Ort als Standard für unterwegs festlegen",
     "inaccurate": "Standort zu ungenau",
     "offset": "Zeit weicht ab, Standort nicht verwendet",
     "none": "ohne Standort",
@@ -73,16 +70,6 @@ def usable(position: dict | None, at: datetime | None, now: datetime) -> str:
     return "ok"
 
 
-def nearest(position: dict, spots: list[dict]) -> tuple[dict | None, float | None]:
-    """The closest spot and its distance."""
-    best, best_distance = None, None
-    for spot in spots:
-        distance = distance_m(position["lat"], position["lon"], spot["lat"], spot["lon"])
-        if best_distance is None or distance < best_distance:
-            best, best_distance = spot, distance
-    return best, best_distance
-
-
 def match(position: dict, spots: list[dict]) -> dict | None:
     """The spot within SPOT_RADIUS_M of the position (the nearest when several do)."""
     inside = [(distance_m(position["lat"], position["lon"], spot["lat"], spot["lon"]), spot) for spot in spots]
@@ -90,40 +77,18 @@ def match(position: dict, spots: list[dict]) -> dict | None:
     return min(inside, key=lambda item: item[0])[1] if inside else None
 
 
-def suggestion(position: dict | None, at: datetime | None, now: datetime, spots: list[dict]) -> dict:
-    """What the entry form preselects: the place of the matching spot, or none with the reason."""
+def suggestion(position: dict | None, at: datetime | None, now: datetime, spots: list[dict],
+               fallback_id: int | None = None) -> dict:
+    """What the entry form preselects: the place of the matching spot, the fallback place for a
+    precise position in no spot, or none with the reason."""
     status = usable(position, at, now)
     if status != "ok":
         return {"status": status, "place_id": None, "hint": STATUS_HINTS[status]}
     spot = match(position, spots)
     if spot is None:
-        return {"status": "unknown", "place_id": None, "hint": STATUS_HINTS["unknown"]}
+        status = "away" if fallback_id is not None else "unknown"
+        return {"status": status, "place_id": fallback_id, "hint": STATUS_HINTS[status]}
     return {"status": "matched", "place_id": spot["place_id"], "hint": STATUS_HINTS["matched"]}
-
-
-def clusters(locations: list[dict], spots: list[dict], names: dict[int, str]) -> list[dict]:
-    """Positions without a place, grouped greedily (oldest first) by distance to a group's centre."""
-    groups: list[dict] = []
-    for item in sorted(locations, key=lambda row: row["at"]):
-        group = next((group for group in groups
-                      if distance_m(item["lat"], item["lon"], group["lat"], group["lon"]) <= CLUSTER_RADIUS_M), None)
-        if group is None:
-            group = {"lat": item["lat"], "lon": item["lon"], "members": []}
-            groups.append(group)
-        group["members"].append(item)
-        group["lat"] = sum(member["lat"] for member in group["members"]) / len(group["members"])
-        group["lon"] = sum(member["lon"] for member in group["members"]) / len(group["members"])
-    result = []
-    for group in groups:
-        lat, lon = round(group["lat"], 6), round(group["lon"], 6)
-        near, distance = nearest({"lat": lat, "lon": lon}, spots)
-        result.append({
-            "lat": lat, "lon": lon, "count": len(group["members"]),
-            "first_at": group["members"][0]["at"], "last_at": group["members"][-1]["at"],
-            "nearest_place": near and {"id": near["place_id"], "name": names.get(near["place_id"]),
-                                       "distance_m": round(distance)},
-        })
-    return sorted(result, key=lambda group: (-group["count"], group["last_at"]))
 
 
 def validate_name(value) -> str:
@@ -134,8 +99,13 @@ def validate_name(value) -> str:
 
 
 def validate_spot(value: dict) -> dict:
-    """Coordinates of one spot of a place."""
-    position = parse_position({"lat": value.get("lat"), "lon": value.get("lon")})
+    """Coordinates of one spot of a place: lat and lon, or typed text "49.0069, 8.4037" as a map
+    app copies them."""
+    lat, lon = value.get("lat"), value.get("lon")
+    if value.get("coordinates") not in (None, ""):
+        parts = str(value["coordinates"]).replace(";", ",").split(",")
+        lat, lon = (parts[0].strip(), parts[1].strip()) if len(parts) == 2 else (None, None)
+    position = parse_position({"lat": lat, "lon": lon})
     if position is None:
         raise ValueError("Ungültige Koordinaten")
     return {"lat": position["lat"], "lon": position["lon"]}

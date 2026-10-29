@@ -48,6 +48,26 @@ class MigrationTests(unittest.TestCase):
         self.assertTrue({"ic_schedule", "target_schedule"} <= profile_columns)
         self.assertIn("effect_mgdl", mark_columns)
 
+    def test_places_drop_stored_positions_and_auswaerts_becomes_the_fallback(self):
+        connection = sqlite3.connect(db.DB_PATH)
+        connection.row_factory = sqlite3.Row
+        for migration in db.MIGRATIONS[:-1]:
+            migration(connection)
+        connection.execute(f"PRAGMA user_version={len(db.MIGRATIONS) - 1}")
+        connection.executescript("""
+            INSERT INTO places(id,name,created_at) VALUES(1,'Kantine','x'),(2,'auswärts','x');
+            INSERT INTO entry_locations(event_id,at,lat,lon,accuracy_m,place_id,updated_at)
+                VALUES('a','x',49.0,8.4,20,1,'x'),('b','x',49.1,8.4,20,NULL,'x');
+        """)
+        connection.commit()
+        connection.close()
+        db.init()
+        with db.connect() as connection:
+            places = [tuple(row) for row in connection.execute("SELECT name,fallback FROM places ORDER BY id")]
+            locations = [tuple(row) for row in connection.execute("SELECT event_id,lat,lon,accuracy_m,place_id FROM entry_locations")]
+        self.assertEqual(places, [("Kantine", 0), ("auswärts", 1)])
+        self.assertEqual(locations, [("a", None, None, None, 1)])
+
 
 if __name__ == "__main__":
     unittest.main()
