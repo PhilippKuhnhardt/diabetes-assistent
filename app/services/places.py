@@ -2,34 +2,25 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
 
 from app import places as rules
-from app.store import config, places as store
+from app.store import places as store
 
 
 def view() -> dict:
-    """Places with their spots and entry counts, and positions that match no place yet, grouped."""
-    places = store.all_places()
+    """Places with their spots and entry counts."""
     spots = store.all_spots()
     counts = store.place_counts()
-    _, settings = config.get_settings()
-    zone = ZoneInfo(settings["timezone"])
-    groups = rules.clusters(store.unassigned_locations(), spots, {place["id"]: place["name"] for place in places})
-    for group in groups:
-        for key in ("first_at", "last_at"):
-            group[key] = datetime.fromisoformat(group[key]).astimezone(zone).isoformat(timespec="minutes")
     return {
         "places": [{**place, "count": counts.get(place["id"], 0),
                     "spots": [{key: spot[key] for key in ("id", "lat", "lon")}
                               for spot in spots if spot["place_id"] == place["id"]]}
-                   for place in places],
-        "unknown": groups,
+                   for place in store.all_places()],
         "max_accuracy_m": rules.MAX_ACCURACY_M,
     }
 
 
-ACTIONS = ("create", "rename", "quick", "delete", "add_spot", "delete_spot")
+ACTIONS = ("create", "rename", "quick", "fallback", "delete", "add_spot", "delete_spot")
 
 
 def _id(payload: dict, key: str) -> int:
@@ -40,10 +31,7 @@ def _id(payload: dict, key: str) -> int:
 
 
 def save(payload: dict) -> dict:
-    """One change from the place management, then the fresh view.
-
-    add_spot takes a place id or a name for a new place, so an unknown position can join an
-    existing chip (Restaurant) or become its own (Stammrestaurant)."""
+    """One change from the place management, then the fresh view."""
     action = payload.get("action")
     if action not in ACTIONS:
         raise ValueError("Unbekannte Aktion")
@@ -53,13 +41,12 @@ def save(payload: dict) -> dict:
         store.rename_place(_id(payload, "id"), rules.validate_name(payload.get("name")))
     elif action == "quick":
         store.set_quick(_id(payload, "id"), payload.get("quick") is True)
+    elif action == "fallback":
+        store.set_fallback(_id(payload, "id"), payload.get("fallback") is True)
     elif action == "delete":
         store.delete_place(_id(payload, "id"))
     elif action == "add_spot":
-        spot = rules.validate_spot(payload)
-        target = (_id(payload, "place_id") if payload.get("place_id") not in (None, "")
-                  else store.create_place(rules.validate_name(payload.get("name"))))
-        store.add_spot(target, spot)
+        store.add_spot(_id(payload, "place_id"), rules.validate_spot(payload))
     else:
         store.delete_spot(_id(payload, "spot_id"))
     return view()
@@ -79,22 +66,12 @@ def chips(payload: dict, at: datetime | None) -> dict:
     """The entry form's place row: every place, the one the position suggests, and why."""
     places = store.all_places()
     position = rules.parse_position(payload.get("position"))
-    suggestion = rules.suggestion(position, at, datetime.now(timezone.utc), store.all_spots())
+    fallback = next((place["id"] for place in places if place["fallback"]), None)
+    suggestion = rules.suggestion(position, at, datetime.now(timezone.utc), store.all_spots(), fallback)
     return {"options": [{"id": place["id"], "name": place["name"], "quick": place["quick"]} for place in places],
             **suggestion}
 
 
 def record(event_id: str, at: datetime, payload: dict) -> None:
-    """Store the chosen place and, for an entry timed close to now, the position it was typed at.
-
-    A coarse position is kept with its accuracy but never matched. A place chosen for a precise
-    position that fits no spot yet gets that position as a new spot, so picking the chip once
-    teaches it (deleted in the settings like any spot)."""
-    position = rules.parse_position(payload.get("position"))
-    status = rules.usable(position, at, datetime.now(timezone.utc))
-    if status not in ("ok", "inaccurate"):
-        position = None
-    chosen = place_id(payload.get("place_id"))
-    store.set_entry_location(event_id, at, chosen, position)
-    if chosen is not None and status == "ok" and rules.match(position, store.all_spots()) is None:
-        store.add_spot(chosen, {"lat": position["lat"], "lon": position["lon"]})
+    """Store the chosen place; the position that suggested it is not kept."""
+    store.set_entry_location(event_id, at, place_id(payload.get("place_id")))

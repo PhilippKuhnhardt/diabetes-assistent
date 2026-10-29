@@ -150,7 +150,7 @@ def save_diary_treatment(payload: dict) -> dict:
     elif not ensure_not_duplicate(day, event_id):
         nightscout.write_treatment(record)
     if "place_id" in payload and carbs > 0:
-        # The edit dialog's place; a position stored with the entry is kept.
+        # The edit dialog's place.
         places.record(event_id, at, {"place_id": payload["place_id"]})
     return {"id": record_id or None, "event_id": event_id, "day": day}
 
