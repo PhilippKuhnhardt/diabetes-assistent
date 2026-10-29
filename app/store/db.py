@@ -201,9 +201,20 @@ def _sport_sessions(db: sqlite3.Connection) -> None:
     )""")
 
 
+def _places_without_positions(db: sqlite3.Connection) -> None:
+    """Places are only the spots Philipp defines (user request 2026-10-29): one place can be the
+    fallback for positions in no spot, and entries no longer keep their position. A place named
+    Auswärts becomes that fallback."""
+    db.execute("ALTER TABLE places ADD COLUMN fallback INTEGER NOT NULL DEFAULT 0")
+    db.execute("UPDATE places SET fallback=1 WHERE id=(SELECT id FROM places WHERE name='Auswärts' COLLATE NOCASE "
+               "ORDER BY id LIMIT 1)")
+    db.execute("UPDATE entry_locations SET lat=NULL,lon=NULL,accuracy_m=NULL")
+    db.execute("DELETE FROM entry_locations WHERE place_id IS NULL")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
                                                           _notifications, _notification_priority, _places,
-                                                          _inbox_seen, _sport_sessions]
+                                                          _inbox_seen, _sport_sessions, _places_without_positions]
 
 
 def init() -> None:

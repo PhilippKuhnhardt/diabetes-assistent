@@ -1551,12 +1551,12 @@ class IntegrationTests(unittest.TestCase):
         row = next(item for item in saved["day_view"]["timeline"] if item["id"] == saved["id"])
         self.assertEqual((row["kind"], row["meal_id"]), ("snack", None))
 
-    def test_place_is_suggested_from_position_stored_locally_and_unknown_positions_join_a_place(self):
+    def test_place_is_suggested_from_defined_spots_else_the_fallback_and_no_position_is_stored(self):
         self.request("/api/settings")
         canteen = self.request("/api/places", method="POST", body={"action": "create", "name": "Kantine"})
         canteen_id = canteen["places"][0]["id"]
         self.request("/api/places", method="POST", body={
-            "action": "add_spot", "place_id": canteen_id, "lat": 49.0, "lon": 8.4})
+            "action": "add_spot", "place_id": canteen_id, "coordinates": "49.0, 8.4"})
         view = self.request("/api/places", method="POST", body={"action": "create", "name": "Restaurant"})
         restaurant_id = next(place["id"] for place in view["places"] if place["name"] == "Restaurant")
         now = datetime.now(timezone.utc).replace(microsecond=0)
@@ -1574,49 +1574,54 @@ class IntegrationTests(unittest.TestCase):
             **entry, "at": (now - timedelta(hours=3)).isoformat()})["place"]
         self.assertEqual((backdated["status"], backdated["place_id"]), ("offset", None))
 
+        # Away from every spot nothing is preselected until a place is the fallback; then that one is.
+        away = {**entry, "position": {**here, "lat": 49.1}}
+        place = self.request("/api/entry/preview", method="POST", body=away)["place"]
+        self.assertEqual((place["status"], place["place_id"]), ("unknown", None))
+        view = self.request("/api/places", method="POST", body={"action": "fallback", "id": restaurant_id, "fallback": True})
+        self.assertEqual({item["name"]: item["fallback"] for item in view["places"]}, {"Kantine": False, "Restaurant": True})
+        place = self.request("/api/entry/preview", method="POST", body=away)["place"]
+        self.assertEqual((place["status"], place["place_id"]), ("away", restaurant_id))
+        view = self.request("/api/places", method="POST", body={"action": "fallback", "id": canteen_id, "fallback": True})
+        self.assertEqual({item["name"]: item["fallback"] for item in view["places"]}, {"Kantine": True, "Restaurant": False})
+        self.request("/api/places", method="POST", body={"action": "fallback", "id": restaurant_id, "fallback": True})
+
         saved = self.request("/api/entry", method="POST", body={**entry, "insulin": "5", "place_id": canteen_id})
         row = next(item for item in saved["day_view"]["timeline"] if item["id"] == saved["id"])
         self.assertEqual(row["place"], {"id": canteen_id, "name": "Kantine"})
         self.assertEqual(saved["day_view"]["meals"][0]["place"]["name"], "Kantine")
-        # Nightscout never sees a place or a position.
+        # Nightscout never sees a place or a position, and the app keeps no position either.
         self.assertNotIn("Kantine", json.dumps(FakeNightscout.treatments))
         self.assertNotIn("49.0005", json.dumps(FakeNightscout.treatments))
-
-        # A position that fits no place waits as unknown until it joins a place.
-        away = {**here, "lat": 49.1}
-        snack = self.request("/api/entry", method="POST", body={**entry, "carbs": "10", "position": away})
-        unknown = self.request("/api/places")["unknown"]
-        self.assertEqual([group["count"] for group in unknown], [1])
-        self.assertEqual(unknown[0]["nearest_place"]["name"], "Kantine")
-        view = self.request("/api/places", method="POST", body={
-            "action": "add_spot", "place_id": restaurant_id, "lat": unknown[0]["lat"], "lon": unknown[0]["lon"]})
-        self.assertEqual(view["unknown"], [])
-        self.assertEqual({place["name"]: place["count"] for place in view["places"]}, {"Kantine": 1, "Restaurant": 1})
+        # A chip picked for a position in no spot learns no spot.
+        self.request("/api/entry", method="POST", body={**away, "carbs": "20", "place_id": canteen_id})
+        with db.connect() as connection:
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM entry_locations WHERE lat IS NOT NULL").fetchone()[0], 0)
+        view = self.request("/api/places")
+        self.assertNotIn("unknown", view)
+        self.assertEqual({item["name"]: (len(item["spots"]), item["count"]) for item in view["places"]},
+                         {"Kantine": (1, 2), "Restaurant": (0, 0)})
+        # Without a chosen place an entry has none.
+        snack = self.request("/api/entry", method="POST", body={**away, "carbs": "10"})
         day = self.request("/api/day?date=" + today)
-        self.assertEqual(next(item for item in day["timeline"] if item["id"] == snack["id"])["place"]["name"], "Restaurant")
+        self.assertIsNone(next(item for item in day["timeline"] if item["id"] == snack["id"])["place"])
 
-        # The edit dialog changes the place afterwards and keeps the stored position.
+        # The edit dialog changes the place afterwards.
         self.request("/api/treatment", method="POST", body={
             "id": saved["id"], "original_day": today, "kind": "meal", "at": now.isoformat(),
             "carbs": "50", "insulin": "5", "place_id": restaurant_id})
         self.request("/api/day?date=" + today)  # The edit is mirrored on the next day load.
         meal = self.request("/api/v1/meals?days=1")["rows"][0]
         self.assertEqual(meal["place"], "Restaurant")
-        # Deleting a place turns entries with a position back into unknown positions.
+        # Deleting a place takes it off its entries.
         view = self.request("/api/places", method="POST", body={"action": "delete", "id": restaurant_id})
-        self.assertEqual(sum(group["count"] for group in view["unknown"]), 2)
+        self.assertEqual([(item["name"], item["count"]) for item in view["places"]], [("Kantine", 1)])
+        self.assertIsNone(self.request("/api/v1/meals?days=1")["rows"][0]["place"])
         with self.assertRaises(urllib.error.HTTPError):
             self.request("/api/places", method="POST", body={"action": "create", "name": "kantine"})
-        # A chip picked for a precise position that fits no spot learns it as a new spot.
-        self.request("/api/entry", method="POST", body={
-            **entry, "carbs": "20", "position": {**here, "lat": 49.3}, "place_id": canteen_id})
-        view = self.request("/api/places")
-        self.assertEqual(len(view["places"][0]["spots"]), 2)
-        self.assertEqual(view["places"][0]["count"], 1)
-        # A coarse position is stored but never grouped with the unknown ones.
-        self.request("/api/entry", method="POST", body={
-            **entry, "carbs": "15", "position": {**here, "lat": 49.4, "accuracy_m": 900}})
-        self.assertEqual(sum(group["count"] for group in self.request("/api/places")["unknown"]), 2)
+        with self.assertRaises(urllib.error.HTTPError):
+            self.request("/api/places", method="POST", body={"action": "add_spot", "place_id": canteen_id,
+                                                             "coordinates": "nördlich"})
 
     def test_finger_value_alone_is_saved_as_bg_check(self):
         self.request("/api/day?date=2026-09-23")

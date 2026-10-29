@@ -46,23 +46,24 @@ class PlaceRuleTests(unittest.TestCase):
         for raw in (None, {}, {"lat": "x", "lon": 1}, {"lat": 95, "lon": 1}, {"lat": float("nan"), "lon": 1}):
             self.assertIsNone(places.parse_position(raw))
 
-    def test_unknown_positions_group_by_distance_and_name_the_nearest_place(self):
-        rows = [{"at": "2026-10-13T10:00:00+00:00", "lat": 49.1, "lon": 8.4},
-                {"at": "2026-10-14T10:00:00+00:00", "lat": 49.1005, "lon": 8.4},
-                {"at": "2026-10-12T10:00:00+00:00", "lat": 49.3, "lon": 8.4}]
-        groups = places.clusters(rows, [CANTEEN], {1: "Kantine"})
-        self.assertEqual([group["count"] for group in groups], [2, 1])
-        self.assertEqual(groups[0]["last_at"], "2026-10-14T10:00:00+00:00")
-        self.assertEqual(groups[0]["nearest_place"]["name"], "Kantine")
-        self.assertAlmostEqual(groups[0]["nearest_place"]["distance_m"], 11147, delta=30)
+    def test_position_in_no_spot_suggests_the_fallback_place(self):
+        away = places.suggestion(position(49.2, 8.4), NOW, NOW, [CANTEEN], fallback_id=7)
+        self.assertEqual((away["status"], away["place_id"]), ("away", 7))
+        self.assertEqual(places.suggestion(position(49.0, 8.4), NOW, NOW, [CANTEEN], fallback_id=7)["place_id"], 1)
+        # Only a precise, fresh position says Philipp is elsewhere.
+        coarse = places.suggestion(position(49.2, 8.4, accuracy=900), NOW, NOW, [CANTEEN], fallback_id=7)
+        self.assertEqual((coarse["status"], coarse["place_id"]), ("inaccurate", None))
+        self.assertEqual(places.suggestion(None, NOW, NOW, [CANTEEN], fallback_id=7)["place_id"], None)
 
     def test_spot_and_name_validation(self):
         self.assertEqual(places.validate_name("  Kantine   Nord "), "Kantine Nord")
         with self.assertRaises(ValueError):
             places.validate_name(" ")
         self.assertEqual(places.validate_spot({"lat": 49, "lon": 8.4}), {"lat": 49, "lon": 8.4})
-        with self.assertRaises(ValueError):
-            places.validate_spot({"lat": None, "lon": 8.4})
+        self.assertEqual(places.validate_spot({"coordinates": " 49.0069, 8.4037 "}), {"lat": 49.0069, "lon": 8.4037})
+        for bad in ({"lat": None, "lon": 8.4}, {"coordinates": "49.0069"}, {"coordinates": "Kantine, Nord"}):
+            with self.assertRaises(ValueError):
+                places.validate_spot(bad)
 
 
 if __name__ == "__main__":
