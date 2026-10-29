@@ -186,21 +186,25 @@ class GlucoseAlertTests(unittest.TestCase):
     def kinds(self, entries, found, now=None):
         return [item["kind"] for item in glucose_alerts.warnings(entries, found, now or self.NOW, "Europe/Berlin")]
 
-    def test_active_insulin_without_carbs_warns_of_a_low(self):
+    def test_active_insulin_warns_of_a_low_once_bg_falls(self):
         found = self.found(doses=[(self.NOW - timedelta(minutes=20), "4")])
-        self.assertEqual(self.kinds(self.entries([110] * 7), found), ["low"])
-        warning = glucose_alerts.warnings(self.entries([110] * 7), found, self.NOW, "Europe/Berlin")[0]
+        falling = self.entries([114, 114, 114, 114, 112, 109, 106])
+        self.assertEqual(self.kinds(falling, found), ["low"])
+        warning = glucose_alerts.warnings(falling, found, self.NOW, "Europe/Berlin")[0]
         self.assertGreater(warning["at"], self.NOW)
+        self.assertLessEqual(warning["at"], self.NOW + timedelta(minutes=glucose_alerts.LOW_WITHIN_MINUTES))
         self.assertLess(warning["mgdl"], 70)
-        self.assertEqual(self.kinds(self.entries([110] * 7), self.found()), [])
+        self.assertEqual(self.kinds(falling, self.found()), [])
+        # The model alone expects a fall, BG is still flat: no warning yet (mostly false alarms, review 2026-10-29).
+        self.assertEqual(self.kinds(self.entries([106] * 7), found), [])
 
     def test_falling_faster_than_the_model_warns_of_a_low(self):
-        self.assertEqual(self.kinds(self.entries([130, 124, 118, 112, 106, 100, 94]), self.found()), ["low"])
-        self.assertEqual(self.kinds(self.entries([130, 124, 118, 112, 106, 100, 94]),
+        self.assertEqual(self.kinds(self.entries([116, 110, 104, 98, 92, 86, 80]), self.found()), ["low"])
+        self.assertEqual(self.kinds(self.entries([116, 110, 104, 98, 92, 86, 80]),
                                     self.found(carbs=[(self.NOW - timedelta(minutes=40), "20")])), [])
 
     def test_no_low_warning_right_after_carbs(self):
-        falling = self.entries([140, 132, 124, 116, 108, 100, 92])
+        falling = self.entries([124, 116, 108, 100, 92, 84, 76])
         just_eaten = self.found(carbs=[(self.NOW - timedelta(minutes=10), "20")])
         self.assertEqual(self.kinds(falling, just_eaten), [])
         # A small carb correction eaten because BG falls does not pause the warning.
@@ -208,17 +212,20 @@ class GlucoseAlertTests(unittest.TestCase):
 
     def test_carbs_still_to_come_warn_of_a_high(self):
         found = self.found(carbs=[(self.NOW - timedelta(minutes=10), "60")])
-        self.assertEqual(self.kinds(self.entries([200] * 7), found), ["high"])
+        self.assertEqual(self.kinds(self.entries([240] * 7), found), ["high"])
         self.assertEqual(self.kinds(self.entries([260] * 7), found), [])
+        # Below 200 or crossing 250 only after 30 min: no warning yet.
+        self.assertEqual(self.kinds(self.entries([195] * 7), found), [])
+        self.assertEqual(self.kinds(self.entries([205] * 7), self.found(carbs=[(self.NOW - timedelta(minutes=10), "20")])), [])
 
     def test_no_warning_at_night_or_without_a_fresh_reading(self):
         found = self.found(doses=[(self.NOW - timedelta(minutes=20), "4")])
         for hours, expected in ((8, ["low"]), (9, []), (10, []), (15, []), (16, ["low"])):  # 22:00, 23:00, 0:00, 5:00, 6:00 local
             moment = self.NOW + timedelta(hours=hours)
-            shifted = [{**row, "at": row["at"] + timedelta(hours=hours)} for row in self.entries([110] * 7)]
+            shifted = [{**row, "at": row["at"] + timedelta(hours=hours)} for row in self.entries([114, 114, 114, 114, 112, 109, 106])]
             self.assertEqual(self.kinds(shifted, self.found(doses=[(moment - timedelta(minutes=20), "4")]), moment),
                              expected, hours)
-        self.assertEqual(self.kinds(self.entries([110] * 7), found, self.NOW + timedelta(minutes=11)), [])
+        self.assertEqual(self.kinds(self.entries([114, 114, 114, 114, 112, 109, 106]), found, self.NOW + timedelta(minutes=11)), [])
 
 
 class PushoverTests(unittest.TestCase):
