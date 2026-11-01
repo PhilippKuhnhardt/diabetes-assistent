@@ -66,6 +66,14 @@ class DosingTests(unittest.TestCase):
         rows = episodes.normalize_treatments(raw)
         self.assertEqual([row["finger_mgdl"] for row in rows], [Decimal(142), Decimal(142), None])
 
+    def test_history_reading_beside_a_live_one_is_dropped_but_fills_a_gap(self):
+        raw = [{"_id": "live1", "dateString": "2026-11-01T10:31:45.000Z", "sgv": 293, "direction": "Flat"},
+               {"_id": "hist1", "dateString": "2026-11-01T10:31:46.000Z", "sgv": 288},
+               {"_id": "live2", "dateString": "2026-11-01T10:32:46.000Z", "sgv": 292, "direction": "Flat"},
+               {"_id": "hist2", "dateString": "2026-11-01T10:50:47.000Z", "sgv": 238}]
+        rows = episodes.normalize_entries(raw)
+        self.assertEqual([row["id"] for row in rows], ["live1", "live2", "hist2"])
+
     def test_half_unit_tie_rounds_to_next_injectable_amount(self):
         entries = [{"at": self.now, "sgv": 190}]
         result = dosing.suggest("20", self.settings, entries, [], self.now)

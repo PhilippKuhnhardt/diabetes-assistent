@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from bisect import bisect_left
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal, InvalidOperation
 from zoneinfo import ZoneInfo
@@ -21,6 +22,11 @@ QUALITY_MARKERS = {"fat_protein": "[DAQ:fat]", "alcohol": "[DAQ:alcohol]"}
 CERTAINTIES = ("weighed", "known", "unsure")
 CERTAINTY_TAG = re.compile(r"\[DAQ:(weighed|known|unsure)\]")
 DAE_TAG = re.compile(r"\[DAE:([a-f0-9-]{36})\]")
+# Since 2026-10-26 the LibreLinkUp uploader also sends LibreLinkUp's smoothed history: about every 5 min a
+# second reading 1-9 s after a live one, without a trend arrow, uploaded ~17 min later and up to 22 mg/dL off
+# (≈ the live readings' centred 10-min mean; review 2026-11-01, project files reviews/2026-11-01.md). Such a
+# reading next to a live one is dropped; on its own (live reading missing) it still fills the gap.
+HISTORY_SECONDS = 10
 
 
 def event_id(item: dict) -> str | None:
@@ -72,7 +78,7 @@ def tag(episode_id: str, meal: str, role: str) -> str:
 
 
 def normalize_entries(raw: list[dict]) -> list[dict]:
-    result = []
+    readings = []
     for item in raw:
         if item.get("sgv") is None:
             continue
@@ -81,7 +87,16 @@ def normalize_entries(raw: list[dict]) -> list[dict]:
             at = datetime.fromtimestamp(millis // 1000, timezone.utc) + timedelta(milliseconds=millis % 1000)
         else:
             at = datetime.fromisoformat(item["dateString"].replace("Z", "+00:00")).astimezone(timezone.utc)
-        result.append({"id": str(item.get("_id") or item.get("date")), "at": at, "sgv": item["sgv"]})
+        readings.append(({"id": str(item.get("_id") or item.get("date")), "at": at, "sgv": item["sgv"]},
+                         bool(item.get("direction"))))
+    live = sorted(entry["at"] for entry, has_trend in readings if has_trend)
+    window = timedelta(seconds=HISTORY_SECONDS)
+
+    def beside_live(at: datetime) -> bool:
+        index = bisect_left(live, at - window)
+        return index < len(live) and live[index] <= at + window
+
+    result = [entry for entry, has_trend in readings if has_trend or not beside_live(entry["at"])]
     return sorted(result, key=lambda x: x["at"])
 
 
