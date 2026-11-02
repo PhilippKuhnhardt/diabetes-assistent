@@ -47,6 +47,12 @@ def run_once() -> dict:
         failure = status["sync_error"] or status["basal_sync_error"]
         if failure:
             errors[day.isoformat()] = failure
+    with day_view.one_pass():
+        return _after_sync(today, errors)
+
+
+def _after_sync(today, errors: dict) -> dict:
+    """Precompute, reminders and today's effects, all from the copy the round just mirrored."""
     result = {"errors": errors, "computed": _precompute(today)}
     # Reminders only read a freshly mirrored today, so an injected dose cannot be reminded again.
     if today.isoformat() not in errors:

@@ -4,6 +4,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import threading
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -26,7 +28,16 @@ CODE_VERSION = hashlib.sha256(b"".join(
 def day_payload(day: str, refresh: bool = True) -> dict:
     """The diary day as the app shows it. With refresh it is first mirrored from Nightscout;
     the calculation is reused from SQLite while nothing it reads has changed."""
-    status = sync.sync_day(day) if refresh else {}
+    memo = getattr(_pass, "memo", None)
+    if refresh:
+        status = sync.sync_day(day)
+        if memo is not None:
+            memo.clear()  # the sync may have changed the day, the profile and the basal doses
+    else:
+        status = {}
+        if memo is not None and ("payload", day) in memo:
+            # Within one_pass() a stored day is decoded once; callers there only read it.
+            return dict(memo[("payload", day)])
     fingerprint = day_fingerprint(day)
     payload = results.day_result(day, fingerprint)
     if payload is None:
@@ -39,6 +50,9 @@ def day_payload(day: str, refresh: bool = True) -> dict:
         "sync_error": status.get("sync_error"), "profile_sync_error": status.get("profile_sync_error"),
         "basal_sync_error": status.get("basal_sync_error"),
     })
+    if memo is not None:
+        memo[("payload", day)] = payload
+        return dict(payload)
     return payload
 
 
@@ -54,12 +68,46 @@ def mirror_current(day: str) -> bool:
     return datetime.now(timezone.utc) - parse_instant(synced) < timedelta(minutes=background.interval_minutes() + 1)
 
 
+# Within one_pass(): each day's fingerprint and payload, and the settings and marks every day shares.
+_pass = threading.local()
+
+
+@contextmanager
+def one_pass():
+    """Read every day's inputs and stored payload at most once in this thread while the block runs.
+    The background round asks for the same ~120 days several hundred times (stored days, five analysis
+    pages, effects, reminders); nothing in the round changes them after its sync, and a sync inside
+    the block starts the memo afresh. A result stored under a fingerprint that a concurrent write made
+    stale is simply recalculated by the next reader, as before. Payloads handed out inside the block
+    are shallow copies of one decoded payload, so their callers must not change nested values."""
+    if getattr(_pass, "memo", None) is not None:
+        yield
+        return
+    _pass.memo = {}
+    try:
+        yield
+    finally:
+        _pass.memo = None
+
+
 def day_fingerprint(day: str) -> str:
     """Hash of everything compute_day reads, plus the code that computes it."""
-    _, settings = config.get_settings()
-    start, end = local_day_range(day, settings["timezone"])
-    return hashlib.sha256(json.dumps([CODE_VERSION, os.environ.get("APP_TIMEZONE"), results.day_inputs(start, end, day)],
-                                     default=str).encode()).hexdigest()
+    memo = getattr(_pass, "memo", None)
+    if memo is None:
+        timezone_name, shared = config.get_settings()[1]["timezone"], None
+    else:
+        if ("fingerprint", day) in memo:
+            return memo[("fingerprint", day)]
+        if "shared" not in memo:
+            memo["shared"] = config.get_settings()[1]["timezone"], results.shared_inputs()
+        timezone_name, shared = memo["shared"]
+    start, end = local_day_range(day, timezone_name)
+    value = hashlib.sha256(json.dumps([CODE_VERSION, os.environ.get("APP_TIMEZONE"),
+                                       results.day_inputs(start, end, day, shared)],
+                                      default=str).encode()).hexdigest()
+    if memo is not None:
+        memo[("fingerprint", day)] = value
+    return value
 
 
 def compute_day(day: str) -> dict:
