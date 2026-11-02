@@ -473,11 +473,27 @@ function updateEntryAssignment() {
   const form = $("#entry-form");
   const assignment = form.elements.kind.value === "meal" ? currentPreview()?.assignment : null;
   chip.hidden = !assignment;
-  if (!assignment) return;
+  if (!assignment) {
+    updateEntryClose(null);
+    return;
+  }
   const snack = assignment.meal ? "Snack zu " + names[assignment.meal] + " " + timeOnly(assignment.at) : "Snack ohne Mahlzeit";
   chip.textContent = "Zählt als: " + (assignment.snack ? snack : "eigenes " + names[assignment.own_meal])
     + (assignment.own_meal_taken ? " (" + names[assignment.own_meal] + " heute schon eingetragen)" : " ⇄");
   chip.disabled = Boolean(assignment.own_meal_taken);
+  updateEntryClose(assignment);
+}
+
+// A snack after a main meal can end that meal here instead; the server offers it and sets the window on save.
+function updateEntryClose(assignment) {
+  const chip = $("#entry-close-chip");
+  const close = assignment?.close;
+  chip.hidden = !close;
+  if (!close) return;
+  chip.setAttribute("aria-pressed", String(Boolean(close.active)));
+  chip.textContent = close.active
+    ? names[close.meal] + " " + timeOnly(close.at) + " endet " + timeOnly(close.end) + " ✓"
+    : names[close.meal] + " " + timeOnly(close.at) + " hier abschließen";
 }
 
 // The server offers a split bolus for a large main meal; the chip switches it off and on.
@@ -1867,6 +1883,7 @@ function previewRequest() {
     day: state.day, at, mode: form.elements.kind.value, carbs: form.elements.carbs.value, as: state.entryAs || null,
     finger_mgdl: form.elements.finger_mgdl.disabled ? null : form.elements.finger_mgdl.value || null,
     split: state.split ?? null,
+    close_meal: Boolean(state.closeMeal),
     // Saving re-checks the shown options with these, so the preview must send the same marks.
     carbs_certainty: Number(form.elements.carbs.value) > 0 ? certaintyValue(form) : null,
     fat_protein: Number(form.elements.carbs.value) > 0 && form.elements.fat_protein.checked,
@@ -2051,6 +2068,7 @@ function resetEntryForm() {
   state.doseChoice = null;
   state.entryAs = null;
   state.split = null;
+  state.closeMeal = false;
   state.entryPlace = undefined;
   delete form.elements.sport_effect_mgdl.dataset.touched;
   setDefaultMealTime();
@@ -2939,6 +2957,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   for (const type of ["input", "change", "pointerdown", "keydown"]) $("#entry-form").addEventListener(type, markEntryActivity, true);
   $("#entry-assign-chip").addEventListener("click", () => {
     state.entryAs = currentPreview()?.assignment?.snack ? "meal" : "snack";
+    schedulePreview(0);
+  });
+  $("#entry-close-chip").addEventListener("click", () => {
+    state.closeMeal = !currentPreview()?.assignment?.close?.active;
     schedulePreview(0);
   });
   $("#entry-split-chip").addEventListener("click", () => {

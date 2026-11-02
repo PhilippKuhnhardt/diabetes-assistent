@@ -161,6 +161,7 @@ def _form(args: dict, at: datetime) -> dict:
     return {
         "day": at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat(), "at": at.isoformat(),
         "mode": "meal", "carbs": str(carbs), "as": "meal" if own_meal else None, "split": split,
+        "close_meal": _bool(args, "close_meal") is True,
         "finger_mgdl": _number(args, "finger_mgdl", Decimal(20), Decimal(600)),
         # Certainty and fat decide whether the lower target is offered, so the preview needs them too.
         "carbs_certainty": _choice(args, "carbs_certainty", CERTAINTIES) if carbs > 0 else None,
@@ -297,6 +298,10 @@ FORM = {
     "own_main_meal": {"type": "boolean",
                       "description": "true, wenn ein Eintrag, den die App als Snack einer Mahlzeit einordnet, "
                                      "eine eigene Hauptmahlzeit sein soll."},
+    "close_meal": {"type": "boolean",
+                   "description": "true, wenn ein Snack, den die App einer Mahlzeit zuordnet (assignment.close "
+                                  "gesetzt), stattdessen die Mahlzeit abschließen soll: ihr Zeitraum endet beim "
+                                  "Snack, der Snack zählt als Snack ohne Mahlzeit."},
     "split": {"type": "boolean",
               "description": "Split-Bolus an/aus. Weglassen = App-Vorgabe (ab split_min_grams KH an)."},
     "finger_mgdl": {"type": "number", "minimum": 20, "maximum": 600,
