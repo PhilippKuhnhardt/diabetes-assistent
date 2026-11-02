@@ -2,8 +2,9 @@
 
 Every APP_SYNC_MINUTES (default 2, 0 switches it off) it mirrors yesterday and today from
 Nightscout and checks the reminders. Only when yesterday or today read something new does it
-make sure every day the analysis reads and the analysis page of every period are stored; today's
-"Wirkungen" are stored every round. Opening the app or calling the read API then finds current
+make sure every day the analysis reads, the analysis page of every period and today's "Wirkungen"
+are stored; when only new CGM readings came in, at most every READINGS_EVERY (user request
+2026-11-02: not every calculation is needed every minute). Opening the app or calling the read API then finds current
 results and reads yesterday and today from the local copy without asking Nightscout
 (day_view.mirror_current).
 """
@@ -20,8 +21,13 @@ from app.services import day_view, effects, notifications, summary
 from app.store import config
 
 PERIODS = (14, 30, 7, 3, 1)  # the analysis page's default first
-# What the last precompute saw; while it is unchanged a round only checks the reminders.
+# New CGM readings alone (every minute) refresh the stored analysis at most this often; a new entry,
+# mark, setting or day does at once. A page opened in between calculates what is out of date itself.
+READINGS_EVERY = timedelta(minutes=15)
+# What the last precompute saw, and when; while it is unchanged a round only checks the reminders.
 _last_inputs: tuple | None = None
+_last_without_readings: tuple | None = None
+_last_at: float | None = None
 
 
 def interval_minutes() -> int:
@@ -64,26 +70,31 @@ def _after_sync(today, errors: dict) -> dict:
             result["notify_error"] = str(error)
     if not errors and "notify_error" not in result:
         pushover.heartbeat()
-    if today.isoformat() not in errors:
-        # Today's effects end at this sync, so they are stored afresh each round for the page to read.
+    if result["computed"] and today.isoformat() not in errors:
+        # Today's effects end at this sync; stored with the analysis so the page mostly only reads them.
         effects.day_effects({"date": [today.isoformat()]})
     return result
 
 
 def _precompute(today) -> bool:
     """Store every day the analysis reads and the analysis page of every period, but only when
-    yesterday or today read something new. Their fingerprints also cover the settings, profile,
-    marks and code, so an unchanged pair means the stored results are still current."""
-    global _last_inputs
-    inputs = (today.isoformat(), *(day_view.day_fingerprint((today - timedelta(days=offset)).isoformat())
-                                   for offset in (1, 0)))
+    yesterday or today read something new, and for nothing but new CGM readings at most every
+    READINGS_EVERY. Their fingerprints also cover the settings, profile, marks and code, so an
+    unchanged pair means the stored results are still current."""
+    global _last_inputs, _last_without_readings, _last_at
+    days = [(today - timedelta(days=offset)).isoformat() for offset in (1, 0)]
+    inputs = (today.isoformat(), *(day_view.day_fingerprint(day) for day in days))
     if inputs == _last_inputs:
+        return False
+    without_readings = (today.isoformat(), *(day_view.day_fingerprint(day, readings=False) for day in days))
+    if (without_readings == _last_without_readings and _last_at is not None
+            and time.monotonic() - _last_at < READINGS_EVERY.total_seconds()):
         return False
     for offset in range(summary.history_days(max(PERIODS)) + 1):
         day_view.day_payload((today - timedelta(days=offset)).isoformat(), refresh=False)
-    for days in PERIODS:
-        summary.summary({"days": [str(days)]})
-    _last_inputs = inputs
+    for days_back in PERIODS:
+        summary.summary({"days": [str(days_back)]})
+    _last_inputs, _last_without_readings, _last_at = inputs, without_readings, time.monotonic()
     return True
 
 

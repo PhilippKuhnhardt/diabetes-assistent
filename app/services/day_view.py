@@ -90,23 +90,25 @@ def one_pass():
         _pass.memo = None
 
 
-def day_fingerprint(day: str) -> str:
-    """Hash of everything compute_day reads, plus the code that computes it."""
+def day_fingerprint(day: str, readings: bool = True) -> str:
+    """Hash of everything compute_day reads, plus the code that computes it. Without readings the
+    CGM values are left out, so it changes only with entries, marks, settings, profile or code."""
     memo = getattr(_pass, "memo", None)
     if memo is None:
         timezone_name, shared = config.get_settings()[1]["timezone"], None
     else:
-        if ("fingerprint", day) in memo:
-            return memo[("fingerprint", day)]
+        if ("fingerprint", day, readings) in memo:
+            return memo[("fingerprint", day, readings)]
         if "shared" not in memo:
             memo["shared"] = config.get_settings()[1]["timezone"], results.shared_inputs()
         timezone_name, shared = memo["shared"]
     start, end = local_day_range(day, timezone_name)
+    inputs = results.day_inputs(start, end, day, shared)
     value = hashlib.sha256(json.dumps([CODE_VERSION, os.environ.get("APP_TIMEZONE"),
-                                       results.day_inputs(start, end, day, shared)],
+                                       inputs if readings else inputs[1:]],
                                       default=str).encode()).hexdigest()
     if memo is not None:
-        memo[("fingerprint", day)] = value
+        memo[("fingerprint", day, readings)] = value
     return value
 
 

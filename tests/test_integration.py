@@ -707,14 +707,28 @@ class IntegrationTests(unittest.TestCase):
                 self.request("/api/day?date=" + today.isoformat())
             self.assertEqual(fetch.call_count, 2)
         background.run_once()
-        # Without new data a round only syncs and checks reminders; a new reading precomputes again.
-        with patch("app.services.background.summary.summary") as page:
+        # Without new data a round only syncs and checks reminders. A new reading alone precomputes
+        # at most every READINGS_EVERY; a new entry precomputes at once.
+        now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+        with patch("app.services.background.summary.summary") as page, \
+                patch("app.services.background.effects.day_effects") as day_effects:
             self.assertEqual(background.run_once(), {"errors": {}, "computed": False})
             page.assert_not_called()
-            FakeNightscout.entries.append({"_id": "glucose-today", "type": "sgv", "sgv": 110,
-                                           "date": int(datetime.now(timezone.utc).timestamp() * 1000) - 60000})
-            self.assertEqual(background.run_once(), {"errors": {}, "computed": True})
+            FakeNightscout.entries.append({"_id": "glucose-today", "type": "sgv", "sgv": 110, "date": now_ms - 60000})
+            self.assertEqual(background.run_once(), {"errors": {}, "computed": False})
+            page.assert_not_called()
+            day_effects.assert_not_called()
+            FakeNightscout.entries.append({"_id": "glucose-later", "type": "sgv", "sgv": 112, "date": now_ms - 30000})
+            with patch("app.services.background.time.monotonic",
+                       return_value=background._last_at + background.READINGS_EVERY.total_seconds()):
+                self.assertEqual(background.run_once(), {"errors": {}, "computed": True})
             self.assertEqual(page.call_count, 5)
+            self.assertEqual(day_effects.call_count, 1)
+            FakeNightscout.treatments.append({"_id": "carbs-today", "eventType": "Carb Correction", "carbs": 10,
+                                              "created_at": datetime.fromtimestamp(now_ms / 1000 - 20, timezone.utc)
+                                              .isoformat().replace("+00:00", "Z")})
+            self.assertEqual(background.run_once(), {"errors": {}, "computed": True})
+            self.assertEqual(page.call_count, 10)
         with patch.dict(os.environ, {"APP_SYNC_MINUTES": "0"}):
             self.assertIsNone(background.start())
         with patch.dict(os.environ, {"APP_SYNC_MINUTES": "soon"}):

@@ -43,7 +43,8 @@ def day_inputs(start: datetime, end: datetime, day: str, shared: list | None = N
     """Everything a calculated day reads from SQLite, in a compact comparable form.
     Mirror rows are only ever rewritten with a new synced_at or deleted, so count, newest
     sync time and total size identify them; the small local tables are taken in full.
-    `shared` is shared_inputs() when the caller already read it for other days."""
+    `shared` is shared_inputs() when the caller already read it for other days. The first item
+    stands for the CGM readings (day_view.day_fingerprint can leave it out)."""
     lo, hi = start.isoformat(), end.isoformat()
     with connect() as db:
         rows = [
