@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 from app import calculation, episodes, split as split_bolus
 from app.common import parse_instant
 from app.ingestion import nightscout
-from app.services import basal, day_view, diary, dose_help, places
+from app.services import basal, day_view, diary, dose_help, places, settings as settings_service
 from app.store import config, marks
 
 MODES = ("meal", "exercise", "basal")
@@ -122,10 +122,54 @@ def _assignment(context: dict, payload: dict) -> dict | None:
         return {"meal": None, "at": None, "own_meal": own_meal,
                 "snack": payload.get("as") != "meal", "own_meal_taken": False}
     if taken is not None:
-        return {"meal": root["meal"] if root else None, "at": root["at"] if root else None,
-                "own_meal": own_meal, "snack": True, "own_meal_taken": True}
-    return {"meal": root["meal"], "at": root["at"], "own_meal": own_meal,
-            "snack": payload.get("as") != "meal", "own_meal_taken": False}
+        result = {"meal": root["meal"] if root else None, "at": root["at"] if root else None,
+                  "own_meal": own_meal, "snack": True, "own_meal_taken": True}
+    else:
+        result = {"meal": root["meal"], "at": root["at"], "own_meal": own_meal,
+                  "snack": payload.get("as") != "meal", "own_meal_taken": False}
+    return _closing(context, root, result, payload)
+
+
+def _instant(value):
+    return parse_instant(value) if isinstance(value, str) else value
+
+
+def _closing(context: dict, root: dict | None, result: dict, payload: dict) -> dict:
+    """A snack after a main meal can end that meal instead (user request 2026-11-02): the meal's window
+    then ends at the entry, the same manual window "Tag durchgehen" sets, so the snack and anything
+    later no longer count in its factor. A meal whose manual window already ended keeps no snacks."""
+    result["close"] = None
+    if root is None or not result["snack"]:
+        return result
+    at = context["at"]
+    meal = next((row for row in context["current"]["meals"] if row.get("source_id") == root["id"]), None)
+    if meal is None or not meal.get("window"):
+        return result
+    start, end = _instant(meal["window"]["start"]), _instant(meal["window"]["end"])
+    if meal["window"].get("manual") and end <= at:
+        return {**result, "meal": None, "at": None}
+    if end <= at:
+        return result
+    try:
+        settings_service.validate_manual_window(_instant(meal["at"]), start, at)
+    except ValueError:
+        return result  # Too soon after the meal to end it here.
+    active = payload.get("close_meal") is True
+    result["close"] = {"meal": root["meal"], "at": root["at"], "meal_id": meal["id"], "start": start,
+                       "end": at, "active": active}
+    if active:
+        result.update({"meal": None, "at": None})
+    return result
+
+
+def _serial(assignment: dict | None) -> dict | None:
+    """The assignment as the form and the agent read it."""
+    if assignment is None:
+        return None
+    close = assignment.get("close")
+    return {**assignment, "at": assignment["at"] and assignment["at"].isoformat(),
+            "close": close and {"meal": close["meal"], "at": close["at"].isoformat(),
+                                "end": close["end"].isoformat(), "active": close["active"]}}
 
 
 def _minute(context: dict) -> int | None:
@@ -268,7 +312,7 @@ def preview(payload: dict) -> dict:
     dose = _dose(context, payload, assignment, split)
     return {
         "day": context["day"],
-        "assignment": assignment and {**assignment, "at": assignment["at"] and assignment["at"].isoformat()},
+        "assignment": _serial(assignment),
         "basal_units": str(_basal_units(context)),
         "day_type": ({"value": current["day_type"], "source": current["day_type_source"]}
                      if day_type_visible else None),
@@ -342,6 +386,10 @@ def save(payload: dict) -> dict:
            if split_units and kind == "meal" else {}),
     })
     day = saved["day"]
+    close = assignment and assignment.get("close")
+    if carbs > 0 and close and close["active"]:
+        # The preceding meal ends at this snack, exactly like "Zeitraum anpassen" in "Tag durchgehen".
+        marks.set_analysis_window(close["meal_id"], close["start"], close["end"])
     if carbs > 0:
         places.record(saved["event_id"], context["at"], payload)
     basal_result = basal_error = None
