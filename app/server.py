@@ -17,6 +17,17 @@ from app.services import annotations, background, basal, day_view, diary, dose_h
 from app.store import config, db
 
 WEB = Path(__file__).resolve().parent.parent / "web"
+# Served without login: the login page needs them, and iOS/Android fetch the
+# home-screen icon and the web app manifest without the session cookie.
+PUBLIC_FILES = {
+    "/styles.css": "text/css",
+    "/logo.svg": "image/svg+xml",
+    "/apple-touch-icon.png": "image/png",
+    "/icon-192.png": "image/png",
+    "/icon-512.png": "image/png",
+    "/icon-maskable-512.png": "image/png",
+    "/manifest.webmanifest": "application/manifest+json",
+}
 MAX_BODY = 64 * 1024
 
 
@@ -248,11 +259,11 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/health":
             self._response(200, {"ok": True})
             return
-        if path in ("/login", "/styles.css", "/logo.svg"):
+        if path == "/login" or path in PUBLIC_FILES:
             target = WEB / ("login.html" if path == "/login" else path.lstrip("/"))
             data = target.read_bytes()
             self.send_response(200)
-            self.send_header("Content-Type", mimetypes.guess_type(target)[0] or "text/html")
+            self.send_header("Content-Type", PUBLIC_FILES.get(path) or "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(data)))
             self.send_header("Cache-Control", "no-store")
             self.end_headers()

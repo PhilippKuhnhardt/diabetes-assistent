@@ -132,9 +132,12 @@ def authorize_page(request: dict, error: bool = False) -> str:
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Agent verbinden · Tagebuch</title>
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-title" content="Tagebuch">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="login-page">
