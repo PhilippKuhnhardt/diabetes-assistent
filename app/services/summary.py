@@ -202,8 +202,61 @@ def compute_summary(days: int, today: date) -> dict:
             "q3_units_per_ke": str(quartile(values, Decimal("0.75"))) if len(values) >= 5 else None,
         }
     configured = factors.forecast_settings(settings)
-    percentile, half_life, lookback = configured
+    surcharge_mgdl = factors.surcharge_mgdl(settings)
     points = factors.meal_points(today, history_days(days), day_types, vacations, loaded_days)
+    # The Automatik part (backtest matrix, tuning rows, trade-offs) is by far the costliest and reads
+    # only these meal factors and the settings, the same for every period. It is reused while they
+    # are unchanged: across the five periods of a background round, and across rounds while new CGM
+    # readings change no meal factor.
+    key = json.dumps([today.isoformat(), settings, points], default=str, sort_keys=True)
+    cached = _automatik_cache.get(key)
+    if cached is None:
+        cached = _automatik(today, points, settings)
+        _automatik_cache.clear()  # only the latest is ever asked for again
+        _automatik_cache[key] = cached
+    predictions, suggestion_derivation, day_type_ratio = cached
+    for kind in ("work", "free"):
+        breakfast["by_day_type"][kind]["suggestion"] = factors.suggestion_factor(
+            predictions[("breakfast", kind)], configured, surcharge_mgdl)
+    for name in ("lunch", "dinner"):
+        groups[name]["suggestion"] = factors.suggestion_factor(predictions[(name, None)], configured, surcharge_mgdl)
+    for name, group in groups.items():
+        current = set()
+        if settings["ic_schedule"]:
+            for item in group["calculations"]:
+                grams = calculation.schedule_value_at(
+                    datetime.fromisoformat(item["at"]), settings["ic_schedule"],
+                    settings["timezone"], "grams_per_unit")
+                current.add(Decimal(10) / grams)
+        group["nightscout_units_per_ke"] = [str(value) for value in sorted(current)]
+    return {
+        "days": days, "groups": groups, "profile_sync_error": profile_sync_error,
+        "suggestion_derivation": json_safe(suggestion_derivation),
+        "day_type_ratio": json_safe(day_type_ratio),
+        "sport_analysis": sport_analysis.analyze(
+            sport_meals, sport_sessions, settings["sport_lookback_minutes"],
+            settings["window_minutes"], episodes.SPORT_LABELS),
+        "night": {
+            "count": len(night_start_values),
+            "unavailable_count": days - len(night_start_values),
+            "median_start_glucose": str(median(sorted(night_start_values))) if night_start_values else None,
+            "median_end_glucose": str(median(sorted(night_end_values))) if night_end_values else None,
+            "median_minimum_glucose": str(median(sorted(night_minimum_values))) if night_minimum_values else None,
+            "median_delta_mgdl": str(median(sorted(night_delta_values))) if night_delta_values else None,
+            "nights": night_records,
+        },
+    }
+
+
+# The last Automatik part computed, by its inputs (see compute_summary). Callers only read it.
+_automatik_cache: dict[str, tuple[dict, dict, dict]] = {}
+
+
+def _automatik(today: date, points: list[dict], settings: dict) -> tuple[dict, dict, dict]:
+    """The period-independent part of the analysis page: the suggestions, the backtest matrix with
+    the Automatik view, and the day-type ratio, from the given meal factors."""
+    configured = factors.forecast_settings(settings)
+    percentile, half_life, lookback = configured
     method = settings.get("auto_method", "percentile")
     surcharge_mgdl = factors.surcharge_mgdl(settings)
     active_surcharge = factors.active_surcharge_mgdl(settings)
@@ -212,11 +265,6 @@ def compute_summary(days: int, today: date) -> dict:
                          "surcharge": method == forecast.SURCHARGE}
                    for key in (("breakfast", "work"), ("breakfast", "free"),
                                ("lunch", None), ("dinner", None))}
-    for kind in ("work", "free"):
-        breakfast["by_day_type"][kind]["suggestion"] = factors.suggestion_factor(
-            predictions[("breakfast", kind)], configured, surcharge_mgdl)
-    for name in ("lunch", "dinner"):
-        groups[name]["suggestion"] = factors.suggestion_factor(predictions[(name, None)], configured, surcharge_mgdl)
     # Backtest matrix: every lookback × half-life (plus the configured ones), each at 25 %,
     # the configured percentile and 50 %, all evaluated on the same meals of the last 90 days.
     # A last column tests the configured percentile with the fixed surcharge per main meal.
@@ -264,32 +312,7 @@ def compute_summary(days: int, today: date) -> dict:
         for age in sorted({1, *(int(half_life * k) for k in (1, 2, 4)), lookback}) if 1 <= age <= lookback]
     # Information only: does the free-day factor follow the work-day factor by a stable ratio?
     day_type_ratio = forecast.day_type_ratios(points, today)
-    for name, group in groups.items():
-        current = set()
-        if settings["ic_schedule"]:
-            for item in group["calculations"]:
-                grams = calculation.schedule_value_at(
-                    datetime.fromisoformat(item["at"]), settings["ic_schedule"],
-                    settings["timezone"], "grams_per_unit")
-                current.add(Decimal(10) / grams)
-        group["nightscout_units_per_ke"] = [str(value) for value in sorted(current)]
-    return {
-        "days": days, "groups": groups, "profile_sync_error": profile_sync_error,
-        "suggestion_derivation": json_safe(suggestion_derivation),
-        "day_type_ratio": json_safe(day_type_ratio),
-        "sport_analysis": sport_analysis.analyze(
-            sport_meals, sport_sessions, settings["sport_lookback_minutes"],
-            settings["window_minutes"], episodes.SPORT_LABELS),
-        "night": {
-            "count": len(night_start_values),
-            "unavailable_count": days - len(night_start_values),
-            "median_start_glucose": str(median(sorted(night_start_values))) if night_start_values else None,
-            "median_end_glucose": str(median(sorted(night_end_values))) if night_end_values else None,
-            "median_minimum_glucose": str(median(sorted(night_minimum_values))) if night_minimum_values else None,
-            "median_delta_mgdl": str(median(sorted(night_delta_values))) if night_delta_values else None,
-            "nights": night_records,
-        },
-    }
+    return predictions, suggestion_derivation, day_type_ratio
 
 
 def tuning_apply(key: str, value) -> dict:

@@ -13,8 +13,9 @@ def _utc_iso(value: str) -> str:
 
 def mirror_day(day: str, entries: list[dict], treatments: list[dict], start: datetime, end: datetime) -> None:
     """Replace authoritative records in the fetched range; preserve other days. A table whose rows
-    come back unchanged is left alone, so its synced_at, and with it every stored result that
-    reads the day, stays valid until Nightscout really has something new."""
+    come back unchanged is left alone, and a row that comes back unchanged keeps its synced_at, so
+    every stored result that reads it (also the neighbouring day, whose range overlaps) stays valid
+    until Nightscout really has something new there."""
     now = datetime.now(timezone.utc).isoformat()
     lo, hi = start.isoformat(), end.isoformat()
     rows = {
@@ -30,12 +31,15 @@ def mirror_day(day: str, entries: list[dict], treatments: list[dict], start: dat
         rows["treatments"].append((key, at, json.dumps(treatment)))
     with connect() as db:
         for table, fresh in rows.items():
-            stored = {tuple(row) for row in db.execute(f"SELECT id,at,payload FROM {table} WHERE at>=? AND at<?", (lo, hi))}
-            if stored == set(fresh):
+            stored = {(row[0], row[1], row[2]): row[3] for row in
+                      db.execute(f"SELECT id,at,payload,synced_at FROM {table} WHERE at>=? AND at<?", (lo, hi))}
+            if set(stored) == set(fresh):
                 continue
             db.execute(f"DELETE FROM {table} WHERE at>=? AND at<?", (lo, hi))
-            for key, at, payload in fresh:
-                db.execute(f"INSERT OR REPLACE INTO {table}(id,at,payload,synced_at) VALUES(?,?,?,?)", (key, at, payload, now))
+            # An unchanged row keeps its synced_at: the neighbouring day's range overlaps this one, and
+            # its stored result stays valid while its own rows are unchanged.
+            db.executemany(f"INSERT OR REPLACE INTO {table}(id,at,payload,synced_at) VALUES(?,?,?,?)",
+                           [(*row, stored.get(row, now)) for row in fresh])
         db.execute("INSERT INTO synced_days(day,synced_at) VALUES(?,?) ON CONFLICT(day) DO UPDATE SET synced_at=excluded.synced_at", (day, now))
 
 
