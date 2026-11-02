@@ -195,6 +195,24 @@ class IntegrationTests(unittest.TestCase):
         with urllib.request.urlopen(req) as response:
             return json.loads(response.read())
 
+    def test_home_screen_icon_and_manifest_are_public(self):
+        os.environ["APP_PASSWORD"] = "secret-test-password"
+        for path, kind in (("/apple-touch-icon.png", "image/png"), ("/icon-192.png", "image/png"),
+                           ("/icon-512.png", "image/png"), ("/icon-maskable-512.png", "image/png"),
+                           ("/manifest.webmanifest", "application/manifest+json")):
+            with urllib.request.urlopen(self.base + path) as response:
+                self.assertEqual(response.status, 200)
+                self.assertEqual(response.headers["Content-Type"], kind)
+                data = response.read()
+            if kind == "image/png":
+                self.assertTrue(data.startswith(b"\x89PNG"))
+        manifest = json.loads((Path(__file__).resolve().parent.parent / "web" / "manifest.webmanifest").read_text())
+        for entry in manifest["icons"]:
+            with urllib.request.urlopen(self.base + entry["src"]) as response:
+                self.assertEqual(response.status, 200)
+        with urllib.request.urlopen(self.base + "/app.js") as response:
+            self.assertTrue(response.url.endswith("/login"))
+
     def test_current_glucose_endpoint_uses_live_nightscout_values(self):
         now = datetime.now(timezone.utc)
         FakeNightscout.profile["store"]["Default"]["target_low"] = [{"time": "00:00", "value": 100}]
