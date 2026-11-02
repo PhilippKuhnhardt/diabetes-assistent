@@ -39,30 +39,44 @@ def save_summary_result(key: str, fingerprint: str, payload: dict) -> None:
              datetime.now(timezone.utc).isoformat()))
 
 
-def day_inputs(start: datetime, end: datetime, day: str) -> list:
+def day_inputs(start: datetime, end: datetime, day: str, shared: list | None = None) -> list:
     """Everything a calculated day reads from SQLite, in a compact comparable form.
     Mirror rows are only ever rewritten with a new synced_at or deleted, so count, newest
-    sync time and total size identify them; the small local tables are taken in full."""
+    sync time and total size identify them; the small local tables are taken in full.
+    `shared` is shared_inputs() when the caller already read it for other days."""
     lo, hi = start.isoformat(), end.isoformat()
     with connect() as db:
         rows = [
             tuple(db.execute(f"SELECT COUNT(*), MAX(synced_at), SUM(LENGTH(payload)), MAX(id), MIN(id) FROM {table} "
                              "WHERE at>=? AND at<?", (lo, hi)).fetchone())
             for table in ("entries", "treatments")]
-        queries = [
+        rows += [[tuple(row) for row in db.execute(sql, args).fetchall()] for sql, args in (
             ("SELECT id,at,units,notes,nightscout_synced FROM basal_doses WHERE at>=? AND at<? ORDER BY id", (lo, hi)),
             ("SELECT 1 FROM synced_days WHERE day=?", (day,)),
-            ("SELECT id,effective_at FROM settings_versions ORDER BY id", ()),
-            ("SELECT start_at,profile_id,profile_name,timezone,isf_schedule,ic_schedule,target_schedule "
-             "FROM nightscout_profiles ORDER BY start_at", ()),
-            ("SELECT meal_id,status,effect_mgdl FROM analysis_sport_marks ORDER BY meal_id", ()),
-            ("SELECT meal_id,start_at,end_at FROM analysis_windows ORDER BY meal_id", ()),
-            ("SELECT session_id,effect_mgdl FROM sport_session_effects ORDER BY session_id", ()),
-            ("SELECT meal_id FROM analysis_exclusions ORDER BY meal_id", ()),
-            ("SELECT day,day_type FROM analysis_day_types ORDER BY day", ()),
-            ("SELECT start_day,end_day FROM vacation_periods ORDER BY id", ()),
-            ("SELECT id,name FROM places ORDER BY id", ()),
             ("SELECT event_id,place_id FROM entry_locations WHERE at>=? AND at<? ORDER BY event_id", (lo, hi)),
-        ]
-        rows += [[tuple(row) for row in db.execute(sql, args).fetchall()] for sql, args in queries]
-    return rows
+        )]
+        if shared is None:
+            shared = _shared_inputs(db)
+    return rows + shared
+
+
+def shared_inputs() -> list:
+    """The part of day_inputs that is the same for every day: settings, profile and marks."""
+    with connect() as db:
+        return _shared_inputs(db)
+
+
+def _shared_inputs(db) -> list:
+    queries = (
+        "SELECT id,effective_at FROM settings_versions ORDER BY id",
+        "SELECT start_at,profile_id,profile_name,timezone,isf_schedule,ic_schedule,target_schedule "
+        "FROM nightscout_profiles ORDER BY start_at",
+        "SELECT meal_id,status,effect_mgdl FROM analysis_sport_marks ORDER BY meal_id",
+        "SELECT meal_id,start_at,end_at FROM analysis_windows ORDER BY meal_id",
+        "SELECT session_id,effect_mgdl FROM sport_session_effects ORDER BY session_id",
+        "SELECT meal_id FROM analysis_exclusions ORDER BY meal_id",
+        "SELECT day,day_type FROM analysis_day_types ORDER BY day",
+        "SELECT start_day,end_day FROM vacation_periods ORDER BY id",
+        "SELECT id,name FROM places ORDER BY id",
+    )
+    return [[tuple(row) for row in db.execute(sql).fetchall()] for sql in queries]
