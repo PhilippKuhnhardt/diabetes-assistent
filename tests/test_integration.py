@@ -1498,6 +1498,34 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual((saved["kind"], [meal["meal"] for meal in saved["day_view"]["meals"]]), ("meal", ["dinner"]))
         self.assertEqual(len(self.request("/api/day?date=2026-09-23")["meals"]), 1)
 
+    def test_snack_can_end_the_preceding_meal_like_a_manual_window(self):
+        self.request("/api/day?date=2026-09-23")
+        lunch = {"day": "2026-09-23", "at": "2026-09-23T10:20:00Z", "mode": "meal", "carbs": "92", "insulin": "7"}
+        self.request("/api/entry", method="POST", body=lunch)
+        snack = {**lunch, "at": "2026-09-23T13:10:00Z", "carbs": "10", "insulin": ""}
+        preview = self.request("/api/entry/preview", method="POST", body=snack)
+        assignment = preview["assignment"]
+        self.assertEqual((assignment["meal"], assignment["snack"], assignment["own_meal_taken"]), ("lunch", True, True))
+        self.assertEqual({key: assignment["close"][key] for key in ("meal", "end", "active")},
+                         {"meal": "lunch", "end": "2026-09-23T13:10:00+00:00", "active": False})
+        closing = self.request("/api/entry/preview", method="POST", body={**snack, "close_meal": True})
+        self.assertEqual((closing["assignment"]["meal"], closing["assignment"]["snack"]), (None, True))
+        self.assertTrue(closing["assignment"]["close"]["active"])
+        # Too soon after the meal (window under 30 min) there is nothing to offer.
+        early = self.request("/api/entry/preview", method="POST", body={**snack, "at": "2026-09-23T10:40:00Z"})
+        self.assertIsNone(early["assignment"]["close"])
+
+        saved = self.request("/api/entry", method="POST", body={**snack, "close_meal": True})
+        self.assertEqual(saved["kind"], "snack")
+        meal = saved["day_view"]["meals"][0]
+        self.assertTrue(meal["window"]["manual"])
+        self.assertEqual(datetime.fromisoformat(meal["window"]["end"]), datetime.fromisoformat("2026-09-23T13:10:00+00:00"))
+        row = next(item for item in saved["day_view"]["timeline"] if item["id"] == saved["id"])
+        self.assertIsNone(row["meal_id"])
+        # Later carbs no longer join the closed meal either.
+        later = self.request("/api/entry/preview", method="POST", body={**snack, "at": "2026-09-23T13:30:00Z"})
+        self.assertEqual((later["assignment"]["meal"], later["assignment"]["close"]), (None, None))
+
     def test_entry_preview_offers_basal_and_day_type_and_save_stores_all_in_one_call(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "exercise", "at": "2026-09-23T06:00:00Z", "sport_kind": "gym", "duration_minutes": 30,
