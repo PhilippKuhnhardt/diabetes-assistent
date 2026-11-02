@@ -14,13 +14,22 @@ from pathlib import Path
 DB_PATH = Path(os.environ.get("APP_DB", "data/app.sqlite3"))
 
 
+# Database files this process already switched to WAL. The mode is stored in the file, so later
+# connections skip the directory check and the PRAGMA (the background round opens hundreds).
+_prepared: set[Path] = set()
+
+
 @contextmanager
 def connect() -> Iterator[sqlite3.Connection]:
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(DB_PATH)
+    path = DB_PATH
+    if path not in _prepared:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    db = sqlite3.connect(path)
     try:
         db.row_factory = sqlite3.Row
-        db.execute("PRAGMA journal_mode=WAL")
+        if path not in _prepared:
+            db.execute("PRAGMA journal_mode=WAL")
+            _prepared.add(path)
         with db:
             yield db
     finally:
