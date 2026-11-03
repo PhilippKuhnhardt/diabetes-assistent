@@ -121,6 +121,7 @@ function loadCurrentGlucose() {
         : data.glucose_mgdl == null ? "Kein aktueller Messwert" : "";
       $("#glucose-meta").textContent = meta;
       $("#glucose-meta").hidden = !meta;
+      if (data.glucose_at) catchUpDay(new Date(data.glucose_at).getTime());
     } catch (error) {
       widget.dataset.status = "unavailable";
       $("#glucose-value").textContent = "—";
@@ -1850,6 +1851,7 @@ async function openInboxItem(event) {
 
 // The server reads its local copy, which the background sync keeps current; refresh asks Nightscout first.
 async function loadDay({ refresh = false } = {}) {
+  state.dayLoadedAt = Date.now();
   $("#selected-day").value = state.day;
   $("#timeline").innerHTML = '<div class="empty">Nightscout-Daten werden geladen …</div>';
   $("#night-card").hidden = true;
@@ -1862,6 +1864,45 @@ async function loadDay({ refresh = false } = {}) {
     $("#timeline").innerHTML = '<div class="empty">Daten konnten nicht geladen werden.</div>';
     toast(error.message, true);
   }
+}
+
+// The header reads Nightscout directly, the day the local copy. On the iPhone home screen the page
+// stays alive for hours without a reload, so today's day follows on its own once the header is ahead
+// of the chart. The copy catches up with each background round, hence the pause between attempts.
+const DAY_CATCH_UP_MS = 2 * 60000;
+let dayCatchUp = null;
+
+function catchUpDay(latestAt) {
+  const data = state.dayData;
+  if (document.hidden || dayCatchUp || !data || state.day !== todayDay() || data.day !== state.day) return;
+  if (Date.now() - (state.dayLoadedAt || 0) < DAY_CATCH_UP_MS) return;
+  const points = glucosePoints(data.entries || []);
+  if (points.length && points[points.length - 1].t >= latestAt) return;
+  // Someone typing in the list keeps it as it is; the next attempt follows.
+  if ($("#timeline").contains(document.activeElement)) return;
+  const day = state.day;
+  state.dayLoadedAt = Date.now();
+  dayCatchUp = (async () => {
+    try {
+      const fresh = await api("/api/day?date=" + encodeURIComponent(day));
+      if (day !== state.day || $("#timeline").contains(document.activeElement)) return;
+      // Folded and unfolded blocks stay as the user left them.
+      const open = new Map([...$$("#timeline details")].map(node => [detailsKey(node), node.open]));
+      renderDay(fresh);
+      $$("#timeline details").forEach(node => {
+        const key = detailsKey(node);
+        if (open.has(key) && node.open !== open.get(key)) node.open = open.get(key);
+      });
+      loadEffects();
+      updatePreview();
+    } catch {
+      // Quietly retried with the next glucose value.
+    }
+  })().finally(() => { dayCatchUp = null; });
+}
+
+function detailsKey(node) {
+  return node.className + "|" + (node.dataset.mealId || node.dataset.id || node.querySelector("summary")?.textContent || "");
 }
 
 let previewTimer;
