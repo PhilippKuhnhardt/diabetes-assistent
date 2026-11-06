@@ -18,6 +18,7 @@
   "split_delay_minutes": 120,
   "split_first_percent": 60,
   "split_min_grams": 80,
+  "split_min_units": 5,
   "sport_durations_minutes": {
    "gym": 300,
    "jogging": 300,
