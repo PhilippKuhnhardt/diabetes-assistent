@@ -185,6 +185,20 @@ class SurchargeTests(unittest.TestCase):
         self.assertEqual(fewer["count"], 2)
         self.assertIsNone(fewer["scale"])
 
+    def test_meals_with_their_own_place_factor_stay_out_of_the_base(self):
+        # Canteen meals need 0.6 of the others; they must not pull the others' factor down, and their
+        # place factor is measured against the factor of the others alone.
+        history = [self.sized(age, 60, 1800, base="0.8") for age in range(2, 30)]
+        for meal in history:
+            if (TODAY - meal["day"]).days % 3 == 0:
+                meal.update({"value": meal["value"] * Decimal("0.6"), "place_id": 5, "own_place": True})
+        values = forecast.base_history(history, KEY, TODAY, 30, Decimal(40))
+        self.assertTrue(all(abs(value - Decimal("0.8")) < Decimal("1e-9") for value, _ in values))
+        self.assertEqual(forecast.predict(history, KEY, TODAY, Decimal(50), Decimal(7), 30)["count"],
+                         sum(not meal.get("own_place") for meal in history))
+        scale = forecast.place_scale(history, 5, TODAY, Decimal(50), Decimal(7), 30, forecast.SURCHARGE, Decimal(40))
+        self.assertEqual(scale["scale"].quantize(Decimal("0.0001")), Decimal("0.6"))
+
     def test_place_scale_is_clamped(self):
         history = [self.sized(age, 60, 1800, base="0.8") for age in range(2, 40)]
         for age in (3, 4, 5):
@@ -366,7 +380,8 @@ class VacationTests(unittest.TestCase):
                                "calculation": {"factor_units_per_ke": "2" if "2026-11-08" <= day <= "2026-12-05" else "1"}}]}
 
         with patch.object(factors.day_view, "day_payload", side_effect=lambda day, refresh=False: payload(day)), \
-                patch.object(factors.marks, "analysis_exclusions", return_value=set()):
+                patch.object(factors.marks, "analysis_exclusions", return_value=set()), \
+                patch.object(factors.place_store, "all_places", return_value=[]):
             points = factors.meal_points(date(2026, 12, 8), 30, {}, self.PERIODS, mode="separate")
             self.assertEqual({point["value"] for point in points}, {Decimal(1)})
             self.assertEqual(points[3]["real_day"], date(2026, 11, 7))
