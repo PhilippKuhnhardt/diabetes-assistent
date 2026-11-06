@@ -302,6 +302,8 @@
               </select></label>
               <label>Mahlzeitzuschlag <span>mg/dL</span><input name="auto_surcharge_mgdl" type="number" min="5" max="150" step="5" required></label>
               <p class="hint">Gilt mit „Perzentil + Mahlzeitzuschlag“: je Hauptmahlzeit dieser BZ-Anstieg für Fett und Eiweiß (40 mg/dL sind bei KF 35 gut 1 IE), bis 40 g KH anteilig weniger; Snacks ohne Zuschlag. Der Faktor wird ohne diesen Anteil berechnet.</p>
+              <label>Fett-Zuschlag <span>mg/dL</span><input name="auto_fat_surcharge_mgdl" type="number" min="0" max="200" step="10" required></label>
+              <p class="hint">Kommt bei als fett-/eiweißreich markierten Hauptmahlzeiten zum Mahlzeitzuschlag dazu (0 = aus). So ziehen fette Mahlzeiten den Faktor der anderen nicht mehr hoch.</p>
               <label>Automatik-Perzentil <span>%</span><input name="auto_percentile" type="number" min="25" max="50" step="0.5" required></label>
               <p class="hint">25 % unteres Quartil, 50 % Median. Kleiner bedeutet weniger Insulin.</p>
               <label>Automatik-Zeitraum<select name="auto_lookback_days">

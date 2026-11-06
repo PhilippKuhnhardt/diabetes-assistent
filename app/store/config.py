@@ -36,6 +36,7 @@ def default_settings() -> dict:
         "auto_half_life_days": "7",
         "auto_method": "percentile",
         "auto_surcharge_mgdl": "40",
+        "auto_fat_surcharge_mgdl": "120",
         "peak_minutes": 60,
         "duration_minutes": 180,
         "breakfast_end_minute": 660,
@@ -86,6 +87,8 @@ def _with_nightscout_profile(settings: dict) -> dict:
         result["auto_lookback_days"] = 15 if result.get("auto_lookback_days") == 14 else 30
     result.setdefault("auto_half_life_days", "7")
     result.setdefault("auto_surcharge_mgdl", "40")
+    # Fat surcharge approved by Philipp 2026-11-06 (analysen/modell-review-2026-11-06.md); older versions lack it.
+    result.setdefault("auto_fat_surcharge_mgdl", "120")
     result.setdefault("lunch_end_minute", 1020)
     result.setdefault("basal_default_units", DEFAULT_BASAL_UNITS)
     for key, value in DEFAULT_SPLIT.items():

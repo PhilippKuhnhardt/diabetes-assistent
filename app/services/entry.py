@@ -228,6 +228,15 @@ def _low_blocked(carbs: Decimal, payload: dict, result: dict, split: dict | None
     return None
 
 
+def _place_choice(context: dict, payload: dict) -> int | None:
+    """The place the entry will be saved with: the chosen chip ("none" = no place), else the one the
+    position suggests, as the form preselects it."""
+    chosen = payload.get("place_id")
+    if chosen is not None:
+        return places.place_id(chosen)
+    return places.chips(payload, context["at"])["place_id"]
+
+
 def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | None = None) -> dict:
     """The suggestion for today, with the three options already resolved for display."""
     carbs = context["carbs"]
@@ -238,6 +247,8 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
     # Sport is part of what still acts (app.on_board), so it needs no extra input here.
     result = dose_help.dose_help({"carbs": str(carbs),
                                   "snack": bool(assignment and assignment["snack"]),
+                                  "fat_protein": carbs > 0 and payload.get("fat_protein") is True,
+                                  "place_id": _place_choice(context, payload) if carbs > 0 else None,
                                   "finger_mgdl": context["finger"], "finger_at": context["at"]})
     # With carbs every option uses the calculated factor; until it has enough meals the
     # breakfast day-type median or Nightscout's I:C stands in.

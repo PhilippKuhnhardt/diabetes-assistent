@@ -3545,6 +3545,7 @@
  },
  "profile": {
   "settings": {
+   "auto_fat_surcharge_mgdl": "120",
    "auto_half_life_days": "5",
    "auto_lookback_days": 30,
    "auto_method": "percentile",

@@ -44,10 +44,16 @@ def dose_help(payload: dict) -> dict:
     points = factors.meal_points(local_now.date(), lookback, overrides, periods)
     method = current_settings.get("auto_method", "percentile")
     surcharge_mgdl = factors.surcharge_mgdl(current_settings)
+    fat_mgdl = factors.fat_surcharge_mgdl(current_settings)
     prediction = forecast.predict_method(points, (meal_kind, day_type if is_breakfast else None),
                                          local_now.date(), auto_percentile, half_life, lookback, method,
-                                         surcharge_mgdl)
+                                         surcharge_mgdl, fat_mgdl)
     auto_value = prediction["units_per_ke"]
+    # Place factor (user request 2026-11-06): an entry at a place switched on for it scales the factor
+    # and the surcharge by what meals there needed compared with the Automatik.
+    scales = factors.place_scales(current_settings, local_now.date(), overrides, periods)
+    place = scales.get(payload.get("place_id")) if payload.get("place_id") is not None else None
+    place_scale = place["scale"] if place and place["scale"] is not None else Decimal(1)
     carb_factor = factors.carb_factor(current_settings, local_now.date(), points, day_type,
                                       {(meal_kind, day_type if is_breakfast else None): auto_value})
 
@@ -55,17 +61,19 @@ def dose_help(payload: dict) -> dict:
         active = on_board.summary(on_board.sources(
             treatments, now, current_settings, carb_factor,
             surcharge_mgdl if method == forecast.SURCHARGE else None, forecast.surcharge_share,
-            sport_overrides=marks.sport_session_effects()), now)
+            sport_overrides=marks.sport_session_effects(), fat_surcharge_mgdl=fat_mgdl,
+            scale=factors.entry_scale(scales)), now)
     except ValueError:
         active = None
     # The surcharge belongs once to each main meal; a snack of a meal gets the factor only.
     surcharge = (method == forecast.SURCHARGE and auto_value is not None
                  and payload.get("snack") is not True)
+    meal_surcharge = factors.meal_surcharge_mgdl(current_settings, payload.get("fat_protein") is True)
     result = dosing.suggest(payload.get("carbs", 0), current_settings, entries, treatments, now,
                             activity_change=payload.get("activity_change_mgdl", 0),
                             units_per_ke=factor["median_units_per_ke"] if use_factor else None,
-                            auto_units_per_ke=auto_value,
-                            auto_surcharge_mgdl=surcharge_mgdl if surcharge else None,
+                            auto_units_per_ke=auto_value * place_scale if auto_value is not None else None,
+                            auto_surcharge_mgdl=meal_surcharge * place_scale if surcharge else None,
                             surcharge_share=forecast.surcharge_share, on_board=active, finger=finger)
     plan = split.open_plan(treatments, now)
     when = split.timing(plan, entries, current_settings, now) if plan else None
@@ -75,6 +83,10 @@ def dose_help(payload: dict) -> dict:
     result["on_board"] = on_board_view(active, result) if active else None
     result.update({
         "auto_meal": meal_kind, "auto_factor_count": prediction["count"], "auto_method": method,
+        "auto_fat_surcharge_mgdl": str(fat_mgdl) if surcharge and payload.get("fat_protein") is True else None,
+        "place_factor": ({"name": place["name"], "count": place["count"], "min_meals": place["min_meals"],
+                          "days": place["days"], "scale": str(place["scale"]) if place["scale"] is not None else None}
+                         if place else None),
         "auto_factor_min_meals": factors.AUTO_FACTOR_MIN_MEALS, "auto_percentile": str(auto_percentile),
         "auto_half_life_days": str(half_life), "auto_factor_days": lookback,
         "auto_median_units_per_ke": str(median(meal_values)) if meal_values else None,
