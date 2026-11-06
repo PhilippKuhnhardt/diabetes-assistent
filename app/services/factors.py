@@ -86,6 +86,7 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
     Breakfast is keyed by the day type of its day. `day` is the day as the Automatik counts it
     (counted_days: vacation days skipped after a vacation), `real_day` the calendar day."""
     excluded = marks.analysis_exclusions()
+    own_places = {place["id"] for place in place_store.all_places() if place.get("adjust")}
     points = []
     for real_day, day in counted_days(today, days_back, periods, mode):
         text = real_day.isoformat()
@@ -111,6 +112,8 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
                 "carbs_g": Decimal(result["carbs_total"]) if result.get("carbs_total") is not None else None,
                 "fat": bool((meal.get("quality") or {}).get("fat_protein")),
                 "place_id": (meal.get("place") or {}).get("id"),
+                # A meal at a place with its own place factor stays out of the Automatik's history.
+                "own_place": (meal.get("place") or {}).get("id") in own_places,
             })
     return points
 

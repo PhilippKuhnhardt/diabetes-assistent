@@ -23,6 +23,10 @@ Place factor (user request 2026-11-06): for a place switched on for it, the dose
 weighted median of actual ÷ suggested factor of the main meals eaten there in the last PLACE_LOOKBACK_DAYS
 (at least PLACE_MIN_MEALS, half-life PLACE_HALF_LIFE, clamped to PLACE_SCALE_MIN..PLACE_SCALE_MAX). Each past
 suggestion is recomputed as the Automatik would have given it on that day, without any place factor.
+Meals at such a place (`own_place`) stay out of every history the Automatik draws on (user question 2026-11-06):
+otherwise the canteen's lower factors would pull down the factor of all other meals and, measured against that
+lowered factor, shrink their own place factor again. The base factor comes from the other meals only, and the
+place factor is measured against it.
 
 The tuning rows vary one setting at a time around the configured ones (percentile, surcharge,
 half-life, lookback), each replayed on the largest set of meals all its options can predict.
@@ -80,7 +84,7 @@ def history(points: list[dict], key: tuple, day: date, lookback: int) -> list[tu
     result = []
     for point in points:
         age = (day - point["day"]).days
-        if point["key"] == key and 1 <= age <= lookback:
+        if point["key"] == key and 1 <= age <= lookback and not point.get("own_place"):
             result.append((point["value"], age))
     return result
 
@@ -149,7 +153,7 @@ def base_history(points: list[dict], key: tuple, day: date, lookback: int,
     result = []
     for point in points:
         age = (day - point["day"]).days
-        if point["key"] == key and 1 <= age <= lookback:
+        if point["key"] == key and 1 <= age <= lookback and not point.get("own_place"):
             base = base_factor(point, mgdl, fat_mgdl)
             if base is not None:
                 result.append((base, age))
@@ -359,7 +363,8 @@ def explain(points: list[dict], key: tuple, day: date, lookback: int, half_life:
     their weight, the weighted percentile (of factors without surcharge), and the dose for the
     median meal size of those meals at their median KF (Σ[g × KF] / g): KE × factor + surcharge IE."""
     used = sorted((point for point in points
-                   if point["key"] == key and 1 <= (day - point["day"]).days <= lookback),
+                   if point["key"] == key and 1 <= (day - point["day"]).days <= lookback
+                   and not point.get("own_place")),
                   key=lambda point: point["at"], reverse=True)
     if surcharge_mgdl:
         used = [point for point in used if base_factor(point, surcharge_mgdl, fat_mgdl) is not None]
