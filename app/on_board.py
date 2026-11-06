@@ -11,8 +11,12 @@ re-estimated 2026-10-22, analysen/pruefstand-2026-10/annahmen.md: the former 2.5
 stretch by half made the forecast too high after meals). Remaining effect = remaining KE × meal factor
 × KF at the entry (the model equation: one KE raises glucose by factor × KF).
 
-Surcharge (surcharge method only): the main meal's surcharge × share acts linearly from 2 h to 5 h
-after the meal start (6 h with a fat/protein mark). Snacks never carry it.
+Surcharge (surcharge method only): the main meal's surcharge × share (plus the fat surcharge for a fat/protein
+meal) acts linearly from 2 h to 5 h after the meal start (6 h with a fat/protein mark). Breakfast, usually low in
+fat and protein, rises sooner: its surcharge acts from 1 h to 4 h (5 h with the fat mark); with 2–5 h the surcharge
+was still fully "to come" at the 8 o'clock peak and the app suggested corrections that ended in lows (Philipp's
+approval 2026-11-06, analysen/modell-review-2026-11-06.md: 2-h forecast 90–300 min after breakfast MAE 28/35 → 24/24).
+Snacks never carry it. A place switched on for the place factor scales the carbs and surcharge of its entries.
 
 Sport: each session lowers glucose by its effect (the setting of its kind, or the value Philipp set on the
 session in "Tag durchgehen"; negative raises, e.g. racing), linearly from the session's end over its kind's
@@ -27,6 +31,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+from zoneinfo import ZoneInfo
+
 from app import calculation
 
 INSULIN_PEAK = Decimal(55)
@@ -36,6 +42,8 @@ CARBS_SHORT_MINUTES, CARBS_SHORT_GRAMS = Decimal(120), Decimal(40)
 CARBS_LONG_MINUTES, CARBS_LONG_GRAMS = Decimal(180), Decimal(100)
 SURCHARGE_FROM = Decimal(120)
 SURCHARGE_TO, SURCHARGE_TO_FAT = Decimal(300), Decimal(360)
+BREAKFAST_SURCHARGE_FROM = Decimal(60)
+BREAKFAST_SURCHARGE_TO, BREAKFAST_SURCHARGE_TO_FAT = Decimal(240), Decimal(300)
 SPORT_MINUTES = Decimal(300)  # default; settings sport_durations_minutes per kind
 # Sessions entered for later count once they start within this time.
 SPORT_AHEAD = timedelta(hours=6)
@@ -82,11 +90,21 @@ def carb_remaining(minutes: Decimal, grams: Decimal) -> Decimal:
     return max(Decimal(0), 1 - minutes / carb_minutes(grams))
 
 
-def surcharge_remaining(minutes: Decimal, fat: bool = False) -> Decimal:
-    end = SURCHARGE_TO_FAT if fat else SURCHARGE_TO
-    if minutes <= SURCHARGE_FROM:
+def surcharge_remaining(minutes: Decimal, fat: bool = False, breakfast: bool = False) -> Decimal:
+    start = BREAKFAST_SURCHARGE_FROM if breakfast else SURCHARGE_FROM
+    if breakfast:
+        end = BREAKFAST_SURCHARGE_TO_FAT if fat else BREAKFAST_SURCHARGE_TO
+    else:
+        end = SURCHARGE_TO_FAT if fat else SURCHARGE_TO
+    if minutes <= start:
         return Decimal(1)
-    return max(Decimal(0), (end - minutes) / (end - SURCHARGE_FROM))
+    return max(Decimal(0), (end - minutes) / (end - start))
+
+
+def is_breakfast(at: datetime, settings: dict) -> bool:
+    """A meal starting before the configured end of breakfast (local time)."""
+    local = at.astimezone(ZoneInfo(settings["timezone"]))
+    return local.hour * 60 + local.minute < int(settings.get("breakfast_end_minute", 660))
 
 
 def sport_remaining(minutes_after_end: Decimal, duration: Decimal = SPORT_MINUTES) -> Decimal:
@@ -127,11 +145,13 @@ def is_main_meal(item: dict) -> bool:
 
 
 def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, surcharge_mgdl: Decimal | None,
-            surcharge_share, keep_all: bool = False, sport_overrides: dict | None = None) -> dict:
+            surcharge_share, keep_all: bool = False, sport_overrides: dict | None = None,
+            fat_surcharge_mgdl: Decimal = Decimal(0), scale=None) -> dict:
     """The doses, carb entries, surcharges and sport sessions that may still act at `now`, with their full
     effect in mg/dL. carb_factor(at) gives the IE/KE that values a carb entry made at `at`. keep_all keeps
     everything up to `now` however old, for a whole-day timeline. sport_overrides maps a session's id to
-    the drop Philipp set for it."""
+    the drop Philipp set for it. A fat/protein main meal carries fat_surcharge_mgdl more surcharge;
+    scale(item) gives the place factor of an entry (None = 1) for its carbs and surcharge."""
     zone = settings["timezone"]
     isf = lambda at: calculation.isf_at(at, settings.get("isf_schedule", []), zone)
     seen, doses, carbs, surcharges, meals, sports = set(), [], [], [], [], []
@@ -158,15 +178,18 @@ def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, 
             doses.append({"at": item["at"], "units": units, "mgdl_per_unit": isf(item["at"])})
         grams = calculation.dec(item.get("carbs") or 0)
         fat = bool(item.get("fat_protein"))
+        place = (scale(item) if scale else None) or Decimal(1)
         if grams > 0 and age < carb_minutes(grams):
             factor = carb_factor(item["at"])
             if factor is not None:
                 carbs.append({"at": item["at"], "grams": grams,
-                              "mgdl_per_gram": factor * isf(item["at"]) / 10})
+                              "mgdl_per_gram": factor * place * isf(item["at"]) / 10})
         if is_main_meal(item) and age < FRESH_MEAL_MINUTES:
             meals.append(item["at"])
         if surcharge_mgdl is not None and is_main_meal(item) and age < SURCHARGE_TO_FAT:
-            surcharges.append({"at": item["at"], "fat": fat, "mgdl": surcharge_mgdl * surcharge_share(grams)})
+            full = surcharge_mgdl + (fat_surcharge_mgdl if fat else Decimal(0))
+            surcharges.append({"at": item["at"], "fat": fat, "breakfast": is_breakfast(item["at"], settings),
+                               "mgdl": full * surcharge_share(grams) * place})
     return {"doses": doses, "carbs": carbs, "surcharges": surcharges, "fresh_meals": meals, "sports": sports}
 
 
@@ -183,7 +206,7 @@ def effects_at(found: dict, moment: datetime, cutoff: datetime | None = None) ->
                     for dose in found["doses"]), Decimal(0))
     carbs = sum((row["grams"] * carb_remaining(_minutes(moment, row["at"]), row["grams"]) * row["mgdl_per_gram"]
                  for row in found["carbs"]), Decimal(0))
-    surcharge = sum((row["mgdl"] * surcharge_remaining(_minutes(moment, row["at"]), row["fat"])
+    surcharge = sum((row["mgdl"] * surcharge_remaining(_minutes(moment, row["at"]), row["fat"], row.get("breakfast", False))
                      for row in found["surcharges"]), Decimal(0))
     sport = sum((row["mgdl"] * sport_remaining(_minutes(moment, row["end"]), row["minutes"]) for row in sports),
                 Decimal(0))

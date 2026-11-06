@@ -8,11 +8,12 @@ from app.store import places as store
 
 
 def view() -> dict:
-    """Places with their spots and entry counts."""
+    """Places with their spots and entry counts, and the place factor where it is switched on."""
     spots = store.all_spots()
     counts = store.place_counts()
+    scales = _place_factors()
     return {
-        "places": [{**place, "count": counts.get(place["id"], 0),
+        "places": [{**place, "count": counts.get(place["id"], 0), "factor": scales.get(place["id"]),
                     "spots": [{key: spot[key] for key in ("id", "lat", "lon")}
                               for spot in spots if spot["place_id"] == place["id"]]}
                    for place in store.all_places()],
@@ -20,7 +21,19 @@ def view() -> dict:
     }
 
 
-ACTIONS = ("create", "rename", "quick", "fallback", "delete", "add_spot", "delete_spot")
+def _place_factors() -> dict[int, dict]:
+    from zoneinfo import ZoneInfo
+    from app.services import factors
+    from app.store import config, marks
+    _, settings = config.get_settings()
+    today = datetime.now(ZoneInfo(settings["timezone"])).date()
+    return {place_id: {key: str(value) if key == "scale" and value is not None else value
+                       for key, value in item.items() if key != "name"}
+            for place_id, item in factors.place_scales(settings, today, marks.analysis_day_types(),
+                                                       marks.vacation_periods()).items()}
+
+
+ACTIONS = ("create", "rename", "quick", "fallback", "adjust", "delete", "add_spot", "delete_spot")
 
 
 def _id(payload: dict, key: str) -> int:
@@ -41,6 +54,8 @@ def save(payload: dict) -> dict:
         store.rename_place(_id(payload, "id"), rules.validate_name(payload.get("name")))
     elif action == "quick":
         store.set_quick(_id(payload, "id"), payload.get("quick") is True)
+    elif action == "adjust":
+        store.set_adjust(_id(payload, "id"), payload.get("adjust") is True)
     elif action == "fallback":
         store.set_fallback(_id(payload, "id"), payload.get("fallback") is True)
     elif action == "delete":

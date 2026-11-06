@@ -143,6 +143,57 @@ class SurchargeTests(unittest.TestCase):
         self.assertNotEqual(plain, Decimal(120))
         self.assertEqual(surcharge.quantize(Decimal("0.0001")), Decimal(120))
 
+    def test_fat_meals_carry_the_fat_surcharge(self):
+        meal = point(1, "1.2")
+        meal.update({"carbs_g": Decimal(60), "carbs_isf": Decimal(1800), "fat": True})
+        self.assertEqual(forecast.base_factor(meal, Decimal(80), Decimal(120)), Decimal("1.2") - Decimal(2000) / Decimal(1800))
+        self.assertEqual(forecast.base_factor({**meal, "fat": False}, Decimal(80), Decimal(120)),
+                         Decimal("1.2") - Decimal(800) / Decimal(1800))
+        # Without a surcharge (plain percentile) there is no fat surcharge either.
+        self.assertEqual(forecast.base_factor(meal, Decimal(0), Decimal(120)), Decimal("1.2"))
+
+    def test_fat_surcharge_keeps_fat_meals_from_raising_the_others(self):
+        # Base factor 0.6 for every meal; fat meals need 200 mg/dL more over the same carbs.
+        history = []
+        for age in range(2, 10):
+            meal = self.sized(age, 60, 1800, base="0.6")
+            if age % 2:
+                meal["fat"] = True
+                meal["value"] += Decimal(1200) / Decimal(1800)
+            history.append(meal)
+        lean, fat = self.sized(1, 60, 1800, base="0.6"), {**self.sized(1, 60, 1800, base="0.6"), "fat": True}
+        values = forecast.base_history(history, KEY, TODAY, 30, Decimal(40), Decimal(120))
+        self.assertTrue(all(abs(value - Decimal("0.6")) < Decimal("1e-9") for value, _ in values))
+        self.assertEqual(forecast.predict_surcharge(values, Decimal(40), Decimal(7), lean, Decimal(40), Decimal(120)),
+                         lean["value"])
+        self.assertAlmostEqual(forecast.predict_surcharge(values, Decimal(40), Decimal(7), fat, Decimal(40), Decimal(120)),
+                               lean["value"] + Decimal(1200) / Decimal(1800))
+
+    def test_place_scale_is_the_median_of_actual_over_suggested(self):
+        history = [self.sized(age, 60, 1800, base="0.8") for age in range(2, 40)]
+        for age, share in ((3, "0.7"), (10, "0.8"), (20, "0.9")):
+            item = next(meal for meal in history if (TODAY - meal["day"]).days == age)
+            item["value"] *= Decimal(share)
+            item["place_id"] = 7
+        result = forecast.place_scale(history, 7, TODAY, Decimal(50), Decimal(7), 30, forecast.SURCHARGE, Decimal(40))
+        self.assertEqual(result["count"], 3)
+        self.assertGreater(result["scale"], Decimal("0.7"))
+        self.assertLess(result["scale"], Decimal("0.85"))
+        # Fewer than PLACE_MIN_MEALS meals: no scale yet.
+        fewer = forecast.place_scale(history, 7, TODAY - timedelta(days=8), Decimal(50), Decimal(7), 30,
+                                     forecast.SURCHARGE, Decimal(40))
+        self.assertEqual(fewer["count"], 2)
+        self.assertIsNone(fewer["scale"])
+
+    def test_place_scale_is_clamped(self):
+        history = [self.sized(age, 60, 1800, base="0.8") for age in range(2, 40)]
+        for age in (3, 4, 5):
+            item = next(meal for meal in history if (TODAY - meal["day"]).days == age)
+            item["value"] *= 3
+            item["place_id"] = 1
+        self.assertEqual(forecast.place_scale(history, 1, TODAY, Decimal(50), Decimal(7), 30, "percentile")["scale"],
+                         forecast.PLACE_SCALE_MAX)
+
     def test_backtest_surcharge_needs_the_meal_size(self):
         history = [self.sized(age, 50, 1500) for age in range(2, 10)]
         result = forecast.backtest(history + [point(1, "1.0")], TODAY - timedelta(days=1),

@@ -10,6 +10,7 @@ from app import calculation, forecast
 from app.common import MEALS, parse_instant
 from app.services import day_view
 from app.store import marks
+from app.store import places as place_store
 
 
 BREAKFAST_FACTOR_DAYS = 28
@@ -76,6 +77,8 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
                 "carbs_isf": (Decimal(result["carbs_times_isf_total"])
                               if result.get("carbs_times_isf_total") is not None else None),
                 "carbs_g": Decimal(result["carbs_total"]) if result.get("carbs_total") is not None else None,
+                "fat": bool((meal.get("quality") or {}).get("fat_protein")),
+                "place_id": (meal.get("place") or {}).get("id"),
             })
     return points
 
@@ -83,6 +86,40 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
 def surcharge_mgdl(settings: dict) -> Decimal:
     """Configured meal surcharge (mg/dL per main meal); used only with the surcharge method."""
     return Decimal(str(settings.get("auto_surcharge_mgdl", forecast.SURCHARGE_MGDL)))
+
+
+def fat_surcharge_mgdl(settings: dict) -> Decimal:
+    """Extra surcharge of a fat/protein main meal (mg/dL); counts only with the surcharge method."""
+    return Decimal(str(settings.get("auto_fat_surcharge_mgdl", forecast.FAT_SURCHARGE_MGDL)))
+
+
+def meal_surcharge_mgdl(settings: dict, fat: bool) -> Decimal | None:
+    """Surcharge of one main meal as the dose help and "Wirkt noch" use it; None without the surcharge method."""
+    if settings.get("auto_method") != forecast.SURCHARGE:
+        return None
+    return surcharge_mgdl(settings) + (fat_surcharge_mgdl(settings) if fat else Decimal(0))
+
+
+def place_scales(settings: dict, today: date, overrides: dict[str, str], periods: list[dict]) -> dict[int, dict]:
+    """The place factor of every place switched on for it (forecast.place_scale), by place id, with its name."""
+    chosen = [place for place in place_store.all_places() if place.get("adjust")]
+    if not chosen:
+        return {}
+    percentile, half_life, lookback = forecast_settings(settings)
+    points = meal_points(today, lookback + forecast.PLACE_LOOKBACK_DAYS, overrides, periods)
+    method = settings.get("auto_method", "percentile")
+    return {place["id"]: {"name": place["name"], **forecast.place_scale(
+                points, place["id"], today, percentile, half_life, lookback, method,
+                surcharge_mgdl(settings), fat_surcharge_mgdl(settings))}
+            for place in chosen}
+
+
+def entry_scale(scales: dict[int, dict]):
+    """scale(item) for on_board.sources: the place factor of the place recorded for a diary entry, else None."""
+    if not any(item["scale"] for item in scales.values()):
+        return None
+    places = place_store.entry_places()
+    return lambda item: (scales.get(places.get(item.get("event_id") or "")) or {}).get("scale")
 
 
 def active_surcharge_mgdl(settings: dict) -> Decimal:
@@ -112,7 +149,8 @@ def carb_factor(settings: dict, today: date, points: list[dict], day_type: str |
         key = (kind, day_type if kind == "breakfast" else None)
         if key not in predictions:
             predictions[key] = forecast.predict_method(points, key, today, percentile, half_life, lookback,
-                                                       method, surcharge_mgdl(settings))["units_per_ke"]
+                                                       method, surcharge_mgdl(settings),
+                                                       fat_surcharge_mgdl(settings))["units_per_ke"]
         if predictions[key] is not None:
             return predictions[key]
         try:

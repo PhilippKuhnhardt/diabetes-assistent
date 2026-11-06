@@ -77,6 +77,7 @@ class DueReminderTests(unittest.TestCase):
                 patch.object(notifications.factors, "forecast_settings", return_value=(None, None, 30)), \
                 patch.object(notifications.factors, "meal_points", return_value=[]), \
                 patch.object(notifications.factors, "carb_factor", return_value=None), \
+                patch.object(notifications.factors, "place_scales", return_value={}), \
                 patch.object(notifications.on_board, "sources", return_value=[]), \
                 patch.object(notifications.glucose_alerts, "warnings", return_value=found):
             due = notifications.glucose_warnings(now, SETTINGS, [], [], {"low": True, "high": True})
