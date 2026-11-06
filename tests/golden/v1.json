@@ -58,7 +58,7 @@
   },
   "meals": {
    "rows": 115,
-   "sha256": "7b115a2033a24f77e1eeceb67337639fd2f3f5164b57b77e655baf74cee73062"
+   "sha256": "f8e3d04fc0fd93737cf6c2be022ae4d02a6589806bd4cf3c340731080964ce96"
   },
   "treatments": {
    "rows": 149,
@@ -74,13 +74,13 @@
    "/api/v1/basal": "Spalten: id, at, units, nightscout_synced, notes",
    "/api/v1/data": "alle Tabellen auf einmal",
    "/api/v1/entries": "Spalten: at, sgv",
-   "/api/v1/meals": "Spalten: day, day_type, meal, meal_id, at, window_start, window_end, end_reason, manual_window, excluded, sport_status, sport_effect_mgdl, g0_mgdl, g_end_mgdl, delta_mgdl, carbs_meal_g, carbs_total_g, extra_carb_count, carbs_times_isf, rapid_units, insulin_effect_mgdl, meal_isf, factor_ie_per_ke, blocked_reason, carbs_certainty, fat_protein, alcohol, place",
+   "/api/v1/meals": "Spalten: day, day_type, vacation, meal, meal_id, at, window_start, window_end, end_reason, manual_window, excluded, sport_status, sport_effect_mgdl, g0_mgdl, g_end_mgdl, delta_mgdl, carbs_meal_g, carbs_total_g, extra_carb_count, carbs_times_isf, rapid_units, insulin_effect_mgdl, meal_isf, factor_ie_per_ke, blocked_reason, carbs_certainty, fat_protein, alcohol, place",
    "/api/v1/profile": "Einstellungen und aktuelles Nightscout-Profil",
    "/api/v1/treatments": "Spalten: id, at, eventType, carbs, insulin, basal_units, duration, sport_type, role, meal, episode_id, carbs_certainty, fat_protein, alcohol, place, notes",
    "/api/v1/window-events": "Spalten: meal_id, kind, at, carbs_g, units, isf, event_type"
   },
   "first_day": "2026-08-29",
-  "notes": "# Lese-API Diabetes-Tagebuch\n\nAlle Zeiten in lokaler Zeit mit UTC-Versatz (ISO 8601), Dezimaltrenner Punkt. Die Faktoren\nentsprechen der App zum Abrufzeitpunkt (aktuelles Nightscout-Profil für alle Tage, siehe\n/api/v1/profile).\n\n- meals: eine Zeile je Hauptmahlzeit. factor_ie_per_ke = 10 × (delta_mgdl\n  + sport_effect_mgdl + insulin_effect_mgdl) / carbs_times_isf. sport_effect_mgdl ist positiv\n  für eine bestätigte BZ-Senkung durch Sport. g_end_mgdl ist der BZ am Endpunkt.\n  excluded = manuell ausgeklammert. blocked_reason ist gesetzt, wenn kein Faktor vorliegt.\n  carbs_certainty: KH-Sicherheit, die unsicherste Stufe der markierten KH-Einträge im Fenster:\n  weighed = gewogen, known = Gericht bekannt oder FDDB-KI-Auswertung, unsure = keine ernsthafte\n  Schätzung, leer = nicht angegeben. fat_protein: mindestens ein KH-Eintrag war als\n  „fett-/eiweißreich“ markiert. alcohol: mindestens ein KH-Eintrag war mit „Alkohol“ markiert.\n  place: Ort-Chip der Mahlzeit (ihr eigener Eintrag, sonst der erste gezählte KH-Eintrag mit Ort),\n  leer = kein Ort. Orte und Standorte liegen nur in der App, nicht in Nightscout.\n- window_events: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.\n- entries: alle gespiegelten CGM-Werte in mg/dL.\n- treatments: alle gespiegelten Nightscout-Behandlungen inklusive Sport (Basal aus der App\n  als Notiz mit basal_units).\n- basal: Basal-Injektionen aus der App (lokal gespeichert, nightscout_synced = auch in\n  Nightscout). Basal zählt nicht in den Mahlzeitenfaktor.\n- profile: Einstellungen und Nightscout-Profil (Korrekturfaktor, I:C, Zielbereich).\n",
+  "notes": "# Lese-API Diabetes-Tagebuch\n\nAlle Zeiten in lokaler Zeit mit UTC-Versatz (ISO 8601), Dezimaltrenner Punkt. Die Faktoren\nentsprechen der App zum Abrufzeitpunkt (aktuelles Nightscout-Profil für alle Tage, siehe\n/api/v1/profile).\n\n- meals: eine Zeile je Hauptmahlzeit. factor_ie_per_ke = 10 × (delta_mgdl\n  + sport_effect_mgdl + insulin_effect_mgdl) / carbs_times_isf. sport_effect_mgdl ist positiv\n  für eine bestätigte BZ-Senkung durch Sport. g_end_mgdl ist der BZ am Endpunkt.\n  excluded = manuell ausgeklammert. blocked_reason ist gesetzt, wenn kein Faktor vorliegt.\n  carbs_certainty: KH-Sicherheit, die unsicherste Stufe der markierten KH-Einträge im Fenster:\n  weighed = gewogen, known = Gericht bekannt oder FDDB-KI-Auswertung, unsure = keine ernsthafte\n  Schätzung, leer = nicht angegeben. fat_protein: mindestens ein KH-Eintrag war als\n  „fett-/eiweißreich“ markiert. alcohol: mindestens ein KH-Eintrag war mit „Alkohol“ markiert.\n  place: Ort-Chip der Mahlzeit (ihr eigener Eintrag, sonst der erste gezählte KH-Eintrag mit Ort),\n  leer = kein Ort. Orte und Standorte liegen nur in der App, nicht in Nightscout.\n  vacation: der Tag liegt in einem Urlaub (Schalter in den Einstellungen); die Automatik lässt\n  Urlaubstage nach dem Urlaub aus (Einstellung „Urlaub in der Automatik“).\n- window_events: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.\n- entries: alle gespiegelten CGM-Werte in mg/dL.\n- treatments: alle gespiegelten Nightscout-Behandlungen inklusive Sport (Basal aus der App\n  als Notiz mit basal_units).\n- basal: Basal-Injektionen aus der App (lokal gespeichert, nightscout_synced = auch in\n  Nightscout). Basal zählt nicht in den Mahlzeitenfaktor.\n- profile: Einstellungen und Nightscout-Profil (Korrekturfaktor, I:C, Zielbereich).\n",
   "query": "?days=N (Standard 30) oder ?from=JJJJ-MM-TT&to=JJJJ-MM-TT, lokale Tage inklusive",
   "timezone": "Europe/Berlin",
   "today": "2026-10-07",
@@ -116,6 +116,7 @@
     "rapid_units": "8.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-08-29T10:25:00+02:00",
     "window_start": "2026-08-29T07:25:00+02:00"
    },
@@ -146,6 +147,7 @@
     "rapid_units": "10.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-08-29T14:50:00+02:00",
     "window_start": "2026-08-29T11:50:00+02:00"
    },
@@ -176,6 +178,7 @@
     "rapid_units": "5.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-08-29T21:25:00+02:00",
     "window_start": "2026-08-29T18:25:00+02:00"
    },
@@ -206,6 +209,7 @@
     "rapid_units": "6.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-08-30T10:05:00+02:00",
     "window_start": "2026-08-30T07:05:00+02:00"
    },
@@ -236,6 +240,7 @@
     "rapid_units": "17.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-08-30T17:05:00+02:00",
     "window_start": "2026-08-30T12:30:00+02:00"
    },
@@ -266,6 +271,7 @@
     "rapid_units": "3.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-08-30T21:20:00+02:00",
     "window_start": "2026-08-30T18:20:00+02:00"
    },
@@ -296,6 +302,7 @@
     "rapid_units": "10.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-08-31T09:50:00+02:00",
     "window_start": "2026-08-31T06:50:00+02:00"
    },
@@ -326,6 +333,7 @@
     "rapid_units": "3.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-08-31T15:25:00+02:00",
     "window_start": "2026-08-31T12:25:00+02:00"
    },
@@ -356,6 +364,7 @@
     "rapid_units": "15.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-08-31T22:10:00+02:00",
     "window_start": "2026-08-31T19:10:00+02:00"
    },
@@ -386,6 +395,7 @@
     "rapid_units": "10.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-01T10:50:00+02:00",
     "window_start": "2026-09-01T07:50:00+02:00"
    },
@@ -416,6 +426,7 @@
     "rapid_units": "10.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-01T14:40:00+02:00",
     "window_start": "2026-09-01T11:40:00+02:00"
    },
@@ -446,6 +457,7 @@
     "rapid_units": "10.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-02T00:35:00+02:00",
     "window_start": "2026-09-01T19:15:00+02:00"
    },
@@ -476,6 +488,7 @@
     "rapid_units": "8.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-02T15:35:00+02:00",
     "window_start": "2026-09-02T12:35:00+02:00"
    },
@@ -506,6 +519,7 @@
     "rapid_units": "10.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-02T21:30:00+02:00",
     "window_start": "2026-09-02T18:30:00+02:00"
    },
@@ -536,6 +550,7 @@
     "rapid_units": "13.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-03T10:20:00+02:00",
     "window_start": "2026-09-03T07:20:00+02:00"
    },
@@ -566,6 +581,7 @@
     "rapid_units": "7.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-03T16:50:00+02:00",
     "window_start": "2026-09-03T12:15:00+02:00"
    },
@@ -596,6 +612,7 @@
     "rapid_units": "12.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-03T22:30:00+02:00",
     "window_start": "2026-09-03T19:30:00+02:00"
    },
@@ -626,6 +643,7 @@
     "rapid_units": "20.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-04T11:10:00+02:00",
     "window_start": "2026-09-04T08:10:00+02:00"
    },
@@ -656,6 +674,7 @@
     "rapid_units": "5.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-04T14:35:00+02:00",
     "window_start": "2026-09-04T11:35:00+02:00"
    },
@@ -686,6 +705,7 @@
     "rapid_units": "7.0",
     "sport_effect_mgdl": "35",
     "sport_status": "affected",
+    "vacation": false,
     "window_end": "2026-09-04T21:20:00+02:00",
     "window_start": "2026-09-04T18:20:00+02:00"
    },
@@ -716,6 +736,7 @@
     "rapid_units": "9.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-05T10:50:00+02:00",
     "window_start": "2026-09-05T07:50:00+02:00"
    },
@@ -746,6 +767,7 @@
     "rapid_units": "4.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-05T15:30:00+02:00",
     "window_start": "2026-09-05T12:30:00+02:00"
    },
@@ -776,6 +798,7 @@
     "rapid_units": "15.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-05T22:30:00+02:00",
     "window_start": "2026-09-05T19:30:00+02:00"
    },
@@ -806,6 +829,7 @@
     "rapid_units": "11.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-06T10:55:00+02:00",
     "window_start": "2026-09-06T07:55:00+02:00"
    },
@@ -836,6 +860,7 @@
     "rapid_units": "3.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-06T14:45:00+02:00",
     "window_start": "2026-09-06T11:45:00+02:00"
    },
@@ -866,6 +891,7 @@
     "rapid_units": "9.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-06T22:10:00+02:00",
     "window_start": "2026-09-06T19:10:00+02:00"
    },
@@ -896,6 +922,7 @@
     "rapid_units": null,
     "sport_effect_mgdl": null,
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-07T10:10:00+02:00",
     "window_start": "2026-09-07T07:10:00+02:00"
    },
@@ -926,6 +953,7 @@
     "rapid_units": "8.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-07T16:20:00+02:00",
     "window_start": "2026-09-07T11:45:00+02:00"
    },
@@ -956,6 +984,7 @@
     "rapid_units": "5.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-08T00:40:00+02:00",
     "window_start": "2026-09-07T19:20:00+02:00"
    },
@@ -986,6 +1015,7 @@
     "rapid_units": "9.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-08T11:10:00+02:00",
     "window_start": "2026-09-08T08:10:00+02:00"
    },
@@ -1016,6 +1046,7 @@
     "rapid_units": "7.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-08T14:35:00+02:00",
     "window_start": "2026-09-08T11:35:00+02:00"
    },
@@ -1046,6 +1077,7 @@
     "rapid_units": "7.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-08T22:00:00+02:00",
     "window_start": "2026-09-08T18:20:00+02:00"
    },
@@ -1076,6 +1108,7 @@
     "rapid_units": "6.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-09T11:05:00+02:00",
     "window_start": "2026-09-09T08:05:00+02:00"
    },
@@ -1106,6 +1139,7 @@
     "rapid_units": "7.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-09T15:50:00+02:00",
     "window_start": "2026-09-09T12:50:00+02:00"
    },
@@ -1136,6 +1170,7 @@
     "rapid_units": "10.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-09T21:45:00+02:00",
     "window_start": "2026-09-09T18:45:00+02:00"
    },
@@ -1166,6 +1201,7 @@
     "rapid_units": "13.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-10T10:20:00+02:00",
     "window_start": "2026-09-10T07:20:00+02:00"
    },
@@ -1196,6 +1232,7 @@
     "rapid_units": "6.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-10T22:15:00+02:00",
     "window_start": "2026-09-10T19:15:00+02:00"
    },
@@ -1226,6 +1263,7 @@
     "rapid_units": "10.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-11T16:15:00+02:00",
     "window_start": "2026-09-11T11:40:00+02:00"
    },
@@ -1256,6 +1294,7 @@
     "rapid_units": "12.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-11T21:35:00+02:00",
     "window_start": "2026-09-11T18:35:00+02:00"
    },
@@ -1286,6 +1325,7 @@
     "rapid_units": "11.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-12T11:05:00+02:00",
     "window_start": "2026-09-12T08:05:00+02:00"
    },
@@ -1316,6 +1356,7 @@
     "rapid_units": "10.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-12T15:45:00+02:00",
     "window_start": "2026-09-12T12:45:00+02:00"
    },
@@ -1346,6 +1387,7 @@
     "rapid_units": "11.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-12T22:25:00+02:00",
     "window_start": "2026-09-12T19:25:00+02:00"
    },
@@ -1376,6 +1418,7 @@
     "rapid_units": "7.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-13T10:25:00+02:00",
     "window_start": "2026-09-13T07:25:00+02:00"
    },
@@ -1406,6 +1449,7 @@
     "rapid_units": "13.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-13T15:55:00+02:00",
     "window_start": "2026-09-13T12:55:00+02:00"
    },
@@ -1436,6 +1480,7 @@
     "rapid_units": "9.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-14T00:15:00+02:00",
     "window_start": "2026-09-13T18:55:00+02:00"
    },
@@ -1466,6 +1511,7 @@
     "rapid_units": "7.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-14T10:25:00+02:00",
     "window_start": "2026-09-14T07:25:00+02:00"
    },
@@ -1496,6 +1542,7 @@
     "rapid_units": "9.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-14T15:25:00+02:00",
     "window_start": "2026-09-14T12:25:00+02:00"
    },
@@ -1526,6 +1573,7 @@
     "rapid_units": "17.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-14T21:35:00+02:00",
     "window_start": "2026-09-14T18:35:00+02:00"
    },
@@ -1556,6 +1604,7 @@
     "rapid_units": "4.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-15T10:50:00+02:00",
     "window_start": "2026-09-15T07:50:00+02:00"
    },
@@ -1586,6 +1635,7 @@
     "rapid_units": "6.5",
     "sport_effect_mgdl": "-3.333333333333333333333333332",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-15T17:05:00+02:00",
     "window_start": "2026-09-15T12:30:00+02:00"
    },
@@ -1616,6 +1666,7 @@
     "rapid_units": "7.5",
     "sport_effect_mgdl": "-40",
     "sport_status": "affected",
+    "vacation": false,
     "window_end": "2026-09-15T21:10:00+02:00",
     "window_start": "2026-09-15T18:10:00+02:00"
    },
@@ -1646,6 +1697,7 @@
     "rapid_units": "11.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-16T10:25:00+02:00",
     "window_start": "2026-09-16T07:25:00+02:00"
    },
@@ -1676,6 +1728,7 @@
     "rapid_units": "4.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-16T15:00:00+02:00",
     "window_start": "2026-09-16T12:00:00+02:00"
    },
@@ -1706,6 +1759,7 @@
     "rapid_units": "6.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-16T22:25:00+02:00",
     "window_start": "2026-09-16T19:25:00+02:00"
    },
@@ -1736,6 +1790,7 @@
     "rapid_units": "4.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-17T09:55:00+02:00",
     "window_start": "2026-09-17T06:55:00+02:00"
    },
@@ -1766,6 +1821,7 @@
     "rapid_units": "10.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-17T14:55:00+02:00",
     "window_start": "2026-09-17T11:55:00+02:00"
    },
@@ -1796,6 +1852,7 @@
     "rapid_units": "12.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-17T22:05:00+02:00",
     "window_start": "2026-09-17T19:05:00+02:00"
    },
@@ -1826,6 +1883,7 @@
     "rapid_units": "4.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-18T09:50:00+02:00",
     "window_start": "2026-09-18T07:00:00+02:00"
    },
@@ -1856,6 +1914,7 @@
     "rapid_units": "4.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-18T15:25:00+02:00",
     "window_start": "2026-09-18T12:35:00+02:00"
    },
@@ -1886,6 +1945,7 @@
     "rapid_units": "11.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-18T22:00:00+02:00",
     "window_start": "2026-09-18T19:10:00+02:00"
    },
@@ -1916,6 +1976,7 @@
     "rapid_units": "12.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-19T10:05:00+02:00",
     "window_start": "2026-09-19T07:15:00+02:00"
    },
@@ -1946,6 +2007,7 @@
     "rapid_units": "11.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-19T16:10:00+02:00",
     "window_start": "2026-09-19T11:45:00+02:00"
    },
@@ -1976,6 +2038,7 @@
     "rapid_units": "4.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-19T23:50:00+02:00",
     "window_start": "2026-09-19T18:40:00+02:00"
    },
@@ -2006,6 +2069,7 @@
     "rapid_units": "9.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-20T14:15:00+02:00",
     "window_start": "2026-09-20T13:15:00+02:00"
    },
@@ -2036,6 +2100,7 @@
     "rapid_units": "4",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-20T16:05:00+02:00",
     "window_start": "2026-09-20T13:15:00+02:00"
    },
@@ -2066,6 +2131,7 @@
     "rapid_units": "4.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-20T21:40:00+02:00",
     "window_start": "2026-09-20T18:50:00+02:00"
    },
@@ -2096,6 +2162,7 @@
     "rapid_units": "13.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-21T10:55:00+02:00",
     "window_start": "2026-09-21T08:05:00+02:00"
    },
@@ -2126,6 +2193,7 @@
     "rapid_units": "7.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-21T14:30:00+02:00",
     "window_start": "2026-09-21T11:40:00+02:00"
    },
@@ -2156,6 +2224,7 @@
     "rapid_units": "14.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-21T21:15:00+02:00",
     "window_start": "2026-09-21T18:25:00+02:00"
    },
@@ -2186,6 +2255,7 @@
     "rapid_units": "7.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-22T10:10:00+02:00",
     "window_start": "2026-09-22T07:20:00+02:00"
    },
@@ -2216,6 +2286,7 @@
     "rapid_units": "12.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-22T14:30:00+02:00",
     "window_start": "2026-09-22T11:40:00+02:00"
    },
@@ -2246,6 +2317,7 @@
     "rapid_units": "6.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-22T21:45:00+02:00",
     "window_start": "2026-09-22T18:55:00+02:00"
    },
@@ -2276,6 +2348,7 @@
     "rapid_units": "6.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-23T10:15:00+02:00",
     "window_start": "2026-09-23T07:25:00+02:00"
    },
@@ -2306,6 +2379,7 @@
     "rapid_units": "7.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-23T16:05:00+02:00",
     "window_start": "2026-09-23T11:40:00+02:00"
    },
@@ -2336,6 +2410,7 @@
     "rapid_units": "3.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-23T21:30:00+02:00",
     "window_start": "2026-09-23T18:40:00+02:00"
    },
@@ -2366,6 +2441,7 @@
     "rapid_units": "14.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-24T10:15:00+02:00",
     "window_start": "2026-09-24T07:25:00+02:00"
    },
@@ -2396,6 +2472,7 @@
     "rapid_units": null,
     "sport_effect_mgdl": null,
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-24T15:30:00+02:00",
     "window_start": "2026-09-24T12:40:00+02:00"
    },
@@ -2426,6 +2503,7 @@
     "rapid_units": "11.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-24T21:55:00+02:00",
     "window_start": "2026-09-24T19:05:00+02:00"
    },
@@ -2456,6 +2534,7 @@
     "rapid_units": "5.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-25T10:15:00+02:00",
     "window_start": "2026-09-25T07:25:00+02:00"
    },
@@ -2486,6 +2565,7 @@
     "rapid_units": "9.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-25T14:45:00+02:00",
     "window_start": "2026-09-25T11:55:00+02:00"
    },
@@ -2516,6 +2596,7 @@
     "rapid_units": "13.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-25T23:50:00+02:00",
     "window_start": "2026-09-25T18:40:00+02:00"
    },
@@ -2546,6 +2627,7 @@
     "rapid_units": "12.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-26T10:25:00+02:00",
     "window_start": "2026-09-26T07:35:00+02:00"
    },
@@ -2576,6 +2658,7 @@
     "rapid_units": "9.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-26T14:35:00+02:00",
     "window_start": "2026-09-26T11:45:00+02:00"
    },
@@ -2606,6 +2689,7 @@
     "rapid_units": "14.5",
     "sport_effect_mgdl": "0",
     "sport_status": "unaffected",
+    "vacation": false,
     "window_end": "2026-09-26T21:05:00+02:00",
     "window_start": "2026-09-26T18:15:00+02:00"
    },
@@ -2636,6 +2720,7 @@
     "rapid_units": "11.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-27T10:15:00+02:00",
     "window_start": "2026-09-27T07:25:00+02:00"
    },
@@ -2666,6 +2751,7 @@
     "rapid_units": "5.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-27T16:30:00+02:00",
     "window_start": "2026-09-27T12:05:00+02:00"
    },
@@ -2696,6 +2782,7 @@
     "rapid_units": "8.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-27T21:55:00+02:00",
     "window_start": "2026-09-27T19:05:00+02:00"
    },
@@ -2726,6 +2813,7 @@
     "rapid_units": "13.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-28T10:10:00+02:00",
     "window_start": "2026-09-28T07:20:00+02:00"
    },
@@ -2756,6 +2844,7 @@
     "rapid_units": "9.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-28T15:20:00+02:00",
     "window_start": "2026-09-28T12:30:00+02:00"
    },
@@ -2786,6 +2875,7 @@
     "rapid_units": "11.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-28T21:05:00+02:00",
     "window_start": "2026-09-28T18:15:00+02:00"
    },
@@ -2816,6 +2906,7 @@
     "rapid_units": "14.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-29T14:35:00+02:00",
     "window_start": "2026-09-29T11:45:00+02:00"
    },
@@ -2846,6 +2937,7 @@
     "rapid_units": "7.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-29T21:30:00+02:00",
     "window_start": "2026-09-29T18:40:00+02:00"
    },
@@ -2876,6 +2968,7 @@
     "rapid_units": "14.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-30T10:40:00+02:00",
     "window_start": "2026-09-30T07:50:00+02:00"
    },
@@ -2906,6 +2999,7 @@
     "rapid_units": "4.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-30T14:50:00+02:00",
     "window_start": "2026-09-30T12:00:00+02:00"
    },
@@ -2936,6 +3030,7 @@
     "rapid_units": "7.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-30T21:10:00+02:00",
     "window_start": "2026-09-30T18:20:00+02:00"
    },
@@ -2966,6 +3061,7 @@
     "rapid_units": "19.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": true,
     "window_end": "2026-10-01T10:10:00+02:00",
     "window_start": "2026-10-01T07:20:00+02:00"
    },
@@ -2996,6 +3092,7 @@
     "rapid_units": "14.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": true,
     "window_end": "2026-10-01T17:05:00+02:00",
     "window_start": "2026-10-01T12:40:00+02:00"
    },
@@ -3026,6 +3123,7 @@
     "rapid_units": "6.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": true,
     "window_end": "2026-10-01T23:35:00+02:00",
     "window_start": "2026-10-01T18:25:00+02:00"
    },
@@ -3056,6 +3154,7 @@
     "rapid_units": "5.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": true,
     "window_end": "2026-10-02T10:45:00+02:00",
     "window_start": "2026-10-02T07:55:00+02:00"
    },
@@ -3086,6 +3185,7 @@
     "rapid_units": "8.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": true,
     "window_end": "2026-10-02T15:20:00+02:00",
     "window_start": "2026-10-02T12:30:00+02:00"
    },
@@ -3116,6 +3216,7 @@
     "rapid_units": "9.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": true,
     "window_end": "2026-10-02T22:05:00+02:00",
     "window_start": "2026-10-02T19:15:00+02:00"
    },
@@ -3146,6 +3247,7 @@
     "rapid_units": "17.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-03T10:50:00+02:00",
     "window_start": "2026-10-03T08:00:00+02:00"
    },
@@ -3176,6 +3278,7 @@
     "rapid_units": "7.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-03T15:45:00+02:00",
     "window_start": "2026-10-03T12:55:00+02:00"
    },
@@ -3206,6 +3309,7 @@
     "rapid_units": "15.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-03T21:25:00+02:00",
     "window_start": "2026-10-03T18:35:00+02:00"
    },
@@ -3236,6 +3340,7 @@
     "rapid_units": "11.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-04T10:35:00+02:00",
     "window_start": "2026-10-04T07:45:00+02:00"
    },
@@ -3266,6 +3371,7 @@
     "rapid_units": "9.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-04T14:40:00+02:00",
     "window_start": "2026-10-04T11:50:00+02:00"
    },
@@ -3296,6 +3402,7 @@
     "rapid_units": "9.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-04T22:00:00+02:00",
     "window_start": "2026-10-04T19:10:00+02:00"
    },
@@ -3326,6 +3433,7 @@
     "rapid_units": "8.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-05T10:45:00+02:00",
     "window_start": "2026-10-05T07:55:00+02:00"
    },
@@ -3356,6 +3464,7 @@
     "rapid_units": "11.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-05T17:05:00+02:00",
     "window_start": "2026-10-05T12:40:00+02:00"
    },
@@ -3386,6 +3495,7 @@
     "rapid_units": "11.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-05T22:05:00+02:00",
     "window_start": "2026-10-05T19:15:00+02:00"
    },
@@ -3416,6 +3526,7 @@
     "rapid_units": "12.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-06T10:10:00+02:00",
     "window_start": "2026-10-06T07:20:00+02:00"
    },
@@ -3446,6 +3557,7 @@
     "rapid_units": "5.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-06T14:30:00+02:00",
     "window_start": "2026-10-06T11:40:00+02:00"
    },
@@ -3476,6 +3588,7 @@
     "rapid_units": "6.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-06T21:40:00+02:00",
     "window_start": "2026-10-06T18:50:00+02:00"
    },
@@ -3506,6 +3619,7 @@
     "rapid_units": "8.0",
     "sport_effect_mgdl": "5.333333333333333333333333332",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-07T11:00:00+02:00",
     "window_start": "2026-10-07T08:10:00+02:00"
    },
@@ -3536,6 +3650,7 @@
     "rapid_units": null,
     "sport_effect_mgdl": null,
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-10-07T14:55:00+02:00",
     "window_start": "2026-10-07T12:05:00+02:00"
    }
@@ -3551,6 +3666,7 @@
    "auto_method": "percentile",
    "auto_percentile": "37.5",
    "auto_surcharge_mgdl": "40",
+   "auto_vacation": "separate",
    "basal_default_units": "17",
    "breakfast_end_minute": 660,
    "dose_cautious_target_mgdl": "150",
@@ -3651,6 +3767,7 @@
     "rapid_units": "13.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-03T10:20:00+02:00",
     "window_start": "2026-09-03T07:20:00+02:00"
    },
@@ -3681,6 +3798,7 @@
     "rapid_units": "7.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-03T16:50:00+02:00",
     "window_start": "2026-09-03T12:15:00+02:00"
    },
@@ -3711,6 +3829,7 @@
     "rapid_units": "12.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-03T22:30:00+02:00",
     "window_start": "2026-09-03T19:30:00+02:00"
    },
@@ -3741,6 +3860,7 @@
     "rapid_units": "20.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-04T11:10:00+02:00",
     "window_start": "2026-09-04T08:10:00+02:00"
    },
@@ -3771,6 +3891,7 @@
     "rapid_units": "5.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-04T14:35:00+02:00",
     "window_start": "2026-09-04T11:35:00+02:00"
    },
@@ -3801,6 +3922,7 @@
     "rapid_units": "7.0",
     "sport_effect_mgdl": "35",
     "sport_status": "affected",
+    "vacation": false,
     "window_end": "2026-09-04T21:20:00+02:00",
     "window_start": "2026-09-04T18:20:00+02:00"
    },
@@ -3831,6 +3953,7 @@
     "rapid_units": "9.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-05T10:50:00+02:00",
     "window_start": "2026-09-05T07:50:00+02:00"
    },
@@ -3861,6 +3984,7 @@
     "rapid_units": "4.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-05T15:30:00+02:00",
     "window_start": "2026-09-05T12:30:00+02:00"
    },
@@ -3891,6 +4015,7 @@
     "rapid_units": "15.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-05T22:30:00+02:00",
     "window_start": "2026-09-05T19:30:00+02:00"
    },
@@ -3921,6 +4046,7 @@
     "rapid_units": "11.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-06T10:55:00+02:00",
     "window_start": "2026-09-06T07:55:00+02:00"
    },
@@ -3951,6 +4077,7 @@
     "rapid_units": "3.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-06T14:45:00+02:00",
     "window_start": "2026-09-06T11:45:00+02:00"
    },
@@ -3981,6 +4108,7 @@
     "rapid_units": "9.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-06T22:10:00+02:00",
     "window_start": "2026-09-06T19:10:00+02:00"
    },
@@ -4011,6 +4139,7 @@
     "rapid_units": null,
     "sport_effect_mgdl": null,
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-07T10:10:00+02:00",
     "window_start": "2026-09-07T07:10:00+02:00"
    },
@@ -4041,6 +4170,7 @@
     "rapid_units": "8.0",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-07T16:20:00+02:00",
     "window_start": "2026-09-07T11:45:00+02:00"
    },
@@ -4071,6 +4201,7 @@
     "rapid_units": "5.5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
+    "vacation": false,
     "window_end": "2026-09-08T00:40:00+02:00",
     "window_start": "2026-09-07T19:20:00+02:00"
    }

@@ -354,7 +354,8 @@ function renderReviewDayType(data) {
   if (!data.day_type) return;
   $$("[data-review-day-type]").forEach(button =>
     button.setAttribute("aria-pressed", String(button.dataset.reviewDayType === data.day_type)));
-  $("#review-day-type-hint").textContent = (dayTypeSources[data.day_type_source] || "") + " · bestimmt den Frühstücksfaktor";
+  $("#review-day-type-hint").textContent = (dayTypeSources[data.day_type_source] || "") + " · bestimmt den Frühstücksfaktor" +
+    (data.vacation && data.day_type_source !== "vacation" ? " · Urlaubstag" : "");
 }
 
 async function saveReviewDayType(button) {
@@ -376,7 +377,8 @@ async function saveVacation(event) {
   const input = event.target;
   input.disabled = true;
   try {
-    const data = await api("/api/vacation", { method: "POST", body: JSON.stringify({ active: input.checked }) });
+    const data = await api("/api/vacation", { method: "POST",
+      body: JSON.stringify({ active: input.checked, day: $("#vacation-day").value || null }) });
     renderVacation(data);
     toast(data.active ? "Urlaub aktiviert: jeder Tag zählt als frei" : "Urlaub beendet");
     await loadDay();
@@ -459,10 +461,21 @@ async function sendTestNotification(event) {
 }
 
 function renderVacation(vacation) {
+  const dateText = day => new Date(day + "T12:00").toLocaleDateString("de-DE");
   $("#vacation-toggle").checked = Boolean(vacation?.active);
-  $("#vacation-status").textContent = vacation?.active
-    ? "Aktiv seit " + new Date(vacation.since + "T12:00").toLocaleDateString("de-DE") + ". Jeder Tag zählt als frei."
-    : "Mo–Fr zählt als Arbeitstag.";
+  $("#vacation-day-label").textContent = vacation?.active ? "Erster Tag zurück" : "Erster Urlaubstag";
+  const input = $("#vacation-day");
+  const today = todayDay();
+  const earliest = new Date(today + "T12:00");
+  earliest.setDate(earliest.getDate() - (vacation?.backdate_days ?? 14));
+  input.max = today;
+  input.min = earliest.toLocaleDateString("sv-SE");
+  input.value = today;
+  const past = (vacation?.periods || []).filter(period => period.end_day)
+    .map(period => dateText(period.start_day) + "–" + dateText(period.end_day));
+  $("#vacation-status").textContent = (vacation?.active
+    ? "Aktiv seit " + dateText(vacation.since) + ". Jeder Tag zählt als frei, Mahlzeiten sind als Urlaub markiert."
+    : "Mo–Fr zählt als Arbeitstag.") + (past.length ? " Frühere Urlaube: " + past.join(", ") + "." : "");
 }
 
 function setDefaultSportTime() {}
@@ -686,6 +699,7 @@ async function loadSettings() {
   form.elements.auto_half_life_days.value = data.settings.auto_half_life_days;
   form.elements.auto_surcharge_mgdl.value = data.settings.auto_surcharge_mgdl ?? 40;
   form.elements.auto_fat_surcharge_mgdl.value = data.settings.auto_fat_surcharge_mgdl ?? 120;
+  form.elements.auto_vacation.value = data.settings.auto_vacation || "separate";
   form.elements.basal_default_units.value = data.settings.basal_default_units ?? 17;
   form.elements.split_min_grams.value = data.settings.split_min_grams ?? 80;
   form.elements.split_first_percent.value = data.settings.split_first_percent ?? 60;
@@ -1767,7 +1781,8 @@ function mealBlockHTML(block, data) {
     // Head: name and window, then where and how certain (the main meal's place leads), then factor and exclusion.
     '<div class="day-meal-head"><div class="day-meal-title"><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' + factorIconsHTML(meal.quality) +
     '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") + '</span></div>' +
-    (meal.place || meal.quality?.carbs_certainty ? '<div class="day-meal-tags">' + placeBadgeHTML(meal.place) +
+    (meal.place || meal.quality?.carbs_certainty || meal.vacation ? '<div class="day-meal-tags">' + placeBadgeHTML(meal.place) +
+      (meal.vacation ? '<span class="place-badge vacation-badge" title="Urlaubstag: zählt nach dem Urlaub nicht in die Automatik">Urlaub</span>' : '') +
       (meal.quality?.carbs_certainty ? '<span class="outlier-badge certainty-' + meal.quality.carbs_certainty + '">' + CERTAINTY_LABELS[meal.quality.carbs_certainty] + '</span>' : '') + '</div>' : '') +
     '<div class="day-meal-result">' + status +
     (meal.review?.excludable ? excludeButtonHTML(meal.id, state.day, meal.excluded) : '') + '</div></div>' +
@@ -2497,6 +2512,7 @@ async function saveSettings(event) {
     auto_half_life_days: form.elements.auto_half_life_days.value,
     auto_surcharge_mgdl: form.elements.auto_surcharge_mgdl.value,
     auto_fat_surcharge_mgdl: form.elements.auto_fat_surcharge_mgdl.value,
+    auto_vacation: form.elements.auto_vacation.value,
     basal_default_units: form.elements.basal_default_units.value,
     split_min_grams: Number(form.elements.split_min_grams.value),
     split_first_percent: Number(form.elements.split_first_percent.value),

@@ -203,7 +203,8 @@ def compute_summary(days: int, today: date) -> dict:
         }
     configured = factors.forecast_settings(settings)
     surcharge_mgdl = factors.surcharge_mgdl(settings)
-    points = factors.meal_points(today, history_days(days), day_types, vacations, loaded_days)
+    points = factors.meal_points(today, history_days(days), day_types, vacations, loaded_days,
+                                 mode=factors.vacation_mode(settings))
     # The Automatik part (backtest matrix, tuning rows, trade-offs) is by far the costliest and reads
     # only these meal factors and the settings, the same for every period. It is reused while they
     # are unchanged: across the five periods of a background round, and across rounds while new CGM

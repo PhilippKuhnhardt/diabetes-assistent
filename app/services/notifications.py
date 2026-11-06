@@ -85,7 +85,7 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
     overrides, periods = marks.analysis_day_types(), marks.vacation_periods()
     day_type = marks.day_type_for(today.isoformat(), overrides, periods)[0]
     _, _, lookback = factors.forecast_settings(settings)
-    points = factors.meal_points(today, lookback, overrides, periods)
+    points = factors.meal_points(today, lookback, overrides, periods, mode=factors.vacation_mode(settings))
     method = settings.get("auto_method", "percentile")
     try:
         found = on_board.sources(treatments, now, settings, factors.carb_factor(settings, today, points, day_type),

@@ -10,6 +10,7 @@
   "auto_method": "percentile",
   "auto_percentile": "37.5",
   "auto_surcharge_mgdl": "40",
+  "auto_vacation": "separate",
   "basal_default_units": "17",
   "breakfast_end_minute": 660,
   "dose_cautious_target_mgdl": "150",
@@ -80,6 +81,13 @@
  },
  "vacation": {
   "active": false,
+  "backdate_days": 14,
+  "periods": [
+   {
+    "end_day": "2026-10-02",
+    "start_day": "2026-10-01"
+   }
+  ],
   "since": null
  },
  "version": 2

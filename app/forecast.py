@@ -220,7 +220,7 @@ def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
             after = [item for item in work_days if 1 <= (item["day"] - point["day"]).days <= reference_days]
             reference = sorted(item["value"] for item in before[-neighbours:] + after[:neighbours])
             if len(reference) >= 2:
-                singles.append({"day": point["day"].isoformat(), "surcharge": median(reference) / point["value"] - 1,
+                singles.append({"day": point.get("real_day", point["day"]).isoformat(), "surcharge": median(reference) / point["value"] - 1,
                                 "before": len(before[-neighbours:]), "after": len(after[:neighbours])})
         surcharges = sorted(item["surcharge"] for item in singles)
         result[kind] = {
@@ -363,7 +363,7 @@ def explain(points: list[dict], key: tuple, day: date, lookback: int, half_life:
                   key=lambda point: point["at"], reverse=True)
     if surcharge_mgdl:
         used = [point for point in used if base_factor(point, surcharge_mgdl, fat_mgdl) is not None]
-    meals = [{"day": point["day"].isoformat(), "age_days": (day - point["day"]).days, "units_per_ke": point["value"],
+    meals = [{"day": point.get("real_day", point["day"]).isoformat(), "age_days": (day - point["day"]).days, "units_per_ke": point["value"],
               "base_units_per_ke": base_factor(point, surcharge_mgdl, fat_mgdl) if surcharge_mgdl else point["value"],
               "weight": weight((day - point["day"]).days, half_life)} for point in used]
     factor = predict_from([(meal["base_units_per_ke"], meal["age_days"]) for meal in meals],
