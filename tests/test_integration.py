@@ -1810,6 +1810,12 @@ class IntegrationTests(unittest.TestCase):
             self.assertFalse(off["split"]["active"])
             self.assertNotIn("later_units", off["dose"]["options"][0])
             self.assertIsNone(self.request("/api/entry/preview", method="POST", body={**entry, "carbs": "40"})["split"])
+            # A full dose below split_min_units is given at once (user choice 2026-11-06).
+            self.request("/api/settings", method="POST", body={"split_min_units": 30})
+            small = self.request("/api/entry/preview", method="POST", body=entry)
+            self.assertIsNone(small["split"])
+            self.assertNotIn("later_units", small["dose"]["options"][0])
+            self.request("/api/settings", method="POST", body={"split_min_units": 5})
             saved = self.request("/api/entry", method="POST", body={
                 **entry, "insulin": str(first), "dose_variant": "normal"})
         self.assertEqual(Decimal(saved["split_units"]), later)

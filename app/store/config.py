@@ -21,7 +21,7 @@ DEFAULT_BASAL_UNITS = "17"
 
 
 # Split bolus for large main meals: from this many grams, this share now, the rest this many minutes later.
-DEFAULT_SPLIT = {"split_min_grams": 80, "split_first_percent": 60, "split_delay_minutes": 120}
+DEFAULT_SPLIT = {"split_min_grams": 80, "split_min_units": 5, "split_first_percent": 60, "split_delay_minutes": 120}
 
 
 # Vacation meals in the Automatik (user request 2026-11-06, app/services/factors.py `history_days`):

@@ -702,6 +702,7 @@ async function loadSettings() {
   form.elements.auto_vacation.value = data.settings.auto_vacation || "separate";
   form.elements.basal_default_units.value = data.settings.basal_default_units ?? 17;
   form.elements.split_min_grams.value = data.settings.split_min_grams ?? 80;
+  form.elements.split_min_units.value = data.settings.split_min_units ?? 5;
   form.elements.split_first_percent.value = data.settings.split_first_percent ?? 60;
   form.elements.split_delay_minutes.value = data.settings.split_delay_minutes ?? 120;
   form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
@@ -2515,6 +2516,7 @@ async function saveSettings(event) {
     auto_vacation: form.elements.auto_vacation.value,
     basal_default_units: form.elements.basal_default_units.value,
     split_min_grams: Number(form.elements.split_min_grams.value),
+    split_min_units: Number(form.elements.split_min_units.value),
     split_first_percent: Number(form.elements.split_first_percent.value),
     split_delay_minutes: Number(form.elements.split_delay_minutes.value),
     breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),

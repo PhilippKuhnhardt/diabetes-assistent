@@ -253,6 +253,9 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
     # With carbs every option uses the calculated factor; until it has enough meals the
     # breakfast day-type median or Nightscout's I:C stands in.
     prefix = "auto_" if carbs > 0 and result.get("auto_units_per_ke") is not None else ""
+    if split and not split_bolus.worth_it(result.get(prefix + "entry_units"), context["settings"]):
+        # The normal dose is too small to split (e.g. shrunk by a low glucose): all of it now, no chip.
+        split = None
     keys = {"normal": ("entry_units", "expected_glucose_mgdl"),
             "low": ("low_entry_units", "low_expected_glucose_mgdl"),
             "cautious": ("cautious_entry_units", "cautious_expected_glucose_mgdl"),
@@ -295,7 +298,7 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
     low_note = (LOW_BLOCKED.get(low_blocked) if result.get("glucose_fresh") and result.get("isf_mgdl_per_unit")
                 else None)
     return {**result, "options": options, "check": _dose_check(result, options), "finger_offer": finger_offer,
-            "low_blocked": low_blocked, "low_note": low_note}
+            "low_blocked": low_blocked, "low_note": low_note, "split": split}
 
 
 def _on_board(context: dict, dose: dict) -> dict | None:
@@ -321,6 +324,7 @@ def preview(payload: dict) -> dict:
                         and _before_breakfast_end(context) and first_meal)
     split = _split(context, assignment, payload)
     dose = _dose(context, payload, assignment, split)
+    split = dose.pop("split", split)
     return {
         "day": context["day"],
         "assignment": _serial(assignment),
@@ -367,6 +371,7 @@ def save(payload: dict) -> dict:
     split = _split(context, assignment, payload) if carbs > 0 else None
     dose = (_dose(context, payload, assignment, split)
             if payload.get("dose_check") or (split and split["active"]) else {})
+    split = dose.pop("split", split)
     if payload.get("dose_check"):
         # A tapped suggestion must still match the current one (new CGM value, new dose, profile change).
         if dose.get("check") != payload["dose_check"]:
