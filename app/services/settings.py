@@ -1,7 +1,7 @@
 """Local settings, manual-window limits and the vacation switch."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
@@ -20,7 +20,7 @@ def validate_settings(value: dict) -> dict:
                 "sport_effects_mgdl", "sport_durations_minutes", "dose_target_mgdl", "dose_cautious_target_mgdl", "dose_low_target_mgdl",
                 "auto_percentile",
                 "auto_half_life_days", "auto_lookback_days", "auto_method", "auto_surcharge_mgdl",
-                "auto_fat_surcharge_mgdl", "basal_default_units", "split_min_grams", "split_first_percent", "split_delay_minutes"):
+                "auto_fat_surcharge_mgdl", "auto_vacation", "basal_default_units", "split_min_grams", "split_first_percent", "split_delay_minutes"):
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
@@ -30,6 +30,8 @@ def validate_settings(value: dict) -> dict:
     result.pop("nightscout_profile", None)
     if result.get("auto_method", "percentile") not in forecast.METHODS:
         raise ValueError("Unbekannte Methode der Automatik")
+    if result.get("auto_vacation", config.DEFAULT_AUTO_VACATION) not in config.AUTO_VACATION_MODES:
+        raise ValueError("Unbekannte Urlaubs-Einstellung der Automatik")
     ZoneInfo(result["timezone"])
     window = int(result["window_minutes"])
     peak = int(result["peak_minutes"])
@@ -104,6 +106,7 @@ def validate_settings(value: dict) -> dict:
         "auto_method": result.get("auto_method", "percentile"),
         "auto_surcharge_mgdl": str(surcharge),
         "auto_fat_surcharge_mgdl": str(fat_surcharge),
+        "auto_vacation": result.get("auto_vacation", config.DEFAULT_AUTO_VACATION),
         "basal_default_units": unit_text(basal_default),
         **split,
     })
@@ -131,9 +134,14 @@ def validate_manual_window(meal_at: datetime, start: datetime, end: datetime) ->
         raise ValueError("Zeitraum darf höchstens zehn Stunden lang sein")
 
 
+VACATION_BACKDATE_DAYS = 14
+
+
 def vacation_state() -> dict:
-    current = next((period for period in marks.vacation_periods() if period["end_day"] is None), None)
-    return {"active": bool(current), "since": current["start_day"] if current else None}
+    periods = marks.vacation_periods()
+    current = next((period for period in periods if period["end_day"] is None), None)
+    return {"active": bool(current), "since": current["start_day"] if current else None,
+            "periods": periods[-5:], "backdate_days": VACATION_BACKDATE_DAYS}
 
 
 def settings_view() -> dict:
@@ -165,8 +173,18 @@ def set_vacation(payload: dict) -> dict:
     if not isinstance(active, bool):
         raise ValueError("Ungültige Urlaubsauswahl")
     _, current_settings = config.get_settings()
-    today = datetime.now(ZoneInfo(current_settings["timezone"])).date().isoformat()
-    marks.set_vacation(active, today)
+    today = datetime.now(ZoneInfo(current_settings["timezone"])).date()
+    # A switch made late (on in the evening of the second day, off a day after coming home) can name
+    # the first vacation day or the first day back, up to two weeks ago.
+    day = today
+    if payload.get("day"):
+        try:
+            day = date.fromisoformat(str(payload["day"]))
+        except ValueError:
+            raise ValueError("Ungültiges Datum") from None
+        if not today - timedelta(days=VACATION_BACKDATE_DAYS) <= day <= today:
+            raise ValueError(f"Datum muss zwischen heute und vor {VACATION_BACKDATE_DAYS} Tagen liegen")
+    marks.set_vacation(active, day.isoformat())
     return vacation_state()
 
 

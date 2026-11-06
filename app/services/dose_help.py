@@ -34,14 +34,16 @@ def dose_help(payload: dict) -> dict:
     meal_kind = ("breakfast" if is_breakfast else
                  "lunch" if minute < int(current_settings["lunch_end_minute"]) else "dinner")
     meal_values = factors.meal_factor_values(meal_kind, day_type if is_breakfast else None,
-                                     local_now.date(), overrides, periods)
+                                     local_now.date(), overrides, periods,
+                                     factors.vacation_mode(current_settings))
     factor = ({"count": len(meal_values), "days": factors.BREAKFAST_FACTOR_DAYS,
                "median_units_per_ke": median(meal_values) if meal_values else None}
               if is_breakfast else None)
     use_factor = bool(factor and factor["count"] >= factors.BREAKFAST_FACTOR_MIN_MEALS
                       and factor["median_units_per_ke"] > 0)
     auto_percentile, half_life, lookback = factors.forecast_settings(current_settings)
-    points = factors.meal_points(local_now.date(), lookback, overrides, periods)
+    points = factors.meal_points(local_now.date(), lookback, overrides, periods,
+                                 mode=factors.vacation_mode(current_settings))
     method = current_settings.get("auto_method", "percentile")
     surcharge_mgdl = factors.surcharge_mgdl(current_settings)
     fat_mgdl = factors.fat_surcharge_mgdl(current_settings)

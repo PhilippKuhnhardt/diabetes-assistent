@@ -1278,7 +1278,7 @@ class IntegrationTests(unittest.TestCase):
         monday = (today - timedelta(days=today.weekday())).isoformat()
         self.assertFalse(self.request("/api/settings")["vacation"]["active"])
         state = self.request("/api/vacation", method="POST", body={"active": True})
-        self.assertEqual(state, {"active": True, "since": today.isoformat()})
+        self.assertEqual((state["active"], state["since"]), (True, today.isoformat()))
         self.assertEqual(marks.day_type_for(today.isoformat(), {}, marks.vacation_periods()),
                          ("free", "vacation"))
         self.assertEqual(marks.day_type_for("2020-01-06", {}, marks.vacation_periods()),
@@ -1302,6 +1302,28 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/vacation", method="POST", body={"active": "yes"})
         self.assertEqual(error.exception.code, 400)
         error.exception.close()
+
+    def test_vacation_switch_can_name_an_earlier_day_and_marks_meals(self):
+        today = datetime.now(ZoneInfo("Europe/Berlin")).date()
+        start = (today - timedelta(days=3)).isoformat()
+        state = self.request("/api/vacation", method="POST", body={"active": True, "day": start})
+        self.assertEqual((state["active"], state["since"]), (True, start))
+        day = self.request("/api/day?date=" + start)
+        self.assertTrue(day["vacation"])
+        self.assertTrue(all(meal["vacation"] for meal in day["meals"]))
+        self.assertFalse(self.request("/api/day?date=" + (today - timedelta(days=4)).isoformat())["vacation"])
+        # Off "from yesterday" (the first day back) ends the vacation two days ago.
+        back = (today - timedelta(days=1)).isoformat()
+        state = self.request("/api/vacation", method="POST", body={"active": False, "day": back})
+        self.assertFalse(state["active"])
+        self.assertEqual(state["periods"][-1], {"start_day": start, "end_day": (today - timedelta(days=2)).isoformat()})
+        for body in ({"active": True, "day": (today - timedelta(days=15)).isoformat()},
+                     {"active": True, "day": (today + timedelta(days=1)).isoformat()},
+                     {"active": True, "day": "gestern"}):
+            with self.assertRaises(urllib.error.HTTPError) as error:
+                self.request("/api/vacation", method="POST", body=body)
+            self.assertEqual(error.exception.code, 400)
+            error.exception.close()
 
     def test_breakfast_dose_help_uses_median_factor_of_selected_day_type(self):
         self.request("/api/settings")

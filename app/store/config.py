@@ -24,6 +24,13 @@ DEFAULT_BASAL_UNITS = "17"
 DEFAULT_SPLIT = {"split_min_grams": 80, "split_first_percent": 60, "split_delay_minutes": 120}
 
 
+# Vacation meals in the Automatik (user request 2026-11-06, app/services/factors.py `history_days`):
+# "separate" = during a vacation all meals count, outside one vacation days are skipped (default);
+# "vacation_only" = the same, but during a vacation only vacation meals count; "all" = vacation counts like any day.
+AUTO_VACATION_MODES = ("separate", "vacation_only", "all")
+DEFAULT_AUTO_VACATION = "separate"
+
+
 def default_settings() -> dict:
     return {
         "timezone": os.environ.get("APP_TIMEZONE", "Europe/Berlin"),
@@ -37,6 +44,7 @@ def default_settings() -> dict:
         "auto_method": "percentile",
         "auto_surcharge_mgdl": "40",
         "auto_fat_surcharge_mgdl": "120",
+        "auto_vacation": DEFAULT_AUTO_VACATION,
         "peak_minutes": 60,
         "duration_minutes": 180,
         "breakfast_end_minute": 660,
@@ -89,6 +97,8 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result.setdefault("auto_surcharge_mgdl", "40")
     # Fat surcharge approved by Philipp 2026-11-06 (analysen/modell-review-2026-11-06.md); older versions lack it.
     result.setdefault("auto_fat_surcharge_mgdl", "120")
+    if result.get("auto_vacation") not in AUTO_VACATION_MODES:
+        result["auto_vacation"] = DEFAULT_AUTO_VACATION
     result.setdefault("lunch_end_minute", 1020)
     result.setdefault("basal_default_units", DEFAULT_BASAL_UNITS)
     for key, value in DEFAULT_SPLIT.items():

@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 from app import calculation, forecast
 from app.common import MEALS, parse_instant
 from app.services import day_view
-from app.store import marks
+from app.store import config, marks
 from app.store import places as place_store
 
 
@@ -18,14 +18,46 @@ BREAKFAST_FACTOR_MIN_MEALS = 3
 AUTO_FACTOR_MIN_MEALS = forecast.MIN_MEALS
 
 
+def counted_days(today: date, days_back: int, periods: list[dict], mode: str) -> list[tuple[date, date]]:
+    """(day, day as the Automatik counts it) from today back over days_back days, newest first.
+
+    Vacation meals (user request 2026-11-06, setting auto_vacation): outside a vacation, modes
+    "separate" and "vacation_only" skip vacation days and move the days before them up by the
+    vacation's length, so after coming home the lookback and the half-life reach the meals before
+    the vacation as if it had not happened, and new meals take over as usual. During a vacation
+    "separate" counts every day as before; "vacation_only" counts only vacation days. "all" counts
+    every day everywhere."""
+    calendar = [today - timedelta(days=offset) for offset in range(days_back + 1)]
+    if mode not in ("separate", "vacation_only") or not periods:
+        return [(day, day) for day in calendar]
+    if marks.in_vacation(today.isoformat(), periods):
+        if mode == "vacation_only":
+            calendar = [day for day in calendar if marks.in_vacation(day.isoformat(), periods)]
+        return [(day, day) for day in calendar]
+    result = []
+    offset = 0
+    # Bounded so a pathological set of periods cannot loop for long.
+    while len(result) <= days_back and offset <= days_back + 732:
+        day = today - timedelta(days=offset)
+        offset += 1
+        if not marks.in_vacation(day.isoformat(), periods):
+            result.append((day, today - timedelta(days=len(result))))
+    return result
+
+
+def vacation_mode(settings: dict) -> str:
+    return settings.get("auto_vacation", config.DEFAULT_AUTO_VACATION)
+
+
 def meal_factor_values(meal_kind: str, day_type: str | None, today: date,
-                       overrides: dict[str, str], periods: list[dict]) -> list[Decimal]:
-    """Sorted IE/KE of one meal kind over the past 28 days (excluded meals left out).
-    A day_type restricts the days to work or free days, as used for breakfast."""
+                       overrides: dict[str, str], periods: list[dict],
+                       mode: str = config.DEFAULT_AUTO_VACATION) -> list[Decimal]:
+    """Sorted IE/KE of one meal kind over the past 28 days (excluded meals left out; vacation days
+    as counted_days counts them). A day_type restricts the days to work or free days, as used for breakfast."""
     excluded = marks.analysis_exclusions()
     values = []
-    for offset in range(1, BREAKFAST_FACTOR_DAYS + 1):
-        day = (today - timedelta(days=offset)).isoformat()
+    for real_day, _ in counted_days(today, BREAKFAST_FACTOR_DAYS, periods, mode)[1:]:
+        day = real_day.isoformat()
         if day_type is not None and marks.day_type_for(day, overrides, periods)[0] != day_type:
             continue
         for meal in day_view.day_payload(day, refresh=False).get("meals", []):
@@ -49,14 +81,14 @@ def suggestion_factor(prediction: dict, settings: tuple[Decimal, Decimal, int],
 
 
 def meal_points(today: date, days_back: int, overrides: dict[str, str], periods: list[dict],
-                loaded: dict[str, dict] | None = None) -> list[dict]:
+                loaded: dict[str, dict] | None = None, mode: str = config.DEFAULT_AUTO_VACATION) -> list[dict]:
     """Valid, non-excluded meal factors from today back to days_back days, for the suggestion.
-    Breakfast is keyed by the day type of its day."""
+    Breakfast is keyed by the day type of its day. `day` is the day as the Automatik counts it
+    (counted_days: vacation days skipped after a vacation), `real_day` the calendar day."""
     excluded = marks.analysis_exclusions()
     points = []
-    for offset in range(days_back + 1):
-        day = today - timedelta(days=offset)
-        text = day.isoformat()
+    for real_day, day in counted_days(today, days_back, periods, mode):
+        text = real_day.isoformat()
         payload = loaded[text] if loaded is not None and text in loaded else day_view.day_payload(text, refresh=False)
         if loaded is not None:
             loaded[text] = payload
@@ -67,9 +99,9 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
             if meal.get("meal") not in MEALS or meal["id"] in excluded or factor is None:
                 continue
             at = (parse_instant(meal["at"]) if meal.get("at")
-                  else datetime.combine(day, time(hour=12), tzinfo=timezone.utc))
+                  else datetime.combine(real_day, time(hour=12), tzinfo=timezone.utc))
             points.append({
-                "id": meal["id"], "day": day, "at": at,
+                "id": meal["id"], "day": day, "real_day": real_day, "at": at,
                 "key": (meal["meal"], day_type if meal["meal"] == "breakfast" else None),
                 "day_type": day_type,
                 "value": Decimal(factor),
@@ -106,7 +138,8 @@ def place_scales(settings: dict, today: date, overrides: dict[str, str], periods
     if not chosen:
         return {}
     percentile, half_life, lookback = forecast_settings(settings)
-    points = meal_points(today, lookback + forecast.PLACE_LOOKBACK_DAYS, overrides, periods)
+    points = meal_points(today, lookback + forecast.PLACE_LOOKBACK_DAYS, overrides, periods,
+                         mode=vacation_mode(settings))
     method = settings.get("auto_method", "percentile")
     return {place["id"]: {"name": place["name"], **forecast.place_scale(
                 points, place["id"], today, percentile, half_life, lookback, method,
