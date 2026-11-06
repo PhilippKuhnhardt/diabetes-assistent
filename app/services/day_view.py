@@ -302,10 +302,16 @@ def compute_day(day: str) -> dict:
         })
     for item in timeline:
         item["meal_id"] = block_meal_id(item, rendered)
-    day_type, day_type_source = marks.day_type_for(day, marks.analysis_day_types(), marks.vacation_periods())
+    periods = marks.vacation_periods()
+    day_type, day_type_source = marks.day_type_for(day, marks.analysis_day_types(), periods)
+    # Vacation mark (user request 2026-11-06): every meal of a vacation day carries it, independent
+    # of a manual day type; the Automatik skips these days after the vacation (factors.counted_days).
+    vacation = marks.in_vacation(day, periods)
+    for meal in rendered:
+        meal["vacation"] = vacation
     return json_safe({
         "day": day, "connected": nightscout.is_configured(),
-        "day_type": day_type, "day_type_source": day_type_source,
+        "day_type": day_type, "day_type_source": day_type_source, "vacation": vacation,
         "review": day_review(rendered),
         "synced_at": mirror.synced_at(day), "sync_error": sync_error,
         "profile_sync_error": profile_sync_error,

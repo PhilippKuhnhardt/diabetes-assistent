@@ -6,7 +6,7 @@ from typing import Callable
 from zoneinfo import ZoneInfo
 
 MEAL_COLUMNS = [
-    "day", "day_type", "meal", "meal_id", "at", "window_start", "window_end", "end_reason",
+    "day", "day_type", "vacation", "meal", "meal_id", "at", "window_start", "window_end", "end_reason",
     "manual_window", "excluded", "sport_status", "sport_effect_mgdl", "g0_mgdl", "g_end_mgdl",
     "delta_mgdl", "carbs_meal_g", "carbs_total_g", "extra_carb_count", "carbs_times_isf",
     "rapid_units", "insulin_effect_mgdl", "meal_isf", "factor_ie_per_ke", "blocked_reason",
@@ -36,6 +36,8 @@ entsprechen der App zum Abrufzeitpunkt (aktuelles Nightscout-Profil für alle Ta
   „fett-/eiweißreich“ markiert. alcohol: mindestens ein KH-Eintrag war mit „Alkohol“ markiert.
   place: Ort-Chip der Mahlzeit (ihr eigener Eintrag, sonst der erste gezählte KH-Eintrag mit Ort),
   leer = kein Ort. Orte und Standorte liegen nur in der App, nicht in Nightscout.
+  vacation: der Tag liegt in einem Urlaub (Schalter in den Einstellungen); die Automatik lässt
+  Urlaubstage nach dem Urlaub aus (Einstellung „Urlaub in der Automatik“).
 - window_events: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.
 - entries: alle gespiegelten CGM-Werte in mg/dL.
 - treatments: alle gespiegelten Nightscout-Behandlungen inklusive Sport (Basal aus der App
@@ -64,7 +66,8 @@ def collect(first_day: date, last_day: date, day_payload: Callable[[str], dict],
         for meal in payload.get("meals", []):
             result = meal.get("calculation") or {}
             meals.append({
-                "day": payload["day"], "day_type": payload.get("day_type"), "meal": meal.get("meal"),
+                "day": payload["day"], "day_type": payload.get("day_type"),
+                "vacation": bool(payload.get("vacation")), "meal": meal.get("meal"),
                 "meal_id": meal["id"], "at": _local(meal.get("at"), zone),
                 "window_start": _local(result.get("start") or result.get("window_start"), zone),
                 "window_end": _local(result.get("end") or result.get("window_end"), zone),

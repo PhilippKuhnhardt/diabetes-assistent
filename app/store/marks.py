@@ -46,8 +46,15 @@ def vacation_periods() -> list[dict]:
     return [{"start_day": row["start_day"], "end_day": row["end_day"]} for row in rows]
 
 
+def in_vacation(day: str, periods: list[dict]) -> bool:
+    """Whether a day lies in a vacation period (independent of a manual day type)."""
+    return any(period["start_day"] <= day and (period["end_day"] is None or day <= period["end_day"])
+               for period in periods)
+
+
 def set_vacation(active: bool, today: str) -> None:
-    """Switching on opens a period from today; switching off closes it before today."""
+    """Switching on opens a period from `today`; switching off closes it before `today`
+    (the first day back). Callers may pass an earlier day for a switch made late."""
     yesterday = (date.fromisoformat(today) - timedelta(days=1)).isoformat()
     with connect() as db:
         open_row = db.execute("SELECT id,start_day FROM vacation_periods WHERE end_day IS NULL").fetchone()
@@ -64,8 +71,7 @@ def day_type_for(day: str, overrides: dict[str, str], periods: list[dict]) -> tu
     """Return (day_type, source): a manual choice wins, then vacation, then Mon–Fri work."""
     if day in overrides:
         return overrides[day], "manual"
-    if any(period["start_day"] <= day and (period["end_day"] is None or day <= period["end_day"])
-           for period in periods):
+    if in_vacation(day, periods):
         return "free", "vacation"
     return ("free" if date.fromisoformat(day).weekday() >= 5 else "work"), "weekday"
 

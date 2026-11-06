@@ -1,4 +1,11 @@
 {
  "active": false,
+ "backdate_days": 14,
+ "periods": [
+  {
+   "end_day": "2026-10-02",
+   "start_day": "2026-10-01"
+  }
+ ],
  "since": null
 }

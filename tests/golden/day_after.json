@@ -33,6 +33,7 @@
  ],
  "timeline": [],
  "treatments": [],
+ "vacation": false,
  "window_limits": {
   "lag_minutes": 120,
   "lead_minutes": 120,

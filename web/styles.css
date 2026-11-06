@@ -675,6 +675,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .entry-chips button.place-chip[aria-pressed="true"] { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
 .place-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 11px; font-weight: 600; vertical-align: middle; }
 .place-badge::before { content: "⌖ "; }
+.vacation-badge::before { content: "☀ "; }
 .place-item { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .place-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .place-head .place-name { flex: 1 1 140px; min-width: 0; }
