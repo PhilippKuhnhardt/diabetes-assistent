@@ -50,7 +50,7 @@ def _compute(day: str, parsed: date, settings: dict, start: datetime, end: datet
     treatments = [{**row, "at": parse_instant(row["at"])} for row in payload["treatments"]]
     overrides, periods = marks.analysis_day_types(), marks.vacation_periods()
     day_type = marks.day_type_for(day, overrides, periods)[0]
-    points = factors.meal_points(parsed, lookback, overrides, periods)
+    points = factors.meal_points(parsed, lookback, overrides, periods, mode=factors.vacation_mode(settings))
     method = settings.get("auto_method", "percentile")
     try:
         found = on_board.sources(treatments, end, settings, factors.carb_factor(settings, parsed, points, day_type),

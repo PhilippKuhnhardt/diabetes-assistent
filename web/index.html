@@ -230,6 +230,7 @@
           </section>
           <section class="panel">
             <h2>Urlaub</h2>
+            <label><span id="vacation-day-label">Erster Urlaubstag</span><input type="date" id="vacation-day"></label>
             <label class="check-label"><input type="checkbox" id="vacation-toggle"> Urlaub aktiv</label>
             <p id="vacation-status" class="hint"></p>
           </section>
@@ -313,6 +314,12 @@
               </select></label>
               <label>Halbwertszeit <span>Tage</span><input name="auto_half_life_days" type="number" min="1" max="28" step="0.5" required></label>
               <p class="hint">Nach der Halbwertszeit zählt eine Mahlzeit nur noch halb. Kürzer = neue Werte zählen stärker.</p>
+              <label>Urlaub in der Automatik<select name="auto_vacation">
+                <option value="separate">Im Urlaub alle Mahlzeiten, danach ohne Urlaub</option>
+                <option value="vacation_only">Im Urlaub nur Urlaubsmahlzeiten, danach ohne Urlaub</option>
+                <option value="all">Urlaub zählt wie jeder andere Tag</option>
+              </select></label>
+              <p class="hint">„Danach ohne Urlaub“: Nach dem Urlaub werden Urlaubstage übersprungen, Zeitraum und Halbwertszeit reichen dann bis zu den Mahlzeiten vor dem Urlaub. „Nur Urlaubsmahlzeiten“ rechnet im Urlaub nur mit Urlaubsdaten (ab 4 Mahlzeiten je Mahlzeit, sonst Nightscout-Faktor).</p>
               <label>Basal zum Frühstück <span>IE</span><input name="basal_default_units" type="number" min="0" max="100" step="0.5" required></label>
               <p class="hint">Wird beim Frühstück automatisch mit eingetragen, solange heute noch kein Basal erfasst ist. 0 schaltet das aus.</p>
               <label>Split-Bolus ab <span>g KH</span><input name="split_min_grams" type="number" min="0" max="300" step="5" required></label>

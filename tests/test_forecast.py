@@ -321,3 +321,59 @@ class TuningTests(unittest.TestCase):
         self.assertEqual(example["carb_units"], 6 * base)
         self.assertEqual(example["surcharge_units"], Decimal(1))
         self.assertEqual(example["total_units"], 6 * base + 1)
+
+
+class VacationTests(unittest.TestCase):
+    """Vacation meals in the Automatik (user request 2026-11-06, factors.counted_days)."""
+
+    PERIODS = [{"start_day": "2026-11-08", "end_day": "2026-12-05"}]
+
+    def counted(self, today, days_back, mode):
+        from app.services import factors
+        return factors.counted_days(date.fromisoformat(today), days_back, self.PERIODS, mode)
+
+    def test_after_a_vacation_its_days_are_skipped_and_earlier_days_move_up(self):
+        days = self.counted("2026-12-08", 30, "separate")
+        self.assertEqual(len(days), 31)
+        real = [day.isoformat() for day, _ in days]
+        self.assertEqual(real[:4], ["2026-12-08", "2026-12-07", "2026-12-06", "2026-11-07"])
+        self.assertFalse(any("2026-11-08" <= day <= "2026-12-05" for day in real))
+        # The day before the vacation counts as 3 days old, not 31.
+        self.assertEqual(days[3][1], date(2026, 12, 5))
+        self.assertEqual([counted for _, counted in days],
+                         [date(2026, 12, 8) - timedelta(days=offset) for offset in range(31)])
+        self.assertEqual(self.counted("2026-12-08", 30, "vacation_only"), days)
+
+    def test_during_a_vacation_separate_counts_all_and_vacation_only_only_vacation(self):
+        mixed = self.counted("2026-11-11", 30, "separate")
+        self.assertEqual([day for day, _ in mixed], [counted for _, counted in mixed])
+        self.assertEqual(len(mixed), 31)
+        only = self.counted("2026-11-11", 30, "vacation_only")
+        self.assertEqual([day.isoformat() for day, _ in only], ["2026-11-11", "2026-11-10", "2026-11-09", "2026-11-08"])
+
+    def test_all_counts_every_day_and_no_vacation_changes_nothing(self):
+        every = self.counted("2026-12-08", 30, "all")
+        self.assertEqual(every, [(date(2026, 12, 8) - timedelta(days=o),) * 2 for o in range(31)])
+        from app.services import factors
+        self.assertEqual(factors.counted_days(date(2026, 12, 8), 30, [], "separate"), every)
+
+    def test_meal_points_after_vacation_use_meals_before_it(self):
+        from unittest.mock import patch
+        from app.services import factors
+
+        def payload(day):
+            return {"meals": [{"id": "m-" + day, "meal": "lunch", "at": day + "T11:00:00+00:00",
+                               "calculation": {"factor_units_per_ke": "2" if "2026-11-08" <= day <= "2026-12-05" else "1"}}]}
+
+        with patch.object(factors.day_view, "day_payload", side_effect=lambda day, refresh=False: payload(day)), \
+                patch.object(factors.marks, "analysis_exclusions", return_value=set()):
+            points = factors.meal_points(date(2026, 12, 8), 30, {}, self.PERIODS, mode="separate")
+            self.assertEqual({point["value"] for point in points}, {Decimal(1)})
+            self.assertEqual(points[3]["real_day"], date(2026, 11, 7))
+            prediction = forecast.predict(points, ("lunch", None), date(2026, 12, 8), Decimal(50), Decimal(14), 30)
+            self.assertEqual(prediction["units_per_ke"], Decimal(1))
+            during = factors.meal_points(date(2026, 11, 12), 30, {}, self.PERIODS, mode="vacation_only")
+            self.assertEqual({point["value"] for point in during}, {Decimal(2)})
+            self.assertEqual(len(during), 5)
+            mixed = factors.meal_points(date(2026, 11, 12), 30, {}, self.PERIODS, mode="separate")
+            self.assertEqual(len(mixed), 31)
