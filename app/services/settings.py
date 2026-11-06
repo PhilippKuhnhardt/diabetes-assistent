@@ -20,7 +20,7 @@ def validate_settings(value: dict) -> dict:
                 "sport_effects_mgdl", "sport_durations_minutes", "dose_target_mgdl", "dose_cautious_target_mgdl", "dose_low_target_mgdl",
                 "auto_percentile",
                 "auto_half_life_days", "auto_lookback_days", "auto_method", "auto_surcharge_mgdl",
-                "basal_default_units", "split_min_grams", "split_first_percent", "split_delay_minutes"):
+                "auto_fat_surcharge_mgdl", "basal_default_units", "split_min_grams", "split_first_percent", "split_delay_minutes"):
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
@@ -60,6 +60,9 @@ def validate_settings(value: dict) -> dict:
     surcharge = calculation.dec(result.get("auto_surcharge_mgdl", forecast.SURCHARGE_MGDL))
     if not surcharge.is_finite() or not 5 <= surcharge <= 150:
         raise ValueError("Mahlzeitzuschlag muss zwischen 5 und 150 mg/dL liegen")
+    fat_surcharge = calculation.dec(result.get("auto_fat_surcharge_mgdl", forecast.FAT_SURCHARGE_MGDL))
+    if not fat_surcharge.is_finite() or not 0 <= fat_surcharge <= 200:
+        raise ValueError("Fett-Zuschlag muss zwischen 0 und 200 mg/dL liegen")
     basal_default = calculation.dec(result.get("basal_default_units", config.DEFAULT_BASAL_UNITS))
     if not basal_default.is_finite() or not 0 <= basal_default <= 100 or basal_default % Decimal("0.5"):
         raise ValueError("Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen")
@@ -100,6 +103,7 @@ def validate_settings(value: dict) -> dict:
         "auto_lookback_days": auto_lookback,
         "auto_method": result.get("auto_method", "percentile"),
         "auto_surcharge_mgdl": str(surcharge),
+        "auto_fat_surcharge_mgdl": str(fat_surcharge),
         "basal_default_units": unit_text(basal_default),
         **split,
     })

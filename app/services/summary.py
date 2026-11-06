@@ -260,8 +260,9 @@ def _automatik(today: date, points: list[dict], settings: dict) -> tuple[dict, d
     method = settings.get("auto_method", "percentile")
     surcharge_mgdl = factors.surcharge_mgdl(settings)
     active_surcharge = factors.active_surcharge_mgdl(settings)
+    fat_mgdl = factors.fat_surcharge_mgdl(settings)
     predictions = {key: {**forecast.predict_method(points, key, today, percentile, half_life, lookback, method,
-                                                   surcharge_mgdl),
+                                                   surcharge_mgdl, fat_mgdl),
                          "surcharge": method == forecast.SURCHARGE}
                    for key in (("breakfast", "work"), ("breakfast", "free"),
                                ("lunch", None), ("dinner", None))}
@@ -276,11 +277,11 @@ def _automatik(today: date, points: list[dict], settings: dict) -> tuple[dict, d
     test = forecast.backtest(points, since,
                              [(days_back, strength, value) for days_back, strength in rows
                               for value in percentiles],
-                             target, percentile, surcharge_mgdl)
+                             target, percentile, surcharge_mgdl, fat_mgdl)
     cells = iter(test["stats"])
     suggestion_derivation = {
         "percentile": str(percentile), "half_life_days": str(half_life), "lookback_days": lookback,
-        "method": method, "surcharge_mgdl": str(surcharge_mgdl),
+        "method": method, "surcharge_mgdl": str(surcharge_mgdl), "fat_surcharge_mgdl": str(fat_mgdl),
         "surcharge_full_grams": str(forecast.SURCHARGE_FULL_GRAMS),
         "min_meals": forecast.MIN_MEALS, "meal_count": len(test["rows"]),
         "backtest_days": forecast.BACKTEST_DAYS,
@@ -294,9 +295,10 @@ def _automatik(today: date, points: list[dict], settings: dict) -> tuple[dict, d
     # The Automatik view: one row per setting around the configured ones, and a worked example per meal.
     suggestion_derivation["tuning"] = [
         {**row, "options": [{**option, "apply": tuning_apply(row["key"], option["value"])} for option in row["options"]]}
-        for row in forecast.tuning(points, since, lookback, half_life, percentile, active_surcharge, target)]
+        for row in forecast.tuning(points, since, lookback, half_life, percentile, active_surcharge, target,
+                                   fat_mgdl)]
     suggestion_derivation["active_surcharge_mgdl"] = str(active_surcharge)
-    tradeoffs = forecast.tradeoffs(points, since, lookback, half_life, percentile, active_surcharge, target)
+    tradeoffs = forecast.tradeoffs(points, since, lookback, half_life, percentile, active_surcharge, target, fat_mgdl)
     for option in [tradeoffs["current"], *tradeoffs["line"]]:
         option["apply"] = {}
         for key, value in (("lookback", option["lookback_days"]), ("half_life", option["half_life_days"]),
@@ -305,7 +307,7 @@ def _automatik(today: date, points: list[dict], settings: dict) -> tuple[dict, d
                 option["apply"].update(tuning_apply(key, value))
     suggestion_derivation["tradeoffs"] = tradeoffs
     suggestion_derivation["examples"] = [
-        forecast.explain(points, key, today, lookback, half_life, percentile, active_surcharge)
+        forecast.explain(points, key, today, lookback, half_life, percentile, active_surcharge, fat_mgdl)
         for key in (("breakfast", "work"), ("breakfast", "free"), ("lunch", None), ("dinner", None))]
     suggestion_derivation["weights"] = [
         {"age_days": age, "weight": forecast.weight(age, half_life)}

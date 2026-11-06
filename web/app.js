@@ -561,7 +561,9 @@ function requestEntryPosition() {
 }
 
 function entryPlaceId() {
-  if (!(Number($("#entry-form").elements.carbs.value) > 0) || state.entryPlace === "none") return null;
+  if (!(Number($("#entry-form").elements.carbs.value) > 0)) return null;
+  // "none" tells the server that no place was chosen on purpose (no place factor).
+  if (state.entryPlace === "none") return "none";
   return state.entryPlace ?? currentPreview()?.place?.place_id ?? null;
 }
 
@@ -597,6 +599,8 @@ function toggleEntryPlace(event) {
   const id = Number(chip.dataset.placeId);
   state.entryPlace = entryPlaceId() === id ? "none" : id;
   updateEntryPlace();
+  // A place with its own place factor changes the dose.
+  schedulePreview(0);
 }
 
 function updateEntryQuality() {
@@ -681,6 +685,7 @@ async function loadSettings() {
   form.elements.auto_lookback_days.value = String(data.settings.auto_lookback_days);
   form.elements.auto_half_life_days.value = data.settings.auto_half_life_days;
   form.elements.auto_surcharge_mgdl.value = data.settings.auto_surcharge_mgdl ?? 40;
+  form.elements.auto_fat_surcharge_mgdl.value = data.settings.auto_fat_surcharge_mgdl ?? 120;
   form.elements.basal_default_units.value = data.settings.basal_default_units ?? 17;
   form.elements.split_min_grams.value = data.settings.split_min_grams ?? 80;
   form.elements.split_first_percent.value = data.settings.split_first_percent ?? 60;
@@ -717,7 +722,12 @@ function renderPlaces(data) {
     '> Schnellauswahl</label>' +
     '<label class="check-label place-quick"><input type="checkbox" class="place-fallback-toggle"' + (place.fallback ? ' checked' : '') +
     '> Standard woanders</label>' +
+    '<label class="check-label place-quick"><input type="checkbox" class="place-adjust-toggle"' + (place.adjust ? ' checked' : '') +
+    '> Ortsfaktor</label>' +
     '<button type="button" class="quiet delete-treatment" data-place-action="delete" data-place-id="' + place.id + '">Löschen</button></div>' +
+    (place.adjust ? '<p class="hint">' + (place.factor?.scale != null
+      ? 'Ortsfaktor ' + signedPercent(place.factor.scale) + ' auf Faktor und Zuschlag, aus ' + place.factor.count + ' Hauptmahlzeiten der letzten ' + place.factor.days + ' Tage.'
+      : 'Ortsfaktor ab ' + (place.factor?.min_meals ?? 3) + ' Hauptmahlzeiten hier in den letzten ' + (place.factor?.days ?? 60) + ' Tagen (bisher ' + (place.factor?.count ?? 0) + ').') + '</p>' : '') +
     (place.spots.length ? '<ul class="place-spots">' + place.spots.map((spot, index) => spotHTML(spot, index)).join("") + '</ul>'
       : '<p class="hint">' + (place.fallback ? 'Vorausgewählt, wenn du an keinem Standort bist.' : 'Ohne Standort: nur von Hand wählbar.') + '</p>') +
     '<div class="place-coords"><button type="button" class="quiet" data-place-action="here" data-place-id="' + place.id + '">+ Aktueller Standort</button>' +
@@ -771,6 +781,8 @@ async function placeChange(event) {
     await placeAction({ action: "rename", id: event.target.closest(".place-item").dataset.placeId, name: event.target.value });
   } else if (event.target.matches(".place-quick-toggle")) {
     await placeAction({ action: "quick", id: event.target.closest(".place-item").dataset.placeId, quick: event.target.checked });
+  } else if (event.target.matches(".place-adjust-toggle")) {
+    await placeAction({ action: "adjust", id: event.target.closest(".place-item").dataset.placeId, adjust: event.target.checked });
   } else if (event.target.matches(".place-fallback-toggle")) {
     await placeAction({ action: "fallback", id: event.target.closest(".place-item").dataset.placeId, fallback: event.target.checked });
   }
@@ -2073,6 +2085,12 @@ function doseHelpHTML(data) {
 
 const mealNames = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 
+// A place factor as a signed percentage: 0.85 -> "−15 %".
+function signedPercent(scale) {
+  const value = Math.round((Number(scale) - 1) * 100);
+  return (value > 0 ? "+" : value < 0 ? "−" : "±") + Math.abs(value) + " %";
+}
+
 // The factor all suggestions use; a stand-in is named while Automatik lacks meals.
 function factorLine(data) {
   if (data.units_per_ke == null) return "";
@@ -2081,10 +2099,17 @@ function factorLine(data) {
   const factor = value => '<strong>' + escapeHTML(factorNum(value)) + ' IE/KE</strong>';
   const count = ' (' + (data.auto_factor_count || 0) + '/' + data.auto_factor_min_meals + ')';
   const surcharge = data.auto_surcharge_units != null
-    ? ' + Zuschlag <strong>' + escapeHTML(num(data.auto_surcharge_units, 2)) + ' IE</strong>'
+    ? ' + Zuschlag <strong>' + escapeHTML(num(data.auto_surcharge_units, 2)) + ' IE</strong>' +
+      (data.auto_fat_surcharge_mgdl != null ? ' (fettreich +' + escapeHTML(num(data.auto_fat_surcharge_mgdl, 0)) + ' mg/dL)' : '')
     : data.auto_method === "surcharge" && data.auto_units_per_ke != null ? ' · Snack ohne Zuschlag' : '';
+  // The place factor is already in the factor and surcharge shown.
+  const place = data.place_factor;
+  const placeText = !place || data.auto_units_per_ke == null ? ''
+    : place.scale != null
+      ? ' · Ort ' + escapeHTML(place.name) + ' <strong>' + signedPercent(place.scale) + '</strong> (' + place.count + ' Essen, ' + place.days + ' T.)'
+      : ' · Ort ' + escapeHTML(place.name) + ': noch kein Ortsfaktor (' + place.count + '/' + place.min_meals + ' Essen)';
   const used = data.auto_units_per_ke != null
-    ? 'Berechneter Faktor ' + factor(data.auto_units_per_ke) + count + surcharge
+    ? 'Berechneter Faktor ' + factor(data.auto_units_per_ke) + count + surcharge + placeText
     : 'Berechneter Faktor –' + count + ' · ersatzweise ' + (data.factor_source === "breakfast_day_type"
       ? 'Frühstück ' + (data.day_type === "free" ? "frei" : "Arbeit") : 'Nightscout') + ' ' + factor(data.units_per_ke);
   return '<p class="dose-factor">' + used + ' · ' + kf + '</p>';
@@ -2471,6 +2496,7 @@ async function saveSettings(event) {
     auto_lookback_days: Number(form.elements.auto_lookback_days.value),
     auto_half_life_days: form.elements.auto_half_life_days.value,
     auto_surcharge_mgdl: form.elements.auto_surcharge_mgdl.value,
+    auto_fat_surcharge_mgdl: form.elements.auto_fat_surcharge_mgdl.value,
     basal_default_units: form.elements.basal_default_units.value,
     split_min_grams: Number(form.elements.split_min_grams.value),
     split_first_percent: Number(form.elements.split_first_percent.value),
@@ -3076,6 +3102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!event.target.matches(".place-more") || !event.target.value) return;
     state.entryPlace = Number(event.target.value);
     updateEntryPlace();
+    schedulePreview(0);
   });
   $("#entry-form").elements.insulin.addEventListener("input", () => {
     $("#entry-form").elements.carbs.setCustomValidity("");

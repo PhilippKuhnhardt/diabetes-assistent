@@ -221,9 +221,17 @@ def _places_without_positions(db: sqlite3.Connection) -> None:
     db.execute("DELETE FROM entry_locations WHERE place_id IS NULL")
 
 
+def _place_factor(db: sqlite3.Connection) -> None:
+    """A place can scale the dose of its main meals by its own factor (user request 2026-11-06), starting
+    with the canteen: a place named Kantine is switched on."""
+    db.execute("ALTER TABLE places ADD COLUMN adjust INTEGER NOT NULL DEFAULT 0")
+    db.execute("UPDATE places SET adjust=1 WHERE name='Kantine' COLLATE NOCASE")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
                                                           _notifications, _notification_priority, _places,
-                                                          _inbox_seen, _sport_sessions, _places_without_positions]
+                                                          _inbox_seen, _sport_sessions, _places_without_positions,
+                                                          _place_factor]
 
 
 def init() -> None:

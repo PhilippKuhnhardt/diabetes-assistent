@@ -51,9 +51,10 @@ class MigrationTests(unittest.TestCase):
     def test_places_drop_stored_positions_and_auswaerts_becomes_the_fallback(self):
         connection = sqlite3.connect(db.DB_PATH)
         connection.row_factory = sqlite3.Row
-        for migration in db.MIGRATIONS[:-1]:
+        before = db.MIGRATIONS.index(db._places_without_positions)
+        for migration in db.MIGRATIONS[:before]:
             migration(connection)
-        connection.execute(f"PRAGMA user_version={len(db.MIGRATIONS) - 1}")
+        connection.execute(f"PRAGMA user_version={before}")
         connection.executescript("""
             INSERT INTO places(id,name,created_at) VALUES(1,'Kantine','x'),(2,'auswärts','x');
             INSERT INTO entry_locations(event_id,at,lat,lon,accuracy_m,place_id,updated_at)
@@ -67,6 +68,21 @@ class MigrationTests(unittest.TestCase):
             locations = [tuple(row) for row in connection.execute("SELECT event_id,lat,lon,accuracy_m,place_id FROM entry_locations")]
         self.assertEqual(places, [("Kantine", 0), ("auswärts", 1)])
         self.assertEqual(locations, [("a", None, None, None, 1)])
+
+    def test_the_canteen_gets_the_place_factor(self):
+        connection = sqlite3.connect(db.DB_PATH)
+        connection.row_factory = sqlite3.Row
+        before = db.MIGRATIONS.index(db._place_factor)
+        for migration in db.MIGRATIONS[:before]:
+            migration(connection)
+        connection.execute(f"PRAGMA user_version={before}")
+        connection.executescript("INSERT INTO places(id,name,created_at) VALUES(1,'kantine','x'),(2,'Büro','x');")
+        connection.commit()
+        connection.close()
+        db.init()
+        with db.connect() as connection:
+            places = [tuple(row) for row in connection.execute("SELECT name,adjust FROM places ORDER BY id")]
+        self.assertEqual(places, [("kantine", 1), ("Büro", 0)])
 
 
 if __name__ == "__main__":

@@ -15,6 +15,14 @@ linearly up to the full amount at SURCHARGE_FULL_GRAMS so small meals get less. 
 reduced by the surcharge's share, F − 10 × Z × share / Σ[g × KF], before the weighted percentile;
 the dose then adds the surcharge once per main meal (Z × share / KF IE). Snacks get no surcharge.
 A surcharge of 0 is the plain percentile.
+A meal marked fat/protein carries FAT_SURCHARGE_MGDL more (setting auto_fat_surcharge_mgdl, approved by Philipp
+2026-11-06, analysis in the project files analysen/modell-review-2026-11-06.md): fat meals no longer pull up the
+factor of the others, so non-fat meals (e.g. in the canteen) get less and fat ones more.
+
+Place factor (user request 2026-11-06): for a place switched on for it, the dose of a main meal there is scaled by the
+weighted median of actual ÷ suggested factor of the main meals eaten there in the last PLACE_LOOKBACK_DAYS
+(at least PLACE_MIN_MEALS, half-life PLACE_HALF_LIFE, clamped to PLACE_SCALE_MIN..PLACE_SCALE_MAX). Each past
+suggestion is recomputed as the Automatik would have given it on that day, without any place factor.
 
 The tuning rows vary one setting at a time around the configured ones (percentile, surcharge,
 half-life, lookback), each replayed on the largest set of meals all its options can predict.
@@ -97,6 +105,11 @@ def predict_from(values: list[tuple[Decimal, int]], percentile: Decimal, half_li
 SURCHARGE = "surcharge"
 SURCHARGE_MGDL = Decimal(40)
 SURCHARGE_FULL_GRAMS = Decimal(40)
+FAT_SURCHARGE_MGDL = Decimal(120)
+PLACE_LOOKBACK_DAYS = 60
+PLACE_MIN_MEALS = 3
+PLACE_HALF_LIFE = Decimal(14)
+PLACE_SCALE_MIN, PLACE_SCALE_MAX = Decimal("0.5"), Decimal("1.5")
 METHODS = ("percentile", SURCHARGE)
 # Options of the tuning rows; the configured value is always added.
 TUNING_PERCENTILES = tuple(Decimal(value) for value in (25, 30, 35, 40, 45, 50))
@@ -116,33 +129,65 @@ def surcharge_units_per_ke(grams: Decimal, carbs_isf: Decimal, mgdl: Decimal = S
     return 10 * mgdl * surcharge_share(grams) / carbs_isf
 
 
-def base_factor(point: dict, mgdl: Decimal = SURCHARGE_MGDL) -> Decimal | None:
+def meal_surcharge(point: dict, mgdl: Decimal, fat_mgdl: Decimal = Decimal(0)) -> Decimal:
+    """The surcharge of one main meal: the configured one, plus the fat surcharge for a fat/protein meal.
+    Without a surcharge (plain percentile) there is no fat surcharge either."""
+    return mgdl + fat_mgdl if mgdl and point.get("fat") else mgdl
+
+
+def base_factor(point: dict, mgdl: Decimal = SURCHARGE_MGDL, fat_mgdl: Decimal = Decimal(0)) -> Decimal | None:
     """A meal's factor without its surcharge share; None without carbs or meal size."""
     grams, carbs_isf = point.get("carbs_g"), point.get("carbs_isf")
     if not grams or not carbs_isf or carbs_isf <= 0:
         return None
-    return point["value"] - surcharge_units_per_ke(grams, carbs_isf, mgdl)
+    return point["value"] - surcharge_units_per_ke(grams, carbs_isf, meal_surcharge(point, mgdl, fat_mgdl))
 
 
 def base_history(points: list[dict], key: tuple, day: date, lookback: int,
-                 mgdl: Decimal = SURCHARGE_MGDL) -> list[tuple[Decimal, int]]:
+                 mgdl: Decimal = SURCHARGE_MGDL, fat_mgdl: Decimal = Decimal(0)) -> list[tuple[Decimal, int]]:
     """(factor without surcharge, age in days) of the same meal key before day."""
     result = []
     for point in points:
         age = (day - point["day"]).days
         if point["key"] == key and 1 <= age <= lookback:
-            base = base_factor(point, mgdl)
+            base = base_factor(point, mgdl, fat_mgdl)
             if base is not None:
                 result.append((base, age))
     return result
 
 
 def predict_method(points: list[dict], key: tuple, day: date, percentile: Decimal,
-                   half_life: Decimal, lookback: int, method: str, mgdl: Decimal = SURCHARGE_MGDL) -> dict:
+                   half_life: Decimal, lookback: int, method: str, mgdl: Decimal = SURCHARGE_MGDL,
+                   fat_mgdl: Decimal = Decimal(0)) -> dict:
     """Like predict; with the surcharge method the factor is the percentile without surcharge."""
     if method != SURCHARGE:
         return predict(points, key, day, percentile, half_life, lookback)
-    return predict_from(base_history(points, key, day, lookback, mgdl), percentile, half_life)
+    return predict_from(base_history(points, key, day, lookback, mgdl, fat_mgdl), percentile, half_life)
+
+
+def place_scale(points: list[dict], place_id: int, day: date, percentile: Decimal, half_life: Decimal,
+                lookback: int, method: str, mgdl: Decimal = SURCHARGE_MGDL, fat_mgdl: Decimal = Decimal(0)) -> dict:
+    """How much the main meals at one place needed compared with the Automatik: the weighted median of
+    actual ÷ suggested factor over the place's meals of the last PLACE_LOOKBACK_DAYS before day (each
+    suggestion as the Automatik would have made it on that meal's day, with its own surcharge share).
+    `scale` is None below PLACE_MIN_MEALS meals; else clamped to PLACE_SCALE_MIN..PLACE_SCALE_MAX.
+    `points` must reach PLACE_LOOKBACK_DAYS + lookback days back."""
+    pairs = []
+    for point in points:
+        age = (day - point["day"]).days
+        if point.get("place_id") != place_id or not 1 <= age <= PLACE_LOOKBACK_DAYS or point["value"] <= 0:
+            continue
+        if method == SURCHARGE:
+            suggested = predict_surcharge(base_history(points, point["key"], point["day"], lookback, mgdl, fat_mgdl),
+                                          percentile, half_life, point, mgdl, fat_mgdl)
+        else:
+            suggested = predict(points, point["key"], point["day"], percentile, half_life, lookback)["units_per_ke"]
+        if suggested:
+            pairs.append((point["value"] / suggested, weight(age, PLACE_HALF_LIFE)))
+    scale = None
+    if len(pairs) >= PLACE_MIN_MEALS:
+        scale = min(PLACE_SCALE_MAX, max(PLACE_SCALE_MIN, weighted_quantile(pairs, HALF)))
+    return {"count": len(pairs), "min_meals": PLACE_MIN_MEALS, "days": PLACE_LOOKBACK_DAYS, "scale": scale}
 
 
 def median(values: list[Decimal]) -> Decimal | None:
@@ -189,17 +234,17 @@ def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
 
 
 def predict_surcharge(values: list[tuple[Decimal, int]], percentile: Decimal, half_life: Decimal,
-                      target: dict, mgdl: Decimal = SURCHARGE_MGDL) -> Decimal | None:
+                      target: dict, mgdl: Decimal = SURCHARGE_MGDL, fat_mgdl: Decimal = Decimal(0)) -> Decimal | None:
     """Full factor for the target meal: percentile without surcharge plus the meal's surcharge share."""
     base = predict_from(values, percentile, half_life)["units_per_ke"]
     if base is None or not target.get("carbs_g") or not target.get("carbs_isf"):
         return None
-    return base + surcharge_units_per_ke(target["carbs_g"], target["carbs_isf"], mgdl)
+    return base + surcharge_units_per_ke(target["carbs_g"], target["carbs_isf"], meal_surcharge(target, mgdl, fat_mgdl))
 
 
 def backtest(points: list[dict], since: date, variants: list[tuple],
              target_glucose: Decimal = Decimal(120), surcharge_percentile: Decimal = Decimal("37.5"),
-             surcharge_mgdl: Decimal = SURCHARGE_MGDL) -> dict:
+             surcharge_mgdl: Decimal = SURCHARGE_MGDL, fat_mgdl: Decimal = Decimal(0)) -> dict:
     """Simulate each (lookback, half-life, percentile or SURCHARGE) variant on the meals since `since`.
     Only meals every variant can predict count, so all cells compare the same meals.
     SURCHARGE uses `surcharge_percentile` on factors without `surcharge_mgdl` and adds the meal's own share.
@@ -222,11 +267,11 @@ def backtest(points: list[dict], since: date, variants: list[tuple],
             continue
         # The history for the longest lookback once per meal (and surcharge); each variant takes its own slice.
         known = history(by_key[target["key"]], target["key"], target["day"], longest)
-        known_base = {mgdl: base_history(by_key[target["key"]], target["key"], target["day"], longest, mgdl)
+        known_base = {mgdl: base_history(by_key[target["key"]], target["key"], target["day"], longest, mgdl, fat_mgdl)
                       for mgdl in {spec[3] for spec in specs if spec[3]}}
         predictions = [
             predict_surcharge([item for item in known_base[mgdl] if item[1] <= lookback], percentile, half_life,
-                              target, mgdl)
+                              target, mgdl, fat_mgdl)
             if mgdl else
             predict_from([item for item in known if item[1] <= lookback], percentile, half_life)["units_per_ke"]
             for lookback, half_life, percentile, mgdl in specs]
@@ -257,7 +302,8 @@ def backtest(points: list[dict], since: date, variants: list[tuple],
 
 
 def tuning(points: list[dict], since: date, lookback: int, half_life: Decimal, percentile: Decimal,
-           surcharge_mgdl: Decimal, target_glucose: Decimal = Decimal(120)) -> list[dict]:
+           surcharge_mgdl: Decimal, target_glucose: Decimal = Decimal(120),
+           fat_mgdl: Decimal = Decimal(0)) -> list[dict]:
     """One row per setting: every option of that setting with the other three as configured
     (surcharge 0 = plain percentile). Each row replays the meals since `since` that all its options
     can predict, so the lookback row (which needs 8 days of history) does not shrink the others."""
@@ -273,7 +319,8 @@ def tuning(points: list[dict], since: date, lookback: int, half_life: Decimal, p
     ]
     result = []
     for key, values, configured, variant in rows:
-        stats = backtest(points, since, [variant(value) for value in values], target_glucose)["stats"]
+        stats = backtest(points, since, [variant(value) for value in values], target_glucose,
+                         fat_mgdl=fat_mgdl)["stats"]
         options = [{"value": value, "active": value == configured, **item} for value, item in zip(values, stats)]
         result.append({"key": key, "meal_count": options[0]["glucose_count"] if options else 0,
                        "options": options, **judge(options)})
@@ -307,7 +354,7 @@ def judge(options: list[dict]) -> dict:
 
 
 def explain(points: list[dict], key: tuple, day: date, lookback: int, half_life: Decimal,
-            percentile: Decimal, surcharge_mgdl: Decimal) -> dict:
+            percentile: Decimal, surcharge_mgdl: Decimal, fat_mgdl: Decimal = Decimal(0)) -> dict:
     """The configured suggestion for a typical meal of `key`, step by step: the meals it uses with
     their weight, the weighted percentile (of factors without surcharge), and the dose for the
     median meal size of those meals at their median KF (Σ[g × KF] / g): KE × factor + surcharge IE."""
@@ -315,9 +362,9 @@ def explain(points: list[dict], key: tuple, day: date, lookback: int, half_life:
                    if point["key"] == key and 1 <= (day - point["day"]).days <= lookback),
                   key=lambda point: point["at"], reverse=True)
     if surcharge_mgdl:
-        used = [point for point in used if base_factor(point, surcharge_mgdl) is not None]
+        used = [point for point in used if base_factor(point, surcharge_mgdl, fat_mgdl) is not None]
     meals = [{"day": point["day"].isoformat(), "age_days": (day - point["day"]).days, "units_per_ke": point["value"],
-              "base_units_per_ke": base_factor(point, surcharge_mgdl) if surcharge_mgdl else point["value"],
+              "base_units_per_ke": base_factor(point, surcharge_mgdl, fat_mgdl) if surcharge_mgdl else point["value"],
               "weight": weight((day - point["day"]).days, half_life)} for point in used]
     factor = predict_from([(meal["base_units_per_ke"], meal["age_days"]) for meal in meals],
                           percentile, half_life)["units_per_ke"]
@@ -337,7 +384,7 @@ def explain(points: list[dict], key: tuple, day: date, lookback: int, half_life:
 
 
 def tradeoffs(points: list[dict], since: date, lookback: int, half_life: Decimal, percentile: Decimal,
-              surcharge_mgdl: Decimal, target_glucose: Decimal = Decimal(120)) -> dict:
+              surcharge_mgdl: Decimal, target_glucose: Decimal = Decimal(120), fat_mgdl: Decimal = Decimal(0)) -> dict:
     """Every combination of the tuning options, replayed on the same meals as the configured one.
     Lows and highs pull against each other, so there is no single best strategy: the trade-off line
     holds the combinations no other one beats on both fewer endpoints below and fewer above the range.
@@ -348,7 +395,7 @@ def tradeoffs(points: list[dict], since: date, lookback: int, half_life: Decimal
                 for strength in sorted({*HALF_LIVES, half_life})
                 for value in sorted({*TUNING_PERCENTILES, percentile})
                 for mgdl in sorted({*TUNING_SURCHARGES, surcharge_mgdl})]
-    stats = backtest(points, since, variants, target_glucose)["stats"]
+    stats = backtest(points, since, variants, target_glucose, fat_mgdl=fat_mgdl)["stats"]
     changes = lambda variant: [name for name, value, current in zip(
         ("lookback", "half_life", "percentile", "surcharge"), variant, configured) if value != current]
     options = {}
