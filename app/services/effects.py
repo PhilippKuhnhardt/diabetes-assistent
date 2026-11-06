@@ -56,7 +56,9 @@ def _compute(day: str, parsed: date, settings: dict, start: datetime, end: datet
         found = on_board.sources(treatments, end, settings, factors.carb_factor(settings, parsed, points, day_type),
                                  factors.surcharge_mgdl(settings) if method == forecast.SURCHARGE else None,
                                  forecast.surcharge_share, keep_all=True,
-                                 sport_overrides=marks.sport_session_effects())
+                                 sport_overrides=marks.sport_session_effects(),
+                                 fat_surcharge_mgdl=factors.fat_surcharge_mgdl(settings),
+                                 scale=factors.entry_scale(factors.place_scales(settings, parsed, overrides, periods)))
     except ValueError:
         return {"day": day, "rows": [], "reason": "Korrekturfaktor-Profil aus Nightscout fehlt"}
     rows = on_board.timeline(found, entries, start, end, HORIZON) if end > start else []

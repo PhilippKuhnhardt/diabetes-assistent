@@ -14,8 +14,9 @@ def _now() -> str:
 
 def all_places() -> list[dict]:
     with connect() as db:
-        rows = db.execute("SELECT id,name,quick,fallback FROM places ORDER BY name COLLATE NOCASE,id").fetchall()
-    return [{**dict(row), "quick": bool(row["quick"]), "fallback": bool(row["fallback"])} for row in rows]
+        rows = db.execute("SELECT id,name,quick,fallback,adjust FROM places ORDER BY name COLLATE NOCASE,id").fetchall()
+    return [{**dict(row), "quick": bool(row["quick"]), "fallback": bool(row["fallback"]), "adjust": bool(row["adjust"])}
+            for row in rows]
 
 
 def all_spots() -> list[dict]:
@@ -59,6 +60,13 @@ def set_quick(place_id: int, quick: bool) -> None:
     with connect() as db:
         _check_place(db, place_id)
         db.execute("UPDATE places SET quick=? WHERE id=?", (int(quick), place_id))
+
+
+def set_adjust(place_id: int, adjust: bool) -> None:
+    """Whether the dose of main meals at the place is scaled by its own place factor."""
+    with connect() as db:
+        _check_place(db, place_id)
+        db.execute("UPDATE places SET adjust=? WHERE id=?", (int(adjust), place_id))
 
 
 def set_fallback(place_id: int, fallback: bool) -> None:

@@ -25,6 +25,12 @@ class CurveTests(unittest.TestCase):
         self.assertEqual(on_board.surcharge_remaining(Decimal(300)), 0)
         self.assertEqual(on_board.surcharge_remaining(Decimal(300), fat=True), Decimal("0.25"))
 
+    def test_breakfast_surcharge_acts_from_one_to_four_hours(self):
+        self.assertEqual(on_board.surcharge_remaining(Decimal(60), breakfast=True), 1)
+        self.assertEqual(on_board.surcharge_remaining(Decimal(150), breakfast=True), Decimal("0.5"))
+        self.assertEqual(on_board.surcharge_remaining(Decimal(240), breakfast=True), 0)
+        self.assertEqual(on_board.surcharge_remaining(Decimal(240), fat=True, breakfast=True), Decimal("0.25"))
+
 
 class OnBoardTests(unittest.TestCase):
     def setUp(self):
@@ -40,6 +46,31 @@ class OnBoardTests(unittest.TestCase):
         found = on_board.sources(treatments, self.now, self.settings, lambda at: factor, surcharge,
                                  forecast.surcharge_share)
         return on_board.summary(found, self.now)
+
+    def test_fat_meal_carries_the_fat_surcharge_and_breakfast_its_own_window(self):
+        breakfast = datetime(2026, 10, 8, 8, tzinfo=timezone.utc)  # 10:00 in Berlin, 4 h ago
+        meals = [{"id": "b", "at": breakfast, "eventType": "Meal Bolus", "carbs": 48, "insulin": 0},
+                 {"id": "l", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 40,
+                  "insulin": 0, "fat_protein": True}]
+        found = on_board.sources(meals, self.now, {**self.settings, "breakfast_end_minute": 660},
+                                 lambda at: Decimal(1), Decimal(80), forecast.surcharge_share,
+                                 fat_surcharge_mgdl=Decimal(120))
+        rows = {row["at"]: row for row in found["surcharges"]}
+        self.assertEqual(rows[breakfast]["mgdl"], 80)
+        self.assertTrue(rows[breakfast]["breakfast"])
+        self.assertEqual(rows[self.now - timedelta(minutes=30)]["mgdl"], 200)
+        # Breakfast 4 h ago: its surcharge (1–4 h) has acted, with 2–5 h a third would be left;
+        # the fat lunch has all of its 200 still to come.
+        self.assertEqual(on_board.effects_at(found, self.now)["surcharge_mgdl"], 200)
+
+    def test_place_factor_scales_carbs_and_surcharge_of_its_entries(self):
+        meal = [{"id": "k", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 40,
+                 "insulin": 0, "event_id": "e1"}]
+        found = on_board.sources(meal, self.now, self.settings, lambda at: Decimal(1), Decimal(80),
+                                 forecast.surcharge_share,
+                                 scale=lambda item: Decimal("0.8") if item.get("event_id") == "e1" else None)
+        self.assertEqual(found["surcharges"][0]["mgdl"], 64)
+        self.assertEqual(found["carbs"][0]["mgdl_per_gram"], Decimal("0.8") * 35 / 10)
 
     def test_fresh_correction_suppresses_another_one(self):
         doses = [{"id": "c", "at": self.now - timedelta(minutes=5), "eventType": "Correction Bolus", "insulin": 2}]
