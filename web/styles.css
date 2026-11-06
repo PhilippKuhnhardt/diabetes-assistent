@@ -759,3 +759,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .inbox-list + .inbox-seen { margin-top: 8px; }
 @media (min-width: 951px) { .inbox-list { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } }
 .day-meal.is-target { box-shadow: 0 0 0 3px #e0c27a; transition: box-shadow .3s; }
+/* iOS Safari zooms into any focused field below 16px and stays zoomed. Only iOS matches this @supports, so Android and desktop keep the compact sizes; pinch zoom stays available. */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea { font-size: 16px !important; }
+}
