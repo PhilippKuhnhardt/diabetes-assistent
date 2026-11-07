@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from app.common import local_zone
 from app import places as rules
 from app.store import places as store
 
@@ -22,11 +23,10 @@ def view() -> dict:
 
 
 def _place_factors() -> dict[int, dict]:
-    from zoneinfo import ZoneInfo
     from app.services import factors
     from app.store import config, marks
     _, settings = config.get_settings()
-    today = datetime.now(ZoneInfo(settings["timezone"])).date()
+    today = datetime.now(local_zone(settings["timezone"])).date()
     return {place_id: {key: str(value) if key == "scale" and value is not None else value
                        for key, value in item.items() if key != "name"}
             for place_id, item in factors.place_scales(settings, today, marks.analysis_day_types(),

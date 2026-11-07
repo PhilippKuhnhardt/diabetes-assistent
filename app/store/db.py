@@ -228,10 +228,20 @@ def _place_factor(db: sqlite3.Connection) -> None:
     db.execute("UPDATE places SET adjust=1 WHERE name='Kantine' COLLATE NOCASE")
 
 
+def _timezone_periods(db: sqlite3.Connection) -> None:
+    """Time-zone switches while travelling (user request 2026-11-07, app/store/timezones.py)."""
+    db.execute("""CREATE TABLE IF NOT EXISTS timezone_periods (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        start_at TEXT NOT NULL,
+        zone TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )""")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
                                                           _notifications, _notification_priority, _places,
                                                           _inbox_seen, _sport_sessions, _places_without_positions,
-                                                          _place_factor]
+                                                          _place_factor, _timezone_periods]
 
 
 def init() -> None:
@@ -240,3 +250,5 @@ def init() -> None:
         for number, migration in enumerate(MIGRATIONS[version:], start=version + 1):
             migration(db)
             db.execute(f"PRAGMA user_version={number}")
+    from app.store import timezones
+    timezones.forget()

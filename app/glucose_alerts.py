@@ -23,8 +23,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
+from app.common import local_zone
 from app import calculation, on_board
 
 LOW_MGDL, HIGH_MGDL = Decimal(70), Decimal(250)
@@ -93,7 +93,7 @@ def forecast(entries: list[dict], found: dict, now: datetime, fade: Decimal = FA
 
 def warnings(entries: list[dict], found: dict, now: datetime, timezone_name: str) -> list[dict]:
     """The low and high warnings due now: kind, the glucose now, when and how far the forecast crosses."""
-    local = now.astimezone(ZoneInfo(timezone_name))
+    local = now.astimezone(local_zone(timezone_name))
     if not DAY_FROM <= local.hour < DAY_TO:
         return []
     result, low_result = forecast(entries, found, now), forecast(entries, found, now, LOW_FADE_MINUTES)

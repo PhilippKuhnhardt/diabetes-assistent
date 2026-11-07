@@ -1,12 +1,11 @@
 """Read-only view of the local mirror for the read API."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from urllib.parse import parse_qs
-from zoneinfo import ZoneInfo
 
 from app import tables as api_tables
-from app.common import parse_instant
+from app.common import local_zone, parse_instant, zone_name_at
 from app.services import day_view
 from app.store import config, marks, mirror
 
@@ -42,13 +41,14 @@ def api_day_range(params: dict, today: date) -> tuple[date, date]:
 def api_read(path: str, query: str) -> dict:
     """Read-only JSON view of the local SQLite mirror; never asks Nightscout."""
     _, settings = config.get_settings()
-    zone = ZoneInfo(settings["timezone"])
+    zone = local_zone(settings["timezone"])
     today = datetime.now(zone).date()
     first_at = mirror.first_cached_at()
     first_cached = parse_instant(first_at).astimezone(zone).date() if first_at else None
     if path in ("/api/v1", "/api/v1/"):
         return {
             "version": 1, "timezone": settings["timezone"], "today": today.isoformat(),
+            "timezone_now": zone_name_at(settings["timezone"], datetime.now(timezone.utc)),
             "first_day": first_cached.isoformat() if first_cached else None,
             "query": "?days=N (Standard 30) oder ?from=JJJJ-MM-TT&to=JJJJ-MM-TT, lokale Tage inklusive",
             "endpoints": {

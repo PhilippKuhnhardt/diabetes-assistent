@@ -6,14 +6,13 @@ import json
 import os
 import threading
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 from app import calculation, episodes, on_board
 from app import glucose as cgm
-from app.common import json_safe, local_day_range, parse_instant
+from app.common import json_safe, local_day_range, local_zone, parse_instant, zone_name_at
 from app.ingestion import nightscout, sync
 from app.services import settings as settings_service
 from app.store import basal_doses as basal_store, config, marks, mirror, places as place_store, results
@@ -213,7 +212,7 @@ def compute_day(day: str) -> dict:
     night = night_analysis(day, treatments, entries, rendered, settings)
     meal_sources = {meal["source_id"] for meal in meals}
     episode_ids = {meal["id"] for meal in meals if not meal["imported"]}
-    zone = ZoneInfo(settings["timezone"])
+    zone = local_zone(settings["timezone"])
     other_events = []
     exercises = []
     for item in treatments:
@@ -309,8 +308,15 @@ def compute_day(day: str) -> dict:
     vacation = marks.in_vacation(day, periods)
     for meal in rendered:
         meal["vacation"] = vacation
+    # Local midnight to midnight, for the day charts: travel days are shorter or longer (TravelZone).
+    local = local_zone(settings["timezone"])
+    parsed = date.fromisoformat(day)
+    day_bounds = [datetime.combine(parsed + timedelta(days=offset), datetime.min.time(), tzinfo=local)
+                  .astimezone(timezone.utc) for offset in (0, 1)]
     return json_safe({
         "day": day, "connected": nightscout.is_configured(),
+        "day_start": day_bounds[0], "day_end": day_bounds[1],
+        "timezone": zone_name_at(settings["timezone"], day_bounds[0] + (day_bounds[1] - day_bounds[0]) / 2),
         "day_type": day_type, "day_type_source": day_type_source, "vacation": vacation,
         "review": day_review(rendered),
         "synced_at": mirror.synced_at(day), "sync_error": sync_error,
