@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import re
 from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
 
 from app import calculation, episodes
-from app.common import local_day_range, unit_text
+from app.common import local_day_range, local_zone, unit_text
 from app.ingestion import nightscout
 from app.store import basal_doses, config
 
@@ -37,7 +36,7 @@ def push_basal(dose: dict, remote: list[dict] | None = None) -> None:
     """Write a local basal dose to Nightscout unless it is already there."""
     if remote is None:
         _, settings = config.get_settings()
-        day = dose["at"].astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+        day = dose["at"].astimezone(local_zone(settings["timezone"])).date().isoformat()
         start, end = local_day_range(day, settings["timezone"])
         _, remote = nightscout.fetch_range(start, end)
     if not any(basal_event_id(item) == dose["id"] for item in remote):

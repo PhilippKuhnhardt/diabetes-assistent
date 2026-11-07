@@ -8,7 +8,8 @@ from __future__ import annotations
 from bisect import bisect_left
 from datetime import datetime, timedelta
 from decimal import Decimal, getcontext
-from zoneinfo import ZoneInfo
+
+from app.common import local_zone
 
 getcontext().prec = 28
 
@@ -18,7 +19,7 @@ def dec(value: object) -> Decimal:
 
 
 def schedule_value_at(moment: datetime, schedule: list[dict], timezone: str, key: str) -> Decimal:
-    local = moment.astimezone(ZoneInfo(timezone))
+    local = moment.astimezone(local_zone(timezone))
     minute = local.hour * 60 + local.minute
     candidates = sorted(schedule, key=lambda row: int(row["start_minute"]))
     if not candidates:
@@ -196,7 +197,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         event_type = treatment.get("eventType") or ""
         kind = "snack" if event_type == "Snack Bolus" else "meal" if event_type == "Meal Bolus" else "other"
         sensitivity = isf_at(at, settings["isf_schedule"], settings["timezone"])
-        local_time = at.astimezone(ZoneInfo(settings["timezone"])).strftime("%H:%M")
+        local_time = at.astimezone(local_zone(settings["timezone"])).strftime("%H:%M")
         label = "Zwischenmahlzeit" if kind == "snack" else "Weitere Hauptmahlzeit" if kind == "meal" else "Weitere Kohlenhydrate"
         extra_carbs.append({
             "id": treatment.get("id"), "at": at.isoformat(), "carbs": str(amount),
@@ -217,7 +218,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         if units <= 0 or not (own_entry or start <= at < end):
             continue
         if not is_rapid_insulin(treatment):
-            local_time = at.astimezone(ZoneInfo(settings["timezone"])).strftime("%H:%M")
+            local_time = at.astimezone(local_zone(settings["timezone"])).strftime("%H:%M")
             blockers.append({"kind": "unknown_insulin", "at": at.isoformat(), "units": str(units),
                              "message": f"Insulinereignis unbekannten Typs um {local_time} ({units} IE)"})
             continue

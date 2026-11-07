@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
 
 from app import episodes, glucose
-from app.common import local_day_range, parse_instant
+from app.common import local_day_range, local_zone, parse_instant
 from app.ingestion import nightscout, sync as ingestion_sync
 from app.store import config
 
@@ -23,7 +22,7 @@ def sync_days(payload: dict) -> dict:
     except nightscout.NightscoutError as error:
         profile_sync_error = str(error)
     _, settings = config.get_settings()
-    today = datetime.now(ZoneInfo(settings["timezone"])).date()
+    today = datetime.now(local_zone(settings["timezone"])).date()
     synced, errors = ingestion_sync.mirror_days(
         [(today - timedelta(days=offset)).isoformat() for offset in range(days)], settings["timezone"])
     return {"synced": synced, "errors": errors, "profile_sync_error": profile_sync_error}
@@ -47,7 +46,7 @@ def test_connection() -> dict:
         raise ValueError("Nightscout-Zugang in Umgebungsvariablen fehlt")
     ingestion_sync.sync_profile_cache(force=True)
     _, settings = config.get_settings()
-    today = datetime.now(ZoneInfo(settings["timezone"])).date().isoformat()
+    today = datetime.now(local_zone(settings["timezone"])).date().isoformat()
     start, end = local_day_range(today, settings["timezone"])
     nightscout.fetch_range(start, end)
     return {"message": "Nightscout-Verbindung und aktuelles Profil erfolgreich geprüft"}

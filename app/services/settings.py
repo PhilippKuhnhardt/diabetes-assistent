@@ -1,14 +1,14 @@
 """Local settings, manual-window limits and the vacation switch."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from app import auth, calculation, episodes, forecast
-from app.common import parse_instant, unit_text
+from app.common import local_zone, parse_instant, unit_text, zone_name_at
 from app.ingestion import nightscout, sync
-from app.store import config, marks
+from app.store import config, marks, timezones
 
 
 
@@ -144,6 +144,65 @@ def vacation_state() -> dict:
             "periods": periods[-5:], "backdate_days": VACATION_BACKDATE_DAYS}
 
 
+TIMEZONE_BACKDATE_DAYS = 14
+
+
+def _offset_minutes(name: str, at: datetime) -> int:
+    return int(at.astimezone(ZoneInfo(name)).utcoffset().total_seconds() // 60)
+
+
+def travel_state(now: datetime | None = None) -> dict:
+    """Home zone, the zone in effect now and the latest switches (user request 2026-11-07)."""
+    now = now or datetime.now(timezone.utc)
+    _, current_settings = config.get_settings()
+    home = current_settings["timezone"]
+    current = zone_name_at(home, now)
+    switches = timezones.switches()
+    return {"home": home, "current": current, "current_offset_minutes": _offset_minutes(current, now),
+            "home_offset_minutes": _offset_minutes(home, now),
+            "switches": [{"at": at.isoformat(), "zone": name or home, "home": not name}
+                         for at, name in switches[-5:]],
+            "backdate_days": TIMEZONE_BACKDATE_DAYS}
+
+
+def set_timezone(payload: dict, now: datetime | None = None) -> dict:
+    """Switch the local clock from an instant on (default now), back home with zone '' or the home
+    zone's name, or {"undo": true} drops the latest switch."""
+    now = now or datetime.now(timezone.utc)
+    if payload.get("undo") is True:
+        if not timezones.delete_last():
+            raise ValueError("Es gibt keinen Zeitzonen-Wechsel zum Zurücknehmen")
+        return travel_state(now)
+    _, current_settings = config.get_settings()
+    home = current_settings["timezone"]
+    name = payload.get("zone")
+    if not isinstance(name, str):
+        raise ValueError("Ungültige Zeitzone")
+    name = name.strip()
+    if name in ("", home):
+        name = ""
+    else:
+        try:
+            ZoneInfo(name)
+        except (ValueError, KeyError, OSError):
+            raise ValueError("Unbekannte Zeitzone") from None
+    at = now
+    if payload.get("at"):
+        try:
+            at = parse_instant(str(payload["at"]))
+        except ValueError:
+            raise ValueError("Ungültiger Zeitpunkt") from None
+        if not now - timedelta(days=TIMEZONE_BACKDATE_DAYS) <= at <= now + timedelta(minutes=5):
+            raise ValueError(f"Zeitpunkt muss zwischen jetzt und vor {TIMEZONE_BACKDATE_DAYS} Tagen liegen")
+    switches = timezones.switches()
+    if switches and at <= switches[-1][0]:
+        raise ValueError("Zeitpunkt muss nach dem letzten Zeitzonen-Wechsel liegen")
+    if (switches[-1][1] if switches else "") == name:
+        raise ValueError("Diese Zeitzone gilt bereits")
+    timezones.add_switch(at, name)
+    return travel_state(now)
+
+
 def settings_view() -> dict:
     profile_sync_error = None
     if nightscout.is_configured():
@@ -157,7 +216,7 @@ def settings_view() -> dict:
         "version": version, "settings": settings, "connected": nightscout.is_configured(),
         "login_required": bool(auth.password()),
         "profile_sync_at": profile_sync["synced_at"], "profile_sync_error": profile_sync_error,
-        "vacation": vacation_state(),
+        "vacation": vacation_state(), "travel": travel_state(),
     }
 
 
@@ -173,7 +232,7 @@ def set_vacation(payload: dict) -> dict:
     if not isinstance(active, bool):
         raise ValueError("Ungültige Urlaubsauswahl")
     _, current_settings = config.get_settings()
-    today = datetime.now(ZoneInfo(current_settings["timezone"])).date()
+    today = datetime.now(local_zone(current_settings["timezone"])).date()
     # A switch made late (on in the evening of the second day, off a day after coming home) can name
     # the first vacation day or the first day back, up to two weeks ago.
     day = today

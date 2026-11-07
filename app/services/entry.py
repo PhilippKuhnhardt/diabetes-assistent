@@ -6,10 +6,9 @@ import json
 import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
-from zoneinfo import ZoneInfo
 
 from app import calculation, episodes, split as split_bolus
-from app.common import parse_instant
+from app.common import local_zone, parse_instant
 from app.ingestion import nightscout
 from app.services import basal, day_view, diary, dose_help, places, settings as settings_service
 from app.store import config, marks
@@ -91,7 +90,7 @@ def _context(payload: dict) -> dict:
     if mode not in MODES:
         raise ValueError("Ungültiger Eintragstyp")
     _, settings = config.get_settings()
-    zone = ZoneInfo(settings["timezone"])
+    zone = local_zone(settings["timezone"])
     today = datetime.now(zone).date().isoformat()
     # Today follows the local copy while the background job keeps it current; same rule as the dose help.
     current = day_view.day_payload(day, refresh=day == today and not day_view.mirror_current(day))

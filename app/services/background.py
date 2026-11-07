@@ -13,8 +13,8 @@ import os
 import threading
 import time
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
+from app.common import local_zone
 from app.ingestion import nightscout, pushover, sync
 from app.services import day_view, effects, notifications, summary
 from app.store import config
@@ -40,7 +40,7 @@ def run_once() -> dict:
     if not nightscout.is_configured():
         return {"skipped": "Nightscout ist nicht verbunden"}
     _, settings = config.get_settings()
-    today = datetime.now(ZoneInfo(settings["timezone"])).date()
+    today = datetime.now(local_zone(settings["timezone"])).date()
     errors = {}
     for day in (today - timedelta(days=1), today):
         status = sync.sync_day(day.isoformat())

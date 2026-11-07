@@ -4,6 +4,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-08-29",
+  "day_end": "2026-08-29T22:00:00+00:00",
+  "day_start": "2026-08-28T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
   "entries": {
@@ -524,6 +526,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -629,6 +632,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-08-30",
+  "day_end": "2026-08-30T22:00:00+00:00",
+  "day_start": "2026-08-29T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
   "entries": {
@@ -1202,6 +1207,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -1343,6 +1349,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-08-31",
+  "day_end": "2026-08-31T22:00:00+00:00",
+  "day_start": "2026-08-30T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -1863,6 +1871,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -2004,6 +2013,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-01",
+  "day_end": "2026-09-01T22:00:00+00:00",
+  "day_start": "2026-08-31T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -2560,6 +2571,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -2683,6 +2695,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-02",
+  "day_end": "2026-09-02T22:00:00+00:00",
+  "day_start": "2026-09-01T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -3046,6 +3060,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -3187,6 +3202,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-03",
+  "day_end": "2026-09-03T22:00:00+00:00",
+  "day_start": "2026-09-02T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -3804,6 +3821,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -3963,6 +3981,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-04",
+  "day_end": "2026-09-04T22:00:00+00:00",
+  "day_start": "2026-09-03T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -4523,6 +4543,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -4672,6 +4693,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-05",
+  "day_end": "2026-09-05T22:00:00+00:00",
+  "day_start": "2026-09-04T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
   "entries": {
@@ -5191,6 +5214,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -5358,6 +5382,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-06",
+  "day_end": "2026-09-06T22:00:00+00:00",
+  "day_start": "2026-09-05T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
   "entries": {
@@ -5898,6 +5924,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -6039,6 +6066,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-07",
+  "day_end": "2026-09-07T22:00:00+00:00",
+  "day_start": "2026-09-06T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -6589,6 +6618,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -6748,6 +6778,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-08",
+  "day_end": "2026-09-08T22:00:00+00:00",
+  "day_start": "2026-09-07T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -7268,6 +7300,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -7409,6 +7442,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-09",
+  "day_end": "2026-09-09T22:00:00+00:00",
+  "day_start": "2026-09-08T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -7928,6 +7963,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -8069,6 +8105,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-10",
+  "day_end": "2026-09-10T22:00:00+00:00",
+  "day_start": "2026-09-09T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -8480,6 +8518,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -8603,6 +8642,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-11",
+  "day_end": "2026-09-11T22:00:00+00:00",
+  "day_start": "2026-09-10T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -9019,6 +9060,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -9142,6 +9184,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-12",
+  "day_end": "2026-09-12T22:00:00+00:00",
+  "day_start": "2026-09-11T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
   "entries": {
@@ -9662,6 +9706,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -9785,6 +9830,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-13",
+  "day_end": "2026-09-13T22:00:00+00:00",
+  "day_start": "2026-09-12T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
   "entries": {
@@ -10395,6 +10442,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -10554,6 +10602,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-14",
+  "day_end": "2026-09-14T22:00:00+00:00",
+  "day_start": "2026-09-13T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -11074,6 +11124,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -11241,6 +11292,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-15",
+  "day_end": "2026-09-15T22:00:00+00:00",
+  "day_start": "2026-09-14T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -11862,6 +11915,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -12047,6 +12101,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-16",
+  "day_end": "2026-09-16T22:00:00+00:00",
+  "day_start": "2026-09-15T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -12587,6 +12643,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -12764,6 +12821,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-17",
+  "day_end": "2026-09-17T22:00:00+00:00",
+  "day_start": "2026-09-16T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -13284,6 +13343,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -13407,6 +13467,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-18",
+  "day_end": "2026-09-18T22:00:00+00:00",
+  "day_start": "2026-09-17T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -13927,6 +13989,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -14068,6 +14131,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-19",
+  "day_end": "2026-09-19T22:00:00+00:00",
+  "day_start": "2026-09-18T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
   "entries": {
@@ -14720,6 +14785,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -14879,6 +14945,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-20",
+  "day_end": "2026-09-20T22:00:00+00:00",
+  "day_start": "2026-09-19T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
   "entries": {
@@ -15426,6 +15494,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -15567,6 +15636,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-21",
+  "day_end": "2026-09-21T22:00:00+00:00",
+  "day_start": "2026-09-20T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -16086,6 +16157,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -16209,6 +16281,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-22",
+  "day_end": "2026-09-22T22:00:00+00:00",
+  "day_start": "2026-09-21T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "manual",
   "entries": {
@@ -16728,6 +16802,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -16851,6 +16926,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-23",
+  "day_end": "2026-09-23T22:00:00+00:00",
+  "day_start": "2026-09-22T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -17423,6 +17500,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -17564,6 +17642,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-24",
+  "day_end": "2026-09-24T22:00:00+00:00",
+  "day_start": "2026-09-23T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -18016,6 +18096,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -18147,6 +18228,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-25",
+  "day_end": "2026-09-25T22:00:00+00:00",
+  "day_start": "2026-09-24T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -18712,6 +18795,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -18879,6 +18963,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-26",
+  "day_end": "2026-09-26T22:00:00+00:00",
+  "day_start": "2026-09-25T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
   "entries": {
@@ -19460,6 +19546,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -19655,6 +19742,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-27",
+  "day_end": "2026-09-27T22:00:00+00:00",
+  "day_start": "2026-09-26T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "manual",
   "entries": {
@@ -20271,6 +20360,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -20448,6 +20538,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-28",
+  "day_end": "2026-09-28T22:00:00+00:00",
+  "day_start": "2026-09-27T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -20987,6 +21079,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -21110,6 +21203,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-29",
+  "day_end": "2026-09-29T22:00:00+00:00",
+  "day_start": "2026-09-28T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -21472,6 +21567,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -21595,6 +21691,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-09-30",
+  "day_end": "2026-09-30T22:00:00+00:00",
+  "day_start": "2026-09-29T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -22114,6 +22212,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -22237,6 +22336,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-10-01",
+  "day_end": "2026-10-01T22:00:00+00:00",
+  "day_start": "2026-09-30T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "vacation",
   "entries": {
@@ -22854,6 +22955,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -23013,6 +23115,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-10-02",
+  "day_end": "2026-10-02T22:00:00+00:00",
+  "day_start": "2026-10-01T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "vacation",
   "entries": {
@@ -23533,6 +23637,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -23692,6 +23797,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-10-03",
+  "day_end": "2026-10-03T22:00:00+00:00",
+  "day_start": "2026-10-02T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
   "entries": {
@@ -24212,6 +24319,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -24335,6 +24443,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-10-04",
+  "day_end": "2026-10-04T22:00:00+00:00",
+  "day_start": "2026-10-03T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
   "entries": {
@@ -24855,6 +24965,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -25004,6 +25115,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-10-05",
+  "day_end": "2026-10-05T22:00:00+00:00",
+  "day_start": "2026-10-04T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -25621,6 +25734,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -25813,6 +25927,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-10-06",
+  "day_end": "2026-10-06T22:00:00+00:00",
+  "day_start": "2026-10-05T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -26353,6 +26469,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,
@@ -26574,6 +26691,8 @@
   "basal_sync_error": null,
   "connected": true,
   "day": "2026-10-07",
+  "day_end": "2026-10-07T22:00:00+00:00",
+  "day_start": "2026-10-06T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
   "entries": {
@@ -26956,6 +27075,7 @@
     "sport_kind": null
    }
   ],
+  "timezone": "Europe/Berlin",
   "treatments": [
    {
     "alcohol": false,

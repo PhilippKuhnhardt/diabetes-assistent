@@ -87,6 +87,8 @@ input[type=time]::-webkit-date-and-time-value { text-align: left; min-height: 1.
 .settings-grid .notify-option > .hint { margin: 4px 0 0 27px; }
 .notify-option > .notify-priority { display: block; margin: 6px 0 0 27px; width: calc(100% - 27px); max-width: 320px; }
 
+.timezone-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.banner-action { margin-left: 6px; padding: 4px 10px; font-size: 13px; }
 .banner { background: var(--amber-light); color: #69410a; border: 1px solid #f3dfa9; padding: 12px 15px; border-radius: 9px; margin: 0 0 23px; font-size: 13px; }
 .meal-list { display: grid; gap: 16px; }
 .meal-card { padding: 21px 24px; }

@@ -5,7 +5,8 @@ import re
 from bisect import bisect_left
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal, InvalidOperation
-from zoneinfo import ZoneInfo
+
+from app.common import local_zone
 
 TAG = re.compile(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction|snack)\]")
 EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal|basal)|DASP:\d+(?:\.\d+)?@\d+)\]")
@@ -208,7 +209,7 @@ def classify_diary_entry(item: dict, treatments: list[dict], settings: dict) -> 
 
 
 def meal_kind_at(at: datetime, settings: dict) -> tuple:
-    local = at.astimezone(ZoneInfo(settings["timezone"]))
+    local = at.astimezone(local_zone(settings["timezone"]))
     minute = local.hour * 60 + local.minute
     breakfast_end = int(settings.get("breakfast_end_minute", 660))
     lunch_end = int(settings.get("lunch_end_minute", 1020))
@@ -252,7 +253,7 @@ def taken_meal(at: datetime, treatments: list[dict], settings: dict) -> dict | N
 
 def meals_for_day(treatments: list[dict], day: str, timezone_name: str,
                   settings: dict | None = None) -> list[dict]:
-    zone = ZoneInfo(timezone_name)
+    zone = local_zone(timezone_name)
     roots = []
     settings = settings or {}
     breakfast_end = int(settings.get("breakfast_end_minute", 660))

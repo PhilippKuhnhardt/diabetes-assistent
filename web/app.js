@@ -460,6 +460,89 @@ async function sendTestNotification(event) {
   }
 }
 
+// The zone the app calculates with right now (home or the latest travel switch, user request 2026-11-07).
+function appZone() {
+  return state.travel?.current || state.settings?.timezone || "Europe/Berlin";
+}
+
+function deviceZone() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch { return null; }
+}
+
+function zoneOffsetMinutes(zone, at = new Date()) {
+  try {
+    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23",
+      year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+      .formatToParts(at).map(part => [part.type, part.value]));
+    const wall = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute);
+    return Math.round((wall - Math.floor(at.getTime() / 60000) * 60000) / 60000);
+  } catch { return null; }
+}
+
+function zoneText(zone) {
+  const offset = zoneOffsetMinutes(zone);
+  if (offset == null) return zone;
+  const sign = offset < 0 ? "−" : "+";
+  const hours = Math.floor(Math.abs(offset) / 60), minutes = Math.abs(offset) % 60;
+  return zone + " (UTC" + sign + hours + (minutes ? ":" + String(minutes).padStart(2, "0") : "") + ")";
+}
+
+// The phone's clock differs from the app's: offer the switch in the diary and in settings.
+function deviceZoneDiffers() {
+  const device = deviceZone();
+  return Boolean(device && state.travel && zoneOffsetMinutes(device) !== zoneOffsetMinutes(appZone()));
+}
+
+function renderTimezone() {
+  const travel = state.travel;
+  if (!travel) return;
+  const device = deviceZone();
+  const differs = deviceZoneDiffers();
+  const last = travel.switches?.[travel.switches.length - 1];
+  const since = last ? " seit " + new Date(last.at).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "";
+  $("#timezone-status").textContent = "Die App rechnet mit " + zoneText(travel.current) +
+    (travel.current !== travel.home ? since + ", Heimat ist " + zoneText(travel.home) : "") + "." +
+    (differs ? " Dein Gerät ist auf " + zoneText(device) + "." : "");
+  const deviceButton = $("#timezone-device");
+  deviceButton.hidden = !differs || device === travel.home;
+  deviceButton.textContent = "Auf Gerätezeit umstellen: " + (device || "");
+  deviceButton.dataset.zone = device || "";
+  const homeButton = $("#timezone-home");
+  homeButton.hidden = travel.current === travel.home;
+  homeButton.textContent = "Zurück auf Heimatzeit: " + travel.home;
+  $("#timezone-undo").hidden = !travel.switches?.length;
+  const input = $("#timezone-at");
+  const now = new Date();
+  input.max = localInputTime(now);
+  input.min = localInputTime(new Date(now.getTime() - (travel.backdate_days ?? 14) * 24 * 60 * MINUTE));
+  const banner = $("#timezone-banner");
+  banner.hidden = !differs;
+  if (differs) {
+    banner.innerHTML = "Dein Gerät zeigt " + escapeHTML(zoneText(device)) + ", die App rechnet noch mit " +
+      escapeHTML(zoneText(travel.current)) + " (Mahlzeiten, Korrekturfaktor, Warnzeiten). " +
+      '<button type="button" class="banner-action" data-timezone-switch="' + escapeHTML(device) + '">Auf ' +
+      escapeHTML(device) + " umstellen</button>";
+  }
+}
+
+async function switchTimezone(payload) {
+  const buttons = $$("#timezone-device, #timezone-home, #timezone-undo, [data-timezone-switch]");
+  buttons.forEach(item => { item.disabled = true; });
+  try {
+    const at = $("#timezone-at").value;
+    if (at && !payload.undo) payload.at = new Date(at).toISOString();
+    state.travel = await api("/api/timezone", { method: "POST", body: JSON.stringify(payload) });
+    $("#timezone-at").value = "";
+    renderTimezone();
+    toast(payload.undo ? "Zeitzonen-Wechsel zurückgenommen" : "Die App rechnet jetzt mit " + state.travel.current);
+    if (todayDay() !== state.day) changeDay(todayDay()); else await loadDay();
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    buttons.forEach(item => { item.disabled = false; });
+  }
+}
+
 function renderVacation(vacation) {
   const dateText = day => new Date(day + "T12:00").toLocaleDateString("de-DE");
   $("#vacation-toggle").checked = Boolean(vacation?.active);
@@ -715,6 +798,8 @@ async function loadSettings() {
   renderIcRows(data.settings.ic_schedule || []);
   renderTargetRows(data.settings.target_schedule || []);
   renderVacation(data.vacation);
+  state.travel = data.travel || null;
+  renderTimezone();
   await loadNotifications();
   renderPlaces(await api("/api/places"));
 }
@@ -1118,20 +1203,28 @@ function overviewHours() {
   try { return Number(localStorage.getItem("overviewHours")) || 3; } catch { return 3; }
 }
 
+// Local midnight to midnight of the shown day as the server counts it (travel days are shorter or longer).
+function dayBounds(data) {
+  if (data?.day === state.day && data.day_start && data.day_end) {
+    return { dayStart: new Date(data.day_start).getTime(), dayEnd: new Date(data.day_end).getTime() };
+  }
+  const dayStart = new Date(state.day + "T00:00:00").getTime();
+  const next = new Date(dayStart + 36 * 60 * MINUTE);
+  return { dayStart, dayEnd: new Date(next.toLocaleDateString("sv-SE") + "T00:00:00").getTime() };
+}
+
 function renderDayOverview() {
   const node = $("#day-overview-chart");
   const data = state.dayData;
   if (!node || !data) return;
   const hours = overviewHours();
-  const today = new Date().toLocaleDateString("sv-SE", { timeZone: state.settings?.timezone || "Europe/Berlin" });
+  const today = todayDay();
   const isToday = state.day === today;
   $$("[data-overview-hours]").forEach(button => {
     button.setAttribute("aria-pressed", String(Number(button.dataset.overviewHours) === hours));
     button.hidden = !isToday;
   });
-  const dayStart = new Date(state.day + "T00:00:00").getTime();
-  const next = new Date(dayStart + 36 * 60 * MINUTE);
-  const dayEnd = new Date(next.toLocaleDateString("sv-SE") + "T00:00:00").getTime();
+  const { dayStart, dayEnd } = dayBounds(data);
   let view = { from: dayStart, to: dayEnd };
   if (isToday) {
     const to = Math.max(Date.now() + 10 * MINUTE, dayStart + 60 * MINUTE);
@@ -1157,9 +1250,8 @@ function renderReviewChart() {
   const node = $("#review-chart");
   const data = state.dayData;
   if (!node || !data || !node.clientWidth) return;
-  const dayStart = new Date(state.day + "T00:00:00").getTime();
-  const next = new Date(dayStart + 36 * 60 * MINUTE);
-  const view = { from: dayStart, to: new Date(next.toLocaleDateString("sv-SE") + "T00:00:00").getTime() };
+  const { dayStart, dayEnd } = dayBounds(data);
+  const view = { from: dayStart, to: dayEnd };
   CHART = chartLayout(node.clientWidth);
   node.innerHTML = windowChartSVG({ start: -Infinity, end: Infinity, mealAt: dayStart }, data.entries, data.treatments,
     { overview: true, view, clipId: "review-clip" });
@@ -1937,7 +2029,7 @@ let previewRequestId = 0;
 let doseHelp = null;
 
 function todayDay() {
-  return new Date().toLocaleDateString("sv-SE", { timeZone: state.settings?.timezone || "Europe/Berlin" });
+  return new Date().toLocaleDateString("sv-SE", { timeZone: appZone() });
 }
 
 // The entry form shows what the server derives from the typed values: snack assignment, sport,
@@ -3096,6 +3188,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#dose-result").addEventListener("click", selectDoseSuggestion);
   $("#entry-day-type").addEventListener("click", saveEntryDayType);
   $("#vacation-toggle").addEventListener("change", saveVacation);
+  $("#timezone-device").addEventListener("click", event => switchTimezone({ zone: event.currentTarget.dataset.zone }));
+  $("#timezone-home").addEventListener("click", () => switchTimezone({ zone: "" }));
+  $("#timezone-undo").addEventListener("click", () => switchTimezone({ undo: true }));
+  $("#timezone-banner").addEventListener("click", event => {
+    const button = event.target.closest("[data-timezone-switch]");
+    if (button) switchTimezone({ zone: button.dataset.timezoneSwitch });
+  });
   $$(".notify-toggle").forEach(input => input.addEventListener("change", saveNotification));
   $$(".notify-priority").forEach(select => select.addEventListener("change", saveNotificationPriority));
   $("#notify-test").addEventListener("click", sendTestNotification);
@@ -3277,6 +3376,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener("keydown", markDayActivity, true);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) return;
+    renderTimezone();
     returnToToday();
     setDefaultMealTime();
     loadCurrentGlucose();

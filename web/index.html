@@ -48,6 +48,7 @@
           <button type="button" data-diary-mode="review" aria-pressed="false">Tag durchgehen</button>
         </div>
         <div id="banner" class="banner" hidden></div>
+        <div id="timezone-banner" class="banner timezone-banner" hidden></div>
         <!-- Things that need an action, across the last days; filled by /api/inbox. -->
         <section id="inbox" class="inbox" aria-label="Zu erledigen" hidden>
           <h2 class="inbox-title">Zu erledigen <span id="inbox-count" class="inbox-count"></span></h2>
@@ -227,6 +228,17 @@
             </div>
             <p id="test-result" class="hint"></p>
             <p id="isf-sync-status" class="hint"></p>
+          </section>
+          <section class="panel">
+            <h2>Zeitzone</h2>
+            <p id="timezone-status" class="hint"></p>
+            <label>Gilt ab (leer = jetzt)<input type="datetime-local" id="timezone-at"></label>
+            <div class="timezone-actions">
+              <button type="button" id="timezone-device" hidden></button>
+              <button type="button" id="timezone-home" class="quiet" hidden></button>
+              <button type="button" id="timezone-undo" class="quiet" hidden>Letzten Wechsel zurücknehmen</button>
+            </div>
+            <p class="hint">Auf Reisen rechnet die App ab dem Wechsel mit der Uhrzeit vor Ort: Frühstück, Mittag und Abend, Korrekturfaktor nach Uhrzeit, Warnzeiten und Tagesgrenzen. Tage vor dem Wechsel bleiben unverändert. Die Zeitzone im Nightscout-Profil bitte nicht ändern, sie verschiebt sonst alle früheren Tage.</p>
           </section>
           <section class="panel">
             <h2>Urlaub</h2>
