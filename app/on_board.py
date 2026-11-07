@@ -31,9 +31,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from zoneinfo import ZoneInfo
-
 from app import calculation
+from app.common import local_zone
 
 INSULIN_PEAK = Decimal(55)
 INSULIN_DURATION = Decimal(360)
@@ -103,7 +102,7 @@ def surcharge_remaining(minutes: Decimal, fat: bool = False, breakfast: bool = F
 
 def is_breakfast(at: datetime, settings: dict) -> bool:
     """A meal starting before the configured end of breakfast (local time)."""
-    local = at.astimezone(ZoneInfo(settings["timezone"]))
+    local = at.astimezone(local_zone(settings["timezone"]))
     return local.hour * 60 + local.minute < int(settings.get("breakfast_end_minute", 660))
 
 

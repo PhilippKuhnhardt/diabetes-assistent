@@ -3,10 +3,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
 from app import dosing, forecast, on_board, split
-from app.common import parse_instant
+from app.common import local_zone, parse_instant
 from app.services import day_view, factors
 from app.store import config, marks
 from app.analysis.stats import median, quartile
@@ -14,7 +13,7 @@ from app.analysis.stats import median, quartile
 
 def dose_help(payload: dict) -> dict:
     _, current_settings = config.get_settings()
-    today = datetime.now(ZoneInfo(current_settings["timezone"])).date().isoformat()
+    today = datetime.now(local_zone(current_settings["timezone"])).date().isoformat()
     current_day = day_view.day_payload(today, refresh=not day_view.mirror_current(today))
     entries = [{"at": parse_instant(row["at"]), "sgv": row["sgv"]}
                for row in current_day["entries"]]
@@ -26,7 +25,7 @@ def dose_help(payload: dict) -> dict:
         # A value typed in the entry form counts before it is saved, at the entry's time.
         at = payload.get("finger_at") or now
         finger.append({"at": min(at, now), "mgdl": Decimal(str(payload["finger_mgdl"]))})
-    local_now = now.astimezone(ZoneInfo(current_settings["timezone"]))
+    local_now = now.astimezone(local_zone(current_settings["timezone"]))
     overrides, periods = marks.analysis_day_types(), marks.vacation_periods()
     day_type, day_type_source = marks.day_type_for(today, overrides, periods)
     minute = local_now.hour * 60 + local_now.minute

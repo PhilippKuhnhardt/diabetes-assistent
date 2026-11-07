@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
+from app.common import local_zone
 from app import calculation
 
 TREND_WINDOW_MINUTES = Decimal(15)
@@ -16,7 +16,7 @@ HIGH_MGDL = Decimal(250)
 
 def target_at(at: datetime, settings: dict) -> dict | None:
     """The Nightscout target range row in force at the local clock time of `at`."""
-    local = at.astimezone(ZoneInfo(settings["timezone"]))
+    local = at.astimezone(local_zone(settings["timezone"]))
     minute = local.hour * 60 + local.minute
     return max((row for row in settings.get("target_schedule") or [] if int(row["start_minute"]) <= minute),
                key=lambda row: int(row["start_minute"]), default=None)
@@ -40,7 +40,7 @@ def tone(value, at: datetime, settings: dict) -> str:
 
 def target_bands(start: datetime, end: datetime, settings: dict) -> list[dict]:
     """The target range as time segments between two instants, for drawing behind a curve."""
-    zone = ZoneInfo(settings["timezone"])
+    zone = local_zone(settings["timezone"])
     rows = sorted(settings.get("target_schedule") or [], key=lambda row: int(row["start_minute"]))
     bands = []
     day = start.astimezone(zone).date() - timedelta(days=1)
@@ -110,7 +110,7 @@ def current_status(entries: list[dict], settings: dict, now: datetime | None = N
     fresh = now - latest_at <= timedelta(minutes=15)
     course = (trend(points) if fresh else None) or NO_TREND
     schedule = settings.get("target_schedule") or []
-    local = now.astimezone(ZoneInfo(settings["timezone"]))
+    local = now.astimezone(local_zone(settings["timezone"]))
     minute = local.hour * 60 + local.minute
     target = max((row for row in schedule if int(row["start_minute"]) <= minute),
                  key=lambda row: int(row["start_minute"]), default=None)

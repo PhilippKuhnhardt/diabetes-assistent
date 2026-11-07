@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import uuid
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
 from app import calculation
-from app.common import local_day_range, parse_instant, unit_text
+from app.common import local_day_range, local_zone, parse_instant, unit_text
 from app.ingestion import basal_sync, nightscout
 from app.store import basal_doses, config, mirror
 
@@ -21,7 +20,7 @@ def save_basal(payload: dict) -> dict:
     dose_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
     note = str(payload.get("notes") or "").strip()[:500]
     _, settings = config.get_settings()
-    day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+    day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
     basal_doses.save_basal_dose(dose_id, at, unit_text(units), note)
     dose = basal_doses.basal_dose(dose_id)
     error = None
@@ -42,7 +41,7 @@ def delete_basal(dose_id: str) -> None:
     if nightscout.is_configured():
         try:
             _, settings = config.get_settings()
-            day = dose["at"].astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+            day = dose["at"].astimezone(local_zone(settings["timezone"])).date().isoformat()
             start, end = local_day_range(day, settings["timezone"])
             _, remote = nightscout.fetch_range(start, end)
             for item in remote:

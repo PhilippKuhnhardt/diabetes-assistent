@@ -78,5 +78,6 @@ def _shared_inputs(db) -> list:
         "SELECT day,day_type FROM analysis_day_types ORDER BY day",
         "SELECT start_day,end_day FROM vacation_periods ORDER BY id",
         "SELECT id,name FROM places ORDER BY id",
+        "SELECT start_at,zone FROM timezone_periods ORDER BY start_at,id",
     )
     return [[tuple(row) for row in db.execute(sql).fetchall()] for sql in queries]

@@ -5,6 +5,8 @@ from datetime import date, datetime, timedelta
 from typing import Callable
 from zoneinfo import ZoneInfo
 
+from app.common import local_zone
+
 MEAL_COLUMNS = [
     "day", "day_type", "vacation", "meal", "meal_id", "at", "window_start", "window_end", "end_reason",
     "manual_window", "excluded", "sport_status", "sport_effect_mgdl", "g0_mgdl", "g_end_mgdl",
@@ -58,7 +60,7 @@ def _local(value, zone: ZoneInfo) -> str:
 def collect(first_day: date, last_day: date, day_payload: Callable[[str], dict],
             excluded: set[str], settings: dict) -> dict[str, list[dict]]:
     """Rows of every read API table for first_day to last_day (inclusive)."""
-    zone = ZoneInfo(settings["timezone"])
+    zone = local_zone(settings["timezone"])
     meals, window_events, entries, treatments, basal = [], [], [], [], []
     day = first_day
     while day <= last_day:

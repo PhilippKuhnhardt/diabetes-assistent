@@ -79,6 +79,14 @@
   "timezone": "Europe/Berlin",
   "window_minutes": 170
  },
+ "travel": {
+  "backdate_days": 14,
+  "current": "Europe/Berlin",
+  "current_offset_minutes": 120,
+  "home": "Europe/Berlin",
+  "home_offset_minutes": 120,
+  "switches": []
+ },
  "vacation": {
   "active": false,
   "backdate_days": 14,

@@ -14,7 +14,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from app import calculation, forecast, glucose_alerts, on_board, split
-from app.common import parse_instant, unit_text
+from app.common import local_zone, parse_instant, unit_text
 from app.ingestion import pushover
 from app.services import day_view, dose_help, factors
 from app.store import basal_doses, config, marks
@@ -45,7 +45,7 @@ def due_reminders(now: datetime, settings: dict, treatments: list[dict], basal_t
                   second_part: Callable[[], Decimal | None] | None = None) -> list[dict]:
     """The reminders that are due now, before checking which were already sent. second_part gives the
     second split part's IE from the current forecast (None without a fresh glucose value)."""
-    zone = ZoneInfo(settings["timezone"])
+    zone = local_zone(settings["timezone"])
     local = now.astimezone(zone)
     reminders = []
     breakfast_end = int(settings["breakfast_end_minute"])
@@ -80,7 +80,7 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
     """Low and high warnings due now (switched-on kinds only), before the once-per-hour check."""
     if not any(enabled.get(kind) for kind in WARNINGS):
         return []
-    zone = ZoneInfo(settings["timezone"])
+    zone = local_zone(settings["timezone"])
     today = now.astimezone(zone).date()
     overrides, periods = marks.analysis_day_types(), marks.vacation_periods()
     day_type = marks.day_type_for(today.isoformat(), overrides, periods)[0]
@@ -112,7 +112,7 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
 
 
 def _today_inputs(now: datetime, settings: dict) -> tuple[list[dict], list[dict], list[dict]]:
-    zone = ZoneInfo(settings["timezone"])
+    zone = local_zone(settings["timezone"])
     today = now.astimezone(zone).date()
     # Today's day reaches back to yesterday afternoon, far enough for any open split plan.
     payload = day_view.day_payload(today.isoformat(), refresh=False)

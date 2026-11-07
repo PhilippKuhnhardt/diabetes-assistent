@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
 from decimal import Decimal, ROUND_HALF_UP
 
+from app.common import local_zone
 from app import calculation, glucose
 from app.on_board import FORECAST_SPREAD_MGDL
 
@@ -124,7 +124,7 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         low = latest[1] < glucose.LOW_MGDL
         cautious_start = max(guarded, full - FORECAST_SPREAD_MGDL)
         start = full
-        hour = now.astimezone(ZoneInfo(timezone_name)).hour
+        hour = now.astimezone(local_zone(timezone_name)).hour
         if low_target >= target:
             result["low_blocked"] = "off"
         elif low:

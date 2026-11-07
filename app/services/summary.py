@@ -5,10 +5,9 @@ import hashlib
 import json
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
 from app import calculation, episodes, forecast, sport_analysis
-from app.common import MEALS, json_safe
+from app.common import MEALS, json_safe, local_zone
 from app.ingestion import nightscout, sync
 from app.services import day_view, factors
 from app.store import config, marks, results
@@ -26,7 +25,7 @@ def summary(params: dict) -> dict:
         except nightscout.NightscoutError as error:
             profile_sync_error = str(error)
     _, settings = config.get_settings()
-    today = datetime.now(ZoneInfo(settings["timezone"])).date()
+    today = datetime.now(local_zone(settings["timezone"])).date()
     # Stored per period while today, the exclusions and every day it reads are unchanged.
     fingerprint = hashlib.sha256(json.dumps([
         day_view.CODE_VERSION, today.isoformat(), sorted(marks.analysis_exclusions()),

@@ -5,10 +5,9 @@ import re
 import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
 from app import calculation, episodes
-from app.common import MEALS, local_day_range, parse_instant, unit_text
+from app.common import MEALS, local_day_range, local_zone, parse_instant, unit_text
 from app.ingestion import nightscout
 from app.services import day_view, places
 from app.store import config, mirror
@@ -43,7 +42,7 @@ def save_diary_treatment(payload: dict) -> dict:
         raise ValueError("Ungültiger Eintragstyp")
     at = parse_instant(str(payload["at"]))
     _, settings = config.get_settings()
-    day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+    day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
     carbs = calculation.dec(payload.get("carbs") or 0)
     units = calculation.dec(payload.get("insulin") or 0)
     if not carbs.is_finite() or not units.is_finite() or not 0 <= carbs <= 500 or not 0 <= units <= 100:
@@ -163,7 +162,7 @@ def save_glucose_check(at: datetime, mgdl: Decimal, event_id: str) -> None:
     if not mgdl.is_finite() or not 20 <= mgdl <= 600:
         raise ValueError("Blutzucker muss zwischen 20 und 600 mg/dL liegen")
     _, settings = config.get_settings()
-    day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+    day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
     if not ensure_not_duplicate(day, event_id):
         nightscout.write_treatment({
             "eventType": "BG Check", "created_at": at.isoformat().replace("+00:00", "Z"),
@@ -205,7 +204,7 @@ def save_episode(payload: dict) -> dict:
     episode_id = str(uuid.UUID(str(payload.get("episode_id") or uuid.uuid4())))
     event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
     _, settings = config.get_settings()
-    day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+    day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
     if not ensure_not_duplicate(day, event_id):
         record = record_with_tag(at, "Meal Bolus", episode_id, meal, "meal", carbs, insulin, note, event_id)
         nightscout.write_treatment(record)
@@ -228,7 +227,7 @@ def save_exercise(payload: dict) -> dict:
     note = str(payload.get("notes", "")).strip()[:400]
     event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
     _, settings = config.get_settings()
-    day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+    day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
     if not ensure_not_duplicate(day, event_id):
         label = episodes.SPORT_LABELS[kind]
         notes = f"{label}" + (f" — {note}" if note else "")
@@ -263,9 +262,9 @@ def save_dose(payload: dict) -> dict:
         raise ValueError("Kohlenhydrate nur für Zwischenmahlzeiten erlaubt")
     event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
     _, settings = config.get_settings()
-    day = at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat()
+    day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
     if not ensure_not_duplicate(day, event_id):
-        nearby_days = [(at.astimezone(ZoneInfo(settings["timezone"])).date() - timedelta(days=offset)).isoformat() for offset in (0, 1)]
+        nearby_days = [(at.astimezone(local_zone(settings["timezone"])).date() - timedelta(days=offset)).isoformat() for offset in (0, 1)]
         roots = [row for meal_day in nearby_days for row in day_view.day_payload(meal_day)["meals"]]
         if not any(row["id"] == episode_id and row["meal"] == meal and 0 <= (at - parse_instant(row["at"])).total_seconds() <= 3 * 3600 for row in roots):
             raise ValueError("Zugehörige Mahlzeit innerhalb von drei Stunden fehlt")
