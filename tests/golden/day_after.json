@@ -3,6 +3,8 @@
  "basal_sync_error": null,
  "connected": true,
  "day": "2026-10-08",
+ "day_end": "2026-10-08T22:00:00+00:00",
+ "day_start": "2026-10-07T22:00:00+00:00",
  "day_type": "work",
  "day_type_source": "weekday",
  "entries": [],
@@ -32,6 +34,7 @@
   }
  ],
  "timeline": [],
+ "timezone": "Europe/Berlin",
  "treatments": [],
  "vacation": false,
  "window_limits": {

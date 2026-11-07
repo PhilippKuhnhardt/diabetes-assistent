@@ -4,10 +4,9 @@ from __future__ import annotations
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
-from zoneinfo import ZoneInfo
 
 from app import calculation, forecast
-from app.common import MEALS, parse_instant
+from app.common import MEALS, local_zone, parse_instant
 from app.services import day_view
 from app.store import config, marks
 from app.store import places as place_store
@@ -178,7 +177,7 @@ def carb_factor(settings: dict, today: date, points: list[dict], day_type: str |
     method = settings.get("auto_method", "percentile")
 
     def value(at: datetime) -> Decimal | None:
-        local = at.astimezone(ZoneInfo(settings["timezone"]))
+        local = at.astimezone(local_zone(settings["timezone"]))
         minute = local.hour * 60 + local.minute
         kind = ("breakfast" if minute < int(settings["breakfast_end_minute"]) else
                 "lunch" if minute < int(settings["lunch_end_minute"]) else "dinner")

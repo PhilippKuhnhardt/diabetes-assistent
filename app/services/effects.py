@@ -5,10 +5,9 @@ import hashlib
 import json
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
 from app import forecast, on_board
-from app.common import json_safe, parse_instant
+from app.common import json_safe, local_zone, parse_instant
 from app.services import day_view, factors
 from app.store import config, marks, mirror, results
 
@@ -26,7 +25,7 @@ def day_effects(params: dict) -> dict:
         raise ValueError("Datum fehlt")
     parsed = date.fromisoformat(day)
     _, settings = config.get_settings()
-    zone = ZoneInfo(settings["timezone"])
+    zone = local_zone(settings["timezone"])
     start = datetime.combine(parsed, datetime.min.time(), tzinfo=zone).astimezone(timezone.utc)
     end = min(start + timedelta(days=1), datetime.now(timezone.utc).replace(second=0, microsecond=0))
     synced = mirror.synced_at(day)

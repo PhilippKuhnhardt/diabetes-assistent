@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from app.common import parse_instant
+from app.common import local_zone, parse_instant
 from app.services import day_view
 from app.store import config
 from app.store import inbox as store
@@ -41,7 +41,7 @@ def meal_items(day: dict, now: datetime, zone: ZoneInfo) -> list[dict]:
 def view(params: dict | None = None, now: datetime | None = None) -> dict:
     now = now or datetime.now(timezone.utc)
     _, settings = config.get_settings()
-    zone = ZoneInfo(settings["timezone"])
+    zone = local_zone(settings["timezone"])
     today = now.astimezone(zone).date()
     items = []
     for offset in range(LOOKBACK_DAYS):

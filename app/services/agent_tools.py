@@ -13,7 +13,7 @@ from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
 from app import episodes
-from app.common import parse_instant
+from app.common import local_zone, parse_instant
 from app.ingestion import nightscout
 from app.services import basal, day_view, diary, entry, read_api, sync
 from app.store import config, places as place_store
@@ -35,7 +35,7 @@ class ToolError(ValueError):
 
 def _zone() -> ZoneInfo:
     _, settings = config.get_settings()
-    return ZoneInfo(settings["timezone"])
+    return local_zone(settings["timezone"])
 
 
 def _at(args: dict) -> datetime:
@@ -159,7 +159,7 @@ def _form(args: dict, at: datetime) -> dict:
     carbs = _number(args, "carbs_g", Decimal(0), Decimal(500)) or Decimal(0)
     own_meal, split = _bool(args, "own_main_meal"), _bool(args, "split")
     return {
-        "day": at.astimezone(ZoneInfo(settings["timezone"])).date().isoformat(), "at": at.isoformat(),
+        "day": at.astimezone(local_zone(settings["timezone"])).date().isoformat(), "at": at.isoformat(),
         "mode": "meal", "carbs": str(carbs), "as": "meal" if own_meal else None, "split": split,
         "close_meal": _bool(args, "close_meal") is True,
         "finger_mgdl": _number(args, "finger_mgdl", Decimal(20), Decimal(600)),
