@@ -1,6 +1,7 @@
 """HTTP layer: authentication, request parsing, routing and JSON responses. No domain logic."""
 from __future__ import annotations
 
+import hashlib
 import hmac
 import json
 import mimetypes
@@ -17,6 +18,9 @@ from app.services import annotations, background, basal, day_view, diary, dose_h
 from app.store import config, db
 
 WEB = Path(__file__).resolve().parent.parent / "web"
+# Sent with every API answer: a page open since before a deploy sees a different value and reloads.
+WEB_VERSION = hashlib.sha256(b"".join(
+    path.read_bytes() for path in sorted(WEB.glob("*")) if path.suffix in {".html", ".js", ".css"})).hexdigest()[:16]
 # Served without login: the login page needs them, and iOS/Android fetch the
 # home-screen icon and the web app manifest without the session cookie.
 PUBLIC_FILES = {
@@ -112,6 +116,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-App-Version", WEB_VERSION)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Content-Security-Policy", "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'")
         self.end_headers()
@@ -353,6 +358,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._response(200, POST_ROUTES[path](payload))
                 return
             self._response(404, {"error": "Nicht gefunden"})
+        except entry.DoseChanged as error:
+            self._response(409, {"error": str(error), "code": "dose_changed"})
         except (ValueError, KeyError, json.JSONDecodeError) as error:
             self._response(400, {"error": str(error)})
         except nightscout.NightscoutError as error:

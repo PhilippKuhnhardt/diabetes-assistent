@@ -68,11 +68,45 @@ const toInstant = (date, clock) => {
   return parsed.toISOString();
 };
 
+// The app version the page was loaded with; a different one after a deploy reloads the page
+// the next time it comes back to the foreground with an empty entry form.
+let appVersion = null;
+let appUpdateWaiting = false;
+
 async function api(path, options = {}) {
   const response = await fetch(path, { headers: { "Content-Type": "application/json" }, cache: "no-store", ...options });
+  const version = response.headers.get("X-App-Version");
+  if (version && !appVersion) appVersion = version;
+  else if (version && version !== appVersion) appUpdateWaiting = true;
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Anfrage fehlgeschlagen");
+  if (!response.ok) {
+    const error = new Error(data.error || "Anfrage fehlgeschlagen");
+    error.code = data.code || null;
+    throw error;
+  }
   return data;
+}
+
+// Nothing typed and no dialog open: a reload loses nothing (the URL keeps view and tab).
+function entryFormIdle() {
+  const form = $("#entry-form");
+  return !["carbs", "insulin", "finger_mgdl", "notes", "duration_minutes"].some(name => form.elements[name]?.value) &&
+    !$$("dialog").some(dialog => dialog.open);
+}
+
+// Called when the page comes back to the foreground: a waiting update reloads at once when
+// nothing would be lost, otherwise the toast offers it.
+function reloadForUpdate() {
+  if (!appUpdateWaiting || document.hidden) return false;
+  if (entryFormIdle()) {
+    window.location.reload();
+    return true;
+  }
+  if (!state.updateOffered) {
+    state.updateOffered = true;
+    toast("Neue App-Version verfügbar", false, { label: "Neu laden", run: () => window.location.reload() });
+  }
+  return false;
 }
 
 let toastTimeout;
@@ -1716,6 +1750,7 @@ function icon(name) {
     exclude: '<circle cx="12" cy="12" r="9"/><path d="m8 8 8 8"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     remove: '<path d="M5 12h14"/>',
+    alert: '<path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4M12 17h.01"/>',
   };
   return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths[name] + '</svg>';
 }
@@ -2082,9 +2117,46 @@ function renderPreview() {
   const dose = currentPreview()?.dose;
   doseHelp = dose?.options ? dose : null;
   output.removeAttribute("aria-busy");
-  if (doseHelp) output.innerHTML = doseHelpHTML(doseHelp);
+  if (doseHelp) output.innerHTML = doseHelpHTML(doseHelp, changedDoses(doseHelp, currentPreview().inputKey));
   else output.textContent = dose?.message || "";
   applyDoseChoice();
+}
+
+// What the user typed, without the clock: a preview for the same input that shows other doses
+// was recalculated from newer data (CGM, entries, profile), and those options are marked.
+function previewInputKey(body) {
+  return JSON.stringify({ ...body, at: state.entryTimeTouched ? body.at : null });
+}
+
+const doseShown = option => ({ units: option.units, later_units: option.later_units ?? null });
+const sameDose = (a, b) => Number(a.units) === Number(b.units) &&
+  (a.later_units == null ? b.later_units == null : b.later_units != null && Number(a.later_units) === Number(b.later_units));
+
+// The doses seen for this input stay the reference until the input changes or an option is tapped.
+function changedDoses(data, inputKey) {
+  const shown = Object.fromEntries(data.options.map(option => [option.variant, doseShown(option)]));
+  if (!state.doseSeen || state.doseSeen.key !== inputKey) {
+    state.doseSeen = { key: inputKey, doses: shown };
+    return {};
+  }
+  const changed = {};
+  for (const [variant, dose] of Object.entries(shown)) {
+    const before = state.doseSeen.doses[variant];
+    if (before && !sameDose(before, dose)) changed[variant] = before;
+  }
+  return changed;
+}
+
+function acknowledgeDoses() {
+  if (state.doseSeen && doseHelp) {
+    state.doseSeen.doses = Object.fromEntries(doseHelp.options.map(option => [option.variant, doseShown(option)]));
+  }
+}
+
+// Today's preview follows new data on its own; the minute tick and the return to the foreground call this.
+function refreshTodayPreview() {
+  if (document.hidden || state.day !== todayDay() || $("#entry-submit")?.disabled) return;
+  updatePreview();
 }
 
 function schedulePreview(delay = 350) {
@@ -2103,7 +2175,7 @@ async function updatePreview() {
   try {
     const data = await api("/api/entry/preview", { method: "POST", body: JSON.stringify(body) });
     if (requestId !== previewRequestId) return null;
-    state.preview = { ...data, mode: body.mode };
+    state.preview = { ...data, mode: body.mode, inputKey: previewInputKey(body), loadedAt: Date.now() };
     renderPreview();
     return state.preview;
   } catch (error) {
@@ -2114,10 +2186,6 @@ async function updatePreview() {
     }
     return null;
   }
-}
-
-function doseUnits(data, variant) {
-  return data?.options?.find(option => option.variant === variant)?.units ?? null;
 }
 
 // A chosen suggestion fills the insulin field and follows later recalculations until the field is edited.
@@ -2138,6 +2206,7 @@ function selectDoseSuggestion(event) {
   const form = $("#entry-form");
   if ($("#entry-submit").disabled) return;
   state.doseChoice = button.dataset.variant;
+  acknowledgeDoses();
   form.elements.carbs.setCustomValidity("");
   applyDoseChoice();
   if (form.elements.insulin.value === "") return;
@@ -2161,21 +2230,29 @@ function splitOptionNote(option) {
 
 const doseLabels = { split: "2. Teil", normal: "Normal", low: "Tiefer", cautious: "Vorsichtig", carbs: "Nur KH" };
 
-function doseHelpHTML(data) {
+function doseHelpHTML(data, changed = {}) {
   const withCarbs = Number(data.carbs_g) > 0;
   const options = data.options.map(option => {
     const label = doseLabels[option.variant];
-    return '<button type="button" class="dose-option apply-dose" data-variant="' + option.variant + '" aria-pressed="false"' +
+    const before = changed[option.variant];
+    return '<button type="button" class="dose-option apply-dose' + (before ? ' is-changed' : '') + '" data-variant="' + option.variant + '" aria-pressed="false"' +
     ' title="' + escapeHTML(label + ": " + num(option.units, 2) + " IE direkt in Nightscout speichern") + '"' +
     (option.savable ? '' : ' disabled') + '><span class="dose-label">' + escapeHTML(label) + '</span><strong>' +
     escapeHTML(num(option.units, 2)) + ' <small>IE</small></strong><span class="dose-expected">' +
     (option.expected_mgdl != null ? '→ ' + escapeHTML(num(option.expected_mgdl, 0)) + ' mg/dL' : 'ohne Korrektur') + '</span>' +
     (option.later_units != null ? '<span class="dose-expected">+ ' + escapeHTML(num(option.later_units, 1)) + ' IE um ' +
       escapeHTML(timeOnly(option.later_at)) + '</span>' : '') +
-    (option.variant === "split" ? '<span class="dose-expected">' + escapeHTML(splitOptionNote(option)) + '</span>' : '') + '</button>';
+    (option.variant === "split" ? '<span class="dose-expected">' + escapeHTML(splitOptionNote(option)) + '</span>' : '') +
+    (before ? '<span class="dose-was">vorher ' + escapeHTML(num(before.units, 2)) + ' IE' +
+      (before.later_units != null && Number(before.later_units) !== Number(option.later_units) ? ' + ' + escapeHTML(num(before.later_units, 1)) : '') +
+      '</span>' : '') + '</button>';
   }).join("");
+  const anyChanged = Object.keys(changed).length > 0;
   return '<div class="dose-head"><span class="dose-heading">' + (withCarbs ? "Empfehlung" : "Korrektur ohne Essen") +
     '</span>' + (options ? '<span class="dose-hint">Antippen speichert direkt</span>' : '') + '</div>' +
+    (anyChanged ? '<p class="dose-changed" role="status">' + icon("alert") + ' Neu berechnet mit neueren Daten' +
+      (data.glucose_at ? ' (CGM ' + escapeHTML(timeOnly(data.glucose_at)) + ')' : '') +
+      '. Markierte Werte haben sich geändert, bitte prüfen.</p>' : '') +
     factorLine(data) +
     (data.glucose_source === "finger" && data.glucose_fresh ? '<p class="dose-factor">Startwert blutig <strong>' +
       escapeHTML(num(data.glucose_mgdl, 0)) + ' mg/dL</strong> um ' + escapeHTML(timeOnly(data.glucose_at)) + '</p>' : '') +
@@ -2435,7 +2512,9 @@ async function saveEntry(event) {
   try { at = toInstant(state.day, form.elements.at.value); }
   catch (error) { toast(error.message, true); return; }
   const basalUnits = entryBasalUnits();
-  const chosen = mode === "meal" && state.doseChoice && doseHelp ? doseUnits(doseHelp, state.doseChoice) : null;
+  const chosenOption = mode === "meal" && state.doseChoice && doseHelp
+    ? doseHelp.options.find(option => option.variant === state.doseChoice) : null;
+  const chosen = chosenOption?.units ?? null;
   const payload = {
     ...previewRequest(), at,
     carbs: form.elements.carbs.value, insulin: form.elements.insulin.value,
@@ -2454,6 +2533,7 @@ async function saveEntry(event) {
     basal_event_id: basalUnits > 0 ? state.pendingBasalId || crypto.randomUUID() : null,
     dose_check: chosen != null && Number(chosen) === insulin ? doseHelp.check : null,
     dose_variant: state.doseChoice || null,
+    dose_shown: chosenOption && Number(chosenOption.units) === insulin ? doseShown(chosenOption) : null,
   };
   state.pendingEventId = payload.event_id;
   state.pendingBasalId = payload.basal_event_id;
@@ -2464,8 +2544,14 @@ async function saveEntry(event) {
     try {
       result = await api("/api/entry", { method: "POST", body: JSON.stringify(payload) });
     } catch (error) {
-      // A changed suggestion is shown again for checking.
-      if (payload.dose_check) await updatePreview();
+      if (error.code === "dose_changed") {
+        // The tapped dose is no longer current: the new one is shown marked and has to be tapped again,
+        // so an old dose cannot be confirmed by accident.
+        state.doseChoice = null;
+        if (Number(form.elements.insulin.value) === Number(chosen)) form.elements.insulin.value = "";
+        await updatePreview();
+        $("#dose-result").scrollIntoView({ block: "nearest", behavior: "smooth" });
+      } else if (payload.dose_check) await updatePreview();
       throw error;
     }
     state.day = result.day;
@@ -3366,8 +3452,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     toast(error.message, true);
   }
   setInterval(() => { if (!document.hidden) loadCurrentGlucose(); }, 60000);
-  // "Wirkt noch" and the suggestion age with the active insulin, so today's preview refreshes too.
-  setInterval(() => { if (!document.hidden && state.day === todayDay()) updatePreview(); }, 5 * 60000);
+  // New CGM values arrive every minute and "Wirkt noch" ages, so today's suggestion follows on its own
+  // and a tapped suggestion rarely meets a newer one on saving.
+  setInterval(refreshTodayPreview, 60000);
   // A form left open keeps showing "jetzt" with the current clock, and an old manual time expires.
   setInterval(() => { if (!document.hidden) setDefaultMealTime({ preview: false }); }, 30000);
   setInterval(returnToToday, 60000);
@@ -3375,13 +3462,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   setInterval(() => { if (!document.hidden) loadInbox(); }, 5 * 60000);
   document.addEventListener("pointerdown", markDayActivity, true);
   document.addEventListener("keydown", markDayActivity, true);
-  document.addEventListener("visibilitychange", () => {
+  // A home-screen app has no reload button: coming back to the foreground refreshes everything shown
+  // and picks up a deployed update.
+  const resume = async () => {
     if (document.hidden) return;
+    if (reloadForUpdate()) return;
     renderTimezone();
     returnToToday();
-    setDefaultMealTime();
-    loadCurrentGlucose();
+    setDefaultMealTime({ preview: false });
+    refreshTodayPreview();
     loadInbox();
-  });
+    await loadCurrentGlucose();
+    reloadForUpdate();
+  };
+  document.addEventListener("visibilitychange", resume);
+  window.addEventListener("pageshow", event => { if (event.persisted) resume(); });
   window.addEventListener("focus", loadCurrentGlucose);
 });
