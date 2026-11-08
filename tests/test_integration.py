@@ -1729,13 +1729,51 @@ class IntegrationTests(unittest.TestCase):
             with self.assertRaises(urllib.error.HTTPError) as changed:
                 self.request("/api/entry", method="POST", body={
                     **entry, "insulin": dose["entry_units"], "dose_check": dose["check"]})
-            self.assertIn("Empfehlung geändert", json.loads(changed.exception.read())["error"])
+            self.assertEqual(changed.exception.code, 409)
+            error = json.loads(changed.exception.read())
+            self.assertEqual(error["code"], "dose_changed")
+            self.assertIn("Empfehlung neu berechnet", error["error"])
             changed.exception.close()
             self.assertEqual(FakeNightscout.treatments, [])
             fresh = self.request("/api/entry/preview", method="POST", body=entry)["dose"]
             self.request("/api/entry", method="POST", body={
                 **entry, "insulin": fresh["entry_units"], "dose_check": fresh["check"]})
         self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["insulin"])), Decimal(fresh["entry_units"]))
+
+    def test_tapped_suggestion_saves_when_newer_data_leaves_its_dose_unchanged(self):
+        self.request("/api/settings")
+        now = datetime.now(timezone.utc)
+        today = now.astimezone(ZoneInfo("Europe/Berlin")).date().isoformat()
+        current_day = {
+            "day": today, "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 150}],
+            "treatments": [], "basal": [], "day_type": "work", "day_type_source": "weekday", "meals": [],
+        }
+        entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "20"}
+        with fake_days(return_value=current_day):
+            dose = self.request("/api/entry/preview", method="POST", body=entry)["dose"]
+            normal = dose["options"][0]
+            # A new CGM reading with the same value changes the check but not the dose.
+            current_day["entries"].append({"at": (now - timedelta(minutes=1)).isoformat(), "sgv": 150})
+            tapped = {**entry, "insulin": normal["units"], "dose_check": dose["check"], "dose_variant": "normal"}
+            # Without the shown dose the old check still refuses.
+            with self.assertRaises(urllib.error.HTTPError) as changed:
+                self.request("/api/entry", method="POST", body=tapped)
+            self.assertEqual(changed.exception.code, 409)
+            changed.exception.close()
+            # A different dose than shown is refused as well.
+            with self.assertRaises(urllib.error.HTTPError) as other:
+                self.request("/api/entry", method="POST", body={
+                    **tapped, "dose_shown": {"units": str(Decimal(normal["units"]) + 1), "later_units": None}})
+            other.exception.close()
+            self.assertEqual(FakeNightscout.treatments, [])
+            self.request("/api/entry", method="POST", body={
+                **tapped, "dose_shown": {"units": normal["units"], "later_units": normal.get("later_units")}})
+        self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["insulin"])), Decimal(normal["units"]))
+
+    def test_api_answers_carry_the_web_version(self):
+        with urllib.request.urlopen(self.base + "/health") as response:
+            version = response.headers["X-App-Version"]
+        self.assertRegex(version, r"^[0-9a-f]{16}$")
 
     def test_lower_target_is_offered_only_without_carb_uncertainty(self):
         self.request("/api/settings")
