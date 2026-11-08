@@ -226,6 +226,24 @@ class OnBoardTests(unittest.TestCase):
         self.assertEqual([row["grams"] for row in active["carbs"]], [20])
         self.assertIsNone(active["fresh_meal_at"])
 
+    def test_diary_snack_of_no_meal_carries_its_own_surcharge(self):
+        # 8.11.: breakfast 07:01, 80 g at 10:34 as a snack of no meal (breakfast taken, 3.5 h later).
+        breakfast = self.now - timedelta(hours=3, minutes=30)
+        meal = {"id": "m", "at": breakfast, "eventType": "Meal Bolus", "carbs": 60, "insulin": 7}
+        snack = {"id": "s", "at": self.now - timedelta(minutes=10), "eventType": "Snack Bolus", "carbs": 80,
+                 "insulin": 6, "notes": "[DA2:snack]"}
+        found = on_board.sources([meal, snack], self.now, self.settings, lambda at: Decimal(1), Decimal(80),
+                                 forecast.surcharge_share)
+        self.assertEqual([(row["at"], row["mgdl"]) for row in found["surcharges"]],
+                         [(breakfast, 80), (snack["at"], 80)])
+        # A snack of the meal (within 2 h) or below 20 g stays without one.
+        close = {**snack, "at": breakfast + timedelta(minutes=60)}
+        small = {**snack, "carbs": 15}
+        for item in (close, small):
+            found = on_board.sources([meal, item], self.now, self.settings, lambda at: Decimal(1), Decimal(80),
+                                     forecast.surcharge_share)
+            self.assertEqual([row["at"] for row in found["surcharges"]], [breakfast])
+
     def test_until_marks_when_each_side_has_acted(self):
         doses = [{"id": "c", "at": self.now, "eventType": "Correction Bolus", "insulin": 2}]
         active = self.active(doses)

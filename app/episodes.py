@@ -14,6 +14,9 @@ EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal|basal)|DASP:\d
 SPLIT_TAG = re.compile(r"\[DASP:(\d+(?:\.\d+)?)@(\d+)\]")
 BASAL_MARKER = "[DA2:basal]"
 SNACK_GAP = timedelta(minutes=120)
+# A carb entry below this that would start a main meal defaults to a snack of no meal (user request 2026-10-19);
+# from this size a snack of no meal carries the main-meal surcharge (user report 2026-11-08).
+SMALL_SNACK_GRAMS = Decimal(20)
 SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio|racing)\]")
 # Data-quality marks on carb entries: how certain the carbs are (weighed, known dish or FDDB
 # estimate, no serious estimate) and the meal factors: fat-/protein-rich, alcohol. Recorded only.
@@ -237,6 +240,21 @@ def preceding_meal(at: datetime, treatments: list[dict], settings: dict) -> dict
     if at - root["at"] < SNACK_GAP or (root["same_kind"] and at < root["end"]):
         return root
     return None
+
+
+def solo_snack(item: dict, treatments: list[dict], settings: dict) -> bool:
+    """A stored diary snack of no meal from SMALL_SNACK_GRAMS: no main meal precedes it closely (its kind was
+    taken that day, or its meal was closed). No meal's surcharge covers it, so it carries its own
+    (user report 2026-11-08: 80 g at 10:34 after breakfast got 2 IE instead of about 5)."""
+    if "[DA2:snack]" not in str(item.get("notes") or ""):
+        return False
+    try:
+        grams = Decimal(str(item.get("carbs") or 0))
+    except InvalidOperation:
+        return False
+    if grams < SMALL_SNACK_GRAMS:
+        return False
+    return preceding_meal(item["at"], [other for other in treatments if other is not item], settings) is None
 
 
 def taken_meal(at: datetime, treatments: list[dict], settings: dict) -> dict | None:

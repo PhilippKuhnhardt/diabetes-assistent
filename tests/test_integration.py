@@ -797,10 +797,16 @@ class IntegrationTests(unittest.TestCase):
                 patch("app.forecast.predict_method", return_value={"count": 5, "units_per_ke": Decimal(1)}):
             meal = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
             snack = self.request("/api/dose-help", method="POST", body={"carbs": "20", "snack": True})
+            solo = self.request("/api/dose-help", method="POST",
+                                body={"carbs": "20", "snack": True, "solo_snack": True})
         # 20 g is half of the full-surcharge size: 20 mg/dL at the current KF (50 or 45 by clock).
         expected = Decimal(20) / Decimal(meal["isf_mgdl_per_unit"])
         self.assertEqual(Decimal(meal["auto_surcharge_units"]), expected)
         self.assertNotIn("auto_surcharge_units", snack)
+        # A snack of no meal is covered by no meal's surcharge, so it carries its own (user report 2026-11-08).
+        self.assertEqual(Decimal(solo["auto_surcharge_units"]), expected)
+        self.assertTrue(solo["solo_snack"])
+        self.assertFalse(meal["solo_snack"])
         self.assertAlmostEqual(Decimal(meal["auto_carb_units"]) - Decimal(snack["auto_carb_units"]), expected, places=20)
 
     def test_quality_marks_are_stored_in_nightscout_and_shown_per_meal(self):

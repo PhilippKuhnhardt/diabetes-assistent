@@ -16,7 +16,8 @@ meal) acts linearly from 2 h to 5 h after the meal start (6 h with a fat/protein
 fat and protein, rises sooner: its surcharge acts from 1 h to 4 h (5 h with the fat mark); with 2–5 h the surcharge
 was still fully "to come" at the 8 o'clock peak and the app suggested corrections that ended in lows (Philipp's
 approval 2026-11-06, analysen/modell-review-2026-11-06.md: 2-h forecast 90–300 min after breakfast MAE 28/35 → 24/24).
-Snacks never carry it. A place switched on for the place factor scales the carbs and surcharge of its entries.
+A snack of a meal never carries it; a diary snack of no meal from 20 g carries its own (episodes.solo_snack,
+user report 2026-11-08), since no meal's surcharge covers it. A place switched on for the place factor scales the carbs and surcharge of its entries.
 
 Sport: each session lowers glucose by its effect (the setting of its kind, or the value Philipp set on the
 session in "Tag durchgehen"; negative raises, e.g. racing), linearly from the session's end over its kind's
@@ -31,7 +32,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from app import calculation
+from app import calculation, episodes
 from app.common import local_zone
 
 INSULIN_PEAK = Decimal(55)
@@ -185,7 +186,8 @@ def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, 
                               "mgdl_per_gram": factor * place * isf(item["at"]) / 10})
         if is_main_meal(item) and age < FRESH_MEAL_MINUTES:
             meals.append(item["at"])
-        if surcharge_mgdl is not None and is_main_meal(item) and age < SURCHARGE_TO_FAT:
+        if (surcharge_mgdl is not None and age < SURCHARGE_TO_FAT
+                and (is_main_meal(item) or episodes.solo_snack(item, treatments, settings))):
             full = surcharge_mgdl + (fat_surcharge_mgdl if fat else Decimal(0))
             surcharges.append({"at": item["at"], "fat": fat, "breakfast": is_breakfast(item["at"], settings),
                                "mgdl": full * surcharge_share(grams) * place})

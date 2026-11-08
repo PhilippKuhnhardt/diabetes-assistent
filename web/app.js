@@ -2207,7 +2207,8 @@ function factorLine(data) {
   const count = ' (' + (data.auto_factor_count || 0) + '/' + data.auto_factor_min_meals + ')';
   const surcharge = data.auto_surcharge_units != null
     ? ' + Zuschlag <strong>' + escapeHTML(num(data.auto_surcharge_units, 2)) + ' IE</strong>' +
-      (data.auto_fat_surcharge_mgdl != null ? ' (fettreich +' + escapeHTML(num(data.auto_fat_surcharge_mgdl, 0)) + ' mg/dL)' : '')
+      (data.auto_fat_surcharge_mgdl != null ? ' (fettreich +' + escapeHTML(num(data.auto_fat_surcharge_mgdl, 0)) + ' mg/dL)' : '') +
+      (data.solo_snack ? ' · Snack ohne Mahlzeit, Zuschlag wie Hauptmahlzeit' : '')
     : data.auto_method === "surcharge" && data.auto_units_per_ke != null ? ' · Snack ohne Zuschlag' : '';
   // The place factor is already in the factor and surcharge shown.
   const place = data.place_factor;
