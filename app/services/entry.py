@@ -38,7 +38,11 @@ DOSE_CHECK_KEYS = (
     "carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl",
     "low_target_mgdl", "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "auto_units_per_ke",
     "recent_rapid_doses")
-DOSE_CHANGED = "Empfehlung geändert. Bitte den neuen Wert prüfen und erneut speichern."
+DOSE_CHANGED = "Empfehlung neu berechnet. Bitte den neuen Wert prüfen und neu antippen."
+
+
+class DoseChanged(ValueError):
+    """The tapped suggestion's dose is no longer the current one; the page shows the new one."""
 
 
 def _carbs(payload: dict) -> Decimal | None:
@@ -204,6 +208,25 @@ def _dose_check(result: dict, options: list[dict]) -> str:
     shown = [[option.get(key) for key in ("variant", "units", "later_units")] for option in options]
     return hashlib.sha256(json.dumps([[result.get(key) for key in DOSE_CHECK_KEYS], shown],
                                      default=str).encode()).hexdigest()
+
+
+def _same_dose(dose: dict, payload: dict, insulin: Decimal) -> bool:
+    """The tapped option still offers exactly the dose that was shown and is being saved."""
+    shown = payload.get("dose_shown")
+    option = next((item for item in dose.get("options", []) if item["variant"] == payload.get("dose_variant")), None)
+    if not isinstance(shown, dict) or option is None or not option.get("savable"):
+        return False
+
+    def same(a: object, b: object) -> bool:
+        if a is None or b is None:
+            return a is None and b is None
+        try:
+            return calculation.dec(a) == calculation.dec(b)
+        except ArithmeticError:
+            return False
+
+    return (same(option["units"], shown.get("units")) and same(option["units"], insulin)
+            and same(option.get("later_units"), shown.get("later_units")))
 
 
 def _split(context: dict, assignment: dict | None, payload: dict) -> dict | None:
@@ -376,8 +399,9 @@ def save(payload: dict) -> dict:
             if payload.get("dose_check") or (split and split["active"]) else {})
     if payload.get("dose_check"):
         # A tapped suggestion must still match the current one (new CGM value, new dose, profile change).
-        if dose.get("check") != payload["dose_check"]:
-            raise ValueError(DOSE_CHANGED)
+        # Newer data that leaves the tapped dose as it was (e.g. only a new CGM reading) still saves it.
+        if dose.get("check") != payload["dose_check"] and not _same_dose(dose, payload, insulin):
+            raise DoseChanged(DOSE_CHANGED)
     split_units = None
     if split and split["active"] and context["day"] == context["today"]:
         # The second part completes the chosen suggestion (normal unless another was tapped).
