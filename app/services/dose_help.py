@@ -66,9 +66,11 @@ def dose_help(payload: dict) -> dict:
             scale=factors.entry_scale(scales)), now)
     except ValueError:
         active = None
-    # The surcharge belongs once to each main meal; a snack of a meal gets the factor only.
+    # The surcharge belongs once to each main meal; a snack of a meal gets the factor only. A snack of no
+    # meal from 20 g (its kind already taken, or its meal closed) carries its own: no meal's surcharge covers
+    # it (user report 2026-11-08: 80 g at 10:34 after breakfast got 2 IE).
     surcharge = (method == forecast.SURCHARGE and auto_value is not None
-                 and payload.get("snack") is not True)
+                 and (payload.get("snack") is not True or payload.get("solo_snack") is True))
     meal_surcharge = factors.meal_surcharge_mgdl(current_settings, payload.get("fat_protein") is True)
     result = dosing.suggest(payload.get("carbs", 0), current_settings, entries, treatments, now,
                             activity_change=payload.get("activity_change_mgdl", 0),
@@ -83,7 +85,7 @@ def dose_help(payload: dict) -> dict:
                                      "latest_at": when["latest_at"].isoformat()}
     result["on_board"] = on_board_view(active, result) if active else None
     result.update({
-        "auto_meal": meal_kind, "auto_factor_count": prediction["count"], "auto_method": method,
+        "auto_meal": meal_kind, "solo_snack": bool(surcharge and payload.get("snack") is True), "auto_factor_count": prediction["count"], "auto_method": method,
         "auto_fat_surcharge_mgdl": str(fat_mgdl) if surcharge and payload.get("fat_protein") is True else None,
         "place_factor": ({"name": place["name"], "count": place["count"], "min_meals": place["min_meals"],
                           "days": place["days"], "scale": str(place["scale"]) if place["scale"] is not None else None}
