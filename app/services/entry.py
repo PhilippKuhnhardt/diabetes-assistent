@@ -18,8 +18,7 @@ DOSE_VARIANTS = ("normal", "low", "cautious", "carbs")
 # The lower target is offered for corrections and for small carb amounts only: up to this many grams,
 # not marked unsure and not fat-/protein-rich, so no carb uncertainty asks for a cautious estimate.
 LOW_TARGET_MAX_GRAMS = Decimal(30)
-# A carb entry below this that would start a main meal defaults to a snack of no meal (user request 2026-10-19).
-SMALL_SNACK_GRAMS = Decimal(20)
+SMALL_SNACK_GRAMS = episodes.SMALL_SNACK_GRAMS
 # Why the lower target is not offered, for the hint under the options (off, equal doses and larger meals stay silent).
 LOW_BLOCKED = {
     "low": "BZ unter 70 mg/dL",
@@ -127,6 +126,14 @@ def _assignment(context: dict, payload: dict) -> dict | None:
         result = {"meal": root["meal"], "at": root["at"], "own_meal": own_meal,
                   "snack": payload.get("as") != "meal", "own_meal_taken": False}
     return _closing(context, root, result, payload)
+
+
+def _solo_snack(context: dict, assignment: dict | None) -> bool:
+    """A snack of no meal from SMALL_SNACK_GRAMS carries its own surcharge, by the rule "Wirkt noch" applies
+    once it is saved (episodes.solo_snack): no main meal precedes it closely."""
+    if not assignment or not assignment["snack"] or context["carbs"] < SMALL_SNACK_GRAMS:
+        return False
+    return episodes.preceding_meal(context["at"], context["treatments"], context["settings"]) is None
 
 
 def _instant(value):
@@ -246,6 +253,7 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
     # Sport is part of what still acts (app.on_board), so it needs no extra input here.
     result = dose_help.dose_help({"carbs": str(carbs),
                                   "snack": bool(assignment and assignment["snack"]),
+                                  "solo_snack": _solo_snack(context, assignment),
                                   "fat_protein": carbs > 0 and payload.get("fat_protein") is True,
                                   "place_id": _place_choice(context, payload) if carbs > 0 else None,
                                   "finger_mgdl": context["finger"], "finger_at": context["at"]})

@@ -121,6 +121,7 @@
     "units": "7.0"
    }
   ],
+  "solo_snack": false,
   "split_plan": null,
   "target_mgdl": "120",
   "total_units": "0",
@@ -193,6 +194,7 @@
   "place_factor": null,
   "reason": "Kein aktueller CGM-Wert innerhalb von 15 Minuten. Ein blutig gemessener Wert kann ihn ersetzen.",
   "recent_rapid_doses": [],
+  "solo_snack": false,
   "split_plan": null,
   "target_mgdl": "120",
   "trend_delta_mgdl": "0.0",
@@ -328,6 +330,7 @@
     "units": "7.0"
    }
   ],
+  "solo_snack": false,
   "split_plan": null,
   "target_mgdl": "120",
   "total_units": "6.217256077470442106567730066",
@@ -458,6 +461,7 @@
     "units": "7.0"
    }
   ],
+  "solo_snack": false,
   "split_plan": null,
   "target_mgdl": "120",
   "total_units": "1.217256077470442106567730066",
@@ -589,6 +593,7 @@
     "units": "7.0"
    }
   ],
+  "solo_snack": false,
   "split_plan": null,
   "target_mgdl": "120",
   "total_units": "9.162724767737277198305782991",
@@ -719,6 +724,7 @@
     "units": "7.0"
    }
   ],
+  "solo_snack": false,
   "split_plan": null,
   "target_mgdl": "120",
   "total_units": "4.162724767737277198305782991",
@@ -791,6 +797,7 @@
   "place_factor": null,
   "reason": "Kein aktueller CGM-Wert innerhalb von 15 Minuten. Ein blutig gemessener Wert kann ihn ersetzen.",
   "recent_rapid_doses": [],
+  "solo_snack": false,
   "split_plan": null,
   "target_mgdl": "120",
   "trend_delta_mgdl": null,
@@ -920,6 +927,7 @@
     "units": "7.0"
    }
   ],
+  "solo_snack": false,
   "split_plan": null,
   "target_mgdl": "120",
   "total_units": "3.485113220327584963710587209",
