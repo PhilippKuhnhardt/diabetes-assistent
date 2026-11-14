@@ -117,7 +117,7 @@ def _dose_view(dose: dict) -> dict:
 
 def _entries(current: dict) -> list[dict]:
     keep = ("id", "at", "kind", "carbs", "insulin", "basal_units", "duration_minutes", "sport_kind", "notes",
-            "carbs_certainty", "fat_protein", "alcohol", "place", "glucose_mgdl", "meal_id", "nightscout_synced")
+            "carbs_certainty", "fat_protein", "alcohol", "fast", "place", "glucose_mgdl", "meal_id", "nightscout_synced")
     return [{key: (_local(item[key]) if key == "at" else (item[key] or {}).get("name") if key == "place"
                    else item[key]) for key in keep if key in item}
             for item in current["timeline"]]
@@ -129,7 +129,7 @@ def _meals(day: str) -> list[dict]:
     keep = ("meal_id", "meal", "at", "day_type", "window_start", "window_end", "end_reason", "excluded",
             "carbs_meal_g", "carbs_total_g", "rapid_units", "g0_mgdl", "g_end_mgdl", "delta_mgdl",
             "sport_effect_mgdl", "factor_ie_per_ke", "blocked_reason", "carbs_certainty", "fat_protein", "alcohol",
-            "place")
+            "fast", "place")
     return [{key: row.get(key) for key in keep} for row in rows]
 
 
@@ -167,6 +167,7 @@ def _form(args: dict, at: datetime) -> dict:
         "carbs_certainty": _choice(args, "carbs_certainty", CERTAINTIES) if carbs > 0 else None,
         "fat_protein": carbs > 0 and _bool(args, "fat_protein") is True,
         "alcohol": carbs > 0 and _bool(args, "alcohol") is True,
+        "fast": carbs > 0 and _bool(args, "fast") is True,
     }
 
 
@@ -313,6 +314,8 @@ FORM = {
                                        "FDDB-KI), unsure = keine ernsthafte Schätzung."},
     "fat_protein": {"type": "boolean", "description": "true = fett-/eiweißreich."},
     "alcohol": {"type": "boolean", "description": "true = Alkohol zur Mahlzeit (nur erfasst, ändert keine Rechnung)."},
+    "fast": {"type": "boolean", "description": "true = wirkt schnell (z. B. Saft, Weißbrot; nur erfasst, ändert keine "
+                                           "Rechnung). Mit fat_protein kombinierbar."},
     "place": {"type": "string",
               "description": "Ort-Chip, an dem gegessen wurde (z. B. Kantine, Restaurant), nur bei KH. Die Vorschau "
                              "listet die vorhandenen Orte in places; weglassen, wenn Philipp keinen nennt."},

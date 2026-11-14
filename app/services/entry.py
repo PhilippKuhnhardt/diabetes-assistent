@@ -429,6 +429,7 @@ def save(payload: dict) -> dict:
         "carbs_certainty": payload.get("carbs_certainty") if carbs > 0 else None,
         "fat_protein": carbs > 0 and payload.get("fat_protein") is True,
         "alcohol": carbs > 0 and payload.get("alcohol") is True,
+        "fast": carbs > 0 and payload.get("fast") is True,
         "event_id": payload.get("event_id"),
         **({"split_units": split_units, "split_delay_minutes": split["delay_minutes"]}
            if split_units and kind == "meal" else {}),

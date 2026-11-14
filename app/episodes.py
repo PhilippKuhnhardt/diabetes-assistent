@@ -19,9 +19,10 @@ SNACK_GAP = timedelta(minutes=120)
 SMALL_SNACK_GRAMS = Decimal(20)
 SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio|racing)\]")
 # Data-quality marks on carb entries: how certain the carbs are (weighed, known dish or FDDB
-# estimate, no serious estimate) and the meal factors: fat-/protein-rich, alcohol. Recorded only.
-QUALITY_TAG = re.compile(r"\[DAQ:(weighed|known|unsure|fat|alcohol)\]")
-QUALITY_MARKERS = {"fat_protein": "[DAQ:fat]", "alcohol": "[DAQ:alcohol]"}
+# estimate, no serious estimate) and the meal factors: fat-/protein-rich, alcohol, fast-acting
+# ("Schnell", user request 2026-11-14). Alcohol and fast are recorded only.
+QUALITY_TAG = re.compile(r"\[DAQ:(weighed|known|unsure|fat|alcohol|fast)\]")
+QUALITY_MARKERS = {"fat_protein": "[DAQ:fat]", "alcohol": "[DAQ:alcohol]", "fast": "[DAQ:fast]"}
 # Most to least certain; a meal takes the least certain level of its marked carb entries.
 CERTAINTIES = ("weighed", "known", "unsure")
 CERTAINTY_TAG = re.compile(r"\[DAQ:(weighed|known|unsure)\]")
