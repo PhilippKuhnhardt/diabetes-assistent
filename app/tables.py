@@ -14,7 +14,7 @@ MEAL_COLUMNS = [
     "rapid_units", "insulin_effect_mgdl", "meal_isf", "factor_ie_per_ke", "blocked_reason",
     "carbs_certainty", "fat_protein", "alcohol", "place",
 ]
-WINDOW_EVENT_COLUMNS = ["meal_id", "kind", "at", "carbs_g", "units", "isf", "event_type"]
+WINDOW_EVENT_COLUMNS = ["meal_id", "kind", "at", "carbs_g", "units", "isf", "event_type", "share"]
 ENTRY_COLUMNS = ["at", "sgv"]
 BASAL_COLUMNS = ["id", "at", "units", "nightscout_synced", "notes"]
 TREATMENT_COLUMNS = ["id", "at", "eventType", "carbs", "insulin", "basal_units", "duration",
@@ -41,6 +41,8 @@ entsprechen der App zum Abrufzeitpunkt (aktuelles Nightscout-Profil für alle Ta
   vacation: der Tag liegt in einem Urlaub (Schalter in den Einstellungen); die Automatik lässt
   Urlaubstage nach dem Urlaub aus (Einstellung „Urlaub in der Automatik“).
 - window_events: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.
+  kind = insulin_prior: schnell wirksame Injektion vor dem Fenster; sie zählt mit share, dem Anteil
+  ihrer Wirkung zwischen Beginn und Endpunkt (units × share × isf, in insulin_effect_mgdl enthalten).
 - entries: alle gespiegelten CGM-Werte in mg/dL.
 - treatments: alle gespiegelten Nightscout-Behandlungen inklusive Sport (Basal aus der App
   als Notiz mit basal_units).
@@ -94,6 +96,9 @@ def collect(first_day: date, last_day: date, day_payload: Callable[[str], dict],
                 window_events.append({"meal_id": meal["id"], "kind": "insulin", "at": _local(item["at"], zone),
                                       "units": item["units"], "isf": item["isf"],
                                       "event_type": item.get("event_type") or item.get("role")})
+            for item in result.get("prior_doses", []):
+                window_events.append({"meal_id": meal["id"], "kind": "insulin_prior", "at": _local(item["at"], zone),
+                                      "units": item["units"], "isf": item["isf"], "share": item["share"]})
         # A day payload also covers parts of the neighbouring days; keep only the rows of this
         # local day so each reading or treatment appears once across a multi-day range.
         own = payload["day"]

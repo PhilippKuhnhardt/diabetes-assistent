@@ -37,11 +37,9 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from app import calculation, episodes
+from app.calculation import INSULIN_DELAY, INSULIN_DURATION, INSULIN_PEAK, insulin_remaining  # noqa: F401
 from app.common import local_zone
 
-INSULIN_PEAK = Decimal(55)
-INSULIN_DURATION = Decimal(360)
-INSULIN_DELAY = Decimal(10)
 CARBS_SHORT_MINUTES, CARBS_SHORT_GRAMS = Decimal(120), Decimal(40)
 CARBS_LONG_MINUTES, CARBS_LONG_GRAMS = Decimal(180), Decimal(100)
 SURCHARGE_FROM = Decimal(120)
@@ -65,21 +63,6 @@ FRESH_MEAL_MINUTES = 90
 NEGLIGIBLE_MGDL = Decimal(5)
 STEP = timedelta(minutes=5)
 HORIZON = timedelta(hours=8)
-
-
-def insulin_remaining(minutes: Decimal) -> Decimal:
-    """Share of a rapid dose that has not acted yet, `minutes` after the injection."""
-    t = calculation.dec(minutes) - INSULIN_DELAY
-    if t <= 0:
-        return Decimal(1)
-    if t >= INSULIN_DURATION:
-        return Decimal(0)
-    peak, duration = INSULIN_PEAK, INSULIN_DURATION
-    tau = peak * (1 - peak / duration) / (1 - 2 * peak / duration)
-    a = 2 * tau / duration
-    scale = 1 / (1 - a + (1 + a) * (-duration / tau).exp())
-    used = scale * (1 - a) * ((t * t / (tau * duration * (1 - a)) - t / tau - 1) * (-t / tau).exp() + 1)
-    return min(Decimal(1), max(Decimal(0), 1 - used))
 
 
 def carb_minutes(grams: Decimal) -> Decimal:
