@@ -335,9 +335,10 @@
               <label>Basal zum Frühstück <span>IE</span><input name="basal_default_units" type="number" min="0" max="100" step="0.5" required></label>
               <p class="hint">Wird beim Frühstück automatisch mit eingetragen, solange heute noch kein Basal erfasst ist. 0 schaltet das aus.</p>
               <label>Split-Bolus ab <span>g KH</span><input name="split_min_grams" type="number" min="0" max="300" step="5" required></label>
+              <label>Split nur ab <span>IE</span><input name="split_min_units" type="number" min="0" max="30" step="1" required></label>
               <label>Split: Anteil jetzt <span>%</span><input name="split_first_percent" type="number" min="30" max="90" step="5" required></label>
               <label>Split: 2. Teil nach <span>min</span><input name="split_delay_minutes" type="number" min="30" max="300" step="15" required></label>
-              <p class="hint">Ab dieser KH-Menge ist bei Hauptmahlzeiten „Split“ vorausgewählt: ein Teil jetzt, der Rest später. Fett-/eiweißreiche Hauptmahlzeiten sind immer vorausgewählt. 0 schaltet das aus.</p>
+              <p class="hint">Ab dieser KH-Menge ist bei Hauptmahlzeiten „Split“ vorausgewählt: ein Teil jetzt, der Rest später. Fett-/eiweißreiche Hauptmahlzeiten sind immer vorausgewählt. 0 schaltet das aus. Ist die normale Dosis kleiner als „Split nur ab“ (etwa weil der BZ niedrig ist), gibt es keinen Split, auch nicht bei Fett; 0 = immer.</p>
             </section>
             <section class="panel">
               <h2>Mahlzeiten</h2>

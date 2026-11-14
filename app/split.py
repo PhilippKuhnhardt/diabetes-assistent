@@ -45,6 +45,15 @@ def offer(carbs: Decimal, snack: bool, settings: dict, fat: bool = False) -> dic
             "delay_minutes": int(settings.get("split_delay_minutes", 120))}
 
 
+def worth_it(full_units, settings: dict) -> bool:
+    """Whether the meal's full dose is large enough to split (user choice 2026-11-06: not under 5 IE).
+    A small second part hardly acts and costs an extra injection; a low glucose shrinking the dose
+    below the limit means the whole dose is given at once."""
+    if full_units is None:
+        return True
+    return Decimal(str(full_units)) >= Decimal(str(settings.get("split_min_units", 5)))
+
+
 def parts(full_units: Decimal, first_percent: int) -> tuple[Decimal, Decimal]:
     """The injectable first part (0.5 IE steps) and the rest of an already rounded dose."""
     now = dosing.half_units(full_units * Decimal(first_percent) / 100)
