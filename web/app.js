@@ -1736,6 +1736,7 @@ function calculationHTML(result) {
   const summary = [
     num(result.carbs_total) + " g KH",
     num(result.rapid_units_in_window, 2) + " IE",
+    ...(Number(result.prior_insulin_effect_mgdl) >= 1 ? ["früheres Insulin −" + num(result.prior_insulin_effect_mgdl, 0) + " mg/dL"] : []),
     "Ende " + timeOnly(result.end) + (result.manual_window ? " (manuell)" : ""),
   ].join(" · ");
   return '<div class="calc-block"><div class="factor' + (valid ? '' : ' unavailable') + '"><span>Insulinfaktor</span><strong>' +

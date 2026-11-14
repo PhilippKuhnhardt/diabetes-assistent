@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
-from app.calculation import calculate_episode, interpolate_glucose, isf_at
+from app.calculation import calculate_episode, insulin_remaining, interpolate_glucose, isf_at
 
 
 def moment(hour, minute=0):
@@ -56,17 +56,40 @@ class CalculationTests(unittest.TestCase):
         self.assertEqual(result["end_reason"], "after_last_injection")
         self.assertEqual([dose["id"] for dose in result["doses"]], ["first", "split", "correction", "late"])
         self.assertEqual(Decimal(result["rapid_units_in_window"]), Decimal(10))
-        self.assertEqual(Decimal(result["insulin_effect_mgdl"]), Decimal(400))
-        self.assertEqual(Decimal(result["factor_units_per_ke"]), Decimal("1.75"))
+        # The dose one hour before the meal counts with the share acting inside the window (60 to 417 min).
+        prior = 2 * 50 * (insulin_remaining(60) - insulin_remaining(417))  # KF 50 at 11:00 in Berlin
+        self.assertEqual([dose["id"] for dose in result["prior_doses"]], ["prior"])
+        self.assertEqual(Decimal(result["prior_insulin_effect_mgdl"]), prior)
+        self.assertEqual(Decimal(result["insulin_effect_mgdl"]), 400 + prior)
+        self.assertEqual(Decimal(result["factor_units_per_ke"]), 10 * (20 + 400 + prior) / (60 * 40))
         self.assertEqual(Decimal(result["doses"][-1]["effect_mgdl"]), Decimal(120))
 
-    def test_prior_insulin_is_excluded(self):
+    def test_prior_insulin_counts_with_its_share_inside_the_window(self):
         start = moment(10)
         entries = [{"at": start, "sgv": 100}, {"at": moment(13), "sgv": 100}]
         result = calculate_episode({"at": start, "carbs": 30},
-            [{"id": "old", "at": moment(9), "insulin": 2, "role": "correction"}], entries, self.settings)
+            [{"id": "old", "at": moment(9), "insulin": 2, "role": "correction"},
+             {"id": "gone", "at": moment(3), "insulin": 5, "role": "correction"},
+             {"id": "basal", "at": moment(9), "insulin": 20, "eventType": "Basal"}], entries, self.settings)
         self.assertEqual(result["doses"], [])
-        self.assertIsNone(result["factor_units_per_ke"])
+        self.assertEqual(Decimal(result["rapid_units_in_window"]), Decimal(0))
+        # 2 IE × KF 50 at 9:00 UTC (11:00 in Berlin) × share acting 60 to 240 min after the dose; a dose
+        # whose effect ended before the meal and basal insulin stay out.
+        share = insulin_remaining(60) - insulin_remaining(240)
+        self.assertTrue(Decimal("0.6") < share < Decimal("0.75"))
+        self.assertEqual([dose["id"] for dose in result["prior_doses"]], ["old"])
+        self.assertEqual(Decimal(result["prior_insulin_effect_mgdl"]), 2 * share * 50)
+        self.assertEqual(Decimal(result["factor_units_per_ke"]), 10 * (2 * share * 50) / (30 * 40))
+
+    def test_without_prior_insulin_the_factor_is_unchanged(self):
+        start = moment(10)
+        entries = [{"at": start, "sgv": 100}, {"at": moment(13), "sgv": 120}]
+        result = calculate_episode({"at": start, "carbs": 40, "source_id": "meal"},
+            [{"id": "meal", "at": start, "insulin": 3, "role": "meal"}], entries, self.settings)
+        self.assertEqual(result["prior_doses"], [])
+        self.assertEqual(Decimal(result["prior_insulin_effect_mgdl"]), Decimal(0))
+        # 10 × (20 + 3 × 40) / (40 × 40)
+        self.assertEqual(Decimal(result["factor_units_per_ke"]), Decimal("0.875"))
 
     def test_time_specific_isf_uses_berlin_local_clock(self):
         self.assertEqual(isf_at(moment(10), self.settings["isf_schedule"], "Europe/Berlin"), Decimal(40))
@@ -213,12 +236,15 @@ class CalculationTests(unittest.TestCase):
         ]
         manual = {"start": moment(10, 20), "end": moment(13, 20)}
         result = calculate_episode(meal, treatments, entries, self.settings, manual_window=manual)
-        # The meal's own carbs and bolus count; a separate dose before the start does not.
+        # The meal's own carbs and bolus count in full; a separate dose before the start only with the
+        # share that acts inside the window.
         self.assertEqual([dose["id"] for dose in result["doses"]], ["meal"])
+        self.assertEqual([dose["id"] for dose in result["prior_doses"]], ["early"])
         self.assertEqual(Decimal(result["carbs_total"]), Decimal(50))
         self.assertEqual(Decimal(result["g0"]), Decimal(100))
-        # 10 × (ΔG 20 + 4 × 40) / (50 × 40)
-        self.assertEqual(Decimal(result["factor_units_per_ke"]), Decimal("0.9"))
+        # 10 × (ΔG 20 + 4 × 40 + 1 × 40 × share from 10 to 190 min) / (50 × 40)
+        prior = 40 * (insulin_remaining(10) - insulin_remaining(190))
+        self.assertEqual(Decimal(result["factor_units_per_ke"]), 10 * (180 + prior) / 2000)
 
     def test_manual_window_must_end_after_meal_start(self):
         start = moment(10)
