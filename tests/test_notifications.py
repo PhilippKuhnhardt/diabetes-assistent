@@ -10,7 +10,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 from unittest.mock import patch
 
-from app import glucose_alerts
+from app import correction_check, glucose_alerts
 from app.ingestion import pushover
 from app.services import background, notifications
 from app.store import db
@@ -98,6 +98,8 @@ class CheckTests(unittest.TestCase):
         self.inputs.start()
         self.warnings = patch.object(notifications, "glucose_warnings", return_value=[])
         self.warnings.start()
+        self.corrections = patch.object(notifications, "correction_reminder", return_value=[])
+        self.corrections.start()
         self.settings = patch.object(notifications.config, "get_settings", return_value=(1, SETTINGS))
         self.settings.start()
         self.second = patch.object(notifications, "_second_part", return_value=None)
@@ -106,6 +108,7 @@ class CheckTests(unittest.TestCase):
     def tearDown(self):
         self.second.stop()
         self.settings.stop()
+        self.corrections.stop()
         self.warnings.stop()
         self.inputs.stop()
         self.env.stop()
@@ -133,7 +136,7 @@ class CheckTests(unittest.TestCase):
         with patch.object(pushover, "send") as send:
             self.assertEqual(notifications.check(MEAL_AT + timedelta(minutes=130)), [])
             send.assert_not_called()
-        self.assertEqual(notifications.view()["enabled"], {"basal": False, "split": False, "low": False, "high": False})
+        self.assertEqual(notifications.view()["enabled"], {"basal": False, "split": False, "low": False, "high": False, "check": False})
         with self.assertRaises(ValueError):
             notifications.set_enabled({"kind": "other", "enabled": True})
         with patch.dict(os.environ, {"PUSHOVER_APP_TOKEN": ""}):
@@ -143,11 +146,11 @@ class CheckTests(unittest.TestCase):
 
 
     def test_priority_per_kind_is_stored_and_used(self):
-        self.assertEqual(notifications.view()["priorities"], {"basal": 1, "split": 1, "low": 1, "high": 1})
+        self.assertEqual(notifications.view()["priorities"], {"basal": 1, "split": 1, "low": 1, "high": 1, "check": 1})
         notifications.set_enabled({"kind": "split", "priority": 2})
         notifications.set_enabled({"kind": "basal", "priority": -1})
         view = notifications.view()
-        self.assertEqual(view["priorities"], {"basal": -1, "split": 2, "low": 1, "high": 1})
+        self.assertEqual(view["priorities"], {"basal": -1, "split": 2, "low": 1, "high": 1, "check": 1})
         self.assertTrue(view["enabled"]["split"])
         self.assertEqual([option["value"] for option in view["priority_options"]], [-2, -1, 0, 1, 2])
         for wrong in (3, "1", True, None):
@@ -227,6 +230,63 @@ class GlucoseAlertTests(unittest.TestCase):
             self.assertEqual(self.kinds(shifted, self.found(doses=[(moment - timedelta(minutes=20), "4")]), moment),
                              expected, hours)
         self.assertEqual(self.kinds(self.entries([114, 114, 114, 114, 112, 109, 106]), found, self.NOW + timedelta(minutes=11)), [])
+
+
+class CorrectionCheckTests(unittest.TestCase):
+    """'BZ prüfen' after a meal (analysen/nachspritzen-2026-11-14.md)."""
+    MEAL = datetime(2026, 11, 14, 11, 0, tzinfo=timezone.utc)
+    MEAL_ROW = {"at": MEAL, "role": "meal", "carbs": "80", "insulin": "6", "eventType": "Meal Bolus"}
+
+    def entries(self, now, values):
+        return [{"at": now - timedelta(minutes=5 * (len(values) - 1 - index)), "sgv": value} for index, value in enumerate(values)]
+
+    def found(self, doses=()):
+        return {"doses": [{"at": at, "units": Decimal(units), "mgdl_per_unit": Decimal(35)} for at, units in doses],
+                "carbs": [], "surcharges": [], "fresh_meals": []}
+
+    def due(self, minutes, values, treatments=None, found=None):
+        now = self.MEAL + timedelta(minutes=minutes)
+        rows = treatments if treatments is not None else [self.MEAL_ROW]
+        return correction_check.due(self.entries(now, values), found or self.found(), rows, now)
+
+    def test_high_and_not_falling_two_hours_after_a_meal(self):
+        hit = self.due(150, [190, 192, 195, 198, 200, 203, 205])
+        self.assertEqual((hit["glucose_mgdl"], hit["rise_mgdl"], hit["end_mgdl"]), (Decimal(205), Decimal(15), Decimal(205)))
+        self.assertEqual(hit["meal_at"], self.MEAL)
+        self.assertIsNotNone(self.due(150, [200] * 7))                       # flat counts
+        self.assertIsNone(self.due(150, [215, 212, 210, 208, 206, 204, 200]))  # falling
+        self.assertIsNone(self.due(150, [150] * 7))                          # below 160
+        self.assertIsNone(self.due(80, [250] * 7))                           # too early
+        self.assertIsNone(self.due(460, [250] * 7))                          # too late
+
+    def test_before_two_hours_only_from_180_and_rising(self):
+        self.assertIsNone(self.due(100, [200] * 7))
+        self.assertIsNone(self.due(100, [168, 169, 170, 171, 172, 173, 174]))  # below 180
+        self.assertIsNotNone(self.due(100, [180, 183, 186, 189, 192, 195, 198]))
+
+    def test_insulin_still_acting_or_given_recently_or_an_open_split_plan_holds_it(self):
+        dose_at = self.MEAL + timedelta(minutes=100)
+        dosed = [self.MEAL_ROW, {"at": dose_at, "insulin": "3", "eventType": "Correction Bolus"}]
+        self.assertIsNone(self.due(150, [205] * 7, dosed))
+        # Older dose: allowed, but the insulin still acting lowers the forecast end below 160.
+        old = [self.MEAL_ROW, {"at": self.MEAL + timedelta(minutes=50), "insulin": "3", "eventType": "Correction Bolus"}]
+        self.assertIsNone(self.due(150, [205] * 7, old, self.found([(self.MEAL + timedelta(minutes=50), "3")])))
+        split = [{**self.MEAL_ROW, "split": {"units": "3", "delay_minutes": 120}}]
+        self.assertIsNone(self.due(150, [205] * 7, split))
+
+    def test_message_names_the_dose_helps_correction(self):
+        now = self.MEAL + timedelta(minutes=150)
+        hit = {"meal_at": self.MEAL, "glucose_mgdl": Decimal(205), "rise_mgdl": Decimal(15), "end_mgdl": Decimal("231.4")}
+        with patch.object(notifications.correction_check, "due", return_value=hit):
+            due = notifications.correction_reminder(now, SETTINGS, [], [], {"check": True},
+                                                    lambda: {"normal": Decimal("2.5"), "cautious": Decimal("1.5")}, found={})
+            self.assertEqual(due[0]["title"], "BZ prüfen")
+            self.assertEqual(due[0]["message"], "BZ 205 (+15 in 30 min), Prognose Ende 231, Mahlzeit um 12:00. "
+                                                "Korrektur 2,5 IE (vorsichtig 1,5 IE)")
+            none = notifications.correction_reminder(now, SETTINGS, [], [], {"check": True},
+                                                     lambda: {"normal": Decimal(0), "cautious": Decimal(0)}, found={})
+            self.assertTrue(none[0]["message"].endswith("Laut Dosishilfe keine Korrektur nötig"))
+            self.assertEqual(notifications.correction_reminder(now, SETTINGS, [], [], {"check": False}, found={}), [])
 
 
 class PushoverTests(unittest.TestCase):
