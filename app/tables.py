@@ -12,13 +12,13 @@ MEAL_COLUMNS = [
     "manual_window", "excluded", "sport_status", "sport_effect_mgdl", "g0_mgdl", "g_end_mgdl",
     "delta_mgdl", "carbs_meal_g", "carbs_total_g", "extra_carb_count", "carbs_times_isf",
     "rapid_units", "insulin_effect_mgdl", "meal_isf", "factor_ie_per_ke", "blocked_reason",
-    "carbs_certainty", "fat_protein", "alcohol", "place",
+    "carbs_certainty", "fat_protein", "alcohol", "fast", "place",
 ]
 WINDOW_EVENT_COLUMNS = ["meal_id", "kind", "at", "carbs_g", "units", "isf", "event_type", "share"]
 ENTRY_COLUMNS = ["at", "sgv"]
 BASAL_COLUMNS = ["id", "at", "units", "nightscout_synced", "notes"]
 TREATMENT_COLUMNS = ["id", "at", "eventType", "carbs", "insulin", "basal_units", "duration",
-                     "sport_type", "role", "meal", "episode_id", "carbs_certainty", "fat_protein", "alcohol", "place", "notes"]
+                     "sport_type", "role", "meal", "episode_id", "carbs_certainty", "fat_protein", "alcohol", "fast", "place", "notes"]
 TABLE_COLUMNS = {"meals": MEAL_COLUMNS, "window_events": WINDOW_EVENT_COLUMNS, "entries": ENTRY_COLUMNS,
                  "treatments": TREATMENT_COLUMNS, "basal": BASAL_COLUMNS}
 
@@ -36,6 +36,7 @@ entsprechen der App zum Abrufzeitpunkt (aktuelles Nightscout-Profil für alle Ta
   weighed = gewogen, known = Gericht bekannt oder FDDB-KI-Auswertung, unsure = keine ernsthafte
   Schätzung, leer = nicht angegeben. fat_protein: mindestens ein KH-Eintrag war als
   „fett-/eiweißreich“ markiert. alcohol: mindestens ein KH-Eintrag war mit „Alkohol“ markiert.
+  fast: mindestens ein KH-Eintrag war als „Schnell“ (wirkt schnell) markiert, seit 14.11.2026.
   place: Ort-Chip der Mahlzeit (ihr eigener Eintrag, sonst der erste gezählte KH-Eintrag mit Ort),
   leer = kein Ort. Orte und Standorte liegen nur in der App, nicht in Nightscout.
   vacation: der Tag liegt in einem Urlaub (Schalter in den Einstellungen); die Automatik lässt
