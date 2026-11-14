@@ -230,11 +230,12 @@ def _same_dose(dose: dict, payload: dict, insulin: Decimal) -> bool:
 
 
 def _split(context: dict, assignment: dict | None, payload: dict) -> dict | None:
-    """The split-bolus chip: offered and preselected for a large main meal; the form can switch it off."""
+    """The split-bolus chip: offered and preselected for a large or fat/protein main meal; the form can switch it off."""
     carbs, at = context["carbs"], context["at"]
     if context["mode"] != "meal" or not carbs or at is None:
         return None
-    offer = split_bolus.offer(carbs, bool(assignment and assignment["snack"]), context["settings"])
+    offer = split_bolus.offer(carbs, bool(assignment and assignment["snack"]), context["settings"],
+                              fat=payload.get("fat_protein") is True)
     if offer is None:
         return None
     return {**offer, "active": payload.get("split") is not False,

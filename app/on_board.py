@@ -16,6 +16,10 @@ meal) acts linearly from 2 h to 5 h after the meal start (6 h with a fat/protein
 fat and protein, rises sooner: its surcharge acts from 1 h to 4 h (5 h with the fat mark); with 2–5 h the surcharge
 was still fully "to come" at the 8 o'clock peak and the app suggested corrections that ended in lows (Philipp's
 approval 2026-11-06, analysen/modell-review-2026-11-06.md: 2-h forecast 90–300 min after breakfast MAE 28/35 → 24/24).
+A fat/protein meal's surcharge acts from the meal start (to 6 h, breakfast 5 h): its glucose rose 64 mg/dL more
+in the first 2 h than a surcharge starting at 2 h allows and 30-65 less after that, so the second split part and
+corrections after such meals came out about 1.5-2 IE too large (Philipp's approval 2026-11-14, 16 fat meals,
+analysen/zweitpruefung-2026-11-14.md). The meal dose itself does not change.
 A snack of a meal never carries it; a diary snack of no meal from 20 g carries its own (episodes.solo_snack,
 user report 2026-11-08), since no meal's surcharge covers it. A place switched on for the place factor scales the carbs and surcharge of its entries.
 
@@ -91,7 +95,7 @@ def carb_remaining(minutes: Decimal, grams: Decimal) -> Decimal:
 
 
 def surcharge_remaining(minutes: Decimal, fat: bool = False, breakfast: bool = False) -> Decimal:
-    start = BREAKFAST_SURCHARGE_FROM if breakfast else SURCHARGE_FROM
+    start = Decimal(0) if fat else BREAKFAST_SURCHARGE_FROM if breakfast else SURCHARGE_FROM
     if breakfast:
         end = BREAKFAST_SURCHARGE_TO_FAT if fat else BREAKFAST_SURCHARGE_TO
     else:

@@ -23,13 +23,17 @@ class CurveTests(unittest.TestCase):
         self.assertEqual(on_board.surcharge_remaining(Decimal(60)), 1)
         self.assertEqual(on_board.surcharge_remaining(Decimal(210)), Decimal("0.5"))
         self.assertEqual(on_board.surcharge_remaining(Decimal(300)), 0)
-        self.assertEqual(on_board.surcharge_remaining(Decimal(300), fat=True), Decimal("0.25"))
+        # A fat/protein meal's surcharge acts from the meal start to 6 h.
+        self.assertEqual(on_board.surcharge_remaining(Decimal(0), fat=True), 1)
+        self.assertEqual(on_board.surcharge_remaining(Decimal(120), fat=True), Decimal(2) / Decimal(3))
+        self.assertEqual(on_board.surcharge_remaining(Decimal(180), fat=True), Decimal("0.5"))
+        self.assertEqual(on_board.surcharge_remaining(Decimal(360), fat=True), 0)
 
     def test_breakfast_surcharge_acts_from_one_to_four_hours(self):
         self.assertEqual(on_board.surcharge_remaining(Decimal(60), breakfast=True), 1)
         self.assertEqual(on_board.surcharge_remaining(Decimal(150), breakfast=True), Decimal("0.5"))
         self.assertEqual(on_board.surcharge_remaining(Decimal(240), breakfast=True), 0)
-        self.assertEqual(on_board.surcharge_remaining(Decimal(240), fat=True, breakfast=True), Decimal("0.25"))
+        self.assertEqual(on_board.surcharge_remaining(Decimal(240), fat=True, breakfast=True), Decimal("0.2"))
 
 
 class OnBoardTests(unittest.TestCase):
@@ -60,8 +64,8 @@ class OnBoardTests(unittest.TestCase):
         self.assertTrue(rows[breakfast]["breakfast"])
         self.assertEqual(rows[self.now - timedelta(minutes=30)]["mgdl"], 200)
         # Breakfast 4 h ago: its surcharge (1–4 h) has acted, with 2–5 h a third would be left;
-        # the fat lunch has all of its 200 still to come.
-        self.assertEqual(on_board.effects_at(found, self.now)["surcharge_mgdl"], 200)
+        # the fat lunch's 200 act from its start over 6 h, so after 30 min 11/12 are still to come.
+        self.assertEqual(on_board.effects_at(found, self.now)["surcharge_mgdl"], Decimal(200) * 11 / 12)
 
     def test_place_factor_scales_carbs_and_surcharge_of_its_entries(self):
         meal = [{"id": "k", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 40,
@@ -112,8 +116,9 @@ class OnBoardTests(unittest.TestCase):
         full = 165 - active["lowering_mgdl"] + active["raising_mgdl"]
         self.assertEqual(Decimal(result["forecast_mgdl"]), full)
         self.assertEqual(Decimal(result["cautious_forecast_mgdl"]), full - on_board.FORECAST_SPREAD_MGDL)
-        # Clearly more than the 0.5 IE of rests that only cancel the bolus (shorter carbs since 2026-10-22: 2 IE).
-        self.assertGreaterEqual(Decimal(result["cautious_entry_units"]), 2)
+        # Clearly more than the 0.5 IE of rests that only cancel the bolus (shorter carbs since 2026-10-22: 2 IE;
+        # fat surcharge from the meal start since 2026-11-14, a quarter of it has acted by now: 1.5 IE).
+        self.assertGreaterEqual(Decimal(result["cautious_entry_units"]), Decimal("1.5"))
         self.assertLess(Decimal(result["cautious_entry_units"]), Decimal(result["entry_units"]))
 
     def test_lower_target_corrects_the_same_forecast_only_while_little_acts(self):
@@ -296,6 +301,10 @@ class SplitTests(unittest.TestCase):
         self.assertIsNone(split.offer(Decimal(79), False, self.settings))
         self.assertIsNone(split.offer(Decimal(120), True, self.settings))
         self.assertIsNone(split.offer(Decimal(120), False, {**self.settings, "split_min_grams": 0}))
+        # A fat/protein main meal is split whatever its size, unless split is switched off.
+        self.assertEqual(split.offer(Decimal(50), False, self.settings, fat=True), {"first_percent": 60, "delay_minutes": 120})
+        self.assertIsNone(split.offer(Decimal(50), True, self.settings, fat=True))
+        self.assertIsNone(split.offer(Decimal(50), False, {**self.settings, "split_min_grams": 0}, fat=True))
 
     def test_first_part_is_rounded_to_half_units_and_the_rest_completes_the_dose(self):
         self.assertEqual(split.parts(Decimal("9.5"), 60), (Decimal("5.5"), Decimal("4.0")))

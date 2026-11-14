@@ -34,10 +34,12 @@ WAIT_BELOW_MGDL, WAIT_FALL_MGDL = Decimal(110), Decimal(5)
 WAIT_AT_MOST = timedelta(minutes=60)
 
 
-def offer(carbs: Decimal, snack: bool, settings: dict) -> dict | None:
-    """Whether the entry form offers (and preselects) a split for this meal."""
+def offer(carbs: Decimal, snack: bool, settings: dict, fat: bool = False) -> dict | None:
+    """Whether the entry form offers (and preselects) a split for this meal: a main meal from split_min_grams,
+    or any fat/protein main meal, whose fat surcharge would otherwise be injected at once while it acts
+    over hours (approval 2026-11-14, analysen/zweitpruefung-2026-11-14.md)."""
     minimum = int(settings.get("split_min_grams", 80))
-    if snack or minimum <= 0 or carbs < minimum:
+    if snack or minimum <= 0 or carbs <= 0 or (carbs < minimum and not fat):
         return None
     return {"first_percent": int(settings.get("split_first_percent", 60)),
             "delay_minutes": int(settings.get("split_delay_minutes", 120))}
