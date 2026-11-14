@@ -306,6 +306,17 @@ class SplitTests(unittest.TestCase):
         self.assertIsNone(split.offer(Decimal(50), True, self.settings, fat=True))
         self.assertIsNone(split.offer(Decimal(50), False, {**self.settings, "split_min_grams": 0}, fat=True))
 
+    def test_small_doses_are_not_worth_splitting(self):
+        self.assertFalse(split.worth_it("4.5", {"split_min_units": 5}))
+        self.assertTrue(split.worth_it("5", {"split_min_units": 5}))
+        self.assertTrue(split.worth_it("4.5", {"split_min_units": 0}))
+        self.assertTrue(split.worth_it(None, {"split_min_units": 5}))
+        self.assertFalse(split.worth_it(Decimal(3), {}))
+        # The limit also holds for a fat/protein meal: it is offered whatever its size, but not split below 5 IE.
+        settings = {**self.settings, "split_min_units": 5}
+        self.assertIsNotNone(split.offer(Decimal(30), False, settings, fat=True))
+        self.assertFalse(split.worth_it("4.5", settings))
+
     def test_first_part_is_rounded_to_half_units_and_the_rest_completes_the_dose(self):
         self.assertEqual(split.parts(Decimal("9.5"), 60), (Decimal("5.5"), Decimal("4.0")))
         self.assertEqual(split.parts(Decimal(10), 60), (Decimal(6), Decimal(4)))

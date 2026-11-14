@@ -49,7 +49,7 @@ G vorsichtig  = max(G − max(0, Senkt − KH-Rest − Zuschlag-Rest), G normal 
 
 ### Split-Bolus
 
-Ab `split_min_grams` KH (Standard 80 g, 0 = aus) ist bei einer Hauptmahlzeit „Split“ vorausgewählt, bei einer fett-/eiweißreich markierten Hauptmahlzeit unabhängig von der KH-Menge (seit 14.11.); ein Snack bekommt keinen. Jede Option zeigt dann den ersten Teil und den Rest:
+Ab `split_min_grams` KH (Standard 80 g, 0 = aus) ist bei einer Hauptmahlzeit „Split“ vorausgewählt, bei einer fett-/eiweißreich markierten Hauptmahlzeit unabhängig von der KH-Menge (seit 14.11.); ein Snack bekommt keinen. Ist die Normal-Empfehlung (volle Dosis) kleiner als `split_min_units` (Standard 5 IE, 0 = immer; Philipps Wahl 6.11.), etwa weil ein niedriger BZ sie verkleinert, gibt es keinen Split und alles wird auf einmal vorgeschlagen; das gilt auch mit Fett-Marke. Jede Option zeigt dann den ersten Teil und den Rest:
 
 ```text
 jetzt   = auf 0,5 IE gerundet (Empfehlung × split_first_percent / 100)     (Standard 60 %)
