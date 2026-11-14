@@ -5,10 +5,13 @@ New tables or columns are appended as a new migration, never by editing an old o
 """
 from __future__ import annotations
 
+import json
 import os
 import sqlite3
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
+from datetime import datetime, timezone
+from decimal import Decimal
 from pathlib import Path
 
 DB_PATH = Path(os.environ.get("APP_DB", "data/app.sqlite3"))
@@ -238,10 +241,30 @@ def _timezone_periods(db: sqlite3.Connection) -> None:
     )""")
 
 
+def _prior_insulin_percentile(db: sqlite3.Connection) -> None:
+    """The meal factor now counts earlier rapid insulin that acts inside the window (app/calculation.py), so
+    the factors of such meals rise. With the percentile at 40 % the dose would rise on average; 35 % keeps
+    it level (Philipp's approval 2026-11-14, analysen/dosisrechnung-pruefung-2026-11-14.md). Only a
+    percentile of exactly 40 is changed, as a new settings version from now on."""
+    row = db.execute("SELECT payload FROM settings_versions ORDER BY id DESC LIMIT 1").fetchone()
+    if not row:
+        return
+    payload = json.loads(row["payload"])
+    try:
+        if Decimal(str(payload.get("auto_percentile"))) != Decimal(40):
+            return
+    except ArithmeticError:
+        return
+    payload["auto_percentile"] = "35"
+    now = datetime.now(timezone.utc).isoformat()
+    db.execute("INSERT INTO settings_versions(created_at,effective_at,payload) VALUES(?,?,?)",
+               (now, now, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))))
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
                                                           _notifications, _notification_priority, _places,
                                                           _inbox_seen, _sport_sessions, _places_without_positions,
-                                                          _place_factor, _timezone_periods]
+                                                          _place_factor, _timezone_periods, _prior_insulin_percentile]
 
 
 def init() -> None:

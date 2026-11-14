@@ -25,10 +25,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-0.8290095552833060693684088",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -89,6 +90,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-29T08:25:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "8.5",
      "ratio_g_per_unit": "10.03261621453466457992430939",
      "reason": null,
@@ -163,10 +166,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-85.12822308137234010167737220",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -188,7 +192,7 @@
      "carbs_times_isf_total": "2450",
      "carbs_total": "70",
      "delta_mgdl": "-85.12822308137234010167737220",
-     "denominator_mgdl": "282.3717769186276598983226278",
+     "denominator_mgdl": "287.8263457865744228071029846",
      "doses": [
       {
        "at": "2026-08-29T09:50:00+00:00",
@@ -204,7 +208,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-08-29T12:50:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.152537864973990448564582154",
+     "factor_units_per_ke": "1.174801411373773154314706060",
      "g0": "125.1282230813723401016773722",
      "g0_source": "cgm",
      "g0_sources": [
@@ -216,7 +220,7 @@
       "2026-08-29T12:45:08.466000+00:00",
       "2026-08-29T12:50:15.641000+00:00"
      ],
-     "insulin_effect_mgdl": "367.5",
+     "insulin_effect_mgdl": "372.9545688679467629087803568",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-08-29T16:25:00+00:00",
@@ -227,8 +231,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-29T12:50:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-08-29T05:25:00+00:00",
+       "effect_mgdl": "5.454568867946762908780356831",
+       "id": "t-0001",
+       "isf": "30",
+       "share": "0.0213904661488108349363935562",
+       "units": "8.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "5.454568867946762908780356831",
      "rapid_units_in_window": "10.5",
-     "ratio_g_per_unit": "8.676504524409418852982554662",
+     "ratio_g_per_unit": "8.512076937587551257434127838",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -301,10 +316,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "48.12413461946377069807337194",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -365,6 +381,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-29T19:25:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "5.5",
      "ratio_g_per_unit": "6.545478085524511286633367595",
      "reason": null,
@@ -653,10 +671,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-2.2749747746257546935737325",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -717,6 +736,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-30T08:05:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.0",
      "ratio_g_per_unit": "9.284004871613462474622980093",
      "reason": null,
@@ -791,10 +812,11 @@
     "calculation": {
      "actual_window_minutes": "275",
      "adjusted_delta_mgdl": "-75.01609197017715221317292900",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -824,7 +846,7 @@
      "carbs_times_isf_total": "4025",
      "carbs_total": "115",
      "delta_mgdl": "-75.01609197017715221317292900",
-     "denominator_mgdl": "519.9839080298228477868270710",
+     "denominator_mgdl": "520.4152929462240495960723146",
      "doses": [
       {
        "at": "2026-08-30T10:30:00+00:00",
@@ -849,7 +871,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-08-30T15:05:00+00:00",
      "extra_carb_count": 1,
-     "factor_units_per_ke": "1.291885485788379746054228748",
+     "factor_units_per_ke": "1.292957249555836148064775937",
      "g0": "115.0160919701771522131729290",
      "g0_source": "cgm",
      "g0_sources": [
@@ -861,7 +883,7 @@
       "2026-08-30T15:00:15.858000+00:00",
       "2026-08-30T15:05:04.601000+00:00"
      ],
-     "insulin_effect_mgdl": "595.0",
+     "insulin_effect_mgdl": "595.4313849164012018092452436",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-08-30T16:20:00+00:00",
@@ -872,8 +894,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-30T13:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-08-30T05:05:00+00:00",
+       "effect_mgdl": "0.4313849164012018092452435640",
+       "id": "t-0004",
+       "isf": "30",
+       "share": "0.0023965828688955656069180198",
+       "units": "6.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.4313849164012018092452435640",
      "rapid_units_in_window": "17.0",
-     "ratio_g_per_unit": "7.740624157486720808245160131",
+     "ratio_g_per_unit": "7.734207765519900609862113603",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -963,10 +996,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "49.03409647996531656967534308",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -988,7 +1022,7 @@
      "carbs_times_isf_total": "1225",
      "carbs_total": "35",
      "delta_mgdl": "49.03409647996531656967534308",
-     "denominator_mgdl": "154.0340964799653165696753431",
+     "denominator_mgdl": "155.2248393201732981148433200",
      "doses": [
       {
        "at": "2026-08-30T16:20:00+00:00",
@@ -1004,7 +1038,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-08-30T19:20:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.257421195754818910772859944",
+     "factor_units_per_ke": "1.267141545470802433590557714",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -1016,7 +1050,7 @@
       "2026-08-30T19:15:10.369000+00:00",
       "2026-08-30T19:20:10.224000+00:00"
      ],
-     "insulin_effect_mgdl": "105.0",
+     "insulin_effect_mgdl": "106.1907428402079815451679769",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-08-31T04:50:00+00:00",
@@ -1027,8 +1061,27 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-30T19:20:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-08-30T10:30:00+00:00",
+       "effect_mgdl": "0.2159941367893097804926875440",
+       "id": "t-0005",
+       "isf": "35",
+       "share": "0.0003857038156951960365940849",
+       "units": "16.0"
+      },
+      {
+       "at": "2026-08-30T12:05:00+00:00",
+       "effect_mgdl": "0.9747487034186717646752893475",
+       "id": "t-0006",
+       "isf": "35",
+       "share": "0.0278499629548191932764368385",
+       "units": "1"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "1.190742840207981545167976892",
      "rapid_units_in_window": "3.0",
-     "ratio_g_per_unit": "7.952784662578466989640185802",
+     "ratio_g_per_unit": "7.891778180380418059231130196",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -1370,10 +1423,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "102.8449291699885649048646110",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -1434,6 +1488,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-31T07:50:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "10.5",
      "ratio_g_per_unit": "7.179697037269856646226736478",
      "reason": null,
@@ -1508,10 +1564,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-60.6208838716114447785713208",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -1533,7 +1590,7 @@
      "carbs_times_isf_total": "1225",
      "carbs_total": "35",
      "delta_mgdl": "-60.6208838716114447785713208",
-     "denominator_mgdl": "44.3791161283885552214286792",
+     "denominator_mgdl": "44.7997869635371737109921785",
      "doses": [
       {
        "at": "2026-08-31T10:25:00+00:00",
@@ -1549,7 +1606,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-08-31T13:25:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "0.3622784990072535120116626873",
+     "factor_units_per_ke": "0.3657125466411197853958545184",
      "g0": "183.7981624004068486184099000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -1561,7 +1618,7 @@
       "2026-08-31T13:20:17.714000+00:00",
       "2026-08-31T13:25:13.091000+00:00"
      ],
-     "insulin_effect_mgdl": "105.0",
+     "insulin_effect_mgdl": "105.4206708351486184895634993",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-08-31T17:10:00+00:00",
@@ -1572,8 +1629,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-31T13:25:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-08-31T04:50:00+00:00",
+       "effect_mgdl": "0.4206708351486184895634992940",
+       "id": "t-0008",
+       "isf": "30",
+       "share": "0.0013354629687257729827412676",
+       "units": "10.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.4206708351486184895634992940",
      "rapid_units_in_window": "3.0",
-     "ratio_g_per_unit": "27.60307340182443666225154480",
+     "ratio_g_per_unit": "27.34388002775627365191596502",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -1646,10 +1714,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-66.00000000000000000000000000",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -1710,6 +1779,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-31T20:10:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "15.5",
      "ratio_g_per_unit": "8.079748163693599160545645331",
      "reason": null,
@@ -2034,10 +2105,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-92.96528901157147675723303340",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -2098,6 +2170,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-01T08:50:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "10.5",
      "ratio_g_per_unit": "6.755700463780969052606688634",
      "reason": null,
@@ -2172,10 +2246,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "0E-26",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -2197,7 +2272,7 @@
      "carbs_times_isf_total": "3500",
      "carbs_total": "100",
      "delta_mgdl": "0E-26",
-     "denominator_mgdl": "350.0000000000000000000000000",
+     "denominator_mgdl": "365.9293049924563648861399886",
      "doses": [
       {
        "at": "2026-09-01T09:40:00+00:00",
@@ -2213,7 +2288,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-01T12:40:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.000000000000000000000000",
+     "factor_units_per_ke": "1.045512299978446756817542825",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -2225,7 +2300,7 @@
       "2026-09-01T12:35:14.231000+00:00",
       "2026-09-01T12:40:03.086000+00:00"
      ],
-     "insulin_effect_mgdl": "350.0",
+     "insulin_effect_mgdl": "365.9293049924563648861399886",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-01T17:15:00+00:00",
@@ -2236,8 +2311,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-01T12:40:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-01T05:50:00+00:00",
+       "effect_mgdl": "15.92930499245636488613998862",
+       "id": "t-0011",
+       "isf": "30",
+       "share": "0.0505692221982741742417142496",
+       "units": "10.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "15.92930499245636488613998862",
      "rapid_units_in_window": "10.0",
-     "ratio_g_per_unit": "1E+1",
+     "ratio_g_per_unit": "9.564689004812425514348608348",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -2310,10 +2396,11 @@
     "calculation": {
      "actual_window_minutes": "320",
      "adjusted_delta_mgdl": "17.33331973037517618321155506",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -2383,6 +2470,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-01T20:15:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "10.5",
      "ratio_g_per_unit": "7.730619588980410907957389952",
      "reason": null,
@@ -2716,10 +2805,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "87.0067810596154294061082774",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -2780,6 +2870,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-02T13:35:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "8.0",
      "ratio_g_per_unit": "9.059778106551926183221798099",
      "reason": null,
@@ -2854,10 +2946,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-109.0764612155423903028045093",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -2879,7 +2972,7 @@
      "carbs_times_isf_total": "2800",
      "carbs_total": "80",
      "delta_mgdl": "-109.0764612155423903028045093",
-     "denominator_mgdl": "240.9235387844576096971954907",
+     "denominator_mgdl": "240.9818610501671311383857577",
      "doses": [
       {
        "at": "2026-09-02T16:30:00+00:00",
@@ -2895,7 +2988,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-02T19:30:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "0.8604412099444914632042696096",
+     "factor_units_per_ke": "0.8606495037505968969228062775",
      "g0": "149.0764612155423903028045093",
      "g0_source": "cgm",
      "g0_sources": [
@@ -2907,7 +3000,7 @@
       "2026-09-02T19:25:05.587000+00:00",
       "2026-09-02T19:30:00.626000+00:00"
      ],
-     "insulin_effect_mgdl": "350.0",
+     "insulin_effect_mgdl": "350.0583222657095214411902670",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-03T05:20:00+00:00",
@@ -2918,8 +3011,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-02T19:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-02T10:35:00+00:00",
+       "effect_mgdl": "0.05832226570952144119026698400",
+       "id": "t-0015",
+       "isf": "35",
+       "share": "0.0002082938061054337185366678",
+       "units": "8.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.05832226570952144119026698400",
      "rapid_units_in_window": "10.0",
-     "ratio_g_per_unit": "11.62194451454169324912201096",
+     "ratio_g_per_unit": "11.61913177945414527405420954",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -3223,10 +3327,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-88.00000000000000000000000000",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -3295,6 +3400,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-03T08:20:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "13.0",
      "ratio_g_per_unit": "8.443708609271523178807947020",
      "reason": null,
@@ -3386,10 +3493,11 @@
     "calculation": {
      "actual_window_minutes": "275",
      "adjusted_delta_mgdl": "128.0064360982381356348110185",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -3419,7 +3527,7 @@
      "carbs_times_isf_total": "3150",
      "carbs_total": "90",
      "delta_mgdl": "128.0064360982381356348110185",
-     "denominator_mgdl": "390.5064360982381356348110185",
+     "denominator_mgdl": "393.8309962311388159227776223",
      "doses": [
       {
        "at": "2026-09-03T10:15:00+00:00",
@@ -3444,7 +3552,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-09-03T14:50:00+00:00",
      "extra_carb_count": 1,
-     "factor_units_per_ke": "1.239702971740438525824796884",
+     "factor_units_per_ke": "1.250257130892504177532627372",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -3456,7 +3564,7 @@
       "2026-09-03T14:45:15.193000+00:00",
       "2026-09-03T14:50:00.459000+00:00"
      ],
-     "insulin_effect_mgdl": "262.5",
+     "insulin_effect_mgdl": "265.8245601329006802879666038",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-03T17:30:00+00:00",
@@ -3467,8 +3575,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-03T13:15:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-03T05:20:00+00:00",
+       "effect_mgdl": "3.324560132900680287966603849",
+       "id": "t-0017",
+       "isf": "30",
+       "share": "0.0085245131612837956101707791",
+       "units": "13.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "3.324560132900680287966603849",
      "rapid_units_in_window": "7.5",
-     "ratio_g_per_unit": "8.066448357351957067819645107",
+     "ratio_g_per_unit": "7.998354700733788269783645510",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -3558,10 +3677,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-81.75046568252967202296391900",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -3583,7 +3703,7 @@
      "carbs_times_isf_total": "2800",
      "carbs_total": "80",
      "delta_mgdl": "-81.75046568252967202296391900",
-     "denominator_mgdl": "338.2495343174703279770360810",
+     "denominator_mgdl": "338.2824959322831673457971208",
      "doses": [
       {
        "at": "2026-09-03T17:30:00+00:00",
@@ -3599,7 +3719,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-03T20:30:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.208034051133822599917986004",
+     "factor_units_per_ke": "1.208151771186725597663561146",
      "g0": "121.7504656825296720229639190",
      "g0_source": "cgm",
      "g0_sources": [
@@ -3611,7 +3731,7 @@
       "2026-09-03T20:25:18.793000+00:00",
       "2026-09-03T20:30:14.632000+00:00"
      ],
-     "insulin_effect_mgdl": "420.0",
+     "insulin_effect_mgdl": "420.0329616148128393687610398",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-04T06:10:00+00:00",
@@ -3622,8 +3742,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-03T20:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-03T11:50:00+00:00",
+       "effect_mgdl": "0.0329616148128393687610398230",
+       "id": "t-0020",
+       "isf": "35",
+       "share": "0.0009417604232239819646011378",
+       "units": "1"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.0329616148128393687610398230",
      "rapid_units_in_window": "12.0",
-     "ratio_g_per_unit": "8.277912357366347321979594533",
+     "ratio_g_per_unit": "8.277105773041533270743603789",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -4013,10 +4144,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-85.18873385217342576202578380",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -4077,6 +4209,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-04T09:10:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "20.0",
      "ratio_g_per_unit": "6.410116127980024610287229146",
      "reason": null,
@@ -4151,10 +4285,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "0E-26",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -4176,7 +4311,7 @@
      "carbs_times_isf_total": "1225",
      "carbs_total": "35",
      "delta_mgdl": "0E-26",
-     "denominator_mgdl": "175.0000000000000000000000000",
+     "denominator_mgdl": "226.4351386240627197026928477",
      "doses": [
       {
        "at": "2026-09-04T09:35:00+00:00",
@@ -4192,7 +4327,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-04T12:35:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.428571428571428571428571429",
+     "factor_units_per_ke": "1.848450111216838528185247736",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -4204,7 +4339,7 @@
       "2026-09-04T12:30:19.685000+00:00",
       "2026-09-04T12:35:17.650000+00:00"
      ],
-     "insulin_effect_mgdl": "175.0",
+     "insulin_effect_mgdl": "226.4351386240627197026928477",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-04T16:20:00+00:00",
@@ -4215,8 +4350,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-04T12:35:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-04T06:10:00+00:00",
+       "effect_mgdl": "51.43513862406271970269284768",
+       "id": "t-0022",
+       "isf": "30",
+       "share": "0.0857252310401045328378214128",
+       "units": "20.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "51.43513862406271970269284768",
      "rapid_units_in_window": "5.0",
-     "ratio_g_per_unit": "7",
+     "ratio_g_per_unit": "5.409937730706174879771929057",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -4289,10 +4435,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-13.95847541160612593910980924",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -4353,6 +4500,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-04T19:20:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.0",
      "ratio_g_per_unit": "6.816956401261206248612412172",
      "reason": null,
@@ -4713,10 +4862,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-54.30395425057280630225108055",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -4777,6 +4927,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-05T08:50:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.0",
      "ratio_g_per_unit": "7.649653447596323261316995563",
      "reason": null,
@@ -4851,10 +5003,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "43.97937469992760255847302448",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -4876,7 +5029,7 @@
      "carbs_times_isf_total": "1575",
      "carbs_total": "45",
      "delta_mgdl": "43.97937469992760255847302448",
-     "denominator_mgdl": "201.4793746999276025584730245",
+     "denominator_mgdl": "205.2300444843207226549405347",
      "doses": [
       {
        "at": "2026-09-05T10:30:00+00:00",
@@ -4892,7 +5045,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-05T13:30:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.279234125078905413069669997",
+     "factor_units_per_ke": "1.303047901487750620031368474",
      "g0": "74.97399225548683706420009852",
      "g0_source": "cgm",
      "g0_sources": [
@@ -4904,7 +5057,7 @@
       "2026-09-05T13:25:15.501000+00:00",
       "2026-09-05T13:30:13.916000+00:00"
      ],
-     "insulin_effect_mgdl": "157.5",
+     "insulin_effect_mgdl": "161.2506697843931200964675102",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-05T17:30:00+00:00",
@@ -4915,8 +5068,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-05T13:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-05T05:50:00+00:00",
+       "effect_mgdl": "3.750669784393120096467510231",
+       "id": "t-0026",
+       "isf": "30",
+       "share": "0.0138913695718263707276574453",
+       "units": "9.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "3.750669784393120096467510231",
      "rapid_units_in_window": "4.5",
-     "ratio_g_per_unit": "7.817177328179220042211709592",
+     "ratio_g_per_unit": "7.674314956942513904893880019",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -4989,10 +5153,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-63.17516658330778787047643630",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -5053,6 +5218,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-05T20:30:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "15.5",
      "ratio_g_per_unit": "8.032131305521309049697259579",
      "reason": null,
@@ -5403,10 +5570,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-94.03746887714823586567073540",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -5467,6 +5635,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-06T08:55:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.5",
      "ratio_g_per_unit": "7.770084208488602816628756715",
      "reason": null,
@@ -5541,10 +5711,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "55.92646626690045563014844308",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -5566,7 +5737,7 @@
      "carbs_times_isf_total": "1050",
      "carbs_total": "30",
      "delta_mgdl": "55.92646626690045563014844308",
-     "denominator_mgdl": "160.9264662669004556301484431",
+     "denominator_mgdl": "178.3728479253050457435398592",
      "doses": [
       {
        "at": "2026-09-06T09:45:00+00:00",
@@ -5582,7 +5753,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-06T12:45:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.532633012065718625049032791",
+     "factor_units_per_ke": "1.698789027860048054700379611",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -5594,7 +5765,7 @@
       "2026-09-06T12:40:01.705000+00:00",
       "2026-09-06T12:45:11.386000+00:00"
      ],
-     "insulin_effect_mgdl": "105.0",
+     "insulin_effect_mgdl": "122.4463816584045901133914161",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-06T17:10:00+00:00",
@@ -5605,8 +5776,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-06T12:45:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-06T05:55:00+00:00",
+       "effect_mgdl": "17.44638165840459011339141611",
+       "id": "t-0029",
+       "isf": "30",
+       "share": "0.0505692221982741742417142496",
+       "units": "11.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "17.44638165840459011339141611",
      "rapid_units_in_window": "3.0",
-     "ratio_g_per_unit": "6.524719173653819500970275043",
+     "ratio_g_per_unit": "5.886546143164655278096057496",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -5679,10 +5861,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "52.80049810867297001334104293",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -5743,6 +5926,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-06T20:10:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.5",
      "ratio_g_per_unit": "8.629628085926306500106949857",
      "reason": null,
@@ -6157,10 +6342,11 @@
     "calculation": {
      "actual_window_minutes": "275",
      "adjusted_delta_mgdl": "16.10119851013574895527811664",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -6190,7 +6376,7 @@
      "carbs_times_isf_total": "2275",
      "carbs_total": "65",
      "delta_mgdl": "16.10119851013574895527811664",
-     "denominator_mgdl": "296.1011985101357489552781166",
+     "denominator_mgdl": "301.4235334796727790185401745",
      "doses": [
       {
        "at": "2026-09-07T09:45:00+00:00",
@@ -6215,7 +6401,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-09-07T14:20:00+00:00",
      "extra_carb_count": 1,
-     "factor_units_per_ke": "1.301543729714882412990233480",
+     "factor_units_per_ke": "1.324938608701858369312264503",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -6227,7 +6413,7 @@
       "2026-09-07T14:15:02.181000+00:00",
       "2026-09-07T14:20:10.397000+00:00"
      ],
-     "insulin_effect_mgdl": "280.0",
+     "insulin_effect_mgdl": "285.3223349695370300632620579",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-07T17:20:00+00:00",
@@ -6238,8 +6424,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-07T12:45:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-07T05:10:00+00:00",
+       "effect_mgdl": "5.322334969537030063262057931",
+       "id": "t-0033",
+       "isf": "30",
+       "share": "0.0161282877864758486765516907",
+       "units": "11.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "5.322334969537030063262057931",
      "rapid_units_in_window": "8.0",
-     "ratio_g_per_unit": "7.683184031158608010439966626",
+     "ratio_g_per_unit": "7.547519510958888340950129949",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -6329,10 +6526,11 @@
     "calculation": {
      "actual_window_minutes": "320",
      "adjusted_delta_mgdl": "-27.18928791484879040073555318",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -6354,7 +6552,7 @@
      "carbs_times_isf_total": "1225",
      "carbs_total": "35",
      "delta_mgdl": "-27.18928791484879040073555318",
-     "denominator_mgdl": "165.3107120851512095992644468",
+     "denominator_mgdl": "165.3138230869862005871472362",
      "doses": [
       {
        "at": "2026-09-07T17:20:00+00:00",
@@ -6379,7 +6577,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-09-07T22:40:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.349475200695111915096036300",
+     "factor_units_per_ke": "1.349500596628458780303242744",
      "g0": "95.93914733878535996782410511",
      "g0_source": "cgm",
      "g0_sources": [
@@ -6391,7 +6589,7 @@
       "2026-09-07T22:35:01.574000+00:00",
       "2026-09-07T22:40:19.907000+00:00"
      ],
-     "insulin_effect_mgdl": "192.5",
+     "insulin_effect_mgdl": "192.5031110018349909878827894",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-08T06:10:00+00:00",
@@ -6402,8 +6600,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-07T20:20:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-07T11:20:00+00:00",
+       "effect_mgdl": "0.0031110018349909878827894215",
+       "id": "t-0035",
+       "isf": "35",
+       "share": "0.0000888857667140282252225549",
+       "units": "1"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.0031110018349909878827894215",
      "rapid_units_in_window": "5.5",
-     "ratio_g_per_unit": "7.410288084470926518834933649",
+     "ratio_g_per_unit": "7.410148632007737941645691763",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -6798,10 +7007,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-94.88667016933554806434032890",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -6862,6 +7072,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-08T09:10:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.5",
      "ratio_g_per_unit": "10.25703984953018004806907490",
      "reason": null,
@@ -6936,10 +7148,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "4.02855801101212150086096006",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -6961,7 +7174,7 @@
      "carbs_times_isf_total": "2625",
      "carbs_total": "75",
      "delta_mgdl": "4.02855801101212150086096006",
-     "denominator_mgdl": "249.0285580110121215008609601",
+     "denominator_mgdl": "273.4602488574419133596400627",
      "doses": [
       {
        "at": "2026-09-08T09:35:00+00:00",
@@ -6977,7 +7190,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-08T12:35:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "0.9486802209943318914318512766",
+     "factor_units_per_ke": "1.041753328980731098512914525",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -6989,7 +7202,7 @@
       "2026-09-08T12:30:14.534000+00:00",
       "2026-09-08T12:35:08.392000+00:00"
      ],
-     "insulin_effect_mgdl": "245.0",
+     "insulin_effect_mgdl": "269.4316908464297918587791026",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-08T16:40:00+00:00",
@@ -7000,8 +7213,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-08T12:35:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-08T06:10:00+00:00",
+       "effect_mgdl": "24.43169084642979185877910265",
+       "id": "t-0038",
+       "isf": "30",
+       "share": "0.0857252310401045328378214128",
+       "units": "9.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "24.43169084642979185877910265",
      "rapid_units_in_window": "7.0",
-     "ratio_g_per_unit": "10.54095972351862420047796750",
+     "ratio_g_per_unit": "9.599201386554883824971410635",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -7074,10 +7298,11 @@
     "calculation": {
      "actual_window_minutes": "220",
      "adjusted_delta_mgdl": "59.08302998551420371526806142",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung",
@@ -7139,6 +7364,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-08T19:40:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.5",
      "ratio_g_per_unit": "8.706927104101627415775102224",
      "reason": null,
@@ -7462,10 +7689,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-46.89852048213448163141519768",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -7526,6 +7754,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-09T09:05:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.0",
      "ratio_g_per_unit": "13.52351609103184592976532927",
      "reason": null,
@@ -7600,10 +7830,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-11.30835445456032819716112786",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -7625,7 +7856,7 @@
      "carbs_times_isf_total": "1925",
      "carbs_total": "55",
      "delta_mgdl": "-11.30835445456032819716112786",
-     "denominator_mgdl": "233.6916455454396718028388721",
+     "denominator_mgdl": "235.8319467372354043579123819",
      "doses": [
       {
        "at": "2026-09-09T10:50:00+00:00",
@@ -7641,7 +7872,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-09T13:50:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.213982574262024269105656478",
+     "factor_units_per_ke": "1.225101022011612490170973412",
      "g0": "80.04749509790383606285730067",
      "g0_source": "cgm",
      "g0_sources": [
@@ -7653,7 +7884,7 @@
       "2026-09-09T13:45:17.256000+00:00",
       "2026-09-09T13:50:06.868000+00:00"
      ],
-     "insulin_effect_mgdl": "245.0",
+     "insulin_effect_mgdl": "247.1403011917957325550735098",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-09T16:45:00+00:00",
@@ -7664,8 +7895,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-09T13:50:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-09T06:05:00+00:00",
+       "effect_mgdl": "2.140301191795732555073509770",
+       "id": "t-0041",
+       "isf": "30",
+       "share": "0.0118905621766429586392972765",
+       "units": "6.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "2.140301191795732555073509770",
      "rapid_units_in_window": "7.0",
-     "ratio_g_per_unit": "8.237350528757766376583222140",
+     "ratio_g_per_unit": "8.162592162056993189536698101",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -7738,10 +7980,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "17.51441946749755498143678308",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -7763,7 +8006,7 @@
      "carbs_times_isf_total": "2625",
      "carbs_total": "75",
      "delta_mgdl": "17.51441946749755498143678308",
-     "denominator_mgdl": "385.0144194674975549814367831",
+     "denominator_mgdl": "385.0654514499933862424782667",
      "doses": [
       {
        "at": "2026-09-09T16:45:00+00:00",
@@ -7779,7 +8022,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-09T19:45:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.466721597971419257072140126",
+     "factor_units_per_ke": "1.466916005523784328542774349",
      "g0": "70.25602881733439656831743064",
      "g0_source": "cgm",
      "g0_sources": [
@@ -7791,7 +8034,7 @@
       "2026-09-09T19:40:17.354000+00:00",
       "2026-09-09T19:45:17.208000+00:00"
      ],
-     "insulin_effect_mgdl": "367.5",
+     "insulin_effect_mgdl": "367.5510319824958312610414836",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-10T05:20:00+00:00",
@@ -7802,8 +8045,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-09T19:45:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-09T10:50:00+00:00",
+       "effect_mgdl": "0.05103198249583126104148361100",
+       "id": "t-0042",
+       "isf": "35",
+       "share": "0.0002082938061054337185366678",
+       "units": "7.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.05103198249583126104148361100",
      "rapid_units_in_window": "10.5",
-     "ratio_g_per_unit": "6.817926465275151285803239020",
+     "ratio_g_per_unit": "6.817022898614668968990080870",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -8126,10 +8380,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-84.03843821914642030475896980",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -8190,6 +8445,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-10T08:20:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "13.0",
      "ratio_g_per_unit": "7.353864932914590021124708698",
      "reason": null,
@@ -8264,10 +8521,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "84.84274453566375684545865780",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -8328,6 +8586,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-10T20:15:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.5",
      "ratio_g_per_unit": "7.283665267723986247255950644",
      "reason": null,
@@ -8663,10 +8923,11 @@
     "calculation": {
      "actual_window_minutes": "275",
      "adjusted_delta_mgdl": "96.2165849479602338625256184",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -8744,6 +9005,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-11T12:40:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "10.5",
      "ratio_g_per_unit": "9.434642068044593589016917115",
      "reason": null,
@@ -8835,10 +9098,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-112.2004124776133237552014884",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -8860,7 +9124,7 @@
      "carbs_times_isf_total": "3850",
      "carbs_total": "110",
      "delta_mgdl": "-112.2004124776133237552014884",
-     "denominator_mgdl": "307.7995875223866762447985116",
+     "denominator_mgdl": "307.9074928217582310688796213",
      "doses": [
       {
        "at": "2026-09-11T16:35:00+00:00",
@@ -8876,7 +9140,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-11T19:35:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "0.7994794481100952629735026275",
+     "factor_units_per_ke": "0.7997597216149564443347522631",
      "g0": "152.2004124776133237552014884",
      "g0_source": "cgm",
      "g0_sources": [
@@ -8888,7 +9152,7 @@
       "2026-09-11T19:30:00.796000+00:00",
       "2026-09-11T19:35:03.780000+00:00"
      ],
-     "insulin_effect_mgdl": "420.0",
+     "insulin_effect_mgdl": "420.1079052993715548240811097",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-12T06:05:00+00:00",
@@ -8899,8 +9163,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-11T19:35:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-11T11:15:00+00:00",
+       "effect_mgdl": "0.1079052993715548240811097480",
+       "id": "t-0049",
+       "isf": "35",
+       "share": "0.0030830085534729949737459928",
+       "units": "1"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.1079052993715548240811097480",
      "rapid_units_in_window": "12.0",
-     "ratio_g_per_unit": "12.50813891919197046874237733",
+     "ratio_g_per_unit": "12.50375547771645652881324116",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -9205,10 +9480,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-86.83529952158062773538459550",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -9269,6 +9545,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-12T09:05:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.0",
      "ratio_g_per_unit": "11.72045117729962081296439337",
      "reason": null,
@@ -9343,10 +9621,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "120.7348369296911978066275917",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -9368,7 +9647,7 @@
      "carbs_times_isf_total": "3850",
      "carbs_total": "110",
      "delta_mgdl": "120.7348369296911978066275917",
-     "denominator_mgdl": "488.2348369296911978066275917",
+     "denominator_mgdl": "492.8189888883939001467545486",
      "doses": [
       {
        "at": "2026-09-12T10:45:00+00:00",
@@ -9384,7 +9663,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-12T13:45:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.268142433583613500796435303",
+     "factor_units_per_ke": "1.280049321788036104277284542",
      "g0": "52.99510504641338237745767461",
      "g0_source": "cgm",
      "g0_sources": [
@@ -9396,7 +9675,7 @@
       "2026-09-12T13:40:19.646000+00:00",
       "2026-09-12T13:45:11.250000+00:00"
      ],
-     "insulin_effect_mgdl": "367.5",
+     "insulin_effect_mgdl": "372.0841519587027023401269569",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-12T17:25:00+00:00",
@@ -9407,8 +9686,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-12T13:45:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-12T06:05:00+00:00",
+       "effect_mgdl": "4.584151958702702340126956949",
+       "id": "t-0051",
+       "isf": "30",
+       "share": "0.0138913695718263707276574453",
+       "units": "11.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "4.584151958702702340126956949",
      "rapid_units_in_window": "10.5",
-     "ratio_g_per_unit": "7.885549552774792151286162974",
+     "ratio_g_per_unit": "7.812198975295347353001924063",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -9481,10 +9771,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "11.9001624898892392540948558",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -9545,6 +9836,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-12T20:25:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.0",
      "ratio_g_per_unit": "9.259255468542717255067007561",
      "reason": null,
@@ -9851,10 +10144,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-85.05884301281043302542347360",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -9915,6 +10209,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-13T08:25:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.0",
      "ratio_g_per_unit": "8.403956112777619923363891214",
      "reason": null,
@@ -9989,10 +10285,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-18.02337515371935424788717654",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -10014,7 +10311,7 @@
      "carbs_times_isf_total": "3325",
      "carbs_total": "95",
      "delta_mgdl": "-18.02337515371935424788717654",
-     "denominator_mgdl": "454.4766248462806457521128235",
+     "denominator_mgdl": "454.8582695835555437059741667",
      "doses": [
       {
        "at": "2026-09-13T10:55:00+00:00",
@@ -10030,7 +10327,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-13T13:55:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.366846992018889160156730296",
+     "factor_units_per_ke": "1.367994795740016672799922306",
      "g0": "58.02337515371935424788717654",
      "g0_source": "cgm",
      "g0_sources": [
@@ -10042,7 +10339,7 @@
       "2026-09-13T13:50:14.051000+00:00",
       "2026-09-13T13:55:02.131000+00:00"
      ],
-     "insulin_effect_mgdl": "472.5",
+     "insulin_effect_mgdl": "472.8816447372748979538613432",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-13T16:55:00+00:00",
@@ -10053,8 +10350,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-13T13:55:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-13T05:25:00+00:00",
+       "effect_mgdl": "0.3816447372748979538613431780",
+       "id": "t-0054",
+       "isf": "30",
+       "share": "0.0018173558917852283517206818",
+       "units": "7.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.3816447372748979538613431780",
      "rapid_units_in_window": "13.5",
-     "ratio_g_per_unit": "7.316107844104473741424306978",
+     "ratio_g_per_unit": "7.309969329664372603400360589",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -10127,10 +10435,11 @@
     "calculation": {
      "actual_window_minutes": "320",
      "adjusted_delta_mgdl": "41.94399719985999299964998250",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -10152,7 +10461,7 @@
      "carbs_times_isf_total": "3150",
      "carbs_total": "90",
      "delta_mgdl": "41.94399719985999299964998250",
-     "denominator_mgdl": "356.9439971998599929996499825",
+     "denominator_mgdl": "356.9859957246323713360676397",
      "doses": [
       {
        "at": "2026-09-13T16:55:00+00:00",
@@ -10186,7 +10495,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-09-13T22:15:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.133155546666222199998888833",
+     "factor_units_per_ke": "1.133288875316293242336722666",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -10198,7 +10507,7 @@
       "2026-09-13T22:10:13.969000+00:00",
       "2026-09-13T22:15:08.240000+00:00"
      ],
-     "insulin_effect_mgdl": "315.0",
+     "insulin_effect_mgdl": "315.0419985247723783364176572",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-14T05:25:00+00:00",
@@ -10209,8 +10518,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-13T19:55:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-13T10:55:00+00:00",
+       "effect_mgdl": "0.04199852477237833641765719025",
+       "id": "t-0055",
+       "isf": "35",
+       "share": "0.0000888857667140282252225549",
+       "units": "13.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.04199852477237833641765719025",
      "rapid_units_in_window": "9.0",
-     "ratio_g_per_unit": "8.824913781184146916666094653",
+     "ratio_g_per_unit": "8.823875551773212096301495062",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -10623,10 +10943,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-70.00000000000000000000000000",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -10687,6 +11008,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-14T08:25:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.5",
      "ratio_g_per_unit": "8.709677419354838709677419355",
      "reason": null,
@@ -10761,10 +11084,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-33.41523725020967653144824147",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -10786,7 +11110,7 @@
      "carbs_times_isf_total": "3150",
      "carbs_total": "90",
      "delta_mgdl": "-33.41523725020967653144824147",
-     "denominator_mgdl": "299.0847627497903234685517585",
+     "denominator_mgdl": "300.6880520188106799965137370",
      "doses": [
       {
        "at": "2026-09-14T10:25:00+00:00",
@@ -10802,7 +11126,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-14T13:25:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "0.9494754373009216618049262175",
+     "factor_units_per_ke": "0.9545652445041608888778213873",
      "g0": "73.41523725020967653144824147",
      "g0_source": "cgm",
      "g0_sources": [
@@ -10814,7 +11138,7 @@
       "2026-09-14T13:20:16.452000+00:00",
       "2026-09-14T13:25:11.636000+00:00"
      ],
-     "insulin_effect_mgdl": "332.5",
+     "insulin_effect_mgdl": "334.1032892690203565279619785",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-14T16:35:00+00:00",
@@ -10825,8 +11149,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-14T13:25:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-14T05:25:00+00:00",
+       "effect_mgdl": "1.603289269020356527961978505",
+       "id": "t-0059",
+       "isf": "30",
+       "share": "0.0071257300845349179020532378",
+       "units": "7.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "1.603289269020356527961978505",
      "rapid_units_in_window": "9.5",
-     "ratio_g_per_unit": "10.53213132972354453642581559",
+     "ratio_g_per_unit": "10.47597328477468010231439664",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -10899,10 +11234,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-22.99474033024521623870158072",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -10963,6 +11299,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-14T19:35:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "17.5",
      "ratio_g_per_unit": "6.530900168993909466630995503",
      "reason": null,
@@ -11325,10 +11663,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-20.9731946597562506544313325",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -11389,6 +11728,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-15T08:50:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "4.0",
      "ratio_g_per_unit": "9.088448293446529723991576112",
      "reason": null,
@@ -11463,10 +11804,11 @@
     "calculation": {
      "actual_window_minutes": "275",
      "adjusted_delta_mgdl": "47.62352496396043075993641757",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -11496,7 +11838,7 @@
      "carbs_times_isf_total": "2450",
      "carbs_total": "70",
      "delta_mgdl": "50.9568582972937640932697509",
-     "denominator_mgdl": "275.1235249639604307599364176",
+     "denominator_mgdl": "276.7904893125795952472553110",
      "doses": [
       {
        "at": "2026-09-15T10:30:00+00:00",
@@ -11521,7 +11863,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-09-15T15:05:00+00:00",
      "extra_carb_count": 1,
-     "factor_units_per_ke": "1.122953163118205839836475174",
+     "factor_units_per_ke": "1.129757099235018756111246167",
      "g0": "108.9256022066435534186994977",
      "g0_source": "cgm",
      "g0_sources": [
@@ -11533,7 +11875,7 @@
       "2026-09-15T15:00:06.799000+00:00",
       "2026-09-15T15:05:11.956000+00:00"
      ],
-     "insulin_effect_mgdl": "227.5",
+     "insulin_effect_mgdl": "229.1669643486191644873188934",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-15T16:10:00+00:00",
@@ -11544,8 +11886,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-15T13:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-15T05:50:00+00:00",
+       "effect_mgdl": "1.666964348619164487318893436",
+       "id": "t-0062",
+       "isf": "30",
+       "share": "0.0138913695718263707276574453",
+       "units": "4.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "1.666964348619164487318893436",
      "rapid_units_in_window": "6.5",
-     "ratio_g_per_unit": "8.905090905334015476400448646",
+     "ratio_g_per_unit": "8.851460200401662476239416453",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "-3.333333333333333333333333332",
@@ -11642,10 +11995,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-42.5005956376523561375645883",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -11667,7 +12021,7 @@
      "carbs_times_isf_total": "2625",
      "carbs_total": "75",
      "delta_mgdl": "-2.5005956376523561375645883",
-     "denominator_mgdl": "219.9994043623476438624354117",
+     "denominator_mgdl": "221.4302352356257115434415430",
      "doses": [
       {
        "at": "2026-09-15T16:10:00+00:00",
@@ -11683,7 +12037,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-15T19:10:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "0.838092968999419595666420616",
+     "factor_units_per_ke": "0.84354375327857413921311064",
      "g0": "149.9934809727569046692867970",
      "g0_source": "cgm",
      "g0_sources": [
@@ -11695,7 +12049,7 @@
       "2026-09-15T19:05:03.994000+00:00",
       "2026-09-15T19:10:17.150000+00:00"
      ],
-     "insulin_effect_mgdl": "262.5",
+     "insulin_effect_mgdl": "263.9308308732780676810061313",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-16T05:25:00+00:00",
@@ -11706,8 +12060,27 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-15T19:10:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-15T10:30:00+00:00",
+       "effect_mgdl": "0.1812888814706165281857190265",
+       "id": "t-0063",
+       "isf": "35",
+       "share": "0.0009417604232239819646011378",
+       "units": "5.5"
+      },
+      {
+       "at": "2026-09-15T12:05:00+00:00",
+       "effect_mgdl": "1.249541991807451152820412274",
+       "id": "t-0064",
+       "isf": "35",
+       "share": "0.0357011997659271757948689221",
+       "units": "1"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "1.430830873278067681006131300",
      "rapid_units_in_window": "7.5",
-     "ratio_g_per_unit": "11.93185048663369146786156069",
+     "ratio_g_per_unit": "11.85474963347582674264381957",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "-40",
@@ -12122,10 +12495,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-93.89716852279890733347341880",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -12186,6 +12560,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-16T08:25:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.0",
      "ratio_g_per_unit": "10.16506233738985173614545128",
      "reason": null,
@@ -12260,10 +12636,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "28.02123944215947891483539771",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -12285,7 +12662,7 @@
      "carbs_times_isf_total": "1050",
      "carbs_total": "30",
      "delta_mgdl": "28.02123944215947891483539771",
-     "denominator_mgdl": "168.0212394421594789148353977",
+     "denominator_mgdl": "173.3435744116965089780974556",
      "doses": [
       {
        "at": "2026-09-16T10:00:00+00:00",
@@ -12301,7 +12678,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-16T13:00:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.600202280401518846807956169",
+     "factor_units_per_ke": "1.650891184873300085505690053",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -12313,7 +12690,7 @@
       "2026-09-16T12:55:06.121000+00:00",
       "2026-09-16T13:00:01.044000+00:00"
      ],
-     "insulin_effect_mgdl": "140.0",
+     "insulin_effect_mgdl": "145.3223349695370300632620579",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-16T17:25:00+00:00",
@@ -12324,8 +12701,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-16T13:00:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-16T05:25:00+00:00",
+       "effect_mgdl": "5.322334969537030063262057931",
+       "id": "t-0067",
+       "isf": "30",
+       "share": "0.0161282877864758486765516907",
+       "units": "11.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "5.322334969537030063262057931",
      "rapid_units_in_window": "4.0",
-     "ratio_g_per_unit": "6.249209942064839721763995347",
+     "ratio_g_per_unit": "6.057334421327995493080119299",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -12398,10 +12786,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "1.16487334938003900116528579",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -12462,6 +12851,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-16T20:25:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.5",
      "ratio_g_per_unit": "10.71436974168136914399816022",
      "reason": null,
@@ -12842,10 +13233,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-29.15955039014227628108649778",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -12906,6 +13298,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-17T07:55:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "4.0",
      "ratio_g_per_unit": "9.907480685810418893488272894",
      "reason": null,
@@ -12980,10 +13374,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "50.2115997836198579049988705",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -13005,7 +13400,7 @@
      "carbs_times_isf_total": "3325",
      "carbs_total": "95",
      "delta_mgdl": "50.2115997836198579049988705",
-     "denominator_mgdl": "417.7115997836198579049988705",
+     "denominator_mgdl": "418.5666873937640480532452590",
      "doses": [
       {
        "at": "2026-09-17T09:55:00+00:00",
@@ -13021,7 +13416,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-17T12:55:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.256275488071037166631575550",
+     "factor_units_per_ke": "1.258847180131621197152617320",
      "g0": "107.7518965910200892130368248",
      "g0_source": "cgm",
      "g0_sources": [
@@ -13033,7 +13428,7 @@
       "2026-09-17T12:50:18.687000+00:00",
       "2026-09-17T12:55:10.658000+00:00"
      ],
-     "insulin_effect_mgdl": "367.5",
+     "insulin_effect_mgdl": "368.3550876101441901482463885",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-17T17:05:00+00:00",
@@ -13044,8 +13439,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-17T12:55:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-17T04:55:00+00:00",
+       "effect_mgdl": "0.8550876101441901482463885360",
+       "id": "t-0071",
+       "isf": "30",
+       "share": "0.0071257300845349179020532378",
+       "units": "4.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.8550876101441901482463885360",
      "rapid_units_in_window": "10.5",
-     "ratio_g_per_unit": "7.960037503680515566548614007",
+     "ratio_g_per_unit": "7.943775986338890392371424937",
      "reason": null,
      "settings_version": 1,
      "sport_effect_mgdl": "0",
@@ -13118,10 +13524,11 @@
     "calculation": {
      "actual_window_minutes": "180",
      "adjusted_delta_mgdl": "-59.02642244364743558972178600",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -13182,6 +13589,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-17T20:05:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "12.0",
      "ratio_g_per_unit": "8.726400478739319791216463313",
      "reason": null,
@@ -13488,10 +13897,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-57.99248230208616117109027500",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -13552,6 +13962,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-18T07:50:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "4.5",
      "ratio_g_per_unit": "11.68717064132014375515740473",
      "reason": null,
@@ -13626,10 +14038,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "8.19290294600183911935654427",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -13651,7 +14064,7 @@
      "carbs_times_isf_total": "1225",
      "carbs_total": "35",
      "delta_mgdl": "8.19290294600183911935654427",
-     "denominator_mgdl": "165.6929029460018391193565443",
+     "denominator_mgdl": "165.8731904467798184720266154",
      "doses": [
       {
        "at": "2026-09-18T10:35:00+00:00",
@@ -13667,7 +14080,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-18T13:25:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.352595126089810931586584035",
+     "factor_units_per_ke": "1.354066860790039334465523391",
      "g0": "92.94778020923888605773554363",
      "g0_source": "cgm",
      "g0_sources": [
@@ -13679,7 +14092,7 @@
       "2026-09-18T13:20:14.217000+00:00",
       "2026-09-18T13:25:14.061000+00:00"
      ],
-     "insulin_effect_mgdl": "157.5",
+     "insulin_effect_mgdl": "157.6802875007779793526700711",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-18T17:10:00+00:00",
@@ -13690,8 +14103,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-18T13:25:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-18T05:00:00+00:00",
+       "effect_mgdl": "0.1802875007779793526700711260",
+       "id": "t-0074",
+       "isf": "30",
+       "share": "0.0013354629687257729827412676",
+       "units": "4.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.1802875007779793526700711260",
      "rapid_units_in_window": "4.5",
-     "ratio_g_per_unit": "7.393195352484221681271819492",
+     "ratio_g_per_unit": "7.385159691571975517035300950",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -13764,10 +14188,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-14.97060869932237485293130326",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -13828,6 +14253,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-18T20:00:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.0",
      "ratio_g_per_unit": "8.985772693116096841405963543",
      "reason": null,
@@ -14151,10 +14578,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "5.8156126715805179659450771",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -14223,6 +14651,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-19T08:05:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "12.5",
      "ratio_g_per_unit": "9.847285340252161223461069285",
      "reason": null,
@@ -14314,10 +14744,11 @@
     "calculation": {
      "actual_window_minutes": "265",
      "adjusted_delta_mgdl": "-4.7569026396252731432806135",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -14347,7 +14778,7 @@
      "carbs_times_isf_total": "3150",
      "carbs_total": "90",
      "delta_mgdl": "-4.7569026396252731432806135",
-     "denominator_mgdl": "380.2430973603747268567193865",
+     "denominator_mgdl": "387.2259742632853623659156723",
      "doses": [
       {
        "at": "2026-09-19T09:45:00+00:00",
@@ -14372,7 +14803,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-09-19T14:10:00+00:00",
      "extra_carb_count": 1,
-     "factor_units_per_ke": "1.207120944001189609068950433",
+     "factor_units_per_ke": "1.229288807185032896399732293",
      "g0": "135.0260479072403949614915940",
      "g0_source": "cgm",
      "g0_sources": [
@@ -14384,7 +14815,7 @@
       "2026-09-19T14:05:00.251000+00:00",
       "2026-09-19T14:10:11.986000+00:00"
      ],
-     "insulin_effect_mgdl": "385.0",
+     "insulin_effect_mgdl": "391.9828769029106355091962858",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-19T16:40:00+00:00",
@@ -14395,8 +14826,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-19T12:35:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-19T05:15:00+00:00",
+       "effect_mgdl": "6.982876902910635509196285750",
+       "id": "t-0077",
+       "isf": "30",
+       "share": "0.0186210050744283613578567620",
+       "units": "12.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "6.982876902910635509196285750",
      "rapid_units_in_window": "11.0",
-     "ratio_g_per_unit": "8.284174050409107201623426958",
+     "ratio_g_per_unit": "8.134784878501539298846081359",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -14486,10 +14928,11 @@
     "calculation": {
      "actual_window_minutes": "310",
      "adjusted_delta_mgdl": "-6.2703323020753437176834521",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -14511,7 +14954,7 @@
      "carbs_times_isf_total": "1400",
      "carbs_total": "40",
      "delta_mgdl": "-6.2703323020753437176834521",
-     "denominator_mgdl": "133.7296676979246562823165479",
+     "denominator_mgdl": "133.8375729972962111063976576",
      "doses": [
       {
        "at": "2026-09-19T16:40:00+00:00",
@@ -14536,7 +14979,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-09-19T21:50:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "0.9552119121280332591594039136",
+     "factor_units_per_ke": "0.9559826642664015079028404114",
      "g0": "116.0403536170450108762340342",
      "g0_source": "cgm",
      "g0_sources": [
@@ -14548,7 +14991,7 @@
       "2026-09-19T21:45:12.583000+00:00",
       "2026-09-19T21:50:17.533000+00:00"
      ],
-     "insulin_effect_mgdl": "140.0",
+     "insulin_effect_mgdl": "140.1079052993715548240811097",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-20T10:05:00+00:00",
@@ -14559,8 +15002,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-19T19:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-19T11:20:00+00:00",
+       "effect_mgdl": "0.1079052993715548240811097480",
+       "id": "t-0080",
+       "isf": "35",
+       "share": "0.0030830085534729949737459928",
+       "units": "1"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.1079052993715548240811097480",
      "rapid_units_in_window": "4.0",
-     "ratio_g_per_unit": "10.46888116975203197014165219",
+     "ratio_g_per_unit": "10.46044073160444132883594392",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -14966,10 +15420,11 @@
     "calculation": {
      "actual_window_minutes": "60",
      "adjusted_delta_mgdl": "-5.7376612316957010731001206",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung",
@@ -15055,6 +15510,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-20T12:55:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.5",
      "ratio_g_per_unit": null,
      "reason": "Weitere Hauptmahlzeit um 13:15 (40 g KH) im Auswertungsfenster",
@@ -15131,10 +15588,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-84.6708524751571235486017414",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -15156,7 +15614,7 @@
      "carbs_times_isf_total": "1400",
      "carbs_total": "40",
      "delta_mgdl": "-84.6708524751571235486017414",
-     "denominator_mgdl": "55.3291475248428764513982586",
+     "denominator_mgdl": "178.6243974438071123712255320",
      "doses": [
       {
        "at": "2026-09-20T11:15:00+00:00",
@@ -15172,7 +15630,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-20T14:05:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "0.3952081966060205460814161329",
+     "factor_units_per_ke": "1.275888553170050802651610943",
      "g0": "222.7942743834428057999752138",
      "g0_source": "cgm",
      "g0_sources": [
@@ -15184,7 +15642,7 @@
       "2026-09-20T14:00:07.099000+00:00",
       "2026-09-20T14:05:19.264000+00:00"
      ],
-     "insulin_effect_mgdl": "140",
+     "insulin_effect_mgdl": "263.2952499189642359198272734",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-20T16:50:00+00:00",
@@ -15195,8 +15653,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-20T14:05:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-20T10:05:00+00:00",
+       "effect_mgdl": "123.2952499189642359198272734",
+       "id": "t-0083",
+       "isf": "35",
+       "share": "0.6404948047738401865965053162",
+       "units": "5.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "123.2952499189642359198272734",
      "rapid_units_in_window": "4",
-     "ratio_g_per_unit": "25.30311892789235081996037561",
+     "ratio_g_per_unit": "7.837675144239025907147215447",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -15269,10 +15738,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-58.15699689472102574376439948",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -15294,7 +15764,7 @@
      "carbs_times_isf_total": "1225",
      "carbs_total": "35",
      "delta_mgdl": "-58.15699689472102574376439948",
-     "denominator_mgdl": "99.34300310527897425623560052",
+     "denominator_mgdl": "99.52996792090058247381937802",
      "doses": [
       {
        "at": "2026-09-20T16:50:00+00:00",
@@ -15310,7 +15780,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-20T19:40:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "0.8109632906553385653570253104",
+     "factor_units_per_ke": "0.8124895340481680201944439022",
      "g0": "98.15699689472102574376439948",
      "g0_source": "cgm",
      "g0_sources": [
@@ -15322,7 +15792,7 @@
       "2026-09-20T19:35:08.722000+00:00",
       "2026-09-20T19:40:19.886000+00:00"
      ],
-     "insulin_effect_mgdl": "157.5",
+     "insulin_effect_mgdl": "157.6869648156216082175837775",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-21T06:05:00+00:00",
@@ -15333,8 +15803,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-20T19:40:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-20T11:15:00+00:00",
+       "effect_mgdl": "0.1869648156216082175837774640",
+       "id": "t-0084",
+       "isf": "35",
+       "share": "0.0013354629687257729827412676",
+       "units": "4"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.1869648156216082175837774640",
      "rapid_units_in_window": "4.5",
-     "ratio_g_per_unit": "12.33101438157454787599829472",
+     "ratio_g_per_unit": "12.30785084722968898186501052",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -15656,10 +16137,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-94.88769626571048103337816850",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -15720,6 +16202,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-21T08:55:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "13.0",
      "ratio_g_per_unit": "6.607654019588837366967541917",
      "reason": null,
@@ -15794,10 +16278,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "81.73837682923238489699372840",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -15819,7 +16304,7 @@
      "carbs_times_isf_total": "2800",
      "carbs_total": "80",
      "delta_mgdl": "81.73837682923238489699372840",
-     "denominator_mgdl": "344.2383768292323848969937284",
+     "denominator_mgdl": "371.4980306571785503813588813",
      "doses": [
       {
        "at": "2026-09-21T09:40:00+00:00",
@@ -15835,7 +16320,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-21T12:30:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.229422774390115660346406173",
+     "factor_units_per_ke": "1.326778680918494822790567433",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -15847,7 +16332,7 @@
       "2026-09-21T12:25:00.051000+00:00",
       "2026-09-21T12:30:05.712000+00:00"
      ],
-     "insulin_effect_mgdl": "262.5",
+     "insulin_effect_mgdl": "289.7596538279461654843651529",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-21T16:25:00+00:00",
@@ -15858,8 +16343,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-21T12:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-21T06:05:00+00:00",
+       "effect_mgdl": "27.25965382794616548436515292",
+       "id": "t-0086",
+       "isf": "30",
+       "share": "0.0698965482767850397035003921",
+       "units": "13.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "27.25965382794616548436515292",
      "rapid_units_in_window": "7.5",
-     "ratio_g_per_unit": "8.133898450808134155055415118",
+     "ratio_g_per_unit": "7.537052067400764004580971527",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -15932,10 +16428,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-80.00000000000000000000000000",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -15996,6 +16493,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-21T19:15:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "14.0",
      "ratio_g_per_unit": "7.682926829268292682926829268",
      "reason": null,
@@ -16301,10 +16800,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-82.78269769515219925637884596",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -16365,6 +16865,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-22T08:10:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.5",
      "ratio_g_per_unit": "8.437791889961164494689797841",
      "reason": null,
@@ -16439,10 +16941,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-13.00000000000000000000000000",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -16464,7 +16967,7 @@
      "carbs_times_isf_total": "3150",
      "carbs_total": "90",
      "delta_mgdl": "-13.00000000000000000000000000",
-     "denominator_mgdl": "407.0000000000000000000000000",
+     "denominator_mgdl": "412.5032569128801747801095051",
      "doses": [
       {
        "at": "2026-09-22T09:40:00+00:00",
@@ -16480,7 +16983,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-22T12:30:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.292063492063492063492063492",
+     "factor_units_per_ke": "1.309534148929778332635268270",
      "g0": "53.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -16492,7 +16995,7 @@
       "2026-09-22T12:25:16.432000+00:00",
       "2026-09-22T12:30:07.924000+00:00"
      ],
-     "insulin_effect_mgdl": "420.0",
+     "insulin_effect_mgdl": "425.5032569128801747801095051",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-22T16:55:00+00:00",
@@ -16503,8 +17006,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-22T12:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-22T05:20:00+00:00",
+       "effect_mgdl": "5.503256912880174780109505136",
+       "id": "t-0089",
+       "isf": "30",
+       "share": "0.0244589196128007768004866895",
+       "units": "7.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "5.503256912880174780109505136",
      "rapid_units_in_window": "12.0",
-     "ratio_g_per_unit": "7.739557739557739557739557740",
+     "ratio_g_per_unit": "7.636303343576444567608457080",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -16577,10 +17091,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-41.73645655595129628095750849",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -16641,6 +17156,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-22T19:45:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.5",
      "ratio_g_per_unit": "7.536462612868250182592746642",
      "reason": null,
@@ -16946,10 +17463,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-86.14704785459113571232285160",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -17010,6 +17528,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-23T08:15:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.5",
      "ratio_g_per_unit": "9.646040638359354608071501437",
      "reason": null,
@@ -17084,10 +17604,11 @@
     "calculation": {
      "actual_window_minutes": "265",
      "adjusted_delta_mgdl": "27.01566585102780967806117640",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -17117,7 +17638,7 @@
      "carbs_times_isf_total": "1925",
      "carbs_total": "55",
      "delta_mgdl": "27.01566585102780967806117640",
-     "denominator_mgdl": "272.0156658510278096780611764",
+     "denominator_mgdl": "277.4464086272175523669663599",
      "doses": [
       {
        "at": "2026-09-23T09:40:00+00:00",
@@ -17142,7 +17663,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-09-23T14:05:00+00:00",
      "extra_carb_count": 1,
-     "factor_units_per_ke": "1.413068394031313297028889228",
+     "factor_units_per_ke": "1.441280044816714557750474597",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -17154,7 +17675,7 @@
       "2026-09-23T14:00:15.761000+00:00",
       "2026-09-23T14:05:02.244000+00:00"
      ],
-     "insulin_effect_mgdl": "245.0",
+     "insulin_effect_mgdl": "250.4307427761897426889051835",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-23T16:40:00+00:00",
@@ -17165,8 +17686,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-23T12:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-23T05:25:00+00:00",
+       "effect_mgdl": "5.430742776189742688905183506",
+       "id": "t-0092",
+       "isf": "30",
+       "share": "0.0278499629548191932764368385",
+       "units": "6.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "5.430742776189742688905183506",
      "rapid_units_in_window": "7.0",
-     "ratio_g_per_unit": "7.076798293868288241546053412",
+     "ratio_g_per_unit": "6.938276871287484691986823473",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -17256,10 +17788,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "11.07437669137810709137333793",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -17281,7 +17814,7 @@
      "carbs_times_isf_total": "1050",
      "carbs_total": "30",
      "delta_mgdl": "11.07437669137810709137333793",
-     "denominator_mgdl": "116.0743766913781070913733379",
+     "denominator_mgdl": "116.1582570917894518876154686",
      "doses": [
       {
        "at": "2026-09-23T16:40:00+00:00",
@@ -17297,7 +17830,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-23T19:30:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.105470254203601019917841313",
+     "factor_units_per_ke": "1.106269115159899541786813987",
      "g0": "85.96098769456442017765463287",
      "g0_source": "cgm",
      "g0_sources": [
@@ -17309,7 +17842,7 @@
       "2026-09-23T19:25:12.070000+00:00",
       "2026-09-23T19:30:02.051000+00:00"
      ],
-     "insulin_effect_mgdl": "105.0",
+     "insulin_effect_mgdl": "105.0838804004113447962421307",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-24T05:25:00+00:00",
@@ -17320,8 +17853,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-23T19:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-23T11:15:00+00:00",
+       "effect_mgdl": "0.0838804004113447962421306930",
+       "id": "t-0094",
+       "isf": "35",
+       "share": "0.0023965828688955656069180198",
+       "units": "1"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.0838804004113447962421306930",
      "rapid_units_in_window": "3.0",
-     "ratio_g_per_unit": "9.045924087034042102575200993",
+     "ratio_g_per_unit": "9.039391828772699117201491154",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -17663,10 +18207,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-91.83487693135472614798801630",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -17727,6 +18272,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-24T08:15:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "14.0",
      "ratio_g_per_unit": "9.598826257173849467599937164",
      "reason": null,
@@ -17871,10 +18418,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "90.88654728055665470636171793",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -17935,6 +18483,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-24T19:55:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.5",
      "ratio_g_per_unit": "7.803212351898108901190014684",
      "reason": null,
@@ -18249,10 +18799,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-18.9847881415958403782302595",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -18313,6 +18864,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-25T08:15:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "5.0",
      "ratio_g_per_unit": "9.159241762681042981590605843",
      "reason": null,
@@ -18387,10 +18940,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "45.1514481730223816777353933",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -18412,7 +18966,7 @@
      "carbs_times_isf_total": "2975",
      "carbs_total": "85",
      "delta_mgdl": "45.1514481730223816777353933",
-     "denominator_mgdl": "360.1514481730223816777353933",
+     "denominator_mgdl": "362.9445989341866358814139076",
      "doses": [
       {
        "at": "2026-09-25T09:55:00+00:00",
@@ -18428,7 +18982,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-25T12:45:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.210593103102596240933564347",
+     "factor_units_per_ke": "1.219981845156929868508954311",
      "g0": "103.9376730817534075842794871",
      "g0_source": "cgm",
      "g0_sources": [
@@ -18440,7 +18994,7 @@
       "2026-09-25T12:40:06.052000+00:00",
       "2026-09-25T12:45:04.432000+00:00"
      ],
-     "insulin_effect_mgdl": "315.0",
+     "insulin_effect_mgdl": "317.7931507611642542036785143",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-25T16:40:00+00:00",
@@ -18451,8 +19005,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-25T12:45:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-25T05:25:00+00:00",
+       "effect_mgdl": "2.793150761164254203678514300",
+       "id": "t-0099",
+       "isf": "30",
+       "share": "0.0186210050744283613578567620",
+       "units": "5.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "2.793150761164254203678514300",
      "rapid_units_in_window": "9.0",
-     "ratio_g_per_unit": "8.260413820606834064748571817",
+     "ratio_g_per_unit": "8.196843288855393139470381670",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -18525,10 +19090,11 @@
     "calculation": {
      "actual_window_minutes": "310",
      "adjusted_delta_mgdl": "-73.00000000000000000000000000",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -18598,6 +19164,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-25T19:30:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "13.5",
      "ratio_g_per_unit": "7.446808510638297872340425532",
      "reason": null,
@@ -18996,10 +19564,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-58.01659167180587096225862435",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -19060,6 +19629,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-26T08:25:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "12.5",
      "ratio_g_per_unit": "10.41063952654357614787253088",
      "reason": null,
@@ -19134,10 +19705,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "81.00208030598333444598655777",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -19159,7 +19731,7 @@
      "carbs_times_isf_total": "3675",
      "carbs_total": "105",
      "delta_mgdl": "81.00208030598333444598655777",
-     "denominator_mgdl": "413.5020803059833344459865578",
+     "denominator_mgdl": "425.3477994083713101476321043",
      "doses": [
       {
        "at": "2026-09-26T09:45:00+00:00",
@@ -19175,7 +19747,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-26T12:35:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.125175728723764175363228729",
+     "factor_units_per_ke": "1.157408977981962748701039740",
      "g0": "70.02730597485138207818535463",
      "g0_source": "cgm",
      "g0_sources": [
@@ -19187,7 +19759,7 @@
       "2026-09-26T12:30:14.310000+00:00",
       "2026-09-26T12:35:01.689000+00:00"
      ],
-     "insulin_effect_mgdl": "332.5",
+     "insulin_effect_mgdl": "344.3457191023879757016455465",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-26T16:15:00+00:00",
@@ -19198,8 +19770,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-26T12:35:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-26T05:35:00+00:00",
+       "effect_mgdl": "11.84571910238797570164554651",
+       "id": "t-0103",
+       "isf": "30",
+       "share": "0.0315885842730346018710547907",
+       "units": "12.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "11.84571910238797570164554651",
      "rapid_units_in_window": "9.5",
-     "ratio_g_per_unit": "8.887500631872451335115061243",
+     "ratio_g_per_unit": "8.639988275739676904208001493",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -19272,10 +19855,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-80.97298983348300895997148170",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -19336,6 +19920,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-26T19:05:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "14.5",
      "ratio_g_per_unit": "9.026392017933289526555463606",
      "reason": null,
@@ -19762,10 +20348,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-95.95261293474143144826302810",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -19834,6 +20421,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-27T08:15:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.0",
      "ratio_g_per_unit": "8.972541955422321188822912837",
      "reason": null,
@@ -19925,10 +20514,11 @@
     "calculation": {
      "actual_window_minutes": "265",
      "adjusted_delta_mgdl": "103.8330526814206210799041004",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -19958,7 +20548,7 @@
      "carbs_times_isf_total": "2100",
      "carbs_total": "60",
      "delta_mgdl": "103.8330526814206210799041004",
-     "denominator_mgdl": "296.3330526814206210799041004",
+     "denominator_mgdl": "300.9172046401233234200310573",
      "doses": [
       {
        "at": "2026-09-27T10:05:00+00:00",
@@ -19983,7 +20573,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-09-27T14:30:00+00:00",
      "extra_carb_count": 1,
-     "factor_units_per_ke": "1.411109774673431528951924288",
+     "factor_units_per_ke": "1.432939069714872968666814559",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -19995,7 +20585,7 @@
       "2026-09-27T14:25:16.792000+00:00",
       "2026-09-27T14:30:16.689000+00:00"
      ],
-     "insulin_effect_mgdl": "192.5",
+     "insulin_effect_mgdl": "197.0841519587027023401269569",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-27T17:05:00+00:00",
@@ -20006,8 +20596,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-27T12:55:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-27T05:25:00+00:00",
+       "effect_mgdl": "4.584151958702702340126956949",
+       "id": "t-0108",
+       "isf": "30",
+       "share": "0.0138913695718263707276574453",
+       "units": "11.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "4.584151958702702340126956949",
      "rapid_units_in_window": "5.5",
-     "ratio_g_per_unit": "7.086620884838152968828351462",
+     "ratio_g_per_unit": "6.978663790631241347404311222",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -20097,10 +20698,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-83.18035094858508058296714660",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -20122,7 +20724,7 @@
      "carbs_times_isf_total": "2100",
      "carbs_total": "60",
      "delta_mgdl": "-83.18035094858508058296714660",
-     "denominator_mgdl": "214.3196490514149194170328534",
+     "denominator_mgdl": "214.4035294518262642132749841",
      "doses": [
       {
        "at": "2026-09-27T17:05:00+00:00",
@@ -20138,7 +20740,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-27T19:55:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.020569757387690092462061207",
+     "factor_units_per_ke": "1.020969187865839353396547543",
      "g0": "128.1803509485850805829671466",
      "g0_source": "cgm",
      "g0_sources": [
@@ -20150,7 +20752,7 @@
       "2026-09-27T19:50:08.329000+00:00",
       "2026-09-27T19:55:03.112000+00:00"
      ],
-     "insulin_effect_mgdl": "297.5",
+     "insulin_effect_mgdl": "297.5838804004113447962421307",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-28T05:20:00+00:00",
@@ -20161,8 +20763,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-27T19:55:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-27T11:40:00+00:00",
+       "effect_mgdl": "0.0838804004113447962421306930",
+       "id": "t-0111",
+       "isf": "35",
+       "share": "0.0023965828688955656069180198",
+       "units": "1"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.0838804004113447962421306930",
      "rapid_units_in_window": "8.5",
-     "ratio_g_per_unit": "9.798448295779980352900397932",
+     "ratio_g_per_unit": "9.794614880497306315966232497",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -20558,10 +21171,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-91.85750704776292539487705190",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -20622,6 +21236,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-28T08:10:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "13.0",
      "ratio_g_per_unit": "7.043611862252803755442038528",
      "reason": null,
@@ -20696,10 +21312,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "0E-26",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -20721,7 +21338,7 @@
      "carbs_times_isf_total": "2625",
      "carbs_total": "75",
      "delta_mgdl": "0E-26",
-     "denominator_mgdl": "315.0000000000000000000000000",
+     "denominator_mgdl": "316.8801061415315756133234099",
      "doses": [
       {
        "at": "2026-09-28T10:30:00+00:00",
@@ -20737,7 +21354,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-28T13:20:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.200000000000000000000000",
+     "factor_units_per_ke": "1.207162309110596478526946323",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -20749,7 +21366,7 @@
       "2026-09-28T13:15:19.871000+00:00",
       "2026-09-28T13:20:12.650000+00:00"
      ],
-     "insulin_effect_mgdl": "315.0",
+     "insulin_effect_mgdl": "316.8801061415315756133234099",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-28T16:15:00+00:00",
@@ -20760,8 +21377,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-28T13:20:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-28T05:20:00+00:00",
+       "effect_mgdl": "1.880106141531575613323409924",
+       "id": "t-0113",
+       "isf": "30",
+       "share": "0.0048207849782860913162138716",
+       "units": "13.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "1.880106141531575613323409924",
      "rapid_units_in_window": "9.0",
-     "ratio_g_per_unit": "8.333333333333333333333333333",
+     "ratio_g_per_unit": "8.283890181567813444227286457",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -20834,10 +21462,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-13.93675643100424558005999336",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -20859,7 +21488,7 @@
      "carbs_times_isf_total": "2450",
      "carbs_total": "70",
      "delta_mgdl": "-13.93675643100424558005999336",
-     "denominator_mgdl": "371.0632435689957544199400066",
+     "denominator_mgdl": "371.2609952596942099790158626",
      "doses": [
       {
        "at": "2026-09-28T16:15:00+00:00",
@@ -20875,7 +21504,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-28T19:05:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.514543851302023487428326558",
+     "factor_units_per_ke": "1.515351001059976367261289235",
      "g0": "53.93675643100424558005999336",
      "g0_source": "cgm",
      "g0_sources": [
@@ -20887,7 +21516,7 @@
       "2026-09-28T19:00:10.170000+00:00",
       "2026-09-28T19:05:09.741000+00:00"
      ],
-     "insulin_effect_mgdl": "385.0",
+     "insulin_effect_mgdl": "385.1977516906984555590758560",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-29T09:45:00+00:00",
@@ -20898,8 +21527,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-28T19:05:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-28T10:30:00+00:00",
+       "effect_mgdl": "0.1977516906984555590758560435",
+       "id": "t-0114",
+       "isf": "35",
+       "share": "0.0006277831450744620923043049",
+       "units": "9.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.1977516906984555590758560435",
      "rapid_units_in_window": "11.0",
-     "ratio_g_per_unit": "6.602648045748690052924162971",
+     "ratio_g_per_unit": "6.599131153775644674098668819",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -21223,10 +21863,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-86.62477170400797447098884780",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -21287,6 +21928,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-29T12:35:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "14.5",
      "ratio_g_per_unit": "7.900203614886079087406525835",
      "reason": null,
@@ -21361,10 +22004,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-4.94918091356587095749748584",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -21425,6 +22069,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-29T19:30:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.0",
      "ratio_g_per_unit": "7.290123010869146699069663309",
      "reason": null,
@@ -21711,10 +22357,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-86.01781027371578552680914890",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -21775,6 +22422,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-30T08:40:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "14.0",
      "ratio_g_per_unit": "7.186011930656915868492209485",
      "reason": null,
@@ -21849,10 +22498,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "40.91806471588998498463505339",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -21874,7 +22524,7 @@
      "carbs_times_isf_total": "1225",
      "carbs_total": "35",
      "delta_mgdl": "40.91806471588998498463505339",
-     "denominator_mgdl": "180.9180647158899849846350534",
+     "denominator_mgdl": "194.1852701105645177704780655",
      "doses": [
       {
        "at": "2026-09-30T10:00:00+00:00",
@@ -21890,7 +22540,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-30T12:50:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.476882160946040693752122885",
+     "factor_units_per_ke": "1.585185878453587900167167882",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -21902,7 +22552,7 @@
       "2026-09-30T12:45:04.563000+00:00",
       "2026-09-30T12:50:04.922000+00:00"
      ],
-     "insulin_effect_mgdl": "140.0",
+     "insulin_effect_mgdl": "153.2672053946745327858430121",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-30T16:20:00+00:00",
@@ -21913,8 +22563,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-30T12:50:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-09-30T05:50:00+00:00",
+       "effect_mgdl": "13.26720539467453278584301209",
+       "id": "t-0119",
+       "isf": "30",
+       "share": "0.0315885842730346018710547907",
+       "units": "14.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "13.26720539467453278584301209",
      "rapid_units_in_window": "4.0",
-     "ratio_g_per_unit": "6.771020914488085275975950770",
+     "ratio_g_per_unit": "6.308408456019933237783432263",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -21987,10 +22648,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "64.91165949684314085533373334",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -22051,6 +22713,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-30T19:10:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.0",
      "ratio_g_per_unit": "7.905478625675767718227549479",
      "reason": null,
@@ -22356,10 +23020,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-93.75182257179929638696041840",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -22420,6 +23085,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-01T08:10:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "19.5",
      "ratio_g_per_unit": "6.106892886006626685807521136",
      "reason": null,
@@ -22494,10 +23161,11 @@
     "calculation": {
      "actual_window_minutes": "265",
      "adjusted_delta_mgdl": "0E-26",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -22527,7 +23195,7 @@
      "carbs_times_isf_total": "4025",
      "carbs_total": "115",
      "delta_mgdl": "0E-26",
-     "denominator_mgdl": "507.5000000000000000000000000",
+     "denominator_mgdl": "509.3035600037817020596414058",
      "doses": [
       {
        "at": "2026-10-01T10:40:00+00:00",
@@ -22552,7 +23220,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-10-01T15:05:00+00:00",
      "extra_carb_count": 1,
-     "factor_units_per_ke": "1.260869565217391304347826087",
+     "factor_units_per_ke": "1.265350459636724725614015915",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -22564,7 +23232,7 @@
       "2026-10-01T15:00:00.109000+00:00",
       "2026-10-01T15:05:03.896000+00:00"
      ],
-     "insulin_effect_mgdl": "507.5",
+     "insulin_effect_mgdl": "509.3035600037817020596414058",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-01T16:25:00+00:00",
@@ -22575,8 +23243,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-01T13:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-10-01T05:20:00+00:00",
+       "effect_mgdl": "1.803560003781702059641405788",
+       "id": "t-0122",
+       "isf": "30",
+       "share": "0.0030830085534729949737459928",
+       "units": "19.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "1.803560003781702059641405788",
      "rapid_units_in_window": "14.5",
-     "ratio_g_per_unit": "7.931034482758620689655172414",
+     "ratio_g_per_unit": "7.902948881743754946336265345",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -22666,10 +23345,11 @@
     "calculation": {
      "actual_window_minutes": "310",
      "adjusted_delta_mgdl": "13.43896128816677088192576565",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -22691,7 +23371,7 @@
      "carbs_times_isf_total": "1750",
      "carbs_total": "50",
      "delta_mgdl": "13.43896128816677088192576565",
-     "denominator_mgdl": "240.9389612881667708819257656",
+     "denominator_mgdl": "242.3411892737706652860264674",
      "doses": [
       {
        "at": "2026-10-01T16:25:00+00:00",
@@ -22716,7 +23396,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-10-01T21:35:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.376794064503810119325290089",
+     "factor_units_per_ke": "1.384806795850118087348722671",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -22728,7 +23408,7 @@
       "2026-10-01T21:30:11.009000+00:00",
       "2026-10-01T21:35:13.268000+00:00"
      ],
-     "insulin_effect_mgdl": "227.5",
+     "insulin_effect_mgdl": "228.9022279856038944041007017",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-02T05:55:00+00:00",
@@ -22739,8 +23419,27 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-01T19:15:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-10-01T10:40:00+00:00",
+       "effect_mgdl": "0.2966275360476833386137840652",
+       "id": "t-0123",
+       "isf": "35",
+       "share": "0.0006277831450744620923043049",
+       "units": "13.5"
+      },
+      {
+       "at": "2026-10-01T12:15:00+00:00",
+       "effect_mgdl": "1.105600449556211065486917674",
+       "id": "t-0124",
+       "isf": "35",
+       "share": "0.0315885842730346018710547907",
+       "units": "1"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "1.402227985603894404100701739",
      "rapid_units_in_window": "6.5",
-     "ratio_g_per_unit": "7.263250371146792628692708308",
+     "ratio_g_per_unit": "7.221223949772074094641466416",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -23136,10 +23835,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-59.70364595395992288596974807",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -23200,6 +23900,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-02T08:45:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "5.0",
      "ratio_g_per_unit": "11.62837648422248200581189517",
      "reason": null,
@@ -23274,10 +23976,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "52.89916184439685655943636746",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -23299,7 +24002,7 @@
      "carbs_times_isf_total": "3500",
      "carbs_total": "100",
      "delta_mgdl": "52.89916184439685655943636746",
-     "denominator_mgdl": "350.3991618443968565594363675",
+     "denominator_mgdl": "352.8184050123682338609191211",
      "doses": [
       {
        "at": "2026-10-02T10:30:00+00:00",
@@ -23315,7 +24018,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-10-02T13:20:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.001140462412562447312675336",
+     "factor_units_per_ke": "1.008052585749623525316911775",
      "g0": "70.13906982690998559023038354",
      "g0_source": "cgm",
      "g0_sources": [
@@ -23327,7 +24030,7 @@
       "2026-10-02T13:15:15.004000+00:00",
       "2026-10-02T13:20:11.329000+00:00"
      ],
-     "insulin_effect_mgdl": "297.5",
+     "insulin_effect_mgdl": "299.9192431679713773014827536",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-02T17:15:00+00:00",
@@ -23338,8 +24041,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-02T13:20:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-10-02T05:55:00+00:00",
+       "effect_mgdl": "2.419243167971377301482753605",
+       "id": "t-0127",
+       "isf": "30",
+       "share": "0.0161282877864758486765516907",
+       "units": "5.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "2.419243167971377301482753605",
      "rapid_units_in_window": "8.5",
-     "ratio_g_per_unit": "9.988608367602942100060543960",
+     "ratio_g_per_unit": "9.920117403958293128217248053",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -23412,10 +24126,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "11.5084731129609547221057586",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -23476,6 +24191,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-02T20:05:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.5",
      "ratio_g_per_unit": "10.17416800327100160944991385",
      "reason": null,
@@ -23818,10 +24535,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-92.87497531788990681915770540",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -23882,6 +24600,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-03T08:50:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "17.5",
      "ratio_g_per_unit": "7.289557003363266444825978876",
      "reason": null,
@@ -23956,10 +24676,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "0E-26",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -23981,7 +24702,7 @@
      "carbs_times_isf_total": "1925",
      "carbs_total": "55",
      "delta_mgdl": "0E-26",
-     "denominator_mgdl": "245.0000000000000000000000000",
+     "denominator_mgdl": "249.4753694096739926953396590",
      "doses": [
       {
        "at": "2026-10-03T10:55:00+00:00",
@@ -23997,7 +24718,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-10-03T13:45:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.272727272727272727272727273",
+     "factor_units_per_ke": "1.295975944985319442573193034",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -24009,7 +24730,7 @@
       "2026-10-03T13:40:06.410000+00:00",
       "2026-10-03T13:45:10.244000+00:00"
      ],
-     "insulin_effect_mgdl": "245.0",
+     "insulin_effect_mgdl": "249.4753694096739926953396590",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-03T16:35:00+00:00",
@@ -24020,8 +24741,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-03T13:45:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-10-03T06:00:00+00:00",
+       "effect_mgdl": "4.475369409673992695339659026",
+       "id": "t-0130",
+       "isf": "30",
+       "share": "0.0085245131612837956101707791",
+       "units": "17.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "4.475369409673992695339659026",
      "rapid_units_in_window": "7.0",
-     "ratio_g_per_unit": "7.857142857142857142857142857",
+     "ratio_g_per_unit": "7.716192602720938627159895202",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -24094,10 +24826,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-6.80016383743685432121239703",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -24119,7 +24852,7 @@
      "carbs_times_isf_total": "3850",
      "carbs_total": "110",
      "delta_mgdl": "-6.80016383743685432121239703",
-     "denominator_mgdl": "518.1998361625631456787876030",
+     "denominator_mgdl": "518.4305674662530212601148818",
      "doses": [
       {
        "at": "2026-10-03T16:35:00+00:00",
@@ -24135,7 +24868,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-10-03T19:25:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.345973600422241936828019748",
+     "factor_units_per_ke": "1.346572902509748107169129563",
      "g0": "46.80016383743685432121239703",
      "g0_source": "cgm",
      "g0_sources": [
@@ -24147,7 +24880,7 @@
       "2026-10-03T19:20:04.872000+00:00",
       "2026-10-03T19:25:00.416000+00:00"
      ],
-     "insulin_effect_mgdl": "525.0",
+     "insulin_effect_mgdl": "525.2307313036898755813272788",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-04T05:45:00+00:00",
@@ -24158,8 +24891,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-03T19:25:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-10-03T10:55:00+00:00",
+       "effect_mgdl": "0.2307313036898755813272787610",
+       "id": "t-0131",
+       "isf": "35",
+       "share": "0.0009417604232239819646011378",
+       "units": "7.0"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.2307313036898755813272787610",
      "rapid_units_in_window": "15.0",
-     "ratio_g_per_unit": "7.429566223931082725408063387",
+     "ratio_g_per_unit": "7.426259641317569157864926415",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -24464,10 +25208,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-91.09772113913814437007375360",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -24528,6 +25273,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-04T08:35:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.5",
      "ratio_g_per_unit": "9.452455530401903648295973533",
      "reason": null,
@@ -24602,10 +25349,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "72.88878086784550179289036570",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -24627,7 +25375,7 @@
      "carbs_times_isf_total": "3325",
      "carbs_total": "95",
      "delta_mgdl": "72.88878086784550179289036570",
-     "denominator_mgdl": "405.3887808678455017928903657",
+     "denominator_mgdl": "417.7056947870903774421201438",
      "doses": [
       {
        "at": "2026-10-04T09:50:00+00:00",
@@ -24643,7 +25391,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-10-04T12:40:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.219214378549911283587640198",
+     "factor_units_per_ke": "1.256257728682978578773293666",
      "g0": "40.00000000000000000000000000",
      "g0_source": "cgm",
      "g0_sources": [
@@ -24655,7 +25403,7 @@
       "2026-10-04T12:35:10.782000+00:00",
       "2026-10-04T12:40:11.135000+00:00"
      ],
-     "insulin_effect_mgdl": "332.5",
+     "insulin_effect_mgdl": "344.8169139192448756492297781",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-04T17:10:00+00:00",
@@ -24666,8 +25414,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-04T12:40:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-10-04T05:45:00+00:00",
+       "effect_mgdl": "12.31691391924487564922977813",
+       "id": "t-0133",
+       "isf": "30",
+       "share": "0.0357011997659271757948689221",
+       "units": "11.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "12.31691391924487564922977813",
      "rapid_units_in_window": "9.5",
-     "ratio_g_per_unit": "8.202003007784104394805420755",
+     "ratio_g_per_unit": "7.960150032655869197466546685",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -24740,10 +25499,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-54.13368236543792895925072103",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -24804,6 +25564,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-04T20:00:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.0",
      "ratio_g_per_unit": "10.06262527030133855253763210",
      "reason": null,
@@ -25136,10 +25898,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "47.0065633649640640386135981",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -25208,6 +25971,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-05T08:45:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "8.5",
      "ratio_g_per_unit": "9.933558948434534370738808895",
      "reason": null,
@@ -25299,10 +26064,11 @@
     "calculation": {
      "actual_window_minutes": "265",
      "adjusted_delta_mgdl": "-112.9231742574146624468692535",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -25332,7 +26098,7 @@
      "carbs_times_isf_total": "3850",
      "carbs_total": "110",
      "delta_mgdl": "-112.9231742574146624468692535",
-     "denominator_mgdl": "289.5768257425853375531307465",
+     "denominator_mgdl": "292.6089190976292920061515520",
      "doses": [
       {
        "at": "2026-10-05T10:40:00+00:00",
@@ -25357,7 +26123,7 @@
      "end_reason": "after_last_injection",
      "extended_end": "2026-10-05T15:05:00+00:00",
      "extra_carb_count": 1,
-     "factor_units_per_ke": "0.7521475993313904871509889519",
+     "factor_units_per_ke": "0.7600231664873488104055884468",
      "g0": "161.2544637109951376991711312",
      "g0_source": "cgm",
      "g0_sources": [
@@ -25369,7 +26135,7 @@
       "2026-10-05T15:00:18.027000+00:00",
       "2026-10-05T15:05:16.479000+00:00"
      ],
-     "insulin_effect_mgdl": "402.5",
+     "insulin_effect_mgdl": "405.5320933550439544530208055",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-05T17:15:00+00:00",
@@ -25380,8 +26146,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-05T13:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-10-05T05:55:00+00:00",
+       "effect_mgdl": "3.032093355043954453020805506",
+       "id": "t-0136",
+       "isf": "30",
+       "share": "0.0118905621766429586392972765",
+       "units": "8.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "3.032093355043954453020805506",
      "rapid_units_in_window": "11.5",
-     "ratio_g_per_unit": "13.29526280332389438739147211",
+     "ratio_g_per_unit": "13.15749366722291608853387032",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -25471,10 +26248,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "52.79880633050622325937307016",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -25496,7 +26274,7 @@
      "carbs_times_isf_total": "3325",
      "carbs_total": "95",
      "delta_mgdl": "52.79880633050622325937307016",
-     "denominator_mgdl": "437.7988063305062232593730702",
+     "denominator_mgdl": "438.0482068834649453859449335",
      "doses": [
       {
        "at": "2026-10-05T17:15:00+00:00",
@@ -25512,7 +26290,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-10-05T20:05:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.316688139339868340629693444",
+     "factor_units_per_ke": "1.317438216190872016198330627",
      "g0": "69.16373581132741280950420514",
      "g0_source": "cgm",
      "g0_sources": [
@@ -25524,7 +26302,7 @@
       "2026-10-05T20:00:15.857000+00:00",
       "2026-10-05T20:05:02.686000+00:00"
      ],
-     "insulin_effect_mgdl": "385.0",
+     "insulin_effect_mgdl": "385.2494005529587221265718633",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-06T05:20:00+00:00",
@@ -25535,8 +26313,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-05T20:05:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-10-05T12:15:00+00:00",
+       "effect_mgdl": "0.2494005529587221265718633230",
+       "id": "t-0139",
+       "isf": "35",
+       "share": "0.0071257300845349179020532378",
+       "units": "1"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "0.2494005529587221265718633230",
      "rapid_units_in_window": "11.0",
-     "ratio_g_per_unit": "7.594812849923275232984766378",
+     "ratio_g_per_unit": "7.590488781259999597878747474",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -25948,10 +26737,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-6.4399656449098505385579712",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -26012,6 +26802,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-06T08:10:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "12.5",
      "ratio_g_per_unit": "6.918818543258533803417574627",
      "reason": null,
@@ -26086,10 +26878,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "29.9251984245202507739572230",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -26111,7 +26904,7 @@
      "carbs_times_isf_total": "1925",
      "carbs_total": "55",
      "delta_mgdl": "29.9251984245202507739572230",
-     "denominator_mgdl": "204.9251984245202507739572230",
+     "denominator_mgdl": "214.0972932793205420741397316",
      "doses": [
       {
        "at": "2026-10-06T09:40:00+00:00",
@@ -26127,7 +26920,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-10-06T12:30:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.064546485322183120903673886",
+     "factor_units_per_ke": "1.112193731321145673112414190",
      "g0": "113.9602080886054707165631817",
      "g0_source": "cgm",
      "g0_sources": [
@@ -26139,7 +26932,7 @@
       "2026-10-06T12:25:16.630000+00:00",
       "2026-10-06T12:30:17.223000+00:00"
      ],
-     "insulin_effect_mgdl": "175.0",
+     "insulin_effect_mgdl": "184.1720948548002913001825086",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-06T16:50:00+00:00",
@@ -26150,8 +26943,19 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-06T12:30:00+00:00",
+     "prior_doses": [
+      {
+       "at": "2026-10-06T05:20:00+00:00",
+       "effect_mgdl": "9.172094854800291300182508564",
+       "id": "t-0141",
+       "isf": "30",
+       "share": "0.0244589196128007768004866895",
+       "units": "12.5"
+      }
+     ],
+     "prior_insulin_effect_mgdl": "9.172094854800291300182508564",
      "rapid_units_in_window": "5.0",
-     "ratio_g_per_unit": "9.393671519166697162323464029",
+     "ratio_g_per_unit": "8.991239312346476801820501012",
      "reason": null,
      "settings_version": 2,
      "sport_effect_mgdl": "0",
@@ -26224,10 +27028,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-6.46051025824007105392614544",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -26288,6 +27093,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-06T19:40:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.0",
      "ratio_g_per_unit": "10.31740819761496025191203643",
      "reason": null,
@@ -26723,10 +27530,11 @@
     "calculation": {
      "actual_window_minutes": "170",
      "adjusted_delta_mgdl": "-82.61017391442710073670978727",
-     "algorithm": "endpoint-full-dose-v1",
+     "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
       "volle IE jeder schnell wirksamen Injektion im Fenster",
+      "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt",
       "alle KH im Fenster teilen einen Insulinfaktor",
       "kein zusätzlicher Hintergrundtrend",
       "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"
@@ -26787,6 +27595,8 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-07T09:00:00+00:00",
+     "prior_doses": [],
+     "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "8.0",
      "ratio_g_per_unit": "7.624381002540530240656442218",
      "reason": null,

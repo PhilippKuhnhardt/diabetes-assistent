@@ -18,6 +18,27 @@ def dec(value: object) -> Decimal:
     return Decimal(str(value))
 
 
+# Activity curve of a rapid dose (Loop's Fiasp preset; derivation in app/on_board.py).
+INSULIN_PEAK = Decimal(55)
+INSULIN_DURATION = Decimal(360)
+INSULIN_DELAY = Decimal(10)
+
+
+def insulin_remaining(minutes: Decimal) -> Decimal:
+    """Share of a rapid dose that has not acted yet, `minutes` after the injection."""
+    t = dec(minutes) - INSULIN_DELAY
+    if t <= 0:
+        return Decimal(1)
+    if t >= INSULIN_DURATION:
+        return Decimal(0)
+    peak, duration = INSULIN_PEAK, INSULIN_DURATION
+    tau = peak * (1 - peak / duration) / (1 - 2 * peak / duration)
+    a = 2 * tau / duration
+    scale = 1 / (1 - a + (1 + a) * (-duration / tau).exp())
+    used = scale * (1 - a) * ((t * t / (tau * duration * (1 - a)) - t / tau - 1) * (-t / tau).exp() + 1)
+    return min(Decimal(1), max(Decimal(0), 1 - used))
+
+
 def schedule_value_at(moment: datetime, schedule: list[dict], timezone: str, key: str) -> Decimal:
     local = moment.astimezone(local_zone(timezone))
     minute = local.hour * 60 + local.minute
@@ -232,6 +253,31 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
             "event_type": treatment.get("eventType") or "",
             "isf": str(sensitivity), "effect_mgdl": str(effect),
         })
+    # Rapid insulin from before the window still lowers glucose inside it. The dose help subtracts it
+    # as "Wirkt noch", so the factor counts the share that acts between start and end (activity curve);
+    # without it the factor of such a meal came out too small and the insulin was deducted twice
+    # (Philipp's approval 2026-11-14, analysen/dosisrechnung-pruefung-2026-11-14.md, 22 % of meals).
+    prior_doses = []
+    prior_insulin_effect = Decimal(0)
+    for treatment in all_treatments:
+        if treatment.get("eventType") == "Exercise":
+            continue
+        units = dec(treatment.get("insulin") or 0)
+        at = treatment["at"]
+        own_entry = bool(episode.get("source_id")) and treatment.get("id") == episode["source_id"]
+        if units <= 0 or own_entry or at >= start or not is_rapid_insulin(treatment):
+            continue
+        share = insulin_remaining(minutes_between(start, at)) - insulin_remaining(minutes_between(end, at))
+        if share <= 0:
+            continue
+        sensitivity = isf_at(at, settings["isf_schedule"], settings["timezone"])
+        effect = units * share * sensitivity
+        prior_insulin_effect += effect
+        prior_doses.append({
+            "id": treatment.get("id"), "at": at.isoformat(), "units": str(units),
+            "share": str(share), "isf": str(sensitivity), "effect_mgdl": str(effect),
+        })
+    insulin_effect += prior_insulin_effect
     sport_effect_mgdl = dec(sport_effect_mgdl)
     if not sport_effect_mgdl.is_finite() or not -500 <= sport_effect_mgdl <= 500:
         raise ValueError("Ungültiger Sporteffekt")
@@ -251,7 +297,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         factor = str(Decimal(10) * denominator / carbs_times_isf_total)
         reason = None
     return {
-        "algorithm": "endpoint-full-dose-v1", "start": start.isoformat(), "end": end.isoformat(),
+        "algorithm": "endpoint-full-dose-v2", "start": start.isoformat(), "end": end.isoformat(),
         "nominal_end": nominal_end.isoformat(), "window_minutes": int(settings["window_minutes"]),
         "actual_window_minutes": str(minutes_between(end, start)),
         "extended_end": extended_end.isoformat(),
@@ -268,11 +314,12 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         "delta_mgdl": str(delta), "adjusted_delta_mgdl": str(adjusted_delta),
         "sport_effect_mgdl": str(sport_effect_mgdl), "meal_isf": str(meal_isf),
         "rapid_units_in_window": str(rapid_units_in_window),
-        "insulin_effect_mgdl": str(insulin_effect), "denominator_mgdl": str(denominator),
+        "insulin_effect_mgdl": str(insulin_effect), "prior_insulin_effect_mgdl": str(prior_insulin_effect),
+        "prior_doses": prior_doses, "denominator_mgdl": str(denominator),
         "doses": effects, "carb_events": all_carb_events,
         "blockers": blockers,
         "ratio_g_per_unit": ratio, "factor_units_per_ke": factor, "reason": reason,
-        "assumptions": ["alle KH im Fenster wirken bis zum Endpunkt vollständig", "volle IE jeder schnell wirksamen Injektion im Fenster", "alle KH im Fenster teilen einen Insulinfaktor", "kein zusätzlicher Hintergrundtrend", "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"]
+        "assumptions": ["alle KH im Fenster wirken bis zum Endpunkt vollständig", "volle IE jeder schnell wirksamen Injektion im Fenster", "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt", "alle KH im Fenster teilen einen Insulinfaktor", "kein zusätzlicher Hintergrundtrend", "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"]
         + (["manuell gewählter Zeitraum statt automatischem Endpunkt"] if manual_window else [])
         + (["Startwert blutig gemessen, weil am Beginn kein CGM-Wert vorlag"] if g0_source == "finger" else []),
     }
