@@ -20,6 +20,7 @@ from app import calculation, on_board
 from app.dosing import half_units
 
 FAST_FACTOR, SLOW_FACTOR = Decimal("0.6"), Decimal("1.4")
+FAST_MIN_GAP = Decimal(1)  # IE
 STEEP_MGDL_PER_MIN, FLAT_MGDL_PER_MIN = Decimal("2.0"), Decimal("1.0")
 RISE_MINUTES = 60          # the slope is measured over the first hour after the meal start
 SLOPE_MINUTES = 15
@@ -72,8 +73,12 @@ def scale(result: dict, rise: dict | None) -> dict | None:
     start, isf = Decimal(result["forecast_mgdl"]), Decimal(result["isf_mgdl_per_unit"])
     out = {"meal_at": rise["meal_at"].isoformat(), "tempo": rise["tempo"],
            "slope_mgdl_per_min": str(rise["slope_mgdl_per_min"]) if rise["slope_mgdl_per_min"] is not None else None}
-    for name, factor in (("fast", FAST_FACTOR), ("slow", SLOW_FACTOR)):
-        units = half_units(max(Decimal(0), correction * factor))
+    # The low end is at least FAST_MIN_GAP below normal: late corrections are small while the right one still
+    # spreads about +-1 IE (3-4 h after the meal only 1 in 5 lay within x0.6..x1.4). The high end gets no such
+    # gap: there it cost lows (late < 70: 38 % at x1.4, 47 % with +1 IE; user decision 2026-11-15).
+    ends = {"fast": min(correction * FAST_FACTOR, correction - FAST_MIN_GAP), "slow": correction * SLOW_FACTOR}
+    for name, value in ends.items():
+        units = half_units(max(Decimal(0), value))
         out[name + "_entry_units"] = str(units)
         out[name + "_expected_glucose_mgdl"] = str(start - units * isf)
     return out

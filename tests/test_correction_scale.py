@@ -48,6 +48,13 @@ class ScaleTests(unittest.TestCase):
         self.assertEqual(Decimal(scale["fast_expected_glucose_mgdl"]), Decimal("220") - 2 * Decimal("33.3"))
         self.assertEqual(scale["tempo"], "fast")
 
+    def test_low_end_is_at_least_one_unit_below_normal(self):
+        scale = correction_scale.scale({**self.RESULT, "correction_units": "2"}, self.RISE)
+        self.assertEqual(scale["fast_entry_units"], "1")       # min(1.2, 1) -> 1
+        self.assertEqual(scale["slow_entry_units"], "3")       # 2.8 -> 3, no gap upwards
+        small = correction_scale.scale({**self.RESULT, "correction_units": "0.8"}, self.RISE)
+        self.assertEqual(small["fast_entry_units"], "0")
+
     def test_no_scale_without_a_positive_correction_or_a_recent_meal(self):
         self.assertIsNone(correction_scale.scale({**self.RESULT, "correction_units": "-0.5"}, self.RISE))
         self.assertIsNone(correction_scale.scale(self.RESULT, None))
