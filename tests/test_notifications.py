@@ -259,8 +259,10 @@ class CorrectionCheckTests(unittest.TestCase):
         self.assertIsNone(self.due(80, [250] * 7))                           # too early
         self.assertIsNone(self.due(460, [250] * 7))                          # too late
 
-    def test_before_two_hours_only_from_180_and_rising(self):
-        self.assertIsNone(self.due(100, [200] * 7))
+    def test_before_two_hours_only_from_180_and_rising_or_from_200(self):
+        self.assertIsNone(self.due(100, [195] * 7))
+        self.assertIsNotNone(self.due(100, [200] * 7))
+        self.assertIsNotNone(self.due(100, [266, 259, 249, 240, 238, 236, 234]))  # 15.11.: high, falling slowly
         self.assertIsNone(self.due(100, [168, 169, 170, 171, 172, 173, 174]))  # below 180
         self.assertIsNotNone(self.due(100, [180, 183, 186, 189, 192, 195, 198]))
 
