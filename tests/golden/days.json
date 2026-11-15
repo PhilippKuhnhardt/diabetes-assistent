@@ -90,6 +90,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-29T08:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "8.5",
@@ -233,6 +234,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-29T12:50:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-08-29T05:25:00+00:00",
@@ -385,6 +387,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-29T19:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "5.5",
@@ -750,6 +753,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-30T08:05:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.0",
@@ -910,6 +914,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-30T13:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-08-30T05:05:00+00:00",
@@ -1080,6 +1085,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-30T19:20:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-08-30T10:30:00+00:00",
@@ -1520,6 +1526,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-31T07:50:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "10.5",
@@ -1663,6 +1670,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-31T13:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-08-31T04:50:00+00:00",
@@ -1815,6 +1823,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-08-31T20:10:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "15.5",
@@ -2218,6 +2227,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-01T08:50:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "10.5",
@@ -2361,6 +2371,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-01T12:40:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-01T05:50:00+00:00",
@@ -2522,6 +2533,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-01T20:15:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "10.5",
@@ -2935,6 +2947,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-02T13:35:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "8.0",
@@ -3078,6 +3091,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-02T19:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-02T10:35:00+00:00",
@@ -3478,6 +3492,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-03T08:20:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "13.0",
@@ -3656,6 +3671,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-03T13:15:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-03T05:20:00+00:00",
@@ -3826,6 +3842,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-03T20:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-03T11:50:00+00:00",
@@ -4308,6 +4325,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-04T09:10:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "20.0",
@@ -4451,6 +4469,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-04T12:35:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-04T06:10:00+00:00",
@@ -4603,6 +4622,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-04T19:20:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.0",
@@ -5043,6 +5063,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-05T08:50:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.0",
@@ -5186,6 +5207,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-05T13:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-05T05:50:00+00:00",
@@ -5338,6 +5360,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-05T20:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "15.5",
@@ -5768,6 +5791,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-06T08:55:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.5",
@@ -5911,6 +5935,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-06T12:45:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-06T05:55:00+00:00",
@@ -6063,6 +6088,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-06T20:10:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.5",
@@ -6576,6 +6602,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-07T12:45:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-07T05:10:00+00:00",
@@ -6755,6 +6782,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-07T20:20:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-07T11:20:00+00:00",
@@ -7243,6 +7271,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-08T09:10:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.5",
@@ -7386,6 +7415,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-08T12:35:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-08T06:10:00+00:00",
@@ -7539,6 +7569,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-08T19:40:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.5",
@@ -7941,6 +7972,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-09T09:05:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.0",
@@ -8084,6 +8116,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-09T13:50:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-09T06:05:00+00:00",
@@ -8236,6 +8269,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-09T19:45:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-09T10:50:00+00:00",
@@ -8648,6 +8682,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-10T08:20:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "13.0",
@@ -8791,6 +8826,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-10T20:15:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.5",
@@ -9222,6 +9258,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-11T12:40:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "10.5",
@@ -9383,6 +9420,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-11T19:35:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-11T11:15:00+00:00",
@@ -9776,6 +9814,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-12T09:05:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.0",
@@ -9919,6 +9958,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-12T13:45:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-12T06:05:00+00:00",
@@ -10071,6 +10111,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-12T20:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.0",
@@ -10455,6 +10496,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-13T08:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.0",
@@ -10598,6 +10640,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-13T13:55:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-13T05:25:00+00:00",
@@ -10768,6 +10811,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-13T19:55:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-13T10:55:00+00:00",
@@ -11275,6 +11319,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-14T08:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.5",
@@ -11418,6 +11463,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-14T13:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-14T05:25:00+00:00",
@@ -11570,6 +11616,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-14T19:35:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "17.5",
@@ -12012,6 +12059,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-15T08:50:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "4.0",
@@ -12172,6 +12220,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-15T13:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-15T05:50:00+00:00",
@@ -12349,6 +12398,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-15T19:10:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-15T10:30:00+00:00",
@@ -12865,6 +12915,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-16T08:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.0",
@@ -13008,6 +13059,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-16T13:00:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-16T05:25:00+00:00",
@@ -13160,6 +13212,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-16T20:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.5",
@@ -13622,6 +13675,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-17T07:55:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "4.0",
@@ -13765,6 +13819,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-17T12:55:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-17T04:55:00+00:00",
@@ -13917,6 +13972,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-17T20:05:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "12.0",
@@ -14301,6 +14357,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-18T07:50:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "4.5",
@@ -14444,6 +14501,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-18T13:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-18T05:00:00+00:00",
@@ -14596,6 +14654,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-18T20:00:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.0",
@@ -15006,6 +15065,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-19T08:05:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "12.5",
@@ -15184,6 +15244,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-19T12:35:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-19T05:15:00+00:00",
@@ -15363,6 +15424,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-19T19:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-19T11:20:00+00:00",
@@ -15888,6 +15950,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-20T12:55:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.5",
@@ -16033,6 +16096,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-20T14:05:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-20T10:05:00+00:00",
@@ -16185,6 +16249,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-20T19:40:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-20T11:15:00+00:00",
@@ -16596,6 +16661,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-21T08:55:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "13.0",
@@ -16739,6 +16805,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-21T12:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-21T06:05:00+00:00",
@@ -16891,6 +16958,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-21T19:15:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "14.0",
@@ -17274,6 +17342,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-22T08:10:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.5",
@@ -17417,6 +17486,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-22T12:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-22T05:20:00+00:00",
@@ -17569,6 +17639,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-22T19:45:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.5",
@@ -17952,6 +18023,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-23T08:15:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.5",
@@ -18112,6 +18184,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-23T12:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-23T05:25:00+00:00",
@@ -18282,6 +18355,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-23T19:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-23T11:15:00+00:00",
@@ -18714,6 +18788,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-24T08:15:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "14.0",
@@ -18929,6 +19004,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-24T19:55:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.5",
@@ -19321,6 +19397,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-25T08:15:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "5.0",
@@ -19464,6 +19541,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-25T12:45:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-25T05:25:00+00:00",
@@ -19625,6 +19703,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-25T19:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "13.5",
@@ -20105,6 +20184,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-26T08:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "12.5",
@@ -20248,6 +20328,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-26T12:35:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-26T05:35:00+00:00",
@@ -20400,6 +20481,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-26T19:05:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "14.5",
@@ -20918,6 +21000,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-27T08:15:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.0",
@@ -21096,6 +21179,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-27T12:55:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-27T05:25:00+00:00",
@@ -21266,6 +21350,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-27T19:55:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-27T11:40:00+00:00",
@@ -21755,6 +21840,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-28T08:10:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "13.0",
@@ -21898,6 +21984,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-28T13:20:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-28T05:20:00+00:00",
@@ -22050,6 +22137,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-28T19:05:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-28T10:30:00+00:00",
@@ -22463,6 +22551,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-29T12:35:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "14.5",
@@ -22606,6 +22695,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-29T19:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.0",
@@ -22969,6 +23059,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-30T08:40:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "14.0",
@@ -23112,6 +23203,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-30T12:50:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-09-30T05:50:00+00:00",
@@ -23264,6 +23356,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-09-30T19:10:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.0",
@@ -23647,6 +23740,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-01T08:10:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "19.5",
@@ -23807,6 +23901,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-01T13:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-10-01T05:20:00+00:00",
@@ -23986,6 +24081,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-01T19:15:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-10-01T10:40:00+00:00",
@@ -24483,6 +24579,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-02T08:45:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "5.0",
@@ -24626,6 +24723,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-02T13:20:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-10-02T05:55:00+00:00",
@@ -24778,6 +24876,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-02T20:05:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.5",
@@ -25200,6 +25299,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-03T08:50:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "17.5",
@@ -25343,6 +25443,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-03T13:45:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-10-03T06:00:00+00:00",
@@ -25495,6 +25596,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-03T19:25:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-10-03T10:55:00+00:00",
@@ -25888,6 +25990,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-04T08:35:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "11.5",
@@ -26031,6 +26134,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-04T12:40:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-10-04T05:45:00+00:00",
@@ -26183,6 +26287,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-04T20:00:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "9.0",
@@ -26602,6 +26707,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-05T08:45:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "8.5",
@@ -26780,6 +26886,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-05T13:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-10-05T05:55:00+00:00",
@@ -26950,6 +27057,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-05T20:05:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-10-05T12:15:00+00:00",
@@ -27455,6 +27563,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-06T08:10:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "12.5",
@@ -27598,6 +27707,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-06T12:30:00+00:00",
+     "prebolus": false,
      "prior_doses": [
       {
        "at": "2026-10-06T05:20:00+00:00",
@@ -27750,6 +27860,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-06T19:40:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "6.0",
@@ -28269,6 +28380,7 @@
       "timezone": "Europe/Berlin"
      },
      "nominal_end": "2026-10-07T09:00:00+00:00",
+     "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "8.0",
