@@ -254,7 +254,7 @@ class CorrectionCheckTests(unittest.TestCase):
         self.assertEqual((hit["glucose_mgdl"], hit["rise_mgdl"], hit["end_mgdl"]), (Decimal(205), Decimal(15), Decimal(205)))
         self.assertEqual(hit["meal_at"], self.MEAL)
         self.assertIsNotNone(self.due(150, [200] * 7))                       # flat counts
-        self.assertIsNone(self.due(150, [215, 212, 210, 208, 206, 204, 200]))  # falling
+        self.assertIsNotNone(self.due(150, [215, 212, 210, 208, 206, 204, 200]))  # falling counts from 2 h on
         self.assertIsNone(self.due(150, [150] * 7))                          # below 160
         self.assertIsNone(self.due(80, [250] * 7))                           # too early
         self.assertIsNone(self.due(460, [250] * 7))                          # too late
