@@ -1,5 +1,6 @@
 """Push reminders over Pushover (user decision 2026-10-09): a forgotten basal and a due second split part;
-since 2026-10-11 also early warnings of a low or high within the next hour (app/glucose_alerts.py).
+since 2026-10-11 also early warnings of a low or high within the next hour (app/glucose_alerts.py), and since
+2026-11-14 a reminder to look at glucose and maybe correct after a meal (app/correction_check.py).
 
 The background job checks them after each sync round; each reminder is sent once (its key is stored)
 and only after a successful Nightscout sync, so a dose already given but not yet mirrored cannot
@@ -13,19 +14,22 @@ from datetime import datetime, time, timedelta, timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from app import calculation, forecast, glucose_alerts, on_board, split
+from app import calculation, correction_check, forecast, glucose_alerts, on_board, split
 from app.common import local_zone, parse_instant, unit_text
 from app.ingestion import pushover
 from app.services import day_view, dose_help, factors
 from app.store import basal_doses, config, marks
 from app.store import notifications as store
 
-KINDS = {"basal": True, "split": True, "low": True, "high": True}
-LABELS = {"basal": "Basal vergessen", "split": "2. Split-Teil fällig", "low": "Tief droht", "high": "Hoch droht"}
+KINDS = {"basal": True, "split": True, "low": True, "high": True, "check": True}
+LABELS = {"basal": "Basal vergessen", "split": "2. Split-Teil fällig", "low": "Tief droht", "high": "Hoch droht",
+          "check": "BZ prüfen"}
 # A second split part due before its planned time: glucose high and rising fast (app/split.py).
 EARLY_SPLIT_TITLE = "2. Split-Teil jetzt: BZ steigt schnell"
 WARNINGS = ("low", "high")
 WARNING_REPEAT = timedelta(minutes=60)
+# How soon each repeating kind may come again.
+REPEAT = {"low": WARNING_REPEAT, "high": WARNING_REPEAT, "check": correction_check.REPEAT}
 # Pushover priorities (https://pushover.net/api#priority); default 1 skips the quiet hours as before.
 PRIORITY_LABELS = {-2: "Ganz leise (nur in der Pushover-App)", -1: "Leise (ohne Ton)", 0: "Normal",
                    1: "Hoch (auch in Ruhezeiten)", 2: "Notfall (wiederholt bis bestätigt)"}
@@ -80,21 +84,10 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
     """Low and high warnings due now (switched-on kinds only), before the once-per-hour check."""
     if not any(enabled.get(kind) for kind in WARNINGS):
         return []
-    zone = local_zone(settings["timezone"])
-    today = now.astimezone(zone).date()
-    overrides, periods = marks.analysis_day_types(), marks.vacation_periods()
-    day_type = marks.day_type_for(today.isoformat(), overrides, periods)[0]
-    _, _, lookback = factors.forecast_settings(settings)
-    points = factors.meal_points(today, lookback, overrides, periods, mode=factors.vacation_mode(settings))
-    method = settings.get("auto_method", "percentile")
-    try:
-        found = on_board.sources(treatments, now, settings, factors.carb_factor(settings, today, points, day_type),
-                                 factors.surcharge_mgdl(settings) if method == forecast.SURCHARGE else None,
-                                 forecast.surcharge_share, sport_overrides=marks.sport_session_effects(),
-                                 fat_surcharge_mgdl=factors.fat_surcharge_mgdl(settings),
-                                 scale=factors.entry_scale(factors.place_scales(settings, today, overrides, periods)))
-    except ValueError:
+    found = _acting(now, settings, treatments)
+    if found is None:
         return []
+    zone = local_zone(settings["timezone"])
     reminders = []
     for warning in glucose_alerts.warnings(entries, found, now, settings["timezone"]):
         if not enabled.get(warning["kind"]):
@@ -109,6 +102,55 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
         reminders.append({"key": f"{warning['kind']}:{now.astimezone(timezone.utc).isoformat()}",
                           "kind": warning["kind"], "title": LABELS[warning["kind"]], "message": message})
     return reminders
+
+
+def _acting(now: datetime, settings: dict, treatments: list[dict]) -> dict | None:
+    """What still acts now ("Wirkt noch"), as for the dose help; None when the model cannot be built."""
+    zone = local_zone(settings["timezone"])
+    today = now.astimezone(zone).date()
+    overrides, periods = marks.analysis_day_types(), marks.vacation_periods()
+    day_type = marks.day_type_for(today.isoformat(), overrides, periods)[0]
+    _, _, lookback = factors.forecast_settings(settings)
+    points = factors.meal_points(today, lookback, overrides, periods, mode=factors.vacation_mode(settings))
+    method = settings.get("auto_method", "percentile")
+    try:
+        return on_board.sources(treatments, now, settings, factors.carb_factor(settings, today, points, day_type),
+                                factors.surcharge_mgdl(settings) if method == forecast.SURCHARGE else None,
+                                forecast.surcharge_share, sport_overrides=marks.sport_session_effects(),
+                                fat_surcharge_mgdl=factors.fat_surcharge_mgdl(settings),
+                                scale=factors.entry_scale(factors.place_scales(settings, today, overrides, periods)))
+    except ValueError:
+        return None
+
+
+def correction_reminder(now: datetime, settings: dict, treatments: list[dict], entries: list[dict],
+                        enabled: dict[str, bool], correction: Callable[[], dict | None] | None = None,
+                        found: dict | None = None) -> list[dict]:
+    """The "BZ prüfen" reminder when due (app/correction_check.py), with the dose help's correction
+    (user request 2026-11-14: name the suggested correction, Philipp judges the situation)."""
+    if not enabled.get("check"):
+        return []
+    found = found if found is not None else _acting(now, settings, treatments)
+    if found is None:
+        return []
+    hit = correction_check.due(entries, found, treatments, now)
+    if hit is None:
+        return []
+    zone = local_zone(settings["timezone"])
+    rise = hit["rise_mgdl"]
+    message = (f"BZ {hit['glucose_mgdl']:.0f} ({'+' if rise >= 0 else ''}{rise:.0f} in 30 min), "
+               f"Prognose Ende {hit['end_mgdl']:.0f}, Mahlzeit um {_clock(hit['meal_at'], zone)}")
+    units = correction() if correction else None
+    if units:
+        normal, cautious = units.get("normal"), units.get("cautious")
+        if normal is not None and normal > 0:
+            message += f". Korrektur {_units(normal)} IE"
+            if cautious is not None and cautious != normal:
+                message += f" (vorsichtig {_units(cautious)} IE)"
+        elif normal is not None:
+            message += ". Laut Dosishilfe keine Korrektur nötig"
+    return [{"key": f"check:{now.astimezone(timezone.utc).isoformat()}", "kind": "check",
+             "title": LABELS["check"], "message": message}]
 
 
 def _today_inputs(now: datetime, settings: dict) -> tuple[list[dict], list[dict], list[dict]]:
@@ -132,6 +174,18 @@ def _second_part() -> Decimal | None:
     return calculation.dec(units) if units is not None else None
 
 
+def _correction() -> dict | None:
+    """The dose help's correction now without food: normal and cautious IE (None without a fresh glucose value)."""
+    try:
+        result = dose_help.dose_help({"carbs": "0"})
+    except ValueError:
+        return None
+    if result.get("entry_units") is None:
+        return None
+    return {"normal": calculation.dec(result["entry_units"]),
+            "cautious": calculation.dec(result["cautious_entry_units"]) if result.get("cautious_entry_units") is not None else None}
+
+
 def check(now: datetime | None = None) -> list[dict]:
     """Send every due reminder once. Returns what was sent; a failed send is retried next round."""
     if not pushover.is_configured():
@@ -145,11 +199,12 @@ def check(now: datetime | None = None) -> list[dict]:
     priorities = store.priorities(PRIORITIES)
     sent = []
     for reminder in (due_reminders(now, settings, treatments, basal_today, enabled, entries, _second_part)
-                     + glucose_warnings(now, settings, treatments, entries, enabled)):
+                     + glucose_warnings(now, settings, treatments, entries, enabled)
+                     + correction_reminder(now, settings, treatments, entries, enabled, _correction)):
         if store.was_sent(reminder["key"]):
             continue
-        last = store.last_sent(reminder["kind"]) if reminder["kind"] in WARNINGS else None
-        if last and now - last < WARNING_REPEAT:
+        last = store.last_sent(reminder["kind"]) if reminder["kind"] in REPEAT else None
+        if last and now - last < REPEAT[reminder["kind"]]:
             continue
         pushover.send(reminder["title"], reminder["message"], priorities[reminder["kind"]])
         store.mark_sent(reminder["key"], reminder["kind"], reminder["title"], reminder["message"], now)
