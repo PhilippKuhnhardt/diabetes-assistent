@@ -105,11 +105,12 @@ class McpTests(unittest.TestCase):
         self.assertEqual(FakeNightscout.treatments, [])
         event_id = "4a0e7a1e-8b0f-4c55-9c62-3f2f0c0e5d11"
         saved = self.call("save_entry", carbs_g=45, insulin_units=5, carbs_certainty="known", fat_protein=True,
-                          dose_variant="normal", notes="Pasta", event_id=event_id)
+                          fast=True, dose_variant="normal", notes="Pasta", event_id=event_id)
         self.assertEqual((saved["kind"], saved["carbs_g"], saved["insulin_units"]), ("meal", "45", "5"))
-        self.assertEqual((saved["entry"]["carbs_certainty"], saved["entry"]["fat_protein"]), ("known", True))
+        self.assertEqual((saved["entry"]["carbs_certainty"], saved["entry"]["fat_protein"], saved["entry"]["fast"]),
+                         ("known", True, True))
         self.call("save_entry", carbs_g=45, insulin_units=5, carbs_certainty="known", fat_protein=True,
-                  event_id=event_id)
+                  fast=True, event_id=event_id)
         self.assertEqual(len(FakeNightscout.treatments), 1)
         record = FakeNightscout.treatments[0]
         self.assertEqual((record["carbs"], record["insulin"]), (45, 5))

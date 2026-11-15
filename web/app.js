@@ -7,7 +7,7 @@ const views = new Set(["diary", "analysis", "settings"]);
 const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
 const CERTAINTY_LABELS = { weighed: "Gewogen", known: "Halbwegs sicher", unsure: "KH unsicher" };
 // Meal factors picked on a carb entry; shown as icons wherever the meal or entry appears.
-const MEAL_FACTORS = { alcohol: "Alkohol", fat_protein: "Fettreich" };
+const MEAL_FACTORS = { alcohol: "Alkohol", fat_protein: "Fettreich", fast: "Schnell" };
 
 function factorIconsHTML(marks) {
   const on = Object.keys(MEAL_FACTORS).filter(key => marks?.[key]);
@@ -2084,7 +2084,7 @@ function previewRequest() {
     // Saving re-checks the shown options with these, so the preview must send the same marks.
     carbs_certainty: Number(form.elements.carbs.value) > 0 ? certaintyValue(form) : null,
     fat_protein: Number(form.elements.carbs.value) > 0 && form.elements.fat_protein.checked,
-    alcohol: Number(form.elements.carbs.value) > 0 && form.elements.alcohol.checked,
+    fast: Number(form.elements.carbs.value) > 0 && form.elements.fast.checked,
     // A position only rides along while the entry is "now" and only picks the chip; the server checks that again.
     position: !state.entryTimeTouched && state.entryPosition ? state.entryPosition : null,
     place_id: entryPlaceId(),
@@ -2345,7 +2345,7 @@ function editEntry(id) {
   form.elements.notes.value = item.notes || "";
   setCertainty(form, item.carbs_certainty);
   form.elements.fat_protein.checked = Boolean(item.fat_protein);
-  form.elements.alcohol.checked = Boolean(item.alcohol);
+  form.elements.fast.checked = Boolean(item.fast);
   const placeSelect = form.elements.place_id;
   placeSelect.innerHTML = '<option value="">Kein Ort</option>' + (state.dayData.place_options || []).map(option =>
     '<option value="' + option.id + '">' + escapeHTML(option.name) + '</option>').join("");
@@ -2406,7 +2406,9 @@ async function saveEditedEntry(event) {
     notes: form.elements.notes.value,
     carbs_certainty: carbs > 0 ? certaintyValue(form) : null,
     fat_protein: carbs > 0 && form.elements.fat_protein.checked,
-    alcohol: carbs > 0 && form.elements.alcohol.checked,
+    // No chip any more (user request 2026-11-15); an old mark stays when the entry is edited.
+    alcohol: carbs > 0 && Boolean(item.alcohol),
+    fast: carbs > 0 && form.elements.fast.checked,
     place_id: form.elements.place_id.disabled ? undefined : form.elements.place_id.value || null,
   };
   const button = $('button[type="submit"]', form);
@@ -2530,7 +2532,7 @@ async function saveEntry(event) {
     notes: form.elements.notes.value,
     carbs_certainty: carbs > 0 ? certaintyValue(form) : null,
     fat_protein: carbs > 0 && form.elements.fat_protein.checked,
-    alcohol: carbs > 0 && form.elements.alcohol.checked,
+    fast: carbs > 0 && form.elements.fast.checked,
     event_id: state.pendingEventId || crypto.randomUUID(),
     basal_event_id: basalUnits > 0 ? state.pendingBasalId || crypto.randomUUID() : null,
     dose_check: chosen != null && Number(chosen) === insulin ? doseHelp.check : null,
