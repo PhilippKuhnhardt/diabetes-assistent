@@ -283,6 +283,11 @@ class CorrectionCheckTests(unittest.TestCase):
             self.assertEqual(due[0]["title"], "BZ prüfen")
             self.assertEqual(due[0]["message"], "BZ 205 (+15 in 30 min), Prognose Ende 231, Mahlzeit um 12:00. "
                                                 "Korrektur 2,5 IE (vorsichtig 1,5 IE)")
+            scaled = notifications.correction_reminder(now, SETTINGS, [], [], {"check": True},
+                                                       lambda: {"normal": Decimal("3"), "cautious": Decimal("2"),
+                                                                "fast": Decimal("2"), "slow": Decimal("4"), "tempo": "fast"},
+                                                       found={})
+            self.assertTrue(scaled[0]["message"].endswith("Korrektur 3 IE (wenig 2 · viel 4 IE, Anstieg steil: eher wenig)"))
             none = notifications.correction_reminder(now, SETTINGS, [], [], {"check": True},
                                                      lambda: {"normal": Decimal(0), "cautious": Decimal(0)}, found={})
             self.assertTrue(none[0]["message"].endswith("Laut Dosishilfe keine Korrektur nötig"))

@@ -2230,14 +2230,25 @@ function splitOptionNote(option) {
     .filter(Boolean).join(" · ");
 }
 
-const doseLabels = { split: "2. Teil", normal: "Normal", low: "Tiefer", cautious: "Vorsichtig", carbs: "Nur KH" };
+const doseLabels = { split: "2. Teil", fast: "Wenig", normal: "Normal", slow: "Viel", low: "Tiefer", cautious: "Vorsichtig", carbs: "Nur KH" };
+const riseNames = { fast: "steil", normal: "mittel", slow: "flach" };
+
+// A correction after a recent meal shows the ends of what was right (x0.6 / x1.4); the rise marks one.
+function scaleLine(scale) {
+  if (!scale) return "";
+  const slope = scale.slope_mgdl_per_min != null ? ' (' + escapeHTML(num(scale.slope_mgdl_per_min, 1)) + ' mg/dL/min)' : ' (Markierung „Schnell“)';
+  const lean = scale.tempo === "fast" ? "eher Wenig" : scale.tempo === "slow" ? "eher Viel" : "eher Normal";
+  return '<p class="dose-factor">Wenig / Viel = was nach Mahlzeiten mit wenig bzw. viel Bedarf richtig war (×0,6 / ×1,4)' +
+    (scale.tempo ? ' · Anstieg nach dem Essen um ' + escapeHTML(timeOnly(scale.meal_at)) + ' <strong>' +
+      riseNames[scale.tempo] + '</strong>' + slope + ': ' + lean : '') + '</p>';
+}
 
 function doseHelpHTML(data, changed = {}) {
   const withCarbs = Number(data.carbs_g) > 0;
   const options = data.options.map(option => {
     const label = doseLabels[option.variant];
     const before = changed[option.variant];
-    return '<button type="button" class="dose-option apply-dose' + (before ? ' is-changed' : '') + '" data-variant="' + option.variant + '" aria-pressed="false"' +
+    return '<button type="button" class="dose-option apply-dose' + (before ? ' is-changed' : '') + (option.suggested ? ' is-suggested' : '') + '" data-variant="' + option.variant + '" aria-pressed="false"' +
     ' title="' + escapeHTML(label + ": " + num(option.units, 2) + " IE direkt in Nightscout speichern") + '"' +
     (option.savable ? '' : ' disabled') + '><span class="dose-label">' + escapeHTML(label) + '</span><strong>' +
     escapeHTML(num(option.units, 2)) + ' <small>IE</small></strong><span class="dose-expected">' +
@@ -2245,6 +2256,7 @@ function doseHelpHTML(data, changed = {}) {
     (option.later_units != null ? '<span class="dose-expected">+ ' + escapeHTML(num(option.later_units, 1)) + ' IE um ' +
       escapeHTML(timeOnly(option.later_at)) + '</span>' : '') +
     (option.variant === "split" ? '<span class="dose-expected">' + escapeHTML(splitOptionNote(option)) + '</span>' : '') +
+    (option.suggested ? '<span class="dose-tendency">passt zum Anstieg</span>' : '') +
     (before ? '<span class="dose-was">vorher ' + escapeHTML(num(before.units, 2)) + ' IE' +
       (before.later_units != null && Number(before.later_units) !== Number(option.later_units) ? ' + ' + escapeHTML(num(before.later_units, 1)) : '') +
       '</span>' : '') + '</button>';
@@ -2259,6 +2271,7 @@ function doseHelpHTML(data, changed = {}) {
     (data.glucose_source === "finger" && data.glucose_fresh ? '<p class="dose-factor">Startwert blutig <strong>' +
       escapeHTML(num(data.glucose_mgdl, 0)) + ' mg/dL</strong> um ' + escapeHTML(timeOnly(data.glucose_at)) + '</p>' : '') +
     (options ? '<div class="dose-options">' + options + '</div>' : '') +
+    scaleLine(data.correction_scale) +
     (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport <strong>' +
       escapeHTML(signedChange(data.activity_change_mgdl, 0)) + '</strong> · ' + escapeHTML((Number(data.activity_units) > 0 ? "+" : "") + num(data.activity_units, 2)) + ' IE</p>' : '') +
     (data.on_board && (data.on_board.lowering_until || data.on_board.raising_until)

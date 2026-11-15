@@ -338,7 +338,8 @@ TOOLS = [
                        "die eigene Mahlzeit heute schon eingetragen ist) oder eigene Mahlzeit; Sport steckt "
                        "automatisch in on_board.sport_mgdl und der Dosis; basal_suggestion_units > 0 = Basal heute "
                        "noch offen (fragen, ob mit eintragen); split = Split-Bolus vorgeschlagen; dose.options = "
-                       "normal / low (tieferer Zielwert, nur ohne KH-Unsicherheit) / cautious (vorsichtig) / carbs (nur KH), "
+                       "normal / low (tieferer Zielwert, nur ohne KH-Unsicherheit) / cautious (vorsichtig) / carbs (nur KH); "
+                       "ohne KH nach einer Mahlzeit statt cautious fast (wenig Bedarf, x0,6) / slow (viel, x1,4), suggested = Tendenz aus dem Anstieg; "
                        "bei Split units = jetzt und "
                        "later_units/later_at = zweiter Teil; ohne KH ggf. Option split = geplanter 2. Teil. "
                        "Speichert nichts.",
