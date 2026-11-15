@@ -68,7 +68,9 @@ def scale(result: dict, rise: dict | None) -> dict | None:
     if rise is None or result.get("forecast_mgdl") is None or result.get("correction_units") is None:
         return None
     correction = Decimal(result["correction_units"])
-    if correction <= 0:
+    # Only when normal suggests an injectable dose: a correction rounding to 0 IE gave three zeros
+    # (user report 2026-11-15, right after a correction).
+    if correction <= 0 or Decimal(result.get("entry_units") or 0) <= 0:
         return None
     start, isf = Decimal(result["forecast_mgdl"]), Decimal(result["isf_mgdl_per_unit"])
     out = {"meal_at": rise["meal_at"].isoformat(), "tempo": rise["tempo"],

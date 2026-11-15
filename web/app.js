@@ -2320,6 +2320,8 @@ function resetEntryForm() {
   state.entryNoteOpen = false;
   state.entryFingerOpen = false;
   state.doseChoice = null;
+  // A saved entry changes what still acts: the next suggestions are new, not "changed" (user report 2026-11-15).
+  state.doseSeen = null;
   state.entryAs = null;
   state.split = null;
   state.closeMeal = false;
