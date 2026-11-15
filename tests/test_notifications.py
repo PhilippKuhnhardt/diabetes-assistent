@@ -287,7 +287,7 @@ class CorrectionCheckTests(unittest.TestCase):
                                                        lambda: {"normal": Decimal("3"), "cautious": Decimal("2"),
                                                                 "fast": Decimal("2"), "slow": Decimal("4"), "tempo": "fast"},
                                                        found={})
-            self.assertTrue(scaled[0]["message"].endswith("Korrektur 3 IE (wenig 2 · viel 4 IE, Anstieg steil: eher wenig)"))
+            self.assertTrue(scaled[0]["message"].endswith("Korrektur 3 IE (wenig 2 · viel 4 IE, eher wenig)"))
             none = notifications.correction_reminder(now, SETTINGS, [], [], {"check": True},
                                                      lambda: {"normal": Decimal(0), "cautious": Decimal(0)}, found={})
             self.assertTrue(none[0]["message"].endswith("Laut Dosishilfe keine Korrektur nötig"))
