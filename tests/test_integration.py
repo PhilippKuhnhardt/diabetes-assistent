@@ -1814,6 +1814,35 @@ class IntegrationTests(unittest.TestCase):
                 **entry, "insulin": low["units"], "dose_check": correction["check"], "dose_variant": "low"})
         self.assertEqual(Decimal(str(FakeNightscout.treatments[0]["insulin"])), Decimal(low["units"]))
 
+    def test_correction_after_a_meal_shows_the_ends_and_marks_the_rise(self):
+        # User request 2026-11-15: little / normal / much need instead of the cautious correction; the rise
+        # after the meal only marks a tendency.
+        self.request("/api/settings")
+        self.request("/api/settings", method="POST", body={"dose_target_mgdl": "120"})
+        now = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+        meal_at = now - timedelta(minutes=180)
+        today = now.astimezone(ZoneInfo("Europe/Berlin")).date().isoformat()
+        rows = [{"at": (meal_at + timedelta(minutes=m)).isoformat(), "sgv": 120 + 3 * min(m, 60) - max(0, m - 60) // 3}
+                for m in range(0, 181, 5)]
+        current_day = {
+            "day": today, "entries": rows,
+            "treatments": [{"id": "meal", "at": meal_at.isoformat(), "eventType": "Meal Bolus", "role": "meal",
+                            "insulin": 4, "carbs": 40, "notes": ""}],
+            "basal": [], "day_type": "work", "day_type_source": "weekday", "meals": [],
+        }
+        entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "", "as": "meal"}
+        with fake_days(return_value=current_day), patch.object(dosing, "LOW_TARGET_HOURS", (0, 0)):
+            dose = self.request("/api/entry/preview", method="POST", body=entry)["dose"]
+            options = {item["variant"]: item for item in dose["options"]}
+            self.assertEqual([item["variant"] for item in dose["options"]], ["fast", "normal", "slow"])
+            self.assertEqual(dose["correction_scale"]["tempo"], "fast")
+            self.assertEqual([item["variant"] for item in dose["options"] if item.get("suggested")], ["fast"])
+            self.assertLess(Decimal(options["fast"]["units"]), Decimal(options["normal"]["units"]))
+            self.assertGreater(Decimal(options["slow"]["units"]), Decimal(options["normal"]["units"]))
+            self.request("/api/entry", method="POST", body={
+                **entry, "insulin": options["fast"]["units"], "dose_check": dose["check"], "dose_variant": "fast"})
+        self.assertEqual(Decimal(str(FakeNightscout.treatments[-1]["insulin"])), Decimal(options["fast"]["units"]))
+
     def test_tapped_suggestion_saves_while_earlier_insulin_still_acts(self):
         # What still acts decays every second; the shown doses stay the same, so saving must not fail.
         self.request("/api/settings")

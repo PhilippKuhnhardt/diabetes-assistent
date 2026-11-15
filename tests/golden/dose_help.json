@@ -42,6 +42,7 @@
   "cautious_forecast_mgdl": "40",
   "cautious_target_mgdl": "150",
   "cautious_total_units": "0",
+  "correction_scale": null,
   "correction_units": "-1.1417280411583750927909028",
   "day_type": "work",
   "day_type_source": "weekday",

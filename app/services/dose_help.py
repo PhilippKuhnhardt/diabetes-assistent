@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from app import dosing, forecast, on_board, split
+from app import calculation, correction_scale, dosing, forecast, on_board, split
 from app.common import local_zone, parse_instant
 from app.services import day_view, factors
 from app.store import config, marks
@@ -78,6 +78,11 @@ def dose_help(payload: dict) -> dict:
                             auto_units_per_ke=auto_value * place_scale if auto_value is not None else None,
                             auto_surcharge_mgdl=meal_surcharge * place_scale if surcharge else None,
                             surcharge_share=forecast.surcharge_share, on_board=active, finger=finger)
+    if calculation.dec(payload.get("carbs") or 0) == 0:
+        # A correction without food also shows the ends of what was right after recent meals (x0.6 / x1.4)
+        # and marks the end the last meal's rise leans to (app/correction_scale.py).
+        result["correction_scale"] = correction_scale.scale(
+            result, correction_scale.meal_rise(entries, treatments, now))
     plan = split.open_plan(treatments, now)
     when = split.timing(plan, entries, current_settings, now) if plan else None
     result["split_plan"] = plan and {"meal_at": plan["meal_at"].isoformat(), "units": str(plan["units"]),
