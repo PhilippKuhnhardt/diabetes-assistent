@@ -14,7 +14,9 @@ from app.services import basal, day_view, diary, dose_help, places, settings as 
 from app.store import config, marks
 
 MODES = ("meal", "exercise", "basal")
-DOSE_VARIANTS = ("normal", "low", "cautious", "carbs")
+# fast / slow: the ends of a correction without food after a recent meal (app/correction_scale.py); they take
+# the cautious option's place there (user request 2026-11-15).
+DOSE_VARIANTS = ("fast", "normal", "slow", "low", "cautious", "carbs")
 # The lower target is offered for corrections and for small carb amounts only: up to this many grams,
 # not marked unsure and not fat-/protein-rich, so no carb uncertainty asks for a cautious estimate.
 LOW_TARGET_MAX_GRAMS = Decimal(30)
@@ -294,9 +296,21 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
     low_blocked = _low_blocked(carbs, payload, result, split)
     if low_blocked is None and result.get(prefix + "low_entry_units") == result.get(prefix + "entry_units"):
         low_blocked = "same"
+    scale = result.get("correction_scale") if carbs == 0 else None
+    if scale:
+        keys.update({name: (scale[name + "_entry_units"], scale[name + "_expected_glucose_mgdl"]) for name in ("fast", "slow")})
     options = []
     for variant in DOSE_VARIANTS:
         if variant == "carbs" and carbs <= 0:
+            continue
+        if variant in ("fast", "slow"):
+            if scale:
+                option = {"variant": variant, "units": keys[variant][0], "expected_mgdl": keys[variant][1],
+                          "savable": Decimal(keys[variant][0]) <= 100}
+                option["suggested"] = scale["tempo"] == variant
+                options.append(option)
+            continue
+        if variant == "cautious" and scale:
             continue
         if variant == "low" and low_blocked is not None:
             continue
@@ -310,6 +324,8 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
             option.update({"units": str(first), "full_units": str(units), "later_units": str(later),
                            "later_at": split["due_at"]})
         option["savable"] = Decimal(option["units"]) <= 100
+        if scale and variant == "normal":
+            option["suggested"] = scale["tempo"] == "normal"
         options.append(option)
     plan = result.get("split_plan")
     if plan and carbs == 0:

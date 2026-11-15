@@ -123,6 +123,9 @@ def _acting(now: datetime, settings: dict, treatments: list[dict]) -> dict | Non
         return None
 
 
+TEMPO_LEAN = {"fast": "wenig", "normal": "normal", "slow": "viel"}
+
+
 def correction_reminder(now: datetime, settings: dict, treatments: list[dict], entries: list[dict],
                         enabled: dict[str, bool], correction: Callable[[], dict | None] | None = None,
                         found: dict | None = None) -> list[dict]:
@@ -145,7 +148,14 @@ def correction_reminder(now: datetime, settings: dict, treatments: list[dict], e
         normal, cautious = units.get("normal"), units.get("cautious")
         if normal is not None and normal > 0:
             message += f". Korrektur {_units(normal)} IE"
-            if cautious is not None and cautious != normal:
+            if units.get("fast") is not None and units.get("slow") is not None:
+                # The ends of what was right after recent meals; the meal's rise leans to one (user request 2026-11-15).
+                message += f" (wenig {_units(units['fast'])} · viel {_units(units['slow'])} IE"
+                tempo = units.get("tempo")
+                if tempo:
+                    message += f", eher {TEMPO_LEAN[tempo]}"
+                message += ")"
+            elif cautious is not None and cautious != normal:
                 message += f" (vorsichtig {_units(cautious)} IE)"
         elif normal is not None:
             message += ". Laut Dosishilfe keine Korrektur nötig"
@@ -175,15 +185,20 @@ def _second_part() -> Decimal | None:
 
 
 def _correction() -> dict | None:
-    """The dose help's correction now without food: normal and cautious IE (None without a fresh glucose value)."""
+    """The dose help's correction now without food: normal and cautious IE, and after a recent meal the ends
+    (fast = little need, slow = much) with the tempo the rise leans to (None without a fresh glucose value)."""
     try:
         result = dose_help.dose_help({"carbs": "0"})
     except ValueError:
         return None
     if result.get("entry_units") is None:
         return None
+    scale = result.get("correction_scale")
     return {"normal": calculation.dec(result["entry_units"]),
-            "cautious": calculation.dec(result["cautious_entry_units"]) if result.get("cautious_entry_units") is not None else None}
+            "cautious": calculation.dec(result["cautious_entry_units"]) if result.get("cautious_entry_units") is not None else None,
+            "fast": calculation.dec(scale["fast_entry_units"]) if scale else None,
+            "slow": calculation.dec(scale["slow_entry_units"]) if scale else None,
+            "tempo": scale["tempo"] if scale else None}
 
 
 def check(now: datetime | None = None) -> list[dict]:
