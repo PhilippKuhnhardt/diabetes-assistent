@@ -7,9 +7,12 @@ glucose less, so a reminder that is about as good as his own judgement is enough
 names the dose help's correction as orientation and Philipp decides.
 
 From 90 min after a main meal until 7.5 h after it, with no open split plan (the split reminder covers that) and
-no rapid insulin in the last 90 min: glucose at least 160 and not lower than 30 min before, and the "Wirkt noch"
+no rapid insulin in the last 90 min: glucose at least 160 and the "Wirkt noch"
 end value (glucose - insulin still acting + carbs and surcharge still to come) at least 160. Before 2 h only
-from 180 and rising by 10 per 30 min: earlier is mostly fast absorption, not more carbs. At most once per 90 min.
+from 180 and rising by 10 per 30 min, or from 200 whatever the trend (user report 2026-11-15: 234 falling from 266
+at 97 min stayed silent; replayed it changes nothing, analysen/nachspritzen-2026-11-14/a9.py). Earlier and lower is
+mostly fast absorption, not more carbs. From 2 h the trend no longer counts (Philipp's choice 2026-11-15, fewer
+conditions; replayed: < 70 3.1 -> 3.5 %, < 54 0.6 -> 0.9 %, time in range 81.4 -> 81.1 %). At most once per 90 min.
 """
 from __future__ import annotations
 
@@ -22,6 +25,7 @@ FROM_MINUTES, TO_MINUTES = 90, 450
 STRICT_UNTIL_MINUTES = 120
 MIN_MGDL, END_MGDL = Decimal(160), Decimal(160)
 EARLY_MGDL, EARLY_RISE_MGDL = Decimal(180), Decimal(10)
+EARLY_HIGH_MGDL = Decimal(200)
 RISE_MINUTES = 30
 NO_INSULIN = timedelta(minutes=90)
 REPEAT = timedelta(minutes=90)
@@ -59,9 +63,9 @@ def due(entries: list[dict], found: dict, treatments: list[dict], now: datetime)
         return None
     rise = glucose - before
     if minutes < STRICT_UNTIL_MINUTES:
-        if glucose < EARLY_MGDL or rise < EARLY_RISE_MGDL:
+        if glucose < EARLY_HIGH_MGDL and (glucose < EARLY_MGDL or rise < EARLY_RISE_MGDL):
             return None
-    elif glucose < MIN_MGDL or rise < 0:
+    elif glucose < MIN_MGDL:
         return None
     acting = on_board.effects_at(found, latest["at"], now)
     end = glucose - acting["lowering_mgdl"] + acting["raising_mgdl"]
