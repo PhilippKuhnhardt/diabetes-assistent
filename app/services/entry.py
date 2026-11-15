@@ -7,7 +7,7 @@ import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
-from app import calculation, episodes, split as split_bolus
+from app import calculation, correction_scale, episodes, split as split_bolus
 from app.common import local_zone, parse_instant
 from app.ingestion import nightscout
 from app.services import basal, day_view, diary, dose_help, places, settings as settings_service
@@ -310,9 +310,8 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
                 option["suggested"] = scale["tempo"] == variant
                 options.append(option)
             continue
-        if variant == "cautious" and scale:
-            continue
-        if variant == "low" and low_blocked is not None:
+        if variant in ("low", "cautious"):
+            # The slider replaces the lower and the cautious target (user request 2026-11-15).
             continue
         units = result.get(prefix + keys[variant][0])
         if units is None:
@@ -342,10 +341,26 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
                            "savable": 0 < units <= 100})
     # Without a fresh CGM value the form offers its field for blood glucose measured by hand.
     finger_offer = not result.get("glucose_fresh") or result.get("glucose_source") == "finger"
-    low_note = (LOW_BLOCKED.get(low_blocked) if result.get("glucose_fresh") and result.get("isf_mgdl_per_unit")
-                else None)
     return {**result, "options": options, "check": _dose_check(result, options), "finger_offer": finger_offer,
-            "low_blocked": low_blocked, "low_note": low_note, "split": split}
+            "low_blocked": low_blocked, "low_note": None, "split": split,
+            "slider": _slider(result, options, carbs, scale, split)}
+
+
+def _slider(result: dict, options: list[dict], carbs: Decimal, scale: dict | None, split: dict | None) -> dict | None:
+    """The dose slider around the normal dose (app/correction_scale.py): ends, recommendation, where glucose
+    likely ends (expected value of the normal dose, its KF and the corridor offsets) and, for a split meal,
+    how a total is divided."""
+    by_variant = {option["variant"]: option for option in options}
+    base = by_variant.get(SPLIT_VARIANT) or by_variant.get("normal")
+    if base is None:
+        return None
+    normal = Decimal(str(base.get("full_units") or base["units"]))
+    tempo = scale["tempo"] if scale else None
+    out = correction_scale.dose_range(normal, carbs == 0, tempo)
+    out.update({"expected_mgdl": base.get("expected_mgdl"), "isf_mgdl_per_unit": result.get("isf_mgdl_per_unit"),
+                "first_percent": split["first_percent"] if split and split["active"] else None,
+                "later_at": split["due_at"] if split and split["active"] else None})
+    return out
 
 
 def _on_board(context: dict, dose: dict) -> dict | None:
@@ -429,7 +444,15 @@ def save(payload: dict) -> dict:
         # The second part completes the chosen suggestion (normal unless another was tapped).
         options = {option["variant"]: option for option in dose.get("options", [])}
         option = options.get(payload.get("dose_variant")) or options.get("normal") or options.get("carbs")
-        if option and option.get("full_units") is not None:
+        total = payload.get("dose_total_units")
+        if total not in (None, ""):
+            # A dose chosen on the slider: its total, of which the saved insulin is the first part.
+            total = calculation.dec(total)
+            if not total.is_finite() or not 0 <= total <= 100:
+                raise ValueError("Gesamtdosis muss zwischen 0 und 100 IE liegen")
+            later = total - insulin
+            split_units = str(later) if later > 0 else None
+        elif option and option.get("full_units") is not None:
             later = Decimal(option["full_units"]) - insulin
             split_units = str(later) if later > 0 else None
     if mode == "exercise":
