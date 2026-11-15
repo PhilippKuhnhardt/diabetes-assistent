@@ -2230,14 +2230,15 @@ function splitOptionNote(option) {
     .filter(Boolean).join(" · ");
 }
 
-const doseLabels = { split: "2. Teil", normal: "Normal", low: "Tiefer", cautious: "Vorsichtig", carbs: "Nur KH" };
+// fast / slow: ends of a correction after a meal; the one the rise leans to is marked by colour only.
+const doseLabels = { split: "2. Teil", fast: "Wenig", normal: "Normal", slow: "Viel", low: "Tiefer", cautious: "Vorsichtig", carbs: "Nur KH" };
 
 function doseHelpHTML(data, changed = {}) {
   const withCarbs = Number(data.carbs_g) > 0;
   const options = data.options.map(option => {
     const label = doseLabels[option.variant];
     const before = changed[option.variant];
-    return '<button type="button" class="dose-option apply-dose' + (before ? ' is-changed' : '') + '" data-variant="' + option.variant + '" aria-pressed="false"' +
+    return '<button type="button" class="dose-option apply-dose' + (before ? ' is-changed' : '') + (option.suggested ? ' is-suggested' : '') + '" data-variant="' + option.variant + '" aria-pressed="false"' +
     ' title="' + escapeHTML(label + ": " + num(option.units, 2) + " IE direkt in Nightscout speichern") + '"' +
     (option.savable ? '' : ' disabled') + '><span class="dose-label">' + escapeHTML(label) + '</span><strong>' +
     escapeHTML(num(option.units, 2)) + ' <small>IE</small></strong><span class="dose-expected">' +
