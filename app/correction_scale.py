@@ -85,3 +85,35 @@ def scale(result: dict, rise: dict | None) -> dict | None:
         out[name + "_expected_glucose_mgdl"] = str(start - units * isf)
     return out
 
+
+
+# The dose slider (user request 2026-11-15): one scale for every dose, from little to much need, with the
+# recommendation marked and where glucose likely ends. Lower / cautious options were dropped for it.
+MEAL_LOW_FACTOR, MEAL_HIGH_FACTOR = Decimal("0.75"), Decimal("1.2")
+SLIDER_MIN_SPAN = Decimal("0.5")
+# Where glucose ended about 4 h later, relative to the dose help's expected value, as 10/25/50/75/90 %
+# (mg/dL). Corrections: 122 corrections and "BZ prüfen" moments 21.09.-07.11. at the dose help's dose,
+# by the rise after the meal (analysen/korrektur-skala-2026-11-15.md, Nachtrag 3). Meals: 117 main meals,
+# untreated glucose 4 h after the meal minus the expectation from the entries at the meal.
+CORRIDOR_MGDL = {
+    "fast": (-65, -41, -18, 31, 90),
+    "normal": (-72, -31, -11, 31, 64),
+    "slow": (-70, -6, 20, 65, 97),
+    None: (-73, -36, -4, 50, 80),
+    "meal": (-89, -44, -8, 33, 79),
+}
+
+
+def dose_range(normal_units: Decimal, correction: bool, tempo: str | None = None) -> dict:
+    """Slider ends and the recommended dose around the dose help's normal dose (all in 0.5 IE).
+    Correction: x0.6 but at least 1 IE less, x1.4 (what was right after meals, quartiles 0.55 / 1.45);
+    the rise after the meal moves the recommendation to the matching end. Meal: x0.75 but at least 1 IE
+    less, x1.2 (quartiles of what the meal needed against the dose given: 0.75 / 1.16)."""
+    low_factor, high_factor = (FAST_FACTOR, SLOW_FACTOR) if correction else (MEAL_LOW_FACTOR, MEAL_HIGH_FACTOR)
+    low = half_units(max(Decimal(0), min(normal_units * low_factor, normal_units - FAST_MIN_GAP)))
+    high = max(half_units(normal_units * high_factor), normal_units + SLIDER_MIN_SPAN)
+    recommended = {"fast": low, "slow": high}.get(tempo, normal_units) if correction else normal_units
+    corridor = CORRIDOR_MGDL[tempo if correction else "meal"]
+    return {"min_units": str(low), "max_units": str(high), "recommended_units": str(recommended),
+            "normal_units": str(normal_units), "tempo": tempo if correction else None,
+            "corridor_mgdl": [str(value) for value in corridor]}

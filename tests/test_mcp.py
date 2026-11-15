@@ -96,8 +96,8 @@ class McpTests(unittest.TestCase):
         self.fresh_glucose()
         preview = self.call("preview_entry", carbs_g=45)
         options = {option["variant"]: option for option in preview["dose"]["options"]}
-        self.assertEqual(sorted(options), ["carbs", "cautious", "normal"])
-        self.assertGreater(Decimal(options["normal"]["units"]), Decimal(options["cautious"]["units"]))
+        self.assertEqual(sorted(options), ["carbs", "normal"])
+        self.assertIsNotNone(preview["dose"]["slider"])
         self.assertIsNone(preview["split"])
         self.assertIn("units_per_ke", preview["dose"]["factor"])
         marked = self.call("preview_entry", carbs_g=20, carbs_certainty="unsure", fat_protein=True)

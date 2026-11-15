@@ -18,8 +18,9 @@ Begriffe: KH = Kohlenhydrate in Gramm. KE = 10 g KH. IE = Insulineinheiten. BZ =
 Faktor = IE pro KE. KF (Korrekturfaktor) = mg/dL, um die 1 IE den BZ senkt. Basal = Langzeitinsulin. \
 Split = Mahlzeitendosis in zwei Teilen, Rest später. Snack = Zwischenmahlzeit, die zu einer Hauptmahlzeit \
 zählt. KH-Sicherheit: weighed = gewogen, known = halbwegs sicher, unsure = unsicher. fat_protein = fett-/ \
-eiweißreich. fast = wirkt schnell (nur erfasst). Optionen: normal = auf Zielwert, low = auf tieferen Zielwert (nur ohne KH-Unsicherheit), \
-cautious = vorsichtig (weniger Insulin), carbs = nur KH ohne Korrektur. Wirkt noch = Insulin und KH, die noch wirken."""
+eiweißreich. fast = wirkt schnell (nur erfasst). Optionen: normal = auf Zielwert, carbs = nur KH ohne Korrektur, \
+fast / slow = wenig / viel bei einer Korrektur nach dem Essen. Slider = Spanne von wenig bis viel Bedarf mit Empfehlung \
+und Korridor (wo der BZ nach etwa 4 h meist landet, Abweichung vom erwarteten Wert in mg/dL). Wirkt noch = Insulin und KH, die noch wirken."""
 
 
 class RpcError(Exception):

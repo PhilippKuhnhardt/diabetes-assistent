@@ -26,7 +26,7 @@ DOSE_KEYS = (
     "message", "reason", "options", "carbs_g", "glucose_mgdl", "glucose_at", "glucose_fresh", "glucose_source",
     "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl", "low_target_mgdl", "low_note", "forecast_mgdl", "cautious_forecast_mgdl",
     "recent_rapid_doses", "auto_meal", "auto_method", "auto_factor_count",
-    "auto_factor_min_meals", "auto_surcharge_units", "solo_snack", "day_type", "day_type_source", "split_plan")
+    "auto_factor_min_meals", "auto_surcharge_units", "solo_snack", "day_type", "day_type_source", "split_plan", "slider")
 
 
 class ToolError(ValueError):
@@ -338,8 +338,9 @@ TOOLS = [
                        "die eigene Mahlzeit heute schon eingetragen ist) oder eigene Mahlzeit; Sport steckt "
                        "automatisch in on_board.sport_mgdl und der Dosis; basal_suggestion_units > 0 = Basal heute "
                        "noch offen (fragen, ob mit eintragen); split = Split-Bolus vorgeschlagen; dose.options = "
-                       "normal / low (tieferer Zielwert, nur ohne KH-Unsicherheit) / cautious (vorsichtig) / carbs (nur KH); "
-                       "ohne KH nach einer Mahlzeit statt cautious fast (wenig Bedarf, x0,6) / slow (viel, x1,4), suggested = Tendenz aus dem Anstieg; "
+                       "normal / carbs (nur KH); slider = Spanne min_units..max_units mit recommended_units und corridor_mgdl "
+                       "(10/25/50/75/90 %, Abweichung vom erwarteten BG expected_mgdl der Normal-Dosis; je IE mehr isf_mgdl_per_unit tiefer); "
+                       "ohne KH nach einer Mahlzeit zusätzlich fast (wenig Bedarf, x0,6) / slow (viel, x1,4), suggested = Tendenz aus dem Anstieg; "
                        "bei Split units = jetzt und "
                        "later_units/later_at = zweiter Teil; ohne KH ggf. Option split = geplanter 2. Teil. "
                        "Speichert nichts.",
