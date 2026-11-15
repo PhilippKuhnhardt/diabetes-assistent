@@ -166,7 +166,6 @@ def _form(args: dict, at: datetime) -> dict:
         # Certainty and fat decide whether the lower target is offered, so the preview needs them too.
         "carbs_certainty": _choice(args, "carbs_certainty", CERTAINTIES) if carbs > 0 else None,
         "fat_protein": carbs > 0 and _bool(args, "fat_protein") is True,
-        "alcohol": carbs > 0 and _bool(args, "alcohol") is True,
         "fast": carbs > 0 and _bool(args, "fast") is True,
     }
 
@@ -313,7 +312,6 @@ FORM = {
                         "description": "weighed = gewogen, known = halbwegs sicher (bekanntes Gericht, "
                                        "FDDB-KI), unsure = keine ernsthafte Schätzung."},
     "fat_protein": {"type": "boolean", "description": "true = fett-/eiweißreich."},
-    "alcohol": {"type": "boolean", "description": "true = Alkohol zur Mahlzeit (nur erfasst, ändert keine Rechnung)."},
     "fast": {"type": "boolean", "description": "true = wirkt schnell (z. B. Saft, Weißbrot; nur erfasst, ändert keine "
                                            "Rechnung). Mit fat_protein kombinierbar."},
     "place": {"type": "string",
