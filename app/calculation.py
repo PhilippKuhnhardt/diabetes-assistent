@@ -108,18 +108,62 @@ def finger_glucose(treatments: list[dict], moment: datetime, max_gap_minutes: in
     return {"value": dec(item["finger_mgdl"]), "before": item["at"], "after": item["at"]}
 
 
-def automatic_window(episode: dict, all_treatments: list[dict], entries: list[dict], settings: dict) -> dict:
-    """Default meal endpoint: fixed window, extended by doses, bounded by the next main meal."""
-    start = episode["at"]
+# Injecting first and eating a little later is common (user report 2026-11-15: 10 IE at 06:43, breakfast
+# entered at 07:05 without insulin gave no factor until the window was moved by hand). A rapid dose without
+# carbs at most this long before a main meal whose own entry carries no rapid insulin is its bolus.
+PREBOLUS_LEAD = timedelta(minutes=30)
+
+
+def _is_main_meal(item: dict) -> bool:
+    return (item.get("role") == "meal" or item.get("eventType") == "Meal Bolus") and dec(item.get("carbs") or 0) > 0
+
+
+def prebolus_start(episode: dict, all_treatments: list[dict], entries: list[dict], settings: dict) -> datetime | None:
+    """The earliest pre-bolus of the meal, or None.
+
+    It must be a rapid dose without carbs within PREBOLUS_LEAD before the meal, the meal's own entry
+    holds no rapid insulin, no carbs lie between dose and meal, and no earlier main meal's automatic
+    window still counts the dose (else it is that meal's correction)."""
+    meal_at = episode["at"]
+    source_id = episode.get("source_id")
+    own = next((item for item in all_treatments if source_id and item.get("id") == source_id), None)
+    if own is not None and dec(own.get("insulin") or 0) > 0 and is_rapid_insulin(own):
+        return None
+    doses = sorted(
+        item["at"] for item in all_treatments
+        if item.get("eventType") != "Exercise" and item is not own
+        and meal_at - PREBOLUS_LEAD <= item["at"] < meal_at
+        and dec(item.get("insulin") or 0) > 0 and dec(item.get("carbs") or 0) <= 0 and is_rapid_insulin(item))
+    if not doses:
+        return None
+    first = doses[0]
+    if any(item is not own and first <= item["at"] < meal_at and dec(item.get("carbs") or 0) > 0
+           for item in all_treatments if item.get("eventType") != "Exercise"):
+        return None
+    earlier = [item for item in all_treatments if _is_main_meal(item) and item["at"] < first and item is not own]
+    if earlier:
+        previous = max(earlier, key=lambda item: item["at"])
+        span = automatic_window({"at": previous["at"], "source_id": previous.get("id")},
+                                all_treatments, entries, settings, prebolus=False)
+        if span["end"] > first:
+            return None
+    return first
+
+
+def automatic_window(episode: dict, all_treatments: list[dict], entries: list[dict], settings: dict,
+                     prebolus: bool = True) -> dict:
+    """Default meal window: from the meal (or its pre-bolus) for a fixed time, extended by doses,
+    bounded by the next main meal."""
+    meal_at = episode["at"]
+    start = (prebolus_start(episode, all_treatments, entries, settings) if prebolus else None) or meal_at
     window = timedelta(minutes=int(settings["window_minutes"]))
-    nominal_end = start + window
+    nominal_end = meal_at + window
     end = nominal_end
     next_main_meals = sorted(
         item["at"] for item in all_treatments
         if (not episode.get("source_id") or item.get("id") != episode["source_id"])
-        and (item.get("role") == "meal" or item.get("eventType") == "Meal Bolus")
-        and dec(item.get("carbs") or 0) > 0
-        and start < item["at"]
+        and _is_main_meal(item)
+        and meal_at < item["at"]
     )
     next_main_meal_at = next_main_meals[0] if next_main_meals else None
     # Each rapid dose reached by the current window starts a full new window.
@@ -132,11 +176,11 @@ def automatic_window(episode: dict, all_treatments: list[dict], entries: list[di
                 and dec(treatment.get("insulin") or 0) > 0 and is_rapid_insulin(treatment)):
             end = max(end, at + window)
     extended_end = end
-    if next_main_meal_at and next_main_meal_at < end and minutes_between(next_main_meal_at, start) > Decimal(120):
+    if next_main_meal_at and next_main_meal_at < end and minutes_between(next_main_meal_at, meal_at) > Decimal(120):
         candidates = [
             item["at"] for item in entries
             if item.get("sgv") is not None
-            and start + timedelta(minutes=120) <= item["at"] < next_main_meal_at
+            and meal_at + timedelta(minutes=120) <= item["at"] < next_main_meal_at
             and minutes_between(next_main_meal_at, item["at"]) <= Decimal(15)
         ]
         if candidates:
@@ -178,8 +222,8 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
     nominal_end = automatic["nominal_end"]
     extended_end = automatic["extended_end"]
     next_main_meal_at = automatic["next_main_meal_at"]
-    start, end = meal_at, automatic["end"]
-    auto_end = end
+    start, end = automatic["start"], automatic["end"]
+    auto_start, auto_end = start, end
     if manual_window:
         start, end = manual_window["start"], manual_window["end"]
         if not meal_at < end or not start < end:
@@ -304,7 +348,8 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         "end_reason": ("manual" if manual_window else "before_next_meal" if end < extended_end
                        else "after_last_injection" if extended_end > nominal_end else "fixed_window"),
         "manual_window": bool(manual_window),
-        "auto_start": meal_at.isoformat(), "auto_end": auto_end.isoformat(),
+        "auto_start": auto_start.isoformat(), "auto_end": auto_end.isoformat(),
+        "prebolus": not manual_window and auto_start < meal_at,
         "next_main_meal_at": next_main_meal_at.isoformat() if next_main_meal_at else None,
         "carbs": str(carbs), "carbs_total": str(carbs_total),
         "carbs_times_isf_total": str(carbs_times_isf_total),
@@ -321,5 +366,6 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         "ratio_g_per_unit": ratio, "factor_units_per_ke": factor, "reason": reason,
         "assumptions": ["alle KH im Fenster wirken bis zum Endpunkt vollständig", "volle IE jeder schnell wirksamen Injektion im Fenster", "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt", "alle KH im Fenster teilen einen Insulinfaktor", "kein zusätzlicher Hintergrundtrend", "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"]
         + (["manuell gewählter Zeitraum statt automatischem Endpunkt"] if manual_window else [])
+        + (["Beginn bei der Injektion vor dem Essen (Spritz-Ess-Abstand)"] if not manual_window and auto_start < meal_at else [])
         + (["Startwert blutig gemessen, weil am Beginn kein CGM-Wert vorlag"] if g0_source == "finger" else []),
     }
