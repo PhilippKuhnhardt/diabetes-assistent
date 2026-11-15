@@ -2334,15 +2334,6 @@ function updateSliderView(fillField = true) {
   }
 }
 
-// "Nur KH" stays as a shortcut: it sets that dose like own IE.
-function setSliderDose(event) {
-  const button = event.target.closest("[data-ds-set]");
-  if (!button) return;
-  const form = $("#entry-form");
-  form.elements.insulin.value = String(Number(button.dataset.dsSet));
-  form.elements.insulin.dispatchEvent(new Event("input"));
-}
-
 function moveSlider(event) {
   if (!event.target.matches("[data-ds-range]")) return;
   state.slider = { units: Number(event.target.value), follow: true };
@@ -2354,10 +2345,7 @@ function moveSlider(event) {
 function doseHelpHTML(data, changed = {}) {
   const withCarbs = Number(data.carbs_g) > 0;
   const splitPart = data.options.find(option => option.variant === "split");
-  const carbsOnly = data.options.find(option => option.variant === "carbs" && option.savable);
   const slider = data.slider ? doseSliderHTML(data) +
-    (carbsOnly ? '<button type="button" class="chip ds-carbs" data-ds-set="' + escapeHTML(carbsOnly.units) + '">Nur KH ' +
-      escapeHTML(num(carbsOnly.units, 1)) + ' IE</button>' : '') +
     (splitPart ? '<p class="dose-factor">2. Teil: ' + escapeHTML(splitOptionNote(splitPart)) + '</p>' : '') : "";
   if (slider) changed = {};
   const options = slider ? "" : data.options.map(option => {
@@ -3412,7 +3400,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#edit-dialog").addEventListener("close", () => { state.editing = null; });
   $("#dose-result").addEventListener("click", selectDoseSuggestion);
   $("#dose-result").addEventListener("input", moveSlider);
-  $("#dose-result").addEventListener("click", setSliderDose);
   $("#entry-day-type").addEventListener("click", saveEntryDayType);
   $("#vacation-toggle").addEventListener("change", saveVacation);
   $("#timezone-device").addEventListener("click", event => switchTimezone({ zone: event.currentTarget.dataset.zone }));
