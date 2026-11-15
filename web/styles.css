@@ -479,6 +479,39 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .dose-option .dose-expected { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .help-result .dose-option[aria-pressed="true"] { border-color: var(--green); background: var(--green-light); box-shadow: inset 0 0 0 1px var(--green); }
 .dose-option.is-off { opacity: .6; }
+/* Dose slider (user request 2026-11-15): dose, where glucose likely ends, recommendation. */
+.ds { margin-top: 8px; }
+.ds-read { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 2px 0 12px; }
+.ds-dose strong { display: block; font-size: 40px; line-height: 1; color: var(--green-dark); font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
+.ds-dose strong small { font-size: 16px; margin-left: 3px; }
+.ds-split { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 650; }
+.ds-land { text-align: right; }
+.ds-land span { display: block; font-size: 11.5px; color: var(--muted); font-weight: 650; margin-bottom: 3px; }
+.ds-pill { display: inline-block; padding: 6px 11px; border-radius: 999px; font-weight: 750; font-size: 17px; font-variant-numeric: tabular-nums; }
+.ds-pill.is-ok { background: #dff0e6; color: #14603f; }
+.ds-pill.is-high { background: #fbefd5; color: #8a5a00; }
+.ds-pill.is-low { background: #f8dddd; color: #a12f2f; }
+.ds-cor { margin: 0 0 6px; }
+.ds-cor-axis { position: relative; height: 28px; border-radius: 7px; background: #f0f2f1; overflow: hidden; }
+.ds-cor-low, .ds-cor-zone { position: absolute; top: 0; bottom: 0; }
+.ds-cor-low { left: 0; background: #f7e1e1; }
+.ds-cor-zone { background: #dcefe3; }
+.ds-cor-w { position: absolute; top: 13px; height: 2px; background: #7a8a83; }
+.ds-cor-iqr { position: absolute; top: 7px; height: 14px; border-radius: 7px; background: #3c7f5d; opacity: .85; }
+.ds-cor-med { position: absolute; top: 4px; width: 4px; height: 20px; border-radius: 2px; background: #123d2a; transform: translateX(-50%); }
+.ds-cor-scale { position: relative; height: 14px; margin-top: 3px; font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ds-cor-scale span { position: absolute; transform: translateX(-50%); }
+.ds-rail { position: relative; padding-top: 28px; }
+.ds-flag { position: absolute; top: 0; white-space: nowrap; }
+.ds-flag b { display: block; font-size: 11.5px; font-weight: 750; color: #2f6fb0; background: #e6effa; border-radius: 6px; padding: 2px 7px; }
+.ds-stem { position: absolute; top: 20px; width: 2px; height: 10px; background: #2f6fb0; transform: translateX(-50%); }
+.help-result input.ds-range { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 36px; min-height: 0; margin: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
+.ds-range::-webkit-slider-runnable-track { height: 10px; border-radius: 5px; background: var(--ds-track, #e3e7e5); }
+.ds-range::-moz-range-track { height: 10px; border-radius: 5px; background: var(--ds-track, #e3e7e5); }
+.ds-range::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -9px; border-radius: 50%; background: #fff; border: 3px solid var(--green-dark); box-shadow: 0 2px 6px rgba(0,0,0,.22); }
+.ds-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid var(--green-dark); box-shadow: 0 2px 6px rgba(0,0,0,.22); }
+.ds-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-weight: 650; font-variant-numeric: tabular-nums; }
+.ds-carbs { margin-top: 8px; }
 .help-result .dose-option.is-suggested:not([aria-pressed="true"]):not(.is-changed) { border-color: #2f6fb0; background: #eaf2fb; box-shadow: inset 0 0 0 1px #2f6fb0; }
 .help-result .dose-option.is-changed { border-color: #c27a00; background: #fff6e0; box-shadow: inset 0 0 0 1px #c27a00; animation: dose-changed 1.2s ease-out; }
 .dose-option .dose-was { color: #8a5600; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
