@@ -123,7 +123,6 @@ def _acting(now: datetime, settings: dict, treatments: list[dict]) -> dict | Non
         return None
 
 
-TEMPO_RISE = {"fast": "steil", "normal": "mittel", "slow": "flach"}
 TEMPO_LEAN = {"fast": "wenig", "normal": "normal", "slow": "viel"}
 
 
@@ -154,7 +153,7 @@ def correction_reminder(now: datetime, settings: dict, treatments: list[dict], e
                 message += f" (wenig {_units(units['fast'])} · viel {_units(units['slow'])} IE"
                 tempo = units.get("tempo")
                 if tempo:
-                    message += f", Anstieg {TEMPO_RISE[tempo]}: eher {TEMPO_LEAN[tempo]}"
+                    message += f", eher {TEMPO_LEAN[tempo]}"
                 message += ")"
             elif cautious is not None and cautious != normal:
                 message += f" (vorsichtig {_units(cautious)} IE)"
