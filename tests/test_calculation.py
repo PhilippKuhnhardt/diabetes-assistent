@@ -213,7 +213,8 @@ class CalculationTests(unittest.TestCase):
         self.assertTrue(result["manual_window"])
         self.assertEqual(result["end_reason"], "manual")
         self.assertEqual(result["start"], moment(9, 45).isoformat())
-        self.assertEqual(result["auto_start"], start.isoformat())
+        # The dose 10 min before the meal is its pre-bolus, so the automatic window starts there too.
+        self.assertEqual(result["auto_start"], moment(9, 50).isoformat())
         self.assertEqual(result["auto_end"], automatic["end"])
         # The next meal starts exactly at the half-open endpoint and is excluded.
         self.assertEqual([dose["id"] for dose in result["doses"]], ["pre", "late"])
@@ -224,6 +225,56 @@ class CalculationTests(unittest.TestCase):
         # 10 × (ΔG 20 + 4 × 50 + 1 × 40) / (50 × 40)
         self.assertEqual(Decimal(result["delta_mgdl"]), Decimal(20))
         self.assertEqual(Decimal(result["factor_units_per_ke"]), Decimal("1.3"))
+
+    def test_prebolus_before_meal_starts_the_window(self):
+        # User report 2026-11-15: 10 IE at 06:43, breakfast entered without insulin at 07:05.
+        meal_at = moment(7, 5)
+        entries = [{"at": moment(6, 40), "sgv": 250}, {"at": moment(6, 45), "sgv": 254},
+                   {"at": moment(7, 5), "sgv": 243}, {"at": moment(10, 0), "sgv": 110},
+                   {"at": moment(10, 10), "sgv": 110}]
+        meal = {"id": "meal", "source_id": "meal", "at": meal_at, "carbs": 40}
+        treatments = [
+            {"id": "pre", "at": moment(6, 43), "insulin": 10, "eventType": "Correction Bolus"},
+            {"id": "meal", "at": meal_at, "carbs": 40, "insulin": 0, "eventType": "Meal Bolus"},
+        ]
+        result = calculate_episode(meal, treatments, entries, self.settings)
+        self.assertTrue(result["prebolus"])
+        self.assertEqual(result["start"], moment(6, 43).isoformat())
+        self.assertEqual(result["auto_start"], moment(6, 43).isoformat())
+        self.assertEqual(result["end"], moment(10, 5).isoformat())
+        self.assertEqual([dose["id"] for dose in result["doses"]], ["pre"])
+        self.assertEqual(result["prior_doses"], [])
+        # g0 at 06:43 interpolated 252.4, KF 50; 10 × (110 − 252.4 + 10 × 50) / (40 × 50)
+        self.assertAlmostEqual(float(result["factor_units_per_ke"]), 10 * (110 - 252.4 + 500) / 2000)
+
+    def test_no_prebolus_when_meal_has_its_own_bolus_or_dose_is_too_early(self):
+        meal_at = moment(12)
+        entries = [{"at": moment(11, 0) + timedelta(minutes=5 * i), "sgv": 120} for i in range(60)]
+        meal = {"id": "meal", "source_id": "meal", "at": meal_at, "carbs": 40}
+        with_bolus = [
+            {"id": "pre", "at": moment(11, 45), "insulin": 2, "eventType": "Correction Bolus"},
+            {"id": "meal", "at": meal_at, "carbs": 40, "insulin": 4, "eventType": "Meal Bolus"},
+        ]
+        result = calculate_episode(meal, with_bolus, entries, self.settings)
+        self.assertFalse(result["prebolus"])
+        self.assertEqual(result["start"], meal_at.isoformat())
+        self.assertEqual([dose["id"] for dose in result["prior_doses"]], ["pre"])
+        too_early = [
+            {"id": "pre", "at": moment(11, 25), "insulin": 2, "eventType": "Correction Bolus"},
+            {"id": "meal", "at": meal_at, "carbs": 40, "insulin": 0, "eventType": "Meal Bolus"},
+        ]
+        self.assertEqual(calculate_episode(meal, too_early, entries, self.settings)["start"], meal_at.isoformat())
+
+    def test_no_prebolus_for_a_correction_inside_the_previous_meal_window(self):
+        # 2026-11-09: 3 IE at 18:02 belong to lunch (15:52, window up to the dinner at 18:38).
+        entries = [{"at": moment(15, 0) + timedelta(minutes=5 * i), "sgv": 150} for i in range(100)]
+        lunch = {"id": "lunch", "at": moment(15, 52), "carbs": 80, "insulin": 8, "eventType": "Meal Bolus"}
+        dinner = {"id": "dinner", "at": moment(18, 38), "carbs": 20, "insulin": 0, "eventType": "Meal Bolus"}
+        treatments = [lunch, {"id": "corr", "at": moment(18, 15), "insulin": 3, "eventType": "Correction Bolus"}, dinner]
+        result = calculate_episode({"id": "dinner", "source_id": "dinner", "at": dinner["at"], "carbs": 20},
+                                   treatments, entries, self.settings)
+        self.assertFalse(result["prebolus"])
+        self.assertEqual(result["start"], dinner["at"].isoformat())
 
     def test_manual_window_may_start_after_recorded_meal_time(self):
         meal_at = moment(10)
