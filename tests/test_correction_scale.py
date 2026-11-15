@@ -38,7 +38,7 @@ class MealRiseTests(unittest.TestCase):
 
 
 class ScaleTests(unittest.TestCase):
-    RESULT = {"forecast_mgdl": "220", "correction_units": "3", "isf_mgdl_per_unit": "33.3"}
+    RESULT = {"forecast_mgdl": "220", "correction_units": "3", "entry_units": "3", "isf_mgdl_per_unit": "33.3"}
     RISE = {"meal_at": MEAL_AT, "slope_mgdl_per_min": Decimal("2.4"), "tempo": "fast"}
 
     def test_ends_are_the_quartiles_of_what_was_right(self):
@@ -49,15 +49,17 @@ class ScaleTests(unittest.TestCase):
         self.assertEqual(scale["tempo"], "fast")
 
     def test_low_end_is_at_least_one_unit_below_normal(self):
-        scale = correction_scale.scale({**self.RESULT, "correction_units": "2"}, self.RISE)
+        scale = correction_scale.scale({**self.RESULT, "correction_units": "2", "entry_units": "2"}, self.RISE)
         self.assertEqual(scale["fast_entry_units"], "1")       # min(1.2, 1) -> 1
         self.assertEqual(scale["slow_entry_units"], "3")       # 2.8 -> 3, no gap upwards
-        small = correction_scale.scale({**self.RESULT, "correction_units": "0.8"}, self.RISE)
+        small = correction_scale.scale({**self.RESULT, "correction_units": "0.8", "entry_units": "1"}, self.RISE)
         self.assertEqual(small["fast_entry_units"], "0")
 
     def test_no_scale_without_a_positive_correction_or_a_recent_meal(self):
         self.assertIsNone(correction_scale.scale({**self.RESULT, "correction_units": "-0.5"}, self.RISE))
         self.assertIsNone(correction_scale.scale(self.RESULT, None))
+        # Normal rounds to 0 IE (e.g. right after a correction): no three zeros.
+        self.assertIsNone(correction_scale.scale({**self.RESULT, "correction_units": "0.17", "entry_units": "0"}, self.RISE))
         self.assertIsNone(correction_scale.scale({"correction_units": "3"}, self.RISE))
 
 
