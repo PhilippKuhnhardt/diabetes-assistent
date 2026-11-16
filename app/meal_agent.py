@@ -80,7 +80,10 @@ Deine Antwort ist ein JSON-Objekt mit genau diesen Feldern:
 - history_adjustment_g: siehe oben,
 - certainty: weighed (gewogen oder Packungswerte), known (bekanntes Gericht oder gut erkennbare Portion), \
 unsure (grobe Schätzung),
-- fat_protein: fett- oder eiweißreich; fast: wirkt schnell (Saft, Weißbrot, Süßes ohne Fett),
+- fat_protein: nur bei wirklich fett- oder eiweißreichen Mahlzeiten, die den BZ über Stunden nachhaltig \
+heben, etwa Pizza, Steak, Burger mit Pommes oder Raclette. Eine Suppe oder ein Gericht mit etwas Fleisch oder \
+Öl (z. B. Pho, Curry mit Reis, Pasta mit Soße) ist es nicht (Philipps Maßstab). fast: wirkt schnell (Saft, \
+Weißbrot, Süßes ohne Fett),
 - dish_name: das passende Gericht aus dem Katalog mit genau seinem Namen, sonst ein kurzer neuer Name für \
 etwas Wiederkehrendes, sonst leer; dish_category: eine Kategorie (vorhandene nutzen, wo sie passen),
 - description: ein bis zwei Sätze, was es war, mit den wichtigsten Mengen,
