@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from zoneinfo import ZoneInfo
+from typing import Annotated, Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from app import auth, calculation, episodes, forecast
 from app.common import local_zone, parse_instant, unit_text, zone_name_at
@@ -12,105 +15,133 @@ from app.store import config, marks, timezones
 
 
 
+SPLIT_MESSAGE = "Split-Bolus: ab 0–300 g (0 = aus), 30–90 % sofort, Rest nach 30–300 min"
+# Every field's own message, used for any problem with it (missing, no number, out of range).
+MESSAGES = {
+    "timezone": "Unbekannte Zeitzone",
+    "window_minutes": "Ungültige Zeitparameter", "peak_minutes": "Ungültige Zeitparameter",
+    "duration_minutes": "Ungültige Zeitparameter",
+    "breakfast_end_minute": "Ungültige Mahlzeiten- oder Sportzeiten",
+    "lunch_end_minute": "Ungültige Mahlzeiten- oder Sportzeiten",
+    "sport_lookback_minutes": "Ungültige Mahlzeiten- oder Sportzeiten",
+    "dose_target_mgdl": "Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen",
+    "dose_cautious_target_mgdl": "Vorsichtiger Zielwert muss zwischen dem Zielwert und 250 mg/dL liegen",
+    "dose_low_target_mgdl": "Tieferer Zielwert muss zwischen 60 mg/dL und dem Zielwert liegen (gleich = aus)",
+    "auto_percentile": "Perzentil der Automatik muss zwischen 25 und 50 % liegen",
+    "auto_lookback_days": "Zeitraum der Automatik muss 8, 15 oder 30 Tage sein",
+    "auto_half_life_days": "Halbwertszeit der Automatik muss zwischen 1 und 28 Tagen liegen",
+    "auto_method": "Unbekannte Methode der Automatik",
+    "auto_surcharge_mgdl": "Mahlzeitzuschlag muss zwischen 5 und 150 mg/dL liegen",
+    "auto_fat_surcharge_mgdl": "Fett-Zuschlag muss zwischen 0 und 200 mg/dL liegen",
+    "auto_vacation": "Unbekannte Urlaubs-Einstellung der Automatik",
+    "basal_default_units": "Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen",
+    "split_min_grams": SPLIT_MESSAGE, "split_first_percent": SPLIT_MESSAGE, "split_delay_minutes": SPLIT_MESSAGE,
+    "split_min_units": "Split-Bolus: Mindestdosis 0–30 IE (0 = immer)",
+    "sport_effects_mgdl": "Ungültiger Sporteffekt",
+    "sport_durations_minutes": "Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen",
+}
+
+
+SportKind = Literal[tuple(episodes.SPORT_LABELS)]
+
+
+class SettingsInput(BaseModel):
+    """The local calculation settings: types and ranges per field, rules between fields below."""
+    model_config = ConfigDict(extra="ignore")
+
+    timezone: str
+    window_minutes: Annotated[int, Field(ge=60, le=360)]
+    peak_minutes: Annotated[int, Field(ge=20)]
+    duration_minutes: Annotated[int, Field(le=600)]
+    breakfast_end_minute: Annotated[int, Field(gt=0)]
+    lunch_end_minute: Annotated[int, Field(lt=1440)]
+    sport_lookback_minutes: Annotated[int, Field(ge=0, le=1440)]
+    dose_target_mgdl: Annotated[Decimal, Field(ge=60, le=140)]
+    dose_cautious_target_mgdl: Annotated[Decimal, Field(le=250)]
+    dose_low_target_mgdl: Annotated[Decimal, Field(ge=60)] = Decimal(100)
+    auto_percentile: Annotated[Decimal, Field(ge=25, le=50)]
+    auto_lookback_days: int
+    auto_half_life_days: Annotated[Decimal, Field(ge=1, le=28)]
+    auto_method: Literal[forecast.METHODS] = "percentile"
+    auto_surcharge_mgdl: Annotated[Decimal, Field(ge=5, le=150)] = forecast.SURCHARGE_MGDL
+    auto_fat_surcharge_mgdl: Annotated[Decimal, Field(ge=0, le=200)] = forecast.FAT_SURCHARGE_MGDL
+    auto_vacation: Literal[config.AUTO_VACATION_MODES] = config.DEFAULT_AUTO_VACATION
+    basal_default_units: Annotated[Decimal, Field(ge=0, le=100, multiple_of=Decimal("0.5"))] = \
+        Decimal(str(config.DEFAULT_BASAL_UNITS))
+    split_min_grams: Annotated[int, Field(ge=0, le=300)] = config.DEFAULT_SPLIT["split_min_grams"]
+    split_min_units: Annotated[int, Field(ge=0, le=30)] = config.DEFAULT_SPLIT["split_min_units"]
+    split_first_percent: Annotated[int, Field(ge=30, le=90)] = config.DEFAULT_SPLIT["split_first_percent"]
+    split_delay_minutes: Annotated[int, Field(ge=30, le=300)] = config.DEFAULT_SPLIT["split_delay_minutes"]
+    sport_effects_mgdl: dict[SportKind, Annotated[Decimal, Field(ge=-500, le=500)]]
+    # Whole minutes: 300 and "300" pass, a fraction is refused instead of cut.
+    sport_durations_minutes: dict[SportKind, Annotated[int, Field(ge=30, le=1440)]] | None = None
+
+    @field_validator("timezone")
+    @classmethod
+    def _known_zone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except (ZoneInfoNotFoundError, ValueError):
+            raise ValueError(MESSAGES["timezone"]) from None
+        return value
+
+    @field_validator("auto_lookback_days")
+    @classmethod
+    def _lookback(cls, value: int) -> int:
+        if value not in forecast.LOOKBACKS:
+            raise ValueError(MESSAGES["auto_lookback_days"])
+        return value
+
+    @field_validator("sport_effects_mgdl", "sport_durations_minutes", mode="before")
+    @classmethod
+    def _every_sport(cls, value):
+        if value is not None and (not isinstance(value, dict) or set(value) != set(episodes.SPORT_LABELS)):
+            raise ValueError("Ungültige Sportarten")
+        return value
+
+    @model_validator(mode="after")
+    def _between_fields(self):
+        if not self.peak_minutes < self.duration_minutes:
+            raise ValueError(MESSAGES["peak_minutes"])
+        if not self.breakfast_end_minute < self.lunch_end_minute:
+            raise ValueError(MESSAGES["breakfast_end_minute"])
+        if not self.dose_target_mgdl <= self.dose_cautious_target_mgdl:
+            raise ValueError(MESSAGES["dose_cautious_target_mgdl"])
+        if not self.dose_low_target_mgdl <= self.dose_target_mgdl:
+            raise ValueError(MESSAGES["dose_low_target_mgdl"])
+        return self
+
+
+def _settings_error(error: ValidationError) -> str:
+    first = error.errors()[0]
+    if first["type"] == "value_error":
+        return str(first["ctx"]["error"])
+    return MESSAGES.get(str(first["loc"][0]) if first["loc"] else "", "Ungültige Einstellungen")
+
+
 def validate_settings(value: dict) -> dict:
     _, old = config.get_settings()
     result = dict(old)
-    for key in ("timezone", "window_minutes", "peak_minutes", "duration_minutes",
-                "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
-                "sport_effects_mgdl", "sport_durations_minutes", "dose_target_mgdl", "dose_cautious_target_mgdl", "dose_low_target_mgdl",
-                "auto_percentile",
-                "auto_half_life_days", "auto_lookback_days", "auto_method", "auto_surcharge_mgdl",
-                "auto_fat_surcharge_mgdl", "auto_vacation", "basal_default_units", "split_min_grams", "split_min_units", "split_first_percent", "split_delay_minutes"):
+    for key in SettingsInput.model_fields:
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
-    result.pop("isf_schedule", None)
-    result.pop("ic_schedule", None)
-    result.pop("target_schedule", None)
-    result.pop("nightscout_profile", None)
-    if result.get("auto_method", "percentile") not in forecast.METHODS:
-        raise ValueError("Unbekannte Methode der Automatik")
-    if result.get("auto_vacation", config.DEFAULT_AUTO_VACATION) not in config.AUTO_VACATION_MODES:
-        raise ValueError("Unbekannte Urlaubs-Einstellung der Automatik")
-    ZoneInfo(result["timezone"])
-    window = int(result["window_minutes"])
-    peak = int(result["peak_minutes"])
-    duration = int(result["duration_minutes"])
-    if not (60 <= window <= 360 and 20 <= peak < duration <= 600):
-        raise ValueError("Ungültige Zeitparameter")
-    breakfast_end = int(result["breakfast_end_minute"])
-    lunch_end = int(result["lunch_end_minute"])
-    lookback = int(result["sport_lookback_minutes"])
-    dose_target = calculation.dec(result["dose_target_mgdl"])
-    if not dose_target.is_finite() or not 60 <= dose_target <= 140:
-        raise ValueError("Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen")
-    cautious_target = calculation.dec(result["dose_cautious_target_mgdl"])
-    if not cautious_target.is_finite() or not dose_target <= cautious_target <= 250:
-        raise ValueError("Vorsichtiger Zielwert muss zwischen dem Zielwert und 250 mg/dL liegen")
-    low_target = calculation.dec(result.get("dose_low_target_mgdl", 100))
-    if not low_target.is_finite() or not 60 <= low_target <= dose_target:
-        raise ValueError("Tieferer Zielwert muss zwischen 60 mg/dL und dem Zielwert liegen (gleich = aus)")
-    auto_percentile = calculation.dec(result["auto_percentile"])
-    if not auto_percentile.is_finite() or not 25 <= auto_percentile <= 50:
-        raise ValueError("Perzentil der Automatik muss zwischen 25 und 50 % liegen")
-    auto_lookback = int(result["auto_lookback_days"])
-    if auto_lookback not in forecast.LOOKBACKS:
-        raise ValueError("Zeitraum der Automatik muss 8, 15 oder 30 Tage sein")
-    half_life = calculation.dec(result["auto_half_life_days"])
-    if not half_life.is_finite() or not 1 <= half_life <= 28:
-        raise ValueError("Halbwertszeit der Automatik muss zwischen 1 und 28 Tagen liegen")
-    surcharge = calculation.dec(result.get("auto_surcharge_mgdl", forecast.SURCHARGE_MGDL))
-    if not surcharge.is_finite() or not 5 <= surcharge <= 150:
-        raise ValueError("Mahlzeitzuschlag muss zwischen 5 und 150 mg/dL liegen")
-    fat_surcharge = calculation.dec(result.get("auto_fat_surcharge_mgdl", forecast.FAT_SURCHARGE_MGDL))
-    if not fat_surcharge.is_finite() or not 0 <= fat_surcharge <= 200:
-        raise ValueError("Fett-Zuschlag muss zwischen 0 und 200 mg/dL liegen")
-    basal_default = calculation.dec(result.get("basal_default_units", config.DEFAULT_BASAL_UNITS))
-    if not basal_default.is_finite() or not 0 <= basal_default <= 100 or basal_default % Decimal("0.5"):
-        raise ValueError("Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen")
-    split = {key: int(result.get(key, default)) for key, default in config.DEFAULT_SPLIT.items()}
-    if not (0 <= split["split_min_grams"] <= 300 and 30 <= split["split_first_percent"] <= 90
-            and 30 <= split["split_delay_minutes"] <= 300):
-        raise ValueError("Split-Bolus: ab 0–300 g (0 = aus), 30–90 % sofort, Rest nach 30–300 min")
-    if not 0 <= split["split_min_units"] <= 30:
-        raise ValueError("Split-Bolus: Mindestdosis 0–30 IE (0 = immer)")
-    effects = result["sport_effects_mgdl"]
-    if not (0 < breakfast_end < lunch_end < 1440 and 0 <= lookback <= 1440):
-        raise ValueError("Ungültige Mahlzeiten- oder Sportzeiten")
-    if not isinstance(effects, dict) or set(effects) != set(episodes.SPORT_LABELS):
-        raise ValueError("Ungültige Sportarten")
-    clean_effects = {}
-    for kind, amount in effects.items():
-        effect = calculation.dec(amount)
-        if not effect.is_finite() or not -500 <= effect <= 500:
-            raise ValueError("Ungültiger Sporteffekt")
-        clean_effects[kind] = str(effect)
-    durations = result.get("sport_durations_minutes") or dict(config.DEFAULT_SPORT_DURATIONS)
-    if not isinstance(durations, dict) or set(durations) != set(episodes.SPORT_LABELS):
-        raise ValueError("Ungültige Sportarten")
-    clean_durations = {}
-    for kind, minutes in durations.items():
-        text = str(minutes)
-        if not text.isdigit() or not 30 <= int(text) <= 1440:
-            raise ValueError("Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen")
-        clean_durations[kind] = int(text)
+    for key in ("isf_schedule", "ic_schedule", "target_schedule", "nightscout_profile"):
+        result.pop(key, None)
+    try:
+        checked = SettingsInput.model_validate(result)
+    except ValidationError as error:
+        raise ValueError(_settings_error(error)) from None
     result.update({
-        "window_minutes": window, "peak_minutes": peak, "duration_minutes": duration,
-        "breakfast_end_minute": breakfast_end, "lunch_end_minute": lunch_end,
-        "sport_lookback_minutes": lookback, "sport_effects_mgdl": clean_effects,
-        "sport_durations_minutes": clean_durations,
-        "dose_target_mgdl": str(dose_target),
-        "dose_cautious_target_mgdl": str(cautious_target),
-        "dose_low_target_mgdl": str(low_target),
-        "auto_percentile": str(auto_percentile),
-        "auto_half_life_days": str(half_life),
-        "auto_lookback_days": auto_lookback,
-        "auto_method": result.get("auto_method", "percentile"),
-        "auto_surcharge_mgdl": str(surcharge),
-        "auto_fat_surcharge_mgdl": str(fat_surcharge),
-        "auto_vacation": result.get("auto_vacation", config.DEFAULT_AUTO_VACATION),
-        "basal_default_units": unit_text(basal_default),
-        **split,
+        **checked.model_dump(include={"timezone", "window_minutes", "peak_minutes", "duration_minutes",
+                                      "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
+                                      "auto_lookback_days", "auto_method", "auto_vacation", *config.DEFAULT_SPLIT}),
+        **{key: str(getattr(checked, key)) for key in (
+            "dose_target_mgdl", "dose_cautious_target_mgdl", "dose_low_target_mgdl", "auto_percentile",
+            "auto_half_life_days", "auto_surcharge_mgdl", "auto_fat_surcharge_mgdl")},
+        "sport_effects_mgdl": {kind: str(amount) for kind, amount in checked.sport_effects_mgdl.items()},
+        "sport_durations_minutes": checked.sport_durations_minutes or dict(config.DEFAULT_SPORT_DURATIONS),
+        "basal_default_units": unit_text(checked.basal_default_units),
     })
     return result
 

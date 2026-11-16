@@ -1,3 +1,5 @@
-# Vendor SDKs for the meal agent (Philipp 2026-11-16: dependencies are fine). Everything else is the standard library.
+# Vendor SDKs for the meal agent (Philipp 2026-11-16: dependencies are fine).
 anthropic==2.3.0
 openai==3.41.0
+# Validation of settings and agent tool arguments (Philipp 2026-11-16, for maintainability).
+pydantic==2.13.5

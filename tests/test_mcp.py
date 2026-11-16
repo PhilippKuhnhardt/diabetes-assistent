@@ -167,6 +167,24 @@ class McpTests(unittest.TestCase):
         meals = self.call("read_data", table="meals", days=3)
         self.assertEqual(meals["rows"], [])
 
+    def test_tool_arguments_are_checked_by_their_model(self):
+        from app.services import agent_tools
+        os.environ["MCP_API_KEY"] = KEY
+        save = next(tool for tool in agent_tools.TOOLS if tool["name"] == "save_entry")
+        self.assertEqual(save["inputSchema"]["properties"]["carbs_g"]["maximum"], 500)
+        self.assertFalse(save["inputSchema"]["additionalProperties"])
+        basal = next(tool for tool in agent_tools.TOOLS if tool["name"] == "save_basal")
+        self.assertEqual(basal["inputSchema"]["required"], ["units"])
+        for arguments, message in (({}, "units fehlt"), ({"units": 200}, "units muss zwischen 0.5 und 100 liegen"),
+                                   ({"units": "viel"}, "units muss eine Zahl sein")):
+            _, answer = self.mcp({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                  "params": {"name": "save_basal", "arguments": arguments}})
+            self.assertTrue(answer["result"]["isError"])
+            self.assertEqual(answer["result"]["content"][0]["text"], message)
+        _, answer = self.mcp({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                              "params": {"name": "read_data", "arguments": {"table": "nope"}}})
+        self.assertIn("table muss einer von meals", answer["result"]["content"][0]["text"])
+
     def test_claude_app_connects_through_oauth_with_the_app_password(self):
         os.environ.update({"MCP_API_KEY": KEY, "APP_PASSWORD": "secret"})
         auth.reset_failures()

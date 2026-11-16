@@ -586,6 +586,25 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/settings", method="POST", body={
                 "sport_durations_minutes": {**settings["sport_durations_minutes"], "gym": 10}})
 
+    def test_invalid_settings_name_the_field_in_german(self):
+        from app.services import settings as settings_service
+        _, current = config.get_settings()
+        for change, message in (
+                ({"dose_target_mgdl": 150}, "Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen"),
+                ({"dose_target_mgdl": "viel"}, "Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen"),
+                ({"timezone": "Mars/Olympus"}, "Unbekannte Zeitzone"),
+                ({"peak_minutes": 500, "duration_minutes": 400}, "Ungültige Zeitparameter"),
+                ({"window_minutes": 90.5}, "Ungültige Zeitparameter"),
+                ({"auto_lookback_days": 14}, "Zeitraum der Automatik muss 8, 15 oder 30 Tage sein"),
+                ({"basal_default_units": "10.3"}, "Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen"),
+                ({"dose_cautious_target_mgdl": 80}, "Vorsichtiger Zielwert muss zwischen dem Zielwert und 250 mg/dL liegen"),
+                ({"sport_effects_mgdl": {"gym": 10}}, "Ungültige Sportarten"),
+                ({"auto_method": "raten"}, "Unbekannte Methode der Automatik")):
+            with self.subTest(change=change):
+                with self.assertRaisesRegex(ValueError, "^" + message.replace("(", r"\(").replace(")", r"\)") + "$"):
+                    settings_service.validate_settings(change)
+        self.assertEqual(config.get_settings()[1], current)
+
     def test_former_lookbacks_map_to_the_offered_ones(self):
         _, current = config.get_settings()
         for old, new in ((14, 15), (21, 30), (28, 30)):
