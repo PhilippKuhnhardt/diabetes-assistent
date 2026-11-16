@@ -832,6 +832,9 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .agent-turns p { margin: 0 0 4px; padding-left: 9px; border-left: 2px solid var(--line); }
 .agent-result { margin: 0 0 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--canvas); font-size: 14px; }
 .agent-result p { margin: 8px 0 0; }
+.agent-lookups { margin-top: 8px; color: var(--muted); font-size: 13px; }
+.agent-lookups summary { cursor: pointer; }
+.agent-lookups ul { margin: 4px 0 0; padding-left: 18px; }
 .agent-total { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .agent-total strong { font-size: 26px; }
 .agent-total span, .agent-marks, .agent-sources, .agent-adjust { color: var(--muted); font-size: 13px; }

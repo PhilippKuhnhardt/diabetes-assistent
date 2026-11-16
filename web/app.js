@@ -3760,11 +3760,14 @@ function agentEstimateHTML(estimate) {
   const sources = estimate.sources?.length ? '<p class="agent-sources">Quellen: ' + estimate.sources.map(source =>
     '<a href="' + escapeHTML(source.url) + '" target="_blank" rel="noopener noreferrer">' +
     escapeHTML(source.title || new URL(source.url).hostname) + '</a>').join(", ") + '</p>' : "";
+  const lookups = estimate.lookups?.length ? '<details class="agent-lookups"><summary>Nachgeschlagen (' +
+    estimate.lookups.length + ')</summary><ul>' + estimate.lookups.map(line => '<li>' + escapeHTML(line) + '</li>').join("") +
+    '</ul></details>' : "";
   return '<div class="agent-total"><strong>' + estimate.carbs_g + ' g KH</strong><span>Spanne ' + estimate.carbs_low_g +
     '–' + estimate.carbs_high_g + ' g</span></div>' + adjust + items +
     '<p class="agent-marks">' + marks.map(escapeHTML).join(" · ") + '</p>' + dish +
     (estimate.reasoning ? '<p class="agent-reasoning">' + escapeHTML(estimate.reasoning) + '</p>' : '') +
-    (estimate.question ? '<p class="agent-question">Rückfrage: ' + escapeHTML(estimate.question) + '</p>' : '') + sources;
+    (estimate.question ? '<p class="agent-question">Rückfrage: ' + escapeHTML(estimate.question) + '</p>' : '') + lookups + sources;
 }
 
 function renderAgent() {
