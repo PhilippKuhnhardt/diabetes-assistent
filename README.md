@@ -21,7 +21,7 @@ The formulas, assumptions and their limits are documented in German in [docs/rec
 
 ## How it is built
 
-- Python standard library only (HTTP server, SQLite, `Decimal` arithmetic), plain HTML/CSS/JavaScript, no build step.
+- Python standard library for the HTTP server, SQLite and `Decimal` arithmetic; the few packages in `requirements.txt` (pydantic for input validation, the vendor SDKs for the meal agent). Plain HTML/CSS/JavaScript, no build step.
 - Nightscout is the source of truth for CGM readings, carbs, injections and the current profile. SQLite mirrors that data and stores local decisions (manual windows, exclusions, settings) and calculated days, which are recomputed when their inputs or the code change.
 - All domain rules live on the server (`app/`); the browser (`web/app.js`) only draws the view data it receives.
 - Runs as a single Docker container; credentials come from environment variables, never from files in the repository.
