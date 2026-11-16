@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import json
 import uuid
 from datetime import datetime, timezone
 
@@ -108,6 +109,26 @@ def _examples() -> dict[int, list[dict]]:
     return result
 
 
+def _call_tool(name: str, args: dict) -> str:
+    """Answer one of the agent's lookups as JSON text; a bad call gets its reason back, never an exception."""
+    try:
+        if name == "search_meals":
+            result = dishes.lookup_meals(args.get("query") or "", args.get("meal") or None, args.get("place") or None,
+                                         args.get("dish") or None, args.get("days") or dishes.VIEW_DAYS)
+        elif name == "dish_history":
+            wanted = " ".join(str(args.get("dish") or "").split()).casefold()
+            days = max(1, min(int(args.get("days") or dishes.VIEW_DAYS), dishes.VIEW_MAX_DAYS))
+            catalogue = dishes.view({"days": [str(days)]})["dishes"]
+            found = next((dish for dish in catalogue if dish["name"].casefold() == wanted), None)
+            result = found if found else {"error": "Unbekanntes Gericht. Vorhandene Gerichte: "
+                                                   + (", ".join(dish["name"] for dish in catalogue) or "keine")}
+        else:
+            result = {"error": f"Unbekanntes Werkzeug {name}"}
+    except (TypeError, ValueError) as error:
+        result = {"error": str(error) or "Ungültige Anfrage"}
+    return json.dumps(result, ensure_ascii=False, default=str)
+
+
 def estimate(payload: dict) -> dict:
     """One turn with the agent: a new meal (text and/or photos) or a follow-up to its last answer."""
     current = _settings()
@@ -140,18 +161,21 @@ def estimate(payload: dict) -> dict:
     place = next((item["name"] for item in place_store.all_places() if str(item["id"]) == str(place_id)), None)
     context = rules.context_text(at.astimezone(zone).strftime("%A, %d.%m.%Y %H:%M"),
                                  episodes.meal_kind_at(at, settings)[1], place,
-                                 rules.catalogue_text(catalogue, _examples()))
+                                 rules.catalogue_text(catalogue, _examples()),
+                                 [item["name"] for item in place_store.all_places()])
     turns = history + [{"role": "user", "text": text or "(nur Fotos)"}]
     encoded = [base64.b64encode(photo).decode() for photo in photos]
     messages = [{"role": turn["role"],
                  "text": (context + "\n\nPhilipp: " + turn["text"]) if index == 0 else turn["text"],
                  "images": encoded if index == 0 else []} for index, turn in enumerate(turns)]
     try:
-        answer = llm.complete(provider, model, rules.SYSTEM, messages, rules.SCHEMA, current["web_search"])
+        answer = llm.run(provider, model, rules.SYSTEM, messages, rules.SCHEMA, rules.TOOLS, _call_tool,
+                         current["web_search"])
         result = rules.check(answer["data"], catalogue)
     except llm.LLMError as error:
         raise ValueError(str(error)) from None
     result["sources"] = answer["sources"]
+    result["lookups"] = rules.lookups(answer.get("tool_calls") or [])
     if not session:
         store.save_photos(session_id, photos)
     turns.append({"role": "assistant", "text": rules.answer_text(result)})

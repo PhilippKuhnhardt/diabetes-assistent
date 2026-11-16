@@ -3,8 +3,10 @@ how an answer is checked before the entry form shows it.
 
 The agent estimates carbohydrates from photos and a description and names the dish. It never names
 an insulin dose: its carbs fill the entry form, where the dose help calculates as always. A dish's
-history (app/dishes.py) is part of what it is told, so a dish that keeps needing more insulin than
-usual is estimated higher next time; that adjustment is named separately (`history_adjustment_g`)."""
+catalogue is part of what it is told, and it looks up past meals and dish histories with its tools
+(Philipp 2026-11-16: the model is smart and gets tools rather than rules). A dish that keeps needing
+more insulin than usual is estimated higher next time; that adjustment is named separately
+(`history_adjustment_g`)."""
 from __future__ import annotations
 
 import json
@@ -15,9 +17,9 @@ MAX_PHOTOS = 4
 MAX_PHOTO_BYTES = 3_000_000
 MAX_TEXT = 2000
 MAX_TURNS = 8
-# Dishes handed to the model, most used first, each with this many recent entries.
+# Dishes handed to the model, most used first, each with this many recent entries (more via the tools).
 CATALOGUE_DISHES = 60
-DISH_EXAMPLES = 3
+DISH_EXAMPLES = 1
 CERTAINTIES = ("weighed", "known", "unsure")
 MEAL_LABELS = {"breakfast": "Frühstück", "lunch": "Mittagessen", "dinner": "Abendessen"}
 
@@ -46,42 +48,72 @@ SCHEMA = {
     "additionalProperties": False,
 }
 
-SYSTEM = """Du bist der Essens-Agent in Philipps Diabetes-Tagebuch (Typ 1, Insulin per Pen). Du schätzt die \
-Kohlenhydrate (KH) einer Mahlzeit aus Fotos und Beschreibung und ordnest sie einem Gericht aus seinem \
-Katalog zu. Deine KH-Schätzung füllt das Eintragsformular; die Insulindosis berechnet danach allein die App. \
-Nenne deshalb nie Insulineinheiten, Faktoren oder Dosisratschläge.
+SYSTEM = """Du bist der Essens-Agent in Philipps Diabetes-Tagebuch (Typ 1, Insulin per Pen). Deine Aufgabe: \
+die Kohlenhydrate (KH) einer Mahlzeit so gut wie möglich einschätzen, aus Fotos, Philipps Beschreibung und \
+allem, was du nachschlagen kannst. Deine Zahl füllt das Eintragsformular; die Insulindosis rechnet danach \
+allein die App. Nenne deshalb nie Insulineinheiten, Faktoren oder Dosisratschläge.
 
-So gehst du vor:
-- Zerlege das Essen in Bestandteile mit Menge (g, ml oder Stück) und KH in Gramm. Zähle nur verwertbare KH \
-(ohne Ballaststoffe), auch aus Getränken, Soßen und Beilagen. Schätze Portionen aus dem Foto an Teller, \
-Besteck und Händen. Philipps Angaben (gewogene Mengen, Packungsangaben) gehen vor dem Foto.
-- carbs_g ist deine beste Schätzung der Summe, carbs_low_g bis carbs_high_g die ehrliche Spanne, in der die \
-Mahlzeit sehr wahrscheinlich liegt. Eine breite Spanne ist besser als falsche Genauigkeit.
-- Gerichte: Passt die Mahlzeit zu einem Gericht im Katalog, nimm in dish_name genau dessen Namen, damit sein \
-Verlauf zusammenbleibt. Nennt Philipp nur ein bekanntes Gericht ohne Mengen ("Porridge wie immer"), nimm \
-dessen übliche KH und Zusammensetzung aus dem Katalog. Sonst schlage einen kurzen neuen Namen vor, der das \
-wiederkehrende Gericht benennt (z. B. "Kantine Pasta Bolognese", nicht "Mittagessen vom Dienstag"), und eine \
-Kategorie; nutze vorhandene Kategorien, wo sie passen. Ist es kein wiederkehrendes Gericht, bleibt dish_name leer.
-- Verlauf: Steht bei einem Gericht, dass es wiederholt deutlich mehr oder weniger Insulin als üblich brauchte \
-(ab 3 Mahlzeiten), dann waren seine KH bisher vermutlich unter- oder überschätzt. Bewege carbs_g dann in \
-Richtung der KH, wie die es sich verhielt, trage den Unterschied zu deiner Schätzung aus Foto und Beschreibung \
-in history_adjustment_g ein (positiv = erhöht, sonst 0) und nenne das in reasoning. Die Bestandteile (items) \
-bleiben ohne diese Anpassung.
-- certainty: weighed = Philipp hat gewogen oder Packungswerte genannt; known = bekanntes Gericht oder gut \
-erkennbare Portion; unsure = grobe Schätzung.
-- fat_protein = fett- oder eiweißreich (z. B. Pizza, Käse, Fleisch mit Soße, Frittiertes). fast = wirkt schnell \
-(z. B. Saft, Weißbrot, Süßes ohne Fett).
-- description: ein bis zwei Sätze, was es war, mit den wichtigsten Mengen, so dass man die Mahlzeit später \
-wiedererkennt.
-- reasoning: zwei bis vier kurze Sätze auf Deutsch, worauf die Schätzung beruht und was sie unsicher macht.
-- question: höchstens eine Rückfrage, nur wenn die Antwort die KH um mehr als etwa 10 g ändern würde, sonst leer. \
-Schätze trotzdem immer.
-- Websuche (falls verfügbar): nutze sie für Nährwerte von Markenprodukten, Restaurant- oder Kantinengerichten \
-und unbekannten Lebensmitteln, nicht für Alltägliches.
+Du entscheidest selbst, wie du vorgehst. Dafür hast du:
+- den Gerichte-Katalog in der ersten Nachricht: Philipps wiederkehrende Gerichte mit Anzahl, üblichen KH und \
+wie sie sich verhalten haben,
+- search_meals: frühere Mahlzeiten nach Stichworten, Mahlzeitenart, Ort oder Gericht durchsuchen, mit KH, \
+Beschreibung und Ergebnis (Faktor, Verhältnis zum üblichen Faktor, BZ vorher und nachher),
+- dish_history: alle Einträge und Mahlzeiten eines Gerichts,
+- die Websuche, falls verfügbar: Nährwerte, Produkte, Restaurant- und Kantinengerichte, Portionsgrößen.
+Nutze sie so oft, wie es deine Schätzung besser macht.
 
-Antworte ausschließlich mit einem JSON-Objekt mit genau diesen Feldern: items (Liste aus name, amount, carbs_g), \
-carbs_g, carbs_low_g, carbs_high_g, history_adjustment_g, certainty, fat_protein, fast, dish_name, \
-dish_category, description, reasoning, question. Kein Text davor oder danach."""
+Was du über die Daten wissen solltest:
+- ratio = Mahlzeitfaktor ÷ üblicher Faktor derselben Mahlzeitenart in den 30 Tagen davor. 1,2 heißt, die \
+Mahlzeit brauchte 20 % mehr Insulin als üblich, sie verhielt sich also wie 20 % mehr KH. Liegt ein Gericht \
+oder eine ähnliche Mahlzeit wiederholt darüber oder darunter, waren ihre KH vermutlich unter- oder \
+überschätzt (Philipps Sicht). Berücksichtige das in carbs_g und trage den Unterschied zu deiner Schätzung \
+aus Foto und Beschreibung in history_adjustment_g ein (positiv = erhöht, sonst 0); die items bleiben ohne \
+diese Anpassung. Einzelne Mahlzeiten streuen auch aus anderen Gründen (Sport, Stress, Fett).
+- Ein Gericht fasst Mahlzeiten zusammen, die sich für den Blutzucker ähnlich verhalten; meist entscheidet \
+die Hauptquelle der KH (Reis, Pasta, Brot, Haferflocken), nicht was sonst dabei war. Ähnliche Gerichte und \
+Mahlzeiten taugen als Referenz, auch wenn keine genau passt.
+- Philipps eigene Angaben (gewogen, Packungswerte) gehen vor dem Foto.
+
+Deine Antwort ist ein JSON-Objekt mit genau diesen Feldern:
+- items: Bestandteile mit name, amount (Menge) und carbs_g (verwertbare KH ohne Ballaststoffe),
+- carbs_g: deine beste Schätzung; carbs_low_g bis carbs_high_g: die ehrliche Spanne,
+- history_adjustment_g: siehe oben,
+- certainty: weighed (gewogen oder Packungswerte), known (bekanntes Gericht oder gut erkennbare Portion), \
+unsure (grobe Schätzung),
+- fat_protein: fett- oder eiweißreich; fast: wirkt schnell (Saft, Weißbrot, Süßes ohne Fett),
+- dish_name: das passende Gericht aus dem Katalog mit genau seinem Namen, sonst ein kurzer neuer Name für \
+etwas Wiederkehrendes, sonst leer; dish_category: eine Kategorie (vorhandene nutzen, wo sie passen),
+- description: ein bis zwei Sätze, was es war, mit den wichtigsten Mengen,
+- reasoning: zwei bis vier kurze Sätze auf Deutsch, worauf die Schätzung beruht (auch welche früheren \
+Mahlzeiten oder Quellen) und was sie unsicher macht,
+- question: höchstens eine Rückfrage, wenn die Antwort die KH deutlich ändern würde, sonst leer. Schätze \
+trotzdem immer.
+Kein Text vor oder nach dem JSON."""
+
+MEAL_KINDS = ["breakfast", "lunch", "dinner"]
+TOOLS = [
+    {"name": "search_meals",
+     "description": "Frühere Kohlenhydrat-Einträge durchsuchen, neueste zuerst (höchstens 40). Je Eintrag: Tag, "
+                    "Uhrzeit, Mahlzeitenart, Gericht, Beschreibung, KH, Ort, KH-Sicherheit und meal_outcome der "
+                    "Hauptmahlzeit, zu der er gehört (factor, reference_factor, ratio, carbs_g und rapid_units "
+                    "der ganzen Mahlzeit, BZ g0_mgdl vorher und g_end_mgdl nachher, delta_mgdl).",
+     "parameters": {"type": "object", "properties": {
+         "query": {"type": "string", "description": "Stichworte, die alle in Gericht oder Beschreibung vorkommen "
+                                                    "müssen, z. B. \"Reis\". Leer = alle."},
+         "meal": {"type": "string", "enum": MEAL_KINDS, "description": "Nur diese Mahlzeitenart."},
+         "place": {"type": "string", "description": "Nur dieser Ort (Name wie im Kontext)."},
+         "dish": {"type": "string", "description": "Nur dieses Gericht (Name aus dem Katalog)."},
+         "days": {"type": "integer", "minimum": 1, "maximum": 730, "description": "Zeitraum in Tagen, Standard 120."},
+     }, "additionalProperties": False}},
+    {"name": "dish_history",
+     "description": "Ein Gericht aus dem Katalog im Detail: Kategorie, Anzahl, übliche KH, Ergebnis (ratio mit "
+                    "Spanne, effective_carbs = übliche KH × ratio) und seine letzten Hauptmahlzeiten mit KH, IE, "
+                    "Faktor, ratio, BZ vorher und nachher und Ort.",
+     "parameters": {"type": "object", "properties": {
+         "dish": {"type": "string", "description": "Name des Gerichts."},
+         "days": {"type": "integer", "minimum": 1, "maximum": 730, "description": "Zeitraum in Tagen, Standard 120."},
+     }, "required": ["dish"], "additionalProperties": False}},
+]
 
 
 def catalogue_text(catalogue: list[dict], examples: dict[int, list[dict]]) -> str:
@@ -96,10 +128,13 @@ def catalogue_text(catalogue: list[dict], examples: dict[int, list[dict]]) -> st
     return "\n".join(lines) if lines else "(noch keine Gerichte)"
 
 
-def context_text(local_time: str, meal: str | None, place: str | None, catalogue: str) -> str:
+def context_text(local_time: str, meal: str | None, place: str | None, catalogue: str,
+                 places: list[str] | None = None) -> str:
     return (f"Zeitpunkt der Mahlzeit: {local_time}" + (f" ({MEAL_LABELS[meal]})" if meal in MEAL_LABELS else "")
-            + f"\nOrt: {place or 'nicht angegeben'}\n\nPhilipps Gerichte-Katalog (Verlauf je Gericht, darunter "
-            + f"die letzten Einträge):\n{catalogue}")
+            + f"\nOrt: {place or 'nicht angegeben'}"
+            + (f"\nPhilipps Orte: {', '.join(places)}" if places else "")
+            + f"\n\nPhilipps Gerichte-Katalog (je Gericht der Verlauf, darunter der letzte Eintrag; mehr über "
+            + f"dish_history und search_meals):\n{catalogue}")
 
 
 def _number(value, low: float = 0, high: float = 500) -> float:
@@ -145,3 +180,19 @@ def answer_text(estimate: dict) -> str:
     return json.dumps({key: estimate[key] for key in ("items", "carbs_g", "carbs_low_g", "carbs_high_g",
                                                       "history_adjustment_g", "description", "reasoning", "question")}
                       | {"dish_name": (estimate.get("dish") or {}).get("name") or ""}, ensure_ascii=False)
+
+
+def lookups(calls: list[dict]) -> list[str]:
+    """What the agent looked up, as short German lines for the page (at most 12)."""
+    lines = []
+    for call in calls:
+        args = call.get("args") or {}
+        if call.get("name") == "search_meals":
+            parts = [f"„{args['query']}“" if args.get("query") else "alle Mahlzeiten"]
+            parts += [MEAL_LABELS.get(args.get("meal"), "")] + [args.get("place") or "", args.get("dish") or ""]
+            lines.append("Frühere Mahlzeiten: " + ", ".join(part for part in parts if part))
+        elif call.get("name") == "dish_history":
+            lines.append("Verlauf: " + str(args.get("dish") or ""))
+        elif call.get("name") == "web_search":
+            lines.append("Websuche" + (f": „{args['query']}“" if args.get("query") else ""))
+    return [line[:120] for line in lines][:12]

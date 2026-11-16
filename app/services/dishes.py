@@ -18,8 +18,14 @@ def _zone():
     return local_zone(settings["timezone"])
 
 
-def _meal_rows(days: int) -> list[dict]:
-    """Main meals of the last `days` days from the stored day results, with their dish."""
+def _local(value, zone) -> str:
+    instant = value if isinstance(value, datetime) else parse_instant(str(value))
+    return instant.astimezone(zone).isoformat(timespec="minutes")
+
+
+def _rows(days: int) -> tuple[list[dict], list[dict]]:
+    """Main meals and carb entries of the last `days` days from the stored day results. Meals carry
+    their dish; entries carry dish, description and place and name the main meal they belong to."""
     from app.services import day_view
     zone = _zone()
     today = datetime.now(zone).date()
@@ -28,15 +34,17 @@ def _meal_rows(days: int) -> list[dict]:
     if first_at:
         first = max(first, parse_instant(first_at).astimezone(zone).date())
     excluded = marks.analysis_exclusions()
-    rows = []
+    meals, entries = [], []
     day = first
     while first_at and day <= today:
         payload = day_view.day_payload(day.isoformat(), refresh=False)
+        kinds = {}
         for meal in payload.get("meals", []):
             result = meal.get("calculation") or {}
-            rows.append({
+            kinds[meal["id"]] = meal.get("meal")
+            meals.append({
                 "day": payload["day"], "meal": meal.get("meal"), "meal_id": meal["id"],
-                "at": parse_instant(meal["at"]).astimezone(zone).isoformat(timespec="minutes") if meal.get("at") else "",
+                "at": _local(meal["at"], zone) if meal.get("at") else "",
                 "dish_id": (meal.get("dish") or {}).get("id"),
                 "carbs_g": result.get("carbs_total"), "rapid_units": result.get("rapid_units_in_window"),
                 "factor": result.get("factor_units_per_ke"),
@@ -46,8 +54,26 @@ def _meal_rows(days: int) -> list[dict]:
                 "place": (meal.get("place") or {}).get("name"),
                 **{key: (meal.get("quality") or {}).get(key) for key in ("carbs_certainty", "fat_protein", "fast")},
             })
+        for item in payload.get("timeline", []):
+            try:
+                carbs = float(item.get("carbs") or 0)
+            except (TypeError, ValueError):
+                carbs = 0
+            if carbs <= 0:
+                continue
+            entries.append({
+                "day": payload["day"], "at": _local(item["at"], zone), "kind": item.get("kind"),
+                "meal": kinds.get(item.get("meal_id")), "meal_id": item.get("meal_id"), "event_id": item.get("event_id"),
+                "carbs_g": carbs, "dish": (item.get("dish") or {}).get("name"), "description": item.get("description") or "",
+                "place": (item.get("place") or {}).get("name"), "carbs_certainty": item.get("carbs_certainty"),
+                "fat_protein": item.get("fat_protein"), "fast": item.get("fast"),
+            })
         day += timedelta(days=1)
-    return rows
+    return meals, entries
+
+
+def _meal_rows(days: int) -> list[dict]:
+    return _rows(days)[0]
 
 
 def _days(params: dict | None) -> int:
@@ -136,3 +162,42 @@ def record(event_id: str, at: datetime, payload: dict, carbs) -> dict | None:
     if chosen is None:
         return None
     return next(({"id": dish["id"], "name": dish["name"]} for dish in store.all_dishes() if dish["id"] == chosen), None)
+
+
+# The agent's lookups (user request 2026-11-16: the model gets tools to decide well rather than rules).
+SEARCH_ROWS = 40
+
+
+def _outcome(meal: dict | None) -> dict | None:
+    if not meal:
+        return None
+    return {key: meal.get(key) for key in ("factor", "reference_factor", "ratio", "carbs_g", "rapid_units",
+                                           "g0_mgdl", "g_end_mgdl", "delta_mgdl", "excluded", "blocked_reason")}
+
+
+def lookup_meals(query: str = "", meal: str | None = None, place: str | None = None, dish: str | None = None,
+                 days: int = VIEW_DAYS) -> dict:
+    """Past carb entries, newest first, filtered by words (all must appear in dish or description),
+    meal kind, place and dish, each with the outcome of the main meal it belongs to."""
+    days = max(1, min(int(days or VIEW_DAYS), VIEW_MAX_DAYS))
+    meals, entries = _rows(days)
+    by_id = {row["meal_id"]: row for row in meals}
+    words = [word.casefold() for word in str(query or "").split()]
+    found = []
+    for entry in reversed(entries):
+        text = f"{entry['dish'] or ''} {entry['description']}".casefold()
+        if any(word not in text for word in words):
+            continue
+        if meal and entry["meal"] != meal:
+            continue
+        if place and (entry["place"] or "").casefold() != str(place).casefold():
+            continue
+        if dish and (entry["dish"] or "").casefold() != str(dish).casefold():
+            continue
+        found.append(entry)
+    shown = []
+    for entry in found[:SEARCH_ROWS]:
+        main = by_id.get(entry["meal_id"])
+        shown.append({**{key: value for key, value in entry.items() if key not in ("meal_id", "event_id")},
+                      "meal_outcome": _outcome(rules.with_ratio(meals, main) if main else None)})
+    return {"days": days, "total": len(found), "entries": shown}
