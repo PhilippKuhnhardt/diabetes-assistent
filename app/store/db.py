@@ -261,10 +261,66 @@ def _prior_insulin_percentile(db: sqlite3.Connection) -> None:
                (now, now, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))))
 
 
+def _dishes(db: sqlite3.Connection) -> None:
+    """The dish catalogue and what was eaten per diary carb entry (by its event id): its dish and
+    description; local only (user request 2026-11-16, meal agent)."""
+    db.execute("""CREATE TABLE IF NOT EXISTS dishes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT '',
+        archived INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS meal_records (
+        event_id TEXT PRIMARY KEY,
+        at TEXT NOT NULL,
+        dish_id INTEGER,
+        description TEXT NOT NULL DEFAULT '',
+        carbs_g REAL,
+        updated_at TEXT NOT NULL
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS meal_records_at ON meal_records(at)")
+    db.execute("CREATE INDEX IF NOT EXISTS meal_records_dish ON meal_records(dish_id)")
+
+
+def _agent(db: sqlite3.Connection) -> None:
+    """The meal agent: which provider and model it uses, and each estimate's conversation, result and
+    token use; its photos lie as files beside the database (user request 2026-11-16)."""
+    db.execute("CREATE TABLE IF NOT EXISTS agent_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+    db.execute("""CREATE TABLE IF NOT EXISTS agent_sessions (
+        id TEXT PRIMARY KEY,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        at TEXT NOT NULL,
+        event_id TEXT,
+        provider TEXT NOT NULL,
+        model TEXT NOT NULL,
+        messages TEXT NOT NULL,
+        estimate TEXT,
+        photos INTEGER NOT NULL DEFAULT 0,
+        calls INTEGER NOT NULL DEFAULT 0,
+        input_tokens INTEGER NOT NULL DEFAULT 0,
+        output_tokens INTEGER NOT NULL DEFAULT 0,
+        cost_usd REAL
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS agent_sessions_event ON agent_sessions(event_id)")
+    db.execute("""CREATE TABLE IF NOT EXISTS agent_usage (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        at TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        model TEXT NOT NULL,
+        input_tokens INTEGER NOT NULL DEFAULT 0,
+        output_tokens INTEGER NOT NULL DEFAULT 0,
+        cost_usd REAL
+    )""")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
                                                           _notifications, _notification_priority, _places,
                                                           _inbox_seen, _sport_sessions, _places_without_positions,
-                                                          _place_factor, _timezone_periods, _prior_insulin_percentile]
+                                                          _place_factor, _timezone_periods, _prior_insulin_percentile,
+                                                          _dishes, _agent]
 
 
 def init() -> None:

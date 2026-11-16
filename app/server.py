@@ -14,7 +14,7 @@ from urllib.parse import parse_qs, urlparse
 from app import auth, mcp, oauth
 from app.common import json_safe
 from app.ingestion import nightscout
-from app.services import annotations, background, basal, day_view, diary, dose_help, effects, entry, inbox, notifications, places, read_api, settings, summary, sync, window_editor
+from app.services import agent, annotations, background, basal, day_view, diary, dishes, dose_help, effects, entry, inbox, notifications, places, read_api, settings, summary, sync, window_editor
 from app.store import config, db
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -33,6 +33,9 @@ PUBLIC_FILES = {
     "/manifest.webmanifest": "application/manifest+json",
 }
 MAX_BODY = 64 * 1024
+# Photos and voice notes for the meal agent.
+MAX_UPLOAD_BODY = 16 * 1024 * 1024
+UPLOAD_ROUTES = {"/api/agent/estimate", "/api/agent/transcribe"}
 
 
 def day_view_request(params: dict) -> dict:
@@ -55,6 +58,9 @@ GET_ROUTES = {
     "/api/analysis/window-editor": window_editor.editor,
     "/api/notifications": lambda params: notifications.view(),
     "/api/places": lambda params: places.view(),
+    "/api/dishes": dishes.view,
+    "/api/agent": agent.view,
+    "/api/agent/models": agent.models,
     "/api/inbox": inbox.view,
 }
 
@@ -82,6 +88,10 @@ POST_ROUTES = {
     "/api/notifications": notifications.set_enabled,
     "/api/notifications/test": notifications.send_test,
     "/api/places": places.save,
+    "/api/dishes": dishes.save,
+    "/api/agent/settings": agent.save_settings,
+    "/api/agent/estimate": agent.estimate,
+    "/api/agent/transcribe": agent.transcribe,
     "/api/inbox/seen": inbox.mark_seen,
     "/api/episode": diary.save_episode,
     "/api/exercise": diary.save_exercise,
@@ -244,7 +254,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
             raise ValueError("JSON-Anfrage erwartet")
         length = int(self.headers.get("Content-Length", "0"))
-        if not 0 < length <= MAX_BODY:
+        limit = MAX_UPLOAD_BODY if urlparse(self.path).path in UPLOAD_ROUTES else MAX_BODY
+        if not 0 < length <= limit:
             raise ValueError("Ungültige Anfragegröße")
         value = json.loads(self.rfile.read(length))
         if not isinstance(value, dict):
@@ -272,6 +283,23 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", PUBLIC_FILES.get(path) or "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(data)))
             self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(data)
+            return
+        if path in ("/api/v1/photo", "/api/agent/photo"):
+            # A photo of an agent estimate: the read key (scripts) or the browser login.
+            if not (self._check_api_access() if path == "/api/v1/photo" else self._check_auth()):
+                return
+            params = parse_qs(urlparse(self.path).query)
+            data = agent.photo((params.get("session") or [""])[0], (params.get("n") or [""])[0])
+            if data is None:
+                self._response(404, {"error": "Nicht gefunden"})
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "image/jpeg")
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "private, max-age=86400")
+            self.send_header("X-Content-Type-Options", "nosniff")
             self.end_headers()
             self.wfile.write(data)
             return

@@ -15,12 +15,12 @@ from zoneinfo import ZoneInfo
 from app import episodes
 from app.common import local_zone, parse_instant
 from app.ingestion import nightscout
-from app.services import basal, day_view, diary, entry, read_api, sync
+from app.services import basal, day_view, diary, dishes, entry, read_api, sync
 from app.store import config, places as place_store
 
 CERTAINTIES = list(episodes.CERTAINTIES)
 SPORT_KINDS = list(episodes.SPORT_LABELS)
-READ_TABLES = ["meals", "window-events", "entries", "treatments", "basal", "data", "profile"]
+READ_TABLES = ["meals", "window-events", "entries", "treatments", "basal", "meal-records", "data", "profile"]
 # The dose fields a conversation needs; the rest of dose_help's answer is intermediate values.
 DOSE_KEYS = (
     "message", "reason", "options", "carbs_g", "glucose_mgdl", "glucose_at", "glucose_fresh", "glucose_source",
@@ -117,8 +117,9 @@ def _dose_view(dose: dict) -> dict:
 
 def _entries(current: dict) -> list[dict]:
     keep = ("id", "at", "kind", "carbs", "insulin", "basal_units", "duration_minutes", "sport_kind", "notes",
-            "carbs_certainty", "fat_protein", "alcohol", "fast", "place", "glucose_mgdl", "meal_id", "nightscout_synced")
-    return [{key: (_local(item[key]) if key == "at" else (item[key] or {}).get("name") if key == "place"
+            "carbs_certainty", "fat_protein", "alcohol", "fast", "place", "dish", "description", "glucose_mgdl",
+            "meal_id", "nightscout_synced")
+    return [{key: (_local(item[key]) if key == "at" else (item[key] or {}).get("name") if key in ("place", "dish")
                    else item[key]) for key in keep if key in item}
             for item in current["timeline"]]
 
@@ -129,7 +130,7 @@ def _meals(day: str) -> list[dict]:
     keep = ("meal_id", "meal", "at", "day_type", "window_start", "window_end", "end_reason", "excluded",
             "carbs_meal_g", "carbs_total_g", "rapid_units", "g0_mgdl", "g_end_mgdl", "delta_mgdl",
             "sport_effect_mgdl", "factor_ie_per_ke", "blocked_reason", "carbs_certainty", "fat_protein", "alcohol",
-            "fast", "place")
+            "fast", "place", "dish")
     return [{key: row.get(key) for key in keep} for row in rows]
 
 
@@ -213,6 +214,9 @@ def save_entry(args: dict) -> dict:
         # A retry with the same event_id must not add a second basal dose either.
         "basal_event_id": str(uuid.uuid5(uuid.UUID(event_id), "basal")),
     })
+    dish, description = " ".join(str(args.get("dish") or "").split()), str(args.get("description") or "").strip()
+    if kind == "meal" and (dish or description):
+        payload.update({"dish_name": dish or None, "description": description})
     if kind == "exercise":
         sport_kind = _choice(args, "sport_kind", SPORT_KINDS)
         minutes = _number(args, "duration_minutes", Decimal(1), Decimal(1440))
@@ -277,6 +281,21 @@ def get_day(args: dict) -> dict:
         "entries": _entries(current), "meals": _meals(day),
         "sync_error": current.get("sync_error"),
     }
+
+
+def list_dishes(args: dict) -> dict:
+    """The dish catalogue with each dish's outcome; `dish` narrows it to one dish with its recent meals."""
+    days = _number(args, "days", Decimal(1), Decimal(dishes.VIEW_MAX_DAYS))
+    current = dishes.view({"days": [str(int(days))]} if days else None)
+    name = " ".join(str(args.get("dish") or "").split()).casefold()
+    if name:
+        found = [dish for dish in current["dishes"] if dish["name"].casefold() == name]
+        if not found:
+            raise ToolError("Unbekanntes Gericht. Vorhandene Gerichte: "
+                            + (", ".join(dish["name"] for dish in current["dishes"]) or "keine"))
+        return {"days": current["days"], "dish": found[0]}
+    return {"days": current["days"],
+            "dishes": [{key: value for key, value in dish.items() if key != "history"} for dish in current["dishes"]]}
 
 
 def read_data(args: dict) -> dict:
@@ -366,6 +385,12 @@ TOOLS = [
                              "description": "Welcher Vorschlag gewählt wurde (bestimmt beim Split den 2. Teil)."},
             "with_basal": {"type": "boolean",
                            "description": "Den vorgeschlagenen Basal (basal_suggestion_units) mit eintragen."},
+            "dish": {"type": "string",
+                     "description": "Gericht aus dem Katalog (list_dishes), z. B. Porridge, nur bei KH. Ein "
+                                    "vorhandenes Gericht mit genau seinem Namen nennen, damit sein Verlauf "
+                                    "zusammenbleibt; ein neuer Name legt ein neues Gericht an."},
+            "description": {"type": "string",
+                            "description": "Was gegessen wurde, in Philipps Worten (Bestandteile, Mengen), nur bei KH."},
             "sport_kind": {"type": "string", "enum": SPORT_KINDS, "description": "Nur für kind=exercise."},
             "duration_minutes": {"type": "integer", "minimum": 1, "maximum": 1440,
                                  "description": "Nur für kind=exercise."},
@@ -419,10 +444,25 @@ TOOLS = [
         "handler": get_day,
     },
     {
+        "name": "list_dishes",
+        "title": "Gerichte und ihr Verlauf",
+        "description": "Gerichte-Katalog: je Gericht Anzahl Einträge, übliche KH und Ergebnis (ratio = "
+                       "Mahlzeitfaktor ÷ üblicher Faktor der Mahlzeitenart in den 30 Tagen davor; 1,2 = brauchte "
+                       "20 % mehr Insulin als üblich, effective_carbs = übliche KH × ratio). Mit dish: ein Gericht "
+                       "samt seinen letzten Hauptmahlzeiten (KH, IE, Faktor, BZ vorher/nachher, Ort).",
+        "inputSchema": {"type": "object", "properties": {
+            "dish": {"type": "string", "description": "Name eines Gerichts für dessen Verlauf."},
+            "days": {"type": "integer", "minimum": 1, "maximum": dishes.VIEW_MAX_DAYS,
+                     "description": f"Zeitraum in Tagen (Standard {dishes.VIEW_DAYS})."},
+        }, "additionalProperties": False},
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+        "handler": list_dishes,
+    },
+    {
         "name": "read_data",
         "title": "Daten lesen",
         "description": "Lese-API für längere Zeiträume: meals (Faktoren), window-events, entries (CGM), "
-                       "treatments, basal, data (alles), profile (Einstellungen und Nightscout-Profil).",
+                       "treatments, basal, meal-records (Einträge mit Gericht/Beschreibung samt Ergebnis), data (alles), profile (Einstellungen und Nightscout-Profil).",
         "inputSchema": {"type": "object", "properties": {
             "table": {"type": "string", "enum": READ_TABLES},
             "days": {"type": "integer", "minimum": 1, "maximum": read_api.API_MAX_DAYS,

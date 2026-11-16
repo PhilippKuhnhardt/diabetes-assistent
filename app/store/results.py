@@ -54,6 +54,7 @@ def day_inputs(start: datetime, end: datetime, day: str, shared: list | None = N
             ("SELECT id,at,units,notes,nightscout_synced FROM basal_doses WHERE at>=? AND at<? ORDER BY id", (lo, hi)),
             ("SELECT 1 FROM synced_days WHERE day=?", (day,)),
             ("SELECT event_id,place_id FROM entry_locations WHERE at>=? AND at<? ORDER BY event_id", (lo, hi)),
+            ("SELECT event_id,dish_id,description FROM meal_records WHERE at>=? AND at<? ORDER BY event_id", (lo, hi)),
         )]
         if shared is None:
             shared = _shared_inputs(db)
@@ -79,5 +80,6 @@ def _shared_inputs(db) -> list:
         "SELECT start_day,end_day FROM vacation_periods ORDER BY id",
         "SELECT id,name FROM places ORDER BY id",
         "SELECT start_at,zone FROM timezone_periods ORDER BY start_at,id",
+        "SELECT id,name FROM dishes ORDER BY id",
     )
     return [[tuple(row) for row in db.execute(sql).fetchall()] for sql in queries]
