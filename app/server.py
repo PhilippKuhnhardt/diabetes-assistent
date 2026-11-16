@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import mimetypes
 import os
@@ -132,6 +131,9 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _client(self) -> str:
+        return auth.client_address(self.headers, self.client_address[0])
+
     def _check_auth(self) -> bool:
         if self._authorized():
             return True
@@ -242,9 +244,9 @@ class Handler(BaseHTTPRequestHandler):
             except (ValueError, UnicodeDecodeError) as error:
                 self._response(400, {"error": str(error)})
                 return True
-            location = oauth.authorize_confirm(request, form.get("password", [""])[0])
+            location, error = oauth.authorize_confirm(request, form.get("password", [""])[0], self._client())
             if location is None:
-                self._html(200, oauth.authorize_page(request, error=True))
+                self._html(429 if error == "wait" else 200, oauth.authorize_page(request, error=error))
             else:
                 self._redirect(location)
             return True
@@ -357,13 +359,15 @@ class Handler(BaseHTTPRequestHandler):
                 supplied = form.get("password", [""])[0]
             except (ValueError, UnicodeDecodeError):
                 supplied = ""
-            if auth.password() and hmac.compare_digest(supplied, auth.password()):
-                secure = self.headers.get("X-Forwarded-Proto", "") == "https"
-                self._redirect("/", auth.cookie_header(secure=secure))
-            elif not auth.password():
+            if not auth.password():
                 self._redirect("/")
+                return
+            checked = auth.check_password(supplied, self._client())
+            if checked == "ok":
+                secure = self.headers.get("X-Forwarded-Proto", "") == "https"
+                self._redirect("/", auth.cookie_header(auth.new_session(), secure=secure))
             else:
-                self._redirect("/login?error=1")
+                self._redirect("/login?error=" + ("wait" if checked == "wait" else "1"))
             return
         if path == "/mcp":
             self._mcp()
@@ -371,6 +375,7 @@ class Handler(BaseHTTPRequestHandler):
         if self._oauth_post(path):
             return
         if path == "/logout":
+            auth.end_session(self.headers.get("Cookie", ""))
             secure = self.headers.get("X-Forwarded-Proto", "") == "https"
             self._redirect("/login", auth.cookie_header(secure=secure, clear=True))
             return

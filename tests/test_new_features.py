@@ -1,10 +1,13 @@
 import os
+import tempfile
 import unittest
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import patch
 
 from app import auth, dosing, episodes, server
+from app.store import db
 from app.ingestion import nightscout
 
 
@@ -234,16 +237,54 @@ class AuthTests(unittest.TestCase):
                     server.main()
                 init.assert_not_called()
 
-    def test_browser_cookie_survives_calls_and_changes_with_password(self):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.old_path = db.DB_PATH
+        db.DB_PATH = Path(self.temp.name) / "app.sqlite3"
+        db.init()
+        auth.reset_failures()
+
+    def tearDown(self):
+        db.DB_PATH = self.old_path
+        auth.reset_failures()
+        self.temp.cleanup()
+
+    def test_browser_session_survives_calls_and_ends_with_password_change(self):
         with patch.dict(os.environ, {"APP_PASSWORD": "private-pass"}):
-            cookie = auth.cookie_header()
+            cookie = auth.cookie_header(auth.new_session())
+            self.assertTrue(auth.authorized(cookie))
             self.assertTrue(auth.authorized(cookie))
             self.assertIn("HttpOnly", cookie)
             self.assertIn("Max-Age=", cookie)
             self.assertFalse(auth.authorized(""))
+            self.assertFalse(auth.authorized(auth.cookie_header("guessed-value")))
             with patch.dict(os.environ, {"APP_PASSWORD": "new-pass"}):
                 self.assertFalse(auth.authorized(cookie))
 
+    def test_logout_ends_only_that_session_on_the_server(self):
+        with patch.dict(os.environ, {"APP_PASSWORD": "private-pass"}):
+            phone = auth.cookie_header(auth.new_session())
+            laptop = auth.cookie_header(auth.new_session())
+            self.assertNotEqual(phone, laptop)
+            auth.end_session(phone)
+            self.assertFalse(auth.authorized(phone))
+            self.assertTrue(auth.authorized(laptop))
+
+    def test_wrong_passwords_are_braked_per_address_and_in_total(self):
+        with patch.dict(os.environ, {"APP_PASSWORD": "private-pass"}):
+            for _ in range(auth.CLIENT_FAILURES):
+                self.assertEqual(auth.check_password("guess", "203.0.113.1"), "wrong")
+            # Even the right password waits now, so guessing on cannot find it.
+            self.assertEqual(auth.check_password("private-pass", "203.0.113.1"), "wait")
+            self.assertGreater(auth.wait_seconds("203.0.113.1"), 0)
+            self.assertEqual(auth.check_password("private-pass", "198.51.100.7"), "ok")
+            for number in range(auth.TOTAL_FAILURES - auth.CLIENT_FAILURES):
+                auth.check_password("guess", f"192.0.2.{number}")
+            self.assertEqual(auth.check_password("private-pass", "198.51.100.7"), "wait")
+
+    def test_client_address_is_the_one_the_proxy_added(self):
+        self.assertEqual(auth.client_address({"X-Forwarded-For": "1.2.3.4, 203.0.113.9"}, "10.0.0.2"), "203.0.113.9")
+        self.assertEqual(auth.client_address({}, "10.0.0.2"), "10.0.0.2")
 
 if __name__ == "__main__":
     unittest.main()

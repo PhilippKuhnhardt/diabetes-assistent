@@ -23,9 +23,13 @@
         <input name="password" type="password" autocomplete="current-password" required autofocus>
       </label>
       <p id="login-error" class="form-error" hidden>Passwort stimmt nicht.</p>
+      <p id="login-wait" class="form-error" hidden>Zu viele falsche Passwörter. Bitte in einer Viertelstunde noch einmal versuchen.</p>
       <button class="primary" type="submit">Anmelden</button>
     </form>
   </main>
-  <script>document.getElementById("login-error").hidden = !location.search.includes("error=1");</script>
+  <script>
+    document.getElementById("login-error").hidden = !location.search.includes("error=1");
+    document.getElementById("login-wait").hidden = !location.search.includes("error=wait");
+  </script>
 </body>
 </html>
