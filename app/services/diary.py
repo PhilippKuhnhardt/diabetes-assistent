@@ -9,8 +9,8 @@ from decimal import Decimal
 from app import calculation, episodes
 from app.common import MEALS, local_day_range, local_zone, parse_instant, unit_text
 from app.ingestion import nightscout
-from app.services import day_view, places
-from app.store import config, mirror
+from app.services import day_view, dishes, places
+from app.store import config, dishes as dish_store, mirror
 
 
 DOSAGE_ROLES = {"meal-dose", "correction", "snack"}
@@ -151,6 +151,21 @@ def save_diary_treatment(payload: dict) -> dict:
     if "place_id" in payload and carbs > 0:
         # The edit dialog's place.
         places.record(event_id, at, {"place_id": payload["place_id"]})
+    if carbs > 0 and ("dish_id" in payload or "dish_name" in payload or "description" in payload):
+        # What the entry was (entry form, edit dialog, agent); a missing key keeps the stored value.
+        stored = dish_store.records().get(event_id) or {}
+        dishes.record(event_id, at, {
+            "dish_id": payload["dish_id"] if "dish_id" in payload else stored.get("dish_id"),
+            "dish_name": payload.get("dish_name"),
+            "description": payload["description"] if "description" in payload else stored.get("description"),
+        }, carbs)
+    elif carbs > 0:
+        dish_store.move_record(event_id, at, float(carbs))
+    else:
+        dish_store.delete_record(event_id)
+    if payload.get("agent_session") and carbs > 0:
+        from app.services import agent
+        agent.link(payload["agent_session"], event_id)
     return {"id": record_id or None, "event_id": event_id, "day": day}
 
 
@@ -182,9 +197,12 @@ def delete_treatment(payload: dict) -> dict:
     _, settings = config.get_settings()
     start, end = local_day_range(day, settings["timezone"])
     _, treatments = nightscout.fetch_range(start, end)
-    if not any(item.get("_id") == record_id for item in treatments):
+    found = next((item for item in treatments if item.get("_id") == record_id), None)
+    if found is None:
         raise ValueError("Eintrag in Nightscout nicht gefunden")
     nightscout.delete_treatment(record_id)
+    if episodes.event_id(found):
+        dish_store.delete_record(episodes.event_id(found))
     mirror.delete_cached_treatment(record_id)
     return {"id": record_id}
 

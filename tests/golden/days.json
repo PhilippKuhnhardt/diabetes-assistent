@@ -8,6 +8,7 @@
   "day_start": "2026-08-28T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 444,
    "sha256": "785fe8c1d9691f62bfc708cc441da2231b5e0a436ccb9b74fb8c13216589c71c",
@@ -102,6 +103,7 @@
      "window_minutes": 180
     },
     "carbs": 85,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -255,6 +257,7 @@
      "window_minutes": 180
     },
     "carbs": 70,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -399,6 +402,7 @@
      "window_minutes": 180
     },
     "carbs": 45,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -501,8 +505,11 @@
     "basal_units": 0,
     "carbs": 85,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-08-29T05:25:00+00:00",
@@ -521,8 +528,11 @@
     "basal_units": 0,
     "carbs": 70,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-08-29T09:50:00+00:00",
@@ -541,8 +551,11 @@
     "basal_units": 0,
     "carbs": 45,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-08-29T16:25:00+00:00",
@@ -671,6 +684,7 @@
   "day_start": "2026-08-29T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "f7abb9e17a2aaffc38174af51339b526de28853c91f7ce0793466123d39159f2",
@@ -765,6 +779,7 @@
      "window_minutes": 180
     },
     "carbs": 55,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -935,6 +950,7 @@
      "window_minutes": 180
     },
     "carbs": 105,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -1114,6 +1130,7 @@
      "window_minutes": 180
     },
     "carbs": 35,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -1216,8 +1233,11 @@
     "basal_units": 0,
     "carbs": 55,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-08-30T05:05:00+00:00",
@@ -1236,8 +1256,11 @@
     "basal_units": 0,
     "carbs": 105,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-08-30T10:30:00+00:00",
@@ -1256,8 +1279,11 @@
     "basal_units": 0,
     "carbs": 10,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-08-30T12:05:00+00:00",
@@ -1276,8 +1302,11 @@
     "basal_units": 0,
     "carbs": 35,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-08-30T16:20:00+00:00",
@@ -1444,6 +1473,7 @@
   "day_start": "2026-08-30T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "328754cc483909b54d3c1ad4d55a1a4b2a16d3d32f6325babb4848ebbca055be",
@@ -1538,6 +1568,7 @@
      "window_minutes": 180
     },
     "carbs": 100,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -1691,6 +1722,7 @@
      "window_minutes": 180
     },
     "carbs": 35,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -1835,6 +1867,7 @@
      "window_minutes": 180
     },
     "carbs": 110,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -1937,8 +1970,11 @@
     "basal_units": 0,
     "carbs": 100,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-08-31T04:50:00+00:00",
@@ -1957,8 +1993,11 @@
     "basal_units": 0,
     "carbs": 35,
     "carbs_certainty": "unsure",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": true,
     "glucose_at": "2026-08-31T10:25:00+00:00",
@@ -1977,8 +2016,11 @@
     "basal_units": 0,
     "carbs": 110,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-08-31T17:10:00+00:00",
@@ -2145,6 +2187,7 @@
   "day_start": "2026-08-31T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "9e2df004ded7fcdff2f58fb0cd075325feec4dedf83dbf101476e6ec804dc16f",
@@ -2239,6 +2282,7 @@
      "window_minutes": 180
     },
     "carbs": 50,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -2392,6 +2436,7 @@
      "window_minutes": 180
     },
     "carbs": 100,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -2545,6 +2590,7 @@
      "window_minutes": 180
     },
     "carbs": 85,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -2656,8 +2702,11 @@
     "basal_units": 0,
     "carbs": 50,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-01T05:50:00+00:00",
@@ -2676,8 +2725,11 @@
     "basal_units": 0,
     "carbs": 100,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-01T09:40:00+00:00",
@@ -2696,8 +2748,11 @@
     "basal_units": 0,
     "carbs": 85,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-01T17:15:00+00:00",
@@ -2716,8 +2771,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-01T19:35:00+00:00",
@@ -2865,6 +2923,7 @@
   "day_start": "2026-09-01T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "81f49d86e532fe0eaf733207ef63531e6aac1ed86fbe58ebef69ddbdc6283296",
@@ -2959,6 +3018,7 @@
      "window_minutes": 180
     },
     "carbs": 95,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -3112,6 +3172,7 @@
      "window_minutes": 180
     },
     "carbs": 80,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -3214,8 +3275,11 @@
     "basal_units": 0,
     "carbs": 95,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-02T10:35:00+00:00",
@@ -3234,8 +3298,11 @@
     "basal_units": 0,
     "carbs": 80,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-02T16:30:00+00:00",
@@ -3402,6 +3469,7 @@
   "day_start": "2026-09-02T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "b3c12c505a4265179a0d60c5990f79e52b3e3800e969e930703150278fe40844",
@@ -3504,6 +3572,7 @@
      "window_minutes": 180
     },
     "carbs": 70,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -3692,6 +3761,7 @@
      "window_minutes": 180
     },
     "carbs": 75,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -3863,6 +3933,7 @@
      "window_minutes": 180
     },
     "carbs": 80,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -3965,8 +4036,11 @@
     "basal_units": 0,
     "carbs": 70,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-03T05:20:00+00:00",
@@ -3985,8 +4059,11 @@
     "basal_units": 0,
     "carbs": 15,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-03T06:20:00+00:00",
@@ -4005,8 +4082,11 @@
     "basal_units": 0,
     "carbs": 75,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-03T10:15:00+00:00",
@@ -4025,8 +4105,11 @@
     "basal_units": 0,
     "carbs": 15,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-03T11:50:00+00:00",
@@ -4045,8 +4128,11 @@
     "basal_units": 0,
     "carbs": 80,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-03T17:30:00+00:00",
@@ -4232,6 +4318,7 @@
   "day_start": "2026-09-03T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "4cb7b389f6404a6baba142f469a3ea90eabb68a0fc2b385da3c05f40720c6354",
@@ -4337,6 +4424,7 @@
      "window_minutes": 180
     },
     "carbs": 110,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -4490,6 +4578,7 @@
      "window_minutes": 180
     },
     "carbs": 35,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -4634,6 +4723,7 @@
      "window_minutes": 180
     },
     "carbs": 45,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -4743,8 +4833,11 @@
     "basal_units": 0,
     "carbs": 110,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-04T06:10:00+00:00",
@@ -4763,8 +4856,11 @@
     "basal_units": 0,
     "carbs": 35,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-04T09:35:00+00:00",
@@ -4783,8 +4879,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 60,
     "eventType": "Exercise",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-04T13:50:00+00:00",
@@ -4806,8 +4905,11 @@
     "basal_units": 0,
     "carbs": 45,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-04T16:20:00+00:00",
@@ -4982,6 +5084,7 @@
   "day_start": "2026-09-04T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "f37b7b6945751630bd16df1dd8938c815d15875797d612da582cbe83d08fa926",
@@ -5075,6 +5178,7 @@
      "window_minutes": 180
     },
     "carbs": 55,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -5228,6 +5332,7 @@
      "window_minutes": 180
     },
     "carbs": 45,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -5372,6 +5477,7 @@
      "window_minutes": 180
     },
     "carbs": 110,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -5474,8 +5580,11 @@
     "basal_units": 0,
     "carbs": 55,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-05T05:50:00+00:00",
@@ -5494,8 +5603,11 @@
     "basal_units": 0,
     "carbs": 45,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-05T10:30:00+00:00",
@@ -5514,8 +5626,11 @@
     "basal_units": 0,
     "carbs": 110,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-05T17:30:00+00:00",
@@ -5709,6 +5824,7 @@
   "day_start": "2026-09-05T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 552,
    "sha256": "a3012f33f8e976a758689045975f3389041d028591068c44b94e06d1d44e1478",
@@ -5803,6 +5919,7 @@
      "window_minutes": 180
     },
     "carbs": 65,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -5956,6 +6073,7 @@
      "window_minutes": 180
     },
     "carbs": 30,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -6100,6 +6218,7 @@
      "window_minutes": 180
     },
     "carbs": 95,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -6202,8 +6321,11 @@
     "basal_units": "17",
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Basal",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-06T05:05:00+00:00",
@@ -6223,8 +6345,11 @@
     "basal_units": 0,
     "carbs": 65,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-06T05:55:00+00:00",
@@ -6243,8 +6368,11 @@
     "basal_units": 0,
     "carbs": 30,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-06T09:45:00+00:00",
@@ -6263,8 +6391,11 @@
     "basal_units": 0,
     "carbs": 95,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-06T17:10:00+00:00",
@@ -6431,6 +6562,7 @@
   "day_start": "2026-09-06T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 552,
    "sha256": "da0341b7f507e3a2924c2b9434e021c74b398078e38f241ea5663707039ce610",
@@ -6454,6 +6586,7 @@
      "window_start": "2026-09-07T05:10:00+00:00"
     },
     "carbs": 70,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -6623,6 +6756,7 @@
      "window_minutes": 180
     },
     "carbs": 50,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -6803,6 +6937,7 @@
      "window_minutes": 180
     },
     "carbs": 35,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -6923,8 +7058,11 @@
     "basal_units": 0,
     "carbs": 70,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-07T05:10:00+00:00",
@@ -6943,8 +7081,11 @@
     "basal_units": 0,
     "carbs": 50,
     "carbs_certainty": "unsure",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": true,
     "glucose_at": "2026-09-07T09:45:00+00:00",
@@ -6963,8 +7104,11 @@
     "basal_units": 0,
     "carbs": 15,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-07T11:20:00+00:00",
@@ -6983,8 +7127,11 @@
     "basal_units": 0,
     "carbs": 35,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-07T17:20:00+00:00",
@@ -7003,8 +7150,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-07T19:40:00+00:00",
@@ -7190,6 +7340,7 @@
   "day_start": "2026-09-07T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "76b5a344f1e39168623fc0292f966872cd8247d68fdd120de251073bcbc55019",
@@ -7283,6 +7434,7 @@
      "window_minutes": 180
     },
     "carbs": 65,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -7436,6 +7588,7 @@
      "window_minutes": 180
     },
     "carbs": 75,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -7581,6 +7734,7 @@
      "window_minutes": 180
     },
     "carbs": 80,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -7683,8 +7837,11 @@
     "basal_units": 0,
     "carbs": 65,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-08T06:10:00+00:00",
@@ -7703,8 +7860,11 @@
     "basal_units": 0,
     "carbs": 75,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-08T09:35:00+00:00",
@@ -7723,8 +7883,11 @@
     "basal_units": 0,
     "carbs": 80,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-08T16:40:00+00:00",
@@ -7891,6 +8054,7 @@
   "day_start": "2026-09-08T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "d5c1355e8d7033b0439b38fb74e58d202e0c108716f87e315f3ba21296edce20",
@@ -7984,6 +8148,7 @@
      "window_minutes": 180
     },
     "carbs": 60,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -8137,6 +8302,7 @@
      "window_minutes": 180
     },
     "carbs": 55,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -8290,6 +8456,7 @@
      "window_minutes": 180
     },
     "carbs": 75,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -8392,8 +8559,11 @@
     "basal_units": 0,
     "carbs": 60,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-09T06:05:00+00:00",
@@ -8412,8 +8582,11 @@
     "basal_units": 0,
     "carbs": 55,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-09T10:50:00+00:00",
@@ -8432,8 +8605,11 @@
     "basal_units": 0,
     "carbs": 75,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-09T16:45:00+00:00",
@@ -8600,6 +8776,7 @@
   "day_start": "2026-09-09T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "183a60063323c8832ded8ac94b7f46df57ca387b12fd837f637bb2206b703947",
@@ -8694,6 +8871,7 @@
      "window_minutes": 180
     },
     "carbs": 75,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -8838,6 +9016,7 @@
      "window_minutes": 180
     },
     "carbs": 65,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -8950,8 +9129,11 @@
     "basal_units": 0,
     "carbs": 75,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-10T05:20:00+00:00",
@@ -8970,8 +9152,11 @@
     "basal_units": 0,
     "carbs": 30,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-10T10:05:00+00:00",
@@ -8990,8 +9175,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-10T10:15:00+00:00",
@@ -9010,8 +9198,11 @@
     "basal_units": 0,
     "carbs": 65,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-10T17:15:00+00:00",
@@ -9159,6 +9350,7 @@
   "day_start": "2026-09-10T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "552eced86afcb261ac9f9bf3d5642ec38c1669fd0adb4d7d39c7e15e9e87cbe3",
@@ -9270,6 +9462,7 @@
      "window_minutes": 180
     },
     "carbs": 100,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -9441,6 +9634,7 @@
      "window_minutes": 180
     },
     "carbs": 110,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -9543,8 +9737,11 @@
     "basal_units": 0,
     "carbs": 100,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-11T09:40:00+00:00",
@@ -9563,8 +9760,11 @@
     "basal_units": 0,
     "carbs": 25,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-11T11:15:00+00:00",
@@ -9583,8 +9783,11 @@
     "basal_units": 0,
     "carbs": 110,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-11T16:35:00+00:00",
@@ -9732,6 +9935,7 @@
   "day_start": "2026-09-11T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "aee674977a0c60f26dccde0dd7e6110180ee509df2f7552ee37ded42b1766fa9",
@@ -9826,6 +10030,7 @@
      "window_minutes": 180
     },
     "carbs": 95,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -9979,6 +10184,7 @@
      "window_minutes": 180
     },
     "carbs": 110,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -10123,6 +10329,7 @@
      "window_minutes": 180
     },
     "carbs": 105,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -10225,8 +10432,11 @@
     "basal_units": 0,
     "carbs": 95,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-12T06:05:00+00:00",
@@ -10245,8 +10455,11 @@
     "basal_units": 0,
     "carbs": 110,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-12T10:45:00+00:00",
@@ -10265,8 +10478,11 @@
     "basal_units": 0,
     "carbs": 105,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-12T17:25:00+00:00",
@@ -10414,6 +10630,7 @@
   "day_start": "2026-09-12T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "d7803a50acf8b9857b5d39ab2f6a642a683ac005b46fde7b75f3c95f251f4d68",
@@ -10508,6 +10725,7 @@
      "window_minutes": 180
     },
     "carbs": 35,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -10661,6 +10879,7 @@
      "window_minutes": 180
     },
     "carbs": 95,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -10832,6 +11051,7 @@
      "window_minutes": 180
     },
     "carbs": 90,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -10970,8 +11190,11 @@
     "basal_units": 0,
     "carbs": 35,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-13T05:25:00+00:00",
@@ -10990,8 +11213,11 @@
     "basal_units": 0,
     "carbs": 95,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-13T10:55:00+00:00",
@@ -11010,8 +11236,11 @@
     "basal_units": 0,
     "carbs": 90,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-13T16:55:00+00:00",
@@ -11030,8 +11259,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-13T17:20:00+00:00",
@@ -11050,8 +11282,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-13T19:15:00+00:00",
@@ -11237,6 +11472,7 @@
   "day_start": "2026-09-13T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "fa57345f0caf8eb83fe19eec84125404e383c864b19025b9464d87e18af67dc3",
@@ -11331,6 +11567,7 @@
      "window_minutes": 180
     },
     "carbs": 45,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -11484,6 +11721,7 @@
      "window_minutes": 180
     },
     "carbs": 90,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -11628,6 +11866,7 @@
      "window_minutes": 180
     },
     "carbs": 110,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -11730,8 +11969,11 @@
     "basal_units": 0,
     "carbs": 45,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-14T05:25:00+00:00",
@@ -11750,8 +11992,11 @@
     "basal_units": 0,
     "carbs": 90,
     "carbs_certainty": "unsure",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": true,
     "glucose_at": "2026-09-14T10:25:00+00:00",
@@ -11770,8 +12015,11 @@
     "basal_units": 0,
     "carbs": 110,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-14T16:35:00+00:00",
@@ -11965,6 +12213,7 @@
   "day_start": "2026-09-14T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "434632616749cf2c00fdd407bdf04ebb08c863c1483a7222270c3433fa479d20",
@@ -12071,6 +12320,7 @@
      "window_minutes": 180
     },
     "carbs": 30,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -12241,6 +12491,7 @@
      "window_minutes": 180
     },
     "carbs": 45,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -12427,6 +12678,7 @@
      "window_minutes": 180
     },
     "carbs": 75,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -12536,8 +12788,11 @@
     "basal_units": 0,
     "carbs": 30,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-15T05:50:00+00:00",
@@ -12556,8 +12811,11 @@
     "basal_units": 0,
     "carbs": 45,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-15T10:30:00+00:00",
@@ -12576,8 +12834,11 @@
     "basal_units": 0,
     "carbs": 25,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-15T12:05:00+00:00",
@@ -12596,8 +12857,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 60,
     "eventType": "Exercise",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-15T13:40:00+00:00",
@@ -12619,8 +12883,11 @@
     "basal_units": 0,
     "carbs": 75,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-15T16:10:00+00:00",
@@ -12833,6 +13100,7 @@
   "day_start": "2026-09-15T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "e2d37a5f4546e9eb59e306e752f7b2fd1ed97b1e21034c1888f6293355b2cc69",
@@ -12927,6 +13195,7 @@
      "window_minutes": 180
     },
     "carbs": 80,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -13080,6 +13349,7 @@
      "window_minutes": 180
     },
     "carbs": 30,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -13224,6 +13494,7 @@
      "window_minutes": 180
     },
     "carbs": 70,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -13326,8 +13597,11 @@
     "basal_units": "17",
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Basal",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-16T05:05:00+00:00",
@@ -13347,8 +13621,11 @@
     "basal_units": 0,
     "carbs": 80,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-16T05:25:00+00:00",
@@ -13367,8 +13644,11 @@
     "basal_units": 0,
     "carbs": 30,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-16T10:00:00+00:00",
@@ -13387,8 +13667,11 @@
     "basal_units": 0,
     "carbs": 70,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-16T17:25:00+00:00",
@@ -13593,6 +13876,7 @@
   "day_start": "2026-09-16T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "a7befb632a981d9377d58d56c8a14de270f6b8c2930863a1e91c6290d460f675",
@@ -13687,6 +13971,7 @@
      "window_minutes": 180
     },
     "carbs": 30,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -13840,6 +14125,7 @@
      "window_minutes": 180
     },
     "carbs": 95,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -13984,6 +14270,7 @@
      "window_minutes": 180
     },
     "carbs": 90,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -14086,8 +14373,11 @@
     "basal_units": 0,
     "carbs": 30,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-17T04:55:00+00:00",
@@ -14106,8 +14396,11 @@
     "basal_units": 0,
     "carbs": 95,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-17T09:55:00+00:00",
@@ -14126,8 +14419,11 @@
     "basal_units": 0,
     "carbs": 90,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-17T17:05:00+00:00",
@@ -14275,6 +14571,7 @@
   "day_start": "2026-09-17T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "030f9cb2d4b45a0c591815764f140f0795a802b1de77121328ff09373cbdbc9b",
@@ -14369,6 +14666,7 @@
      "window_minutes": 170
     },
     "carbs": 30,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -14522,6 +14820,7 @@
      "window_minutes": 170
     },
     "carbs": 35,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -14666,6 +14965,7 @@
      "window_minutes": 170
     },
     "carbs": 95,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -14768,8 +15068,11 @@
     "basal_units": 0,
     "carbs": 30,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-18T05:00:00+00:00",
@@ -14788,8 +15091,11 @@
     "basal_units": 0,
     "carbs": 35,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-18T10:35:00+00:00",
@@ -14808,8 +15114,11 @@
     "basal_units": 0,
     "carbs": 95,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-18T17:10:00+00:00",
@@ -14976,6 +15285,7 @@
   "day_start": "2026-09-18T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "e86a2e358e8643a5005a60d72e6abc2dfe90ccc03ac72600a3de6181be4ca0ce",
@@ -15077,6 +15387,7 @@
      "window_minutes": 170
     },
     "carbs": 110,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -15265,6 +15576,7 @@
      "window_minutes": 170
     },
     "carbs": 65,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -15445,6 +15757,7 @@
      "window_minutes": 170
     },
     "carbs": 40,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -15556,8 +15869,11 @@
     "basal_units": 0,
     "carbs": 110,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-19T05:15:00+00:00",
@@ -15576,8 +15892,11 @@
     "basal_units": 0,
     "carbs": 15,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-19T06:15:00+00:00",
@@ -15596,8 +15915,11 @@
     "basal_units": 0,
     "carbs": 65,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-19T09:45:00+00:00",
@@ -15616,8 +15938,11 @@
     "basal_units": 0,
     "carbs": 25,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-19T11:20:00+00:00",
@@ -15636,8 +15961,11 @@
     "basal_units": 0,
     "carbs": 40,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-19T16:40:00+00:00",
@@ -15656,8 +15984,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-19T19:00:00+00:00",
@@ -15843,6 +16174,7 @@
   "day_start": "2026-09-19T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "39030884d902551f49c357c82e075fe9478176777b0a7bb96209ed70cf23999e",
@@ -15962,6 +16294,7 @@
      "window_minutes": 170
     },
     "carbs": 70,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -16117,6 +16450,7 @@
      "window_minutes": 170
     },
     "carbs": 40,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -16270,6 +16604,7 @@
      "window_minutes": 170
     },
     "carbs": 35,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -16372,8 +16707,11 @@
     "basal_units": 0,
     "carbs": 70,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-20T10:05:00+00:00",
@@ -16392,8 +16730,11 @@
     "basal_units": 0,
     "carbs": 40,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-20T11:15:00+00:00",
@@ -16412,8 +16753,11 @@
     "basal_units": 0,
     "carbs": 35,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-20T16:50:00+00:00",
@@ -16580,6 +16924,7 @@
   "day_start": "2026-09-20T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "3e6acd509941c957ae5bc6990de2e20baf389214e230a7161331385ca97df909",
@@ -16673,6 +17018,7 @@
      "window_minutes": 170
     },
     "carbs": 65,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -16826,6 +17172,7 @@
      "window_minutes": 170
     },
     "carbs": 80,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -16970,6 +17317,7 @@
      "window_minutes": 170
     },
     "carbs": 90,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -17072,8 +17420,11 @@
     "basal_units": 0,
     "carbs": 65,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-21T06:05:00+00:00",
@@ -17092,8 +17443,11 @@
     "basal_units": 0,
     "carbs": 80,
     "carbs_certainty": "unsure",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": true,
     "glucose_at": "2026-09-21T09:40:00+00:00",
@@ -17112,8 +17466,11 @@
     "basal_units": 0,
     "carbs": 90,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-21T16:25:00+00:00",
@@ -17261,6 +17618,7 @@
   "day_start": "2026-09-21T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "manual",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "d6cb5787587d1a9d6034bf77eb735de283810684be37fdf41df1c5429af68909",
@@ -17354,6 +17712,7 @@
      "window_minutes": 170
     },
     "carbs": 40,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -17507,6 +17866,7 @@
      "window_minutes": 170
     },
     "carbs": 90,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -17651,6 +18011,7 @@
      "window_minutes": 170
     },
     "carbs": 40,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -17753,8 +18114,11 @@
     "basal_units": 0,
     "carbs": 40,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-22T05:20:00+00:00",
@@ -17773,8 +18137,11 @@
     "basal_units": 0,
     "carbs": 90,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-22T09:40:00+00:00",
@@ -17793,8 +18160,11 @@
     "basal_units": 0,
     "carbs": 40,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-22T16:55:00+00:00",
@@ -17942,6 +18312,7 @@
   "day_start": "2026-09-22T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "112973d7ae5528ca1e940fdb5cbae9fce24f3e81eefaf9d02409fffcbfe095e4",
@@ -18035,6 +18406,7 @@
      "window_minutes": 170
     },
     "carbs": 35,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -18205,6 +18577,7 @@
      "window_minutes": 170
     },
     "carbs": 45,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -18376,6 +18749,7 @@
      "window_minutes": 170
     },
     "carbs": 30,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -18478,8 +18852,11 @@
     "basal_units": 0,
     "carbs": 35,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-23T05:25:00+00:00",
@@ -18498,8 +18875,11 @@
     "basal_units": 0,
     "carbs": 45,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-23T09:40:00+00:00",
@@ -18518,8 +18898,11 @@
     "basal_units": 0,
     "carbs": 10,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-23T11:15:00+00:00",
@@ -18538,8 +18921,11 @@
     "basal_units": 0,
     "carbs": 30,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-23T16:40:00+00:00",
@@ -18706,6 +19092,7 @@
   "day_start": "2026-09-23T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 544,
    "sha256": "6a9e63ad7791c78d5278e0c8d62b8d581706c54f3d2b610ca1ec497fbb0db669",
@@ -18800,6 +19187,7 @@
      "window_minutes": 170
     },
     "carbs": 105,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -18873,6 +19261,7 @@
      "window_start": "2026-09-24T10:40:00+00:00"
     },
     "carbs": 90,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -19016,6 +19405,7 @@
      "window_minutes": 170
     },
     "carbs": 110,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -19118,8 +19508,11 @@
     "basal_units": 0,
     "carbs": 105,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-24T05:25:00+00:00",
@@ -19138,8 +19531,11 @@
     "basal_units": 0,
     "carbs": 90,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-24T10:40:00+00:00",
@@ -19158,8 +19554,11 @@
     "basal_units": 0,
     "carbs": 110,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-24T17:05:00+00:00",
@@ -19315,6 +19714,7 @@
   "day_start": "2026-09-24T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 544,
    "sha256": "79a7747f7a7d86482c434118f9045889e9a46b0f96e5632f47871a3c55b0b218",
@@ -19409,6 +19809,7 @@
      "window_minutes": 170
     },
     "carbs": 40,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -19562,6 +19963,7 @@
      "window_minutes": 170
     },
     "carbs": 85,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -19715,6 +20117,7 @@
      "window_minutes": 170
     },
     "carbs": 85,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -19835,8 +20238,11 @@
     "basal_units": 0,
     "carbs": 40,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-25T05:25:00+00:00",
@@ -19855,8 +20261,11 @@
     "basal_units": 0,
     "carbs": 85,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-25T09:55:00+00:00",
@@ -19875,8 +20284,11 @@
     "basal_units": 0,
     "carbs": 85,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-25T16:40:00+00:00",
@@ -19895,8 +20307,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-25T19:00:00+00:00",
@@ -20090,6 +20505,7 @@
   "day_start": "2026-09-25T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "fc68d6384ffa7bd92ed330f8639720eb65dd06ffbdc4cae79101ad58737893a1",
@@ -20196,6 +20612,7 @@
      "window_minutes": 170
     },
     "carbs": 110,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -20349,6 +20766,7 @@
      "window_minutes": 170
     },
     "carbs": 105,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -20493,6 +20911,7 @@
      "window_minutes": 170
     },
     "carbs": 110,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -20602,8 +21021,11 @@
     "basal_units": "17",
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Basal",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-26T05:05:00+00:00",
@@ -20623,8 +21045,11 @@
     "basal_units": 0,
     "carbs": 110,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-26T05:35:00+00:00",
@@ -20643,8 +21068,11 @@
     "basal_units": 0,
     "carbs": 105,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-26T09:45:00+00:00",
@@ -20663,8 +21091,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 60,
     "eventType": "Exercise",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-26T13:45:00+00:00",
@@ -20686,8 +21117,11 @@
     "basal_units": 0,
     "carbs": 110,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-26T16:15:00+00:00",
@@ -20911,6 +21345,7 @@
   "day_start": "2026-09-26T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "manual",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "92a03cd363c1ff976341f8335e90d0b3e2f659f9eda2aa7420be46f745d8f2f1",
@@ -21012,6 +21447,7 @@
      "window_minutes": 170
     },
     "carbs": 55,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -21200,6 +21636,7 @@
      "window_minutes": 170
     },
     "carbs": 35,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -21371,6 +21808,7 @@
      "window_minutes": 170
     },
     "carbs": 60,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -21473,8 +21911,11 @@
     "basal_units": 0,
     "carbs": 55,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-27T05:25:00+00:00",
@@ -21493,8 +21934,11 @@
     "basal_units": 0,
     "carbs": 15,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-27T06:25:00+00:00",
@@ -21513,8 +21957,11 @@
     "basal_units": 0,
     "carbs": 35,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-27T10:05:00+00:00",
@@ -21533,8 +21980,11 @@
     "basal_units": 0,
     "carbs": 25,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-27T11:40:00+00:00",
@@ -21553,8 +22003,11 @@
     "basal_units": 0,
     "carbs": 60,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-27T17:05:00+00:00",
@@ -21759,6 +22212,7 @@
   "day_start": "2026-09-27T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "d5c5f0f9a519d34fb93ff28db56efbd17b71deccc33bdce76a753a0ba9464aa2",
@@ -21852,6 +22306,7 @@
      "window_minutes": 170
     },
     "carbs": 70,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -22005,6 +22460,7 @@
      "window_minutes": 170
     },
     "carbs": 75,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -22158,6 +22614,7 @@
      "window_minutes": 170
     },
     "carbs": 70,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -22261,8 +22718,11 @@
     "basal_units": 0,
     "carbs": 70,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-28T05:20:00+00:00",
@@ -22281,8 +22741,11 @@
     "basal_units": 0,
     "carbs": 75,
     "carbs_certainty": "unsure",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": true,
     "glucose_at": "2026-09-28T10:30:00+00:00",
@@ -22301,8 +22764,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 30,
     "eventType": "Temp Basal",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-28T13:00:00+00:00",
@@ -22321,8 +22787,11 @@
     "basal_units": 0,
     "carbs": 70,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-28T16:15:00+00:00",
@@ -22470,6 +22939,7 @@
   "day_start": "2026-09-28T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "08e17dfc8847f91ea6bc96f5ecb2f12e0fbbaa03906816daf73369a481930f7e",
@@ -22563,6 +23033,7 @@
      "window_minutes": 170
     },
     "carbs": 95,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -22707,6 +23178,7 @@
      "window_minutes": 170
     },
     "carbs": 50,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -22809,8 +23281,11 @@
     "basal_units": 0,
     "carbs": 95,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-29T09:45:00+00:00",
@@ -22829,8 +23304,11 @@
     "basal_units": 0,
     "carbs": 50,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-29T16:40:00+00:00",
@@ -22978,6 +23456,7 @@
   "day_start": "2026-09-29T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "e06ec38b9266fef31c37e24f1419f6a022da6bea0fcb4a3f49d6af52804ded82",
@@ -23071,6 +23550,7 @@
      "window_minutes": 170
     },
     "carbs": 80,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -23224,6 +23704,7 @@
      "window_minutes": 170
     },
     "carbs": 35,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -23368,6 +23849,7 @@
      "window_minutes": 170
     },
     "carbs": 70,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -23470,8 +23952,11 @@
     "basal_units": 0,
     "carbs": 80,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-30T05:50:00+00:00",
@@ -23490,8 +23975,11 @@
     "basal_units": 0,
     "carbs": 35,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-30T10:00:00+00:00",
@@ -23510,8 +23998,11 @@
     "basal_units": 0,
     "carbs": 70,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-30T16:20:00+00:00",
@@ -23659,6 +24150,7 @@
   "day_start": "2026-09-30T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "vacation",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "4e459ee0c2e5314988f07e5919b0bcf41d973891165c40089ce7783f30f429d7",
@@ -23752,6 +24244,7 @@
      "window_minutes": 170
     },
     "carbs": 100,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -23922,6 +24415,7 @@
      "window_minutes": 170
     },
     "carbs": 95,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -24110,6 +24604,7 @@
      "window_minutes": 170
     },
     "carbs": 50,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -24230,8 +24725,11 @@
     "basal_units": 0,
     "carbs": 100,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-01T05:20:00+00:00",
@@ -24250,8 +24748,11 @@
     "basal_units": 0,
     "carbs": 95,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-01T10:40:00+00:00",
@@ -24270,8 +24771,11 @@
     "basal_units": 0,
     "carbs": 20,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-01T12:15:00+00:00",
@@ -24290,8 +24794,11 @@
     "basal_units": 0,
     "carbs": 50,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-01T16:25:00+00:00",
@@ -24310,8 +24817,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Correction Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-01T18:45:00+00:00",
@@ -24497,6 +25007,7 @@
   "day_start": "2026-10-01T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "vacation",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "955cafaf5cda196e1555ed61ea8f22d9bf29c9d8aec47dc9acd04db8e06dcb45",
@@ -24591,6 +25102,7 @@
      "window_minutes": 170
     },
     "carbs": 35,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -24744,6 +25256,7 @@
      "window_minutes": 170
     },
     "carbs": 100,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -24888,6 +25401,7 @@
      "window_minutes": 170
     },
     "carbs": 100,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -24990,8 +25504,11 @@
     "basal_units": 0,
     "carbs": 35,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-02T05:55:00+00:00",
@@ -25010,8 +25527,11 @@
     "basal_units": 0,
     "carbs": 100,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-02T10:30:00+00:00",
@@ -25030,8 +25550,11 @@
     "basal_units": 0,
     "carbs": 100,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-02T17:15:00+00:00",
@@ -25217,6 +25740,7 @@
   "day_start": "2026-10-02T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "5ab09767ad3dfa2af0d5aafc7e062445be41a5009df03b081561d8deaf243ffb",
@@ -25311,6 +25835,7 @@
      "window_minutes": 170
     },
     "carbs": 105,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -25464,6 +25989,7 @@
      "window_minutes": 170
     },
     "carbs": 55,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -25617,6 +26143,7 @@
      "window_minutes": 170
     },
     "carbs": 110,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -25719,8 +26246,11 @@
     "basal_units": 0,
     "carbs": 105,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-03T06:00:00+00:00",
@@ -25739,8 +26269,11 @@
     "basal_units": 0,
     "carbs": 55,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-03T10:55:00+00:00",
@@ -25759,8 +26292,11 @@
     "basal_units": 0,
     "carbs": 110,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-03T16:35:00+00:00",
@@ -25908,6 +26444,7 @@
   "day_start": "2026-10-03T22:00:00+00:00",
   "day_type": "free",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "df7ba69c9b06f44ff1c863d466d753a25a0904c9a451ee10114b7e0a6e525ad8",
@@ -26002,6 +26539,7 @@
      "window_minutes": 170
     },
     "carbs": 80,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -26155,6 +26693,7 @@
      "window_minutes": 170
     },
     "carbs": 95,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -26299,6 +26838,7 @@
      "window_minutes": 170
     },
     "carbs": 75,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -26401,8 +26941,11 @@
     "basal_units": 0,
     "carbs": 80,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-04T05:45:00+00:00",
@@ -26421,8 +26964,11 @@
     "basal_units": 0,
     "carbs": 95,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-04T09:50:00+00:00",
@@ -26441,8 +26987,11 @@
     "basal_units": 0,
     "carbs": 75,
     "carbs_certainty": "weighed",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-04T17:10:00+00:00",
@@ -26617,6 +27166,7 @@
   "day_start": "2026-10-04T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 564,
    "sha256": "0a30e45990ede70af3c91b1d65894529a5a443e0e320aeb9a55ede5c19c427fd",
@@ -26719,6 +27269,7 @@
      "window_minutes": 170
     },
     "carbs": 85,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -26907,6 +27458,7 @@
      "window_minutes": 170
     },
     "carbs": 100,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -27078,6 +27630,7 @@
      "window_minutes": 170
     },
     "carbs": 95,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -27180,8 +27733,11 @@
     "basal_units": 0,
     "carbs": 85,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-05T05:55:00+00:00",
@@ -27200,8 +27756,11 @@
     "basal_units": 0,
     "carbs": 15,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Carb Correction",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-05T06:55:00+00:00",
@@ -27220,8 +27779,11 @@
     "basal_units": 0,
     "carbs": 100,
     "carbs_certainty": "unsure",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": true,
     "glucose_at": "2026-10-05T10:40:00+00:00",
@@ -27240,8 +27802,11 @@
     "basal_units": 0,
     "carbs": 10,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Snack Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-05T12:15:00+00:00",
@@ -27260,8 +27825,11 @@
     "basal_units": 0,
     "carbs": 95,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-05T17:15:00+00:00",
@@ -27481,6 +28049,7 @@
   "day_start": "2026-10-05T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 561,
    "sha256": "35e6343ae0eb852e67c3c0dbfe51a5bbbda7086e47b6b3a52dfd14315a6b2269",
@@ -27575,6 +28144,7 @@
      "window_minutes": 170
     },
     "carbs": 85,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -27728,6 +28298,7 @@
      "window_minutes": 170
     },
     "carbs": 55,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -27872,6 +28443,7 @@
      "window_minutes": 170
     },
     "carbs": 60,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -27974,8 +28546,11 @@
     "basal_units": "17",
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Basal",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-06T05:05:00+00:00",
@@ -27995,8 +28570,11 @@
     "basal_units": 0,
     "carbs": 85,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-06T05:20:00+00:00",
@@ -28015,8 +28593,11 @@
     "basal_units": 0,
     "carbs": 55,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-06T09:40:00+00:00",
@@ -28035,8 +28616,11 @@
     "basal_units": 0,
     "carbs": 60,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-06T16:50:00+00:00",
@@ -28287,6 +28871,7 @@
   "day_start": "2026-10-06T22:00:00+00:00",
   "day_type": "work",
   "day_type_source": "weekday",
+  "dish_options": [],
   "entries": {
    "count": 273,
    "sha256": "a055288bea484078be55b6361b14d052ffec6f3dbd609747c000a46210646744",
@@ -28392,6 +28977,7 @@
      "window_minutes": 170
     },
     "carbs": 40,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -28472,6 +29058,7 @@
      "window_start": "2026-10-07T10:05:00+00:00"
     },
     "carbs": 70.0,
+    "dish": null,
     "events": [
      {
       "alcohol": false,
@@ -28581,8 +29168,11 @@
     "basal_units": "17",
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Basal",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-07T05:10:00+00:00",
@@ -28602,8 +29192,11 @@
     "basal_units": 0,
     "carbs": 40,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": null,
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-07T06:10:00+00:00",
@@ -28622,8 +29215,11 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 40,
     "eventType": "Exercise",
+    "event_id": "44444444-4444-4444-8444-444444444444",
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-07T07:40:00+00:00",
@@ -28645,8 +29241,11 @@
     "basal_units": 0,
     "carbs": 70.0,
     "carbs_certainty": "known",
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Meal Bolus",
+    "event_id": "22222222-2222-4222-8222-222222222222",
     "fast": false,
     "fat_protein": true,
     "glucose_at": "2026-10-07T10:05:00+00:00",
@@ -28665,8 +29264,11 @@
     "basal_units": 0,
     "carbs": 15.0,
     "carbs_certainty": null,
+    "description": "",
+    "dish": null,
     "duration_minutes": 0,
     "eventType": "Carb Correction",
+    "event_id": "33333333-3333-4333-8333-333333333333",
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-07T10:35:00+00:00",

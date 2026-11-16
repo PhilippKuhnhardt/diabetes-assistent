@@ -15,7 +15,7 @@ class ApiNotFound(Exception):
 
 
 API_TABLES = {"meals": "meals", "window-events": "window_events", "entries": "entries",
-              "treatments": "treatments", "basal": "basal"}
+              "treatments": "treatments", "basal": "basal", "meal-records": "meal_records"}
 API_MAX_DAYS = 3650
 
 
@@ -56,11 +56,17 @@ def api_read(path: str, query: str) -> dict:
                 **{f"/api/v1/{name}": f"Spalten: {', '.join(api_tables.TABLE_COLUMNS[table])}"
                    for name, table in API_TABLES.items()},
                 "/api/v1/profile": "Einstellungen und aktuelles Nightscout-Profil",
+                "/api/v1/dishes": "Gerichte-Katalog: je Gericht Einträge, übliche KH, Ergebnis (ratio = "
+                                  "Mahlzeitfaktor ÷ üblicher Faktor der Mahlzeitenart in den 30 Tagen davor, "
+                                  "effective_carbs = übliche KH × ratio) und die letzten Hauptmahlzeiten; ?days=N",
             },
             "notes": api_tables.README,
         }
     if path == "/api/v1/profile":
         return {"timezone": settings["timezone"], "settings": settings}
+    if path == "/api/v1/dishes":
+        from app.services import dishes
+        return dishes.view(parse_qs(query))
     name = path.removeprefix("/api/v1/")
     if name != "data" and name not in API_TABLES:
         raise ApiNotFound(path)
@@ -68,6 +74,10 @@ def api_read(path: str, query: str) -> dict:
     loaded_first = max(first, first_cached) if first_cached else last + timedelta(days=1)
     tables = api_tables.collect(loaded_first, last, lambda day: day_view.day_payload(day, refresh=False),
                             marks.analysis_exclusions(), settings)
+    if tables["meal_records"]:
+        from app.services import agent
+        estimates = agent.records([row["event_id"] for row in tables["meal_records"] if row.get("event_id")])
+        tables["meal_records"] = [{**row, **estimates.get(row.get("event_id"), {})} for row in tables["meal_records"]]
     tables = {table: api_tables.rows_for(table, rows) for table, rows in tables.items()}
     result = {"from": first.isoformat(), "to": last.isoformat(), "timezone": settings["timezone"]}
     if name == "data":

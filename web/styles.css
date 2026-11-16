@@ -721,6 +721,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .entry-chips button.place-chip[aria-pressed="true"] { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
 .place-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 11px; font-weight: 600; vertical-align: middle; }
 .place-badge::before { content: "⌖ "; }
+.dish-badge::before { content: "◍ "; }
 .vacation-badge::before { content: "☀ "; }
 .place-item { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .place-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -810,3 +811,38 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 @supports (-webkit-touch-callout: none) {
   input, select, textarea { font-size: 16px !important; }
 }
+
+/* Meal agent: the dialog with photos, voice note and the estimate; dish catalogue. */
+#agent-dialog { width: min(520px, calc(100vw - 28px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 15px; padding: 24px; color: var(--ink); box-shadow: 0 18px 70px #10281840; }
+#agent-dialog::backdrop { background: #0c2419a8; }
+#agent-dialog .section-head { align-items: center; }
+#agent-dialog .section-head button { font-size: 22px; line-height: 1; padding: 3px 9px; }
+#agent-dialog textarea, #edit-dialog textarea { width: 100%; resize: vertical; font: inherit; }
+.agent-entry { align-items: center; }
+.agent-chip::before { content: "✦ "; }
+.agent-summary { font-size: 12px; color: var(--muted); }
+.agent-photos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.agent-photos figure { position: relative; margin: 0; }
+.agent-photos img { display: block; width: 92px; height: 92px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }
+#agent-dialog .agent-photos figure button { position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; min-width: 0; min-height: 0; padding: 0; font-size: 15px; line-height: 1; border-radius: 999px; background: var(--surface); }
+.agent-photo-add { cursor: pointer; }
+.agent-inputs { align-items: center; margin: 8px 0 12px; }
+#agent-record[aria-pressed="true"] { border-color: var(--red, #b3261e); color: var(--red, #b3261e); }
+.agent-turns { margin-bottom: 8px; font-size: 13px; color: var(--muted); }
+.agent-turns p { margin: 0 0 4px; padding-left: 9px; border-left: 2px solid var(--line); }
+.agent-result { margin: 0 0 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--canvas); font-size: 14px; }
+.agent-result p { margin: 8px 0 0; }
+.agent-total { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.agent-total strong { font-size: 26px; }
+.agent-total span, .agent-marks, .agent-sources, .agent-adjust { color: var(--muted); font-size: 13px; }
+.agent-items { list-style: none; margin: 10px 0 0; padding: 0; }
+.agent-items li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-bottom: 1px dashed var(--line); }
+.agent-items small { color: var(--muted); }
+.agent-question { font-weight: 650; }
+.agent-sources a { color: inherit; }
+.agent-panel input[type="text"] { width: 100%; }
+.dish-item { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.dish-item summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.dish-hint { flex-basis: 100%; }
+.dish-edit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.dish-edit input[type="text"] { flex: 1 1 140px; min-width: 0; }
