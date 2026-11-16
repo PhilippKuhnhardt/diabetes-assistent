@@ -2283,7 +2283,8 @@ function doseSliderHTML(data) {
   const flagShift = pos(rec) < 15 ? -12 : pos(rec) > 85 ? -88 : -50;
   return '<div class="ds" data-slider>' +
     '<div class="ds-read"><div class="ds-dose"><strong data-ds-units></strong><span class="ds-split" data-ds-split></span></div>' +
-    (ends[0] ? '<div class="ds-land"><span>meist zwischen</span><b class="ds-pill" data-ds-pill></b></div>' : '') + '</div>' +
+    (ends[0] ? '<div class="ds-land"><span>erwartet in 4 h</span><b class="ds-pill" data-ds-pill></b>' +
+      '<small class="ds-iqr" data-ds-iqr-text></small></div>' : '') + '</div>' +
     (ends[0] ? '<div class="ds-cor" aria-hidden="true"><div class="ds-cor-axis">' +
       '<div class="ds-cor-low" data-css="width:' + landX(70) + '%"></div><div class="ds-cor-zone" data-css="left:' + landX(90) + '%;width:' +
       (landX(160) - landX(90)) + '%"></div><div class="ds-cor-w" data-ds-w></div><div class="ds-cor-iqr" data-ds-iqr></div>' +
@@ -2321,7 +2322,9 @@ function updateSliderView(fillField = true) {
     ? "jetzt " + num(first, 1) + " + " + num(units - first, 1) + " um " + timeOnly(slider.later_at) : "";
   if (land) {
     const pill = $("[data-ds-pill]", root);
-    pill.textContent = land[1] + "–" + land[3];
+    // Median (where every second case ended) as the expected value, the middle half beside it.
+    pill.innerHTML = land[2] + '<small>mg/dL</small>';
+    $("[data-ds-iqr-text]", root).textContent = "meist " + land[1] + "–" + land[3];
     pill.className = "ds-pill " + landClass(land[2]);
     Object.assign($("[data-ds-w]", root).style, { left: landX(land[0]) + "%", width: (landX(land[4]) - landX(land[0])) + "%" });
     Object.assign($("[data-ds-iqr]", root).style, { left: landX(land[1]) + "%", width: (landX(land[3]) - landX(land[1])) + "%" });
