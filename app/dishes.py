@@ -66,17 +66,18 @@ def _spread(values: list[float]) -> tuple[float, float]:
     return quantile(0.25), quantile(0.75)
 
 
+def with_ratio(meals: list[dict], meal: dict) -> dict:
+    """The main meal with the usual factor of its kind then and its ratio to it."""
+    reference = reference_factor(meals, meal)
+    valid = meal["factor"] is not None and not meal["excluded"]
+    return {**meal, "reference_factor": round(reference, 3) if reference else None,
+            "ratio": round(float(meal["factor"]) / reference, 3) if valid and reference else None}
+
+
 def history(meals: list[dict], dish_id: int) -> list[dict]:
     """The dish's main meals, oldest first, each with the usual factor then and its ratio to it."""
-    rows = []
-    for meal in meals:
-        if meal.get("dish_id") != dish_id:
-            continue
-        reference = reference_factor(meals, meal)
-        valid = meal["factor"] is not None and not meal["excluded"]
-        rows.append({**meal, "reference_factor": round(reference, 3) if reference else None,
-                     "ratio": round(float(meal["factor"]) / reference, 3) if valid and reference else None})
-    return sorted(rows, key=lambda row: row["at"])
+    own = [with_ratio(meals, meal) for meal in meals if meal.get("dish_id") == dish_id]
+    return sorted(own, key=lambda row: row["at"])
 
 
 def outcome(rows: list[dict], typical: float | None) -> dict:

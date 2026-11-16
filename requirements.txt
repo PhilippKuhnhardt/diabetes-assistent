@@ -1,0 +1,3 @@
+# Vendor SDKs for the meal agent (Philipp 2026-11-16: dependencies are fine). Everything else is the standard library.
+anthropic==2.3.0
+openai==3.41.0
