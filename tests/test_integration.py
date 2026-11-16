@@ -16,7 +16,7 @@ from pathlib import Path
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-from app import dosing, episodes, forecast
+from app import auth, dosing, episodes, forecast
 from app.common import unit_text
 from app.analysis.night import night_analysis
 from app.services import day_view
@@ -212,6 +212,36 @@ class IntegrationTests(unittest.TestCase):
                 self.assertEqual(response.status, 200)
         with urllib.request.urlopen(self.base + "/app.js") as response:
             self.assertTrue(response.url.endswith("/login"))
+
+    def test_login_session_ends_on_logout(self):
+        os.environ["APP_PASSWORD"] = "secret-test-password"
+        auth.reset_failures()
+        no_redirect = urllib.request.build_opener(type("NoRedirect", (urllib.request.HTTPRedirectHandler,), {
+            "redirect_request": lambda *args: None}))
+
+        def call(path, method="GET", data=None, cookie=""):
+            req = urllib.request.Request(self.base + path, method=method, headers={"Cookie": cookie},
+                                         data=urllib.parse.urlencode(data).encode() if data is not None else None)
+            try:
+                with no_redirect.open(req) as response:
+                    return response.status, response.headers
+            except urllib.error.HTTPError as error:
+                with error:
+                    return error.code, error.headers
+
+        status, headers = call("/login", "POST", {"password": "wrong"})
+        self.assertEqual(headers["Location"], "/login?error=1")
+        status, headers = call("/login", "POST", {"password": "secret-test-password"})
+        self.assertEqual(status, 303)
+        cookie = headers["Set-Cookie"].split(";")[0]
+        self.assertEqual(call("/api/places", cookie=cookie)[0], 200)
+        self.assertEqual(call("/logout", "POST", {}, cookie=cookie)[0], 303)
+        # The old cookie no longer works, even if a copy of it is kept.
+        self.assertEqual(call("/api/places", cookie=cookie)[0], 401)
+        for _ in range(auth.CLIENT_FAILURES):
+            call("/login", "POST", {"password": "wrong"})
+        self.assertEqual(call("/login", "POST", {"password": "secret-test-password"})[1]["Location"], "/login?error=wait")
+        auth.reset_failures()
 
     def test_current_glucose_endpoint_uses_live_nightscout_values(self):
         now = datetime.now(timezone.utc)

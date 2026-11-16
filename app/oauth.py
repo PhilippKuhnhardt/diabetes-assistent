@@ -124,7 +124,11 @@ def authorize_request(params: dict) -> dict:
     return value
 
 
-def authorize_page(request: dict, error: bool = False) -> str:
+ERRORS = {"wrong": "Passwort stimmt nicht.",
+          "wait": "Zu viele falsche Passwörter. Bitte in einer Viertelstunde noch einmal versuchen."}
+
+
+def authorize_page(request: dict, error: str | None = None) -> str:
     fields = "".join(f'<input type="hidden" name="{key}" value="{html.escape(value)}">'
                      for key, value in request.items())
     target = html.escape(urlparse(request["redirect_uri"]).netloc)
@@ -151,7 +155,7 @@ def authorize_page(request: dict, error: bool = False) -> str:
       <label>Passwort
         <input name="password" type="password" autocomplete="current-password" required autofocus>
       </label>
-      {'<p class="form-error">Passwort stimmt nicht.</p>' if error else ''}
+      {f'<p class="form-error">{ERRORS[error]}</p>' if error else ''}
       <button class="primary" type="submit">Verbinden</button>
     </form>
   </main>
@@ -159,11 +163,13 @@ def authorize_page(request: dict, error: bool = False) -> str:
 </html>"""
 
 
-def authorize_confirm(request: dict, password: str) -> str | None:
-    """The redirect with a one-time code, or None when the password is wrong."""
-    expected = auth.password()
-    if not expected or not hmac.compare_digest(password.encode(), expected.encode()):
-        return None
+def authorize_confirm(request: dict, password: str, client: str) -> tuple[str | None, str | None]:
+    """(redirect with a one-time code, None), or (None, "wrong" / "wait") as auth.check_password says."""
+    if not auth.password():
+        return None, "wrong"
+    checked = auth.check_password(password, client)
+    if checked != "ok":
+        return None, checked
     code = secrets.token_urlsafe(32)
     with _codes_lock:
         now = time.time()
@@ -172,7 +178,7 @@ def authorize_confirm(request: dict, password: str) -> str | None:
         _codes[code] = {"client_id": request["client_id"], "redirect_uri": request["redirect_uri"],
                         "challenge": request["code_challenge"], "exp": now + CODE_SECONDS}
     query = {"code": code, **({"state": request["state"]} if request["state"] else {})}
-    return request["redirect_uri"] + ("&" if "?" in request["redirect_uri"] else "?") + urlencode(query)
+    return request["redirect_uri"] + ("&" if "?" in request["redirect_uri"] else "?") + urlencode(query), None
 
 
 def _tokens() -> dict:

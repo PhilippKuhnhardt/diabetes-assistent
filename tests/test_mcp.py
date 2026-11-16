@@ -9,6 +9,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
+from app import auth
 from tests import test_integration
 from tests.test_integration import FakeNightscout
 
@@ -168,6 +169,7 @@ class McpTests(unittest.TestCase):
 
     def test_claude_app_connects_through_oauth_with_the_app_password(self):
         os.environ.update({"MCP_API_KEY": KEY, "APP_PASSWORD": "secret"})
+        auth.reset_failures()
         callback = "https://claude.ai/api/mcp/auth_callback"
         no_redirect = urllib.request.build_opener(type("NoRedirect", (urllib.request.HTTPRedirectHandler,), {
             "redirect_request": lambda *args: None}))
@@ -231,6 +233,13 @@ class McpTests(unittest.TestCase):
         self.assertEqual(status, 200)
         renewed = json.loads(body)["access_token"]
         self.assertEqual(self.mcp({"jsonrpc": "2.0", "id": 1, "method": "ping"}, token=renewed)[0], 200)
+        # Wrong passwords are braked: after a few, even the right one waits.
+        for _ in range(auth.CLIENT_FAILURES):
+            post("/oauth/authorize", {**request, "password": "wrong"})
+        status, _, body = post("/oauth/authorize", {**request, "password": "secret"})
+        self.assertEqual(status, 429)
+        self.assertIn("Zu viele falsche Passwörter", body)
+        auth.reset_failures()
         # A new MCP_API_KEY ends every connection.
         os.environ["MCP_API_KEY"] = "n" * 40
         self.assertEqual(self.status({"jsonrpc": "2.0", "id": 1, "method": "ping"}, token=renewed), 401)

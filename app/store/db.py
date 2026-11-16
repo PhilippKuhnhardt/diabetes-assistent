@@ -316,11 +316,21 @@ def _agent(db: sqlite3.Connection) -> None:
     )""")
 
 
+def _browser_sessions(db: sqlite3.Connection) -> None:
+    """Browser logins as random sessions (only the hash stored), so logout ends them on the server."""
+    db.execute("""CREATE TABLE IF NOT EXISTS browser_sessions (
+        token_hash TEXT PRIMARY KEY,
+        password_tag TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL
+    )""")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
                                                           _notifications, _notification_priority, _places,
                                                           _inbox_seen, _sport_sessions, _places_without_positions,
                                                           _place_factor, _timezone_periods, _prior_insulin_percentile,
-                                                          _dishes, _agent]
+                                                          _dishes, _agent, _browser_sessions]
 
 
 def init() -> None:
