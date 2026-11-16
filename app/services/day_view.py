@@ -15,7 +15,7 @@ from app import glucose as cgm
 from app.common import json_safe, local_day_range, local_zone, parse_instant, zone_name_at
 from app.ingestion import nightscout, sync
 from app.services import settings as settings_service
-from app.store import basal_doses as basal_store, config, marks, mirror, places as place_store, results
+from app.store import basal_doses as basal_store, config, dishes as dish_store, marks, mirror, places as place_store, results
 from app.analysis.night import night_analysis
 
 # Any change to the app's code recalculates stored days once, so a stored result never
@@ -131,6 +131,13 @@ def compute_day(day: str) -> dict:
         place_id = entry_places.get(item.get("event_id") or "")
         return {"id": place_id, "name": place_names[place_id]} if place_id in place_names else None
 
+    dish_names = {dish["id"]: dish["name"] for dish in dish_store.all_dishes()}
+    meal_records = dish_store.records()
+
+    def dish_of(item: dict) -> dict | None:
+        dish_id = (meal_records.get(item.get("event_id") or "") or {}).get("dish_id")
+        return {"id": dish_id, "name": dish_names[dish_id]} if dish_id in dish_names else None
+
     rendered = []
     main_meal_ids = {item["id"] for item in treatments
                      if (item.get("role") == "meal" or item.get("eventType") == "Meal Bolus")
@@ -196,6 +203,8 @@ def compute_day(day: str) -> dict:
         carb_entries = sorted((item for item in treatments if item["id"] in carb_ids),
                               key=lambda item: (item["id"] != meal["source_id"], item["at"]))
         output["place"] = next((place for place in map(place_of, carb_entries) if place), None)
+        # What the meal was: the dish of its own entry, else of its first counted carb entry with one.
+        output["dish"] = next((dish for dish in map(dish_of, carb_entries) if dish), None)
         output["excluded"] = meal["id"] in exclusions
         output["review"] = meal_review(output)
         calculation_events = output["calculation"]
@@ -296,6 +305,8 @@ def compute_day(day: str) -> dict:
             **(sport_session(item, settings, session_effects) if kind == "exercise" else {}),
             "carbs_certainty": item.get("carbs_certainty"), "fat_protein": item.get("fat_protein", False),
             "alcohol": item.get("alcohol", False), "fast": item.get("fast", False), "place": place_of(item),
+            "dish": dish_of(item), "event_id": item.get("event_id"),
+            "description": (meal_records.get(item.get("event_id") or "") or {}).get("description") or "",
             "glucose_mgdl": glucose, "glucose_at": glucose_at,
             **({"nightscout_synced": item["nightscout_synced"]} if kind == "basal" else {}),
         })
@@ -334,6 +345,7 @@ def compute_day(day: str) -> dict:
                        for item in treatments],
         "window_limits": settings_service.MANUAL_WINDOW_LIMITS,
         "place_options": [{"id": place_id, "name": name} for place_id, name in place_names.items()],
+        "dish_options": [{"id": dish_id, "name": name} for dish_id, name in dish_names.items()],
     })
 
 

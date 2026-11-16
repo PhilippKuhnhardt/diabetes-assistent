@@ -1,0 +1,216 @@
+"""The meal agent: estimate a meal from photos and a description, transcribe a voice note, and the
+agent's settings (provider, model, web search). The rules are in app/meal_agent.py, the provider
+calls in app/ingestion/llm.py; this module joins them with the dish catalogue and stores each estimate."""
+from __future__ import annotations
+
+import base64
+import binascii
+import uuid
+from datetime import datetime, timezone
+
+from app import episodes, meal_agent as rules
+from app.common import local_zone, parse_instant
+from app.ingestion import llm
+from app.services import dishes
+from app.store import agent as store, config, dishes as dish_store, places as place_store
+
+DEFAULT_TRANSCRIBE_MODEL = "google/gemini-2.5-flash"
+TRANSCRIBE_INSTRUCTION = ("Transkribiere diese Sprachnotiz wörtlich auf Deutsch. Es geht um eine Mahlzeit "
+                          "(Lebensmittel, Mengen in Gramm, Marken). Gib nur den gesprochenen Text zurück, "
+                          "ohne Anführungszeichen und ohne Kommentar. Ist nichts zu verstehen, gib nichts zurück.")
+MAX_AUDIO_BYTES = 6_000_000
+AUDIO_FORMATS = ("wav", "mp3")
+
+
+def _settings() -> dict:
+    stored = store.settings()
+    available = llm.configured()
+    provider = stored.get("provider") if stored.get("provider") in available else (available[0] if available else None)
+    return {
+        "provider": provider,
+        "models": {name: stored.get("model_" + name) or llm.PROVIDERS[name]["default_model"] for name in llm.PROVIDERS},
+        "web_search": stored.get("web_search", "1") == "1",
+        "transcribe_model": stored.get("transcribe_model") or DEFAULT_TRANSCRIBE_MODEL,
+    }
+
+
+def view(params: dict | None = None) -> dict:
+    """What the page needs to offer the agent and its settings; never a key."""
+    current = _settings()
+    zone = local_zone(config.get_settings()[1]["timezone"])
+    month = datetime.now(zone).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    return {
+        "available": bool(current["provider"] and current["models"][current["provider"]]),
+        "provider": current["provider"],
+        "providers": [{"id": name, "label": info["label"], "key": info["key"], "configured": bool(llm.api_key(name)),
+                       "model": current["models"][name]} for name, info in llm.PROVIDERS.items()],
+        "web_search": current["web_search"],
+        "transcribe_model": current["transcribe_model"],
+        "transcribe_available": bool(llm.api_key("openrouter")),
+        "limits": {"photos": rules.MAX_PHOTOS, "text": rules.MAX_TEXT},
+        "usage_month": store.usage_since(month),
+    }
+
+
+def save_settings(payload: dict) -> dict:
+    values = {}
+    if "provider" in payload:
+        if payload["provider"] not in llm.configured():
+            raise ValueError("Für diesen Anbieter ist kein Schlüssel hinterlegt")
+        values["provider"] = payload["provider"]
+    for name in llm.PROVIDERS:
+        if "model_" + name in payload:
+            values["model_" + name] = str(payload["model_" + name] or "").strip()[:120]
+    if "web_search" in payload:
+        values["web_search"] = "1" if payload["web_search"] is True else "0"
+    if "transcribe_model" in payload:
+        values["transcribe_model"] = str(payload["transcribe_model"] or "").strip()[:120]
+    store.set_settings(values)
+    return view()
+
+
+def models(params: dict) -> dict:
+    """The provider's models for the settings' pick list."""
+    provider = (params.get("provider") or [""])[0]
+    try:
+        return {"provider": provider, "models": llm.models(provider)}
+    except llm.LLMError as error:
+        raise ValueError(str(error)) from None
+
+
+def _photos(raw) -> list[bytes]:
+    if raw in (None, ""):
+        return []
+    if not isinstance(raw, list) or len(raw) > rules.MAX_PHOTOS:
+        raise ValueError(f"Höchstens {rules.MAX_PHOTOS} Fotos")
+    photos = []
+    for item in raw:
+        text = str(item or "")
+        try:
+            data = base64.b64decode(text.split(",", 1)[1] if text.startswith("data:") else text, validate=True)
+        except (binascii.Error, ValueError, IndexError):
+            raise ValueError("Foto konnte nicht gelesen werden") from None
+        if not data.startswith(b"\xff\xd8") or len(data) > rules.MAX_PHOTO_BYTES:
+            raise ValueError("Foto muss ein JPEG bis 3 MB sein")
+        photos.append(data)
+    return photos
+
+
+def _examples() -> dict[int, list[dict]]:
+    """Recent entries per dish with what was written about them."""
+    zone = local_zone(config.get_settings()[1]["timezone"])
+    described = dish_store.records()
+    result: dict[int, list[dict]] = {}
+    for record in dish_store.dish_records():
+        result.setdefault(record["dish_id"], []).append({
+            "day": parse_instant(record["at"]).astimezone(zone).date().isoformat(), "carbs_g": record["carbs_g"],
+            "description": (described.get(record["event_id"]) or {}).get("description") or ""})
+    return result
+
+
+def estimate(payload: dict) -> dict:
+    """One turn with the agent: a new meal (text and/or photos) or a follow-up to its last answer."""
+    current = _settings()
+    provider = current["provider"]
+    if not provider:
+        raise ValueError("Kein Anbieter eingerichtet: ANTHROPIC_API_KEY, OPENAI_API_KEY oder OPENROUTER_API_KEY "
+                         "in der Bereitstellung setzen")
+    model = current["models"][provider]
+    text = str(payload.get("text") or "").strip()[:rules.MAX_TEXT]
+    at = parse_instant(str(payload["at"])) if payload.get("at") else datetime.now(timezone.utc)
+    session = store.session(str(payload["session_id"])) if payload.get("session_id") else None
+    if payload.get("session_id") and session is None:
+        raise ValueError("Einschätzung nicht gefunden")
+    if session:
+        if not text:
+            raise ValueError("Bitte eine Antwort oder Korrektur eingeben")
+        if len(session["messages"]) >= rules.MAX_TURNS * 2:
+            raise ValueError("Zu viele Rückfragen, bitte neu einschätzen")
+        session_id, photos = session["id"], store.load_photos(session["id"], session["photos"])
+        history = session["messages"]
+    else:
+        photos = _photos(payload.get("photos"))
+        if not text and not photos:
+            raise ValueError("Bitte ein Foto aufnehmen oder das Essen beschreiben")
+        session_id, history = str(uuid.uuid4()), []
+    _, settings = config.get_settings()
+    zone = local_zone(settings["timezone"])
+    catalogue = dishes.view()["dishes"]
+    place_id = payload.get("place_id")
+    place = next((item["name"] for item in place_store.all_places() if str(item["id"]) == str(place_id)), None)
+    context = rules.context_text(at.astimezone(zone).strftime("%A, %d.%m.%Y %H:%M"),
+                                 episodes.meal_kind_at(at, settings)[1], place,
+                                 rules.catalogue_text(catalogue, _examples()))
+    turns = history + [{"role": "user", "text": text or "(nur Fotos)"}]
+    encoded = [base64.b64encode(photo).decode() for photo in photos]
+    messages = [{"role": turn["role"],
+                 "text": (context + "\n\nPhilipp: " + turn["text"]) if index == 0 else turn["text"],
+                 "images": encoded if index == 0 else []} for index, turn in enumerate(turns)]
+    try:
+        answer = llm.complete(provider, model, rules.SYSTEM, messages, rules.SCHEMA, current["web_search"])
+        result = rules.check(answer["data"], catalogue)
+    except llm.LLMError as error:
+        raise ValueError(str(error)) from None
+    result["sources"] = answer["sources"]
+    if not session:
+        store.save_photos(session_id, photos)
+    turns.append({"role": "assistant", "text": rules.answer_text(result)})
+    store.save_session(session_id, at, provider, model, turns, result, len(photos), answer["usage"])
+    store.log_usage("estimate", provider, model, answer["usage"])
+    return {"session_id": session_id, "estimate": result, "provider": provider, "model": model,
+            "turns": [turn["text"] for turn in turns if turn["role"] == "user"], "photos": len(photos)}
+
+
+def transcribe(payload: dict) -> dict:
+    """A voice note as text for the description field (always through OpenRouter)."""
+    audio_format = payload.get("format")
+    if audio_format not in AUDIO_FORMATS:
+        raise ValueError("Unbekanntes Audioformat")
+    text = str(payload.get("audio") or "")
+    try:
+        data = base64.b64decode(text, validate=True)
+    except (binascii.Error, ValueError):
+        raise ValueError("Aufnahme konnte nicht gelesen werden") from None
+    if not data or len(data) > MAX_AUDIO_BYTES:
+        raise ValueError("Aufnahme ist leer oder zu lang")
+    model = _settings()["transcribe_model"]
+    try:
+        answer = llm.transcribe(model, text, audio_format, TRANSCRIBE_INSTRUCTION)
+    except llm.LLMError as error:
+        raise ValueError(str(error)) from None
+    store.log_usage("transcribe", "openrouter", model, answer["usage"])
+    return {"text": answer["text"][:rules.MAX_TEXT]}
+
+
+def link(session_id, event_id: str) -> None:
+    """A saved entry keeps the estimate it came from."""
+    try:
+        session_id = str(uuid.UUID(str(session_id)))
+    except ValueError:
+        return
+    if store.session(session_id):
+        store.link_session(session_id, event_id)
+
+
+def photo(session_id: str, index: str) -> bytes | None:
+    """One photo of an estimate, or None."""
+    try:
+        path = store.photo_path(str(uuid.UUID(session_id)), int(index))
+    except ValueError:
+        return None
+    return path.read_bytes() if path.is_file() else None
+
+
+def records(event_ids: list[str]) -> dict[str, dict]:
+    """What the read API adds to a meal record: the agent's estimate and its photos."""
+    result = {}
+    for event_id, session in store.sessions_for(event_ids).items():
+        estimate = session["estimate"] or {}
+        result[event_id] = {
+            "agent_carbs_g": estimate.get("carbs_g"), "agent_carbs_low_g": estimate.get("carbs_low_g"),
+            "agent_carbs_high_g": estimate.get("carbs_high_g"),
+            "agent_history_adjustment_g": estimate.get("history_adjustment_g"),
+            "agent_items": estimate.get("items"), "agent_model": session["provider"] + ":" + session["model"],
+            "photos": [f"/api/v1/photo?session={session['id']}&n={index}" for index in range(session["photos"])],
+        }
+    return result

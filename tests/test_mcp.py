@@ -85,7 +85,7 @@ class McpTests(unittest.TestCase):
         _, tools = self.mcp({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         names = [tool["name"] for tool in tools["result"]["tools"]]
         self.assertEqual(names, ["get_status", "preview_entry", "save_entry", "save_basal", "delete_entry",
-                                 "get_day", "read_data"])
+                                 "get_day", "list_dishes", "read_data"])
         save = next(tool for tool in tools["result"]["tools"] if tool["name"] == "save_entry")
         self.assertEqual(save["inputSchema"]["properties"]["carbs_certainty"]["enum"], ["weighed", "known", "unsure"])
         _, unknown = self.mcp({"jsonrpc": "2.0", "id": 3, "method": "resources/list"})

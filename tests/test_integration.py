@@ -894,7 +894,7 @@ class IntegrationTests(unittest.TestCase):
                          [(meal["id"], "2026-09-23", False)])
         self.assertEqual(meals["rows"][0]["factor_ie_per_ke"], meal["calculation"]["factor_units_per_ke"])
         data = get("/api/v1/data?from=2026-09-23&to=2026-09-23", key)
-        self.assertEqual(sorted(data["tables"]), ["basal", "entries", "meals", "treatments", "window_events"])
+        self.assertEqual(sorted(data["tables"]), ["basal", "entries", "meal_records", "meals", "treatments", "window_events"])
         self.assertIn(100, [row["sgv"] for row in data["tables"]["entries"]])
         self.assertEqual([row["eventType"] for row in data["tables"]["treatments"]], ["Meal Bolus"])
         # Neighbouring day payloads overlap; a multi-day range still lists every row once.
@@ -1627,6 +1627,59 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual([meal["meal"] for meal in saved["day_view"]["meals"]], ["breakfast", "lunch"])
         row = next(item for item in saved["day_view"]["timeline"] if item["id"] == saved["id"])
         self.assertEqual((row["kind"], row["meal_id"]), ("snack", None))
+
+    def test_dish_and_description_label_an_entry_and_can_be_added_afterwards(self):
+        # User request 2026-11-16: what a meal was is kept locally so recurring dishes can be traced.
+        self.request("/api/settings")
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        today = now.astimezone(ZoneInfo("Europe/Berlin")).date().isoformat()
+        entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "50", "insulin": "5", "as": "meal"}
+        saved = self.request("/api/entry", method="POST", body={
+            **entry, "dish_name": " Porridge ", "description": "50 g Haferflocken, Banane"})
+        row = next(item for item in saved["day_view"]["timeline"] if item["id"] == saved["id"])
+        self.assertEqual((row["dish"]["name"], row["description"]), ("Porridge", "50 g Haferflocken, Banane"))
+        self.assertEqual(saved["day_view"]["meals"][0]["dish"]["name"], "Porridge")
+        self.assertEqual(saved["day_view"]["dish_options"], [{"id": row["dish"]["id"], "name": "Porridge"}])
+        # Nightscout never sees the dish or the description.
+        self.assertNotIn("Porridge", json.dumps(FakeNightscout.treatments))
+        self.assertNotIn("Haferflocken", json.dumps(FakeNightscout.treatments))
+        # An entry without them has none; the edit dialog adds them afterwards, reusing the dish by name.
+        plain = self.request("/api/entry", method="POST", body={
+            **entry, "at": (now - timedelta(minutes=1)).isoformat(), "carbs": "30"})
+        self.assertIsNone(next(item for item in plain["day_view"]["timeline"] if item["id"] == plain["id"])["dish"])
+        self.request("/api/treatment", method="POST", body={
+            "id": plain["id"], "original_day": today, "kind": plain["kind"], "at": (now - timedelta(minutes=1)).isoformat(),
+            "carbs": "30", "insulin": "5", "dish_id": None, "dish_name": "porridge", "description": ""})
+        day = self.request("/api/day?date=" + today)
+        self.assertEqual(next(item for item in day["timeline"] if item["id"] == plain["id"])["dish"], row["dish"])
+        view = self.request("/api/dishes")
+        self.assertEqual([(dish["name"], dish["count"], dish["typical_carbs"]) for dish in view["dishes"]],
+                         [("Porridge", 2, 40)])
+        records = self.request("/api/v1/meal-records?days=1")["rows"]
+        self.assertEqual(sorted((record["dish"], record["carbs_g"]) for record in records),
+                         [("Porridge", 30.0), ("Porridge", 50.0)])
+        self.assertEqual(self.request("/api/v1/dishes")["dishes"][0]["name"], "Porridge")
+        # An edit that names neither keeps both; emptying the dish removes it; a deleted entry loses its record.
+        self.request("/api/treatment", method="POST", body={
+            "id": saved["id"], "original_day": today, "kind": "meal", "at": now.isoformat(), "carbs": "60", "insulin": "5"})
+        self.request("/api/treatment", method="POST", body={
+            "id": plain["id"], "original_day": today, "kind": plain["kind"], "at": (now - timedelta(minutes=1)).isoformat(),
+            "carbs": "30", "insulin": "5", "dish_id": None, "dish_name": "", "description": ""})
+        view = self.request("/api/dishes")
+        self.assertEqual([(dish["name"], dish["count"], dish["typical_carbs"]) for dish in view["dishes"]],
+                         [("Porridge", 1, 60)])
+        self.request("/api/treatment/delete", method="POST", body={"id": saved["id"], "day": today})
+        self.assertEqual(self.request("/api/dishes")["dishes"][0]["count"], 0)
+        # Catalogue actions: rename, category, merge, delete.
+        dish_id = view["dishes"][0]["id"]
+        self.request("/api/dishes", method="POST", body={"action": "rename", "id": dish_id, "name": "Haferbrei"})
+        view = self.request("/api/dishes", method="POST", body={"action": "create", "name": "Müsli", "category": "Frühstück"})
+        other = next(dish["id"] for dish in view["dishes"] if dish["name"] == "Müsli")
+        with self.assertRaises(urllib.error.HTTPError):
+            self.request("/api/dishes", method="POST", body={"action": "rename", "id": other, "name": "haferbrei"})
+        view = self.request("/api/dishes", method="POST", body={"action": "merge", "id": other, "into_id": dish_id})
+        self.assertEqual([dish["name"] for dish in view["dishes"]], ["Haferbrei"])
+        self.assertEqual(self.request("/api/dishes", method="POST", body={"action": "delete", "id": dish_id})["dishes"], [])
 
     def test_place_is_suggested_from_defined_spots_else_the_fallback_and_no_position_is_stored(self):
         self.request("/api/settings")

@@ -17,6 +17,8 @@ function factorIconsHTML(marks) {
     on.map(key => '<span class="factor-icon factor-' + key + '"></span>').join("") + '</span>';
 }
 // Where a carb entry was eaten; the place chip's name.
+// What a carb entry was; the dish's name from the catalogue.
+const dishBadgeHTML = dish => dish ? '<span class="place-badge dish-badge" title="Gericht">' + escapeHTML(dish.name) + '</span>' : "";
 const placeBadgeHTML = place => place ? '<span class="place-badge" title="Ort">' + escapeHTML(place.name) + '</span>' : "";
 
 // The browser position for the place suggestion and for adding a spot to a place.
@@ -184,7 +186,7 @@ function locationState() {
   const requestedView = params.get("view");
   return {
     view: views.has(requestedView) ? requestedView : "diary",
-    analysisTab: params.get("tab") === "automatik" ? "automatik" : "werte",
+    analysisTab: ["automatik", "gerichte"].includes(params.get("tab")) ? params.get("tab") : "werte",
   };
 }
 
@@ -202,7 +204,7 @@ function updateLocation(replace = false) {
   const url = new URL(window.location.href);
   url.searchParams.set("view", state.view);
   url.searchParams.delete("date");
-  if (state.view === "analysis" && state.analysisTab === "automatik") url.searchParams.set("tab", "automatik");
+  if (state.view === "analysis" && state.analysisTab !== "werte") url.searchParams.set("tab", state.analysisTab);
   else url.searchParams.delete("tab");
   syncTabLinks(url);
   window.history[replace ? "replaceState" : "pushState"]({ view: state.view }, "", url);
@@ -244,6 +246,8 @@ function analysisTab(name, options = {}) {
   $$("[data-analysis-tab]").forEach(button => button.setAttribute("aria-selected", String(button.dataset.analysisTab === name)));
   $("#analysis-werte").hidden = name !== "werte";
   $("#analysis-automatik").hidden = name !== "automatik";
+  $("#analysis-gerichte").hidden = name !== "gerichte";
+  if (name === "gerichte") loadDishes();
   if (changed && options.updateHistory !== false) updateLocation(true);
 }
 
@@ -837,6 +841,7 @@ async function loadSettings() {
   renderTimezone();
   await loadNotifications();
   renderPlaces(await api("/api/places"));
+  await loadAgent();
 }
 
 // Place management: chips with the spots Philipp defines, and the fallback place for anywhere else.
@@ -1862,14 +1867,16 @@ function entryRowHTML(item, data, meal = null) {
       '" aria-label="' + escapeHTML("Basal um " + timeOnly(item.at) + " löschen") + '">Löschen</button>' :
     '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '" aria-label="' +
     escapeHTML(label + " um " + timeOnly(item.at) + " bearbeiten") + '">Bearbeiten</button>';
-  const place = item.place && (!meal || item.place.id !== meal.place?.id) ? placeBadgeHTML(item.place) : "";
+  const place = (item.dish && (!meal || item.dish.id !== meal.dish?.id) ? dishBadgeHTML(item.dish) : "")
+    + (item.place && (!meal || item.place.id !== meal.place?.id) ? placeBadgeHTML(item.place) : "");
   const certainty = meal && item.carbs_certainty && item.carbs_certainty !== meal.quality?.carbs_certainty
     ? '<span class="outlier-badge certainty-' + item.carbs_certainty + '">' + CERTAINTY_LABELS[item.carbs_certainty] + '</span>' : "";
   return '<article class="timeline-item"><time>' + escapeHTML(timeOnly(item.at)) +
     '</time><div><div class="entry-title"><strong>' + escapeHTML(label) + '</strong>' + factorIconsHTML(item) + place + certainty +
     // Each value stays on one line, so "84 mg/dL" never breaks between number and unit.
     '</div><p>' + (details.length ? details.map(part => '<span>' + escapeHTML(part) + '</span>').join(" · ") : escapeHTML(item.eventType)) +
-    '</p>' + (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') +
+    '</p>' + (item.description ? '<small>' + escapeHTML(item.description) + '</small>' : '') +
+    (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') +
     (item.kind === "exercise" && item.sport_effect_mgdl != null ? sportSessionHTML(item) : '') +
     '</div><div class="timeline-actions">' + action + '</div></article>';
 }
@@ -1910,7 +1917,7 @@ function mealBlockHTML(block, data) {
     // Head: name and window, then where and how certain (the main meal's place leads), then factor and exclusion.
     '<div class="day-meal-head"><div class="day-meal-title"><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' + factorIconsHTML(meal.quality) +
     '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") + '</span></div>' +
-    (meal.place || meal.quality?.carbs_certainty || meal.vacation ? '<div class="day-meal-tags">' + placeBadgeHTML(meal.place) +
+    (meal.dish || meal.place || meal.quality?.carbs_certainty || meal.vacation ? '<div class="day-meal-tags">' + dishBadgeHTML(meal.dish) + placeBadgeHTML(meal.place) +
       (meal.vacation ? '<span class="place-badge vacation-badge" title="Urlaubstag: zählt nach dem Urlaub nicht in die Automatik">Urlaub</span>' : '') +
       (meal.quality?.carbs_certainty ? '<span class="outlier-badge certainty-' + meal.quality.carbs_certainty + '">' + CERTAINTY_LABELS[meal.quality.carbs_certainty] + '</span>' : '') + '</div>' : '') +
     '<div class="day-meal-result">' + status +
@@ -2444,6 +2451,8 @@ function resetEntryForm() {
   state.split = null;
   state.closeMeal = false;
   state.entryPlace = undefined;
+  state.entryAgent = null;
+  updateEntryAgent();
   delete form.elements.sport_effect_mgdl.dataset.touched;
   setDefaultMealTime();
   updateEntryFields();
@@ -2471,6 +2480,11 @@ function editEntry(id) {
   placeSelect.innerHTML = '<option value="">Kein Ort</option>' + (state.dayData.place_options || []).map(option =>
     '<option value="' + option.id + '">' + escapeHTML(option.name) + '</option>').join("");
   placeSelect.value = item.place ? String(item.place.id) : "";
+  $("#edit-dish-options").innerHTML = (state.dayData.dish_options || []).map(option =>
+    '<option value="' + escapeHTML(option.name) + '"></option>').join("");
+  form.elements.dish_name.value = item.dish?.name || "";
+  form.elements.description.value = item.description || "";
+  state.editAgentSession = null;
   const sport = item.kind === "exercise";
   $("#edit-quality").hidden = sport || !(Number(item.carbs) > 0);
   updateEditPlace();
@@ -2499,6 +2513,11 @@ function updateEditPlace() {
     || !(state.dayData?.place_options || []).length;
   $("#edit-place-field").hidden = hidden;
   form.elements.place_id.disabled = hidden;
+  // What was eaten can be added afterwards as well (user request 2026-11-16).
+  const noFood = state.editing?.kind === "exercise" || !(Number(form.elements.carbs.value) > 0);
+  $("#edit-food-fields").hidden = noFood;
+  form.elements.dish_name.disabled = noFood;
+  form.elements.description.disabled = noFood;
 }
 
 async function saveEditedEntry(event) {
@@ -2531,6 +2550,9 @@ async function saveEditedEntry(event) {
     alcohol: carbs > 0 && Boolean(item.alcohol),
     fast: carbs > 0 && form.elements.fast.checked,
     place_id: form.elements.place_id.disabled ? undefined : form.elements.place_id.value || null,
+    ...(form.elements.dish_name.disabled ? {} : { dish_id: null, dish_name: form.elements.dish_name.value.trim(),
+                                                  description: form.elements.description.value }),
+    ...(state.editAgentSession ? { agent_session: state.editAgentSession } : {}),
   };
   const button = $('button[type="submit"]', form);
   button.disabled = true;
@@ -2662,6 +2684,10 @@ async function saveEntry(event) {
     // A split meal dosed on the slider: the total, of which the insulin field holds the first part.
     dose_total_units: mode === "meal" && doseHelp?.slider?.first_percent != null && state.slider?.follow !== false
       ? sliderUnits(doseHelp.slider) : null,
+    // What the agent's estimate named; the carbs themselves are whatever the form holds now.
+    ...(mode === "meal" && carbs > 0 && state.entryAgent ? {
+      dish_name: state.entryAgent.dish_name, description: state.entryAgent.description,
+      agent_session: state.entryAgent.session_id } : {}),
   };
   state.pendingEventId = payload.event_id;
   state.pendingBasalId = payload.basal_event_id;
@@ -3614,4 +3640,410 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener("visibilitychange", resume);
   window.addEventListener("pageshow", event => { if (event.persisted) resume(); });
   window.addEventListener("focus", loadCurrentGlucose);
+});
+
+// ---- Meal agent (user request 2026-11-16): photos and a description in, carbs and a dish out. ----
+// The agent only fills the form; the dose help calculates as always. One dialog serves the entry form
+// and the edit dialog ("Tag durchgehen"); `agent.target` says where "Übernehmen" writes.
+const agent = { target: "entry", photos: [], session: null, estimate: null, turns: [], busy: false,
+  recorder: null, recordTimer: null, info: null };
+const AGENT_PHOTO_SIDE = 1568;
+const AGENT_RECORD_SECONDS = 120;
+
+async function loadAgent() {
+  try { agent.info = await api("/api/agent"); } catch (_) { agent.info = null; }
+  renderAgentSettings();
+  updateEntryAgent();
+}
+
+function renderAgentSettings() {
+  const info = agent.info;
+  if (!info) return;
+  const ready = info.providers.filter(item => item.configured);
+  $("#agent-settings-status").textContent = !ready.length
+    ? "Noch kein Anbieter eingerichtet."
+    : info.available ? "" : "Bitte ein Modell wählen.";
+  const select = $("#agent-provider");
+  select.replaceChildren(...info.providers.map(item => {
+    const option = new Option(item.label + (item.configured ? "" : " (kein Schlüssel)"), item.id);
+    option.disabled = !item.configured;
+    return option;
+  }));
+  select.value = info.provider || "";
+  select.disabled = !ready.length;
+  const current = info.providers.find(item => item.id === info.provider);
+  $("#agent-model").value = current?.model || "";
+  $("#agent-model").disabled = !current;
+  $("#agent-web-search").checked = info.web_search;
+  $("#agent-transcribe-model").value = info.transcribe_model;
+  $("#agent-transcribe-model").disabled = !info.transcribe_available;
+  $("#agent-models-load").disabled = !current;
+  const kinds = { estimate: "Einschätzungen", transcribe: "Transkriptionen" };
+  $("#agent-usage").textContent = info.usage_month.length ? "Diesen Monat: " + info.usage_month.map(row =>
+    row.calls + " " + (kinds[row.kind] || row.kind) + " mit " + row.model + " (" +
+    num((row.input_tokens + row.output_tokens) / 1000, 0) + " Tsd. Token" +
+    (row.cost_usd != null ? ", " + num(row.cost_usd, 2) + " $" : "") + ")").join("; ") : "";
+}
+
+async function saveAgentSettings(body) {
+  try {
+    agent.info = await api("/api/agent/settings", { method: "POST", body: JSON.stringify(body) });
+    renderAgentSettings();
+    updateEntryAgent();
+  } catch (error) { toast(error.message, true); renderAgentSettings(); }
+}
+
+async function loadAgentModels() {
+  const button = $("#agent-models-load");
+  button.disabled = true;
+  try {
+    const provider = $("#agent-provider").value;
+    const data = await api("/api/agent/models?provider=" + encodeURIComponent(provider));
+    const option = model => '<option value="' + escapeHTML(model.id) + '">' + escapeHTML(model.name) + '</option>';
+    $("#agent-model-options").innerHTML = data.models.filter(model => model.image !== false).map(option).join("");
+    if (provider === "openrouter" || !agent.info.transcribe_available)
+      $("#agent-audio-options").innerHTML = data.models.filter(model => model.audio).map(option).join("");
+    else {
+      const router = await api("/api/agent/models?provider=openrouter");
+      $("#agent-audio-options").innerHTML = router.models.filter(model => model.audio).map(option).join("");
+    }
+    toast(data.models.length + " Modelle geladen, im Feld Modell auswählen oder tippen");
+  } catch (error) { toast(error.message, true); }
+  finally { button.disabled = false; }
+}
+
+// The entry form's agent line: the button, and what an applied estimate will save with the entry.
+function updateEntryAgent() {
+  const form = $("#entry-form");
+  const meal = form.elements.kind.value === "meal";
+  $("#entry-agent-open").hidden = !meal;
+  const applied = meal ? state.entryAgent : null;
+  $("#entry-agent-summary").hidden = !applied;
+  $("#entry-agent-clear").hidden = !applied;
+  if (applied) $("#entry-agent-summary").textContent =
+    (applied.dish_name ? "Gericht: " + applied.dish_name : "Ohne Gericht") + " · geschätzt " + applied.range;
+}
+
+function openAgent(target) {
+  if (!agent.info?.available) {
+    toast("Essens-Agent ist nicht eingerichtet: in den Einstellungen Anbieter und Modell wählen", true);
+    return;
+  }
+  Object.assign(agent, { target, photos: [], session: null, estimate: null, turns: [], busy: false });
+  const form = $("#agent-form");
+  form.reset();
+  if (target === "edit") form.elements.text.value = $("#edit-form").elements.description.value;
+  $("#agent-record").hidden = !agent.info.transcribe_available || !navigator.mediaDevices?.getUserMedia;
+  renderAgent();
+  $("#agent-dialog").showModal();
+}
+
+function closeAgent() {
+  stopAgentRecording(true);
+  $("#agent-dialog").close();
+}
+
+function agentEstimateHTML(estimate) {
+  const adjust = estimate.history_adjustment_g
+    ? '<p class="agent-adjust">Darin ' + (estimate.history_adjustment_g > 0 ? "+" : "−") + Math.abs(estimate.history_adjustment_g) +
+      ' g aus dem Verlauf des Gerichts.</p>' : "";
+  const items = estimate.items.length ? '<ul class="agent-items">' + estimate.items.map(item =>
+    '<li><span>' + escapeHTML(item.name) + (item.amount ? ' <small>' + escapeHTML(item.amount) + '</small>' : '') +
+    '</span><strong>' + num(item.carbs_g, 0) + ' g</strong></li>').join("") + '</ul>' : "";
+  const marks = [CERTAINTY_LABELS[estimate.certainty], estimate.fat_protein ? "fett-/eiweißreich" : "",
+    estimate.fast ? "wirkt schnell" : ""].filter(Boolean);
+  const dish = estimate.dish
+    ? '<p class="agent-dish">Gericht: <strong>' + escapeHTML(estimate.dish.name) + '</strong>' +
+      (estimate.dish.new ? ' <span class="outlier-badge">neu</span>' : '') +
+      (estimate.dish.hint ? '<br><small>' + escapeHTML(estimate.dish.hint) + '</small>' : '') + '</p>'
+    : '<p class="agent-dish">Kein wiederkehrendes Gericht erkannt.</p>';
+  const sources = estimate.sources?.length ? '<p class="agent-sources">Quellen: ' + estimate.sources.map(source =>
+    '<a href="' + escapeHTML(source.url) + '" target="_blank" rel="noopener noreferrer">' +
+    escapeHTML(source.title || new URL(source.url).hostname) + '</a>').join(", ") + '</p>' : "";
+  return '<div class="agent-total"><strong>' + estimate.carbs_g + ' g KH</strong><span>Spanne ' + estimate.carbs_low_g +
+    '–' + estimate.carbs_high_g + ' g</span></div>' + adjust + items +
+    '<p class="agent-marks">' + marks.map(escapeHTML).join(" · ") + '</p>' + dish +
+    (estimate.reasoning ? '<p class="agent-reasoning">' + escapeHTML(estimate.reasoning) + '</p>' : '') +
+    (estimate.question ? '<p class="agent-question">Rückfrage: ' + escapeHTML(estimate.question) + '</p>' : '') + sources;
+}
+
+function renderAgent() {
+  const form = $("#agent-form");
+  const followUp = Boolean(agent.session);
+  $("#agent-photos").innerHTML = agent.photos.map((photo, index) =>
+    '<figure><img src="' + photo + '" alt="Foto ' + (index + 1) + '">' + (followUp ? '' :
+    '<button type="button" class="quiet" data-agent-photo="' + index + '" aria-label="Foto ' + (index + 1) + ' entfernen">×</button>') +
+    '</figure>').join("");
+  $("#agent-photos").hidden = !agent.photos.length;
+  $("#agent-photo-add").hidden = followUp || agent.photos.length >= (agent.info?.limits.photos || 4);
+  $("#agent-turns").innerHTML = agent.turns.map(turn => '<p>' + escapeHTML(turn) + '</p>').join("");
+  $("#agent-turns").hidden = !agent.turns.length;
+  $("#agent-text-label").firstChild.textContent = followUp ? "Antwort oder Korrektur " : "Beschreibung ";
+  form.elements.text.placeholder = followUp ? "z. B. es waren zwei Scheiben" : "z. B. Porridge wie immer, dazu eine Banane";
+  const result = $("#agent-result");
+  result.hidden = !agent.estimate;
+  result.innerHTML = agent.estimate ? agentEstimateHTML(agent.estimate) : "";
+  $("#agent-submit").textContent = followUp ? "Neu einschätzen" : "Einschätzen";
+  $("#agent-submit").disabled = agent.busy;
+  $("#agent-submit").classList.toggle("primary", !agent.estimate);
+  $("#agent-apply").hidden = !agent.estimate;
+  $("#agent-apply").classList.toggle("primary", Boolean(agent.estimate));
+  $("#agent-apply").disabled = agent.busy;
+  $("#agent-status").textContent = agent.busy ? "Der Agent schätzt, das dauert meist 10 bis 40 Sekunden …" : "";
+}
+
+// A photo as a JPEG data URL, scaled down so the longer side has at most AGENT_PHOTO_SIDE pixels.
+function agentPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Foto konnte nicht gelesen werden"));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("Foto konnte nicht gelesen werden"));
+      image.onload = () => {
+        const scale = Math.min(1, AGENT_PHOTO_SIDE / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.naturalWidth * scale);
+        canvas.height = Math.round(image.naturalHeight * scale);
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function addAgentPhotos(event) {
+  const limit = agent.info?.limits.photos || 4;
+  try {
+    for (const file of [...event.target.files].slice(0, limit - agent.photos.length))
+      agent.photos.push(await agentPhoto(file));
+  } catch (error) { toast(error.message, true); }
+  event.target.value = "";
+  renderAgent();
+}
+
+async function submitAgent(event) {
+  event.preventDefault();
+  if (agent.busy) return;
+  const form = $("#agent-form");
+  const text = form.elements.text.value.trim();
+  if (!text && (agent.session || !agent.photos.length)) {
+    toast(agent.session ? "Bitte eine Antwort oder Korrektur eingeben" : "Bitte ein Foto aufnehmen oder das Essen beschreiben", true);
+    return;
+  }
+  let at = null;
+  try {
+    at = agent.target === "edit" ? toInstant(state.day, $("#edit-form").elements.at.value)
+      : toInstant(state.day, $("#entry-form").elements.at.value);
+  } catch (_) { /* Without a valid time the server takes now. */ }
+  const placeId = agent.target === "edit" ? $("#edit-form").elements.place_id.value || null : entryPlaceId();
+  agent.busy = true;
+  renderAgent();
+  try {
+    const data = await api("/api/agent/estimate", { method: "POST", body: JSON.stringify(agent.session
+      ? { session_id: agent.session, text, at, place_id: placeId }
+      : { text, photos: agent.photos, at, place_id: placeId === "none" ? null : placeId }) });
+    agent.session = data.session_id;
+    agent.estimate = data.estimate;
+    agent.turns = data.turns;
+    form.elements.text.value = "";
+  } catch (error) { toast(error.message, true); }
+  agent.busy = false;
+  renderAgent();
+  if (agent.estimate) $("#agent-result").scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+// "Übernehmen": the estimate fills the form it was opened from; nothing is saved yet.
+function applyAgent() {
+  const estimate = agent.estimate;
+  if (!estimate) return;
+  const form = $(agent.target === "edit" ? "#edit-form" : "#entry-form");
+  form.elements.carbs.value = estimate.carbs_g;
+  setCertainty(form, estimate.certainty);
+  form.elements.fat_protein.checked = estimate.fat_protein;
+  form.elements.fast.checked = estimate.fast;
+  if (agent.target === "edit") {
+    form.elements.dish_name.value = estimate.dish?.name || "";
+    form.elements.description.value = estimate.description;
+    state.editAgentSession = agent.session;
+    updateEditPlace();
+  } else {
+    state.entryAgent = { session_id: agent.session, dish_name: estimate.dish?.name || "", description: estimate.description,
+      range: estimate.carbs_low_g + "–" + estimate.carbs_high_g + " g" };
+    updateEntryAgent();
+    updateEntryOptions();
+    requestEntryPosition();
+    schedulePreview(0);
+  }
+  closeAgent();
+}
+
+// Voice note: recorded in the browser, turned into 16 kHz mono WAV there (every provider reads that)
+// and transcribed on the server through OpenRouter; the text lands in the description field.
+function wavBase64(samples, rate) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+  const text = (offset, value) => [...value].forEach((char, index) => view.setUint8(offset + index, char.charCodeAt(0)));
+  text(0, "RIFF"); view.setUint32(4, 36 + samples.length * 2, true); text(8, "WAVEfmt ");
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true); view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true); text(36, "data"); view.setUint32(40, samples.length * 2, true);
+  for (let index = 0; index < samples.length; index++) {
+    const value = Math.max(-1, Math.min(1, samples[index]));
+    view.setInt16(44 + index * 2, value < 0 ? value * 0x8000 : value * 0x7fff, true);
+  }
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 0x8000)
+    binary += String.fromCharCode.apply(null, bytes.subarray(offset, offset + 0x8000));
+  return btoa(binary);
+}
+
+async function transcribeAgentRecording(blob) {
+  const status = $("#agent-record-status");
+  status.textContent = "Wird transkribiert …";
+  try {
+    const Context = window.AudioContext || window.webkitAudioContext;
+    const context = new Context();
+    const decoded = await context.decodeAudioData(await blob.arrayBuffer());
+    context.close();
+    const rate = 16000;
+    const offline = new OfflineAudioContext(1, Math.max(1, Math.ceil(decoded.duration * rate)), rate);
+    const source = offline.createBufferSource();
+    source.buffer = decoded;
+    source.connect(offline.destination);
+    source.start();
+    const rendered = await offline.startRendering();
+    const data = await api("/api/agent/transcribe", { method: "POST",
+      body: JSON.stringify({ audio: wavBase64(rendered.getChannelData(0), rate), format: "wav" }) });
+    const field = $("#agent-form").elements.text;
+    field.value = (field.value.trim() ? field.value.trim() + " " : "") + data.text;
+    status.textContent = data.text ? "" : "Nichts verstanden";
+  } catch (error) {
+    status.textContent = "";
+    toast(error.message || "Aufnahme konnte nicht verarbeitet werden", true);
+  }
+}
+
+function stopAgentRecording(discard = false) {
+  clearTimeout(agent.recordTimer);
+  const recorder = agent.recorder;
+  if (!recorder) return;
+  agent.recorder = null;
+  recorder.discard = discard;
+  if (recorder.state !== "inactive") recorder.stop();
+  $("#agent-record").textContent = "Sprechen";
+  $("#agent-record").setAttribute("aria-pressed", "false");
+}
+
+async function toggleAgentRecording() {
+  if (agent.recorder) { stopAgentRecording(); return; }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (_) { toast("Mikrofon nicht freigegeben", true); return; }
+  const chunks = [];
+  const recorder = new MediaRecorder(stream);
+  recorder.addEventListener("dataavailable", event => { if (event.data.size) chunks.push(event.data); });
+  recorder.addEventListener("stop", () => {
+    stream.getTracks().forEach(track => track.stop());
+    if (!recorder.discard && chunks.length) transcribeAgentRecording(new Blob(chunks, { type: recorder.mimeType }));
+    else $("#agent-record-status").textContent = "";
+  });
+  agent.recorder = recorder;
+  recorder.start();
+  $("#agent-record").textContent = "Stopp";
+  $("#agent-record").setAttribute("aria-pressed", "true");
+  $("#agent-record-status").textContent = "Aufnahme läuft …";
+  agent.recordTimer = setTimeout(() => stopAgentRecording(), AGENT_RECORD_SECONDS * 1000);
+}
+
+// ---- Dish catalogue (Analyse → Gerichte): each dish with how its main meals turned out. ----
+const MEAL_NAMES = { breakfast: "Frühstück", lunch: "Mittag", dinner: "Abend" };
+
+function dishHTML(dish, all) {
+  const outcome = dish.outcome;
+  const rows = dish.history.map(row => '<tr><td>' + escapeHTML(new Date(row.day + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "numeric" })) +
+    ' ' + escapeHTML(MEAL_NAMES[row.meal] || "") + '</td><td>' + (row.carbs_g != null ? num(row.carbs_g, 0) + ' g' : '—') +
+    '</td><td>' + (row.rapid_units != null ? num(row.rapid_units) + ' IE' : '—') +
+    '</td><td>' + (row.factor != null ? num(row.factor, 2) : escapeHTML(row.excluded ? "ausgeklammert" : "kein Faktor")) +
+    '</td><td>' + (row.ratio != null ? signedPercent(row.ratio) : '—') +
+    '</td><td>' + (row.g0_mgdl != null && row.g_end_mgdl != null ? num(row.g0_mgdl, 0) + ' → ' + num(row.g_end_mgdl, 0) : '—') +
+    '</td><td>' + escapeHTML(row.place || "") + '</td></tr>').join("");
+  const others = all.filter(other => other.id !== dish.id);
+  return '<details class="dish-item" data-dish-id="' + dish.id + '"><summary><strong>' + escapeHTML(dish.name) + '</strong>' +
+    (dish.category ? ' <span class="place-badge">' + escapeHTML(dish.category) + '</span>' : '') +
+    (dish.archived ? ' <span class="outlier-badge">archiviert</span>' : '') +
+    '<span class="hint dish-hint">' + escapeHTML(dish.hint) + '</span></summary>' +
+    (outcome.meals ? '<p class="hint">' + outcome.meals + ' Hauptmahlzeiten im Zeitraum, davon ' + outcome.valid + ' mit Vergleich' +
+      (outcome.delta_mgdl != null ? ' · BZ-Änderung im Median ' + signedChange(outcome.delta_mgdl, 0) : '') +
+      (outcome.end_mgdl != null ? ' · Endwert im Median ' + outcome.end_mgdl + ' mg/dL' : '') + '</p>' : '') +
+    (rows ? '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Mahlzeit</th><th>KH</th><th>Insulin</th><th>Faktor</th><th>zu üblich</th><th>BZ</th><th>Ort</th></tr></thead><tbody>' +
+      rows + '</tbody></table></div>' : '<p class="hint">Noch keine Hauptmahlzeit mit diesem Gericht im Zeitraum.</p>') +
+    '<div class="dish-edit"><input type="text" class="dish-name" maxlength="60" value="' + escapeHTML(dish.name) + '" aria-label="Name des Gerichts">' +
+    '<input type="text" class="dish-category" maxlength="40" value="' + escapeHTML(dish.category) + '" placeholder="Kategorie" aria-label="Kategorie">' +
+    (others.length ? '<select class="dish-merge" aria-label="Zusammenlegen mit"><option value="">Zusammenlegen mit …</option>' +
+      others.map(other => '<option value="' + other.id + '">' + escapeHTML(other.name) + '</option>').join("") + '</select>' : '') +
+    '<button type="button" class="quiet" data-dish-action="archive">' + (dish.archived ? "Wieder nutzen" : "Archivieren") + '</button>' +
+    '<button type="button" class="quiet delete-treatment" data-dish-action="delete">Löschen</button></div></details>';
+}
+
+function renderDishes(data) {
+  state.dishes = data;
+  $("#dishes-count").textContent = data.dishes.length + (data.dishes.length === 1 ? " Gericht" : " Gerichte") + " · letzte " + data.days + " Tage";
+  const open = new Set($$("#dishes-list details[open]").map(node => node.dataset.dishId));
+  $("#dishes-list").innerHTML = data.dishes.length ? data.dishes.map(dish => dishHTML(dish, data.dishes)).join("")
+    : '<p class="hint">Noch keine Gerichte. Sie entstehen, wenn der Essens-Agent eine Mahlzeit einschätzt oder du in „Tag durchgehen“ an einem Eintrag ein Gericht einträgst.</p>';
+  $$("#dishes-list details").forEach(node => { node.open = open.has(node.dataset.dishId); });
+}
+
+async function loadDishes() {
+  try { renderDishes(await api("/api/dishes")); } catch (error) { toast(error.message, true); }
+}
+
+async function dishAction(body) {
+  try { renderDishes(await api("/api/dishes", { method: "POST", body: JSON.stringify(body) })); }
+  catch (error) { toast(error.message, true); if (state.dishes) renderDishes(state.dishes); }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  $("#entry-agent-open").addEventListener("click", () => openAgent("entry"));
+  $("#entry-agent-clear").addEventListener("click", () => { state.entryAgent = null; updateEntryAgent(); });
+  $("#edit-agent-open").addEventListener("click", () => openAgent("edit"));
+  $("#close-agent").addEventListener("click", closeAgent);
+  $("#agent-dialog").addEventListener("cancel", () => stopAgentRecording(true));
+  $("#agent-form").addEventListener("submit", submitAgent);
+  $("#agent-apply").addEventListener("click", applyAgent);
+  $("#agent-photo-input").addEventListener("change", addAgentPhotos);
+  $("#agent-photos").addEventListener("click", event => {
+    const button = event.target.closest("[data-agent-photo]");
+    if (!button) return;
+    agent.photos.splice(Number(button.dataset.agentPhoto), 1);
+    renderAgent();
+  });
+  $("#agent-record").addEventListener("click", toggleAgentRecording);
+  $$(".entry-mode").forEach(button => button.addEventListener("click", () => setTimeout(updateEntryAgent)));
+  $("#agent-provider").addEventListener("change", event => saveAgentSettings({ provider: event.target.value }));
+  $("#agent-model").addEventListener("change", event =>
+    saveAgentSettings({ ["model_" + $("#agent-provider").value]: event.target.value }));
+  $("#agent-web-search").addEventListener("change", event => saveAgentSettings({ web_search: event.target.checked }));
+  $("#agent-transcribe-model").addEventListener("change", event => saveAgentSettings({ transcribe_model: event.target.value }));
+  $("#agent-models-load").addEventListener("click", loadAgentModels);
+  $("#dishes-list").addEventListener("click", event => {
+    const button = event.target.closest("[data-dish-action]");
+    if (!button) return;
+    const id = button.closest(".dish-item").dataset.dishId;
+    const dish = state.dishes.dishes.find(item => String(item.id) === id);
+    if (button.dataset.dishAction === "archive") dishAction({ action: "archive", id, archived: !dish.archived });
+    else if (button.dataset.armed) dishAction({ action: "delete", id });
+    else { button.dataset.armed = "1"; button.textContent = "Wirklich löschen?"; }
+  });
+  $("#dishes-list").addEventListener("change", event => {
+    const id = event.target.closest(".dish-item")?.dataset.dishId;
+    if (!id) return;
+    if (event.target.matches(".dish-name")) dishAction({ action: "rename", id, name: event.target.value });
+    else if (event.target.matches(".dish-category")) dishAction({ action: "category", id, category: event.target.value });
+    else if (event.target.matches(".dish-merge") && event.target.value) dishAction({ action: "merge", id, into_id: event.target.value });
+  });
 });

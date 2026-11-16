@@ -89,6 +89,11 @@
               <!-- Cards follow the entry flow: meal, outside factors, dose (recommendation and own IE). -->
               <section id="entry-meal-fields" class="entry-card" aria-label="Essen">
                 <p class="entry-card-title">Essen</p>
+                <div class="entry-chips agent-entry">
+                  <button type="button" id="entry-agent-open" class="chip agent-chip">Essen einschätzen</button>
+                  <span id="entry-agent-summary" class="agent-summary" hidden></span>
+                  <button type="button" id="entry-agent-clear" class="chip quiet-chip" aria-label="Einschätzung verwerfen" hidden>×</button>
+                </div>
                 <!-- Meal factors sit beside the carbs input so the certainty slider below keeps the full width. -->
                 <div class="entry-carbs-row">
                   <label id="entry-carbs-field">Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"></label>
@@ -166,6 +171,7 @@
           <div class="segmented analysis-tabs" role="tablist" aria-label="Analyse">
             <button type="button" role="tab" data-analysis-tab="werte" aria-selected="true">Werte</button>
             <button type="button" role="tab" data-analysis-tab="automatik" aria-selected="false">Automatik</button>
+            <button type="button" role="tab" data-analysis-tab="gerichte" aria-selected="false">Gerichte</button>
           </div>
         </div>
         <div id="analysis-werte" class="analysis-pane">
@@ -213,6 +219,13 @@
             <summary><h2>Stressaufschlag beim Frühstück</h2><span id="day-type-ratio-range" class="hint"></span></summary>
             <div id="day-type-ratio"></div>
           </details>
+        </div>
+        <div id="analysis-gerichte" class="analysis-pane" hidden>
+          <p class="hint automatik-intro">Jedes Gericht mit seinen Hauptmahlzeiten. „Brauchte … als üblich“ vergleicht den Faktor der Mahlzeit mit dem üblichen Faktor derselben Mahlzeitenart in den 30 Tagen davor; daraus folgt, wie viele KH sich das Gericht verhielt. Genannt ab 3 gültigen Mahlzeiten. Nur ein Hinweis, die Dosis ändert sich dadurch nicht.</p>
+          <section class="analysis-list panel">
+            <div class="section-head"><h2>Gerichte</h2><span id="dishes-count" class="hint"></span></div>
+            <div id="dishes-list" aria-live="polite"></div>
+          </section>
         </div>
       </section>
 
@@ -276,6 +289,19 @@
             </div>
             <button type="button" id="notify-test">Testmeldung senden</button>
             <ul id="notify-recent" class="hint"></ul>
+          </section>
+          <section class="panel agent-panel">
+            <h2>Essens-Agent</h2>
+            <p id="agent-settings-status" class="hint"></p>
+            <label>Anbieter<select id="agent-provider"></select></label>
+            <label>Modell<input type="text" id="agent-model" maxlength="120" list="agent-model-options" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+            <datalist id="agent-model-options"></datalist>
+            <label class="check-label"><input type="checkbox" id="agent-web-search"> Websuche erlauben (Nährwerte von Produkten und Restaurants)</label>
+            <label>Modell für Sprachaufnahmen <span>über OpenRouter</span><input type="text" id="agent-transcribe-model" maxlength="120" list="agent-audio-options" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+            <datalist id="agent-audio-options"></datalist>
+            <div class="button-row"><button type="button" id="agent-models-load">Modelle des Anbieters laden</button></div>
+            <p id="agent-usage" class="hint"></p>
+            <p class="hint">Schlüssel liegen in der Bereitstellung (Coolify): ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY. Nur Anbieter mit Schlüssel sind wählbar.</p>
           </section>
           <section class="panel places-panel">
             <h2>Orte</h2>
@@ -397,11 +423,37 @@
         <label class="chip chip-toggle factor-chip" title="Wirkt schnell (z. B. Saft, Weißbrot)"><input type="checkbox" name="fast"><span class="factor-icon factor-fast" aria-hidden="true"></span><span>Schnell</span></label>
       </div>
       <label id="edit-place-field" hidden>Ort<select name="place_id"></select></label>
+      <div id="edit-food-fields" hidden>
+        <label>Gericht <span>optional, neuer Name legt es an</span><input name="dish_name" type="text" maxlength="60" list="edit-dish-options" autocomplete="off"></label>
+        <datalist id="edit-dish-options"></datalist>
+        <label>Beschreibung <span>was es war</span><textarea name="description" rows="2" maxlength="1000"></textarea></label>
+        <div class="entry-chips"><button type="button" id="edit-agent-open" class="chip agent-chip">Vom Agenten einschätzen lassen</button></div>
+      </div>
       <label id="edit-sport-field" hidden>Sportart<select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select></label>
       <label id="edit-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
       <label>Notiz <span>optional</span><input name="notes" type="text" maxlength="500"></label>
       <div class="form-actions"><button class="primary" type="submit">Änderung in Nightscout speichern</button><button id="cancel-edit" type="button" class="quiet">Abbrechen</button></div>
       <button id="delete-edit" type="button" class="delete-treatment">Eintrag löschen</button>
+    </form>
+  </dialog>
+  <dialog id="agent-dialog" aria-labelledby="agent-dialog-title">
+    <form id="agent-form">
+      <div class="section-head"><h2 id="agent-dialog-title">Essen einschätzen</h2><button id="close-agent" type="button" class="quiet" aria-label="Schließen">×</button></div>
+      <div id="agent-photos" class="agent-photos" aria-label="Fotos"></div>
+      <div id="agent-turns" class="agent-turns" aria-live="polite"></div>
+      <div id="agent-result" class="agent-result" aria-live="polite" hidden></div>
+      <label id="agent-text-label">Beschreibung <span>was und wie viel</span><textarea name="text" rows="3" maxlength="2000" placeholder="z. B. Porridge wie immer, dazu eine Banane"></textarea></label>
+      <div class="entry-chips agent-inputs">
+        <label class="chip agent-photo-add" id="agent-photo-add">+ Foto<input type="file" id="agent-photo-input" accept="image/*" multiple hidden></label>
+        <button type="button" id="agent-record" class="chip" hidden>Sprechen</button>
+        <span id="agent-record-status" class="hint" role="status"></span>
+      </div>
+      <p id="agent-status" class="hint" role="status"></p>
+      <div class="form-actions">
+        <button class="primary" type="submit" id="agent-submit">Einschätzen</button>
+        <button type="button" id="agent-apply" hidden>Übernehmen</button>
+      </div>
+      <p class="hint">Der Agent schätzt nur die Kohlenhydrate. Die Dosis rechnet danach die App wie immer. Fotos und Text gehen an den gewählten KI-Anbieter.</p>
     </form>
   </dialog>
   <dialog id="window-dialog" aria-labelledby="window-dialog-title">
