@@ -85,5 +85,17 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual(places, [("kantine", 1), ("Büro", 0)])
 
 
+    def test_a_split_limit_of_5_ie_rises_to_6_5(self):
+        db.init()
+        before = db.MIGRATIONS.index(db._split_min_units)
+        for limit, expected in ((5, "6.5"), (8, 8)):
+            with db.connect() as connection:
+                connection.execute("DELETE FROM settings_versions")
+                connection.execute("INSERT INTO settings_versions(created_at,effective_at,payload) VALUES(?,?,?)",
+                                   ("x", "1970-01-01T00:00:00+00:00", f'{{"split_min_units":{limit}}}'))
+                connection.execute(f"PRAGMA user_version={before}")
+            db.init()
+            self.assertEqual(config.get_settings()[1]["split_min_units"], expected)
+
 if __name__ == "__main__":
     unittest.main()
