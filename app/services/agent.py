@@ -225,6 +225,20 @@ def photo(session_id: str, index: str) -> bytes | None:
     return path.read_bytes() if path.is_file() else None
 
 
+def for_entry(params: dict) -> dict:
+    """The newest estimate linked to a diary entry, so the edit dialog can continue it
+    (user request 2026-11-17: a second plate is told to the agent instead of starting over)."""
+    event_id = str((params.get("event_id") or [""])[0])
+    session = store.sessions_for([event_id]).get(event_id) if event_id else None
+    if not session:
+        return {"session": None}
+    return {"session": {
+        "session_id": session["id"], "estimate": session["estimate"], "photos": session["photos"],
+        "turns": [turn["text"] for turn in session["messages"] if turn["role"] == "user"],
+        "can_continue": len(session["messages"]) < rules.MAX_TURNS * 2,
+    }}
+
+
 def records(event_ids: list[str]) -> dict[str, dict]:
     """What the read API adds to a meal record: the agent's estimate and its photos."""
     result = {}

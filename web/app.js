@@ -3724,7 +3724,7 @@ function updateEntryAgent() {
     (applied.dish_name ? "Gericht: " + applied.dish_name : "Ohne Gericht") + " · geschätzt " + applied.range;
 }
 
-function openAgent(target) {
+async function openAgent(target) {
   if (!agent.info?.available) {
     toast("Essens-Agent ist nicht eingerichtet: in den Einstellungen Anbieter und Modell wählen", true);
     return;
@@ -3732,7 +3732,20 @@ function openAgent(target) {
   Object.assign(agent, { target, photos: [], session: null, estimate: null, turns: [], busy: false });
   const form = $("#agent-form");
   form.reset();
-  if (target === "edit") form.elements.text.value = $("#edit-form").elements.description.value;
+  // An entry the agent already estimated continues that conversation (photos, turns, last answer),
+  // so a second plate is told as a correction instead of starting over.
+  const eventId = target === "edit" ? state.editing?.event_id : null;
+  let earlier = null;
+  if (eventId) {
+    try { earlier = (await api("/api/agent/session?event_id=" + encodeURIComponent(eventId))).session; }
+    catch (error) { toast(error.message, true); }
+  }
+  if (earlier?.can_continue) {
+    Object.assign(agent, { session: earlier.session_id, estimate: earlier.estimate, turns: earlier.turns,
+      photos: Array.from({ length: earlier.photos }, (_, index) =>
+        "/api/agent/photo?session=" + encodeURIComponent(earlier.session_id) + "&n=" + index) });
+    form.elements.text.placeholder = "z. B. ich hatte noch einen zweiten Teller";
+  } else if (target === "edit") form.elements.text.value = $("#edit-form").elements.description.value;
   $("#agent-record").hidden = !agent.info.transcribe_available || !navigator.mediaDevices?.getUserMedia;
   renderAgent();
   $("#agent-dialog").showModal();
@@ -3782,11 +3795,14 @@ function renderAgent() {
   $("#agent-turns").innerHTML = agent.turns.map(turn => '<p>' + escapeHTML(turn) + '</p>').join("");
   $("#agent-turns").hidden = !agent.turns.length;
   $("#agent-text-label").firstChild.textContent = followUp ? "Antwort oder Korrektur " : "Beschreibung ";
-  form.elements.text.placeholder = followUp ? "z. B. es waren zwei Scheiben" : "z. B. Porridge wie immer, dazu eine Banane";
+  form.elements.text.placeholder = followUp
+    ? (agent.target === "edit" ? "z. B. ich hatte noch einen zweiten Teller" : "z. B. es waren zwei Scheiben")
+    : "z. B. Porridge wie immer, dazu eine Banane";
   const result = $("#agent-result");
   result.hidden = !agent.estimate;
   result.innerHTML = agent.estimate ? agentEstimateHTML(agent.estimate) : "";
   $("#agent-submit").textContent = followUp ? "Neu einschätzen" : "Einschätzen";
+  $("#agent-dialog-title").textContent = followUp && agent.target === "edit" ? "Einschätzung nachbessern" : "Essen einschätzen";
   $("#agent-submit").disabled = agent.busy;
   $("#agent-submit").classList.toggle("primary", !agent.estimate);
   $("#agent-apply").hidden = !agent.estimate;

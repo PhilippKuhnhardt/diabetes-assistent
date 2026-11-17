@@ -60,6 +60,7 @@ GET_ROUTES = {
     "/api/dishes": dishes.view,
     "/api/agent": agent.view,
     "/api/agent/models": agent.models,
+    "/api/agent/session": agent.for_entry,
     "/api/inbox": inbox.view,
 }
 
