@@ -36,7 +36,7 @@ MESSAGES = {
     "auto_vacation": "Unbekannte Urlaubs-Einstellung der Automatik",
     "basal_default_units": "Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen",
     "split_min_grams": SPLIT_MESSAGE, "split_first_percent": SPLIT_MESSAGE, "split_delay_minutes": SPLIT_MESSAGE,
-    "split_min_units": "Split-Bolus: Mindestdosis 0–30 IE (0 = immer)",
+    "split_min_units": "Split-Bolus: Mindestdosis 0–30 IE in 0,5er-Schritten (0 = immer)",
     "sport_effects_mgdl": "Ungültiger Sporteffekt",
     "sport_durations_minutes": "Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen",
 }
@@ -69,7 +69,8 @@ class SettingsInput(BaseModel):
     basal_default_units: Annotated[Decimal, Field(ge=0, le=100, multiple_of=Decimal("0.5"))] = \
         Decimal(str(config.DEFAULT_BASAL_UNITS))
     split_min_grams: Annotated[int, Field(ge=0, le=300)] = config.DEFAULT_SPLIT["split_min_grams"]
-    split_min_units: Annotated[int, Field(ge=0, le=30)] = config.DEFAULT_SPLIT["split_min_units"]
+    split_min_units: Annotated[Decimal, Field(ge=0, le=30, multiple_of=Decimal("0.5"))] = \
+        Decimal(config.DEFAULT_SPLIT["split_min_units"])
     split_first_percent: Annotated[int, Field(ge=30, le=90)] = config.DEFAULT_SPLIT["split_first_percent"]
     split_delay_minutes: Annotated[int, Field(ge=30, le=300)] = config.DEFAULT_SPLIT["split_delay_minutes"]
     sport_effects_mgdl: dict[SportKind, Annotated[Decimal, Field(ge=-500, le=500)]]
@@ -142,6 +143,7 @@ def validate_settings(value: dict) -> dict:
         "sport_effects_mgdl": {kind: str(amount) for kind, amount in checked.sport_effects_mgdl.items()},
         "sport_durations_minutes": checked.sport_durations_minutes or dict(config.DEFAULT_SPORT_DURATIONS),
         "basal_default_units": unit_text(checked.basal_default_units),
+        "split_min_units": unit_text(checked.split_min_units),
     })
     return result
 

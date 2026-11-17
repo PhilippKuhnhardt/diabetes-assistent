@@ -312,6 +312,10 @@ class SplitTests(unittest.TestCase):
         self.assertTrue(split.worth_it("4.5", {"split_min_units": 0}))
         self.assertTrue(split.worth_it(None, {"split_min_units": 5}))
         self.assertFalse(split.worth_it(Decimal(3), {}))
+        # Default since 2026-11-17: 6.5 IE, half units allowed.
+        self.assertFalse(split.worth_it("6", {}))
+        self.assertTrue(split.worth_it("6.5", {}))
+        self.assertFalse(split.worth_it("6", {"split_min_units": "6.5"}))
         # The limit also holds for a fat/protein meal: it is offered whatever its size, but not split below 5 IE.
         settings = {**self.settings, "split_min_units": 5}
         self.assertIsNotNone(split.offer(Decimal(30), False, settings, fat=True))
