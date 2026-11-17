@@ -817,7 +817,10 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 #agent-dialog::backdrop { background: #0c2419a8; }
 #agent-dialog .section-head { align-items: center; }
 #agent-dialog .section-head button { font-size: 22px; line-height: 1; padding: 3px 9px; }
-#agent-dialog textarea, #edit-dialog textarea { width: 100%; resize: vertical; font: inherit; }
+#agent-dialog textarea, #edit-dialog textarea { width: 100%; resize: vertical; font: inherit; font-weight: 400; }
+/* The description is the entry's content: room for several lines, growing with the text where the browser can. */
+label textarea { display: block; margin-top: 7px; background: white; color: var(--ink); border: 1px solid #cddbd2; border-radius: 8px; padding: 9px 11px; font-weight: 400; line-height: 1.45; }
+#edit-dialog textarea[name="description"] { min-height: 7.5em; max-height: 50vh; field-sizing: content; }
 .agent-entry { align-items: center; }
 .agent-chip::before { content: "✦ "; }
 .agent-summary { font-size: 12px; color: var(--muted); }
