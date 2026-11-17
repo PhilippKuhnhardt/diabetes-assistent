@@ -14,8 +14,10 @@ from app.services import agent
 from app.store import agent as agent_store, db, dishes as dish_store
 
 ANSWER = {
-    "items": [{"name": "Haferflocken", "amount": "50 g", "carbs_g": 29.5}, {"name": "Banane", "amount": "1", "carbs_g": 24}],
-    "carbs_g": 58.4, "carbs_low_g": 60, "carbs_high_g": 70, "history_adjustment_g": 5, "certainty": "known",
+    "items": [{"name": "Haferflocken", "amount": "50 g", "carbs_g": 29.5, "fat_g": 3.5, "protein_g": 6.5},
+              {"name": "Banane", "amount": "1", "carbs_g": 24, "fat_g": 0.3, "protein_g": 1.4}],
+    "carbs_g": 58.4, "carbs_low_g": 60, "carbs_high_g": 70, "history_adjustment_g": 5, "fat_g": 4.2,
+    "protein_g": 8, "certainty": "known",
     "fat_protein": False, "fast": False, "dish_name": "porridge", "dish_category": "Frühstück",
     "description": "Porridge mit Banane", "reasoning": "Bekanntes Gericht.", "question": "",
 }
@@ -58,6 +60,14 @@ class MealAgentRuleTests(unittest.TestCase):
         self.assertEqual(meal_agent.check({**ANSWER, "certainty": "sure"}, [])["certainty"], "unsure")
         with self.assertRaises(ValueError):
             meal_agent.check({**ANSWER, "carbs_g": "viel"}, [])
+
+    def test_check_keeps_fat_and_protein_and_sums_the_items_without_a_total(self):
+        result = meal_agent.check(ANSWER, [])
+        self.assertEqual((result["fat_g"], result["protein_g"]), (4, 8))
+        self.assertEqual((result["items"][0]["fat_g"], result["items"][0]["protein_g"]), (3.5, 6.5))
+        summed = meal_agent.check({key: value for key, value in ANSWER.items() if key not in ("fat_g", "protein_g")}, [])
+        self.assertEqual((summed["fat_g"], summed["protein_g"]), (4, 8))
+        self.assertEqual(json.loads(meal_agent.answer_text(result))["protein_g"], 8)
 
     def test_the_schema_is_strict_and_the_prompt_names_no_dose(self):
         self.assertEqual(sorted(meal_agent.SCHEMA["required"]), sorted(meal_agent.SCHEMA["properties"]))
@@ -258,6 +268,7 @@ class AgentServiceTests(unittest.TestCase):
         agent.link(first["session_id"], "11111111-1111-1111-1111-111111111111")
         linked = agent.records(["11111111-1111-1111-1111-111111111111"])["11111111-1111-1111-1111-111111111111"]
         self.assertEqual((linked["agent_carbs_g"], len(linked["photos"])), (58, 1))
+        self.assertEqual((linked["agent_fat_g"], linked["agent_protein_g"]), (4, 8))
         # The edit dialog continues the linked estimate (user request 2026-11-17: a second plate).
         earlier = agent.for_entry({"event_id": ["11111111-1111-1111-1111-111111111111"]})["session"]
         self.assertEqual((earlier["session_id"], earlier["turns"], earlier["photos"], earlier["can_continue"]),

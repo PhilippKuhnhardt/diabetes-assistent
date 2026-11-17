@@ -21,8 +21,8 @@ MEAL_RECORD_COLUMNS = [
     "event_id", "at", "dish", "dish_id", "description", "carbs_g", "insulin_units", "kind", "place",
     "carbs_certainty", "fat_protein", "fast", "meal_id", "meal", "own_meal", "meal_carbs_total_g",
     "factor_ie_per_ke", "g0_mgdl", "g_end_mgdl", "delta_mgdl", "excluded", "blocked_reason",
-    "agent_carbs_g", "agent_carbs_low_g", "agent_carbs_high_g", "agent_history_adjustment_g", "agent_items",
-    "agent_model", "photos",
+    "agent_carbs_g", "agent_carbs_low_g", "agent_carbs_high_g", "agent_history_adjustment_g", "agent_fat_g",
+    "agent_protein_g", "agent_items", "agent_model", "photos",
 ]
 TREATMENT_COLUMNS = ["id", "at", "eventType", "carbs", "insulin", "basal_units", "duration",
                      "sport_type", "role", "meal", "episode_id", "carbs_certainty", "fat_protein", "alcohol", "fast", "place",
@@ -57,7 +57,9 @@ entsprechen der App zum Abrufzeitpunkt (aktuelles Nightscout-Profil für alle Ta
   ihrem Fenster, das Ergebnis gehört dann dem ganzen Fenster (meal_carbs_total_g).
   agent_*: Schätzung des Essens-Agenten, aus der der Eintrag entstand (carbs_g = gespeicherte KH,
   agent_carbs_g mit Spanne low/high = Schätzung; agent_history_adjustment_g = Anteil, den der Agent
-  wegen des Verlaufs des Gerichts aufgeschlagen hat; agent_items = Bestandteile). photos: Pfade der
+  wegen des Verlaufs des Gerichts aufgeschlagen hat; agent_fat_g / agent_protein_g = geschätztes
+  Fett und Eiweiß der Mahlzeit in Gramm, seit 17.11.2026, nur gespeichert, nicht in der App gezeigt;
+  agent_items = Bestandteile, je mit carbs_g, fat_g, protein_g). photos: Pfade der
   Fotos, abrufbar mit demselben Schlüssel (JPEG).
   /api/v1/dishes (ohne Zeitraum-Tabellen): der Katalog mit Kennzahlen je Gericht, siehe dort.
 - window_events: alle KH- und Insulinereignisse, die in das Fenster einer Mahlzeit zählen.

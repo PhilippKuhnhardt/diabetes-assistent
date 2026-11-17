@@ -28,12 +28,15 @@ SCHEMA = {
     "properties": {
         "items": {"type": "array", "items": {
             "type": "object",
-            "properties": {"name": {"type": "string"}, "amount": {"type": "string"}, "carbs_g": {"type": "number"}},
-            "required": ["name", "amount", "carbs_g"], "additionalProperties": False}},
+            "properties": {"name": {"type": "string"}, "amount": {"type": "string"}, "carbs_g": {"type": "number"},
+                           "fat_g": {"type": "number"}, "protein_g": {"type": "number"}},
+            "required": ["name", "amount", "carbs_g", "fat_g", "protein_g"], "additionalProperties": False}},
         "carbs_g": {"type": "number"},
         "carbs_low_g": {"type": "number"},
         "carbs_high_g": {"type": "number"},
         "history_adjustment_g": {"type": "number"},
+        "fat_g": {"type": "number"},
+        "protein_g": {"type": "number"},
         "certainty": {"type": "string", "enum": list(CERTAINTIES)},
         "fat_protein": {"type": "boolean"},
         "fast": {"type": "boolean"},
@@ -43,8 +46,8 @@ SCHEMA = {
         "reasoning": {"type": "string"},
         "question": {"type": "string"},
     },
-    "required": ["items", "carbs_g", "carbs_low_g", "carbs_high_g", "history_adjustment_g", "certainty",
-                 "fat_protein", "fast", "dish_name", "dish_category", "description", "reasoning", "question"],
+    "required": ["items", "carbs_g", "carbs_low_g", "carbs_high_g", "history_adjustment_g", "fat_g",
+                 "protein_g", "certainty", "fat_protein", "fast", "dish_name", "dish_category", "description", "reasoning", "question"],
     "additionalProperties": False,
 }
 
@@ -78,9 +81,12 @@ Teller", "die Hälfte liegen lassen"). Deine Antwort beschreibt dann immer die g
 tatsächlich gegessen wurde, mit allen Bestandteilen in items und description.
 
 Deine Antwort ist ein JSON-Objekt mit genau diesen Feldern:
-- items: Bestandteile mit name, amount (Menge) und carbs_g (verwertbare KH ohne Ballaststoffe),
+- items: Bestandteile mit name, amount (Menge), carbs_g (verwertbare KH ohne Ballaststoffe), fat_g (Fett) \
+und protein_g (Eiweiß), alles in Gramm,
 - carbs_g: deine beste Schätzung; carbs_low_g bis carbs_high_g: die ehrliche Spanne,
 - history_adjustment_g: siehe oben,
+- fat_g und protein_g: Fett und Eiweiß der ganzen Mahlzeit in Gramm, eine grobe Schätzung reicht. Philipp \
+sieht sie nicht; sie werden gespeichert, um später die Wirkung von Fett und Eiweiß auf den BZ zu untersuchen,
 - certainty: weighed (gewogen oder Packungswerte), known (bekanntes Gericht oder gut erkennbare Portion), \
 unsure (grobe Schätzung),
 - fat_protein: nur bei wirklich fett- oder eiweißreichen Mahlzeiten, die den BZ über Stunden nachhaltig \
@@ -153,6 +159,13 @@ def _number(value, low: float = 0, high: float = 500) -> float:
     return min(max(number, low), high)
 
 
+def _total(value, items: list[dict], key: str) -> int:
+    """Grams of fat or protein for the whole meal: the model's total, else the sum of its items."""
+    if value is None:
+        return round(sum(item[key] for item in items))
+    return round(_number(value))
+
+
 def check(data: dict, catalogue: list[dict]) -> dict:
     """An answer in the form the page shows: whole grams, a range that holds the estimate, a dish
     matched to the catalogue by name, and texts cut to size. Raises ValueError on a broken answer."""
@@ -164,13 +177,16 @@ def check(data: dict, catalogue: list[dict]) -> dict:
     for item in data.get("items") or []:
         if isinstance(item, dict) and str(item.get("name") or "").strip():
             items.append({"name": str(item["name"]).strip()[:80], "amount": str(item.get("amount") or "").strip()[:40],
-                          "carbs_g": round(_number(item.get("carbs_g") or 0), 1)})
+                          "carbs_g": round(_number(item.get("carbs_g") or 0), 1),
+                          "fat_g": round(_number(item.get("fat_g") or 0), 1),
+                          "protein_g": round(_number(item.get("protein_g") or 0), 1)})
     name = " ".join(str(data.get("dish_name") or "").split())[:dishes.NAME_MAX]
     known = next((dish for dish in catalogue if dish["name"].casefold() == name.casefold()), None) if name else None
     certainty = data.get("certainty") if data.get("certainty") in CERTAINTIES else "unsure"
     return {
         "items": items[:30], "carbs_g": carbs, "carbs_low_g": low, "carbs_high_g": high,
         "history_adjustment_g": round(_number(data.get("history_adjustment_g") or 0, -200, 200)),
+        "fat_g": _total(data.get("fat_g"), items, "fat_g"), "protein_g": _total(data.get("protein_g"), items, "protein_g"),
         "certainty": certainty, "fat_protein": data.get("fat_protein") is True, "fast": data.get("fast") is True,
         "dish": ({"id": known["id"] if known else None, "name": known["name"] if known else name, "new": known is None,
                   "category": (known or {}).get("category") or dishes.validate_category(data.get("dish_category")),
@@ -184,7 +200,8 @@ def check(data: dict, catalogue: list[dict]) -> dict:
 def answer_text(estimate: dict) -> str:
     """The agent's earlier answer as it is replayed to the model in a follow-up turn."""
     return json.dumps({key: estimate[key] for key in ("items", "carbs_g", "carbs_low_g", "carbs_high_g",
-                                                      "history_adjustment_g", "description", "reasoning", "question")}
+                                                      "history_adjustment_g", "fat_g", "protein_g", "description", "reasoning",
+                                                      "question") if key in estimate}
                       | {"dish_name": (estimate.get("dish") or {}).get("name") or ""}, ensure_ascii=False)
 
 
