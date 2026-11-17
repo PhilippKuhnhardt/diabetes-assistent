@@ -326,11 +326,29 @@ def _browser_sessions(db: sqlite3.Connection) -> None:
     )""")
 
 
+def _split_min_units(db: sqlite3.Connection) -> None:
+    """A split is only offered from a full dose of 6.5 IE instead of 5 IE (Philipp's request 2026-11-17).
+    Only the former default of exactly 5 IE is changed, as a new settings version from now on."""
+    row = db.execute("SELECT payload FROM settings_versions ORDER BY id DESC LIMIT 1").fetchone()
+    if not row:
+        return
+    payload = json.loads(row["payload"])
+    try:
+        if Decimal(str(payload.get("split_min_units"))) != Decimal(5):
+            return
+    except ArithmeticError:
+        return
+    payload["split_min_units"] = "6.5"
+    now = datetime.now(timezone.utc).isoformat()
+    db.execute("INSERT INTO settings_versions(created_at,effective_at,payload) VALUES(?,?,?)",
+               (now, now, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))))
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
                                                           _notifications, _notification_priority, _places,
                                                           _inbox_seen, _sport_sessions, _places_without_positions,
                                                           _place_factor, _timezone_periods, _prior_insulin_percentile,
-                                                          _dishes, _agent, _browser_sessions]
+                                                          _dishes, _agent, _browser_sessions, _split_min_units]
 
 
 def init() -> None:
