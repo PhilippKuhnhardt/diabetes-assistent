@@ -5,7 +5,7 @@ const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selec
 const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", analysisTab: "werte", dayChosenAt: 0, settings: null, dayData: null, pendingMealId: null, pendingSportId: null, entryTimeTouched: false };
 const views = new Set(["diary", "analysis", "settings"]);
 const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
-const CERTAINTY_LABELS = { weighed: "Gewogen", known: "Halbwegs sicher", unsure: "KH unsicher" };
+const CERTAINTY_LABELS = { weighed: "KH sicher", known: "Halbwegs sicher", unsure: "KH unsicher" };
 // Meal factors picked on a carb entry; shown as icons wherever the meal or entry appears.
 const MEAL_FACTORS = { alcohol: "Alkohol", fat_protein: "Fettreich", fast: "Schnell" };
 
@@ -646,7 +646,7 @@ function updateEntrySplit() {
 // KH-Sicherheit is a three-stop slider (unsure, roughly known, weighed) that starts in the middle.
 // An edited entry without a mark keeps none until the slider is moved.
 const CERTAINTY_LEVELS = ["unsure", "known", "weighed"];
-const CERTAINTY_SLIDER_LABELS = ["KH unsicher", "KH halbwegs", "KH gewogen"];
+const CERTAINTY_SLIDER_LABELS = ["KH unsicher", "KH halbwegs", "KH sicher"];
 
 function showCertainty(input) {
   input.parentElement.querySelector(".certainty-label").textContent = CERTAINTY_SLIDER_LABELS[Number(input.value)];

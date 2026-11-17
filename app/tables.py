@@ -41,8 +41,9 @@ entsprechen der App zum Abrufzeitpunkt (aktuelles Nightscout-Profil für alle Ta
   für eine bestätigte BZ-Senkung durch Sport. g_end_mgdl ist der BZ am Endpunkt.
   excluded = manuell ausgeklammert. blocked_reason ist gesetzt, wenn kein Faktor vorliegt.
   carbs_certainty: KH-Sicherheit, die unsicherste Stufe der markierten KH-Einträge im Fenster:
-  weighed = gewogen, known = Gericht bekannt oder FDDB-KI-Auswertung, unsure = keine ernsthafte
-  Schätzung, leer = nicht angegeben. fat_protein: mindestens ein KH-Eintrag war als
+  weighed = gewogen oder genormt, known = alle relevanten Zutaten bekannt, nur das Gewicht geschätzt,
+  unsure = unbekannte Zutaten oder sehr unklare Menge (Bedeutung seit 17.11.2026, vorher: known =
+  Gericht bekannt oder FDDB-KI, unsure = keine ernsthafte Schätzung), leer = nicht angegeben. fat_protein: mindestens ein KH-Eintrag war als
   „fett-/eiweißreich“ markiert. alcohol: mindestens ein KH-Eintrag war mit „Alkohol“ markiert.
   fast: mindestens ein KH-Eintrag war als „Schnell“ (wirkt schnell) markiert, seit 14.11.2026.
   place: Ort-Chip der Mahlzeit (ihr eigener Eintrag, sonst der erste gezählte KH-Eintrag mit Ort),

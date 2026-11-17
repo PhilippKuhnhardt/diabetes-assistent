@@ -87,8 +87,9 @@ und protein_g (Eiweiß), alles in Gramm,
 - history_adjustment_g: siehe oben,
 - fat_g und protein_g: Fett und Eiweiß der ganzen Mahlzeit in Gramm, eine grobe Schätzung reicht. Philipp \
 sieht sie nicht; sie werden gespeichert, um später die Wirkung von Fett und Eiweiß auf den BZ zu untersuchen,
-- certainty: weighed (gewogen oder Packungswerte), known (bekanntes Gericht oder gut erkennbare Portion), \
-unsure (grobe Schätzung),
+- certainty (Philipps Maßstab): weighed = gewogen oder genormt (Packung, feste Portionsangabe); known = alle \
+relevanten Zutaten sind bekannt, nur das Gewicht ist geschätzt; unsure = unbekannte Zutaten oder sehr unklare \
+Menge,
 - fat_protein: nur bei wirklich fett- oder eiweißreichen Mahlzeiten, die den BZ über Stunden nachhaltig \
 heben, etwa Pizza, Steak, Burger mit Pommes oder Raclette. Eine Suppe oder ein Gericht mit etwas Fleisch oder \
 Öl (z. B. Pho, Curry mit Reis, Pasta mit Soße) ist es nicht (Philipps Maßstab). fast: wirkt schnell (Saft, \

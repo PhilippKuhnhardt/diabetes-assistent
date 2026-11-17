@@ -76,7 +76,8 @@ class EntryArgs(Args):
         "Blutig gemessener BZ in mg/dL (z. B. Sensor ausgefallen). Ersetzt für die Empfehlung einen fehlenden oder "
         "älteren CGM-Wert; save_entry speichert ihn als Nightscout-BG-Check, auch ohne KH und Insulin.")] = None
     carbs_certainty: Annotated[Literal[tuple(CERTAINTIES)] | None, Field(description=
-        "weighed = gewogen, known = halbwegs sicher (bekanntes Gericht, FDDB-KI), unsure = keine ernsthafte Schätzung.")] = None
+        "weighed = gewogen oder genormt (Packung, Portionsangabe), known = alle relevanten Zutaten bekannt, nur das Gewicht "
+        "geschätzt, unsure = unbekannte Zutaten oder sehr unklare Menge.")] = None
     fat_protein: Annotated[bool | None, Field(description="true = fett-/eiweißreich.")] = None
     fast: Annotated[bool | None, Field(description=
         "true = wirkt schnell (z. B. Saft, Weißbrot; nur erfasst, ändert keine Rechnung). Mit fat_protein kombinierbar.")] = None
