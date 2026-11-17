@@ -248,6 +248,7 @@ def records(event_ids: list[str]) -> dict[str, dict]:
             "agent_carbs_g": estimate.get("carbs_g"), "agent_carbs_low_g": estimate.get("carbs_low_g"),
             "agent_carbs_high_g": estimate.get("carbs_high_g"),
             "agent_history_adjustment_g": estimate.get("history_adjustment_g"),
+            "agent_fat_g": estimate.get("fat_g"), "agent_protein_g": estimate.get("protein_g"),
             "agent_items": estimate.get("items"), "agent_model": session["provider"] + ":" + session["model"],
             "photos": [f"/api/v1/photo?session={session['id']}&n={index}" for index in range(session["photos"])],
         }
