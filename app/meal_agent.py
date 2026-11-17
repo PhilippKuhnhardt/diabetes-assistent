@@ -73,6 +73,9 @@ diese Anpassung. Einzelne Mahlzeiten streuen auch aus anderen Gründen (Sport, S
 die Hauptquelle der KH (Reis, Pasta, Brot, Haferflocken), nicht was sonst dabei war. Ähnliche Gerichte und \
 Mahlzeiten taugen als Referenz, auch wenn keine genau passt.
 - Philipps eigene Angaben (gewogen, Packungswerte) gehen vor dem Foto.
+- In späteren Nachrichten korrigiert oder ergänzt Philipp die Mahlzeit, auch nachträglich ("noch ein zweiter \
+Teller", "die Hälfte liegen lassen"). Deine Antwort beschreibt dann immer die ganze Mahlzeit, wie sie \
+tatsächlich gegessen wurde, mit allen Bestandteilen in items und description.
 
 Deine Antwort ist ein JSON-Objekt mit genau diesen Feldern:
 - items: Bestandteile mit name, amount (Menge) und carbs_g (verwertbare KH ohne Ballaststoffe),
