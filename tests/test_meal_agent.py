@@ -258,6 +258,13 @@ class AgentServiceTests(unittest.TestCase):
         agent.link(first["session_id"], "11111111-1111-1111-1111-111111111111")
         linked = agent.records(["11111111-1111-1111-1111-111111111111"])["11111111-1111-1111-1111-111111111111"]
         self.assertEqual((linked["agent_carbs_g"], len(linked["photos"])), (58, 1))
+        # The edit dialog continues the linked estimate (user request 2026-11-17: a second plate).
+        earlier = agent.for_entry({"event_id": ["11111111-1111-1111-1111-111111111111"]})["session"]
+        self.assertEqual((earlier["session_id"], earlier["turns"], earlier["photos"], earlier["can_continue"]),
+                         (first["session_id"], ["Porridge wie immer", "mit 2 Bananen"], 1, True))
+        self.assertEqual(earlier["estimate"]["carbs_g"], 58)
+        self.assertIsNone(agent.for_entry({"event_id": ["nope"]})["session"])
+        self.assertIsNone(agent.for_entry({})["session"])
         self.assertEqual(agent.view()["usage_month"][0]["calls"], 2)
 
     def test_estimate_needs_input_and_valid_photos(self):
