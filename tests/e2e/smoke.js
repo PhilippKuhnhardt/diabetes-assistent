@@ -43,6 +43,9 @@ async function run(browser, name, options) {
   check(await page.getAttribute("[data-overview-hours='6']", "aria-pressed") === "true", `${name}: the chart shows 6 h`);
   await page.click("[data-overview-hours='3']");
   check((await page.$$(".meal-today")).length > 0, `${name}: Heute lists today's meals`);
+  // A long meal row must not widen the page (iPhone report 2026-11-18).
+  await page.evaluate(() => { document.querySelector(".meal-today span").textContent = "128 g · 11 IE · + 1 Snack · Abendessen lang"; });
+  check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${name}: Heute fits the screen width`);
   if (name === "phone") {
     await page.waitForSelector("#inbox-new .inbox-item");
     await page.click("#inbox-new .inbox-item >> nth=0");
