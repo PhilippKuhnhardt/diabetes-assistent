@@ -4,7 +4,7 @@ import { html, render } from "./ui/html.js";
 import "./ui/main.js";
 import { AnalysisView } from "./ui/analysis.js";
 import { DayReview, entryLabel, dayTypeSources, dayBounds } from "./ui/day.js";
-import { Overview, Inbox } from "./ui/today.js";
+import { Overview, Inbox, ActiveCard } from "./ui/today.js";
 import { glucosePoints } from "./ui/charts.js";
 import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
 import { MINUTE, names, CERTAINTY_LABELS, MEAL_FACTORS, sportKinds, sportNames, api, appUpdateWaiting, toast, num, factorNum,
@@ -512,7 +512,9 @@ function toggleEntryPlace(event) {
 
 function updateEntryQuality() {
   const form = $("#entry-form");
-  const hidden = !(form.elements.kind.value === "meal" && Number(form.elements.carbs.value) > 0);
+  // The manual entry ("KE & IE") shows its fields right away, not only once carbs are typed (user request 2026-11-18).
+  const manual = $("#entry-drawer").dataset.quick === "manual";
+  const hidden = !(form.elements.kind.value === "meal" && (manual || Number(form.elements.carbs.value) > 0));
   $("#entry-quality").hidden = hidden;
   $("#entry-factors").hidden = hidden;
 }
@@ -597,10 +599,19 @@ function overviewHours() {
   try { return Number(localStorage.getItem("overviewHours")) || 3; } catch { return 3; }
 }
 
+// The manual entry on phones covers "Heute", so it shows "Wirkt noch" itself (web/ui/today.js ActiveCard).
+function renderEntryActive() {
+  const host = $("#entry-active-host");
+  if (!host) return;
+  const show = $("#entry-drawer").dataset.quick === "manual" && state.day === todayDay() && state.preview?.on_board;
+  render(show ? html`<${ActiveCard} id=${null} active=${state.preview.on_board} />` : null, host);
+}
+
 // "Heute" (web/ui/today.js): chart, "Wirkt noch" from the forecast, the last three hours.
 function renderDayOverview() {
+  renderEntryActive();
   render(html`<${Overview} data=${state.dayData} day=${state.day} today=${todayDay()} active=${state.preview?.on_board}
-    hours=${overviewHours()} onHours=${hours => { try { localStorage.setItem("overviewHours", hours); } catch {} renderDayOverview(); }} />`,
+    hours=${overviewHours()} onEdit=${editEntry} onHours=${hours => { try { localStorage.setItem("overviewHours", hours); } catch {} renderDayOverview(); }} />`,
     $("#overview-host"));
 }
 
@@ -1631,7 +1642,7 @@ function applyAgent({ session, estimate, carbs, certainty, fat_protein, fast }) 
 // full-screen sheet opened from "+", settings as one page at a time. Wide screens: a rail on the left,
 // the entry stays in the page. The breakpoint matches the CSS.
 const compactLayout = () => matchMedia("(max-width: 950px)").matches;
-const QUICK_TITLES = { meal: "Essen", correction: "Korrektur", carbs: "KH direkt", exercise: "Sport", basal: "Basal" };
+const QUICK_TITLES = { meal: "Essen", manual: "KE & IE", exercise: "Sport", basal: "Basal" };
 
 function updateNav() {
   const current = state.view === "diary" ? (state.diaryMode === "review" ? "history" : "today") : state.view;
@@ -1662,12 +1673,12 @@ function navigate(target) {
 // Each choice says what it would do: the correction dose now, whether today's basal is still open.
 function quickAddHints() {
   const today = state.day === todayDay();
-  const hints = { meal: agent.info?.available ? "Foto, Sprache oder Text" : "KH eintragen", carbs: "Gramm direkt eingeben",
-    exercise: "Art, Dauer, Wirkung", correction: "nur Insulin", basal: "" };
+  const hints = { meal: agent.info?.available ? "Foto, Sprache oder Text" : "KH eintragen", manual: "KH und Insulin, auch nur Korrektur",
+    exercise: "Art, Dauer, Wirkung", basal: "" };
   const preview = state.preview;
   const suggested = today && preview && preview.day === state.day && preview.mode === "meal" && !(Number(preview.carbs_g) > 0)
     ? (preview.options || []).find(option => option.suggested) : null;
-  if (suggested && Number(suggested.units) > 0) hints.correction = "jetzt " + num(suggested.units, 1) + " IE empfohlen";
+  if (suggested && Number(suggested.units) > 0) hints.manual = "Korrektur jetzt " + num(suggested.units, 1) + " IE empfohlen";
   if (today && state.dayData) {
     const doses = state.dayData.basal || [];
     hints.basal = doses.length ? "heute " + num(doses[doses.length - 1].units, 1) + " IE um " + timeOnly(doses[doses.length - 1].at) : "heute noch offen";
@@ -1685,13 +1696,14 @@ function chooseEntry(kind) {
   const mode = kind === "exercise" || kind === "basal" ? kind : "meal";
   $('.entry-mode[data-entry-mode="' + mode + '"]')?.click();
   $("#entry-title").textContent = QUICK_TITLES[kind] || "Eintrag hinzufügen";
-  // "KH direkt" means the grams are known: no "Essen einschätzen" there (user feedback 2026-11-18).
+  // "KE & IE" is the manual entry: no "Essen einschätzen" there, and it shows what still acts (user feedback 2026-11-18).
   $("#entry-drawer").dataset.quick = kind;
+  renderEntryActive();
+  updateEntryQuality();
   openEntryDrawer();
   const form = $("#entry-form");
   if (kind === "meal" && agent.info?.available) openAgent();
-  else if (kind === "meal" || kind === "carbs") form.elements.carbs.focus();
-  else if (kind === "correction") $("#entry-dose")?.scrollIntoView({ block: "start" });
+  else if (kind === "meal" || kind === "manual") form.elements.carbs.focus();
   else if (kind === "exercise") form.elements.sport_kind.focus();
   else if (kind === "basal") form.elements.basal_units.focus();
 }
@@ -1711,6 +1723,7 @@ function closeEntryDrawer() {
   const title = $("#entry-title");
   if (title) title.textContent = "Eintrag hinzufügen";
   delete $("#entry-drawer")?.dataset.quick;
+  renderEntryActive();
 }
 
 // Settings on phones: a list of pages, one page at a time (the CSS reads data-page and page-in-form).
