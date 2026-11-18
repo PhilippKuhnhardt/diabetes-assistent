@@ -1,12 +1,12 @@
-// "+" (concept 2026-11-18): a short choice of what to enter. Food with the agent is the big button,
-// the rest one tap away; each tile already says what it would do (the correction dose now, whether
+// "+" (concept 2026-11-18): a short choice of what to enter, four tiles in a grid; each tile already says what it would do (the correction dose now, whether
 // basal is still open today). Choosing hands over to app.js, which opens the entry in that mode.
 import { html } from "./html.js";
 
+// Four tiles (user request 2026-11-18): the agent, one full manual entry for carbs and insulin (also a
+// correction alone), sport and basal.
 const CHOICES = [
   { key: "meal", title: "✦ Essen", main: true },
-  { key: "correction", title: "Korrektur" },
-  { key: "carbs", title: "KH direkt" },
+  { key: "manual", title: "KE & IE" },
   { key: "exercise", title: "Sport" },
   { key: "basal", title: "Basal" },
 ];
