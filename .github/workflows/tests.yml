@@ -20,4 +20,4 @@ jobs:
       - name: Python unit tests
         run: python -m unittest discover -s tests -v
       - name: Check web/app.js syntax
-        run: node --check web/app.js
+        run: node --check web/app.js && for file in web/ui/*.js; do node --check "$file"; done

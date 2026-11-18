@@ -3642,12 +3642,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // ---- Meal agent (user request 2026-11-16): photos and a description in, carbs and a dish out. ----
-// The agent only fills the form; the dose help calculates as always. One dialog serves the entry form
-// and the edit dialog ("Tag durchgehen"); `agent.target` says where "Übernehmen" writes.
-const agent = { target: "entry", photos: [], session: null, estimate: null, turns: [], busy: false,
-  recorder: null, recordTimer: null, info: null };
-const AGENT_PHOTO_SIDE = 1568;
-const AGENT_RECORD_SECONDS = 120;
+// The agent only fills the form; the dose help calculates as always. One chat serves the entry form
+// and the edit dialog ("Tag durchgehen", where it continues an earlier estimate: "Nachbessern").
+const agent = { info: null };
 
 async function loadAgent() {
   try { agent.info = await api("/api/agent"); } catch (_) { agent.info = null; }
@@ -3723,258 +3720,50 @@ function updateEntryAgent() {
     (applied.dish_name ? "Gericht: " + applied.dish_name : "Ohne Gericht") + " · geschätzt " + applied.range;
 }
 
-async function openAgent(target) {
+// The chat itself lives in web/ui/agent-chat.js (Preact); here only what it needs from the page
+// and where "übernehmen" writes: the entry form or the edit dialog. Nothing is saved yet.
+function openAgent(target) {
   if (!agent.info?.available) {
     toast("Essens-Agent ist nicht eingerichtet: in den Einstellungen Anbieter und Modell wählen", true);
     return;
   }
-  Object.assign(agent, { target, photos: [], session: null, estimate: null, turns: [], busy: false });
-  const form = $("#agent-form");
-  form.reset();
-  // An entry the agent already estimated continues that conversation (photos, turns, last answer),
-  // so a second plate is told as a correction instead of starting over.
-  const eventId = target === "edit" ? state.editing?.event_id : null;
-  let earlier = null;
-  if (eventId) {
-    try { earlier = (await api("/api/agent/session?event_id=" + encodeURIComponent(eventId))).session; }
-    catch (error) { toast(error.message, true); }
-  }
-  if (earlier?.can_continue) {
-    Object.assign(agent, { session: earlier.session_id, estimate: earlier.estimate, turns: earlier.turns,
-      photos: Array.from({ length: earlier.photos }, (_, index) =>
-        "/api/agent/photo?session=" + encodeURIComponent(earlier.session_id) + "&n=" + index) });
-    form.elements.text.placeholder = "z. B. ich hatte noch einen zweiten Teller";
-  } else if (target === "edit") form.elements.text.value = $("#edit-form").elements.description.value;
-  $("#agent-record").hidden = !agent.info.transcribe_available || !navigator.mediaDevices?.getUserMedia;
-  renderAgent();
-  $("#agent-dialog").showModal();
-}
-
-function closeAgent() {
-  stopAgentRecording(true);
-  $("#agent-dialog").close();
-}
-
-function agentEstimateHTML(estimate) {
-  const adjust = estimate.history_adjustment_g
-    ? '<p class="agent-adjust">Darin ' + (estimate.history_adjustment_g > 0 ? "+" : "−") + Math.abs(estimate.history_adjustment_g) +
-      ' g aus dem Verlauf des Gerichts.</p>' : "";
-  const items = estimate.items.length ? '<ul class="agent-items">' + estimate.items.map(item =>
-    '<li><span>' + escapeHTML(item.name) + (item.amount ? ' <small>' + escapeHTML(item.amount) + '</small>' : '') +
-    '</span><strong>' + num(item.carbs_g, 0) + ' g</strong></li>').join("") + '</ul>' : "";
-  const marks = [CERTAINTY_LABELS[estimate.certainty], estimate.fat_protein ? "fett-/eiweißreich" : "",
-    estimate.fast ? "wirkt schnell" : ""].filter(Boolean);
-  const dish = estimate.dish
-    ? '<p class="agent-dish">Gericht: <strong>' + escapeHTML(estimate.dish.name) + '</strong>' +
-      (estimate.dish.new ? ' <span class="outlier-badge">neu</span>' : '') +
-      (estimate.dish.hint ? '<br><small>' + escapeHTML(estimate.dish.hint) + '</small>' : '') + '</p>'
-    : '';
-  const sources = estimate.sources?.length ? '<p class="agent-sources">Quellen: ' + estimate.sources.map(source =>
-    '<a href="' + escapeHTML(source.url) + '" target="_blank" rel="noopener noreferrer">' +
-    escapeHTML(source.title || new URL(source.url).hostname) + '</a>').join(", ") + '</p>' : "";
-  const lookups = estimate.lookups?.length ? '<details class="agent-lookups"><summary>Nachgeschlagen (' +
-    estimate.lookups.length + ')</summary><ul>' + estimate.lookups.map(line => '<li>' + escapeHTML(line) + '</li>').join("") +
-    '</ul></details>' : "";
-  return '<div class="agent-total"><strong>' + estimate.carbs_g + ' g KH</strong><span>Spanne ' + estimate.carbs_low_g +
-    '–' + estimate.carbs_high_g + ' g</span></div>' + adjust + items +
-    '<p class="agent-marks">' + marks.map(escapeHTML).join(" · ") + '</p>' + dish +
-    (estimate.reasoning ? '<p class="agent-reasoning">' + escapeHTML(estimate.reasoning) + '</p>' : '') +
-    (estimate.question ? '<p class="agent-question">Rückfrage: ' + escapeHTML(estimate.question) + '</p>' : '') + lookups + sources;
-}
-
-function renderAgent() {
-  const form = $("#agent-form");
-  const followUp = Boolean(agent.session);
-  $("#agent-photos").innerHTML = agent.photos.map((photo, index) =>
-    '<figure><img src="' + photo + '" alt="Foto ' + (index + 1) + '">' + (followUp ? '' :
-    '<button type="button" class="quiet" data-agent-photo="' + index + '" aria-label="Foto ' + (index + 1) + ' entfernen">×</button>') +
-    '</figure>').join("");
-  $("#agent-photos").hidden = !agent.photos.length;
-  $("#agent-photo-add").hidden = followUp || agent.photos.length >= (agent.info?.limits.photos || 4);
-  $("#agent-turns").innerHTML = agent.turns.map(turn => '<p>' + escapeHTML(turn) + '</p>').join("");
-  $("#agent-turns").hidden = !agent.turns.length;
-  $("#agent-text-label").firstChild.textContent = followUp ? "Antwort oder Korrektur " : "Beschreibung ";
-  form.elements.text.placeholder = followUp
-    ? (agent.target === "edit" ? "z. B. ich hatte noch einen zweiten Teller" : "z. B. es waren zwei Scheiben")
-    : "z. B. Porridge wie immer, dazu eine Banane";
-  const result = $("#agent-result");
-  result.hidden = !agent.estimate;
-  result.innerHTML = agent.estimate ? agentEstimateHTML(agent.estimate) : "";
-  $("#agent-submit").textContent = followUp ? "Neu einschätzen" : "Einschätzen";
-  $("#agent-dialog-title").textContent = followUp && agent.target === "edit" ? "Einschätzung nachbessern" : "Essen einschätzen";
-  $("#agent-submit").disabled = agent.busy;
-  $("#agent-submit").classList.toggle("primary", !agent.estimate);
-  $("#agent-apply").hidden = !agent.estimate;
-  $("#agent-apply").classList.toggle("primary", Boolean(agent.estimate));
-  $("#agent-apply").disabled = agent.busy;
-  $("#agent-status").textContent = agent.busy ? "Schätzt …" : "";
-}
-
-// A photo as a JPEG data URL, scaled down so the longer side has at most AGENT_PHOTO_SIDE pixels.
-function agentPhoto(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Foto konnte nicht gelesen werden"));
-    reader.onload = () => {
-      const image = new Image();
-      image.onerror = () => reject(new Error("Foto konnte nicht gelesen werden"));
-      image.onload = () => {
-        const scale = Math.min(1, AGENT_PHOTO_SIDE / Math.max(image.naturalWidth, image.naturalHeight));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(image.naturalWidth * scale);
-        canvas.height = Math.round(image.naturalHeight * scale);
-        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.82));
-      };
-      image.src = reader.result;
-    };
-    reader.readAsDataURL(file);
+  if (!window.mealChat) { toast("Seite neu laden, der Chat ist noch nicht geladen", true); return; }
+  const edit = target === "edit";
+  const form = $(edit ? "#edit-form" : "#entry-form");
+  window.mealChat.open({
+    target, info: agent.info, api, toast,
+    eventId: edit ? state.editing?.event_id || null : null,
+    initialText: edit ? form.elements.description.value : "",
+    previousCarbs: form.elements.carbs.value,
+    context: () => {
+      let at = null;
+      try { at = toInstant(state.day, form.elements.at.value); } catch (_) { /* Without a valid time the server takes now. */ }
+      const placeId = edit ? form.elements.place_id.value || null : entryPlaceId();
+      return { at, placeId: placeId === "none" ? null : placeId };
+    },
+    onApply: result => applyAgent(target, result),
   });
 }
 
-async function addAgentPhotos(event) {
-  const limit = agent.info?.limits.photos || 4;
-  try {
-    for (const file of [...event.target.files].slice(0, limit - agent.photos.length))
-      agent.photos.push(await agentPhoto(file));
-  } catch (error) { toast(error.message, true); }
-  event.target.value = "";
-  renderAgent();
-}
-
-async function submitAgent(event) {
-  event.preventDefault();
-  if (agent.busy) return;
-  const form = $("#agent-form");
-  const text = form.elements.text.value.trim();
-  if (!text && (agent.session || !agent.photos.length)) {
-    toast(agent.session ? "Bitte eine Antwort oder Korrektur eingeben" : "Bitte ein Foto aufnehmen oder das Essen beschreiben", true);
-    return;
-  }
-  let at = null;
-  try {
-    at = agent.target === "edit" ? toInstant(state.day, $("#edit-form").elements.at.value)
-      : toInstant(state.day, $("#entry-form").elements.at.value);
-  } catch (_) { /* Without a valid time the server takes now. */ }
-  const placeId = agent.target === "edit" ? $("#edit-form").elements.place_id.value || null : entryPlaceId();
-  agent.busy = true;
-  renderAgent();
-  try {
-    const data = await api("/api/agent/estimate", { method: "POST", body: JSON.stringify(agent.session
-      ? { session_id: agent.session, text, at, place_id: placeId }
-      : { text, photos: agent.photos, at, place_id: placeId === "none" ? null : placeId }) });
-    agent.session = data.session_id;
-    agent.estimate = data.estimate;
-    agent.turns = data.turns;
-    form.elements.text.value = "";
-  } catch (error) { toast(error.message, true); }
-  agent.busy = false;
-  renderAgent();
-  if (agent.estimate) $("#agent-result").scrollIntoView({ block: "nearest", behavior: "smooth" });
-}
-
-// "Übernehmen": the estimate fills the form it was opened from; nothing is saved yet.
-function applyAgent() {
-  const estimate = agent.estimate;
-  if (!estimate) return;
-  const form = $(agent.target === "edit" ? "#edit-form" : "#entry-form");
-  form.elements.carbs.value = estimate.carbs_g;
-  setCertainty(form, estimate.certainty);
-  form.elements.fat_protein.checked = estimate.fat_protein;
-  form.elements.fast.checked = estimate.fast;
-  if (agent.target === "edit") {
+function applyAgent(target, { session, estimate, carbs, certainty, fat_protein, fast }) {
+  const form = $(target === "edit" ? "#edit-form" : "#entry-form");
+  form.elements.carbs.value = carbs;
+  setCertainty(form, certainty);
+  form.elements.fat_protein.checked = fat_protein;
+  form.elements.fast.checked = fast;
+  if (target === "edit") {
     form.elements.dish_name.value = estimate.dish?.name || "";
     form.elements.description.value = estimate.description;
-    state.editAgentSession = agent.session;
+    state.editAgentSession = session;
     updateEditPlace();
   } else {
-    state.entryAgent = { session_id: agent.session, dish_name: estimate.dish?.name || "", description: estimate.description,
+    state.entryAgent = { session_id: session, dish_name: estimate.dish?.name || "", description: estimate.description,
       range: estimate.carbs_low_g + "–" + estimate.carbs_high_g + " g" };
     updateEntryAgent();
     updateEntryOptions();
     requestEntryPosition();
     schedulePreview(0);
   }
-  closeAgent();
-}
-
-// Voice note: recorded in the browser, turned into 16 kHz mono WAV there (every provider reads that)
-// and transcribed on the server through OpenRouter; the text lands in the description field.
-function wavBase64(samples, rate) {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
-  const text = (offset, value) => [...value].forEach((char, index) => view.setUint8(offset + index, char.charCodeAt(0)));
-  text(0, "RIFF"); view.setUint32(4, 36 + samples.length * 2, true); text(8, "WAVEfmt ");
-  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
-  view.setUint32(24, rate, true); view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true); text(36, "data"); view.setUint32(40, samples.length * 2, true);
-  for (let index = 0; index < samples.length; index++) {
-    const value = Math.max(-1, Math.min(1, samples[index]));
-    view.setInt16(44 + index * 2, value < 0 ? value * 0x8000 : value * 0x7fff, true);
-  }
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let offset = 0; offset < bytes.length; offset += 0x8000)
-    binary += String.fromCharCode.apply(null, bytes.subarray(offset, offset + 0x8000));
-  return btoa(binary);
-}
-
-async function transcribeAgentRecording(blob) {
-  const status = $("#agent-record-status");
-  status.textContent = "Wird transkribiert …";
-  try {
-    const Context = window.AudioContext || window.webkitAudioContext;
-    const context = new Context();
-    const decoded = await context.decodeAudioData(await blob.arrayBuffer());
-    context.close();
-    const rate = 16000;
-    const offline = new OfflineAudioContext(1, Math.max(1, Math.ceil(decoded.duration * rate)), rate);
-    const source = offline.createBufferSource();
-    source.buffer = decoded;
-    source.connect(offline.destination);
-    source.start();
-    const rendered = await offline.startRendering();
-    const data = await api("/api/agent/transcribe", { method: "POST",
-      body: JSON.stringify({ audio: wavBase64(rendered.getChannelData(0), rate), format: "wav" }) });
-    const field = $("#agent-form").elements.text;
-    field.value = (field.value.trim() ? field.value.trim() + " " : "") + data.text;
-    status.textContent = data.text ? "" : "Nichts verstanden";
-  } catch (error) {
-    status.textContent = "";
-    toast(error.message || "Aufnahme konnte nicht verarbeitet werden", true);
-  }
-}
-
-function stopAgentRecording(discard = false) {
-  clearTimeout(agent.recordTimer);
-  const recorder = agent.recorder;
-  if (!recorder) return;
-  agent.recorder = null;
-  recorder.discard = discard;
-  if (recorder.state !== "inactive") recorder.stop();
-  $("#agent-record").textContent = "Sprechen";
-  $("#agent-record").setAttribute("aria-pressed", "false");
-}
-
-async function toggleAgentRecording() {
-  if (agent.recorder) { stopAgentRecording(); return; }
-  let stream;
-  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-  catch (_) { toast("Mikrofon nicht freigegeben", true); return; }
-  const chunks = [];
-  const recorder = new MediaRecorder(stream);
-  recorder.addEventListener("dataavailable", event => { if (event.data.size) chunks.push(event.data); });
-  recorder.addEventListener("stop", () => {
-    stream.getTracks().forEach(track => track.stop());
-    if (!recorder.discard && chunks.length) transcribeAgentRecording(new Blob(chunks, { type: recorder.mimeType }));
-    else $("#agent-record-status").textContent = "";
-  });
-  agent.recorder = recorder;
-  recorder.start();
-  $("#agent-record").textContent = "Stopp";
-  $("#agent-record").setAttribute("aria-pressed", "true");
-  $("#agent-record-status").textContent = "Aufnahme läuft …";
-  agent.recordTimer = setTimeout(() => stopAgentRecording(), AGENT_RECORD_SECONDS * 1000);
 }
 
 // ---- Dish catalogue (Analyse → Gerichte): each dish with how its main meals turned out. ----
@@ -4029,18 +3818,6 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#entry-agent-open").addEventListener("click", () => openAgent("entry"));
   $("#entry-agent-clear").addEventListener("click", () => { state.entryAgent = null; updateEntryAgent(); });
   $("#edit-agent-open").addEventListener("click", () => openAgent("edit"));
-  $("#close-agent").addEventListener("click", closeAgent);
-  $("#agent-dialog").addEventListener("cancel", () => stopAgentRecording(true));
-  $("#agent-form").addEventListener("submit", submitAgent);
-  $("#agent-apply").addEventListener("click", applyAgent);
-  $("#agent-photo-input").addEventListener("change", addAgentPhotos);
-  $("#agent-photos").addEventListener("click", event => {
-    const button = event.target.closest("[data-agent-photo]");
-    if (!button) return;
-    agent.photos.splice(Number(button.dataset.agentPhoto), 1);
-    renderAgent();
-  });
-  $("#agent-record").addEventListener("click", toggleAgentRecording);
   $$(".entry-mode").forEach(button => button.addEventListener("click", () => setTimeout(updateEntryAgent)));
   $("#agent-provider").addEventListener("change", event => saveAgentSettings({ provider: event.target.value }));
   $("#agent-model").addEventListener("change", event =>
