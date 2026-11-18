@@ -5,11 +5,10 @@ import "./ui/main.js";
 import { AnalysisView } from "./ui/analysis.js";
 import { DayReview, entryLabel, dayTypeSources, dayBounds } from "./ui/day.js";
 import { Overview, Inbox, ActiveCard } from "./ui/today.js";
+import { DoseHelp, sliderUnits, firstPart } from "./ui/dose.js";
 import { glucosePoints } from "./ui/charts.js";
 import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
-import { MINUTE, names, CERTAINTY_LABELS, MEAL_FACTORS, sportKinds, sportNames, api, appUpdateWaiting, toast, num, factorNum,
-  signedChange, sportChange, timeOnly, signedPercent, minuteClock, clockMinute, localInputTime, toInstant, pickerMinimum,
-  trendSymbol, currentPosition, SPLIT_TIMING } from "./ui/lib.js";
+import { names, sportNames, api, appUpdateWaiting, toast, num, sportChange, timeOnly, localInputTime, toInstant, trendSymbol, currentPosition } from "./ui/lib.js";
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -636,17 +635,6 @@ function renderActiveCard() {
   renderDayOverview();
 }
 
-function icon(name) {
-  const paths = {
-    diary: '<path d="M4 4h14a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V4Z"/><path d="M8 4v16M11 9h6M11 13h6"/>',
-    check: '<path d="m4 12 5 5L20 6"/>',
-    exclude: '<circle cx="12" cy="12" r="9"/><path d="m8 8 8 8"/>',
-    plus: '<path d="M12 5v14M5 12h14"/>',
-    remove: '<path d="M5 12h14"/>',
-    alert: '<path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4M12 17h.01"/>',
-  };
-  return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths[name] + '</svg>';
-}
 
 function renderDay(data) {
   state.dayData = data;
@@ -811,12 +799,11 @@ function renderPreview() {
   updateEntryOptions();
   updateEntryDayType();
   updateEntryBasalOption();
-  const output = $("#dose-result");
   const dose = currentPreview()?.dose;
   doseHelp = dose?.options ? dose : null;
-  output.removeAttribute("aria-busy");
-  if (doseHelp) output.innerHTML = doseHelpHTML(doseHelp, changedDoses(doseHelp, currentPreview().inputKey));
-  else output.textContent = dose?.message || "";
+  $("#dose-result").removeAttribute("aria-busy");
+  state.doseNote = dose?.message || "";
+  state.doseChanged = doseHelp ? changedDoses(doseHelp, currentPreview().inputKey) : {};
   if (doseHelp?.slider) {
     // New input (other carbs, marks, place): the slider starts again at the recommendation.
     const key = currentPreview().inputKey;
@@ -827,6 +814,12 @@ function renderPreview() {
     updateSliderView();
   }
   applyDoseChoice();
+}
+
+// The dose help (web/ui/dose.js) under the form; app.js keeps the choice and the slider position.
+function renderDose() {
+  render(html`<${DoseHelp} help=${doseHelp} note=${state.doseNote} changed=${state.doseChanged} choice=${state.doseChoice}
+    chosen=${state.slider} onChoose=${selectDoseSuggestion} onSlide=${moveSlider} />`, $("#dose-result"));
 }
 
 // What the user typed, without the clock: a preview for the same input that shows other doses
@@ -876,9 +869,11 @@ function schedulePreview(delay = 350) {
 async function updatePreview() {
   clearTimeout(previewTimer);
   const requestId = ++previewRequestId;
-  const output = $("#dose-result");
   const body = previewRequest();
-  if (body.mode === "meal" && !output.innerHTML && body.day === todayDay()) output.textContent = "Empfehlung wird berechnet …";
+  if (body.mode === "meal" && !doseHelp && !state.doseNote && body.day === todayDay()) {
+    state.doseNote = "Empfehlung wird berechnet …";
+    renderDose();
+  }
   try {
     const data = await api("/api/entry/preview", { method: "POST", body: JSON.stringify(body) });
     if (requestId !== previewRequestId) return null;
@@ -889,7 +884,10 @@ async function updatePreview() {
     if (requestId === previewRequestId) {
       state.preview = null;
       renderPreview();
-      if (body.mode === "meal") output.textContent = error.message;
+      if (body.mode === "meal") {
+        state.doseNote = error.message;
+        renderDose();
+      }
     }
     return null;
   }
@@ -901,18 +899,16 @@ function applyDoseChoice() {
   const option = doseHelp?.options.find(item => item.variant === state.doseChoice);
   if (state.doseChoice && doseHelp && !option?.savable) state.doseChoice = null;
   if (state.doseChoice && option) form.elements.insulin.value = String(Number(option.units));
-  $$(".apply-dose").forEach(button =>
-    button.setAttribute("aria-pressed", String(button.dataset.variant === state.doseChoice)));
+  renderDose();
   updateEntrySubmitLabel();
 }
 
 // A tapped suggestion saves carbs and that dose directly in Nightscout; the toast offers undo.
-function selectDoseSuggestion(event) {
-  const button = event.target.closest(".apply-dose");
-  if (!button || button.disabled || !doseHelp) return;
+function selectDoseSuggestion(variant) {
+  if (!doseHelp) return;
   const form = $("#entry-form");
   if ($("#entry-submit").disabled) return;
-  state.doseChoice = button.dataset.variant;
+  state.doseChoice = variant;
   acknowledgeDoses();
   form.elements.carbs.setCustomValidity("");
   applyDoseChoice();
@@ -920,184 +916,21 @@ function selectDoseSuggestion(event) {
   form.requestSubmit($("#entry-submit"));
 }
 
-// The second split part's amount comes from the forecast; the note names the plan and when it fits.
-function splitOptionNote(option) {
-  const planned = "geplant " + num(option.planned_units, 1) + " IE um " + timeOnly(option.due_at);
-  const when = option.state === "wait" ? SPLIT_TIMING.wait + " bis " + timeOnly(option.latest_at) : SPLIT_TIMING[option.state];
-  return [option.from_forecast && Number(option.units) <= 0 ? "laut Prognose nicht nötig" : "", planned, when]
-    .filter(Boolean).join(" · ");
-}
-
-// fast / slow: ends of a correction after a meal; the one the rise leans to is marked by colour only.
-const doseLabels = { split: "2. Teil", fast: "Wenig", normal: "Normal", slow: "Viel", low: "Tiefer", cautious: "Vorsichtig", carbs: "Nur KH" };
-
-// The dose slider (user request 2026-11-15): one scale from little to much need for every dose, the
-// recommendation flagged, and where glucose likely ends for the chosen dose (the dose help's expected value
-// of the normal dose moved by the KF, with the corridor that past doses showed around it: dark = every
-// second case, line = 8 of 10). Dragging fills the insulin field; the form's button saves.
-const LAND_AXIS = [40, 280];
-const landX = value => Math.max(0, Math.min(100, (value - LAND_AXIS[0]) / (LAND_AXIS[1] - LAND_AXIS[0]) * 100));
-const landClass = value => value < 90 ? "is-low" : value > 160 ? "is-high" : "is-ok";
-const landColor = value => value < 70 ? "#d9534f" : value < 90 ? "#eb9b8f" : value <= 160 ? "#8fcaa6" : value <= 200 ? "#f2cf86" : "#e9b45a";
-const halfUnits = value => Math.round(value * 2) / 2;
-
-function sliderLanding(slider, units) {
-  if (slider.expected_mgdl == null || slider.isf_mgdl_per_unit == null) return null;
-  const center = Number(slider.expected_mgdl) + (Number(slider.normal_units) - units) * Number(slider.isf_mgdl_per_unit);
-  return slider.corridor_mgdl.map(offset => Math.round(center + Number(offset)));
-}
-
-// Own IE may lie outside the slider: the readout shows them as typed, the thumb stops at the end.
-function sliderUnits(slider, clamp = true) {
-  const lo = Number(slider.min_units), hi = Number(slider.max_units);
-  const value = state.slider?.units ?? Number(slider.recommended_units);
-  return clamp || state.slider?.follow !== false ? Math.max(lo, Math.min(hi, value)) : value;
-}
-
-function doseSliderHTML(data) {
-  const slider = data.slider;
-  const lo = Number(slider.min_units), hi = Number(slider.max_units), rec = Number(slider.recommended_units);
-  const pos = value => hi > lo ? (value - lo) / (hi - lo) * 100 : 50;
-  const units = sliderUnits(slider);
-  const ends = [lo, hi].map(value => sliderLanding(slider, value));
-  let track = "";
-  if (ends[0]) {
-    const stops = [];
-    for (let i = 0; i <= 20; i += 1) {
-      const value = lo + (hi - lo) * i / 20;
-      stops.push(landColor(sliderLanding(slider, value)[2]) + " " + (i * 5) + "%");
-    }
-    track = "linear-gradient(90deg," + stops.join(",") + ")";
-  }
-  const flagShift = pos(rec) < 15 ? -12 : pos(rec) > 85 ? -88 : -50;
-  return '<div class="ds" data-slider>' +
-    '<div class="ds-read"><div class="ds-dose"><strong data-ds-units></strong><span class="ds-split" data-ds-split></span></div>' +
-    (ends[0] ? '<div class="ds-land"><span>erwartet in 4 h</span><b class="ds-pill" data-ds-pill></b>' +
-      '<small class="ds-iqr" data-ds-iqr-text></small></div>' : '') + '</div>' +
-    (ends[0] ? '<div class="ds-cor" aria-hidden="true"><div class="ds-cor-axis">' +
-      '<div class="ds-cor-low" data-css="width:' + landX(70) + '%"></div><div class="ds-cor-zone" data-css="left:' + landX(90) + '%;width:' +
-      (landX(160) - landX(90)) + '%"></div><div class="ds-cor-w" data-ds-w></div><div class="ds-cor-iqr" data-ds-iqr></div>' +
-      '<div class="ds-cor-med" data-ds-med></div></div><div class="ds-cor-scale">' +
-      [70, 90, 160, 250].map(value => '<span data-css="left:' + landX(value) + '%">' + value + '</span>').join("") + '</div></div>' : '') +
-    '<div class="ds-rail"><div class="ds-flag" data-css="left:' + pos(rec) + '%;transform:translateX(' + flagShift + '%)"><b>empfohlen ' +
-      escapeHTML(num(rec, 1)) + '</b></div><i class="ds-stem" data-css="left:calc(14px + (100% - 28px) * ' + pos(rec) / 100 + ')"></i>' +
-      '<input type="range" class="ds-range" data-ds-range min="' + lo + '" max="' + hi + '" step="0.5" value="' + units + '"' +
-      ' aria-label="Insulin in IE"' + (track ? ' data-css="--ds-track:' + track + '"' : '') + '></div>' +
-    '<div class="ds-ends"><span>' + escapeHTML(num(lo, 1)) + ' IE' + (ends[0] ? ' · ' + ends[0][2] : '') + '</span><span>' +
-      escapeHTML(num(hi, 1)) + ' IE' + (ends[1] ? ' · ' + ends[1][2] : '') + '</span></div></div>';
-}
-
-// Updates the readout without re-rendering, so dragging keeps going.
+// The slider's dose fills the insulin field (with a split: the part given now) while it follows the slider.
 function updateSliderView(fillField = true) {
-  const root = $("#dose-result [data-slider]");
+  renderDose();
   const slider = doseHelp?.slider;
-  if (!root || !slider) return;
-  const units = sliderUnits(slider, false);
-  const land = sliderLanding(slider, units);
-  const range = $("[data-ds-range]", root);
-  if (document.activeElement !== range) range.value = String(sliderUnits(slider));
-  // Positions go through the CSSOM: the page's CSP blocks inline style attributes.
-  root.querySelectorAll("[data-css]").forEach(element => {
-    element.dataset.css.split(";").forEach(rule => {
-      const at = rule.indexOf(":");
-      if (at > 0) element.style.setProperty(rule.slice(0, at).trim(), rule.slice(at + 1).trim());
-    });
-    element.removeAttribute("data-css");
-  });
-  $("[data-ds-units]", root).innerHTML = escapeHTML(num(units, 1)) + '<small>IE</small>';
-  const pct = slider.first_percent;
-  const first = pct != null ? halfUnits(units * Number(pct) / 100) : null;
-  $("[data-ds-split]", root).textContent = first != null
-    ? "jetzt " + num(first, 1) + " + " + num(units - first, 1) + " um " + timeOnly(slider.later_at) : "";
-  if (land) {
-    const pill = $("[data-ds-pill]", root);
-    // Median (where every second case ended) as the expected value, the middle half beside it.
-    pill.innerHTML = land[2] + '<small>mg/dL</small>';
-    $("[data-ds-iqr-text]", root).textContent = "meist " + land[1] + "–" + land[3];
-    pill.className = "ds-pill " + landClass(land[2]);
-    Object.assign($("[data-ds-w]", root).style, { left: landX(land[0]) + "%", width: (landX(land[4]) - landX(land[0])) + "%" });
-    Object.assign($("[data-ds-iqr]", root).style, { left: landX(land[1]) + "%", width: (landX(land[3]) - landX(land[1])) + "%" });
-    $("[data-ds-med]", root).style.left = landX(land[2]) + "%";
-  }
-  if (fillField && state.slider?.follow !== false) {
-    const form = $("#entry-form");
-    form.elements.insulin.value = String(first ?? units);
-    updateEntrySubmitLabel();
-  }
+  if (!slider || !fillField || state.slider?.follow === false) return;
+  const units = sliderUnits(slider, state.slider, false);
+  $("#entry-form").elements.insulin.value = String(firstPart(slider, units) ?? units);
+  updateEntrySubmitLabel();
 }
 
-function moveSlider(event) {
-  if (!event.target.matches("[data-ds-range]")) return;
-  state.slider = { units: Number(event.target.value), follow: true };
+function moveSlider(units) {
+  state.slider = { units, follow: true };
   state.doseChoice = null;
   $("#entry-form").elements.carbs.setCustomValidity("");
   updateSliderView();
-}
-
-function doseHelpHTML(data, changed = {}) {
-  const withCarbs = Number(data.carbs_g) > 0;
-  const splitPart = data.options.find(option => option.variant === "split");
-  const slider = data.slider ? doseSliderHTML(data) +
-    (splitPart ? '<p class="dose-factor">2. Teil: ' + escapeHTML(splitOptionNote(splitPart)) + '</p>' : '') : "";
-  if (slider) changed = {};
-  const options = slider ? "" : data.options.map(option => {
-    const label = doseLabels[option.variant];
-    const before = changed[option.variant];
-    return '<button type="button" class="dose-option apply-dose' + (before ? ' is-changed' : '') + (option.suggested ? ' is-suggested' : '') + '" data-variant="' + option.variant + '" aria-pressed="false"' +
-    ' title="' + escapeHTML(label + ": " + num(option.units, 2) + " IE direkt in Nightscout speichern") + '"' +
-    (option.savable ? '' : ' disabled') + '><span class="dose-label">' + escapeHTML(label) + '</span><strong>' +
-    escapeHTML(num(option.units, 2)) + ' <small>IE</small></strong><span class="dose-expected">' +
-    (option.expected_mgdl != null ? '→ ' + escapeHTML(num(option.expected_mgdl, 0)) + ' mg/dL' : 'ohne Korrektur') + '</span>' +
-    (option.later_units != null ? '<span class="dose-expected">+ ' + escapeHTML(num(option.later_units, 1)) + ' IE um ' +
-      escapeHTML(timeOnly(option.later_at)) + '</span>' : '') +
-    (option.variant === "split" ? '<span class="dose-expected">' + escapeHTML(splitOptionNote(option)) + '</span>' : '') +
-    (before ? '<span class="dose-was">vorher ' + escapeHTML(num(before.units, 2)) + ' IE' +
-      (before.later_units != null && Number(before.later_units) !== Number(option.later_units) ? ' + ' + escapeHTML(num(before.later_units, 1)) : '') +
-      '</span>' : '') + '</button>';
-  }).join("");
-  const anyChanged = Object.keys(changed).length > 0;
-  return '<div class="dose-head"><span class="dose-heading">' + (withCarbs ? "Empfehlung" : "Korrektur ohne Essen") +
-    '</span></div>' +
-    (anyChanged ? '<p class="dose-changed" role="status">' + icon("alert") + ' Neu berechnet mit neueren Daten' +
-      (data.glucose_at ? ' (CGM ' + escapeHTML(timeOnly(data.glucose_at)) + ')' : '') +
-      '. Markierte Werte haben sich geändert, bitte prüfen.</p>' : '') +
-    factorLine(data) +
-    (data.glucose_source === "finger" && data.glucose_fresh ? '<p class="dose-factor">Startwert blutig <strong>' +
-      escapeHTML(num(data.glucose_mgdl, 0)) + ' mg/dL</strong> um ' + escapeHTML(timeOnly(data.glucose_at)) + '</p>' : '') +
-    (options ? '<div class="dose-options">' + options + '</div>' : '') + slider +
-    (Number(data.activity_change_mgdl) !== 0 && data.activity_units != null ? '<p class="dose-factor">Sport <strong>' +
-      escapeHTML(signedChange(data.activity_change_mgdl, 0)) + '</strong> · ' + escapeHTML((Number(data.activity_units) > 0 ? "+" : "") + num(data.activity_units, 2)) + ' IE</p>' : '') +
-    (data.on_board && (data.on_board.lowering_until || data.on_board.raising_until)
-      ? '<p class="dose-factor">Wirkt noch <strong>−' + escapeHTML(num(data.on_board.lowering_mgdl, 0)) + ' / +' +
-        escapeHTML(num(data.on_board.raising_mgdl, 0)) + ' mg/dL</strong> · eingerechnet</p>' : '') +
-    (data.low_note ? '<p class="dose-factor">Tiefer (' + escapeHTML(num(data.low_target_mgdl, 0)) + ' mg/dL) nicht angeboten: ' +
-      escapeHTML(data.low_note) + '</p>' : '') +
-    (data.reason ? '<p class="hint">' + escapeHTML(data.reason) + '</p>' : '');
-}
-
-// The factor all suggestions use; a stand-in is named while Automatik lacks meals.
-function factorLine(data) {
-  if (data.units_per_ke == null) return "";
-  const kf = 'KF ' + escapeHTML(num(data.isf_mgdl_per_unit, 1)) + ' mg/dL/IE';
-  if (!(Number(data.carbs_g) > 0)) return '<p class="dose-factor">' + kf + '</p>';
-  const factor = value => '<strong>' + escapeHTML(factorNum(value)) + ' IE/KE</strong>';
-  const count = ' (' + (data.auto_factor_count || 0) + '/' + data.auto_factor_min_meals + ')';
-  const surcharge = data.auto_surcharge_units != null
-    ? ' + Zuschlag <strong>' + escapeHTML(num(data.auto_surcharge_units, 2)) + ' IE</strong>' +
-      (data.auto_fat_surcharge_mgdl != null ? ' (fettreich +' + escapeHTML(num(data.auto_fat_surcharge_mgdl, 0)) + ' mg/dL)' : '') +
-      (data.solo_snack ? ' · Snack ohne Mahlzeit, Zuschlag wie Hauptmahlzeit' : '')
-    : data.auto_method === "surcharge" && data.auto_units_per_ke != null ? ' · Snack ohne Zuschlag' : '';
-  // The place factor is already in the factor and surcharge shown.
-  const place = data.place_factor;
-  const placeText = !place || data.auto_units_per_ke == null ? ''
-    : place.scale != null
-      ? ' · Ort ' + escapeHTML(place.name) + ' <strong>' + signedPercent(place.scale) + '</strong> (' + place.count + ' Essen, ' + place.days + ' T.)'
-      : ' · Ort ' + escapeHTML(place.name) + ': noch kein Ortsfaktor (' + place.count + '/' + place.min_meals + ' Essen)';
-  const used = data.auto_units_per_ke != null
-    ? 'Berechneter Faktor ' + factor(data.auto_units_per_ke) + count + surcharge + placeText
-    : 'Berechneter Faktor –' + count + ' · ersatzweise ' + (data.factor_source === "breakfast_day_type"
-      ? 'Frühstück ' + (data.day_type === "free" ? "frei" : "Arbeit") : 'Nightscout') + ' ' + factor(data.units_per_ke);
-  return '<p class="dose-factor">' + used + ' · ' + kf + '</p>';
 }
 
 function closeEditDialog() {
@@ -1331,7 +1164,7 @@ async function saveEntry(event) {
     dose_shown: chosenOption && Number(chosenOption.units) === insulin ? doseShown(chosenOption) : null,
     // A split meal dosed on the slider: the total, of which the insulin field holds the first part.
     dose_total_units: mode === "meal" && doseHelp?.slider?.first_percent != null && state.slider?.follow !== false
-      ? sliderUnits(doseHelp.slider) : null,
+      ? sliderUnits(doseHelp.slider, state.slider) : null,
     // What the agent's estimate named; the carbs themselves are whatever the form holds now.
     ...(mode === "meal" && carbs > 0 && state.entryAgent ? {
       dish_name: state.entryAgent.dish_name, description: state.entryAgent.description,
@@ -1476,8 +1309,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     view("diary");
     $("#inbox")?.scrollIntoView({ block: "start" });
   });
-  $("#dose-result").addEventListener("click", selectDoseSuggestion);
-  $("#dose-result").addEventListener("input", moveSlider);
   $("#entry-day-type").addEventListener("click", saveEntryDayType);
   $("#timezone-banner").addEventListener("click", event => {
     const button = event.target.closest("[data-timezone-switch]");
