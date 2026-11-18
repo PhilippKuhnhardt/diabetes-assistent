@@ -3,6 +3,7 @@
 import { html, render } from "./ui/html.js";
 import "./ui/main.js";
 import { AnalysisView } from "./ui/analysis.js";
+import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
 import { MINUTE, names, CERTAINTY_LABELS, MEAL_FACTORS, sportKinds, sportNames, api, appUpdateWaiting, toast, num, factorNum,
   signedChange, sportChange, timeOnly, signedPercent, minuteClock, clockMinute, localInputTime, toInstant, pickerMinimum,
   trendSymbol, currentPosition } from "./ui/lib.js";
@@ -24,15 +25,7 @@ function factorIconsHTML(marks) {
 const dishBadgeHTML = dish => dish ? '<span class="place-badge dish-badge" title="Gericht">' + escapeHTML(dish.name) + '</span>' : "";
 const placeBadgeHTML = place => place ? '<span class="place-badge" title="Ort">' + escapeHTML(place.name) + '</span>' : "";
 
-const osmLink = (lat, lon) => "https://www.openstreetmap.org/?mlat=" + lat + "&mlon=" + lon + "#map=18/" + lat + "/" + lon;
-
 const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
-function setPickerBase(input, step, positive = false) {
-  const value = Number(input.value);
-  input.min = String(input.value && Number.isFinite(value)
-    ? pickerMinimum(value, step, positive) : positive ? step : 0);
-}
-
 // Nothing typed and no dialog open: a reload loses nothing (the URL keeps view and tab).
 function entryFormIdle() {
   const form = $("#entry-form");
@@ -361,192 +354,39 @@ async function saveReviewDayType(button) {
   }
 }
 
-async function saveVacation(event) {
-  const input = event.target;
-  input.disabled = true;
-  try {
-    const data = await api("/api/vacation", { method: "POST",
-      body: JSON.stringify({ active: input.checked, day: $("#vacation-day").value || null }) });
-    renderVacation(data);
-    toast(data.active ? "Urlaub aktiviert: jeder Tag zählt als frei" : "Urlaub beendet");
-    await loadDay();
-  } catch (error) {
-    input.checked = !input.checked;
-    toast(error.message, true);
-  } finally {
-    input.disabled = false;
-  }
-}
-
-async function loadNotifications() {
-  try {
-    renderNotifications(await api("/api/notifications"));
-  } catch (error) {
-    $("#notify-status").textContent = error.message;
-  }
-}
-
-function renderNotifications(data) {
-  $("#notify-status").textContent = data.configured
-    ? "Pushover ist eingerichtet."
-    : "Pushover ist nicht eingerichtet: PUSHOVER_APP_TOKEN und PUSHOVER_USER_KEY im Deployment setzen.";
-  $$(".notify-toggle").forEach(input => { input.checked = Boolean(data.enabled[input.dataset.kind]); });
-  $$(".notify-priority").forEach(select => {
-    select.replaceChildren(...data.priority_options.map(option => new Option("Stufe: " + option.label, String(option.value))));
-    select.value = String(data.priorities[select.dataset.kind]);
-  });
-  $("#notify-basal-hint").textContent = "Wenn bis " + data.basal_after + " (Frühstücksende) heute noch kein Basal erfasst ist.";
-  $("#notify-test").disabled = !data.configured;
-  const list = $("#notify-recent");
-  list.replaceChildren(...data.recent.map(item => {
-    const row = document.createElement("li");
-    row.textContent = new Date(item.sent_at).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })
-      + " · " + item.label + ": " + item.message;
-    return row;
-  }));
-}
-
-async function saveNotification(event) {
-  const input = event.target;
-  input.disabled = true;
-  try {
-    renderNotifications(await api("/api/notifications", {
-      method: "POST", body: JSON.stringify({ kind: input.dataset.kind, enabled: input.checked }),
-    }));
-  } catch (error) {
-    input.checked = !input.checked;
-    toast(error.message, true);
-  } finally {
-    input.disabled = false;
-  }
-}
-
-async function saveNotificationPriority(event) {
-  const select = event.target;
-  select.disabled = true;
-  try {
-    renderNotifications(await api("/api/notifications", {
-      method: "POST", body: JSON.stringify({ kind: select.dataset.kind, priority: Number(select.value) }),
-    }));
-  } catch (error) {
-    toast(error.message, true);
-    loadNotifications();
-  } finally {
-    select.disabled = false;
-  }
-}
-
-async function sendTestNotification(event) {
-  const button = event.currentTarget;
-  button.disabled = true;
-  try {
-    toast((await api("/api/notifications/test", { method: "POST", body: "{}" })).message);
-  } catch (error) {
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
-}
-
 // The zone the app calculates with right now (home or the latest travel switch, user request 2026-11-07).
 function appZone() {
   return state.travel?.current || state.settings?.timezone || "Europe/Berlin";
 }
 
-function deviceZone() {
-  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch { return null; }
-}
-
-function zoneOffsetMinutes(zone, at = new Date()) {
-  try {
-    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23",
-      year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
-      .formatToParts(at).map(part => [part.type, part.value]));
-    const wall = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute);
-    return Math.round((wall - Math.floor(at.getTime() / 60000) * 60000) / 60000);
-  } catch { return null; }
-}
-
-function zoneText(zone) {
-  const offset = zoneOffsetMinutes(zone);
-  if (offset == null) return zone;
-  const sign = offset < 0 ? "−" : "+";
-  const hours = Math.floor(Math.abs(offset) / 60), minutes = Math.abs(offset) % 60;
-  return zone + " (UTC" + sign + hours + (minutes ? ":" + String(minutes).padStart(2, "0") : "") + ")";
-}
-
-// The phone's clock differs from the app's: offer the switch in the diary and in settings.
-function deviceZoneDiffers() {
-  const device = deviceZone();
-  return Boolean(device && state.travel && zoneOffsetMinutes(device) !== zoneOffsetMinutes(appZone()));
-}
-
+// The diary's timezone banner: shown while the device's clock differs from the app's.
 function renderTimezone() {
   const travel = state.travel;
-  if (!travel) return;
-  const device = deviceZone();
-  const differs = deviceZoneDiffers();
-  const last = travel.switches?.[travel.switches.length - 1];
-  const since = last ? " seit " + new Date(last.at).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "";
-  $("#timezone-status").textContent = "Die App rechnet mit " + zoneText(travel.current) +
-    (travel.current !== travel.home ? since + ", Heimat ist " + zoneText(travel.home) : "") + "." +
-    (differs ? " Dein Gerät ist auf " + zoneText(device) + "." : "");
-  const deviceButton = $("#timezone-device");
-  deviceButton.hidden = !differs || device === travel.home;
-  deviceButton.textContent = "Auf Gerätezeit umstellen: " + (device || "");
-  deviceButton.dataset.zone = device || "";
-  const homeButton = $("#timezone-home");
-  homeButton.hidden = travel.current === travel.home;
-  homeButton.textContent = "Zurück auf Heimatzeit: " + travel.home;
-  $("#timezone-undo").hidden = !travel.switches?.length;
-  const input = $("#timezone-at");
-  const now = new Date();
-  input.max = localInputTime(now);
-  input.min = localInputTime(new Date(now.getTime() - (travel.backdate_days ?? 14) * 24 * 60 * MINUTE));
   const banner = $("#timezone-banner");
+  const differs = deviceZoneDiffers(travel);
   banner.hidden = !differs;
-  if (differs) {
-    banner.innerHTML = "Dein Gerät zeigt " + escapeHTML(zoneText(device)) + ", die App rechnet noch mit " +
-      escapeHTML(zoneText(travel.current)) + " (Mahlzeiten, Korrekturfaktor, Warnzeiten). " +
-      '<button type="button" class="banner-action" data-timezone-switch="' + escapeHTML(device) + '">Auf ' +
-      escapeHTML(device) + " umstellen</button>";
-  }
+  if (!differs) return;
+  const device = deviceZone();
+  banner.innerHTML = "Dein Gerät zeigt " + escapeHTML(zoneText(device)) + ", die App rechnet noch mit " +
+    escapeHTML(zoneText(travel.current)) + " (Mahlzeiten, Korrekturfaktor, Warnzeiten). " +
+    '<button type="button" class="banner-action" data-timezone-switch="' + escapeHTML(device) + '">Auf ' +
+    escapeHTML(device) + " umstellen</button>";
 }
 
+// Switches the zone the app calculates with (settings or the banner); true when it worked.
 async function switchTimezone(payload) {
-  const buttons = $$("#timezone-device, #timezone-home, #timezone-undo, [data-timezone-switch]");
-  buttons.forEach(item => { item.disabled = true; });
   try {
-    const at = $("#timezone-at").value;
-    if (at && !payload.undo) payload.at = new Date(at).toISOString();
     state.travel = await api("/api/timezone", { method: "POST", body: JSON.stringify(payload) });
-    $("#timezone-at").value = "";
+    if (state.settingsData) state.settingsData = { ...state.settingsData, travel: state.travel };
     renderTimezone();
+    renderSettings();
     toast(payload.undo ? "Zeitzonen-Wechsel zurückgenommen" : "Die App rechnet jetzt mit " + state.travel.current);
     if (todayDay() !== state.day) changeDay(todayDay()); else await loadDay();
+    return true;
   } catch (error) {
     toast(error.message, true);
-  } finally {
-    buttons.forEach(item => { item.disabled = false; });
+    return false;
   }
-}
-
-function renderVacation(vacation) {
-  const dateText = day => new Date(day + "T12:00").toLocaleDateString("de-DE");
-  $("#vacation-toggle").checked = Boolean(vacation?.active);
-  $("#vacation-day-label").textContent = vacation?.active ? "Erster Tag zurück" : "Erster Urlaubstag";
-  const input = $("#vacation-day");
-  const today = todayDay();
-  const earliest = new Date(today + "T12:00");
-  earliest.setDate(earliest.getDate() - (vacation?.backdate_days ?? 14));
-  input.max = today;
-  input.min = earliest.toLocaleDateString("sv-SE");
-  input.value = today;
-  const past = (vacation?.periods || []).filter(period => period.end_day)
-    .map(period => dateText(period.start_day) + "–" + dateText(period.end_day));
-  $("#vacation-status").textContent = (vacation?.active
-    ? "Aktiv seit " + dateText(vacation.since) + ". Jeder Tag zählt als frei, Mahlzeiten sind als Urlaub markiert."
-    : "Mo–Fr zählt als Arbeitstag.") + (past.length ? " Frühere Urlaube: " + past.join(", ") + "." : "");
 }
 
 function setDefaultSportTime() {}
@@ -740,222 +580,33 @@ function updateEntryFields() {
   schedulePreview(0);
 }
 
+// Settings (web/ui/settings.js) render from /api/settings; the rest of the page reads state.settings
+// (dose defaults, sport effects) and state.travel (the zone the app calculates with).
+let settingsLoads = 0;
+
 async function loadSettings() {
   const data = await api("/api/settings");
   state.settings = data.settings;
+  state.settingsData = data;
+  state.travel = data.travel || null;
+  settingsLoads += 1;
   $("#connection").textContent = data.connected ? "" : "Nightscout einrichten";
   $("#connection").hidden = data.connected;
-  $("#nightscout-location").hidden = data.connected;
-  $("#nightscout-location").textContent = data.connected ? "" : "NIGHTSCOUT_URL und NIGHTSCOUT_CREDENTIAL setzen";
-  $("#settings-version").textContent = "Einstellungsversion " + data.version;
-  $("#logout-form").hidden = !data.login_required;
-  const form = $("#settings-form");
-  form.elements.window_minutes.value = data.settings.window_minutes;
-  form.elements.dose_target_mgdl.value = data.settings.dose_target_mgdl;
-  form.elements.dose_cautious_target_mgdl.value = data.settings.dose_cautious_target_mgdl;
-  form.elements.dose_low_target_mgdl.value = data.settings.dose_low_target_mgdl ?? 100;
-  form.elements.auto_method.value = data.settings.auto_method || "percentile";
-  form.elements.auto_percentile.value = data.settings.auto_percentile;
-  form.elements.auto_lookback_days.value = String(data.settings.auto_lookback_days);
-  form.elements.auto_half_life_days.value = data.settings.auto_half_life_days;
-  form.elements.auto_surcharge_mgdl.value = data.settings.auto_surcharge_mgdl ?? 40;
-  form.elements.auto_fat_surcharge_mgdl.value = data.settings.auto_fat_surcharge_mgdl ?? 120;
-  form.elements.auto_vacation.value = data.settings.auto_vacation || "separate";
-  form.elements.basal_default_units.value = data.settings.basal_default_units ?? 17;
-  form.elements.split_min_grams.value = data.settings.split_min_grams ?? 80;
-  form.elements.split_min_units.value = data.settings.split_min_units ?? 6.5;
-  form.elements.split_first_percent.value = data.settings.split_first_percent ?? 60;
-  form.elements.split_delay_minutes.value = data.settings.split_delay_minutes ?? 120;
-  form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
-  form.elements.lunch_end.value = minuteClock(data.settings.lunch_end_minute);
-  form.elements.sport_lookback_minutes.value = data.settings.sport_lookback_minutes;
-  for (const kind of sportKinds) {
-    form.elements["sport_" + kind].value = sportChange(data.settings.sport_effects_mgdl[kind]);
-    form.elements["sport_minutes_" + kind].value = data.settings.sport_durations_minutes?.[kind] ?? 300;
-  }
-  renderIsfRows(data.settings.isf_schedule, data.settings.nightscout_profile, data.profile_sync_at, data.profile_sync_error);
-  renderIcRows(data.settings.ic_schedule || []);
-  renderTargetRows(data.settings.target_schedule || []);
-  renderVacation(data.vacation);
-  state.travel = data.travel || null;
   renderTimezone();
-  await loadNotifications();
-  renderPlaces(await api("/api/places"));
+  renderSettings();
   await loadAgent();
 }
 
-// Place management: chips with the spots Philipp defines, and the fallback place for anywhere else.
-function spotHTML(spot, index) {
-  return '<li class="place-spot"><a href="' + osmLink(spot.lat, spot.lon) + '" target="_blank" rel="noopener">Standort ' +
-    (index + 1) + '</a>' +
-    '<button type="button" class="quiet" data-place-action="delete_spot" data-spot-id="' + spot.id + '">Entfernen</button></li>';
-}
-
-function renderPlaces(data) {
-  state.places = data;
-  $("#places-list").innerHTML = data.places.length ? data.places.map(place =>
-    '<div class="place-item" data-place-id="' + place.id + '"><div class="place-head">' +
-    '<input type="text" class="place-name" maxlength="40" value="' + escapeHTML(place.name) + '" aria-label="Name des Orts">' +
-    '<span class="hint">' + place.count + (place.count === 1 ? ' Eintrag' : ' Einträge') + '</span>' +
-    '<label class="check-label place-quick"><input type="checkbox" class="place-quick-toggle"' + (place.quick ? ' checked' : '') +
-    '> Schnellauswahl</label>' +
-    '<label class="check-label place-quick"><input type="checkbox" class="place-fallback-toggle"' + (place.fallback ? ' checked' : '') +
-    '> Standard woanders</label>' +
-    '<label class="check-label place-quick"><input type="checkbox" class="place-adjust-toggle"' + (place.adjust ? ' checked' : '') +
-    '> Ortsfaktor</label>' +
-    '<button type="button" class="quiet delete-treatment" data-place-action="delete" data-place-id="' + place.id + '">Löschen</button></div>' +
-    (place.adjust ? '<p class="hint">' + (place.factor?.scale != null
-      ? 'Ortsfaktor ' + signedPercent(place.factor.scale) + ' auf Faktor und Zuschlag, aus ' + place.factor.count + ' Hauptmahlzeiten der letzten ' + place.factor.days + ' Tage.'
-      : 'Ortsfaktor ab ' + (place.factor?.min_meals ?? 3) + ' Hauptmahlzeiten hier in den letzten ' + (place.factor?.days ?? 60) + ' Tagen (bisher ' + (place.factor?.count ?? 0) + ').') + '</p>' : '') +
-    (place.spots.length ? '<ul class="place-spots">' + place.spots.map((spot, index) => spotHTML(spot, index)).join("") + '</ul>'
-      : '<p class="hint">' + (place.fallback ? 'Vorausgewählt, wenn du an keinem Standort bist.' : 'Ohne Standort: nur von Hand wählbar.') + '</p>') +
-    '<div class="place-coords"><button type="button" class="quiet" data-place-action="here" data-place-id="' + place.id + '">+ Aktueller Standort</button>' +
-    '<input type="text" class="place-coords-input" inputmode="decimal" placeholder="oder Koordinaten: 49.0069, 8.4037" aria-label="Koordinaten des Standorts">' +
-    '<button type="button" class="quiet" data-place-action="coords" data-place-id="' + place.id + '">Hinzufügen</button></div></div>'
-  ).join("") : '<p class="hint">Noch keine Orte.</p>';
-}
-
-async function placeAction(body) {
-  try {
-    renderPlaces(await api("/api/places", { method: "POST", body: JSON.stringify(body) }));
-    if (state.dayData) loadDay();
-    schedulePreview(0);
-    return true;
-  } catch (error) {
-    toast(error.message, true);
-    return false;
-  }
-}
-
-async function placeClick(event) {
-  const button = event.target.closest("[data-place-action]");
-  if (!button) return;
-  const action = button.dataset.placeAction;
-  if (action === "delete") {
-    const name = button.closest(".place-item").querySelector(".place-name").value;
-    if (!confirm("Ort „" + name + "“ löschen? Seine Einträge verlieren den Ort.")) return;
-    await placeAction({ action, id: button.dataset.placeId });
-  } else if (action === "delete_spot") {
-    await placeAction({ action, spot_id: button.dataset.spotId });
-  } else if (action === "here") {
-    button.disabled = true;
-    try {
-      const position = await currentPosition();
-      if (position.accuracy_m > state.places.max_accuracy_m)
-        throw new Error("Standort zu ungenau (± " + position.accuracy_m + " m). Bitte draußen oder mit WLAN erneut versuchen.");
-      await placeAction({ action: "add_spot", place_id: button.dataset.placeId, lat: position.lat, lon: position.lon });
-    } catch (error) {
-      toast(error?.code === 1 ? "Standort nicht freigegeben" : error?.message || "Standort nicht ermittelt", true);
-    } finally {
-      button.disabled = false;
-    }
-  } else if (action === "coords") {
-    const input = $(".place-coords-input", button.closest(".place-item"));
-    if (await placeAction({ action: "add_spot", place_id: button.dataset.placeId, coordinates: input.value })) input.value = "";
-  }
-}
-
-async function placeChange(event) {
-  if (event.target.matches(".place-name")) {
-    await placeAction({ action: "rename", id: event.target.closest(".place-item").dataset.placeId, name: event.target.value });
-  } else if (event.target.matches(".place-quick-toggle")) {
-    await placeAction({ action: "quick", id: event.target.closest(".place-item").dataset.placeId, quick: event.target.checked });
-  } else if (event.target.matches(".place-adjust-toggle")) {
-    await placeAction({ action: "adjust", id: event.target.closest(".place-item").dataset.placeId, adjust: event.target.checked });
-  } else if (event.target.matches(".place-fallback-toggle")) {
-    await placeAction({ action: "fallback", id: event.target.closest(".place-item").dataset.placeId, fallback: event.target.checked });
-  }
-}
-
-function renderTargetRows(rows) {
-  $("#target-rows").innerHTML = rows.length
-    ? '<div class="isf-table"><div class="isf-table-head"><span>Ab</span><span>Zielbereich</span></div>' +
-      rows.map(row => '<div class="isf-readonly-row"><span>' +
-        escapeHTML(minuteClock(Number(row.start_minute))) + '</span><strong>' +
-        escapeHTML(num(row.low_mgdl, 0)) + '–' + escapeHTML(num(row.high_mgdl, 0)) +
-        ' mg/dL</strong></div>').join("") + '</div>'
-    : '<p class="hint">Kein Zielbereich im aktuellen Nightscout-Profil verfügbar.</p>';
-}
-
-function renderIcRows(rows) {
-  const list = $("#ic-rows");
-  if (!rows.length) {
-    list.innerHTML = '<p class="hint">Kein I:C-Zeitplan aus Nightscout verfügbar.</p>';
-    $("#save-ic").disabled = true;
-    return;
-  }
-  $("#save-ic").disabled = false;
-  list.innerHTML = '<div class="isf-table"><div class="isf-table-head"><span>Ab</span><span>Insulinfaktor (IE/KE)</span></div>' +
-    rows.map(row => {
-      const start = Number(row.start_minute);
-      const time = String(Math.floor(start / 60)).padStart(2, "0") + ':' + String(start % 60).padStart(2, "0");
-      const display = Number((10 / Number(row.grams_per_unit)).toFixed(2));
-      return '<label class="ic-row"><span>' + time + '</span><input type="number" min="' + escapeHTML(pickerMinimum(display, 0.1, true)) + '" max="1000" step="0.1" required data-start-minute="' +
-        escapeHTML(start) + '" data-grams-per-unit="' + escapeHTML(row.grams_per_unit) +
-        '" data-original-display="' + escapeHTML(display) + '" value="' + escapeHTML(display) +
-        '" aria-label="Insulinfaktor ab ' + time + ' in IE je KE"></label>';
-    }).join("") + '</div>';
-}
-
-function icScheduleRow(input) {
-  const start_minute = Number(input.dataset.startMinute);
-  return Number(input.value) === Number(input.dataset.originalDisplay)
-    ? { start_minute, grams_per_unit: input.dataset.gramsPerUnit }
-    : { start_minute, units_per_ke: input.value };
-}
-
-async function saveProfileSchedule(kind) {
-  const isIc = kind === "ic";
-  const button = $(isIc ? "#save-ic" : "#save-isf");
-  const inputs = $$(isIc ? "#ic-rows input" : "#isf-rows input");
-  const status = $(isIc ? "#ic-status" : "#isf-sync-status");
-  const key = isIc ? "units_per_ke" : "mgdl_per_unit";
-  if (button.disabled) return;
-  if (!inputs.every(input => input.reportValidity())) return;
-  button.disabled = true;
-  status.textContent = "Profil-Zeitplan wird in Nightscout gespeichert …";
-  try {
-    const result = await api("/api/profile/" + kind, { method: "POST", body: JSON.stringify({
-      profile_id: state.settings.nightscout_profile.profile_id,
-      [isIc ? "ic_schedule" : "isf_schedule"]: inputs.map(input => isIc
-        ? icScheduleRow(input)
-        : { start_minute: Number(input.dataset.startMinute), [key]: input.value }),
-    }) });
-    await loadSettings();
-    refreshAnalysis();
-    status.textContent = result.message;
-    toast(result.message);
-  } catch (error) {
-    status.textContent = error.message;
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
-}
-
-function renderIsfRows(rows, profile, syncedAt, syncError) {
-  const list = $("#isf-rows");
-  if (!rows.length) {
-    list.innerHTML = '<p class="hint">Kein Korrekturfaktor-Profil aus Nightscout im lokalen Cache.</p>';
-    $("#save-isf").disabled = true;
-  } else {
-    $("#save-isf").disabled = false;
-    list.innerHTML = '<div class="isf-table"><div class="isf-table-head"><span>Ab</span><span>Korrekturfaktor</span></div>' +
-      rows.map(row => {
-        const start = Number(row.start_minute);
-        const hh = String(Math.floor(start / 60)).padStart(2, "0");
-        const mm = String(start % 60).padStart(2, "0");
-        return '<label class="ic-row"><span>' + hh + ':' + mm + '</span><input type="number" min="0.001" max="1000" step="any" required data-start-minute="' +
-          escapeHTML(start) + '" value="' + escapeHTML(row.mgdl_per_unit) + '" aria-label="Korrekturfaktor ab ' + hh + ':' + mm + ' in mg/dL je IE"></label>';
-      }).join("") + '</div>';
-  }
-  const source = profile
-    ? 'Profil „' + escapeHTML(profile.profile_name) + '“ · gültig ab ' +
-      escapeHTML(new Date(profile.start_at).toLocaleString("de-DE")) +
-      (profile.timezone ? ' · ' + escapeHTML(profile.timezone) : '')
-    : 'Nightscout-Profil nicht verfügbar.';
-  const synced = syncedAt ? ' · zuletzt synchronisiert ' + escapeHTML(new Date(syncedAt).toLocaleString("de-DE")) : '';
-  $("#isf-sync-status").textContent = (syncError ? syncError + ' · ' : '') + source + synced;
+function renderSettings() {
+  if (!state.settingsData) return;
+  render(html`<${SettingsView} data=${state.settingsData} loadCount=${settingsLoads} page=${state.settingsPage || null}
+    onPage=${showSettingsPage} today=${todayDay()} agentInfo=${agent.info}
+    onAgentInfo=${info => { agent.info = info; renderSettings(); updateEntryAgent(); }}
+    onReload=${async ({ day }) => { await loadSettings(); if (day) await loadDay(); }}
+    onSwitchZone=${switchTimezone}
+    onVacation=${async vacation => { state.settingsData = { ...state.settingsData, vacation }; renderSettings(); await loadDay(); }}
+    onPlacesChanged=${() => { if (state.dayData) loadDay(); schedulePreview(0); }}
+    onProfileSaved=${refreshAnalysis} />`, $("#settings-view"));
 }
 
 // The server's limits for a manual meal window, in milliseconds.
@@ -2730,61 +2381,6 @@ async function saveSportSession(button) {
   }
 }
 
-async function saveSettings(event) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const payload = {
-    window_minutes: Number(form.elements.window_minutes.value),
-    dose_target_mgdl: form.elements.dose_target_mgdl.value,
-    dose_cautious_target_mgdl: form.elements.dose_cautious_target_mgdl.value,
-    dose_low_target_mgdl: form.elements.dose_low_target_mgdl.value,
-    auto_method: form.elements.auto_method.value,
-    auto_percentile: form.elements.auto_percentile.value,
-    auto_lookback_days: Number(form.elements.auto_lookback_days.value),
-    auto_half_life_days: form.elements.auto_half_life_days.value,
-    auto_surcharge_mgdl: form.elements.auto_surcharge_mgdl.value,
-    auto_fat_surcharge_mgdl: form.elements.auto_fat_surcharge_mgdl.value,
-    auto_vacation: form.elements.auto_vacation.value,
-    basal_default_units: form.elements.basal_default_units.value,
-    split_min_grams: Number(form.elements.split_min_grams.value),
-    split_min_units: Number(form.elements.split_min_units.value),
-    split_first_percent: Number(form.elements.split_first_percent.value),
-    split_delay_minutes: Number(form.elements.split_delay_minutes.value),
-    breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),
-    lunch_end_minute: clockMinute(form.elements.lunch_end.value),
-    sport_lookback_minutes: Number(form.elements.sport_lookback_minutes.value),
-    sport_effects_mgdl: Object.fromEntries(sportKinds
-      .map(kind => [kind, sportChange(form.elements["sport_" + kind].value)])),
-    sport_durations_minutes: Object.fromEntries(sportKinds
-      .map(kind => [kind, Number(form.elements["sport_minutes_" + kind].value)])),
-    effective_at: form.elements.effective_date.value ? toInstant(form.elements.effective_date.value, form.elements.effective_time.value || "00:00") : null,
-  };
-  try {
-    await api("/api/settings", { method: "POST", body: JSON.stringify(payload) });
-    toast("Einstellungen gespeichert");
-    await loadSettings();
-    await loadDay();
-  } catch (error) {
-    toast(error.message, true);
-  }
-}
-
-async function saveExclusion(event) {
-  const button = event.target.closest(".exclude-meal");
-  if (!button) return;
-  button.disabled = true;
-  try {
-    await api("/api/analysis/exclusion", {
-      method: "POST",
-      body: JSON.stringify({ meal_id: button.dataset.mealId, day: button.dataset.day, excluded: button.dataset.excluded !== "true" }),
-    });
-    await loadDay();
-  } catch (error) {
-    button.disabled = false;
-    toast(error.message, true);
-  }
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
   const initialLocation = locationState();
   state.day = todayDay();
@@ -2844,9 +2440,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#entry-kind").value = button.dataset.entryMode;
     updateEntryFields();
   }));
-  $("#ic-rows").addEventListener("input", event => {
-    if (event.target.matches("input")) setPickerBase(event.target, 0.1, true);
-  });
   $$("[data-diary-mode]").forEach(button => button.addEventListener("click", () => {
     state.modeDay = state.day;
     state.diaryMode = button.dataset.diaryMode;
@@ -2866,23 +2459,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#dose-result").addEventListener("click", selectDoseSuggestion);
   $("#dose-result").addEventListener("input", moveSlider);
   $("#entry-day-type").addEventListener("click", saveEntryDayType);
-  $("#vacation-toggle").addEventListener("change", saveVacation);
-  $("#timezone-device").addEventListener("click", event => switchTimezone({ zone: event.currentTarget.dataset.zone }));
-  $("#timezone-home").addEventListener("click", () => switchTimezone({ zone: "" }));
-  $("#timezone-undo").addEventListener("click", () => switchTimezone({ undo: true }));
   $("#timezone-banner").addEventListener("click", event => {
     const button = event.target.closest("[data-timezone-switch]");
     if (button) switchTimezone({ zone: button.dataset.timezoneSwitch });
-  });
-  $$(".notify-toggle").forEach(input => input.addEventListener("change", saveNotification));
-  $$(".notify-priority").forEach(select => select.addEventListener("change", saveNotificationPriority));
-  $("#notify-test").addEventListener("click", sendTestNotification);
-  $(".places-panel").addEventListener("click", placeClick);
-  $(".places-panel").addEventListener("change", placeChange);
-  $("#place-new").addEventListener("submit", async event => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    if (await placeAction({ action: "create", name: form.elements.name.value })) form.reset();
   });
   $("#entry-form").elements.carbs.addEventListener("input", event => {
     event.target.setCustomValidity("");
@@ -2983,38 +2562,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 150);
   });
   updateEntryFields();
-  $("#settings-form").addEventListener("submit", saveSettings);
-  $("#save-ic").addEventListener("click", () => saveProfileSchedule("ic"));
-  $("#save-isf").addEventListener("click", () => saveProfileSchedule("isf"));
-  for (const kind of ["ic", "isf"]) {
-    $("#" + kind + "-rows").addEventListener("keydown", event => {
-      if (event.key === "Enter" && event.target.matches("input")) {
-        event.preventDefault();
-        saveProfileSchedule(kind);
-      }
-    });
-  }
-  $("#sync-profile").addEventListener("click", async event => {
-    const button = event.currentTarget;
-    button.disabled = true;
-    $("#isf-sync-status").textContent = "Nightscout-Profil wird synchronisiert …";
-    try {
-      const result = await api("/api/profile/sync", { method: "POST", body: JSON.stringify({}) });
-      await loadSettings();
-      await loadDay();
-      toast(result.message);
-    } catch (error) {
-      $("#isf-sync-status").textContent = error.message;
-      toast(error.message, true);
-    } finally {
-      button.disabled = false;
-    }
-  });
-  $("#test-connection").addEventListener("click", async () => {
-    $("#test-result").textContent = "Prüfe …";
-    try { const result = await api("/api/test-connection"); $("#test-result").textContent = result.message; }
-    catch (error) { $("#test-result").textContent = error.message; }
-  });
   document.addEventListener("keydown", event => {
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !$("#diary-view").hidden) {
       event.preventDefault();
@@ -3045,6 +2592,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (document.hidden) return;
     if (reloadForUpdate()) return;
     renderTimezone();
+    renderSettings();
     returnToToday();
     setDefaultMealTime({ preview: false });
     refreshTodayPreview();
@@ -3064,64 +2612,8 @@ const agent = { info: null };
 
 async function loadAgent() {
   try { agent.info = await api("/api/agent"); } catch (_) { agent.info = null; }
-  renderAgentSettings();
+  renderSettings();
   updateEntryAgent();
-}
-
-function renderAgentSettings() {
-  const info = agent.info;
-  if (!info) return;
-  const ready = info.providers.filter(item => item.configured);
-  $("#agent-settings-status").textContent = !ready.length
-    ? "Noch kein Anbieter eingerichtet."
-    : info.available ? "" : "Bitte ein Modell wählen.";
-  const select = $("#agent-provider");
-  select.replaceChildren(...info.providers.map(item => {
-    const option = new Option(item.label + (item.configured ? "" : " (kein Schlüssel)"), item.id);
-    option.disabled = !item.configured;
-    return option;
-  }));
-  select.value = info.provider || "";
-  select.disabled = !ready.length;
-  const current = info.providers.find(item => item.id === info.provider);
-  $("#agent-model").value = current?.model || "";
-  $("#agent-model").disabled = !current;
-  $("#agent-web-search").checked = info.web_search;
-  $("#agent-transcribe-model").value = info.transcribe_model;
-  $("#agent-transcribe-model").disabled = !info.transcribe_available;
-  $("#agent-models-load").disabled = !current;
-  const kinds = { estimate: "Einschätzungen", transcribe: "Transkriptionen" };
-  $("#agent-usage").textContent = info.usage_month.length ? "Diesen Monat: " + info.usage_month.map(row =>
-    row.calls + " " + (kinds[row.kind] || row.kind) + " mit " + row.model + " (" +
-    num((row.input_tokens + row.output_tokens) / 1000, 0) + " Tsd. Token" +
-    (row.cost_usd != null ? ", " + num(row.cost_usd, 2) + " $" : "") + ")").join("; ") : "";
-}
-
-async function saveAgentSettings(body) {
-  try {
-    agent.info = await api("/api/agent/settings", { method: "POST", body: JSON.stringify(body) });
-    renderAgentSettings();
-    updateEntryAgent();
-  } catch (error) { toast(error.message, true); renderAgentSettings(); }
-}
-
-async function loadAgentModels() {
-  const button = $("#agent-models-load");
-  button.disabled = true;
-  try {
-    const provider = $("#agent-provider").value;
-    const data = await api("/api/agent/models?provider=" + encodeURIComponent(provider));
-    const option = model => '<option value="' + escapeHTML(model.id) + '">' + escapeHTML(model.name) + '</option>';
-    $("#agent-model-options").innerHTML = data.models.filter(model => model.image !== false).map(option).join("");
-    if (provider === "openrouter" || !agent.info.transcribe_available)
-      $("#agent-audio-options").innerHTML = data.models.filter(model => model.audio).map(option).join("");
-    else {
-      const router = await api("/api/agent/models?provider=openrouter");
-      $("#agent-audio-options").innerHTML = router.models.filter(model => model.audio).map(option).join("");
-    }
-    toast(data.models.length + " Modelle geladen, im Feld Modell auswählen oder tippen");
-  } catch (error) { toast(error.message, true); }
-  finally { button.disabled = false; }
 }
 
 // The entry form's agent line: the button, and what an applied estimate will save with the entry.
@@ -3255,50 +2747,14 @@ function closeEntryDrawer() {
   if (title) title.textContent = "Eintrag hinzufügen";
 }
 
-// Settings on phones: a list of pages (one per panel, grouped by the headings), one page at a time.
-function setupSettingsPages() {
-  const root = $("#settings-view");
-  const index = $("#settings-index");
-  const groups = [{ title: "Allgemein", pages: [] }];
-  let count = 0;
-  $$(".settings-heading, .panel", root).forEach(node => {
-    if (node.matches(".settings-heading")) { groups.push({ title: node.textContent.trim(), pages: [] }); return; }
-    if (node.matches(".settings-save")) return;
-    const heading = node.querySelector(":scope > h2");
-    if (!heading) return;
-    const id = "page-" + (++count);
-    node.dataset.settingsPage = id;
-    groups[groups.length - 1].pages.push({ id, title: heading.firstChild?.textContent?.trim() || heading.textContent.trim() });
-  });
-  index.replaceChildren(...groups.filter(group => group.pages.length).map(group => {
-    const section = document.createElement("div");
-    section.className = "settings-index-group";
-    const title = document.createElement("h2");
-    title.textContent = group.title;
-    section.append(title, ...group.pages.map(page => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "settings-index-item";
-      button.dataset.settingsOpen = page.id;
-      button.textContent = page.title;
-      return button;
-    }));
-    return section;
-  }));
-}
-
+// Settings on phones: a list of pages, one page at a time (the CSS reads data-page and page-in-form).
 function showSettingsPage(id) {
   const root = $("#settings-view");
+  state.settingsPage = id;
   if (id) root.dataset.page = id;
   else delete root.dataset.page;
-  let inForm = false;
-  $$("[data-settings-page]", root).forEach(panel => {
-    const current = panel.dataset.settingsPage === id;
-    panel.classList.toggle("is-current", current);
-    if (current) inForm = Boolean(panel.closest("#settings-form"));
-  });
-  root.classList.toggle("page-in-form", inForm);
-  $("#settings-back").hidden = !id;
+  root.classList.toggle("page-in-form", FORM_PAGES.has(id));
+  renderSettings();
   window.scrollTo({ top: 0 });
 }
 
@@ -3314,12 +2770,6 @@ document.addEventListener("DOMContentLoaded", () => {
   $$(".entry-mode").forEach(button => button.addEventListener("click", event => {
     if (event.isTrusted) $("#entry-title").textContent = "Eintrag hinzufügen";
   }));
-  setupSettingsPages();
-  $("#settings-index").addEventListener("click", event => {
-    const button = event.target.closest("[data-settings-open]");
-    if (button) showSettingsPage(button.dataset.settingsOpen);
-  });
-  $("#settings-back").addEventListener("click", () => showSettingsPage(null));
   updateNav();
 });
 
@@ -3348,10 +2798,4 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#entry-agent-open").addEventListener("click", openAgent);
   $("#entry-agent-clear").addEventListener("click", () => { state.entryAgent = null; updateEntryAgent(); });
   $$(".entry-mode").forEach(button => button.addEventListener("click", () => setTimeout(updateEntryAgent)));
-  $("#agent-provider").addEventListener("change", event => saveAgentSettings({ provider: event.target.value }));
-  $("#agent-model").addEventListener("change", event =>
-    saveAgentSettings({ ["model_" + $("#agent-provider").value]: event.target.value }));
-  $("#agent-web-search").addEventListener("change", event => saveAgentSettings({ web_search: event.target.checked }));
-  $("#agent-transcribe-model").addEventListener("change", event => saveAgentSettings({ transcribe_model: event.target.value }));
-  $("#agent-models-load").addEventListener("click", loadAgentModels);
 });
