@@ -110,6 +110,22 @@ def set_sport_session_effect(session_id: str, effect_mgdl: str | None) -> None:
                        (session_id, effect_mgdl))
 
 
+def sport_session_minutes() -> dict[str, int]:
+    """Effect duration per sport session (minutes after its end); other sessions use their kind's setting."""
+    with connect() as db:
+        rows = db.execute("SELECT session_id,minutes FROM sport_session_minutes").fetchall()
+    return {row["session_id"]: int(row["minutes"]) for row in rows}
+
+
+def set_sport_session_minutes(session_id: str, minutes: int | None) -> None:
+    with connect() as db:
+        if minutes is None:
+            db.execute("DELETE FROM sport_session_minutes WHERE session_id=?", (session_id,))
+        else:
+            db.execute("INSERT INTO sport_session_minutes(session_id,minutes) VALUES(?,?) "
+                       "ON CONFLICT(session_id) DO UPDATE SET minutes=excluded.minutes", (session_id, minutes))
+
+
 def analysis_windows() -> dict[str, dict]:
     """Manually chosen meal windows; local analysis cleanup, never sent to Nightscout."""
     with connect() as db:
