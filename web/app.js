@@ -3,6 +3,8 @@
 import { html, render } from "./ui/html.js";
 import "./ui/main.js";
 import { AnalysisView } from "./ui/analysis.js";
+import { DayReview, entryLabel, dayTypeSources, dayBounds } from "./ui/day.js";
+import { DayChart, glucosePoints } from "./ui/charts.js";
 import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
 import { MINUTE, names, CERTAINTY_LABELS, MEAL_FACTORS, sportKinds, sportNames, api, appUpdateWaiting, toast, num, factorNum,
   signedChange, sportChange, timeOnly, signedPercent, minuteClock, clockMinute, localInputTime, toInstant, pickerMinimum,
@@ -22,8 +24,6 @@ function factorIconsHTML(marks) {
 }
 // Where a carb entry was eaten; the place chip's name.
 // What a carb entry was; the dish's name from the catalogue.
-const dishBadgeHTML = dish => dish ? '<span class="place-badge dish-badge" title="Gericht">' + escapeHTML(dish.name) + '</span>' : "";
-const placeBadgeHTML = place => place ? '<span class="place-badge" title="Ort">' + escapeHTML(place.name) + '</span>' : "";
 
 const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
 // Nothing typed and no dialog open: a reload loses nothing (the URL keeps view and tab).
@@ -293,12 +293,6 @@ function updateEntrySubmitLabel() {
   button.textContent = parts.length ? parts.join(" + ") + " speichern" : "In Nightscout speichern";
 }
 
-const dayTypeSources = {
-  weekday: "Standard nach Wochentag",
-  vacation: "Urlaub ist aktiv",
-  manual: "Für diesen Tag manuell gewählt",
-};
-
 function updateEntryDayType() {
   const form = $("#entry-form");
   const dayType = form.elements.kind.value === "meal" ? currentPreview()?.day_type : null;
@@ -321,32 +315,6 @@ async function saveEntryDayType(event) {
       method: "POST", body: JSON.stringify({ day, day_type: button.dataset.dayType }),
     });
     await updatePreview();
-  } catch (error) {
-    toast(error.message, true);
-  } finally {
-    buttons.forEach(item => { item.disabled = false; });
-  }
-}
-
-// "Tag durchgehen" is where a day's data is kept clean: its day type is set here too.
-function renderReviewDayType(data) {
-  const box = $("#review-day-type");
-  box.hidden = !data.day_type;
-  if (!data.day_type) return;
-  $$("[data-review-day-type]").forEach(button =>
-    button.setAttribute("aria-pressed", String(button.dataset.reviewDayType === data.day_type)));
-  $("#review-day-type-hint").textContent = (dayTypeSources[data.day_type_source] || "") +
-    (data.vacation && data.day_type_source !== "vacation" ? " · Urlaubstag" : "");
-}
-
-async function saveReviewDayType(button) {
-  const buttons = $$("[data-review-day-type]");
-  buttons.forEach(item => { item.disabled = true; });
-  try {
-    await api("/api/analysis/day-type", {
-      method: "POST", body: JSON.stringify({ day: state.day, day_type: button.dataset.reviewDayType }),
-    });
-    await loadDay();
   } catch (error) {
     toast(error.message, true);
   } finally {
@@ -609,236 +577,13 @@ function renderSettings() {
     onProfileSaved=${refreshAnalysis} />`, $("#settings-view"));
 }
 
-// The server's limits for a manual meal window, in milliseconds.
-function windowLimits() {
-  const limits = state.dayData?.window_limits || { lead_minutes: 120, lag_minutes: 120, min_minutes: 30, max_minutes: 600 };
-  return { lead: limits.lead_minutes * MINUTE, lag: limits.lag_minutes * MINUTE,
-    min: limits.min_minutes * MINUTE, max: limits.max_minutes * MINUTE };
-}
-const SNAP_PIXELS = 16;
-let CHART = chartLayout(600);
-
-// Chart units equal CSS pixels at the measured width, so text and touch targets keep their size.
-function chartLayout(width) {
-  const clamped = Math.max(300, Math.min(900, Math.round(width || 600)));
-  return { width: clamped, left: 36, right: clamped - 12, plotTop: 70, plotBottom: 258 };
-}
-let windowEditor = null;
-
-function glucosePoints(entries) {
-  return entries.map(point => ({ t: new Date(point.at).getTime(), g: Number(point.sgv), tone: point.tone }))
-    .filter(point => Number.isFinite(point.g)).sort((a, b) => a.t - b.t);
-}
-
-// The server sends each meal's counted window and the CGM value at both ends.
-function mealWindow(meal) {
-  const window = meal.window;
-  const time = value => new Date(value).getTime();
-  return {
-    mealAt: time(meal.at), start: time(window.start), end: time(window.end),
-    autoStart: time(window.auto_start), autoEnd: time(window.auto_end), manual: window.manual,
-    startGlucose: window.start_glucose, endGlucose: window.end_glucose,
-    sourceId: meal.source_id || null,
-  };
-}
-
-function chartEvents(treatments) {
-  return treatments.flatMap(item => {
-    const t = new Date(item.at).getTime();
-    if (item.eventType === "Exercise") {
-      return [{ kind: "sport", t, end: t + Number(item.duration || 0) * MINUTE, label: sportNames[item.sport_type] || "Sport" }];
-    }
-    const result = [];
-    if (Number(item.insulin) > 0) result.push({ kind: "insulin", id: item.id, t, amount: Number(item.insulin), rapid: Boolean(item.rapid) });
-    if (Number(item.carbs) > 0) result.push({ kind: "carbs", id: item.id, t, amount: Number(item.carbs) });
-    return result;
-  });
-}
-
-function chartView(range) {
-  const from = Math.min(range.start, range.autoStart) - 45 * MINUTE;
-  const to = Math.max(range.end, range.autoEnd, range.mealAt + 240 * MINUTE) + 75 * MINUTE;
-  return {
-    from: Math.max(from, range.mealAt - windowLimits().lead - 30 * MINUTE),
-    to: Math.min(to, range.mealAt + windowLimits().max + 60 * MINUTE),
-  };
-}
-
-function chartScales(view, points) {
-  const visible = points.filter(point => point.t >= view.from && point.t <= view.to).map(point => point.g);
-  const top = Math.max(300, Math.ceil((Math.max(0, ...visible) + 20) / 50) * 50);
-  const bottom = Math.min(40, Math.floor((Math.min(400, ...visible) - 10) / 10) * 10);
-  return {
-    x: t => CHART.left + (t - view.from) / (view.to - view.from) * (CHART.right - CHART.left),
-    y: g => CHART.plotBottom - (g - bottom) / (top - bottom) * (CHART.plotBottom - CHART.plotTop),
-    top, bottom,
-  };
-}
-
-const chartIcons = {
-  insulin: '<path d="M-5 5l3-3m-1-1 6-6 3 3-6 6zM4-7l3 3M5-8l3 3"/>',
-  carbs: '<path d="M0-3c-2-2-6-1-6 3s3 7 6 7 6-3 6-7-4-5-6-3zM0-3c0-2 1-4 3-5"/>',
-};
-
-function eventLanes(events, scales, view, range) {
-  const labelEnds = {};
-  const shown = events.filter(event => (event.end || event.t) >= view.from && event.t <= view.to).sort((a, b) => a.t - b.t);
-  const iconsCovered = (kind, from, to, own) => shown.some(other => other !== own && other.kind === kind &&
-    scales.x(other.t) + 8 > from && scales.x(other.t) - 8 < to);
-  return shown.map(event => {
-    const x = scales.x(Math.max(event.t, view.from));
-    const included = windowIncludes(range, event) ? " is-included" : "";
-    if (event.kind === "sport") {
-      const width = Math.max(4, scales.x(Math.min(event.end, view.to)) - x);
-      return '<g class="chart-event sport' + included + '" data-t="' + event.t + '"><rect x="' + x.toFixed(1) +
-        '" y="46" width="' + width.toFixed(1) + '" height="14" rx="4"/><text x="' + (x + 4).toFixed(1) +
-        '" y="57">' + escapeHTML(event.label) + '</text></g>';
-    }
-    const y = event.kind === "insulin" ? 14 : 34;
-    const label = event.kind === "insulin" ? num(event.amount, 1) + " IE" : num(event.amount, 0) + " g";
-    // Labels near the right edge flip left; a label that would overlap its lane neighbour is left out.
-    const labelWidth = label.length * 6;
-    const flip = x + 10 + labelWidth > CHART.right;
-    const textStart = flip ? x - 10 - labelWidth : x + 10;
-    const showLabel = textStart >= (labelEnds[event.kind] ?? -Infinity) &&
-      !iconsCovered(event.kind, textStart, textStart + labelWidth, event);
-    if (showLabel) labelEnds[event.kind] = textStart + labelWidth + 4;
-    return '<g class="chart-event ' + event.kind + (event.rapid === false ? ' non-rapid' : '') + included +
-      '" data-t="' + event.t + '" data-id="' + escapeHTML(event.id || "") + '"><line x1="' + x.toFixed(1) + '" y1="' + (y + 9) + '" x2="' + x.toFixed(1) + '" y2="' + CHART.plotBottom + '" class="event-guide"/>' +
-      '<g transform="translate(' + x.toFixed(1) + ' ' + y + ')">' + chartIcons[event.kind] + '</g>' +
-      (showLabel ? '<text x="' + (flip ? x - 10 : x + 10).toFixed(1) + '" y="' + (y + 4) + '"' + (flip ? ' text-anchor="end"' : '') + '>' + escapeHTML(label) + '</text>' : '') + '</g>';
-  }).join("");
-}
-
-function targetBand(view, scales) {
-  return (state.dayData?.target_bands || []).map(band => {
-    const from = Math.max(new Date(band.from).getTime(), view.from);
-    const to = Math.min(new Date(band.to).getTime(), view.to);
-    const high = Math.min(Number(band.high_mgdl), scales.top);
-    const low = Math.max(Number(band.low_mgdl), scales.bottom);
-    if (to <= from || high <= low) return "";
-    return '<rect class="target-band" x="' + scales.x(from).toFixed(1) + '" y="' + scales.y(high).toFixed(1) +
-      '" width="' + (scales.x(to) - scales.x(from)).toFixed(1) + '" height="' + (scales.y(low) - scales.y(high)).toFixed(1) + '"/>';
-  }).join("");
-}
-
-function handleSVG(name, t, points, scales, interactive, reading) {
-  const x = scales.x(t);
-  // A drawn meal window brings its own reading; the editor's moving handles look theirs up.
-  if (interactive) reading = editorReading(t);
-  const value = reading?.value != null ? Number(reading.value) : null;
-  const tone = reading?.tone || "none";
-  const dotY = value == null ? CHART.plotBottom : scales.y(value);
-  const label = name === "start" ? "Beginn" : "Ende";
-  return '<g class="window-handle" data-handle="' + name + '" transform="translate(' + x.toFixed(1) + ' 0)"' +
-    (interactive ? ' tabindex="0" role="slider" aria-label="' + label + ' des Zeitraums" aria-valuetext="' + escapeHTML(timeOnly(t)) + ' Uhr"' : '') + '>' +
-    '<line class="handle-line" x1="0" y1="64" x2="0" y2="' + (interactive ? 290 : CHART.plotBottom) + '"/>' +
-    '<circle class="handle-dot" data-tone="' + tone + '" cx="0" cy="' + dotY.toFixed(1) + '" r="' + (interactive ? 7 : 4.5) + '"' + (value == null ? ' hidden' : '') + '/>' +
-    (interactive
-      ? '<rect class="handle-hit" x="-24" y="62" width="48" height="262"/>' +
-        '<g class="handle-knob"><rect x="-21" y="288" width="42" height="30" rx="15"/><path d="M-5 297v12M0 297v12M5 297v12"/></g>'
-      : '') +
-    '</g>';
-}
-
-function windowChartSVG(range, entries, treatments, options = {}) {
-  const interactive = Boolean(options.interactive);
-  const overview = Boolean(options.overview);
-  const view = options.view || chartView(range);
-  const clipId = options.clipId || (overview ? "overview-clip" : interactive ? "editor-clip" : "chart-clip-" + range.mealAt);
-  const points = glucosePoints(entries);
-  const scales = chartScales(view, points);
-  const visible = points.filter(point => point.t >= view.from - 10 * MINUTE && point.t <= view.to + 10 * MINUTE);
-  const height = interactive ? 324 : 284;
-  const grid = [];
-  const yLabels = [];
-  for (let g = Math.ceil(scales.bottom / 50) * 50; g <= scales.top; g += 50) {
-    grid.push('<line class="grid" x1="' + CHART.left + '" x2="' + CHART.right + '" y1="' + scales.y(g).toFixed(1) + '" y2="' + scales.y(g).toFixed(1) + '"/>');
-    yLabels.push('<text class="y-label" x="' + (CHART.left - 6) + '" y="' + (scales.y(g) + 4).toFixed(1) + '" text-anchor="end">' + g + '</text>');
-  }
-  const ticks = [];
-  const hour = 60 * MINUTE;
-  const step = [1, 2, 3, 6].map(hours => hours * hour)
-    .find(candidate => (view.to - view.from) / candidate * 48 <= CHART.right - CHART.left) || 6 * hour;
-  for (let t = Math.ceil(view.from / step) * step; t <= view.to; t += step) {
-    ticks.push('<line class="tick" x1="' + scales.x(t).toFixed(1) + '" x2="' + scales.x(t).toFixed(1) + '" y1="' + CHART.plotBottom + '" y2="' + (CHART.plotBottom + 5) + '"/>' +
-      '<text class="x-label" x="' + scales.x(t).toFixed(1) + '" y="' + (CHART.plotBottom + 19) + '" text-anchor="middle">' + escapeHTML(timeOnly(t)) + '</text>');
-  }
-  const limit = (g, className) => g > scales.bottom && g < scales.top
-    ? '<line class="' + className + '" x1="' + CHART.left + '" x2="' + CHART.right + '" y1="' + scales.y(g).toFixed(1) + '" y2="' + scales.y(g).toFixed(1) + '"/>' : '';
-  const segments = [];
-  let segment = [];
-  visible.forEach((point, index) => {
-    if (index && point.t - visible[index - 1].t > 15 * MINUTE) { segments.push(segment); segment = []; }
-    segment.push(scales.x(point.t).toFixed(1) + "," + scales.y(point.g).toFixed(1));
-  });
-  segments.push(segment);
-  const curve = segments.filter(item => item.length > 1).map(item => '<polyline class="curve" points="' + item.join(" ") + '"/>').join("");
-  const shadeX = scales.x(range.start);
-  const last = visible.filter(point => point.t <= view.to).pop();
-  const label = overview
-    ? 'Glukoseverlauf mit Ereignissen von ' + timeOnly(view.from) + ' bis ' + timeOnly(view.to) + ' Uhr'
-    : 'Glukoseverlauf mit Auswertungszeitraum ' + timeOnly(range.start) + ' bis ' + timeOnly(range.end) + ' Uhr';
-  return '<svg class="window-chart-svg' + (interactive ? ' is-interactive' : '') + '" viewBox="0 0 ' + CHART.width + ' ' + height +
-    '" role="img" aria-label="' + escapeHTML(label) + '">' +
-    '<defs><clipPath id="' + clipId + '"><rect x="' + CHART.left + '" y="0" width="' + (CHART.right - CHART.left) + '" height="' + height + '"/></clipPath></defs>' +
-    '<rect class="plot-bg" x="' + CHART.left + '" y="' + CHART.plotTop + '" width="' + (CHART.right - CHART.left) + '" height="' + (CHART.plotBottom - CHART.plotTop) + '"/>' +
-    '<g clip-path="url(#' + clipId + ')">' +
-    targetBand(view, scales) + grid.join("") + limit(250, "limit-high") + limit(70, "limit-low") +
-    (overview ? '' : '<rect class="window-shade" x="' + shadeX.toFixed(1) + '" y="' + (CHART.plotTop - 6) + '" width="' + (scales.x(range.end) - shadeX).toFixed(1) + '" height="' + (CHART.plotBottom - CHART.plotTop + 6) + '"/>') +
-    (!overview && (range.manual || interactive) && (range.autoStart !== range.start || range.autoEnd !== range.end)
-      ? '<line class="auto-marker" x1="' + scales.x(range.autoStart).toFixed(1) + '" x2="' + scales.x(range.autoStart).toFixed(1) + '" y1="' + CHART.plotTop + '" y2="' + CHART.plotBottom + '"/>' +
-        '<line class="auto-marker" x1="' + scales.x(range.autoEnd).toFixed(1) + '" x2="' + scales.x(range.autoEnd).toFixed(1) + '" y1="' + CHART.plotTop + '" y2="' + CHART.plotBottom + '"/>'
-      : '') +
-    eventLanes(chartEvents(treatments), scales, view, range) + curve +
-    (overview
-      ? (last ? '<circle class="handle-dot" data-tone="' + (last.tone || "none") + '" cx="' + scales.x(last.t).toFixed(1) + '" cy="' + scales.y(last.g).toFixed(1) + '" r="4.5"/>' : '')
-      : handleSVG("start", range.start, points, scales, interactive, range.startGlucose) +
-        handleSVG("end", range.end, points, scales, interactive, range.endGlucose)) +
-    '</g>' + '<line class="axis" x1="' + CHART.left + '" x2="' + CHART.right + '" y1="' + CHART.plotBottom + '" y2="' + CHART.plotBottom + '"/>' + ticks.join("") + yLabels.join("") +
-    '<text class="y-unit" x="2" y="' + (CHART.plotTop - 16) + '">mg/dL</text>' +
-    '</svg>';
-}
-
-function chartFor(meal, entries) {
-  const range = mealWindow(meal);
-  if (!entries.some(point => {
-    const t = new Date(point.at).getTime();
-    return t >= range.start - 30 * MINUTE && t <= range.end + 30 * MINUTE;
-  })) return '<p class="hint">Keine CGM-Kurve verfügbar.</p>';
-  return '<div class="meal-chart"><div class="meal-chart-plot" data-meal-id="' + escapeHTML(meal.id) + '"></div>' +
-    '<div class="meal-chart-foot"><span>' + escapeHTML(timeOnly(range.start) + '–' + timeOnly(range.end)) + ' Uhr' +
-    (range.manual ? ' · <b>manuell</b>' : '') + '</span>' +
-    '<button type="button" class="open-window-editor" data-meal-id="' + escapeHTML(meal.id) + '">Zeitraum anpassen</button></div></div>';
-}
-
-// Charts are drawn after insertion so their geometry matches the rendered card width.
-function renderMealCharts() {
-  for (const node of $$(".meal-chart-plot")) {
-    const meal = state.dayData?.meals.find(item => item.id === node.dataset.mealId);
-    if (!meal || !node.clientWidth) continue;
-    CHART = chartLayout(node.clientWidth);
-    node.innerHTML = windowChartSVG(mealWindow(meal), state.dayData.entries, state.dayData.treatments);
-  }
-}
-
 // Overview above the entry form: today the last hours up to now, other days the whole day.
 function overviewHours() {
   try { return Number(localStorage.getItem("overviewHours")) || 3; } catch { return 3; }
 }
 
-// Local midnight to midnight of the shown day as the server counts it (travel days are shorter or longer).
-function dayBounds(data) {
-  if (data?.day === state.day && data.day_start && data.day_end) {
-    return { dayStart: new Date(data.day_start).getTime(), dayEnd: new Date(data.day_end).getTime() };
-  }
-  const dayStart = new Date(state.day + "T00:00:00").getTime();
-  const next = new Date(dayStart + 36 * 60 * MINUTE);
-  return { dayStart, dayEnd: new Date(next.toLocaleDateString("sv-SE") + "T00:00:00").getTime() };
-}
-
 function renderDayOverview() {
-  const node = $("#day-overview-chart");
+  const node = $("#day-overview-host");
   const data = state.dayData;
   if (!node || !data) return;
   const hours = overviewHours();
@@ -848,7 +593,7 @@ function renderDayOverview() {
     button.setAttribute("aria-pressed", String(Number(button.dataset.overviewHours) === hours));
     button.hidden = !isToday;
   });
-  const { dayStart, dayEnd } = dayBounds(data);
+  const { dayStart, dayEnd } = dayBounds(data, state.day);
   let view = { from: dayStart, to: dayEnd };
   if (isToday) {
     const to = Math.max(Date.now() + 10 * MINUTE, dayStart + 60 * MINUTE);
@@ -857,9 +602,7 @@ function renderDayOverview() {
   const clipped = isToday && hours < 24 && view.from === dayStart && view.to - view.from < hours * 60 * MINUTE;
   const points = glucosePoints(data.entries).filter(point => point.t >= view.from && point.t <= view.to);
   const last = points[points.length - 1];
-  CHART = chartLayout(node.clientWidth);
-  node.innerHTML = windowChartSVG({ start: -Infinity, end: Infinity, mealAt: dayStart }, data.entries, data.treatments,
-    { overview: true, view });
+  render(html`<${DayChart} id="day-overview-chart" data=${data} view=${view} clipId="overview-clip" />`, node);
   // The current value is in the header; the note only explains gaps.
   $("#day-overview-note").textContent = [
     last ? "" : "Keine CGM-Werte in diesem Zeitraum.",
@@ -867,18 +610,6 @@ function renderDayOverview() {
   ].filter(Boolean).join(" ");
   $("#day-overview-recent").innerHTML = isToday ? recentEntriesHTML([...data.treatments,
     ...(data.basal || []).map(dose => ({ at: dose.at, basal: dose.units }))]) : "";
-}
-
-// The whole day for "Tag durchgehen"; drawn only while visible so its width is known.
-function renderReviewChart() {
-  const node = $("#review-chart");
-  const data = state.dayData;
-  if (!node || !data || !node.clientWidth) return;
-  const { dayStart, dayEnd } = dayBounds(data);
-  const view = { from: dayStart, to: dayEnd };
-  CHART = chartLayout(node.clientWidth);
-  node.innerHTML = windowChartSVG({ start: -Infinity, end: Infinity, mealAt: dayStart }, data.entries, data.treatments,
-    { overview: true, view, clipId: "review-clip" });
 }
 
 // Today opens "Jetzt", other days open "Tag durchgehen"; a tap on the switch overrides it for that day.
@@ -896,89 +627,6 @@ function applyDiaryMode() {
 function renderVisibleCharts() {
   if (!state.dayData) return;
   renderDayOverview();
-  renderReviewChart();
-  renderMealCharts();
-  renderEffects();
-}
-
-// "Wirkungen": measured glucose against the 3-h model, and how strongly carbs raise and insulin lowers.
-async function loadEffects() {
-  const day = state.day;
-  try {
-    const data = await api("/api/day/effects?date=" + encodeURIComponent(day));
-    if (day !== state.day) return;
-    state.effects = data;
-  } catch (error) {
-    state.effects = { day, rows: [], reason: error.message };
-  }
-  renderEffects();
-}
-
-function effectsSummaryText(data) {
-  const summary = data.summary;
-  if (!summary?.count) return data.reason || "Noch keine Werte für das Modell.";
-  const parts = ["Modell im Mittel " + num(summary.mean_abs_mgdl, 0) + " mg/dL daneben"];
-  if (summary.max_above) parts.push("BZ bis " + signedChange(summary.max_above.mgdl, 0) + " über Modell um " + timeOnly(summary.max_above.at));
-  if (summary.max_below) parts.push("bis " + signedChange(summary.max_below.mgdl, 0) + " darunter um " + timeOnly(summary.max_below.at));
-  return parts.join(" · ");
-}
-
-function effectsChartSVG(data, width) {
-  const W = Math.max(300, Math.min(900, Math.round(width))), L = 36, R = W - 10;
-  const top = 8, mid = 168, rateTop = 186, rateBottom = 290, H = 312;
-  const from = new Date(data.from).getTime(), to = Math.max(new Date(data.to).getTime(), from + 60 * MINUTE);
-  const rows = data.rows.map(row => ({ t: new Date(row.at).getTime(), g: row.glucose_mgdl == null ? null : Number(row.glucose_mgdl),
-    m: row.model_mgdl == null ? null : Number(row.model_mgdl), up: Number(row.raising_per_hour), down: Number(row.lowering_per_hour) }));
-  const values = rows.flatMap(row => [row.g, row.m]).filter(value => value != null);
-  const gTop = Math.max(250, Math.ceil((Math.max(0, ...values) + 10) / 50) * 50);
-  const gBottom = Math.min(50, Math.floor(Math.min(400, ...values) / 10) * 10);
-  const rateMax = Math.max(60, ...rows.map(row => Math.max(row.up, row.down)));
-  const x = t => L + (t - from) / (to - from) * (R - L);
-  const y = g => mid - (Math.min(Math.max(g, gBottom), gTop) - gBottom) / (gTop - gBottom) * (mid - top);
-  const zero = (rateTop + rateBottom) / 2;
-  const r = v => v / rateMax * (rateBottom - rateTop) / 2;
-  const line = key => {
-    let d = "", open = false;
-    for (const row of rows) {
-      if (row[key] == null) { open = false; continue; }
-      d += (open ? "L" : "M") + x(row.t).toFixed(1) + " " + y(row[key]).toFixed(1);
-      open = true;
-    }
-    return d;
-  };
-  const area = (key, sign) => rows.length ? "M" + x(rows[0].t).toFixed(1) + " " + zero + rows.map(row =>
-    "L" + x(row.t).toFixed(1) + " " + (zero - sign * r(row[key])).toFixed(1)).join("") +
-    "L" + x(rows[rows.length - 1].t).toFixed(1) + " " + zero + "Z" : "";
-  const grid = [];
-  for (let g = Math.ceil(gBottom / 50) * 50; g <= gTop; g += 50) {
-    grid.push('<line class="grid" x1="' + L + '" x2="' + R + '" y1="' + y(g).toFixed(1) + '" y2="' + y(g).toFixed(1) + '"/>' +
-      '<text x="' + (L - 6) + '" y="' + (y(g) + 4).toFixed(1) + '" text-anchor="end">' + g + '</text>');
-  }
-  const ticks = [];
-  for (let t = Math.ceil(from / (180 * MINUTE)) * 180 * MINUTE; t <= to; t += 180 * MINUTE) {
-    ticks.push('<line class="grid" x1="' + x(t).toFixed(1) + '" x2="' + x(t).toFixed(1) + '" y1="' + top + '" y2="' + rateBottom + '"/>' +
-      '<text x="' + x(t).toFixed(1) + '" y="' + (rateBottom + 16) + '" text-anchor="middle">' + escapeHTML(timeOnly(t)) + '</text>');
-  }
-  return '<svg class="window-chart-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Gemessener BZ, Modell und Wirkungen">' +
-    grid.join("") + ticks.join("") +
-    '<path class="model" d="' + line("m") + '"/><path class="measured" d="' + line("g") + '"/>' +
-    '<path class="raising" d="' + area("up", 1) + '"/><path class="lowering" d="' + area("down", -1) + '"/>' +
-    '<line class="axis" x1="' + L + '" x2="' + R + '" y1="' + zero + '" y2="' + zero + '"/>' +
-    '<text x="' + (L - 6) + '" y="' + (rateTop + 8) + '" text-anchor="end">+' + Math.round(rateMax) + '</text>' +
-    '<text x="' + (L - 6) + '" y="' + rateBottom + '" text-anchor="end">−' + Math.round(rateMax) + '</text>' +
-    '<text class="y-unit" x="' + L + '" y="' + (rateTop - 4) + '">mg/dL pro h</text></svg>';
-}
-
-function renderEffects() {
-  const card = $("#effects-card");
-  const data = state.effects;
-  if (!card) return;
-  card.hidden = !data || data.day !== state.day;
-  if (card.hidden) return;
-  $("#effects-summary").textContent = effectsSummaryText(data);
-  const node = $("#effects-chart");
-  if (!card.open || !node.clientWidth) return;
-  node.innerHTML = data.rows.length ? effectsChartSVG(data, node.clientWidth) : '<p class="hint">Keine Daten für diesen Tag.</p>';
 }
 
 // Today's "Wirkt noch" card: what still lowers and raises glucose and the expected value after it.
@@ -1037,304 +685,6 @@ function recentEntriesHTML(treatments) {
     : '<span class="recent-label">Letzte 3 h: keine Einträge</span>';
 }
 
-// --- Interactive window editor -------------------------------------------
-
-function windowBounds(handle) {
-  const editor = windowEditor;
-  const limits = windowLimits();
-  if (handle === "start") return { min: Math.max(editor.mealAt - limits.lead, editor.view.from), max: editor.mealAt + limits.lag };
-  return { min: minWindowEnd(editor.start), max: Math.min(editor.start + limits.max, editor.view.to) };
-}
-
-function minWindowEnd(start) {
-  return Math.max(start, windowEditor.mealAt) + windowLimits().min;
-}
-
-// The meal's own entry (carbs and bolus) always counts, even when the start was moved after it.
-function windowIncludes(range, event) {
-  return (range.sourceId && event.id === range.sourceId) || (event.t >= range.start && event.t < range.end);
-}
-
-function snapTargets() {
-  const editor = windowEditor;
-  const targets = [{ t: editor.autoStart, label: "Standardbeginn" }, { t: editor.autoEnd, label: "Standardende" }];
-  for (const event of editor.events) {
-    if (event.kind === "insulin") targets.push({ t: event.t, label: num(event.amount, 1) + " IE" });
-    if (event.kind === "carbs") targets.push({ t: event.t, label: num(event.amount, 0) + " g KH" });
-    if (event.kind === "sport") {
-      targets.push({ t: event.t, label: event.label + " Beginn" }, { t: event.end, label: event.label + " Ende" });
-    }
-  }
-  return targets;
-}
-
-function placeHandle(handle, raw, options = {}) {
-  const editor = windowEditor;
-  const bounds = windowBounds(handle);
-  const clamp = value => Math.min(bounds.max, Math.max(bounds.min, value));
-  let t = clamp(raw);
-  let snapped = null;
-  if (options.snapTolerance) {
-    for (const target of snapTargets()) {
-      const distance = Math.abs(target.t - t);
-      if (target.t >= bounds.min && target.t <= bounds.max && distance <= options.snapTolerance &&
-          (!snapped || distance < Math.abs(snapped.t - t))) snapped = target;
-    }
-  }
-  t = snapped ? snapped.t : clamp(Math.round(t / MINUTE) * MINUTE);
-  if (snapped && editor.snapped[handle]?.t !== snapped.t) navigator.vibrate?.(8);
-  editor.snapped[handle] = snapped;
-  editor[handle] = t;
-  if (handle === "start") editor.end = Math.min(Math.max(editor.end, minWindowEnd(editor.start)), editor.start + windowLimits().max);
-}
-
-// The CGM reading at a handle position, from the per-minute readings the server sent for the editor.
-function editorReading(t) {
-  const readings = windowEditor?.readings;
-  // A handle clamped to a limit can sit between minutes; it reads the minute it is in.
-  return readings?.get(t) || readings?.get(Math.floor(t / MINUTE) * MINUTE) || null;
-}
-
-const readingValue = reading => reading?.value != null ? Number(reading.value) : null;
-
-// The server counts the candidate window (same rule as the factor); the editor asks after each move.
-function scheduleWindowPreview() {
-  const editor = windowEditor;
-  clearTimeout(editor.previewTimer);
-  editor.previewTimer = setTimeout(async () => {
-    const key = editor.start + "-" + editor.end;
-    try {
-      const summary = await api("/api/analysis/window/preview", { method: "POST", body: JSON.stringify({
-        meal_id: editor.mealId, day: editor.day, start: new Date(editor.start).toISOString(), end: new Date(editor.end).toISOString(),
-      }) });
-      if (windowEditor !== editor || key !== editor.start + "-" + editor.end) return;
-      editor.summary = summary;
-      $("#window-summary").innerHTML = editorSummary();
-    } catch (error) {
-      toast(error.message, true);
-    }
-  }, 120);
-}
-
-function editorSummary() {
-  const editor = windowEditor;
-  const summary = editor.summary;
-  const g0 = readingValue(editorReading(editor.start));
-  const g1 = readingValue(editorReading(editor.end));
-  const minutes = Math.round((editor.end - editor.start) / MINUTE);
-  const changed = editor.start !== editor.savedStart || editor.end !== editor.savedEnd;
-  const isDefault = editor.start === editor.autoStart && editor.end === editor.autoEnd;
-  const cell = (label, value, detail = "") => '<div><span>' + label + '</span><strong>' + value + '</strong>' + (detail ? '<small>' + detail + '</small>' : '') + '</div>';
-  return '<div class="window-facts">' +
-    cell("Beginn", escapeHTML(timeOnly(editor.start)), g0 == null ? "kein CGM-Wert" : escapeHTML(num(g0, 0)) + " mg/dL") +
-    cell("Ende <small>(exkl.)</small>", escapeHTML(timeOnly(editor.end)), g1 == null ? "kein CGM-Wert" : escapeHTML(num(g1, 0)) + " mg/dL") +
-    cell("ΔG", g0 == null || g1 == null ? "—" : escapeHTML(signedChange(g1 - g0, 0))) +
-    cell("Dauer", escapeHTML(Math.floor(minutes / 60) + " h " + String(minutes % 60).padStart(2, "0") + " min")) +
-    cell("KH im Fenster", summary ? escapeHTML(num(summary.carbs_g, 0)) + " g" : "…") +
-    cell("Schnelles Insulin", summary ? escapeHTML(num(summary.rapid_units, 1)) + " IE" : "…") +
-    '</div><p class="window-state">' +
-    (isDefault ? "Automatischer Standardzeitraum" : "Manueller Zeitraum") +
-    (changed ? " · <b>nicht gespeichert</b>" : "") +
-    (g0 == null || g1 == null ? ' · <span class="window-warning">An Beginn und Ende wird ein CGM-Wert benötigt.</span>' : "") + '</p>';
-}
-
-function updateWindowReadout() {
-  const editor = windowEditor;
-  const t = editor[editor.active];
-  const reading = editorReading(t);
-  const value = readingValue(reading);
-  const snapped = editor.snapped[editor.active];
-  const readout = $("#window-readout");
-  readout.dataset.tone = reading?.tone || "none";
-  readout.innerHTML = '<span class="readout-label">' + (editor.active === "start" ? "Beginn" : "Ende") + ' · ' + escapeHTML(timeOnly(t)) + ' Uhr' +
-    (snapped ? ' · eingerastet: ' + escapeHTML(snapped.label) : '') + '</span>' +
-    '<span class="readout-value"><strong>' + (value == null ? "—" : escapeHTML(num(value, 0))) + '</strong>' +
-    '<span class="readout-trend">' + escapeHTML(value == null ? "" : trendSymbol(reading.trend)) + '</span><small>mg/dL</small></span>';
-}
-
-function updateWindowEditor() {
-  const editor = windowEditor;
-  const svg = $("#window-chart svg");
-  if (!svg) return;
-  CHART = editor.layout;
-  const scales = chartScales(editor.view, editor.points);
-  for (const name of ["start", "end"]) {
-    const group = $('.window-handle[data-handle="' + name + '"]', svg);
-    const t = editor[name];
-    const reading = editorReading(t);
-    const value = readingValue(reading);
-    group.setAttribute("transform", "translate(" + scales.x(t).toFixed(1) + " 0)");
-    group.setAttribute("aria-valuetext", timeOnly(t) + " Uhr");
-    group.classList.toggle("is-active", editor.active === name);
-    group.classList.toggle("is-snapped", Boolean(editor.snapped[name]));
-    const dot = $(".handle-dot", group);
-    dot.toggleAttribute("hidden", value == null);
-    dot.dataset.tone = reading?.tone || "none";
-    if (value != null) dot.setAttribute("cy", scales.y(value).toFixed(1));
-  }
-  const shade = $(".window-shade", svg);
-  shade.setAttribute("x", scales.x(editor.start).toFixed(1));
-  shade.setAttribute("width", (scales.x(editor.end) - scales.x(editor.start)).toFixed(1));
-  $$(".chart-event", svg).forEach(node => {
-    const t = Number(node.dataset.t);
-    node.classList.toggle("is-included", windowIncludes(editor, { t, id: node.dataset.id }));
-  });
-  $$("[data-window-handle]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.windowHandle === editor.active)));
-  updateWindowReadout();
-  $("#window-summary").innerHTML = editorSummary();
-  const key = editor.start + "-" + editor.end;
-  if (editor.previewKey !== key) {
-    editor.previewKey = key;
-    scheduleWindowPreview();
-  }
-}
-
-function renderWindowEditor(focus) {
-  const editor = windowEditor;
-  editor.view = chartView(editor);
-  CHART = editor.layout = chartLayout($("#window-chart").clientWidth - 12);
-  $("#window-chart").innerHTML = windowChartSVG(editor, state.dayData.entries, state.dayData.treatments,
-    { interactive: true, view: editor.view });
-  updateWindowEditor();
-  if (focus) $('#window-chart .window-handle[data-handle="' + focus + '"]')?.focus();
-}
-
-async function openWindowEditor(mealId) {
-  const meal = state.dayData?.meals.find(item => item.id === mealId);
-  if (!meal) return;
-  const range = mealWindow(meal);
-  let editorData;
-  try {
-    editorData = await api("/api/analysis/window-editor?" + new URLSearchParams({ day: state.day, meal_id: mealId }));
-  } catch (error) {
-    toast(error.message, true);
-    return;
-  }
-  windowEditor = {
-    ...range, mealId, day: state.day, active: "end", snapped: {}, drag: null, tap: null,
-    savedStart: range.start, savedEnd: range.end, summary: null,
-    readings: new Map(editorData.readings.map(row => [new Date(row.t).getTime(), row])),
-    points: glucosePoints(state.dayData.entries), events: chartEvents(state.dayData.treatments),
-  };
-  $("#window-meal-type").textContent = names[meal.meal] + " · " + timeOnly(meal.at) + " Uhr · " + num(meal.carbs) + " g KH";
-  $("#window-dialog").showModal();
-  renderWindowEditor();
-}
-
-function pointerTime(event) {
-  const svg = $("#window-chart svg");
-  const rect = svg.getBoundingClientRect();
-  CHART = windowEditor.layout;
-  const unitsPerPixel = CHART.width / rect.width;
-  const x = (event.clientX - rect.left) * unitsPerPixel;
-  const { from, to } = windowEditor.view;
-  const msPerUnit = (to - from) / (CHART.right - CHART.left);
-  return { t: from + (x - CHART.left) * msPerUnit, msPerPixel: msPerUnit * unitsPerPixel };
-}
-
-function windowPointerDown(event) {
-  if (!windowEditor || (event.pointerType === "mouse" && event.button !== 0)) return;
-  const { t, msPerPixel } = pointerTime(event);
-  let handle = event.target.closest(".window-handle")?.dataset.handle;
-  if (!handle) {
-    const distance = name => Math.abs(windowEditor[name] - t) / msPerPixel;
-    const nearest = distance("start") <= distance("end") ? "start" : "end";
-    if (distance(nearest) <= 28) handle = nearest;
-  }
-  if (!handle) {
-    windowEditor.tap = { x: event.clientX, y: event.clientY };
-    return;
-  }
-  event.preventDefault();
-  windowEditor.active = handle;
-  windowEditor.drag = { handle, pointerId: event.pointerId };
-  event.currentTarget.setPointerCapture(event.pointerId);
-  event.currentTarget.classList.add("is-dragging");
-  updateWindowEditor();
-}
-
-function windowPointerMove(event) {
-  const drag = windowEditor?.drag;
-  if (!drag || drag.pointerId !== event.pointerId) return;
-  event.preventDefault();
-  const { t, msPerPixel } = pointerTime(event);
-  placeHandle(drag.handle, t, { snapTolerance: SNAP_PIXELS * msPerPixel });
-  updateWindowEditor();
-}
-
-function windowPointerUp(event) {
-  if (!windowEditor) return;
-  const target = event.currentTarget;
-  if (windowEditor.drag) {
-    windowEditor.drag = null;
-    target.classList.remove("is-dragging");
-    renderWindowEditor();
-    return;
-  }
-  const tap = windowEditor.tap;
-  windowEditor.tap = null;
-  if (event.type !== "pointerup" || !tap || Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 8) return;
-  // A tap moves the selected handle, which works well on small touch screens.
-  const { t, msPerPixel } = pointerTime(event);
-  placeHandle(windowEditor.active, t, { snapTolerance: SNAP_PIXELS * msPerPixel });
-  renderWindowEditor();
-}
-
-function nudgeWindow(handle, minutes, focus) {
-  placeHandle(handle, windowEditor[handle] + minutes * MINUTE);
-  windowEditor.snapped[handle] = null;
-  renderWindowEditor(focus ? handle : null);
-}
-
-function windowKeydown(event) {
-  const handle = event.target.closest?.(".window-handle")?.dataset.handle;
-  if (!handle || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
-  event.preventDefault();
-  windowEditor.active = handle;
-  nudgeWindow(handle, (event.key === "ArrowLeft" ? -1 : 1) * (event.shiftKey ? 5 : 1), true);
-}
-
-async function saveWindow(reset = false) {
-  const editor = windowEditor;
-  if (!editor) return;
-  const button = $("#save-window");
-  const isDefault = editor.start === editor.autoStart && editor.end === editor.autoEnd;
-  if (!reset && !isDefault && (readingValue(editorReading(editor.start)) == null || readingValue(editorReading(editor.end)) == null)) {
-    toast("An Beginn und Ende wird ein CGM-Wert benötigt.", true);
-    return;
-  }
-  button.disabled = true;
-  try {
-    const body = reset || isDefault
-      ? { meal_id: editor.mealId, day: editor.day, reset: true }
-      : { meal_id: editor.mealId, day: editor.day, start: new Date(editor.start).toISOString(), end: new Date(editor.end).toISOString() };
-    await api("/api/analysis/window", { method: "POST", body: JSON.stringify(body) });
-    $("#window-dialog").close();
-    toast(body.reset ? "Standardzeitraum wiederhergestellt" : "Zeitraum gespeichert");
-    await loadDay();
-    refreshAnalysis();
-  } catch (error) {
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
-}
-
-function calculationHTML(result) {
-  if (!result || !result.start) return '<div class="factor unavailable"><span>Insulinfaktor</span><strong>—</strong><small>' + escapeHTML(result?.reason || "Noch keine Berechnung") + '</small></div>';
-  const valid = result.factor_units_per_ke != null;
-  const summary = [
-    num(result.carbs_total) + " g KH",
-    num(result.rapid_units_in_window, 2) + " IE",
-    ...(Number(result.prior_insulin_effect_mgdl) >= 1 ? ["früheres Insulin −" + num(result.prior_insulin_effect_mgdl, 0) + " mg/dL"] : []),
-    "Ende " + timeOnly(result.end) + (result.manual_window ? " (manuell)" : ""),
-  ].join(" · ");
-  return '<div class="calc-block"><div class="factor' + (valid ? '' : ' unavailable') + '"><span>Insulinfaktor</span><strong>' +
-    (valid ? escapeHTML(factorNum(result.factor_units_per_ke)) + ' <small>IE/KE</small>' : '—') +
-    '</strong><small>' + escapeHTML(summary) + '</small>' +
-    (result.reason ? '<small>' + escapeHTML(result.reason) + '</small>' : '') + '</div></div>';
-}
-
 function icon(name) {
   const paths = {
     diary: '<path d="M4 4h14a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V4Z"/><path d="M8 4v16M11 9h6M11 13h6"/>',
@@ -1347,191 +697,25 @@ function icon(name) {
   return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths[name] + '</svg>';
 }
 
-// Sport counts by itself with the share of each session acting in the meal window; the meal can take
-// its own value or none, and "Automatisch" goes back to the sessions.
-function sportReviewHTML(sport, mealId, day) {
-  const status = sport.status || "auto";
-  const auto = sportChange(sport.suggested_effect_mgdl);
-  if (status === "auto" && !sport.suggested) return "";
-  const own = status === "affected";
-  const effect = own ? sportChange(sport.effect_mgdl) : status === "auto" ? auto : 0;
-  const state = status === "unaffected" ? '<span>Kein Sporteinfluss</span>'
-    : icon("check") + '<span>Sport ' + escapeHTML(signedChange(effect, 0)) + (own ? ' · eigener Wert' : ' · automatisch') + '</span>';
-  const actions = [
-    status !== "auto" && sport.suggested ? '<button type="button" class="sport-auto quiet">Automatisch ' + escapeHTML(signedChange(auto, 0)) + '</button>' : '',
-    status !== "unaffected" ? '<button type="button" class="sport-none quiet">Kein Einfluss</button>' : '',
-  ].join("");
-  return '<div class="sport-review sport-review-meal" data-meal-id="' + escapeHTML(mealId) +
-    '" data-day="' + escapeHTML(day) + '">' +
-    '<div class="sport-line"><div class="sport-state' + (status === "unaffected" ? '' : ' is-applied') + '">' + state +
-    ((sport.events || []).length ? '<span class="sport-source">' + escapeHTML(sport.events.map(item =>
-      (sportNames[item.kind] || "Sport") + " " + timeOnly(item.at) + " " + signedChange(sportChange(item.effect_mgdl), 0)).join(", ")) + '</span>' : '') +
-    '</div></div>' +
-    (actions ? '<div class="sport-actions">' + actions + '</div>' : '') +
-    '<details class="sport-custom"><summary>Eigenen Wert für diese Mahlzeit</summary>' +
-    '<div class="sport-custom-fields"><label><span>BZ-Wirkung in mg/dL (− senkt, + hebt)</span><input class="sport-effect" type="number" min="-500" max="500" step="1" value="' +
-    escapeHTML(effect || "") + '"></label><button type="button" class="sport-save">Setzen</button></div></details></div>';
-}
-
-// A sport session's own effect: what it lowers over the 5 h after it ends, default from its kind.
-function sportSessionHTML(item) {
-  const effect = sportChange(item.sport_effect_mgdl);
-  return '<details class="sport-custom sport-session" data-id="' + escapeHTML(item.id) + '" data-day="' + escapeHTML(state.day) + '">' +
-    '<summary>Einfluss ändern</summary><div class="sport-custom-fields"><label><span>BZ-Wirkung in mg/dL (− senkt, + hebt)</span>' +
-    '<input class="sport-effect" type="number" min="-500" max="500" step="1" value="' + escapeHTML(effect) + '"></label>' +
-    '<button type="button" class="sport-session-save">Setzen</button>' +
-    (item.sport_effect_custom ? '<button type="button" class="sport-session-reset quiet">Standard ' +
-      escapeHTML(signedChange(sportChange(item.sport_effect_default_mgdl), 0)) + '</button>' : '') + '</div></details>';
-}
-
-function renderNight(night) {
-  const card = $("#night-card");
-  card.hidden = false;
-  const startTime = night.start ? timeOnly(night.start) : null;
-  const endTime = night.end ? timeOnly(night.end) : null;
-  $("#night-window").textContent = startTime && endTime
-    ? startTime + " bis " + endTime + " Uhr"
-    : "Drei Stunden nach letzter Injektion bis Beginn Frühstück";
-  const metric = (label, value, detail) =>
-    '<div class="night-metric"><span>' + label + '</span><strong>' +
-    (value == null ? '—' : escapeHTML(num(value, 1)) + ' <small>mg/dL</small>') +
-    '<small>' + escapeHTML(detail) + '</small></div>';
-  $("#night-values").innerHTML =
-    metric("Startwert", night.start_glucose, startTime ? "3 h nach letzter Injektion · " + startTime : "3 h nach letzter Injektion") +
-    metric("Endwert", night.end_glucose, endTime ? "Beginn Frühstück · " + endTime : "Beginn Frühstück") +
-    '<div class="night-metric"><span>Veränderung</span><strong>' + escapeHTML(signedChange(night.delta_mgdl)) + '</strong></div>' +
-    metric("Minimalwert", night.minimum_glucose, night.minimum_at ? "um " + timeOnly(night.minimum_at) : "im Nachtfenster");
-  $("#night-values").hidden = [night.start_glucose, night.end_glucose, night.minimum_glucose].every(value => value == null);
-  const reason = $("#night-reason");
-  reason.hidden = !night.reason;
-  reason.textContent = night.reason || "";
-}
-
 function renderDay(data) {
   state.dayData = data;
   updateEntryChips();
-  renderNight(data.night || { reason: "Nachtanalyse nicht verfügbar." });
   const banner = $("#banner");
   const errors = [data.sync_error, data.profile_sync_error].filter(Boolean);
   banner.hidden = data.connected && !errors.length;
   banner.textContent = !data.connected
     ? "Nightscout ist noch nicht verbunden. Setze NIGHTSCOUT_URL und NIGHTSCOUT_CREDENTIAL im Deployment."
     : errors.length ? "Nightscout konnte nicht vollständig aktualisiert werden: " + errors.join(" · ") + ". Lokale Daten werden angezeigt." : "";
+  state.dayStatus = "ready";
   applyDiaryMode();
-  $("#timeline").innerHTML = dayListHTML(data);
-  renderReviewDayType(data);
-  renderReviewSummary(data);
+  renderReview();
   renderVisibleCharts();
 }
 
-const entryLabels = { finger: "BZ blutig", basal: "Basal", meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur / Bolus", exercise: "Sport", other: "Weiterer Eintrag" };
-
-function entryLabel(item, data) {
-  if (item.kind === "exercise") return sportNames[item.sport_kind] || "Sport";
-  const meal = item.kind === "meal" ? data.meals.find(row => row.source_id === item.id) : null;
-  return meal ? names[meal.meal] : entryLabels[item.kind];
-}
-
-// Inside a meal, an entry names its place and carb certainty only where they differ from the meal head.
-function entryRowHTML(item, data, meal = null) {
-  const details = [
-    Number(item.carbs) ? num(item.carbs) + " g KH" : "",
-    Number(item.insulin) ? num(item.insulin) + " IE" : "",
-    item.kind === "basal" ? num(item.basal_units) + " IE" + (item.nightscout_synced ? "" : " · nur lokal, noch nicht in Nightscout") : "",
-    item.kind === "exercise" ? num(item.duration_minutes, 0) + " min" : "",
-    item.kind === "exercise" && item.sport_effect_mgdl != null
-      ? "Einfluss " + signedChange(sportChange(item.sport_effect_mgdl), 0) + (item.sport_effect_custom ? " (eigener Wert)" : "") : "",
-    item.glucose_mgdl != null
-      ? (item.glucose_at === item.at ? "BZ " : "BZ um " + timeOnly(item.glucose_at) + ": ") + num(item.glucose_mgdl, 0) + " mg/dL" : "",
-  ].filter(Boolean);
-  const label = entryLabel(item, data);
-  const action = item.kind === "other" ? "" : item.kind === "finger"
-    ? '<button type="button" class="delete-treatment quiet" data-id="' + escapeHTML(item.id) + '" data-label="BZ blutig" data-at="' +
-      escapeHTML(item.at) + '" aria-label="' + escapeHTML("Blutige Messung um " + timeOnly(item.at) + " löschen") + '">Löschen</button>' : item.kind === "basal"
-    ? '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '" aria-label="' +
-      escapeHTML("Basal um " + timeOnly(item.at) + " bearbeiten") + '">Bearbeiten</button>' :
-    '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '" aria-label="' +
-    escapeHTML(label + " um " + timeOnly(item.at) + " bearbeiten") + '">Bearbeiten</button>';
-  const place = (item.dish && (!meal || item.dish.id !== meal.dish?.id) ? dishBadgeHTML(item.dish) : "")
-    + (item.place && (!meal || item.place.id !== meal.place?.id) ? placeBadgeHTML(item.place) : "");
-  const certainty = meal && item.carbs_certainty && item.carbs_certainty !== meal.quality?.carbs_certainty
-    ? '<span class="outlier-badge certainty-' + item.carbs_certainty + '">' + CERTAINTY_LABELS[item.carbs_certainty] + '</span>' : "";
-  return '<article class="timeline-item"><time>' + escapeHTML(timeOnly(item.at)) +
-    '</time><div><div class="entry-title"><strong>' + escapeHTML(label) + '</strong>' + factorIconsHTML(item) + place + certainty +
-    // Each value stays on one line, so "84 mg/dL" never breaks between number and unit.
-    '</div><p>' + (details.length ? details.map(part => '<span>' + escapeHTML(part) + '</span>').join(" · ") : escapeHTML(item.eventType)) +
-    '</p>' + (item.description ? '<small>' + escapeHTML(item.description) + '</small>' : '') +
-    (item.notes ? '<small>' + escapeHTML(item.notes) + '</small>' : '') +
-    (item.kind === "exercise" && item.sport_effect_mgdl != null ? sportSessionHTML(item) : '') +
-    '</div><div class="timeline-actions">' + action + '</div></article>';
-}
-
-// One chronological list: each main meal as a block holding the entries the server grouped under it.
-function dayBlocks(data) {
-  const blocks = new Map(data.meals.map(meal => [meal.id, { meal, range: mealWindow(meal), items: [] }]));
-  const rows = [];
-  for (const item of data.timeline) {
-    const block = blocks.get(item.meal_id);
-    if (block) block.items.push(item);
-    else rows.push({ t: new Date(item.at).getTime(), item });
-  }
-  return [...[...blocks.values()].map(block => ({ t: block.range.mealAt, block })), ...rows].sort((a, b) => a.t - b.t);
-}
-
-function mealNeedsCheck(meal) {
-  return (meal.review?.open || []).length > 0;
-}
-
-function excludeButtonHTML(mealId, day, excluded) {
-  const label = excluded ? 'Mahlzeit wieder berücksichtigen' : 'Mahlzeit ausklammern';
-  return '<button type="button" class="exclude-meal' + (excluded ? ' is-excluded' : '') +
-    '" data-meal-id="' + escapeHTML(mealId) + '" data-day="' + escapeHTML(day) +
-    '" data-excluded="' + excluded + '" aria-pressed="' + excluded + '" aria-label="' + label + '" title="' + label + '">' +
-    icon(excluded ? "exclude" : "check") + '<span>' + (excluded ? 'Ausgeklammert' : 'Berücksichtigt') + '</span></button>';
-}
-
-function mealBlockHTML(block, data) {
-  const { meal, range, items } = block;
-  const calc = meal.calculation || {};
-  const check = mealNeedsCheck(meal);
-  const calculated = Boolean(meal.review?.calculated);
-  const status = !calculated
-    ? '<span class="day-meal-status">' + escapeHTML(calc.reason || "Noch keine Berechnung") + '</span>'
-    : '<span class="day-meal-factor">' + escapeHTML(factorNum(calc.factor_units_per_ke)) + ' <small>IE/KE</small></span>';
-  return '<article class="day-meal' + (check ? ' needs-check' : '') + (meal.excluded ? ' is-excluded' : '') + '" id="meal-' + escapeHTML(meal.id) + '">' +
-    // Head: name and window, then where and how certain (the main meal's place leads), then factor and exclusion.
-    '<div class="day-meal-head"><div class="day-meal-title"><span class="meal-type">' + escapeHTML(names[meal.meal]) + '</span>' + factorIconsHTML(meal.quality) +
-    '<span class="day-meal-window">' + escapeHTML(timeOnly(range.start) + "–" + timeOnly(range.end)) + (range.manual ? " · manuell" : "") + '</span></div>' +
-    (meal.dish || meal.place || meal.quality?.carbs_certainty || meal.vacation ? '<div class="day-meal-tags">' + dishBadgeHTML(meal.dish) + placeBadgeHTML(meal.place) +
-      (meal.vacation ? '<span class="place-badge vacation-badge" title="Urlaubstag: zählt nach dem Urlaub nicht in die Automatik">Urlaub</span>' : '') +
-      (meal.quality?.carbs_certainty ? '<span class="outlier-badge certainty-' + meal.quality.carbs_certainty + '">' + CERTAINTY_LABELS[meal.quality.carbs_certainty] + '</span>' : '') + '</div>' : '') +
-    '<div class="day-meal-result">' + status +
-    (meal.review?.excludable ? excludeButtonHTML(meal.id, state.day, meal.excluded) : '') + '</div></div>' +
-    items.map(item => entryRowHTML(item, data, meal)).join("") +
-    // Sport is adjusted right on the meal, without opening the curve details.
-    sportReviewHTML(meal.sport || {}, meal.id, state.day) +
-    '<details class="day-meal-details" data-meal-id="' + escapeHTML(meal.id) + '"' + (calculated ? '' : ' open') +
-    '><summary>Kurve und Zeitraum</summary>' +
-    calculationHTML(meal.calculation) + chartFor(meal, data.entries) +
-    (meal.notes ? '<p class="meal-note">' + escapeHTML(meal.notes) + '</p>' : '') + '</details></article>';
-}
-
-function dayListHTML(data) {
-  if (!data.timeline.length) return '<div class="empty">Für diesen Tag liegen noch keine Einträge vor.</div>';
-  return dayBlocks(data).map(entry => entry.block ? mealBlockHTML(entry.block, data) : entryRowHTML(entry.item, data)).join("");
-}
-
-function renderReviewSummary(data) {
-  $("#record-count").textContent = data.timeline.length + (data.timeline.length === 1 ? " Eintrag" : " Einträge");
-  const review = data.review || {};
-  const link = text => '<a class="review-chip needs-check" href="#meal-' + escapeHTML(review.first_open) + '">' + text + '</a>';
-  const chips = [
-    review.blocked ? link(review.blocked === 1 ? "1 Mahlzeit nicht berechenbar" : review.blocked + " Mahlzeiten nicht berechenbar") : "",
-    review.calculated ? '<span class="review-chip">' + (review.calculated === 1 ? "1 Faktor zählt" : review.calculated + " Faktoren zählen") + '</span>' : "",
-    review.excluded ? '<span class="review-chip">' + review.excluded + ' ausgeklammert</span>' : "",
-    data.meals.length && !review.blocked ? '<span class="review-chip is-clean">' + icon("check") + ' Tag geprüft</span>' : "",
-  ].filter(Boolean);
-  $("#review-summary").innerHTML = chips.join("");
+// "Tag durchgehen" (web/ui/day.js): the day's chart, effects, night and list with the window editor.
+function renderReview() {
+  render(html`<${DayReview} data=${state.dayData} day=${state.day} status=${state.dayStatus} reload=${loadDay}
+    onEdit=${editEntry} onAnalysisChanged=${refreshAnalysis} />`, $(".review-panel"));
 }
 
 // "Zu erledigen": what needs an action across the last days (user request 2026-10-21). The server decides what
@@ -1601,15 +785,18 @@ async function openInboxItem(event) {
 async function loadDay({ refresh = false } = {}) {
   state.dayLoadedAt = Date.now();
   $("#selected-day").value = state.day;
-  $("#timeline").innerHTML = '<div class="empty">Nightscout-Daten werden geladen …</div>';
-  $("#night-card").hidden = true;
+  // Another day shows "loading"; reloading the same day keeps the list (and what is unfolded) in place.
+  if (state.dayData?.day !== state.day) {
+    state.dayStatus = "loading";
+    renderReview();
+  }
   try {
     renderDay(await api("/api/day?date=" + encodeURIComponent(state.day) + (refresh ? "&refresh=1" : "")));
-    loadEffects();
     loadInbox();
     await updatePreview();
   } catch (error) {
-    $("#timeline").innerHTML = '<div class="empty">Daten konnten nicht geladen werden.</div>';
+    state.dayStatus = "error";
+    renderReview();
     toast(error.message, true);
   }
 }
@@ -1635,22 +822,12 @@ function catchUpDay(latestAt) {
       const fresh = await api("/api/day?date=" + encodeURIComponent(day));
       if (day !== state.day || $("#timeline").contains(document.activeElement)) return;
       // Folded and unfolded blocks stay as the user left them.
-      const open = new Map([...$$("#timeline details")].map(node => [detailsKey(node), node.open]));
       renderDay(fresh);
-      $$("#timeline details").forEach(node => {
-        const key = detailsKey(node);
-        if (open.has(key) && node.open !== open.get(key)) node.open = open.get(key);
-      });
-      loadEffects();
       updatePreview();
     } catch {
       // Quietly retried with the next glucose value.
     }
   })().finally(() => { dayCatchUp = null; });
-}
-
-function detailsKey(node) {
-  return node.className + "|" + (node.dataset.mealId || node.dataset.id || node.querySelector("summary")?.textContent || "");
 }
 
 let previewTimer;
@@ -2310,77 +1487,6 @@ async function undoEntry(id, restore) {
   }
 }
 
-async function deleteTreatment(event) {
-  const button = event.target.closest(".delete-treatment");
-  if (!button) return;
-  const label = button.dataset.label + " um " + timeOnly(button.dataset.at);
-  if (!window.confirm(label + " Uhr wirklich aus Nightscout löschen?")) return;
-  button.disabled = true;
-  try {
-    await api("/api/treatment/delete", { method: "POST", body: JSON.stringify({ id: button.dataset.id, day: state.day }) });
-    toast("Eintrag aus Nightscout gelöscht");
-    button.disabled = false;
-    await loadDay();
-  } catch (error) {
-    button.disabled = false;
-    toast(error.message, true);
-  }
-}
-
-async function saveSportMark(event) {
-  const button = event.target.closest(".sport-save, .sport-auto, .sport-none");
-  const block = button?.closest(".sport-review");
-  if (!block) return;
-  const status = button.matches(".sport-auto") ? "auto" : button.matches(".sport-none") ? "unaffected" : "affected";
-  const effect = $(".sport-effect", block);
-  const amount = status === "affected" ? Number(effect.value) : 0;
-  if (status === "affected" && (!Number.isInteger(amount) || amount === 0 || Math.abs(amount) > 500)) {
-    effect.setCustomValidity("Bitte eine BZ-Wirkung zwischen −500 und +500 mg/dL eingeben, nicht 0.");
-    effect.reportValidity();
-    return;
-  }
-  effect.setCustomValidity("");
-  button.disabled = true;
-  try {
-    await api("/api/analysis/sport", { method: "POST", body: JSON.stringify({
-      meal_id: block.dataset.mealId, day: block.dataset.day, status, effect_mgdl: sportChange(amount),
-    }) });
-    toast(status === "unaffected" ? "Kein Sporteinfluss vermerkt" : status === "auto" ? "Sport wieder automatisch" : "Sporteinfluss gespeichert");
-    await loadDay();
-    refreshAnalysis();
-  } catch (error) {
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
-}
-
-async function saveSportSession(button) {
-  const block = button.closest(".sport-session");
-  const reset = button.matches(".sport-session-reset");
-  const effect = $(".sport-effect", block);
-  const amount = Number(effect.value);
-  if (!reset && (effect.value === "" || !Number.isInteger(amount) || Math.abs(amount) > 500)) {
-    effect.setCustomValidity("Bitte eine BZ-Wirkung zwischen −500 und +500 mg/dL eingeben (0 = kein Einfluss).");
-    effect.reportValidity();
-    return;
-  }
-  effect.setCustomValidity("");
-  button.disabled = true;
-  try {
-    await api("/api/analysis/sport-session", { method: "POST", body: JSON.stringify(reset
-      ? { id: block.dataset.id, day: block.dataset.day, reset: true }
-      : { id: block.dataset.id, day: block.dataset.day, effect_mgdl: sportChange(amount) }) });
-    toast(reset ? "Sporteinfluss wieder Standard" : "Sporteinfluss gespeichert");
-    await loadDay();
-    refreshAnalysis();
-  } catch (error) {
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
   const initialLocation = locationState();
   state.day = todayDay();
@@ -2446,11 +1552,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyDiaryMode();
     renderVisibleCharts();
   }));
-  // Charts inside folded meal blocks are drawn when the block opens.
-  $("#timeline").addEventListener("toggle", event => {
-    if (event.target.matches(".day-meal-details") && event.target.open) renderMealCharts();
-  }, true);
-  $("#effects-card").addEventListener("toggle", renderEffects);
   $("#inbox").addEventListener("click", openInboxItem);
   $("#inbox-badge").addEventListener("click", () => {
     view("diary");
@@ -2513,54 +1614,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateEntryChips();
     $("#entry-form").elements.notes.focus();
   });
-  $("#diary-view").addEventListener("click", event => {
-    if (event.target.closest(".delete-treatment")) deleteTreatment(event);
-    const edit = event.target.closest(".edit-entry");
-    if (edit) editEntry(edit.dataset.id);
-    if (event.target.closest(".sport-save, .sport-auto, .sport-none")) saveSportMark(event);
-    const sessionButton = event.target.closest(".sport-session-save, .sport-session-reset");
-    if (sessionButton) saveSportSession(sessionButton);
-    if (event.target.closest(".exclude-meal")) saveExclusion(event);
-    const dayTypeButton = event.target.closest("[data-review-day-type]");
-    if (dayTypeButton) saveReviewDayType(dayTypeButton);
-    const windowButton = event.target.closest(".open-window-editor");
-    if (windowButton) openWindowEditor(windowButton.dataset.mealId);
-  });
-  const windowChart = $("#window-chart");
-  windowChart.addEventListener("pointerdown", windowPointerDown);
-  windowChart.addEventListener("pointermove", windowPointerMove);
-  windowChart.addEventListener("pointerup", windowPointerUp);
-  windowChart.addEventListener("pointercancel", windowPointerUp);
-  windowChart.addEventListener("keydown", windowKeydown);
-  // iOS Safari may still scroll during a handle drag without a non-passive touch listener.
-  windowChart.addEventListener("touchmove", event => { if (windowEditor?.drag) event.preventDefault(); }, { passive: false });
-  $$("[data-window-handle]").forEach(button => button.addEventListener("click", () => {
-    windowEditor.active = button.dataset.windowHandle;
-    updateWindowEditor();
-  }));
-  $$("[data-nudge]").forEach(button => button.addEventListener("click", () =>
-    nudgeWindow(windowEditor.active, Number(button.dataset.nudge))));
-  $("#save-window").addEventListener("click", () => saveWindow());
-  $("#default-window").addEventListener("click", () => {
-    windowEditor.start = windowEditor.autoStart;
-    windowEditor.end = windowEditor.autoEnd;
-    windowEditor.snapped = {};
-    renderWindowEditor();
-  });
   $$("[data-overview-hours]").forEach(button => button.addEventListener("click", () => {
     try { localStorage.setItem("overviewHours", button.dataset.overviewHours); } catch {}
     renderDayOverview();
   }));
-  for (const id of ["#cancel-window", "#close-window"]) $(id).addEventListener("click", () => $("#window-dialog").close());
-  $("#window-dialog").addEventListener("close", () => { windowEditor = null; });
-  let resizeTimer;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      renderVisibleCharts();
-      if (windowEditor && !windowEditor.drag) renderWindowEditor();
-    }, 150);
-  });
   updateEntryFields();
   document.addEventListener("keydown", event => {
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !$("#diary-view").hidden) {

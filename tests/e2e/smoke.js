@@ -68,8 +68,60 @@ async function run(browser, name, options) {
   await context.close();
 }
 
+const toastSays = (page, text) => page.waitForFunction(wanted => document.querySelector("#toast")?.textContent.includes(wanted), text);
+
+// "Tag durchgehen" (web/ui/day.js): the day chart and effects, a meal excluded and counted again, and the
+// window editor: dragging, nudging, saving and going back to the standard window.
+async function review(page, name) {
+  await page.waitForSelector("#timeline .day-meal");
+  // Wide screens show the day in the chart above the form; phones draw it in the review.
+  await page.waitForSelector(name === "phone" ? "#review-chart svg" : "#day-overview-chart svg");
+  check(true, `${name}: the day chart is drawn`);
+  await page.waitForSelector("#effects-chart svg, #effects-chart .hint");
+  check(true, `${name}: Wirkungen load`);
+  const exclude = "#timeline .exclude-meal";
+  const before = await page.$eval(exclude, button => button.getAttribute("aria-pressed"));
+  await page.click(exclude + " >> nth=0");
+  await page.waitForFunction(([selector, was]) => document.querySelector(selector)?.getAttribute("aria-pressed") !== was, [exclude, before]);
+  await page.click(exclude + " >> nth=0");
+  await page.waitForFunction(([selector, was]) => document.querySelector(selector)?.getAttribute("aria-pressed") === was, [exclude, before]);
+  check(true, `${name}: a meal in the day is excluded and counted again`);
+
+  const details = page.locator("#timeline .day-meal-details").first();
+  if (!(await details.evaluate(node => node.open))) await details.locator("summary").click();
+  await page.waitForSelector("#timeline .meal-chart-plot svg");
+  check(true, `${name}: a meal shows its curve`);
+  await page.click("#timeline .open-window-editor >> nth=0");
+  await page.waitForSelector("#window-dialog[open] #window-chart svg");
+  const endTime = () => page.$eval("#window-summary .window-facts div:nth-child(2) strong", node => node.textContent);
+  const end = await endTime();
+  const handle = await page.$("#window-chart .window-handle[data-handle=end] .handle-line");
+  const box = await handle.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x - 40, box.y + box.height / 2, { steps: 5 });
+  await page.mouse.up();
+  check(await endTime() !== end, `${name}: dragging moves the window end`);
+  await page.click("[data-window-handle=start]");
+  await page.click("[data-nudge='5']");
+  await page.waitForSelector("#window-summary .window-state b");
+  check(await page.getAttribute("[data-window-handle=start]", "aria-pressed") === "true", `${name}: the start handle is selected`);
+  await page.click("#save-window");
+  await toastSays(page, "Zeitraum gespeichert");
+  await page.waitForSelector("#window-dialog", { state: "detached" });
+  await page.waitForSelector("#timeline .day-meal-window:has-text('manuell')");
+  check(true, `${name}: a saved window shows as manual`);
+  await page.click("#timeline .open-window-editor >> nth=0");
+  await page.waitForSelector("#window-dialog[open] #window-chart svg");
+  await page.click("#default-window");
+  await page.click("#save-window");
+  await toastSays(page, "Standardzeitraum wiederhergestellt");
+  await page.waitForFunction(() => !document.querySelector("#timeline .day-meal-window")?.textContent.includes("manuell"));
+  check(true, `${name}: the standard window comes back`);
+}
+
 // Analyse (web/ui/analysis.js): Werte with the summary and every calculation, exclusion and day type,
-// another period, Automatik and Gerichte, and a calculation opening its day.
+// another period, Automatik and Gerichte, and a calculation opening its day (then reviewed there).
 async function analysis(page, name) {
   await page.waitForSelector("#calculations tbody tr .exclude-meal");
   check((await page.$$("#summary .summary-card")).length === 3, `${name}: Werte shows three meal cards`);
@@ -104,6 +156,7 @@ async function analysis(page, name) {
   await page.click("#calculations tr:has(.exclude-meal) .open-meal-day >> nth=0");
   await page.waitForSelector("#timeline .day-meal");
   check(await page.isVisible("#diary-view"), `${name}: a calculation opens its day`);
+  await review(page, name);
   await page.click("[data-nav=analysis]");
   await page.waitForSelector("#calculations tbody tr");
 }
