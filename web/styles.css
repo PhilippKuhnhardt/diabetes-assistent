@@ -1056,8 +1056,13 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .glucose-badge[data-status="high"] { background: #ffeddb; border-color: #edc09b; color: #9b4d11; }
 .chat-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-width: 0; }
 .chat-empty { margin: auto 0 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
-.entry-drawer-title { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
-.entry-drawer-head .entry-drawer-title h2 { font-size: 16px; }
+/* Entry sheet head on one line: back, title, glucose, close. */
+@media (max-width: 950px) {
+  .entry-drawer-head { justify-content: flex-start; gap: 8px; }
+  .entry-drawer-head h2 { flex: 1; min-width: 0; text-align: left; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entry-drawer-head button#entry-back { font-size: 26px; line-height: 1; padding: 2px 12px 5px; }
+  .entry-drawer-head .glucose-badge { padding: 4px 10px; }
+}
 @media (max-width: 950px) { .entry-drawer .glucose-badge.entry-drawer-nav { display: inline-flex; } }
 
 /* Chat input row: the camera is a label and the mic a button, so both need selectors that beat the global

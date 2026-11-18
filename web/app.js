@@ -181,7 +181,8 @@ function publishGlucose() {
   if (badge) {
     badge.dataset.status = glucose.status;
     badge.querySelector("strong").textContent = glucose.value;
-    badge.querySelector("small").textContent = glucose.trend;
+    // Short here so title, value and trend fit one line on a phone: "↓ -47" instead of "↓ -47 mg/dL / 15 min".
+    badge.querySelector("small").textContent = stale ? "" : glucose.trend.replace(/ mg\/dL \/ \d+ min$/, "").replace("Trend nicht verfügbar", "");
   }
   document.dispatchEvent(new CustomEvent("glucose:update", { detail: glucose }));
 }
