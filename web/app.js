@@ -4,24 +4,18 @@ import { html, render } from "./ui/html.js";
 import "./ui/main.js";
 import { AnalysisView } from "./ui/analysis.js";
 import { DayReview, entryLabel, dayTypeSources, dayBounds } from "./ui/day.js";
-import { DayChart, glucosePoints } from "./ui/charts.js";
+import { Overview, Inbox } from "./ui/today.js";
+import { glucosePoints } from "./ui/charts.js";
 import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
 import { MINUTE, names, CERTAINTY_LABELS, MEAL_FACTORS, sportKinds, sportNames, api, appUpdateWaiting, toast, num, factorNum,
   signedChange, sportChange, timeOnly, signedPercent, minuteClock, clockMinute, localInputTime, toInstant, pickerMinimum,
-  trendSymbol, currentPosition } from "./ui/lib.js";
+  trendSymbol, currentPosition, SPLIT_TIMING } from "./ui/lib.js";
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", analysisTab: "werte", dayChosenAt: 0, settings: null, dayData: null, pendingMealId: null, pendingSportId: null, entryTimeTouched: false };
 const views = new Set(["diary", "analysis", "settings"]);
 
-function factorIconsHTML(marks) {
-  const on = Object.keys(MEAL_FACTORS).filter(key => marks?.[key]);
-  if (!on.length) return "";
-  const label = on.map(key => MEAL_FACTORS[key]).join(", ");
-  return '<span class="factor-icons" title="' + escapeHTML(label) + '" role="img" aria-label="' + escapeHTML(label) + '">' +
-    on.map(key => '<span class="factor-icon factor-' + key + '"></span>').join("") + '</span>';
-}
 // Where a carb entry was eaten; the place chip's name.
 // What a carb entry was; the dish's name from the catalogue.
 
@@ -603,34 +597,11 @@ function overviewHours() {
   try { return Number(localStorage.getItem("overviewHours")) || 3; } catch { return 3; }
 }
 
+// "Heute" (web/ui/today.js): chart, "Wirkt noch" from the forecast, the last three hours.
 function renderDayOverview() {
-  const node = $("#day-overview-host");
-  const data = state.dayData;
-  if (!node || !data) return;
-  const hours = overviewHours();
-  const today = todayDay();
-  const isToday = state.day === today;
-  $$("[data-overview-hours]").forEach(button => {
-    button.setAttribute("aria-pressed", String(Number(button.dataset.overviewHours) === hours));
-    button.hidden = !isToday;
-  });
-  const { dayStart, dayEnd } = dayBounds(data, state.day);
-  let view = { from: dayStart, to: dayEnd };
-  if (isToday) {
-    const to = Math.max(Date.now() + 10 * MINUTE, dayStart + 60 * MINUTE);
-    view = { from: Math.max(dayStart, to - hours * 60 * MINUTE), to };
-  }
-  const clipped = isToday && hours < 24 && view.from === dayStart && view.to - view.from < hours * 60 * MINUTE;
-  const points = glucosePoints(data.entries).filter(point => point.t >= view.from && point.t <= view.to);
-  const last = points[points.length - 1];
-  render(html`<${DayChart} id="day-overview-chart" data=${data} view=${view} clipId="overview-clip" />`, node);
-  // The current value is in the header; the note only explains gaps.
-  $("#day-overview-note").textContent = [
-    last ? "" : "Keine CGM-Werte in diesem Zeitraum.",
-    clipped ? "Werte vor Mitternacht stehen beim Vortag." : "",
-  ].filter(Boolean).join(" ");
-  $("#day-overview-recent").innerHTML = isToday ? recentEntriesHTML([...data.treatments,
-    ...(data.basal || []).map(dose => ({ at: dose.at, basal: dose.units }))]) : "";
+  render(html`<${Overview} data=${state.dayData} day=${state.day} today=${todayDay()} active=${state.preview?.on_board}
+    hours=${overviewHours()} onHours=${hours => { try { localStorage.setItem("overviewHours", hours); } catch {} renderDayOverview(); }} />`,
+    $("#overview-host"));
 }
 
 // Today opens "Jetzt", other days open "Tag durchgehen"; a tap on the switch overrides it for that day.
@@ -650,60 +621,8 @@ function renderVisibleCharts() {
   renderDayOverview();
 }
 
-// Today's "Wirkt noch" card: what still lowers and raises glucose and the expected value after it.
-function activeCardHTML(active) {
-  const until = value => value ? "bis " + timeOnly(value) : "wirkt nicht mehr";
-  const nothing = !active.lowering_until && !active.raising_until;
-  const value = (sign, mgdl) => escapeHTML(sign + num(mgdl, 0)) + ' <small>mg/dL</small>';
-  const item = (label, strong, lines, extra = "") => '<div class="active-item' + extra + '"><span>' + label + '</span><strong>' +
-    strong + '</strong>' + lines.map(line => '<small>' + escapeHTML(line) + '</small>').join("") + '</div>';
-  return item("Senkt noch", value("−", active.lowering_mgdl),
-      ["Insulin " + num(active.insulin_units, 1) + " IE",
-       ...(active.sports || []).filter(row => Number(row.remaining_mgdl) > 0).map(row =>
-         (sportNames[row.kind] || "Sport") + " " + timeOnly(row.at) + " −" + num(row.remaining_mgdl, 0)),
-       until(active.lowering_until)]) +
-    item("Hebt noch", value("+", active.raising_mgdl),
-      ["KH " + num(active.carbs_remaining_g, 0) + " g +" + num(active.carbs_mgdl, 0),
-       "Fett/Eiweiß +" + num(active.surcharge_mgdl, 0), until(active.raising_until)]) +
-    item("Erwartet", active.expected_mgdl == null ? "—" : value("≈ ", active.expected_mgdl),
-      active.expected_mgdl == null ? ["kein aktueller CGM-Wert"]
-        : [(active.expected_at ? "um " + timeOnly(active.expected_at) : "jetzt"),
-           "wahrscheinlich " + num(active.expected_low_mgdl, 0) + "–" + num(active.expected_high_mgdl, 0) + " mg/dL"],
-      " expected") +
-    (nothing ? '<p class="hint">Nichts wirkt mehr nach.</p>' : '') +
-    (active.split_plan ? '<p class="hint">2. Teil geplant: ' + escapeHTML(num(active.split_plan.units, 1)) + ' IE um ' +
-      escapeHTML(timeOnly(active.split_plan.due_at)) + ', in der Prognose noch nicht enthalten' +
-      escapeHTML(active.split_plan.state === "later" ? "" : " (" + (active.split_plan.state === "wait"
-        ? splitTiming.wait + " bis " + timeOnly(active.split_plan.latest_at) : splitTiming[active.split_plan.state]) + ")") +
-      '. Die Menge kommt aus der Prognose.</p>' : '') +
-    (active.fresh_meal_at ? '<p class="hint">Mahlzeit um ' + escapeHTML(timeOnly(active.fresh_meal_at)) +
-      ': Die KH steigen noch, die Prognose ist hier am unsichersten.</p>' : '');
-}
-
 function renderActiveCard() {
-  const node = $("#day-overview-active");
-  if (!node) return;
-  const active = state.day === todayDay() ? state.preview?.on_board : null;
-  node.hidden = !active;
-  node.innerHTML = active ? activeCardHTML(active) : "";
-}
-
-// What happened in the last three hours, newest first, as context for the next decision.
-function recentEntriesHTML(treatments) {
-  const now = Date.now();
-  const items = treatments
-    .filter(item => { const t = new Date(item.at).getTime(); return t <= now && t >= now - 180 * MINUTE; })
-    .sort((a, b) => new Date(b.at) - new Date(a.at))
-    .map(item => {
-      const parts = item.eventType === "Exercise"
-        ? [(sportNames[item.sport_type] || "Sport") + (Number(item.duration) ? " " + num(item.duration, 0) + " min" : "")]
-        : item.basal ? ["Basal " + num(item.basal, 1) + " IE"]
-        : item.finger_mgdl ? ["BZ blutig " + num(item.finger_mgdl, 0) + " mg/dL"]
-        : [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 2) + " IE" : ""].filter(Boolean);
-      return parts.length ? '<span class="recent-chip"><time>' + escapeHTML(timeOnly(item.at)) + '</time> ' + escapeHTML(parts.join(" + ")) + factorIconsHTML(item) + '</span>' : "";
-    }).filter(Boolean);
-  return items.length ? '<span class="recent-label">Letzte 3 h</span>' + items.join("")
-    : '<span class="recent-label">Letzte 3 h: keine Einträge</span>';
+  renderDayOverview();
 }
 
 function icon(name) {
@@ -741,40 +660,16 @@ function renderReview() {
 
 // "Zu erledigen": what needs an action across the last days (user request 2026-10-21). The server decides what
 // is open; an opened hint folds away, and a done one is no longer listed.
-function inboxDayLabel(day) {
-  const today = todayDay();
-  const yesterday = new Date(new Date(today + "T12:00:00").getTime() - 24 * 60 * MINUTE).toLocaleDateString("sv-SE");
-  if (day === today) return "heute";
-  if (day === yesterday) return "gestern";
-  return new Date(day + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" });
-}
-
-function inboxItemHTML(item) {
-  return '<li><button type="button" class="inbox-item" data-key="' + escapeHTML(item.key) + '" data-day="' +
-    escapeHTML(item.day) + '" data-meal-id="' + escapeHTML(item.meal_id) + '"><span><strong>' +
-    escapeHTML(names[item.meal] + " " + inboxDayLabel(item.day) + ", " + timeOnly(item.at)) + '</strong>' +
-    item.reasons.map(reason => '<small>' + escapeHTML(reason.text) + '</small>').join("") +
-    '</span><span class="inbox-go" aria-hidden="true">›</span></button></li>';
-}
-
 function renderInbox(data) {
+  state.inbox = data;
   const fresh = data.items.filter(item => !item.seen);
-  const seen = data.items.filter(item => item.seen);
-  const box = $("#inbox");
-  box.hidden = !data.items.length;
-  box.classList.toggle("is-quiet", !fresh.length);
-  $("#inbox-count").textContent = fresh.length || "";
   // The header names new hints on every page, since the list itself sits in the diary.
   const badge = $("#inbox-badge");
   badge.hidden = !fresh.length;
   // On phones only the number shows, so logo, glucose and inbox fit one line.
   badge.innerHTML = fresh.length + '<span class="inbox-badge-label"> zu erledigen</span>';
   badge.setAttribute("aria-label", fresh.length + " zu erledigen");
-  $("#inbox-new").innerHTML = fresh.map(inboxItemHTML).join("");
-  const folded = $("#inbox-seen");
-  folded.hidden = !seen.length;
-  $("summary", folded).textContent = seen.length + (seen.length === 1 ? " Mahlzeit noch offen, schon angesehen" : " Mahlzeiten noch offen, schon angesehen");
-  $("ul", folded).innerHTML = seen.map(inboxItemHTML).join("");
+  render(html`<${Inbox} data=${data} today=${todayDay()} onOpen=${openInboxItem} />`, $("#inbox-host"));
 }
 
 async function loadInbox() {
@@ -786,18 +681,16 @@ async function loadInbox() {
 }
 
 // A hint opens "Tag durchgehen" at its meal and counts as seen from then on.
-async function openInboxItem(event) {
-  const button = event.target.closest(".inbox-item");
-  if (!button) return;
-  api("/api/inbox/seen", { method: "POST", body: JSON.stringify({ key: button.dataset.key }) })
+async function openInboxItem(item) {
+  api("/api/inbox/seen", { method: "POST", body: JSON.stringify({ key: item.key }) })
     .then(renderInbox).catch(() => {});
-  state.modeDay = button.dataset.day;
+  state.modeDay = item.day;
   state.diaryMode = "review";
-  if (state.day !== button.dataset.day) changeDay(button.dataset.day, { load: false });
+  if (state.day !== item.day) changeDay(item.day, { load: false });
   else markDayActivity();
   applyDiaryMode();
   await loadDay();
-  const meal = $("#meal-" + CSS.escape(button.dataset.mealId));
+  const meal = $("#meal-" + CSS.escape(item.meal_id));
   if (!meal) return;
   meal.scrollIntoView({ block: "start" });
   meal.classList.add("is-target");
@@ -1017,16 +910,9 @@ function selectDoseSuggestion(event) {
 }
 
 // The second split part's amount comes from the forecast; the note names the plan and when it fits.
-const splitTiming = {
-  early: "jetzt: BZ steigt schnell",
-  due: "jetzt fällig",
-  wait: "BZ tief oder fallend: lieber warten",
-  later: "",
-};
-
 function splitOptionNote(option) {
   const planned = "geplant " + num(option.planned_units, 1) + " IE um " + timeOnly(option.due_at);
-  const when = option.state === "wait" ? splitTiming.wait + " bis " + timeOnly(option.latest_at) : splitTiming[option.state];
+  const when = option.state === "wait" ? SPLIT_TIMING.wait + " bis " + timeOnly(option.latest_at) : SPLIT_TIMING[option.state];
   return [option.from_forecast && Number(option.units) <= 0 ? "laut Prognose nicht nötig" : "", planned, when]
     .filter(Boolean).join(" · ");
 }
@@ -1575,10 +1461,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyDiaryMode();
     renderVisibleCharts();
   }));
-  $("#inbox").addEventListener("click", openInboxItem);
   $("#inbox-badge").addEventListener("click", () => {
     view("diary");
-    $("#inbox").scrollIntoView({ block: "start" });
+    $("#inbox")?.scrollIntoView({ block: "start" });
   });
   $("#dose-result").addEventListener("click", selectDoseSuggestion);
   $("#dose-result").addEventListener("input", moveSlider);
@@ -1637,10 +1522,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateEntryChips();
     $("#entry-form").elements.notes.focus();
   });
-  $$("[data-overview-hours]").forEach(button => button.addEventListener("click", () => {
-    try { localStorage.setItem("overviewHours", button.dataset.overviewHours); } catch {}
-    renderDayOverview();
-  }));
   updateEntryFields();
   document.addEventListener("keydown", event => {
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !$("#diary-view").hidden) {

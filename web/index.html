@@ -58,27 +58,12 @@
         </div>
         <div id="banner" class="banner" hidden></div>
         <div id="timezone-banner" class="banner timezone-banner" hidden></div>
-        <!-- Things that need an action, across the last days; filled by /api/inbox. -->
-        <section id="inbox" class="inbox" aria-label="Zu erledigen" hidden>
-          <h2 class="inbox-title">Zu erledigen <span id="inbox-count" class="inbox-count"></span></h2>
-          <ul id="inbox-new" class="inbox-list"></ul>
-          <details id="inbox-seen" class="inbox-seen" hidden><summary></summary><ul class="inbox-list"></ul></details>
-        </section>
+        <!-- "Zu erledigen" across the last days (web/ui/today.js, from /api/inbox). -->
+        <div id="inbox-host"></div>
         <div class="diary-grid">
           <section class="panel entry-panel">
-            <div id="day-overview" class="day-overview">
-              <div class="section-head"><h2>Verlauf</h2>
-                <div class="overview-span" role="group" aria-label="Zeitraum des Verlaufs">
-                  <button type="button" data-overview-hours="3" aria-pressed="true">3 h</button>
-                  <button type="button" data-overview-hours="6" aria-pressed="false">6 h</button>
-                  <button type="button" data-overview-hours="24" aria-pressed="false">Tag</button>
-                </div>
-              </div>
-              <div id="day-overview-host"></div>
-              <div id="day-overview-active" class="active-card" aria-label="Was noch wirkt" aria-live="polite" hidden></div>
-              <div id="day-overview-recent" class="overview-recent" aria-label="Einträge der letzten 3 Stunden"></div>
-              <p id="day-overview-note" class="hint"></p>
-            </div>
+            <!-- Chart, "Wirkt noch" and the last three hours (web/ui/today.js). -->
+            <div id="overview-host"></div>
             <!-- On phones and tablets the entry is a full-screen sheet opened from "+"; on wide screens it stays here. -->
             <div id="entry-drawer" class="entry-drawer">
             <div class="section-head entry-drawer-head">
