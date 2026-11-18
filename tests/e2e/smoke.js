@@ -35,6 +35,20 @@ async function run(browser, name, options) {
     }
   }
 
+  // Heute (web/ui/today.js): the chart span switches; a hint in "Zu erledigen" opens its meal and folds away.
+  await page.click("[data-nav=today]");
+  await page.click("[data-overview-hours='6']");
+  check(await page.getAttribute("[data-overview-hours='6']", "aria-pressed") === "true", `${name}: the chart shows 6 h`);
+  await page.click("[data-overview-hours='3']");
+  if (name === "phone") {
+    await page.waitForSelector("#inbox-new .inbox-item");
+    await page.click("#inbox-new .inbox-item >> nth=0");
+    await page.waitForSelector(".day-meal.is-target");
+    check(await page.isVisible(".review-panel"), `${name}: a hint opens its meal in Tag durchgehen`);
+    await page.waitForSelector("#inbox-seen");
+    check(true, `${name}: an opened hint folds away`);
+  }
+
   await page.click("[data-nav=history]");
   check(await page.isVisible(".review-panel"), `${name}: Verlauf shows the day`);
   const card = await page.$(".edit-entry:visible");

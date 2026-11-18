@@ -10,6 +10,8 @@ export const CERTAINTY_LABELS = { weighed: "KH sicher", known: "Halbwegs sicher"
 export const MEAL_FACTORS = { alcohol: "Alkohol", fat_protein: "Fettreich", fast: "Schnell" };
 export const sportKinds = ["jogging", "gym", "light_cardio", "racing"];
 export const sportNames = { jogging: "Joggen", gym: "Gym", light_cardio: "Leichtes Cardio", racing: "Rennsport" };
+// When the second part of a split dose is due, as the dose help and "Wirkt noch" word it.
+export const SPLIT_TIMING = { early: "jetzt: BZ steigt schnell", due: "jetzt fällig", wait: "BZ tief oder fallend: lieber warten", later: "" };
 
 // ---- API ----
 // The app version the page was loaded with; a different one after a deploy marks an update as waiting.
