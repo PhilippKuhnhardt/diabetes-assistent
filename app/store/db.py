@@ -213,6 +213,15 @@ def _sport_sessions(db: sqlite3.Connection) -> None:
     )""")
 
 
+def _sport_session_minutes(db: sqlite3.Connection) -> None:
+    """How long one sport session acts after its end (user request 2026-11-18: effect duration per session),
+    instead of its kind's setting."""
+    db.execute("""CREATE TABLE IF NOT EXISTS sport_session_minutes (
+        session_id TEXT PRIMARY KEY,
+        minutes INTEGER NOT NULL
+    )""")
+
+
 def _places_without_positions(db: sqlite3.Connection) -> None:
     """Places are only the spots Philipp defines (user request 2026-10-29): one place can be the
     fallback for positions in no spot, and entries no longer keep their position. A place named
@@ -348,7 +357,8 @@ MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_res
                                                           _notifications, _notification_priority, _places,
                                                           _inbox_seen, _sport_sessions, _places_without_positions,
                                                           _place_factor, _timezone_periods, _prior_insulin_percentile,
-                                                          _dishes, _agent, _browser_sessions, _split_min_units]
+                                                          _dishes, _agent, _browser_sessions, _split_min_units,
+                                                          _sport_session_minutes]
 
 
 def init() -> None:

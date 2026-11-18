@@ -1862,8 +1862,8 @@ function entryRowHTML(item, data, meal = null) {
   const action = item.kind === "other" ? "" : item.kind === "finger"
     ? '<button type="button" class="delete-treatment quiet" data-id="' + escapeHTML(item.id) + '" data-label="BZ blutig" data-at="' +
       escapeHTML(item.at) + '" aria-label="' + escapeHTML("Blutige Messung um " + timeOnly(item.at) + " löschen") + '">Löschen</button>' : item.kind === "basal"
-    ? '<button type="button" class="delete-basal quiet" data-id="' + escapeHTML(item.id) + '" data-at="' + escapeHTML(item.at) +
-      '" aria-label="' + escapeHTML("Basal um " + timeOnly(item.at) + " löschen") + '">Löschen</button>' :
+    ? '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '" aria-label="' +
+      escapeHTML("Basal um " + timeOnly(item.at) + " bearbeiten") + '">Bearbeiten</button>' :
     '<button type="button" class="edit-entry quiet" data-id="' + escapeHTML(item.id) + '" aria-label="' +
     escapeHTML(label + " um " + timeOnly(item.at) + " bearbeiten") + '">Bearbeiten</button>';
   const place = (item.dish && (!meal || item.dish.id !== meal.dish?.id) ? dishBadgeHTML(item.dish) : "")
@@ -2427,7 +2427,7 @@ function factorLine(data) {
 
 function closeEditDialog() {
   state.editing = null;
-  $("#edit-dialog").close();
+  window.entryCard?.close();
 }
 
 function resetEntryForm() {
@@ -2458,121 +2458,107 @@ function resetEntryForm() {
   if ($("#edit-dialog").open) closeEditDialog();
 }
 
+// A saved entry opens as a card (web/ui/entry-card.js); here what it needs from the day and how it saves.
 function editEntry(id) {
   const item = state.dayData?.timeline.find(row => row.id === id);
-  if (!item || item.kind === "other") return;
+  if (!item || item.kind === "other" || item.kind === "finger") return;
+  if (!window.entryCard) { toast("Seite neu laden, die Karte ist noch nicht geladen", true); return; }
   state.editing = item;
-  const form = $("#edit-form");
-  form.reset();
-  form.elements.at.value = timeOnly(item.at);
-  form.elements.carbs.value = Number(item.carbs) || "";
-  form.elements.insulin.value = Number(item.insulin) || "";
-  setPickerBase(form.elements.carbs, 1);
-  setPickerBase(form.elements.insulin, 0.5);
-  form.elements.sport_kind.value = item.sport_kind || "jogging";
-  form.elements.duration_minutes.value = Number(item.duration_minutes) || "";
-  form.elements.notes.value = item.notes || "";
-  setCertainty(form, item.carbs_certainty);
-  form.elements.fat_protein.checked = Boolean(item.fat_protein);
-  form.elements.fast.checked = Boolean(item.fast);
-  const placeSelect = form.elements.place_id;
-  placeSelect.innerHTML = '<option value="">Kein Ort</option>' + (state.dayData.place_options || []).map(option =>
-    '<option value="' + option.id + '">' + escapeHTML(option.name) + '</option>').join("");
-  placeSelect.value = item.place ? String(item.place.id) : "";
-  $("#edit-dish-options").innerHTML = (state.dayData.dish_options || []).map(option =>
-    '<option value="' + escapeHTML(option.name) + '"></option>').join("");
-  form.elements.dish_name.value = item.dish?.name || "";
-  form.elements.description.value = item.description || "";
-  state.editAgentSession = null;
-  const sport = item.kind === "exercise";
-  $("#edit-quality").hidden = sport || !(Number(item.carbs) > 0);
-  updateEditPlace();
-  $("#edit-meal-fields").hidden = sport;
-  $("#edit-sport-field").hidden = !sport;
-  $("#edit-duration-field").hidden = !sport;
-  form.elements.carbs.disabled = sport;
-  form.elements.insulin.disabled = sport;
-  form.elements.sport_kind.disabled = !sport;
-  form.elements.duration_minutes.disabled = !sport;
-  form.elements.duration_minutes.required = sport;
-  const remove = $("#delete-edit");
-  remove.dataset.id = item.id;
-  remove.dataset.label = entryLabel(item, state.dayData);
-  remove.dataset.at = item.at;
-  $("#edit-date").textContent = new Date(state.day + "T12:00:00").toLocaleDateString("de-DE", {day: "numeric", month: "long", year: "numeric"});
-  $("#edit-dialog").showModal();
-  // On touch screens a focused field would pop up the keyboard or picker before anything was tapped.
-  if (matchMedia("(pointer: fine)").matches) form.elements.at.focus();
+  const meal = item.kind === "meal" ? state.dayData.meals.find(row => row.source_id === item.id) : null;
+  const factor = meal?.calculation?.factor_units_per_ke;
+  const sportDefaults = Object.fromEntries(Object.keys(sportNames).map(kind => [kind, {
+    effect: state.settings?.sport_effects_mgdl?.[kind] ?? 0,
+    minutes: state.settings?.sport_durations_minutes?.[kind] ?? 300 }]));
+  // The session's own default (from the day) wins for its current kind.
+  if (item.kind === "exercise" && item.sport_kind) sportDefaults[item.sport_kind] = {
+    effect: item.sport_effect_default_mgdl, minutes: item.sport_minutes_default };
+  window.entryCard.open({
+    item: { ...item, time: timeOnly(item.at), title: entryLabel(item, state.dayData) },
+    dateLabel: new Date(state.day + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long" }) +
+      " · " + timeOnly(item.at),
+    factor: factor == null ? null : Number(factor),
+    places: state.dayData.place_options || [], dishes: state.dayData.dish_options || [],
+    sportDefaults, agentInfo: agent.info, api, toast,
+    instant: time => { try { return toInstant(state.day, time); } catch (_) { return null; } },
+    onSave: values => saveEditedEntry(item, values),
+    onDelete: () => deleteEditedEntry(item),
+    onClosed: () => { state.editing = null; },
+  });
 }
 
-// Places can be set afterwards, e.g. for meals eaten before places existed.
-function updateEditPlace() {
-  const form = $("#edit-form");
-  const hidden = state.editing?.kind === "exercise" || !(Number(form.elements.carbs.value) > 0)
-    || !(state.dayData?.place_options || []).length;
-  $("#edit-place-field").hidden = hidden;
-  form.elements.place_id.disabled = hidden;
-  // What was eaten can be added afterwards as well (user request 2026-11-16).
-  const noFood = state.editing?.kind === "exercise" || !(Number(form.elements.carbs.value) > 0);
-  $("#edit-food-fields").hidden = noFood;
-  form.elements.dish_name.disabled = noFood;
-  form.elements.description.disabled = noFood;
-}
-
-async function saveEditedEntry(event) {
-  event.preventDefault();
-  const item = state.editing;
-  if (!item) return;
-  const form = event.currentTarget;
-  const sport = item.kind === "exercise";
-  const carbs = sport ? 0 : Number(form.elements.carbs.value || 0);
-  const insulin = sport ? 0 : Number(form.elements.insulin.value || 0);
-  if (!sport && carbs <= 0 && insulin <= 0) {
-    form.elements.carbs.setCustomValidity("Bitte Kohlenhydrate, Insulin oder beides eintragen.");
-    form.elements.carbs.reportValidity();
-    return;
+async function saveEditedEntry(item, values) {
+  const at = toInstant(state.day, values.at);
+  if (item.kind === "basal") {
+    if (!(values.units > 0 && values.units <= 100 && Number.isInteger(values.units * 2)))
+      throw new Error("Bitte Basal zwischen 0,5 und 100 IE in 0,5er-Schritten eintragen.");
+    // A new dose replaces the old one, so Nightscout gets the changed note as well.
+    const result = await saveBasal(at, values.units, values.notes);
+    try { await deleteBasal(item.id); }
+    catch (error) { await deleteBasal(result.id).catch(() => {}); throw error; }
+    return finishEdit(result.day, "Basal gespeichert");
   }
+  const sport = item.kind === "exercise";
+  const { carbs, insulin } = sport ? { carbs: 0, insulin: 0 } : values;
+  if (!sport && carbs <= 0 && insulin <= 0) throw new Error("Bitte Kohlenhydrate, Insulin oder beides eintragen.");
+  if (sport && !(values.duration >= 1 && values.duration <= 1440)) throw new Error("Bitte eine Dauer zwischen 1 und 1440 Minuten eintragen.");
+  if (sport && values.effect != null && !(Number.isInteger(values.effect) && Math.abs(values.effect) <= 500))
+    throw new Error("Bitte eine BZ-Wirkung zwischen −500 und +500 mg/dL eintragen.");
+  if (sport && values.minutes != null && !(values.minutes >= 30 && values.minutes <= 1440))
+    throw new Error("Die Wirkdauer muss zwischen 0,5 und 24 h liegen.");
   const kind = sport ? "exercise" : carbs > 0
     ? (item.kind === "snack" ? "snack" : item.kind === "carbs" && insulin === 0 ? "carbs" : "meal")
     : "correction";
-  let at;
-  try { at = toInstant(state.day, form.elements.at.value); }
-  catch (error) { toast(error.message, true); return; }
   const payload = {
     id: item.id, original_day: state.day, kind, at, carbs, insulin,
-    sport_kind: form.elements.sport_kind.value,
-    duration_minutes: form.elements.duration_minutes.value || 0,
-    notes: form.elements.notes.value,
-    carbs_certainty: carbs > 0 ? certaintyValue(form) : null,
-    fat_protein: carbs > 0 && form.elements.fat_protein.checked,
+    sport_kind: values.sportKind, duration_minutes: sport ? values.duration : 0, notes: values.notes,
+    carbs_certainty: carbs > 0 ? values.certainty ?? item.carbs_certainty ?? null : null,
+    fat_protein: carbs > 0 && values.fat,
     // No chip any more (user request 2026-11-15); an old mark stays when the entry is edited.
     alcohol: carbs > 0 && Boolean(item.alcohol),
-    fast: carbs > 0 && form.elements.fast.checked,
-    place_id: form.elements.place_id.disabled ? undefined : form.elements.place_id.value || null,
-    ...(form.elements.dish_name.disabled ? {} : { dish_id: null, dish_name: form.elements.dish_name.value.trim(),
-                                                  description: form.elements.description.value }),
-    ...(state.editAgentSession ? { agent_session: state.editAgentSession } : {}),
+    fast: carbs > 0 && values.fast,
+    ...(carbs > 0 ? { place_id: values.place || null, dish_id: null, dish_name: values.dish.trim(), description: values.description } : {}),
+    ...(values.session ? { agent_session: values.session } : {}),
   };
-  const button = $('button[type="submit"]', form);
-  button.disabled = true;
-  try {
-    const result = await api("/api/treatment", { method: "POST", body: JSON.stringify(payload) });
-    const refreshed = await api("/api/day?date=" + encodeURIComponent(result.day));
-    const saved = refreshed.timeline.find(row => row.id === item.id);
-    if (!saved || Number(saved.carbs) !== carbs || Number(saved.insulin) !== insulin)
-      throw new Error("Die Änderung ist in Nightscout noch nicht sichtbar. Bitte Eintrag aktualisieren.");
-    state.day = result.day;
-    $("#selected-day").value = state.day;
-    updateLocation(true);
-    renderDay(refreshed);
-    await updatePreview();
-    closeEditDialog();
-    toast("Änderung in Nightscout gespeichert");
-  } catch (error) {
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
+  // The session's own effect and duration first: right after the Nightscout update the day's
+  // cached copy may not hold the session yet.
+  if (sport) {
+    const changes = {};
+    if (values.effect == null ? item.sport_effect_custom : !item.sport_effect_custom || sportChange(item.sport_effect_mgdl) !== values.effect)
+      Object.assign(changes, values.effect == null ? { reset: true } : { effect_mgdl: sportChange(values.effect) });
+    if ((values.minutes ?? null) !== (item.sport_minutes_custom ? item.sport_minutes : null)) changes.minutes = values.minutes;
+    if (Object.keys(changes).length)
+      await api("/api/analysis/sport-session", { method: "POST", body: JSON.stringify({ id: item.id, day: state.day, ...changes }) });
   }
+  const result = await api("/api/treatment", { method: "POST", body: JSON.stringify(payload) });
+  const refreshed = await api("/api/day?date=" + encodeURIComponent(result.day));
+  const saved = refreshed.timeline.find(row => row.id === item.id);
+  if (!saved || Number(saved.carbs) !== carbs || Number(saved.insulin) !== insulin)
+    throw new Error("Die Änderung ist in Nightscout noch nicht sichtbar. Bitte Eintrag aktualisieren.");
+  return finishEdit(result.day, "Änderung in Nightscout gespeichert", refreshed);
+}
+
+async function finishEdit(day, message, refreshed = null) {
+  state.day = day;
+  $("#selected-day").value = state.day;
+  updateLocation(true);
+  if (refreshed) renderDay(refreshed);
+  else await loadDay();
+  await updatePreview();
+  if (state.view === "analysis") await loadSummary();
+  closeEditDialog();
+  toast(message);
+}
+
+async function deleteEditedEntry(item) {
+  if (item.kind === "basal") {
+    await deleteBasal(item.id);
+    toast("Basal gelöscht");
+  } else {
+    await api("/api/treatment/delete", { method: "POST", body: JSON.stringify({ id: item.id, day: state.day }) });
+    toast("Eintrag aus Nightscout gelöscht");
+  }
+  closeEditDialog();
+  await loadDay();
 }
 
 async function saveBasal(at, units, notes = "") {
@@ -2621,19 +2607,6 @@ async function undoBasal(id, day) {
     if (state.day === day) await loadDay();
     toast("Basal entfernt");
   } catch (error) {
-    toast(error.message, true);
-  }
-}
-
-async function deleteBasalRow(button) {
-  if (!window.confirm("Basal um " + timeOnly(button.dataset.at) + " Uhr wirklich löschen?")) return;
-  button.disabled = true;
-  try {
-    await deleteBasal(button.dataset.id);
-    toast("Basal gelöscht");
-    await loadDay();
-  } catch (error) {
-    button.disabled = false;
     toast(error.message, true);
   }
 }
@@ -2768,7 +2741,6 @@ async function deleteTreatment(event) {
     await api("/api/treatment/delete", { method: "POST", body: JSON.stringify({ id: button.dataset.id, day: state.day }) });
     toast("Eintrag aus Nightscout gelöscht");
     button.disabled = false;
-    if ($("#edit-dialog").open) closeEditDialog();
     await loadDay();
   } catch (error) {
     button.disabled = false;
@@ -3392,22 +3364,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#entry-kind").value = button.dataset.entryMode;
     updateEntryFields();
   }));
-  $("#edit-form").addEventListener("submit", saveEditedEntry);
-  $("#edit-form").elements.carbs.addEventListener("input", event => {
-    setPickerBase(event.target, 1);
-    event.target.setCustomValidity("");
-    $("#edit-quality").hidden = state.editing?.kind === "exercise" || !(Number(event.target.value) > 0);
-    updateEditPlace();
-  });
-  $("#edit-form").elements.insulin.addEventListener("input", event => {
-    setPickerBase(event.target, 0.5);
-    $("#edit-form").elements.carbs.setCustomValidity("");
-  });
   $("#ic-rows").addEventListener("input", event => {
     if (event.target.matches("input")) setPickerBase(event.target, 0.1, true);
   });
-  $("#cancel-edit").addEventListener("click", closeEditDialog);
-  $("#delete-edit").addEventListener("click", deleteTreatment);
   $$("[data-diary-mode]").forEach(button => button.addEventListener("click", () => {
     state.modeDay = state.day;
     state.diaryMode = button.dataset.diaryMode;
@@ -3424,8 +3383,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     view("diary");
     $("#inbox").scrollIntoView({ block: "start" });
   });
-  $("#close-edit").addEventListener("click", closeEditDialog);
-  $("#edit-dialog").addEventListener("close", () => { state.editing = null; });
   $("#dose-result").addEventListener("click", selectDoseSuggestion);
   $("#dose-result").addEventListener("input", moveSlider);
   $("#entry-day-type").addEventListener("click", saveEntryDayType);
@@ -3499,8 +3456,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   $("#diary-view").addEventListener("click", event => {
     if (event.target.closest(".delete-treatment")) deleteTreatment(event);
-    const basalButton = event.target.closest(".delete-basal");
-    if (basalButton) deleteBasalRow(basalButton);
     const edit = event.target.closest(".edit-entry");
     if (edit) editEntry(edit.dataset.id);
     if (event.target.closest(".sport-save, .sport-auto, .sport-none")) saveSportMark(event);
@@ -3720,50 +3675,40 @@ function updateEntryAgent() {
     (applied.dish_name ? "Gericht: " + applied.dish_name : "Ohne Gericht") + " · geschätzt " + applied.range;
 }
 
-// The chat itself lives in web/ui/agent-chat.js (Preact); here only what it needs from the page
-// and where "übernehmen" writes: the entry form or the edit dialog. Nothing is saved yet.
-function openAgent(target) {
+// The chat itself lives in web/ui/agent-chat.js (Preact); here only what it needs from the entry
+// form and where "übernehmen" writes. Nothing is saved yet. A saved meal opens the chat from its
+// card ("Nachbessern", web/ui/entry-card.js).
+function openAgent() {
   if (!agent.info?.available) {
     toast("Essens-Agent ist nicht eingerichtet: in den Einstellungen Anbieter und Modell wählen", true);
     return;
   }
   if (!window.mealChat) { toast("Seite neu laden, der Chat ist noch nicht geladen", true); return; }
-  const edit = target === "edit";
-  const form = $(edit ? "#edit-form" : "#entry-form");
+  const form = $("#entry-form");
   window.mealChat.open({
-    target, info: agent.info, api, toast,
-    eventId: edit ? state.editing?.event_id || null : null,
-    initialText: edit ? form.elements.description.value : "",
-    previousCarbs: form.elements.carbs.value,
+    target: "entry", info: agent.info, api, toast, previousCarbs: form.elements.carbs.value,
     context: () => {
       let at = null;
       try { at = toInstant(state.day, form.elements.at.value); } catch (_) { /* Without a valid time the server takes now. */ }
-      const placeId = edit ? form.elements.place_id.value || null : entryPlaceId();
+      const placeId = entryPlaceId();
       return { at, placeId: placeId === "none" ? null : placeId };
     },
-    onApply: result => applyAgent(target, result),
+    onApply: applyAgent,
   });
 }
 
-function applyAgent(target, { session, estimate, carbs, certainty, fat_protein, fast }) {
-  const form = $(target === "edit" ? "#edit-form" : "#entry-form");
+function applyAgent({ session, estimate, carbs, certainty, fat_protein, fast }) {
+  const form = $("#entry-form");
   form.elements.carbs.value = carbs;
   setCertainty(form, certainty);
   form.elements.fat_protein.checked = fat_protein;
   form.elements.fast.checked = fast;
-  if (target === "edit") {
-    form.elements.dish_name.value = estimate.dish?.name || "";
-    form.elements.description.value = estimate.description;
-    state.editAgentSession = session;
-    updateEditPlace();
-  } else {
-    state.entryAgent = { session_id: session, dish_name: estimate.dish?.name || "", description: estimate.description,
-      range: estimate.carbs_low_g + "–" + estimate.carbs_high_g + " g" };
-    updateEntryAgent();
-    updateEntryOptions();
-    requestEntryPosition();
-    schedulePreview(0);
-  }
+  state.entryAgent = { session_id: session, dish_name: estimate.dish?.name || "", description: estimate.description,
+    range: estimate.carbs_low_g + "–" + estimate.carbs_high_g + " g" };
+  updateEntryAgent();
+  updateEntryOptions();
+  requestEntryPosition();
+  schedulePreview(0);
 }
 
 // ---- Dish catalogue (Analyse → Gerichte): each dish with how its main meals turned out. ----
@@ -3815,9 +3760,8 @@ async function dishAction(body) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  $("#entry-agent-open").addEventListener("click", () => openAgent("entry"));
+  $("#entry-agent-open").addEventListener("click", openAgent);
   $("#entry-agent-clear").addEventListener("click", () => { state.entryAgent = null; updateEntryAgent(); });
-  $("#edit-agent-open").addEventListener("click", () => openAgent("edit"));
   $$(".entry-mode").forEach(button => button.addEventListener("click", () => setTimeout(updateEntryAgent)));
   $("#agent-provider").addEventListener("change", event => saveAgentSettings({ provider: event.target.value }));
   $("#agent-model").addEventListener("change", event =>

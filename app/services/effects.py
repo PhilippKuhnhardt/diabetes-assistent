@@ -56,6 +56,7 @@ def _compute(day: str, parsed: date, settings: dict, start: datetime, end: datet
                                  factors.surcharge_mgdl(settings) if method == forecast.SURCHARGE else None,
                                  forecast.surcharge_share, keep_all=True,
                                  sport_overrides=marks.sport_session_effects(),
+            sport_minutes_overrides=marks.sport_session_minutes(),
                                  fat_surcharge_mgdl=factors.fat_surcharge_mgdl(settings),
                                  scale=factors.entry_scale(factors.place_scales(settings, parsed, overrides, periods)))
     except ValueError:

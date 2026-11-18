@@ -4338,7 +4338,10 @@
     "notes": "",
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "40",
-    "sport_effect_mgdl": "40"
+    "sport_effect_mgdl": "40",
+    "sport_minutes": 300,
+    "sport_minutes_custom": false,
+    "sport_minutes_default": 300
    }
   ],
   "meals": [
@@ -4897,7 +4900,10 @@
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "40",
     "sport_effect_mgdl": "40",
-    "sport_kind": "gym"
+    "sport_kind": "gym",
+    "sport_minutes": 300,
+    "sport_minutes_custom": false,
+    "sport_minutes_default": 300
    },
    {
     "alcohol": false,
@@ -12234,7 +12240,10 @@
     "notes": "Racing",
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "-40",
-    "sport_effect_mgdl": "-40"
+    "sport_effect_mgdl": "-40",
+    "sport_minutes": 300,
+    "sport_minutes_custom": false,
+    "sport_minutes_default": 300
    }
   ],
   "meals": [
@@ -12875,7 +12884,10 @@
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "-40",
     "sport_effect_mgdl": "-40",
-    "sport_kind": "racing"
+    "sport_kind": "racing",
+    "sport_minutes": 300,
+    "sport_minutes_custom": false,
+    "sport_minutes_default": 300
    },
    {
     "alcohol": false,
@@ -20526,7 +20538,10 @@
     "notes": "",
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "40",
-    "sport_effect_mgdl": "40"
+    "sport_effect_mgdl": "40",
+    "sport_minutes": 300,
+    "sport_minutes_custom": false,
+    "sport_minutes_default": 300
    }
   ],
   "meals": [
@@ -21109,7 +21124,10 @@
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "40",
     "sport_effect_mgdl": "40",
-    "sport_kind": "gym"
+    "sport_kind": "gym",
+    "sport_minutes": 300,
+    "sport_minutes_custom": false,
+    "sport_minutes_default": 300
    },
    {
     "alcohol": false,
@@ -28891,7 +28909,10 @@
     "notes": "Runde",
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "40",
-    "sport_effect_mgdl": "40"
+    "sport_effect_mgdl": "40",
+    "sport_minutes": 300,
+    "sport_minutes_custom": false,
+    "sport_minutes_default": 300
    }
   ],
   "meals": [
@@ -29233,7 +29254,10 @@
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "40",
     "sport_effect_mgdl": "40",
-    "sport_kind": "jogging"
+    "sport_kind": "jogging",
+    "sport_minutes": 300,
+    "sport_minutes_custom": false,
+    "sport_minutes_default": 300
    },
    {
     "alcohol": false,

@@ -74,6 +74,7 @@ class DueReminderTests(unittest.TestCase):
                 patch.object(notifications.marks, "vacation_periods", return_value=[]), \
                 patch.object(notifications.marks, "day_type_for", return_value=("work",)), \
                 patch.object(notifications.marks, "sport_session_effects", return_value={}), \
+                patch.object(notifications.marks, "sport_session_minutes", return_value={}), \
                 patch.object(notifications.factors, "forecast_settings", return_value=(None, None, 30)), \
                 patch.object(notifications.factors, "meal_points", return_value=[]), \
                 patch.object(notifications.factors, "carb_factor", return_value=None), \
