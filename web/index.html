@@ -71,6 +71,8 @@
               <h2 id="entry-title">Eintrag hinzufügen</h2>
               <button type="button" id="entry-close" class="quiet entry-drawer-nav" aria-label="Schließen">×</button>
             </div>
+            <!-- "KE & IE" on phones: what still acts, since the sheet covers "Heute" (app.js renderEntryActive). -->
+            <div id="entry-active-host" class="entry-active"></div>
             <form id="entry-form">
               <div class="entry-switch" role="group" aria-label="Eintragsart">
                 <button type="button" class="entry-mode" data-entry-mode="meal" aria-pressed="true">Essen &amp; Insulin</button>

@@ -1091,4 +1091,22 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
   body.entry-open .entry-drawer { top: var(--topbar-h, 0px); z-index: 40; }
   .entry-drawer-head { padding-top: 10px; }
 }
-#entry-drawer[data-quick="carbs"] .agent-entry { display: none; }
+#entry-drawer[data-quick="manual"] .agent-entry { display: none; }
+
+/* "Heute": today's meals in short, a tap opens the meal's card (web/ui/today.js MealsToday). */
+.meals-today { margin: 10px 0 4px; }
+.meals-today ul { list-style: none; margin: 5px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; }
+.meals-today li + li { border-top: 1px solid var(--line); }
+.meals-today button.meal-today { display: grid; grid-template-columns: 44px auto 1fr auto; align-items: baseline; gap: 8px; width: 100%; min-height: 0; padding: 11px 12px; line-height: 1.3; border: 0; border-radius: 0; background: none; text-align: left; font-size: 13px; font-variant-numeric: tabular-nums; }
+.meal-today time { color: var(--muted); font-weight: 650; }
+.meal-today span { color: var(--ink); font-weight: 600; white-space: nowrap; }
+.meal-today small { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.meals-today button.meal-today:hover { background: var(--canvas); }
+
+/* "Wirkt noch" inside the manual entry: only where the sheet covers "Heute". */
+.entry-active { display: none; }
+@media (max-width: 950px) { .entry-active { display: block; margin-bottom: 12px; } .entry-active:empty { display: none; } }
+
+/* "+" is a 2 × 2 grid of four tiles (user request 2026-11-18); Essen keeps its green. */
+.choices button.choice.main { grid-column: auto; min-height: 96px; }
+.choices button.choice { min-height: 96px; }
