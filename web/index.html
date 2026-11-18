@@ -11,6 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="Tagebuch">
   <link rel="stylesheet" href="/styles.css">
   <script src="/app.js" defer></script>
+  <script type="module" src="/ui/main.js"></script>
 </head>
 <body>
   <div class="shell">
@@ -415,25 +416,8 @@
       <button id="delete-edit" type="button" class="delete-treatment">Eintrag löschen</button>
     </form>
   </dialog>
-  <dialog id="agent-dialog" aria-labelledby="agent-dialog-title">
-    <form id="agent-form">
-      <div class="section-head"><h2 id="agent-dialog-title">Essen einschätzen</h2><button id="close-agent" type="button" class="quiet" aria-label="Schließen">×</button></div>
-      <div id="agent-photos" class="agent-photos" aria-label="Fotos"></div>
-      <div id="agent-turns" class="agent-turns" aria-live="polite"></div>
-      <div id="agent-result" class="agent-result" aria-live="polite" hidden></div>
-      <label id="agent-text-label">Beschreibung <textarea name="text" rows="3" maxlength="2000" placeholder="z. B. Porridge wie immer, dazu eine Banane"></textarea></label>
-      <div class="entry-chips agent-inputs">
-        <label class="chip agent-photo-add" id="agent-photo-add">+ Foto<input type="file" id="agent-photo-input" accept="image/*" multiple hidden></label>
-        <button type="button" id="agent-record" class="chip" hidden>Sprechen</button>
-        <span id="agent-record-status" class="hint" role="status"></span>
-      </div>
-      <p id="agent-status" class="hint" role="status"></p>
-      <div class="form-actions">
-        <button class="primary" type="submit" id="agent-submit">Einschätzen</button>
-        <button type="button" id="agent-apply" hidden>Übernehmen</button>
-      </div>
-    </form>
-  </dialog>
+  <!-- The meal chat (web/ui/agent-chat.js) renders in here. -->
+  <dialog id="agent-dialog" class="chat-dialog" aria-labelledby="agent-dialog-title"></dialog>
   <dialog id="window-dialog" aria-labelledby="window-dialog-title">
     <div class="section-head"><div><span id="window-meal-type" class="meal-type"></span><h2 id="window-dialog-title">Zeitraum anpassen</h2></div><button id="close-window" type="button" class="quiet" aria-label="Schließen">×</button></div>
     <div id="window-readout" class="window-readout" data-tone="none" aria-live="polite"></div>

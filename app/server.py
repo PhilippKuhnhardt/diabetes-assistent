@@ -19,7 +19,7 @@ from app.store import config, db
 WEB = Path(__file__).resolve().parent.parent / "web"
 # Sent with every API answer: a page open since before a deploy sees a different value and reloads.
 WEB_VERSION = hashlib.sha256(b"".join(
-    path.read_bytes() for path in sorted(WEB.glob("*")) if path.suffix in {".html", ".js", ".css"})).hexdigest()[:16]
+    path.read_bytes() for path in sorted(WEB.rglob("*")) if path.suffix in {".html", ".js", ".css"})).hexdigest()[:16]
 # Served without login: the login page needs them, and iOS/Android fetch the
 # home-screen icon and the web app manifest without the session cookie.
 PUBLIC_FILES = {
