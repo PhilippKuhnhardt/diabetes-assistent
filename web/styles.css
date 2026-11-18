@@ -958,3 +958,90 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
   .analysis-table td:first-child > small, .analysis-table td:first-child > .summary-unavailable { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; }
   .analysis-table tr.matrix-group td { border-top: 0; }
 }
+
+/* App navigation (concept 2026-11-18): tab bar at the bottom up to 950px, a rail on the left above.
+   The old top tabs and the "Jetzt / Tag durchgehen" switch give way to it. */
+.tabs { display: none; }
+.appnav { position: fixed; z-index: 30; background: var(--surface); border-color: var(--line); border-style: solid; border-width: 0; }
+.appnav-item, .appnav button.appnav-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--muted); font-size: 11px; font-weight: 650; text-decoration: none; }
+.appnav .ui-icon { width: 24px; height: 24px; }
+.appnav-item.active { color: var(--green-dark); }
+.appnav-item.active .ui-icon { stroke-width: 2.4; }
+.appnav button.appnav-add { border: 0; border-radius: 0; background: none; padding: 0; color: var(--green-dark); }
+.appnav button.appnav-add .ui-icon { box-sizing: content-box; width: 26px; height: 26px; padding: 11px; border-radius: 50%; background: var(--green); color: #fff; box-shadow: 0 6px 16px #17674655; }
+.appnav button.appnav-add:hover .ui-icon { background: var(--green-dark); }
+@media (max-width: 950px) {
+  .appnav { left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; height: calc(62px + env(safe-area-inset-bottom, 0px)); padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); border-top-width: 1px; }
+  .appnav-item { height: 62px; }
+  .appnav button.appnav-add { height: 62px; justify-content: flex-end; padding-bottom: 7px; }
+  .appnav button.appnav-add .ui-icon { margin-top: -22px; }
+  body { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  .diary-mode { display: none !important; }
+  #toast { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (min-width: 951px) {
+  .appnav { top: 0; bottom: 0; left: 0; width: 88px; display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 92px 0 20px; border-right-width: 1px; }
+  .appnav-item { min-height: 62px; margin: 0 8px; border-radius: 12px; }
+  .appnav-item:hover { background: var(--canvas); color: var(--ink); }
+  .appnav-item.active { background: var(--green-light); }
+  .appnav button.appnav-add { order: -1; min-height: 78px; margin-bottom: 10px; }
+  body { padding-left: calc(88px + env(safe-area-inset-left, 0px)); }
+}
+
+/* The entry: on phones and tablets a full-screen sheet opened from "+", in the page on wide screens. */
+.entry-drawer-nav { display: none; }
+@media (max-width: 950px) {
+  .entry-drawer { display: none; }
+  body.entry-open { overflow: hidden; }
+  body.entry-open .entry-drawer { display: block; position: fixed; inset: 0; z-index: 60; overflow-y: auto; overscroll-behavior: contain; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); background: var(--canvas); }
+  .entry-drawer-head { position: sticky; top: 0; z-index: 6; align-items: center; margin: 0 -16px 14px; padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  .entry-drawer-head h2 { flex: 1; text-align: center; }
+  .entry-drawer .entry-drawer-nav { display: inline-block; }
+  .entry-drawer-head button#entry-close { font-size: 22px; line-height: 1; padding: 3px 11px; }
+  .entry-drawer .entry-actions { margin: 0 -16px; border-radius: 0; padding-left: 16px; padding-right: 16px; background: linear-gradient(to bottom, rgba(246,248,244,0), var(--canvas) 30%); }
+}
+
+/* "+": what to enter, as a sheet from the bottom (web/ui/quick-add.js). */
+#add-dialog { width: min(460px, calc(100vw - 28px)); max-height: calc(100dvh - 32px); border: 1px solid var(--line); border-radius: 18px; padding: 0; color: var(--ink); background: var(--surface); box-shadow: 0 18px 70px #10281840; }
+#add-dialog::backdrop { background: #0c2419a8; }
+.quick-add { padding: 8px 18px 18px; }
+.quick-add-head { display: grid; grid-template-columns: 1fr auto; align-items: center; position: relative; padding-top: 12px; margin-bottom: 14px; }
+.quick-add-head h2 { margin: 0; }
+.quick-add-head button.quiet { font-size: 22px; line-height: 1; padding: 3px 10px; }
+.grab { display: none; position: absolute; top: 0; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 4px; background: var(--line); }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.choices button.choice { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 72px; padding: 13px 14px; border-radius: 13px; text-align: left; }
+.choices button.choice b { font-size: 15px; }
+.choices button.choice small { color: var(--muted); font-size: 12px; font-weight: 500; line-height: 1.35; }
+.choices button.choice.main { grid-column: 1 / -1; min-height: 84px; border-color: var(--green); background: var(--green); color: #fff; }
+.choices button.choice.main b { font-size: 18px; }
+.choices button.choice.main small { color: #e4f1e9; }
+.choices button.choice:hover { border-color: var(--green); }
+.choices button.choice.main:hover { background: var(--green-dark); }
+@media (max-width: 650px) {
+  #add-dialog { width: 100vw; max-width: none; margin: auto 0 0; border: 0; border-radius: 18px 18px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .grab { display: block; }
+}
+
+/* Settings: on phones and tablets a list of pages, one page at a time (app.js setupSettingsPages). */
+.settings-index, .settings-back { display: none; }
+@media (max-width: 950px) {
+  #settings-view:not([data-page]) .settings-index { display: block; }
+  #settings-view:not([data-page]) .settings-grid, #settings-view:not([data-page]) .settings-heading, #settings-view:not([data-page]) .settings-save { display: none; }
+  #settings-view[data-page] .settings-back:not([hidden]) { display: inline-block; margin-bottom: 14px; }
+  #settings-view[data-page] [data-settings-page]:not(.is-current) { display: none; }
+  #settings-view[data-page] .settings-heading, #settings-view[data-page] .page-head { display: none; }
+  #settings-view[data-page]:not(.page-in-form) .settings-save { display: none; }
+  #settings-view[data-page] .settings-grid { margin-bottom: 0; }
+  #settings-view[data-page] .settings-save { margin-top: 14px; }
+  .settings-index-group { margin-bottom: 22px; }
+  .settings-index-group h2 { margin: 0 0 8px; color: var(--muted); font-size: 12px; font-weight: 750; text-transform: uppercase; letter-spacing: .04em; }
+  .settings-index-group { overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); }
+  .settings-index-group h2 { padding: 12px 16px 0; }
+  .settings-index button.settings-index-item { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 50px; padding: 0 16px; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; text-align: left; font-weight: 600; }
+  .settings-index button.settings-index-item:first-of-type { border-top: 0; }
+  .settings-index button.settings-index-item::after { content: "›"; color: var(--muted); font-size: 20px; }
+}
+.entry-drawer { scroll-margin-top: 90px; }
+/* In the sheet the kind was chosen behind "+" ("‹ Auswahl" goes back), so the switch is not repeated. */
+@media (max-width: 950px) { .entry-drawer .entry-switch { display: none; } }

@@ -1,0 +1,67 @@
+import sys, os, json, math, tempfile, threading, urllib.parse
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
+from app.store import db
+db.DB_PATH = Path(tempfile.mkdtemp()) / "app.sqlite3"
+now = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+entries = []
+t = now - timedelta(days=3)
+i = 0
+while t <= now:
+    h = t.hour + t.minute/60
+    v = 120 + 40*math.sin(h/3) + 25*math.sin(h/1.3)
+    entries.append({"_id": f"g{i}", "date": int(t.timestamp()*1000), "type": "sgv", "sgv": int(v), "direction": "Flat"})
+    t += timedelta(minutes=5); i += 1
+entries.reverse()
+treat = []
+def add(dt, **kw):
+    kw.update({"_id": f"t{len(treat)}", "created_at": dt.strftime("%Y-%m-%dT%H:%M:%S.000Z"), "eventType": "Meal Bolus"})
+    treat.append(kw)
+for d in range(3, -1, -1):
+    day = (now - timedelta(days=d)).replace(hour=0, minute=0)
+    for hh, c, ins in ((6, 45, 3.5), (11, 70, 4.5), (17, 78, 4.5)):
+        dt = day + timedelta(hours=hh, minutes=20)
+        if dt < now: add(dt, carbs=c, insulin=ins, notes="")
+    dt = day + timedelta(hours=14)
+    if dt < now: add(dt, carbs=15, notes="")
+PROFILE = {"_id": "p", "startDate": "2026-01-01T00:00:00.000Z", "defaultProfile": "Default", "store": {"Default": {
+  "timezone": "Europe/Berlin", "units": "mg/dl",
+  "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 40}],
+  "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 8}],
+  "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}],
+  "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 120}]}}}
+class NS(BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def _send(self, v):
+        raw = json.dumps(v).encode(); self.send_response(200)
+        self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(raw))); self.end_headers(); self.wfile.write(raw)
+    def do_GET(self):
+        p = urllib.parse.urlparse(self.path).path
+        if p.endswith("/entries/sgv.json") or p.endswith("/entries.json"): return self._send(entries)
+        if p.endswith("/treatments.json"): return self._send(treat)
+        if "profile" in p: return self._send(PROFILE if p.endswith("current") else [PROFILE])
+        if "status" in p: return self._send({"status": "ok"})
+        self.send_error(404)
+    def do_POST(self):
+        v = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        for it in (v if isinstance(v, list) else [v]):
+            it["_id"] = f"t{len(treat)}"; treat.append(it)
+        self._send(v)
+    def do_DELETE(self):
+        tid = urllib.parse.urlparse(self.path).path.rsplit("/", 1)[-1]
+        treat[:] = [e for e in treat if e["_id"] != tid]
+        self._send({"ok": 1})
+    def do_PUT(self):
+        v = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        for k, e in enumerate(treat):
+            if e["_id"] == v.get("_id"): treat[k] = v
+        self._send(v)
+fake = ThreadingHTTPServer(("127.0.0.1", 8799), NS)
+threading.Thread(target=fake.serve_forever, daemon=True).start()
+os.environ.update({"NIGHTSCOUT_URL": "http://127.0.0.1:8799", "NIGHTSCOUT_AUTH_MODE": "token", "NIGHTSCOUT_CREDENTIAL": "x", "APP_PASSWORD": "", "OPENROUTER_API_KEY": "dummy"})
+db.init()
+from app.server import Handler
+ThreadingHTTPServer(("127.0.0.1", 8765), Handler).serve_forever()
