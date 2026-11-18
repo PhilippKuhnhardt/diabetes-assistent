@@ -74,7 +74,7 @@
                   <button type="button" data-overview-hours="24" aria-pressed="false">Tag</button>
                 </div>
               </div>
-              <div id="day-overview-chart" class="day-overview-chart"></div>
+              <div id="day-overview-host"></div>
               <div id="day-overview-active" class="active-card" aria-label="Was noch wirkt" aria-live="polite" hidden></div>
               <div id="day-overview-recent" class="overview-recent" aria-label="Einträge der letzten 3 Stunden"></div>
               <p id="day-overview-note" class="hint"></p>
@@ -152,31 +152,8 @@
             </form>
             </div>
           </section>
-          <section class="records review-panel">
-            <section class="panel">
-              <div class="section-head"><h2>Tag durchgehen</h2><span id="record-count" class="hint"></span></div>
-              <div id="review-day-type" class="review-day-type" hidden>
-                <div class="entry-switch" role="group" aria-label="Tagesart">
-                  <button type="button" class="day-type-option" data-review-day-type="work" aria-pressed="false">Arbeitstag</button>
-                  <button type="button" class="day-type-option" data-review-day-type="free" aria-pressed="false">Freier Tag</button>
-                </div>
-                <p id="review-day-type-hint" class="hint"></p>
-              </div>
-              <div id="review-summary" class="review-summary" aria-live="polite"></div>
-              <div id="review-chart" class="day-overview-chart review-chart"></div>
-              <details id="effects-card" class="effects-card" open hidden>
-                <summary>Wirkungen über den Tag <span id="effects-summary" class="hint"></span></summary>
-                <div id="effects-chart" class="effects-chart"></div>
-                <p class="effects-legend"><span class="legend-measured">gemessen</span><span class="legend-model">Modell aus dem BZ 3 h vorher</span><span class="legend-raising">hebt: KH, Fett/Eiweiß</span><span class="legend-lowering">senkt: Insulin</span></p>
-              </details>
-              <section id="night-card" class="night-card" aria-live="polite" hidden>
-                <div class="section-head"><h2>Nacht</h2><span id="night-window" class="hint"></span></div>
-                <div id="night-values" class="night-values"></div>
-                <p id="night-reason" class="hint" hidden></p>
-              </section>
-              <div id="timeline" class="day-list" aria-live="polite"></div>
-            </section>
-          </section>
+          <!-- "Tag durchgehen" (web/ui/day.js) renders in here. -->
+          <section class="records review-panel"></section>
         </div>
       </section>
 
@@ -193,21 +170,6 @@
   <dialog id="edit-dialog" class="card-dialog" aria-labelledby="edit-dialog-title"></dialog>
   <!-- The meal chat (web/ui/agent-chat.js) renders in here. -->
   <dialog id="agent-dialog" class="chat-dialog" aria-labelledby="agent-dialog-title"></dialog>
-  <dialog id="window-dialog" aria-labelledby="window-dialog-title">
-    <div class="section-head"><div><span id="window-meal-type" class="meal-type"></span><h2 id="window-dialog-title">Zeitraum anpassen</h2></div><button id="close-window" type="button" class="quiet" aria-label="Schließen">×</button></div>
-    <div id="window-readout" class="window-readout" data-tone="none" aria-live="polite"></div>
-    <div class="window-handle-switch" role="group" aria-label="Griff auswählen">
-      <button type="button" data-window-handle="start" aria-pressed="false">Beginn</button>
-      <button type="button" data-window-handle="end" aria-pressed="true">Ende</button>
-    </div>
-    <div id="window-chart" class="window-chart"></div>
-    <div class="window-nudge" role="group" aria-label="Ausgewählten Griff verschieben">
-      <button type="button" data-nudge="-5">−5 min</button><button type="button" data-nudge="-1">−1 min</button>
-      <button type="button" data-nudge="1">+1 min</button><button type="button" data-nudge="5">+5 min</button>
-    </div>
-    <div id="window-summary" class="window-summary" aria-live="polite"></div>
-    <div class="form-actions"><button id="save-window" class="primary" type="button">Zeitraum speichern</button><button id="default-window" type="button" class="quiet">Standard</button><button id="cancel-window" type="button" class="quiet">Abbrechen</button></div>
-  </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
