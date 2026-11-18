@@ -1091,3 +1091,4 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
   body.entry-open .entry-drawer { top: var(--topbar-h, 0px); z-index: 40; }
   .entry-drawer-head { padding-top: 10px; }
 }
+#entry-drawer[data-quick="carbs"] .agent-entry { display: none; }

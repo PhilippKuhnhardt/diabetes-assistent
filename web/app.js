@@ -3799,6 +3799,8 @@ function chooseEntry(kind) {
   const mode = kind === "exercise" || kind === "basal" ? kind : "meal";
   $('.entry-mode[data-entry-mode="' + mode + '"]')?.click();
   $("#entry-title").textContent = QUICK_TITLES[kind] || "Eintrag hinzufügen";
+  // "KH direkt" means the grams are known: no "Essen einschätzen" there (user feedback 2026-11-18).
+  $("#entry-drawer").dataset.quick = kind;
   openEntryDrawer();
   const form = $("#entry-form");
   if (kind === "meal" && agent.info?.available) openAgent();
@@ -3822,6 +3824,7 @@ function closeEntryDrawer() {
   document.body.classList.remove("entry-open");
   const title = $("#entry-title");
   if (title) title.textContent = "Eintrag hinzufügen";
+  delete $("#entry-drawer")?.dataset.quick;
 }
 
 // Settings on phones: a list of pages (one per panel, grouped by the headings), one page at a time.
@@ -3881,7 +3884,9 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#entry-close").addEventListener("click", closeEntryDrawer);
   // Switching the kind by hand (wide screens) drops the title the "+" choice gave.
   $$(".entry-mode").forEach(button => button.addEventListener("click", event => {
-    if (event.isTrusted) $("#entry-title").textContent = "Eintrag hinzufügen";
+    if (!event.isTrusted) return;
+    $("#entry-title").textContent = "Eintrag hinzufügen";
+    delete $("#entry-drawer").dataset.quick;
   }));
   setupSettingsPages();
   $("#settings-index").addEventListener("click", event => {
