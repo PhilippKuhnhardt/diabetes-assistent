@@ -1061,12 +1061,33 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
   .entry-drawer-head { justify-content: flex-start; gap: 8px; }
   .entry-drawer-head h2 { flex: 1; min-width: 0; text-align: left; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .entry-drawer-head button#entry-back { font-size: 26px; line-height: 1; padding: 2px 12px 5px; }
-  .entry-drawer-head .glucose-badge { padding: 4px 10px; }
 }
-@media (max-width: 950px) { .entry-drawer .glucose-badge.entry-drawer-nav { display: inline-flex; } }
 
 /* Chat input row: the camera is a label and the mic a button, so both need selectors that beat the global
    label margin and button radius; all three controls share one height and sit on one line. */
 .chat-input { align-items: center; }
 .chat-input label.round-button, .chat-input button.round-button { margin: 0; width: 44px; height: 44px; min-height: 0; padding: 0; border-radius: 50%; }
 .chat-input textarea { min-height: 44px; }
+
+/* One header on every page (user request 2026-11-18): on phones the top bar is a single line with the
+   logo, the glucose and the inbox; the entry sheet and the meal chat open below it, so the value stays in sight. */
+@media (max-width: 650px) {
+  .topbar { flex-wrap: nowrap; min-height: 0; gap: 8px; padding: calc(8px + env(safe-area-inset-top, 0px)) 0 8px; }
+  .brand strong { display: none; }
+  .brand-mark { width: 34px; height: 34px; }
+  .glucose-widget { order: 0; flex: 1 1 auto; min-width: 0; padding: 5px 10px; }
+  .glucose-main { flex-wrap: nowrap; gap: 8px; }
+  .glucose-main strong { font-size: 19px; }
+  .glucose-main span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+  .topbar-actions { flex-direction: row; flex: none; }
+  .topbar-actions button.inbox-badge { min-height: 32px; padding: 4px 10px; font-size: 13px; }
+  .inbox-badge-label { display: none; }
+  .glucose-main span { font-size: 12px; }
+  #agent-dialog { top: var(--topbar-h, 0px); height: calc(100dvh - var(--topbar-h, 0px)); margin: 0; padding-top: 0; }
+  #agent-dialog::backdrop { background: transparent; }
+  .chat-title .glucose-badge { display: none; }
+}
+@media (max-width: 950px) {
+  body.entry-open .entry-drawer { top: var(--topbar-h, 0px); z-index: 40; }
+  .entry-drawer-head { padding-top: 10px; }
+}

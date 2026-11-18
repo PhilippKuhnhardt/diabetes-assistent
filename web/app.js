@@ -170,22 +170,25 @@ function loadCurrentGlucose() {
   return glucoseRefresh;
 }
 
-// Full-screen views cover the top bar, but a dose decision always needs the glucose in sight
-// (user feedback 2026-11-18): the entry sheet shows a copy, the meal chat listens (web/ui/glucose.js).
+// A dose decision always needs the glucose in sight (user feedback 2026-11-18): on phones the top bar is
+// one line (logo, value, inbox) and full-screen views open below it; the meal chat on wider screens is a
+// modal over the dimmed page and shows a copy (web/ui/glucose.js).
 function publishGlucose() {
   const stale = $("#glucose-meta").hidden ? "" : $("#glucose-meta").textContent;
   const glucose = { value: $("#glucose-value").textContent, status: $("#current-glucose").dataset.status,
     trend: stale || $("#glucose-trend").textContent };
   window.currentGlucose = glucose;
-  const badge = $("#entry-glucose");
-  if (badge) {
-    badge.dataset.status = glucose.status;
-    badge.querySelector("strong").textContent = glucose.value;
-    // Short here so title, value and trend fit one line on a phone: "↓ -47" instead of "↓ -47 mg/dL / 15 min".
-    badge.querySelector("small").textContent = stale ? "" : glucose.trend.replace(/ mg\/dL \/ \d+ min$/, "").replace("Trend nicht verfügbar", "");
-  }
   document.dispatchEvent(new CustomEvent("glucose:update", { detail: glucose }));
 }
+
+// Full-screen views start below the top bar: its height as --topbar-h.
+function trackTopbarHeight() {
+  const bar = $(".topbar");
+  const set = () => document.documentElement.style.setProperty("--topbar-h", bar.getBoundingClientRect().height + "px");
+  set();
+  if (window.ResizeObserver) new ResizeObserver(set).observe(bar);
+}
+document.addEventListener("DOMContentLoaded", trackTopbarHeight);
 
 function validDay(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) return false;
@@ -1998,7 +2001,9 @@ function renderInbox(data) {
   // The header names new hints on every page, since the list itself sits in the diary.
   const badge = $("#inbox-badge");
   badge.hidden = !fresh.length;
-  badge.textContent = fresh.length + " zu erledigen";
+  // On phones only the number shows, so logo, glucose and inbox fit one line.
+  badge.innerHTML = fresh.length + '<span class="inbox-badge-label"> zu erledigen</span>';
+  badge.setAttribute("aria-label", fresh.length + " zu erledigen");
   $("#inbox-new").innerHTML = fresh.map(inboxItemHTML).join("");
   const folded = $("#inbox-seen");
   folded.hidden = !seen.length;
