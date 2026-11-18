@@ -1,13 +1,17 @@
-"use strict";
+// The classic page logic, moving screen by screen into Preact components in web/ui/ (AGENTS.md).
+// Shared helpers and the API call live in web/ui/lib.js.
+import { html, render } from "./ui/html.js";
+import "./ui/main.js";
+import { AnalysisView } from "./ui/analysis.js";
+import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
+import { MINUTE, names, CERTAINTY_LABELS, MEAL_FACTORS, sportKinds, sportNames, api, appUpdateWaiting, toast, num, factorNum,
+  signedChange, sportChange, timeOnly, signedPercent, minuteClock, clockMinute, localInputTime, toInstant, pickerMinimum,
+  trendSymbol, currentPosition } from "./ui/lib.js";
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", analysisTab: "werte", dayChosenAt: 0, settings: null, dayData: null, pendingMealId: null, pendingSportId: null, entryTimeTouched: false };
 const views = new Set(["diary", "analysis", "settings"]);
-const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
-const CERTAINTY_LABELS = { weighed: "KH sicher", known: "Halbwegs sicher", unsure: "KH unsicher" };
-// Meal factors picked on a carb entry; shown as icons wherever the meal or entry appears.
-const MEAL_FACTORS = { alcohol: "Alkohol", fat_protein: "Fettreich", fast: "Schnell" };
 
 function factorIconsHTML(marks) {
   const on = Object.keys(MEAL_FACTORS).filter(key => marks?.[key]);
@@ -21,74 +25,7 @@ function factorIconsHTML(marks) {
 const dishBadgeHTML = dish => dish ? '<span class="place-badge dish-badge" title="Gericht">' + escapeHTML(dish.name) + '</span>' : "";
 const placeBadgeHTML = place => place ? '<span class="place-badge" title="Ort">' + escapeHTML(place.name) + '</span>' : "";
 
-// The browser position for the place suggestion and for adding a spot to a place.
-function currentPosition() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) { reject({ code: 0 }); return; }
-    navigator.geolocation.getCurrentPosition(position => resolve({
-      lat: position.coords.latitude, lon: position.coords.longitude,
-      accuracy_m: Math.round(position.coords.accuracy), captured_at: new Date(position.timestamp).toISOString(),
-    }), reject, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
-  });
-}
-
-const osmLink = (lat, lon) => "https://www.openstreetmap.org/?mlat=" + lat + "&mlon=" + lon + "#map=18/" + lat + "/" + lon;
-
-const num = (value, digits = 2) => Number(value).toLocaleString("de-DE", { maximumFractionDigits: digits, minimumFractionDigits: 0 });
-const factorNum = value => Number(value).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
-const signedChange = (value, digits = 1) => value == null ? "—" : (Number(value) > 0 ? "+" : "") + num(value, digits) + " mg/dL";
-const glucoseChangeHTML = value => value == null ? '—' :
-  '<span class="glucose-change ' + (Number(value) > 0 ? 'rising' : Number(value) < 0 ? 'falling' : 'steady') + '">' +
-  escapeHTML(signedChange(value)) + '</span>';
-const sportKinds = ["jogging", "gym", "light_cardio", "racing"];
-const sportNames = { jogging: "Joggen", gym: "Gym", light_cardio: "Leichtes Cardio", racing: "Rennsport" };
-// The API stores a sport effect as glucose drop; the UI shows the signed glucose change.
-const sportChange = effect => -Number(effect || 0);
-const timeOnly = (value) => new Date(value).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
-// Keep an existing fractional value valid while number-input arrows use the requested step.
-function pickerMinimum(value, step, positive = false) {
-  const remainder = Number((((value % step) + step) % step).toFixed(2));
-  return positive && remainder === 0 ? step : remainder;
-}
-
-function setPickerBase(input, step, positive = false) {
-  const value = Number(input.value);
-  input.min = String(input.value && Number.isFinite(value)
-    ? pickerMinimum(value, step, positive) : positive ? step : 0);
-}
-
-const localInputTime = date => {
-  const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return d.toISOString().slice(0, 16);
-};
-
-const toInstant = (date, clock) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(clock)) throw new Error("Zeit bitte im 24-Stunden-Format HH:MM eingeben");
-  const parsed = new Date(date + "T" + clock + ":00");
-  if (!Number.isFinite(parsed.getTime()) || localInputTime(parsed) !== date + "T" + clock) throw new Error("Dieser lokale Zeitpunkt existiert nicht");
-  return parsed.toISOString();
-};
-
-// The app version the page was loaded with; a different one after a deploy reloads the page
-// the next time it comes back to the foreground with an empty entry form.
-let appVersion = null;
-let appUpdateWaiting = false;
-
-async function api(path, options = {}) {
-  const response = await fetch(path, { headers: { "Content-Type": "application/json" }, cache: "no-store", ...options });
-  const version = response.headers.get("X-App-Version");
-  if (version && !appVersion) appVersion = version;
-  else if (version && version !== appVersion) appUpdateWaiting = true;
-  const data = await response.json();
-  if (!response.ok) {
-    const error = new Error(data.error || "Anfrage fehlgeschlagen");
-    error.code = data.code || null;
-    throw error;
-  }
-  return data;
-}
-
 // Nothing typed and no dialog open: a reload loses nothing (the URL keeps view and tab).
 function entryFormIdle() {
   const form = $("#entry-form");
@@ -99,7 +36,7 @@ function entryFormIdle() {
 // Called when the page comes back to the foreground: a waiting update reloads at once when
 // nothing would be lost, otherwise the toast offers it.
 function reloadForUpdate() {
-  if (!appUpdateWaiting || document.hidden) return false;
+  if (!appUpdateWaiting() || document.hidden) return false;
   if (entryFormIdle()) {
     window.location.reload();
     return true;
@@ -109,29 +46,6 @@ function reloadForUpdate() {
     toast("Neue App-Version verfügbar", false, { label: "Neu laden", run: () => window.location.reload() });
   }
   return false;
-}
-
-let toastTimeout;
-// An optional action (e.g. "Rückgängig") adds a button and keeps the toast visible longer.
-function toast(message, error = false, action = null) {
-  const node = $("#toast");
-  node.textContent = message;
-  if (action) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "toast-action";
-    button.textContent = action.label;
-    button.addEventListener("click", () => {
-      node.classList.remove("visible", "has-action");
-      action.run();
-    }, { once: true });
-    node.append(" ", button);
-  }
-  node.classList.toggle("error", error);
-  node.classList.toggle("has-action", Boolean(action));
-  node.classList.add("visible");
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => node.classList.remove("visible", "has-action"), action ? 12000 : 4500);
 }
 
 const glucoseStatuses = new Set(["in_range", "outside", "low", "high", "stale", "no_target", "unavailable"]);
@@ -255,7 +169,7 @@ function view(name, options = {}) {
   });
   $$(".view").forEach(section => section.hidden = section.id !== name + "-view");
   if (changed && options.updateHistory !== false) updateLocation();
-  if (name === "analysis") loadSummary();
+  if (name === "analysis") refreshAnalysis();
   if (changed) releaseEntryTime();
   if (name === "diary") setDefaultMealTime();
   if (name === "settings" && changed) showSettingsPage(null);
@@ -263,16 +177,42 @@ function view(name, options = {}) {
   updateNav();
 }
 
-// Analysis sub-pages: values of the chosen period, or how the Automatik would have done.
+// Analysis (web/ui/analysis.js): mounted the first time it is opened; every opening, and every change
+// elsewhere that it shows, fetches the summary again.
+let analysisReload = 0;
+
+function renderAnalysis() {
+  if (!analysisReload) return;
+  render(html`<${AnalysisView} tab=${state.analysisTab} onTab=${analysisTab} reloadKey=${analysisReload}
+    getSettings=${() => state.settings} onSettings=${settings => { state.settings = settings; }}
+    onSettingsChanged=${loadSettings} onOpenMeal=${openMealDay} />`, $("#analysis-view"));
+}
+
+function refreshAnalysis() {
+  if (state.view !== "analysis") return;
+  analysisReload += 1;
+  renderAnalysis();
+}
+
+// Analysis sub-pages: values of the chosen period, how the Automatik would have done, the dishes.
 function analysisTab(name, options = {}) {
   const changed = state.analysisTab !== name;
   state.analysisTab = name;
-  $$("[data-analysis-tab]").forEach(button => button.setAttribute("aria-selected", String(button.dataset.analysisTab === name)));
-  $("#analysis-werte").hidden = name !== "werte";
-  $("#analysis-automatik").hidden = name !== "automatik";
-  $("#analysis-gerichte").hidden = name !== "gerichte";
-  if (name === "gerichte") loadDishes();
+  renderAnalysis();
   if (changed && options.updateHistory !== false) updateLocation(true);
+}
+
+// A meal is corrected on its day: the analysis row opens "Tag durchgehen" at that meal.
+async function openMealDay(day, mealId) {
+  state.day = day;
+  state.dayChosenAt = Date.now();
+  state.modeDay = state.day;
+  state.diaryMode = "review";
+  $("#selected-day").value = state.day;
+  setDefaultMealTime();
+  view("diary");
+  await loadDay();
+  $("#meal-" + CSS.escape(mealId))?.scrollIntoView({ block: "start" });
 }
 
 function changeDay(day, options = {}) {
@@ -435,192 +375,39 @@ async function saveReviewDayType(button) {
   }
 }
 
-async function saveVacation(event) {
-  const input = event.target;
-  input.disabled = true;
-  try {
-    const data = await api("/api/vacation", { method: "POST",
-      body: JSON.stringify({ active: input.checked, day: $("#vacation-day").value || null }) });
-    renderVacation(data);
-    toast(data.active ? "Urlaub aktiviert: jeder Tag zählt als frei" : "Urlaub beendet");
-    await loadDay();
-  } catch (error) {
-    input.checked = !input.checked;
-    toast(error.message, true);
-  } finally {
-    input.disabled = false;
-  }
-}
-
-async function loadNotifications() {
-  try {
-    renderNotifications(await api("/api/notifications"));
-  } catch (error) {
-    $("#notify-status").textContent = error.message;
-  }
-}
-
-function renderNotifications(data) {
-  $("#notify-status").textContent = data.configured
-    ? "Pushover ist eingerichtet."
-    : "Pushover ist nicht eingerichtet: PUSHOVER_APP_TOKEN und PUSHOVER_USER_KEY im Deployment setzen.";
-  $$(".notify-toggle").forEach(input => { input.checked = Boolean(data.enabled[input.dataset.kind]); });
-  $$(".notify-priority").forEach(select => {
-    select.replaceChildren(...data.priority_options.map(option => new Option("Stufe: " + option.label, String(option.value))));
-    select.value = String(data.priorities[select.dataset.kind]);
-  });
-  $("#notify-basal-hint").textContent = "Wenn bis " + data.basal_after + " (Frühstücksende) heute noch kein Basal erfasst ist.";
-  $("#notify-test").disabled = !data.configured;
-  const list = $("#notify-recent");
-  list.replaceChildren(...data.recent.map(item => {
-    const row = document.createElement("li");
-    row.textContent = new Date(item.sent_at).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })
-      + " · " + item.label + ": " + item.message;
-    return row;
-  }));
-}
-
-async function saveNotification(event) {
-  const input = event.target;
-  input.disabled = true;
-  try {
-    renderNotifications(await api("/api/notifications", {
-      method: "POST", body: JSON.stringify({ kind: input.dataset.kind, enabled: input.checked }),
-    }));
-  } catch (error) {
-    input.checked = !input.checked;
-    toast(error.message, true);
-  } finally {
-    input.disabled = false;
-  }
-}
-
-async function saveNotificationPriority(event) {
-  const select = event.target;
-  select.disabled = true;
-  try {
-    renderNotifications(await api("/api/notifications", {
-      method: "POST", body: JSON.stringify({ kind: select.dataset.kind, priority: Number(select.value) }),
-    }));
-  } catch (error) {
-    toast(error.message, true);
-    loadNotifications();
-  } finally {
-    select.disabled = false;
-  }
-}
-
-async function sendTestNotification(event) {
-  const button = event.currentTarget;
-  button.disabled = true;
-  try {
-    toast((await api("/api/notifications/test", { method: "POST", body: "{}" })).message);
-  } catch (error) {
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
-}
-
 // The zone the app calculates with right now (home or the latest travel switch, user request 2026-11-07).
 function appZone() {
   return state.travel?.current || state.settings?.timezone || "Europe/Berlin";
 }
 
-function deviceZone() {
-  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch { return null; }
-}
-
-function zoneOffsetMinutes(zone, at = new Date()) {
-  try {
-    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23",
-      year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
-      .formatToParts(at).map(part => [part.type, part.value]));
-    const wall = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute);
-    return Math.round((wall - Math.floor(at.getTime() / 60000) * 60000) / 60000);
-  } catch { return null; }
-}
-
-function zoneText(zone) {
-  const offset = zoneOffsetMinutes(zone);
-  if (offset == null) return zone;
-  const sign = offset < 0 ? "−" : "+";
-  const hours = Math.floor(Math.abs(offset) / 60), minutes = Math.abs(offset) % 60;
-  return zone + " (UTC" + sign + hours + (minutes ? ":" + String(minutes).padStart(2, "0") : "") + ")";
-}
-
-// The phone's clock differs from the app's: offer the switch in the diary and in settings.
-function deviceZoneDiffers() {
-  const device = deviceZone();
-  return Boolean(device && state.travel && zoneOffsetMinutes(device) !== zoneOffsetMinutes(appZone()));
-}
-
+// The diary's timezone banner: shown while the device's clock differs from the app's.
 function renderTimezone() {
   const travel = state.travel;
-  if (!travel) return;
-  const device = deviceZone();
-  const differs = deviceZoneDiffers();
-  const last = travel.switches?.[travel.switches.length - 1];
-  const since = last ? " seit " + new Date(last.at).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "";
-  $("#timezone-status").textContent = "Die App rechnet mit " + zoneText(travel.current) +
-    (travel.current !== travel.home ? since + ", Heimat ist " + zoneText(travel.home) : "") + "." +
-    (differs ? " Dein Gerät ist auf " + zoneText(device) + "." : "");
-  const deviceButton = $("#timezone-device");
-  deviceButton.hidden = !differs || device === travel.home;
-  deviceButton.textContent = "Auf Gerätezeit umstellen: " + (device || "");
-  deviceButton.dataset.zone = device || "";
-  const homeButton = $("#timezone-home");
-  homeButton.hidden = travel.current === travel.home;
-  homeButton.textContent = "Zurück auf Heimatzeit: " + travel.home;
-  $("#timezone-undo").hidden = !travel.switches?.length;
-  const input = $("#timezone-at");
-  const now = new Date();
-  input.max = localInputTime(now);
-  input.min = localInputTime(new Date(now.getTime() - (travel.backdate_days ?? 14) * 24 * 60 * MINUTE));
   const banner = $("#timezone-banner");
+  const differs = deviceZoneDiffers(travel);
   banner.hidden = !differs;
-  if (differs) {
-    banner.innerHTML = "Dein Gerät zeigt " + escapeHTML(zoneText(device)) + ", die App rechnet noch mit " +
-      escapeHTML(zoneText(travel.current)) + " (Mahlzeiten, Korrekturfaktor, Warnzeiten). " +
-      '<button type="button" class="banner-action" data-timezone-switch="' + escapeHTML(device) + '">Auf ' +
-      escapeHTML(device) + " umstellen</button>";
-  }
+  if (!differs) return;
+  const device = deviceZone();
+  banner.innerHTML = "Dein Gerät zeigt " + escapeHTML(zoneText(device)) + ", die App rechnet noch mit " +
+    escapeHTML(zoneText(travel.current)) + " (Mahlzeiten, Korrekturfaktor, Warnzeiten). " +
+    '<button type="button" class="banner-action" data-timezone-switch="' + escapeHTML(device) + '">Auf ' +
+    escapeHTML(device) + " umstellen</button>";
 }
 
+// Switches the zone the app calculates with (settings or the banner); true when it worked.
 async function switchTimezone(payload) {
-  const buttons = $$("#timezone-device, #timezone-home, #timezone-undo, [data-timezone-switch]");
-  buttons.forEach(item => { item.disabled = true; });
   try {
-    const at = $("#timezone-at").value;
-    if (at && !payload.undo) payload.at = new Date(at).toISOString();
     state.travel = await api("/api/timezone", { method: "POST", body: JSON.stringify(payload) });
-    $("#timezone-at").value = "";
+    if (state.settingsData) state.settingsData = { ...state.settingsData, travel: state.travel };
     renderTimezone();
+    renderSettings();
     toast(payload.undo ? "Zeitzonen-Wechsel zurückgenommen" : "Die App rechnet jetzt mit " + state.travel.current);
     if (todayDay() !== state.day) changeDay(todayDay()); else await loadDay();
+    return true;
   } catch (error) {
     toast(error.message, true);
-  } finally {
-    buttons.forEach(item => { item.disabled = false; });
+    return false;
   }
-}
-
-function renderVacation(vacation) {
-  const dateText = day => new Date(day + "T12:00").toLocaleDateString("de-DE");
-  $("#vacation-toggle").checked = Boolean(vacation?.active);
-  $("#vacation-day-label").textContent = vacation?.active ? "Erster Tag zurück" : "Erster Urlaubstag";
-  const input = $("#vacation-day");
-  const today = todayDay();
-  const earliest = new Date(today + "T12:00");
-  earliest.setDate(earliest.getDate() - (vacation?.backdate_days ?? 14));
-  input.max = today;
-  input.min = earliest.toLocaleDateString("sv-SE");
-  input.value = today;
-  const past = (vacation?.periods || []).filter(period => period.end_day)
-    .map(period => dateText(period.start_day) + "–" + dateText(period.end_day));
-  $("#vacation-status").textContent = (vacation?.active
-    ? "Aktiv seit " + dateText(vacation.since) + ". Jeder Tag zählt als frei, Mahlzeiten sind als Urlaub markiert."
-    : "Mo–Fr zählt als Arbeitstag.") + (past.length ? " Frühere Urlaube: " + past.join(", ") + "." : "");
 }
 
 function setDefaultSportTime() {}
@@ -788,15 +575,6 @@ function setSportEffectDefault() {
   form.elements.sport_effect_mgdl.value = sportChange(effects[form.elements.sport_kind.value]);
 }
 
-function minuteClock(minute) {
-  return String(Math.floor(minute / 60)).padStart(2, "0") + ":" + String(minute % 60).padStart(2, "0");
-}
-
-function clockMinute(value) {
-  const [hours, minutes] = value.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
 function updateEntryFields() {
   const form = $("#entry-form");
   const mode = form.elements.kind.value;
@@ -823,225 +601,35 @@ function updateEntryFields() {
   schedulePreview(0);
 }
 
+// Settings (web/ui/settings.js) render from /api/settings; the rest of the page reads state.settings
+// (dose defaults, sport effects) and state.travel (the zone the app calculates with).
+let settingsLoads = 0;
+
 async function loadSettings() {
   const data = await api("/api/settings");
   state.settings = data.settings;
+  state.settingsData = data;
+  state.travel = data.travel || null;
+  settingsLoads += 1;
   $("#connection").textContent = data.connected ? "" : "Nightscout einrichten";
   $("#connection").hidden = data.connected;
-  $("#nightscout-location").hidden = data.connected;
-  $("#nightscout-location").textContent = data.connected ? "" : "NIGHTSCOUT_URL und NIGHTSCOUT_CREDENTIAL setzen";
-  $("#settings-version").textContent = "Einstellungsversion " + data.version;
-  $("#logout-form").hidden = !data.login_required;
-  const form = $("#settings-form");
-  form.elements.window_minutes.value = data.settings.window_minutes;
-  form.elements.dose_target_mgdl.value = data.settings.dose_target_mgdl;
-  form.elements.dose_cautious_target_mgdl.value = data.settings.dose_cautious_target_mgdl;
-  form.elements.dose_low_target_mgdl.value = data.settings.dose_low_target_mgdl ?? 100;
-  form.elements.auto_method.value = data.settings.auto_method || "percentile";
-  form.elements.auto_percentile.value = data.settings.auto_percentile;
-  form.elements.auto_lookback_days.value = String(data.settings.auto_lookback_days);
-  form.elements.auto_half_life_days.value = data.settings.auto_half_life_days;
-  form.elements.auto_surcharge_mgdl.value = data.settings.auto_surcharge_mgdl ?? 40;
-  form.elements.auto_fat_surcharge_mgdl.value = data.settings.auto_fat_surcharge_mgdl ?? 120;
-  form.elements.auto_vacation.value = data.settings.auto_vacation || "separate";
-  form.elements.basal_default_units.value = data.settings.basal_default_units ?? 17;
-  form.elements.split_min_grams.value = data.settings.split_min_grams ?? 80;
-  form.elements.split_min_units.value = data.settings.split_min_units ?? 6.5;
-  form.elements.split_first_percent.value = data.settings.split_first_percent ?? 60;
-  form.elements.split_delay_minutes.value = data.settings.split_delay_minutes ?? 120;
-  form.elements.breakfast_end.value = minuteClock(data.settings.breakfast_end_minute);
-  form.elements.lunch_end.value = minuteClock(data.settings.lunch_end_minute);
-  form.elements.sport_lookback_minutes.value = data.settings.sport_lookback_minutes;
-  for (const kind of sportKinds) {
-    form.elements["sport_" + kind].value = sportChange(data.settings.sport_effects_mgdl[kind]);
-    form.elements["sport_minutes_" + kind].value = data.settings.sport_durations_minutes?.[kind] ?? 300;
-  }
-  renderIsfRows(data.settings.isf_schedule, data.settings.nightscout_profile, data.profile_sync_at, data.profile_sync_error);
-  renderIcRows(data.settings.ic_schedule || []);
-  renderTargetRows(data.settings.target_schedule || []);
-  renderVacation(data.vacation);
-  state.travel = data.travel || null;
   renderTimezone();
-  await loadNotifications();
-  renderPlaces(await api("/api/places"));
+  renderSettings();
   await loadAgent();
 }
 
-// Place management: chips with the spots Philipp defines, and the fallback place for anywhere else.
-function spotHTML(spot, index) {
-  return '<li class="place-spot"><a href="' + osmLink(spot.lat, spot.lon) + '" target="_blank" rel="noopener">Standort ' +
-    (index + 1) + '</a>' +
-    '<button type="button" class="quiet" data-place-action="delete_spot" data-spot-id="' + spot.id + '">Entfernen</button></li>';
+function renderSettings() {
+  if (!state.settingsData) return;
+  render(html`<${SettingsView} data=${state.settingsData} loadCount=${settingsLoads} page=${state.settingsPage || null}
+    onPage=${showSettingsPage} today=${todayDay()} agentInfo=${agent.info}
+    onAgentInfo=${info => { agent.info = info; renderSettings(); updateEntryAgent(); }}
+    onReload=${async ({ day }) => { await loadSettings(); if (day) await loadDay(); }}
+    onSwitchZone=${switchTimezone}
+    onVacation=${async vacation => { state.settingsData = { ...state.settingsData, vacation }; renderSettings(); await loadDay(); }}
+    onPlacesChanged=${() => { if (state.dayData) loadDay(); schedulePreview(0); }}
+    onProfileSaved=${refreshAnalysis} />`, $("#settings-view"));
 }
 
-function renderPlaces(data) {
-  state.places = data;
-  $("#places-list").innerHTML = data.places.length ? data.places.map(place =>
-    '<div class="place-item" data-place-id="' + place.id + '"><div class="place-head">' +
-    '<input type="text" class="place-name" maxlength="40" value="' + escapeHTML(place.name) + '" aria-label="Name des Orts">' +
-    '<span class="hint">' + place.count + (place.count === 1 ? ' Eintrag' : ' Einträge') + '</span>' +
-    '<label class="check-label place-quick"><input type="checkbox" class="place-quick-toggle"' + (place.quick ? ' checked' : '') +
-    '> Schnellauswahl</label>' +
-    '<label class="check-label place-quick"><input type="checkbox" class="place-fallback-toggle"' + (place.fallback ? ' checked' : '') +
-    '> Standard woanders</label>' +
-    '<label class="check-label place-quick"><input type="checkbox" class="place-adjust-toggle"' + (place.adjust ? ' checked' : '') +
-    '> Ortsfaktor</label>' +
-    '<button type="button" class="quiet delete-treatment" data-place-action="delete" data-place-id="' + place.id + '">Löschen</button></div>' +
-    (place.adjust ? '<p class="hint">' + (place.factor?.scale != null
-      ? 'Ortsfaktor ' + signedPercent(place.factor.scale) + ' auf Faktor und Zuschlag, aus ' + place.factor.count + ' Hauptmahlzeiten der letzten ' + place.factor.days + ' Tage.'
-      : 'Ortsfaktor ab ' + (place.factor?.min_meals ?? 3) + ' Hauptmahlzeiten hier in den letzten ' + (place.factor?.days ?? 60) + ' Tagen (bisher ' + (place.factor?.count ?? 0) + ').') + '</p>' : '') +
-    (place.spots.length ? '<ul class="place-spots">' + place.spots.map((spot, index) => spotHTML(spot, index)).join("") + '</ul>'
-      : '<p class="hint">' + (place.fallback ? 'Vorausgewählt, wenn du an keinem Standort bist.' : 'Ohne Standort: nur von Hand wählbar.') + '</p>') +
-    '<div class="place-coords"><button type="button" class="quiet" data-place-action="here" data-place-id="' + place.id + '">+ Aktueller Standort</button>' +
-    '<input type="text" class="place-coords-input" inputmode="decimal" placeholder="oder Koordinaten: 49.0069, 8.4037" aria-label="Koordinaten des Standorts">' +
-    '<button type="button" class="quiet" data-place-action="coords" data-place-id="' + place.id + '">Hinzufügen</button></div></div>'
-  ).join("") : '<p class="hint">Noch keine Orte.</p>';
-}
-
-async function placeAction(body) {
-  try {
-    renderPlaces(await api("/api/places", { method: "POST", body: JSON.stringify(body) }));
-    if (state.dayData) loadDay();
-    schedulePreview(0);
-    return true;
-  } catch (error) {
-    toast(error.message, true);
-    return false;
-  }
-}
-
-async function placeClick(event) {
-  const button = event.target.closest("[data-place-action]");
-  if (!button) return;
-  const action = button.dataset.placeAction;
-  if (action === "delete") {
-    const name = button.closest(".place-item").querySelector(".place-name").value;
-    if (!confirm("Ort „" + name + "“ löschen? Seine Einträge verlieren den Ort.")) return;
-    await placeAction({ action, id: button.dataset.placeId });
-  } else if (action === "delete_spot") {
-    await placeAction({ action, spot_id: button.dataset.spotId });
-  } else if (action === "here") {
-    button.disabled = true;
-    try {
-      const position = await currentPosition();
-      if (position.accuracy_m > state.places.max_accuracy_m)
-        throw new Error("Standort zu ungenau (± " + position.accuracy_m + " m). Bitte draußen oder mit WLAN erneut versuchen.");
-      await placeAction({ action: "add_spot", place_id: button.dataset.placeId, lat: position.lat, lon: position.lon });
-    } catch (error) {
-      toast(error?.code === 1 ? "Standort nicht freigegeben" : error?.message || "Standort nicht ermittelt", true);
-    } finally {
-      button.disabled = false;
-    }
-  } else if (action === "coords") {
-    const input = $(".place-coords-input", button.closest(".place-item"));
-    if (await placeAction({ action: "add_spot", place_id: button.dataset.placeId, coordinates: input.value })) input.value = "";
-  }
-}
-
-async function placeChange(event) {
-  if (event.target.matches(".place-name")) {
-    await placeAction({ action: "rename", id: event.target.closest(".place-item").dataset.placeId, name: event.target.value });
-  } else if (event.target.matches(".place-quick-toggle")) {
-    await placeAction({ action: "quick", id: event.target.closest(".place-item").dataset.placeId, quick: event.target.checked });
-  } else if (event.target.matches(".place-adjust-toggle")) {
-    await placeAction({ action: "adjust", id: event.target.closest(".place-item").dataset.placeId, adjust: event.target.checked });
-  } else if (event.target.matches(".place-fallback-toggle")) {
-    await placeAction({ action: "fallback", id: event.target.closest(".place-item").dataset.placeId, fallback: event.target.checked });
-  }
-}
-
-function renderTargetRows(rows) {
-  $("#target-rows").innerHTML = rows.length
-    ? '<div class="isf-table"><div class="isf-table-head"><span>Ab</span><span>Zielbereich</span></div>' +
-      rows.map(row => '<div class="isf-readonly-row"><span>' +
-        escapeHTML(minuteClock(Number(row.start_minute))) + '</span><strong>' +
-        escapeHTML(num(row.low_mgdl, 0)) + '–' + escapeHTML(num(row.high_mgdl, 0)) +
-        ' mg/dL</strong></div>').join("") + '</div>'
-    : '<p class="hint">Kein Zielbereich im aktuellen Nightscout-Profil verfügbar.</p>';
-}
-
-function renderIcRows(rows) {
-  const list = $("#ic-rows");
-  if (!rows.length) {
-    list.innerHTML = '<p class="hint">Kein I:C-Zeitplan aus Nightscout verfügbar.</p>';
-    $("#save-ic").disabled = true;
-    return;
-  }
-  $("#save-ic").disabled = false;
-  list.innerHTML = '<div class="isf-table"><div class="isf-table-head"><span>Ab</span><span>Insulinfaktor (IE/KE)</span></div>' +
-    rows.map(row => {
-      const start = Number(row.start_minute);
-      const time = String(Math.floor(start / 60)).padStart(2, "0") + ':' + String(start % 60).padStart(2, "0");
-      const display = Number((10 / Number(row.grams_per_unit)).toFixed(2));
-      return '<label class="ic-row"><span>' + time + '</span><input type="number" min="' + escapeHTML(pickerMinimum(display, 0.1, true)) + '" max="1000" step="0.1" required data-start-minute="' +
-        escapeHTML(start) + '" data-grams-per-unit="' + escapeHTML(row.grams_per_unit) +
-        '" data-original-display="' + escapeHTML(display) + '" value="' + escapeHTML(display) +
-        '" aria-label="Insulinfaktor ab ' + time + ' in IE je KE"></label>';
-    }).join("") + '</div>';
-}
-
-function icScheduleRow(input) {
-  const start_minute = Number(input.dataset.startMinute);
-  return Number(input.value) === Number(input.dataset.originalDisplay)
-    ? { start_minute, grams_per_unit: input.dataset.gramsPerUnit }
-    : { start_minute, units_per_ke: input.value };
-}
-
-async function saveProfileSchedule(kind) {
-  const isIc = kind === "ic";
-  const button = $(isIc ? "#save-ic" : "#save-isf");
-  const inputs = $$(isIc ? "#ic-rows input" : "#isf-rows input");
-  const status = $(isIc ? "#ic-status" : "#isf-sync-status");
-  const key = isIc ? "units_per_ke" : "mgdl_per_unit";
-  if (button.disabled) return;
-  if (!inputs.every(input => input.reportValidity())) return;
-  button.disabled = true;
-  status.textContent = "Profil-Zeitplan wird in Nightscout gespeichert …";
-  try {
-    const result = await api("/api/profile/" + kind, { method: "POST", body: JSON.stringify({
-      profile_id: state.settings.nightscout_profile.profile_id,
-      [isIc ? "ic_schedule" : "isf_schedule"]: inputs.map(input => isIc
-        ? icScheduleRow(input)
-        : { start_minute: Number(input.dataset.startMinute), [key]: input.value }),
-    }) });
-    await loadSettings();
-    if (state.view === "analysis") await loadSummary();
-    status.textContent = result.message;
-    toast(result.message);
-  } catch (error) {
-    status.textContent = error.message;
-    toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
-}
-
-function renderIsfRows(rows, profile, syncedAt, syncError) {
-  const list = $("#isf-rows");
-  if (!rows.length) {
-    list.innerHTML = '<p class="hint">Kein Korrekturfaktor-Profil aus Nightscout im lokalen Cache.</p>';
-    $("#save-isf").disabled = true;
-  } else {
-    $("#save-isf").disabled = false;
-    list.innerHTML = '<div class="isf-table"><div class="isf-table-head"><span>Ab</span><span>Korrekturfaktor</span></div>' +
-      rows.map(row => {
-        const start = Number(row.start_minute);
-        const hh = String(Math.floor(start / 60)).padStart(2, "0");
-        const mm = String(start % 60).padStart(2, "0");
-        return '<label class="ic-row"><span>' + hh + ':' + mm + '</span><input type="number" min="0.001" max="1000" step="any" required data-start-minute="' +
-          escapeHTML(start) + '" value="' + escapeHTML(row.mgdl_per_unit) + '" aria-label="Korrekturfaktor ab ' + hh + ':' + mm + ' in mg/dL je IE"></label>';
-      }).join("") + '</div>';
-  }
-  const source = profile
-    ? 'Profil „' + escapeHTML(profile.profile_name) + '“ · gültig ab ' +
-      escapeHTML(new Date(profile.start_at).toLocaleString("de-DE")) +
-      (profile.timezone ? ' · ' + escapeHTML(profile.timezone) : '')
-    : 'Nightscout-Profil nicht verfügbar.';
-  const synced = syncedAt ? ' · zuletzt synchronisiert ' + escapeHTML(new Date(syncedAt).toLocaleString("de-DE")) : '';
-  $("#isf-sync-status").textContent = (syncError ? syncError + ' · ' : '') + source + synced;
-}
-
-const MINUTE = 60000;
 // The server's limits for a manual meal window, in milliseconds.
 function windowLimits() {
   const limits = state.dayData?.window_limits || { lead_minutes: 120, lag_minutes: 120, min_minutes: 30, max_minutes: 600 };
@@ -1061,12 +649,6 @@ let windowEditor = null;
 function glucosePoints(entries) {
   return entries.map(point => ({ t: new Date(point.at).getTime(), g: Number(point.sgv), tone: point.tone }))
     .filter(point => Number.isFinite(point.g)).sort((a, b) => a.t - b.t);
-}
-
-const trendSymbols = { up_fast: "↑", up: "↗", flat: "→", down: "↘", down_fast: "↓" };
-
-function trendSymbol(direction) {
-  return trendSymbols[direction] || "";
 }
 
 // The server sends each meal's counted window and the CGM value at both ends.
@@ -1751,7 +1333,7 @@ async function saveWindow(reset = false) {
     $("#window-dialog").close();
     toast(body.reset ? "Standardzeitraum wiederhergestellt" : "Zeitraum gespeichert");
     await loadDay();
-    if (state.view === "analysis") await loadSummary();
+    refreshAnalysis();
   } catch (error) {
     toast(error.message, true);
   } finally {
@@ -2419,14 +2001,6 @@ function doseHelpHTML(data, changed = {}) {
     (data.reason ? '<p class="hint">' + escapeHTML(data.reason) + '</p>' : '');
 }
 
-const mealNames = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
-
-// A place factor as a signed percentage: 0.85 -> "−15 %".
-function signedPercent(scale) {
-  const value = Math.round((Number(scale) - 1) * 100);
-  return (value > 0 ? "+" : value < 0 ? "−" : "±") + Math.abs(value) + " %";
-}
-
 // The factor all suggestions use; a stand-in is named while Automatik lacks meals.
 function factorLine(data) {
   if (data.units_per_ke == null) return "";
@@ -2572,7 +2146,7 @@ async function finishEdit(day, message, refreshed = null) {
   if (refreshed) renderDay(refreshed);
   else await loadDay();
   await updatePreview();
-  if (state.view === "analysis") await loadSummary();
+  refreshAnalysis();
   closeEditDialog();
   toast(message);
 }
@@ -2796,7 +2370,7 @@ async function saveSportMark(event) {
     }) });
     toast(status === "unaffected" ? "Kein Sporteinfluss vermerkt" : status === "auto" ? "Sport wieder automatisch" : "Sporteinfluss gespeichert");
     await loadDay();
-    if (state.view === "analysis") await loadSummary();
+    refreshAnalysis();
   } catch (error) {
     toast(error.message, true);
   } finally {
@@ -2822,507 +2396,9 @@ async function saveSportSession(button) {
       : { id: block.dataset.id, day: block.dataset.day, effect_mgdl: sportChange(amount) }) });
     toast(reset ? "Sporteinfluss wieder Standard" : "Sporteinfluss gespeichert");
     await loadDay();
-    if (state.view === "analysis") await loadSummary();
+    refreshAnalysis();
   } catch (error) {
     toast(error.message, true);
-  } finally {
-    button.disabled = false;
-  }
-}
-
-async function saveSettings(event) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const payload = {
-    window_minutes: Number(form.elements.window_minutes.value),
-    dose_target_mgdl: form.elements.dose_target_mgdl.value,
-    dose_cautious_target_mgdl: form.elements.dose_cautious_target_mgdl.value,
-    dose_low_target_mgdl: form.elements.dose_low_target_mgdl.value,
-    auto_method: form.elements.auto_method.value,
-    auto_percentile: form.elements.auto_percentile.value,
-    auto_lookback_days: Number(form.elements.auto_lookback_days.value),
-    auto_half_life_days: form.elements.auto_half_life_days.value,
-    auto_surcharge_mgdl: form.elements.auto_surcharge_mgdl.value,
-    auto_fat_surcharge_mgdl: form.elements.auto_fat_surcharge_mgdl.value,
-    auto_vacation: form.elements.auto_vacation.value,
-    basal_default_units: form.elements.basal_default_units.value,
-    split_min_grams: Number(form.elements.split_min_grams.value),
-    split_min_units: Number(form.elements.split_min_units.value),
-    split_first_percent: Number(form.elements.split_first_percent.value),
-    split_delay_minutes: Number(form.elements.split_delay_minutes.value),
-    breakfast_end_minute: clockMinute(form.elements.breakfast_end.value),
-    lunch_end_minute: clockMinute(form.elements.lunch_end.value),
-    sport_lookback_minutes: Number(form.elements.sport_lookback_minutes.value),
-    sport_effects_mgdl: Object.fromEntries(sportKinds
-      .map(kind => [kind, sportChange(form.elements["sport_" + kind].value)])),
-    sport_durations_minutes: Object.fromEntries(sportKinds
-      .map(kind => [kind, Number(form.elements["sport_minutes_" + kind].value)])),
-    effective_at: form.elements.effective_date.value ? toInstant(form.elements.effective_date.value, form.elements.effective_time.value || "00:00") : null,
-  };
-  try {
-    await api("/api/settings", { method: "POST", body: JSON.stringify(payload) });
-    toast("Einstellungen gespeichert");
-    await loadSettings();
-    await loadDay();
-  } catch (error) {
-    toast(error.message, true);
-  }
-}
-
-function renderNightSummary(night) {
-  const metrics = [
-    ["Startwert", "median_start_glucose"],
-    ["Endwert", "median_end_glucose"],
-    ["Veränderung", "median_delta_mgdl"],
-    ["Minimalwert", "median_minimum_glucose"],
-  ];
-  $("#night-summary-count").textContent = night.count + " von " +
-    (night.count + night.unavailable_count) + " Nächten mit vollständigen Werten";
-  $("#night-summary-cards").innerHTML = metrics.map(([label, key]) =>
-    '<div class="summary-card"><span>' + label + ' · Median</span><strong>' +
-    (night[key] == null ? '—' : label === "Veränderung" ? escapeHTML(signedChange(night[key])) : escapeHTML(num(night[key], 1)) + ' <small>mg/dL</small>') +
-    '</strong></div>'
-  ).join("");
-  const cell = (value, at) => value == null ? '—' : escapeHTML(num(value, 1)) + ' mg/dL' +
-    (at ? '<small class="night-error">' + escapeHTML(timeOnly(at)) + ' Uhr</small>' : '');
-  const rows = night.nights.map(item => {
-    const label = new Date(item.day + "T12:00:00").toLocaleDateString("de-DE", {
-      weekday: "short", day: "numeric", month: "short",
-    });
-    const reason = item.reason
-      ? '<small class="night-error">' + escapeHTML(item.reason) + '</small>' : '';
-    return '<tr><td>' + escapeHTML(label) + reason + '</td><td>' +
-      cell(item.start_glucose, item.start) + '</td><td>' + cell(item.end_glucose, item.end) +
-      '</td><td>' + escapeHTML(signedChange(item.delta_mgdl)) + '</td><td>' + cell(item.minimum_glucose, item.minimum_at) + '</td></tr>';
-  }).join("");
-  $("#night-records").innerHTML = rows
-    ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Nacht</th><th>Startwert</th><th>Endwert</th><th>Veränderung</th><th>Minimalwert</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
-    : '<div class="empty">Für diesen Zeitraum liegen keine Nächte vor.</div>';
-}
-
-function renderSportAnalysis(analysis) {
-  const sessions = analysis?.sessions || [];
-  const kinds = analysis?.kinds || [];
-  $("#sport-analysis-count").textContent = sessions.length + (sessions.length === 1 ? " Einheit" : " Einheiten");
-  $("#sport-analysis-kinds").innerHTML = kinds.map(group =>
-    '<div class="summary-card"><span class="meal-type">' + escapeHTML(group.label) + '</span>' +
-    '<div class="summary-primary"><span>Median Sportwirkung</span><strong>' +
-    (group.median_effect_mgdl == null ? '—' : glucoseChangeHTML(group.median_effect_mgdl)) + '</strong></div>' +
-    (group.effect_count > 1 ? '<p>Spanne ' + escapeHTML(signedChange(group.min_effect_mgdl)) + ' bis ' +
-      escapeHTML(signedChange(group.max_effect_mgdl)) + '</p>' : '') +
-    '<p>' + group.session_count + (group.session_count === 1 ? ' Einheit' : ' Einheiten') + ' · ' +
-    group.effect_count + ' von ' + group.meal_count + (group.meal_count === 1 ? ' Mahlzeit' : ' Mahlzeiten') + ' auswertbar</p></div>'
-  ).join("");
-  const dateTime = value => new Date(value).toLocaleString("de-DE", {
-    weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-  const period = session => session.end
-    ? escapeHTML(dateTime(session.start)) + '–' + escapeHTML(timeOnly(session.end)) +
-      ' <small>(' + escapeHTML(session.duration_minutes) + ' min)</small>'
-    : '—';
-  const mealCells = meal => {
-    if (!meal) return '<td colspan="6"><span class="hint">Keine Mahlzeit im Einflussbereich (' +
-      escapeHTML(analysis.lookback_minutes) + ' min davor bis Mahlzeitende)</span></td>';
-    const baseline = meal.baseline_units_per_ke == null ? '' :
-      '<br><small>Vergleich ' + escapeHTML(factorNum(meal.baseline_units_per_ke)) + ' IE/KE</small>';
-    const effect = meal.effect_mgdl == null
-      ? '<span class="summary-unavailable">' + escapeHTML(meal.reason || "Nicht berechenbar") + '</span>'
-      : '<b>' + glucoseChangeHTML(meal.effect_mgdl) + '</b>' +
-        (meal.shared ? ' <span class="outlier-badge">Mehrere Einheiten</span>' : '') +
-        (meal.excluded ? ' <span class="outlier-badge">Ausgeklammert</span>' : '');
-    return '<td>' + escapeHTML(names[meal.meal]) + '<br><small>' + escapeHTML(dateTime(meal.start)) + '–' +
-      escapeHTML(timeOnly(meal.end)) + '</small></td>' +
-      '<td>' + (meal.factor_without_sport_units_per_ke == null ? '—' :
-        escapeHTML(factorNum(meal.factor_without_sport_units_per_ke)) + ' IE/KE') + baseline + '</td>' +
-      '<td>' + glucoseChangeHTML(meal.delta_mgdl) + '</td>' +
-      '<td>' + glucoseChangeHTML(meal.expected_delta_mgdl) + '</td>' +
-      '<td>' + effect + '</td>' +
-      '<td>' + (meal.confirmed_effect_mgdl == null ? '—' : escapeHTML(signedChange(-Number(meal.confirmed_effect_mgdl), 0))) + '</td>';
-  };
-  $("#sport-analysis-sessions").innerHTML = sessions.length
-    ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Sport</th><th>Zeitraum</th><th>Mahlzeit</th><th>Faktor ohne Sport</th><th>Gemessen</th><th>Erwartet ohne Sport</th><th>Sportwirkung</th><th>Bestätigt</th></tr></thead><tbody>' +
-      sessions.flatMap(session => (session.meals.length ? session.meals : [null]).map(meal =>
-        '<tr><td><b>' + escapeHTML(session.label) + '</b>' +
-        (session.notes ? '<br><small>' + escapeHTML(session.notes) + '</small>' : '') + '</td>' +
-        '<td>' + period(session) + '</td>' + mealCells(meal) + '</tr>')).join("") +
-      '</tbody></table></div>'
-    : '<div class="empty">Im Zeitraum sind keine Sport- oder Rennsport-Einträge im lokalen Datenbestand.</div>';
-}
-
-// Backtest matrix: where the endpoint glucose would have landed with each lookback,
-// weighting strength (half-life) and percentile.
-function renderSuggestionDerivation(d) {
-  const output = $("#suggestion-derivation");
-  if (!d) { output.innerHTML = ""; return; }
-  $("#suggestion-method").textContent = "Aktiv: " + d.lookback_days + " T. · Halbwertszeit " + num(d.half_life_days, 1) +
-    " T. · " + num(d.percentile, 1) + " %" + (d.method === "surcharge" ? " + Zuschlag" : "");
-  const low = Number(d.glucose_low_mgdl), high = Number(d.glucose_high_mgdl);
-  const variants = d.variants || [];
-  const percentiles = variants.length ? variants[0].cells.map(cell => cell.percentile) : [];
-  const total = variants.length ? variants[0].cells[0].stats.glucose_count : 0;
-  // The server marks the active cell and the best cells (per lookback period and overall).
-  const strength = days => { const diff = Number(days) - 7; return num(days, 1) + ' T.' + (diff < 0 ? ' <small>stärker</small>' : diff > 0 ? ' <small>schwächer</small>' : ''); };
-  const cellHTML = (variant, cell) => {
-    const [below, inRange, above] = ["below", "in_range", "above"].map(key => Number(cell.shares[key]));
-    const active = cell.active;
-    const isBest = cell.best === "overall";
-    const isPeriodBest = Boolean(cell.best);
-    const bar = '<svg class="range-bar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">' +
-      '<rect class="range-low" x="0" width="' + below.toFixed(2) + '" height="8"/>' +
-      '<rect class="range-ok" x="' + below.toFixed(2) + '" width="' + inRange.toFixed(2) + '" height="8"/>' +
-      '<rect class="range-high" x="' + (below + inRange).toFixed(2) + '" width="' + above.toFixed(2) + '" height="8"/></svg>';
-    const notes = [isBest ? 'bestes gesamt' : isPeriodBest ? 'bestes ' + variant.lookback_days + ' T.' : '',
-      cell.stats.median_abs_deviation == null ? '' : '±' + num(Number(cell.stats.median_abs_deviation) * 100, 0) + ' %'];
-    return '<td class="matrix-cell' + (active ? ' is-active' : '') + (isPeriodBest ? ' is-best' : '') + (isBest ? ' is-overall-best' : '') + '">' +
-      (active ? '<span class="active-badge">Aktiv</span>' : '') + bar +
-      '<span class="range-nums"><span class="range-low">' + num(below, 0) + '</span> · <b class="range-ok">' + num(inRange, 0) +
-      ' %</b> · <span class="range-high">' + num(above, 0) + '</span></span>' +
-      (cell.stats.mean_glucose == null ? '' : '<span class="range-glucose">Ø ' + num(cell.stats.mean_glucose, 0) +
-        ' · Median ' + num(cell.stats.median_glucose, 0) + ' mg/dL</span>') + '<small>' +
-      escapeHTML(notes.filter(Boolean).join(' · ')) + '</small></td>';
-  };
-  const rows = variants.map((variant, index) => {
-    const first = index === 0 || variants[index - 1].lookback_days !== variant.lookback_days;
-    return '<tr' + (first ? ' class="matrix-group"' : '') + '><td>' + (first ? escapeHTML(variant.lookback_days + ' Tage') : '') +
-      '</td><td>' + strength(variant.half_life_days) + '</td>' + variant.cells.map(cell => cellHTML(variant, cell)).join("") + '</tr>';
-  });
-  const legend = '<p class="hint derivation-note range-legend"><span class="range-low">■ &lt; ' + num(low, 0) + '</span> ' +
-    '<span class="range-ok">■ ' + num(low, 0) + '–' + num(high, 0) + '</span> <span class="range-high">■ &gt; ' + num(high, 0) +
-    '</span> · Anteil der Mahlzeiten mit BZ am Endpunkt in diesem Bereich, darunter Durchschnitt und Median dieses BZ, dazu typische Abweichung des Faktors. ' +
-    'Grün umrandet: bestes Feld je Zeitraum (meiste im Bereich, dann wenigste unter ' + num(low, 0) + '), kräftig: bestes gesamt. Dunkel umrandet mit „Aktiv“: deine Einstellung.</p>';
-  output.innerHTML = total
-    ? legend + '<div class="table-wrap"><table class="analysis-table compact matrix"><thead><tr><th>Zeitraum</th><th>Halbwertszeit</th>' +
-      percentiles.map(value => '<th>' + (value === "surcharge" ? escapeHTML(num(d.percentile, 1)) + ' % + Zuschlag <small>' + num(d.surcharge_mgdl, 0) + ' mg/dL je Mahlzeit</small>'
-        : escapeHTML(num(value, 1)) + ' %' + (Number(value) === 50 ? ' <small>Median</small>' : '')) + '</th>').join("") +
-      '</tr></thead><tbody>' + rows.join("") + '</tbody></table></div>' +
-      '<p class="hint derivation-note">Getestet werden dieselben ' + total + (total === 1 ? ' Mahlzeit' : ' Mahlzeiten') +
-      ' der letzten ' + d.backtest_days + ' Tage für alle Felder, unabhängig vom Zeitraum unter „Werte“. Jede Mahlzeit bekommt den Vorschlag, ' +
-      'den das Feld aus den Tagen davor berechnet hätte; gezeigt wird der BZ am Endpunkt mit diesem Faktor bei Korrektur auf den Zielwert (Modellrechnung: Ziel + (tatsächlicher − vorgeschlagener Faktor) × Σ[KH × KF] / 10, nur der Faktorfehler zählt). ' +
-      'Kürzere Halbwertszeit = neue Werte zählen stärker. Zuschlag: eingestelltes Perzentil der Faktoren ohne einen festen Anstieg von ' +
-      num(d.surcharge_mgdl, 0) + ' mg/dL je Hauptmahlzeit (Fett/Eiweiß, bis ' + num(d.surcharge_full_grams, 0) +
-      ' g KH anteilig), dazu dieser Zuschlag für die jeweilige Mahlzeit.</p>'
-    : '<p class="hint derivation-note">In den letzten ' + d.backtest_days + ' Tagen fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
-      d.min_meals + ' Faktoren derselben Mahlzeit in jedem Zeitraum davor, also auch in den letzten 8 Tagen).</p>';
-}
-
-// Automatik view: worked example, trade-offs against the current strategy and one row per setting.
-// The server delivers every number, verdict and the settings change behind each "Übernehmen".
-const tuningLabel = (key, value) => key === "percentile" ? num(value, 1) + " %"
-  : key === "surcharge" ? (Number(value) ? num(value, 0) + " mg/dL" : "aus")
-  : key === "half_life" ? num(value, 1) + (Number(value) === 1 ? " Tag" : " Tage")
-  : num(value, 0) + " Tage";
-const tuningNames = { percentile: "Perzentil", surcharge: "Zuschlag", half_life: "Halbwertszeit", lookback: "Zeitraum" };
-const tuningHints = {
-  percentile: "Welcher Wert aus den bisherigen Faktoren genommen wird. Tiefer = weniger Insulin.",
-  surcharge: "Fester BZ-Anstieg je Hauptmahlzeit für Fett und Eiweiß, als Insulin zusätzlich zu den KH. Aus = nur Perzentil.",
-  half_life: "Nach dieser Zeit zählt eine Mahlzeit nur noch halb. Kürzer = neue Werte zählen stärker.",
-  lookback: "Wie viele Tage Vorgeschichte in den Vorschlag eingehen.",
-};
-const strategyText = o => num(o.percentile, 1) + " % · " + (Number(o.surcharge_mgdl) ? "Zuschlag " + num(o.surcharge_mgdl, 0) + " mg/dL" : "ohne Zuschlag") +
-  " · Halbwertszeit " + num(o.half_life_days, 1) + " T. · " + o.lookback_days + " Tage";
-const rangeBar = (below, inRange, above) => {
-  const total = below + inRange + above || 1, pct = value => (value * 100 / total).toFixed(2);
-  return '<svg class="range-bar" viewBox="0 0 100 8" preserveAspectRatio="none" role="img" aria-label="' +
-    below + ' unter 80, ' + inRange + ' im Bereich, ' + above + ' über 160">' +
-    '<rect class="range-low" x="0" width="' + pct(below) + '" height="8"/>' +
-    '<rect class="range-ok" x="' + pct(below) + '" width="' + pct(inRange) + '" height="8"/>' +
-    '<rect class="range-high" x="' + (Number(pct(below)) + Number(pct(inRange))).toFixed(2) + '" width="' + pct(above) + '" height="8"/></svg>';
-};
-const rangeCounts = (below, inRange, above, medianGlucose) => '<span class="range-nums"><span class="range-low">' + below +
-  '</span> · <b class="range-ok">' + inRange + '</b> · <span class="range-high">' + above + '</span>' +
-  (medianGlucose == null ? '' : '<small class="range-median">Median ' + num(medianGlucose, 0) + ' mg/dL</small>') + '</span>';
-const applyButton = (apply, label = "Übernehmen") => '<button type="button" class="quiet apply-button" data-apply="' +
-  escapeHTML(JSON.stringify(apply)) + '">' + label + '</button>';
-
-const deltaText = (value, label) => '<span class="' + (Number(value) < 0 ? 'delta-good' : Number(value) > 0 ? 'delta-bad' : '') + '">' +
-  (Number(value) > 0 ? '+' : Number(value) < 0 ? '−' : '±') + Math.abs(Number(value)) + ' ' + label + '</span>';
-
-function renderAutomatik(d) {
-  const explain = $("#automatik-explain"), tradeoffs = $("#automatik-tradeoffs"), tuning = $("#automatik-tuning");
-  if (!d || !d.tuning) { explain.innerHTML = tradeoffs.innerHTML = tuning.innerHTML = ""; return; }
-  const surcharge = Number(d.active_surcharge_mgdl);
-  const weights = (d.weights || []).map(item => (item.age_days === 1 ? 'gestern ' : 'vor ' + item.age_days + ' Tagen ') +
-    num(item.weight, 2)).join(' · ');
-  const exampleName = item => item.meal === "breakfast" ? "Frühstück " + (item.day_type === "work" ? "Arbeit" : "Frei") : names[item.meal];
-  const examples = d.examples.map(item => {
-    if (item.units_per_ke == null) {
-      return '<tr><td>' + escapeHTML(exampleName(item)) + '</td><td>' + item.count + '</td><td colspan="5" class="hint">Zu wenige Mahlzeiten (mind. ' + item.min_meals + ')</td></tr>';
-    }
-    return '<tr><td>' + escapeHTML(exampleName(item)) + '</td><td>' + item.count + '</td><td><b>' + factorNum(item.units_per_ke) + '</b> IE/KE</td>' +
-      '<td>' + num(item.carbs_g, 0) + ' g · KF ' + num(item.isf, 0) + '</td>' +
-      '<td>' + num(Number(item.carbs_g) / 10, 1) + ' KE × ' + factorNum(item.units_per_ke) + ' = ' + num(item.carb_units, 1) + ' IE</td>' +
-      '<td>' + (surcharge ? '+ ' + num(item.surcharge_units, 1) + ' IE' : '—') + '</td>' +
-      '<td><b>' + num(item.total_units, 1) + ' IE</b></td></tr>';
-  }).join("");
-  explain.innerHTML = '<div class="automatik-chips">' +
-    ['Perzentil <b>' + num(d.percentile, 1) + ' %</b>', 'Zuschlag <b>' + (surcharge ? num(surcharge, 0) + ' mg/dL' : 'aus') + '</b>',
-     'Halbwertszeit <b>' + num(d.half_life_days, 1) + ' Tage</b>', 'Zeitraum <b>' + d.lookback_days + ' Tage</b>']
-      .map(text => '<span class="chip">' + text + '</span>').join("") + '</div>' +
-    '<ol class="automatik-steps">' +
-    '<li>Alle gültigen Mahlzeiten derselben Art aus den letzten ' + d.lookback_days + ' Tagen (Frühstück getrennt nach Arbeit und Frei). Ältere zählen weniger: ' + escapeHTML(weights) + '.</li>' +
-    (surcharge ? '<li>Von jedem Faktor wird der Zuschlag abgezogen: ' + num(surcharge, 0) + ' mg/dL je Hauptmahlzeit, umgerechnet in IE/KE dieser Mahlzeit (bis 40 g KH anteilig weniger).</li>' : '') +
-    '<li>Davon der gewichtete ' + num(d.percentile, 1) + '-%-Wert. Das ist der Faktor für die KH.</li>' +
-    '<li>Dosis = KE × Faktor' + (surcharge ? ' + Zuschlag (' + num(surcharge, 0) + ' mg/dL ÷ KF, einmal je Hauptmahlzeit, nicht für Snacks)' : '') + ', dazu wie immer die Korrektur auf den Zielwert.</li></ol>' +
-    '<p class="hint">Beispiel mit einer typischen Mahlzeit (Median der KH und des KF der verwendeten Mahlzeiten), ohne Korrektur:</p>' +
-    '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Mahlzeit</th><th>Mahlzeiten</th><th>Faktor</th><th>Typisch</th><th>KH-Teil</th><th>Zuschlag</th><th>Summe</th></tr></thead><tbody>' +
-    examples + '</tbody></table></div>';
-
-  const t = d.tradeoffs;
-  $("#tradeoff-count").textContent = t.meal_count + " Mahlzeiten";
-  if (!t.meal_count) {
-    tradeoffs.innerHTML = '<div class="empty">In den letzten ' + d.backtest_days + ' Tagen fehlen Mahlzeiten mit genug Vorgeschichte (mind. ' +
-      d.min_meals + ' derselben Art in den 8 Tagen davor).</div>';
-    tuning.innerHTML = "";
-    return;
-  }
-  const current = t.current;
-  const points = t.cloud;
-  const maxX = Math.max(1, ...points.map(p => p.below)), maxY = Math.max(1, ...points.map(p => p.above));
-  const W = 320, H = 200, L = 34, B = 30, x = v => L + v / maxX * (W - L - 12), y = v => H - B - v / maxY * (H - B - 12);
-  const ticks = (max, f) => Array.from(new Set([0, Math.round(max / 2), max])).map(f).join("");
-  const plot = '<svg class="tradeoff-plot" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Unter 80 gegen über 160 für alle Kombinationen">' +
-    ticks(maxX, v => '<text x="' + x(v) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + v + '</text>') +
-    ticks(maxY, v => '<text x="' + (L - 8) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + v + '</text>') +
-    '<line class="axis" x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - 6) + '" y2="' + (H - B) + '"/>' +
-    '<line class="axis" x1="' + L + '" y1="' + (H - B) + '" x2="' + L + '" y2="6"/>' +
-    '<text class="axis-label" x="' + (W - 6) + '" y="' + (H - 2) + '" text-anchor="end">unter 80 →</text>' +
-    '<text class="axis-label" x="' + (L + 4) + '" y="12">über 160 ↑</text>' +
-    points.map(p => '<circle class="cloud" cx="' + x(p.below) + '" cy="' + y(p.above) + '" r="3"/>').join("") +
-    '<polyline class="line" points="' + t.line.map(o => x(o.below) + ',' + y(o.above)).join(" ") + '"/>' +
-    t.line.map(o => '<circle class="on-line" cx="' + x(o.below) + '" cy="' + y(o.above) + '" r="4.5"/>').join("") +
-    '<circle class="current" cx="' + x(current.below) + '" cy="' + y(current.above) + '" r="7"/></svg>';
-  const optionRow = (o, isCurrent) => '<li class="tradeoff' + (isCurrent ? ' is-current' : '') + '">' +
-    '<div class="tradeoff-head"><b>' + (isCurrent ? 'Aktuell' : o.changes.map(key => tuningNames[key] + ' ' +
-      tuningLabel(key, key === "percentile" ? o.percentile : key === "surcharge" ? o.surcharge_mgdl : key === "half_life" ? o.half_life_days : o.lookback_days)).join(' · ')) +
-    '</b><small>' + escapeHTML(strategyText(o)) + '</small>' + (isCurrent ? '' : '<span class="tradeoff-delta">' +
-      deltaText(o.delta_below, "zu tief") + ' · ' + deltaText(o.delta_above, "zu hoch") +
-      (o.delta_median_glucose == null ? '' : ' · Median ' + (Number(o.delta_median_glucose) >= 0 ? '+' : '−') +
-        num(Math.abs(Number(o.delta_median_glucose)), 0) + ' mg/dL') + '</span>') + '</div>' +
-    rangeBar(o.below, o.in_range, o.above) + rangeCounts(o.below, o.in_range, o.above, o.median_glucose) +
-    (isCurrent ? '<span class="hint">eingestellt</span>' : applyButton(o.apply)) + '</li>';
-  const alternatives = t.line.filter(o => o.changes.length);
-  tradeoffs.innerHTML = '<div class="tradeoff-layout">' + plot + '<div><ul class="tradeoff-list">' +
-    optionRow(current, true) + alternatives.map(o => optionRow(o, false)).join("") + '</ul>' +
-    '<p class="hint">Jeder Punkt ist eine Kombination der vier Regler, alle auf denselben ' + t.meal_count +
-    ' Mahlzeiten. Auf der Linie liegen die, die keine andere bei „unter 80“ und „über 160“ zugleich schlägt: Nach links weniger zu tief, dafür mehr zu hoch. ' +
-    (t.line.some(o => !o.changes.length) ? 'Deine Einstellung liegt auf der Linie.' : 'Deine Einstellung (Ring) liegt nicht auf der Linie, mindestens eine Alternative ist in beiden Richtungen gleich gut oder besser.') +
-    ' Unterschiede von 1–2 Mahlzeiten können Zufall sein.</p></div></div>';
-
-  $("#tuning-count").textContent = "Je Regler nur dieser geändert";
-  const verdictText = row => row.verdict === "better" ? "besser: " + tuningLabel(row.key, row.options.find(o => o.best).value)
-    : row.verdict === "shift" ? "verschiebt tief ↔ hoch" : "kein Unterschied";
-  tuning.innerHTML = d.tuning.map(row => '<details class="tuning-row"' + (row.verdict !== "none" ? ' open' : '') + '><summary>' +
-    '<b>' + tuningNames[row.key] + '</b><span class="verdict verdict-' + row.verdict + '">' + escapeHTML(verdictText(row)) + '</span>' +
-    '<small>' + row.meal_count + ' Mahlzeiten</small></summary><p class="hint">' + tuningHints[row.key] + '</p>' +
-    '<ul class="tuning-options">' + row.options.map(o => '<li class="' + (o.active ? 'is-active' : '') + (o.best ? ' is-best' : '') + '">' +
-      '<span class="tuning-label">' + escapeHTML(tuningLabel(row.key, o.value)) + (o.active ? ' <small>aktiv</small>' : '') + '</span>' +
-      rangeBar(o.below, o.in_range, o.above) + rangeCounts(o.below, o.in_range, o.above, o.median_glucose) +
-      (o.active ? '<span></span>' : applyButton(o.apply)) + '</li>').join("") + '</ul></details>').join("") +
-    '<p class="hint range-legend"><span class="range-low">■ unter 80</span> <span class="range-ok">■ 80–160</span> <span class="range-high">■ über 160</span> · ' +
-    'Median = mittlerer BZ am Endpunkt dieser Mahlzeiten (Ziel ' + num(d.dose_target_mgdl, 0) + ' mg/dL). Jede Zeile prüft die Mahlzeiten, die alle ihre Optionen berechnen können. „Kein Unterschied“: die Optionen liegen höchstens ' +
-    num(d.tuning[0].noise_meals, 1) + ' Mahlzeiten auseinander.</p>';
-}
-
-async function applyAutomatik(button) {
-  const change = JSON.parse(button.dataset.apply);
-  const previous = Object.fromEntries(["auto_percentile", "auto_half_life_days", "auto_lookback_days", "auto_method", "auto_surcharge_mgdl"]
-    .map(key => [key, state.settings?.[key]]).filter(([, value]) => value != null));
-  const save = async (payload, message) => {
-    $$("#analysis-automatik [data-apply]").forEach(item => item.disabled = true);
-    try {
-      const result = await api("/api/settings", { method: "POST", body: JSON.stringify(payload) });
-      state.settings = result.settings;
-      toast(message, false, payload === change ? { label: "Rückgängig", run: () => save(previous, "Vorherige Einstellung wiederhergestellt") } : null);
-      await loadSettings();
-      await loadSummary();
-    } catch (error) {
-      toast(error.message, true);
-      $$("#analysis-automatik [data-apply]").forEach(item => item.disabled = false);
-    }
-  };
-  await save(change, "Automatik-Einstellung übernommen");
-}
-
-// Information only: how much more insulin per KE breakfast needs on work days than on free days.
-function renderDayTypeRatio(d) {
-  const output = $("#day-type-ratio");
-  if (!d) { output.innerHTML = ""; return; }
-  $("#day-type-ratio-range").textContent = "Letzte " + d.days + " Tage";
-  const pct = number => (Number(number) >= 0 ? '+' : '−') + Math.abs(Number(number) * 100).toLocaleString("de-DE", { maximumFractionDigits: 0 }) + '\u00a0%';
-  const value = (median, count) => median == null ? '—' : factorNum(median) + ' <small>(' + count + ')</small>';
-  const rows = Object.values(d.meals).map(m => {
-    const singles = m.singles.length
-      ? pct(m.single_median) + ' <small>(' + m.singles.length + ', ' + pct(m.single_min) + ' bis ' + pct(m.single_max) + ')</small>' +
-        '<br><small class="surcharge-days">' + m.singles.map(item => escapeHTML(new Date(item.day + "T12:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" })) + ' ' + pct(item.surcharge)).join(' · ') + '</small>'
-      : '—';
-    return '<tr><td>' + value(m.free_median, m.free_count) + '</td><td>' +
-      value(m.work_median, m.work_count) + '</td><td><b>' + (m.surcharge == null ? '—' : pct(m.surcharge)) + '</b></td><td class="surcharge-cell">' + singles + '</td></tr>';
-  });
-  output.innerHTML = '<div class="table-wrap"><table class="analysis-table compact"><thead><tr>' +
-    '<th>Frei <small>Median IE/KE</small></th><th>Arbeit <small>Median IE/KE</small></th><th>Stressaufschlag</th>' +
-    '<th>Je freiem Tag</th></tr></thead><tbody>' + rows.join("") + '</tbody></table></div>' +
-    '<p class="hint derivation-note">Frei ist die Basis: Arbeit = Frei × (1 + Stressaufschlag). „Je freiem Tag“ vergleicht jeden ' +
-    'freien Tag mit dem Frühstück an den ' + d.neighbours + ' Arbeitstagen davor und den ' + d.neighbours +
-    ' danach (Median, höchstens ' + d.reference_days + ' Tage entfernt, mind. 2 Werte). Liegen diese Einzelwerte eng beieinander, ' +
-    'ist der Aufschlag stabil. Nur zur Info, der Vorschlag bleibt unverändert.</p>';
-}
-
-async function loadSummary() {
-  $("#summary").innerHTML = '<div class="empty">Analyse wird geladen …</div>';
-  $("#night-summary-cards").innerHTML = '<div class="empty">Nachtübersicht wird geladen …</div>';
-  $("#night-records").innerHTML = "";
-  $("#calculations").innerHTML = "";
-  $("#automatik-status").textContent = "Wird berechnet …";
-  try {
-    const days = $("#summary-days").value;
-    const data = await api("/api/summary?days=" + days);
-    // The summary endpoint may refresh the Nightscout profile before calculating.
-    state.settings = (await api("/api/settings")).settings;
-    renderNightSummary(data.night || { count: 0, unavailable_count: Number(days), nights: [] });
-    if (data.profile_sync_error) {
-      $("#sync-progress").textContent = "Korrekturfaktor-Profil nicht aktualisiert: " + data.profile_sync_error;
-    }
-    const span = (low, high) => low == null ? '—'
-      : Number(low) === Number(high) ? factorNum(low) : factorNum(low) + '–' + factorNum(high);
-    const fact = (label, value, key = false) =>
-      '<div' + (key ? ' class="key"' : '') + '><dt>' + label + '</dt><dd>' + escapeHTML(value) + '</dd></div>';
-    const suggestion = s => s.auto_units_per_ke != null
-      ? factorNum(s.auto_units_per_ke) + (s.surcharge ? ' + Zuschlag' : '') : '—';
-    const suggestionNote = s => 'Vorschlag aus ' + s.count + '\u00a0(' + s.days + '\u00a0T.)';
-    const mealsText = count => count + (count === 1 ? ' Mahlzeit' : ' Mahlzeiten');
-    const breakfastSubcards = () => '<div class="breakfast-subcards">' + ["work", "free"].map(dayType => {
-      const subset = data.groups.breakfast.by_day_type[dayType];
-      const s = subset.suggestion;
-      return '<div class="breakfast-subcard"><span>' + (dayType === "work" ? "Arbeit" : "Frei") + '</span>' +
-        '<strong>' + (subset.count ? escapeHTML(factorNum(subset.median_units_per_ke)) + ' <small>IE/KE</small>' : '—') +
-        '</strong><dl class="factor-facts compact">' +
-        fact("Vorschlag", suggestion(s), true) +
-        (subset.q1_units_per_ke != null ? fact("Mittlere 50 %", span(subset.q1_units_per_ke, subset.q3_units_per_ke)) : '') +
-        '</dl><small>' + mealsText(subset.count) + '<br>' + escapeHTML(suggestionNote(s)) + '</small></div>';
-    }).join("") + '</div>';
-    $("#summary").innerHTML = ["breakfast", "lunch", "dinner"].map(kind => {
-      const row = data.groups[kind];
-      const hasValues = row.count > 0;
-      const current = (row.nightscout_units_per_ke || []).map(value => factorNum(value)).join(' / ') || '—';
-      const facts = (kind === "breakfast" ? '' : fact("Vorschlag", suggestion(row.suggestion), true)) +
-        fact("Aktuell", current) +
-        (row.q1_units_per_ke != null ? fact("Mittlere 50 %", span(row.q1_units_per_ke, row.q3_units_per_ke)) : '');
-      return '<div class="summary-card"><span class="meal-type">' + escapeHTML(names[kind]) + '</span>' +
-        '<div class="summary-primary"><span>Median</span><strong>' +
-        (hasValues ? escapeHTML(factorNum(row.median_units_per_ke)) + ' <small>IE/KE</small>' : '—') +
-        '</strong></div><dl class="factor-facts">' + facts + '</dl>' +
-        '<p>' + mealsText(row.count) +
-        (kind === "breakfast" ? '' : ' · ' + escapeHTML(suggestionNote(row.suggestion))) + '</p>' +
-        (kind === "breakfast" ? breakfastSubcards() : '') + '</div>';
-    }).join("");
-    renderSportAnalysis(data.sport_analysis);
-    renderSuggestionDerivation(data.suggestion_derivation);
-    renderAutomatik(data.suggestion_derivation);
-    $("#automatik-status").textContent = "";
-    renderDayTypeRatio(data.day_type_ratio);
-    const calculations = ["breakfast", "lunch", "dinner"]
-      .flatMap(kind => data.groups[kind].calculations.map(item => ({ ...item, kind })))
-      .sort((a, b) => b.at.localeCompare(a.at));
-    $("#calculation-count").textContent = calculations.length + (calculations.length === 1 ? " Mahlzeit" : " Mahlzeiten");
-    $("#calculations").innerHTML = calculations.length
-      ? '<div class="table-wrap"><table class="analysis-table"><thead><tr><th>Mahlzeit</th><th>Insulinfaktor</th><th>KH</th><th>Insulin</th><th>Gemessen</th><th>Erwartet</th><th>Delta</th><th>Sport</th><th>Wertung</th><th></th></tr></thead><tbody>' +
-        (() => {
-          let previousDay = "";
-          return calculations.map(item => {
-            const newDay = item.day !== previousDay;
-            previousDay = item.day;
-            const dayHeading = newDay
-              ? '<tr class="analysis-day-row"><th colspan="10" scope="colgroup">' +
-                escapeHTML(new Date(item.day + "T12:00:00").toLocaleDateString("de-DE", {
-                  weekday: "long", day: "numeric", month: "long", year: "numeric",
-                })) + ' <label class="day-type-label">Tag: <select class="day-type" data-day="' +
-                escapeHTML(item.day) + '"><option value="work"' + (item.day_type === "work" ? " selected" : "") +
-                '>Arbeit</option><option value="free"' + (item.day_type === "free" ? " selected" : "") +
-                '>Frei</option></select></label></th></tr>'
-              : '';
-            const factor = item.units_per_ke != null
-              ? escapeHTML(factorNum(item.units_per_ke)) + ' IE/KE' +
-                (item.strong_outlier ? ' <span class="outlier-badge">Stark abweichend</span>' : '') +
-                (item.manual_window ? ' <span class="manual-badge">Zeitraum manuell</span>' : '')
-              : '<span class="summary-unavailable">Nicht berechenbar: ' + escapeHTML(item.reason || "Kein Faktor") + '</span>';
-            const excluded = item.units_per_ke != null && item.excluded;
-            const sport = item.sport || {};
-            // Read only here: sport is set on the meal in "Tag durchgehen".
-            const sportReview = sport.status === "affected" || (sport.status === "auto" && sport.suggested)
-              ? '<span class="sport-state is-applied">' + icon("check") + escapeHTML(signedChange(sportChange(sport.effect_mgdl), 0)) +
-                (sport.status === "auto" ? ' <small>auto</small>' : '') + '</span>'
-              : '—';
-            return dayHeading + '<tr class="' + (excluded ? "analysis-excluded " : "") +
-              (item.strong_outlier ? "analysis-outlier" : "") + '">' +
-            '<td>' + escapeHTML(names[item.kind]) + '</td><td><b>' + factor + '</b></td>' +
-            '<td>' + (item.carbs_total == null ? "—" : escapeHTML(num(item.carbs_total)) + ' g') + '</td>' +
-            '<td>' + (item.rapid_units_in_window == null ? "—" : escapeHTML(num(item.rapid_units_in_window)) + ' IE') + '</td>' +
-            '<td>' + glucoseChangeHTML(item.delta_mgdl) + '</td>' +
-            '<td>' + glucoseChangeHTML(item.expected_delta_mgdl) + '</td>' +
-            '<td>' + glucoseChangeHTML(item.deviation_mgdl) + '</td>' +
-            '<td>' + sportReview + '</td>' +
-            '<td>' + (item.units_per_ke == null ? "—" : excludeButtonHTML(item.id, item.day, excluded)) + '</td>' +
-            '<td><button type="button" class="icon-button open-meal-day" data-day="' + escapeHTML(item.day) +
-              '" data-meal-id="' + escapeHTML(item.id) + '" aria-label="Im Tag durchgehen öffnen" title="Im Tag durchgehen öffnen">' + icon("diary") + '</button></td></tr>';
-          }).join("");
-        })() + '</tbody></table></div>'
-      : '<div class="empty">Für diesen Zeitraum sind keine Mahlzeiten im lokalen Datenbestand.</div>';
-  } catch (error) {
-    $("#summary").innerHTML = '<div class="empty">Analyse nicht verfügbar.</div>';
-    $("#night-summary-cards").innerHTML = '<div class="empty">Nachtübersicht nicht verfügbar.</div>';
-    $("#night-records").innerHTML = "";
-    $("#calculations").innerHTML = "";
-    $("#sport-analysis-kinds").innerHTML = "";
-    $("#sport-analysis-sessions").innerHTML = "";
-      toast(error.message, true);
-  }
-}
-
-async function saveExclusion(event) {
-  const button = event.target.closest(".exclude-meal");
-  if (!button) return;
-  button.disabled = true;
-  try {
-    await api("/api/analysis/exclusion", {
-      method: "POST",
-      body: JSON.stringify({ meal_id: button.dataset.mealId, day: button.dataset.day, excluded: button.dataset.excluded !== "true" }),
-    });
-    if (state.view === "analysis") await loadSummary();
-    else await loadDay();
-  } catch (error) {
-    button.disabled = false;
-    toast(error.message, true);
-  }
-}
-
-async function saveDayType(event) {
-  const input = event.target;
-  if (!input.matches(".day-type")) return;
-  input.disabled = true;
-  try {
-    await api("/api/analysis/day-type", {
-      method: "POST",
-      body: JSON.stringify({ day: input.dataset.day, day_type: input.value }),
-    });
-    await loadSummary();
-  } catch (error) {
-    input.disabled = false;
-    toast(error.message, true);
-    await loadSummary();
-  }
-}
-
-async function syncRange() {
-  const button = $("#sync-range");
-  button.disabled = true;
-  $("#sync-progress").textContent = "Synchronisiere …";
-  try {
-    const data = await api("/api/sync", { method: "POST", body: JSON.stringify({ days: Number($("#summary-days").value) }) });
-    $("#sync-progress").textContent = data.synced + " Tage synchronisiert" +
-      (data.errors.length ? " · " + data.errors.length + " Fehler" : "") +
-      (data.profile_sync_error ? " · Korrekturfaktor: " + data.profile_sync_error : "");
-    await loadSummary();
-  } catch (error) {
-    $("#sync-progress").textContent = error.message;
   } finally {
     button.disabled = false;
   }
@@ -3339,11 +2415,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   setSportDuration();
   view(state.view, { updateHistory: false });
   updateLocation(true);
-  $$("[data-analysis-tab]").forEach(button => button.addEventListener("click", () => analysisTab(button.dataset.analysisTab)));
-  $("#analysis-automatik").addEventListener("click", event => {
-    const button = event.target.closest("[data-apply]");
-    if (button) applyAutomatik(button);
-  });
   $$(".tab").forEach(link => link.addEventListener("click", event => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
@@ -3392,9 +2463,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#entry-kind").value = button.dataset.entryMode;
     updateEntryFields();
   }));
-  $("#ic-rows").addEventListener("input", event => {
-    if (event.target.matches("input")) setPickerBase(event.target, 0.1, true);
-  });
   $$("[data-diary-mode]").forEach(button => button.addEventListener("click", () => {
     state.modeDay = state.day;
     state.diaryMode = button.dataset.diaryMode;
@@ -3414,23 +2482,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#dose-result").addEventListener("click", selectDoseSuggestion);
   $("#dose-result").addEventListener("input", moveSlider);
   $("#entry-day-type").addEventListener("click", saveEntryDayType);
-  $("#vacation-toggle").addEventListener("change", saveVacation);
-  $("#timezone-device").addEventListener("click", event => switchTimezone({ zone: event.currentTarget.dataset.zone }));
-  $("#timezone-home").addEventListener("click", () => switchTimezone({ zone: "" }));
-  $("#timezone-undo").addEventListener("click", () => switchTimezone({ undo: true }));
   $("#timezone-banner").addEventListener("click", event => {
     const button = event.target.closest("[data-timezone-switch]");
     if (button) switchTimezone({ zone: button.dataset.timezoneSwitch });
-  });
-  $$(".notify-toggle").forEach(input => input.addEventListener("change", saveNotification));
-  $$(".notify-priority").forEach(select => select.addEventListener("change", saveNotificationPriority));
-  $("#notify-test").addEventListener("click", sendTestNotification);
-  $(".places-panel").addEventListener("click", placeClick);
-  $(".places-panel").addEventListener("change", placeChange);
-  $("#place-new").addEventListener("submit", async event => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    if (await placeAction({ action: "create", name: form.elements.name.value })) form.reset();
   });
   $("#entry-form").elements.carbs.addEventListener("input", event => {
     event.target.setCustomValidity("");
@@ -3531,57 +2585,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 150);
   });
   updateEntryFields();
-  $("#settings-form").addEventListener("submit", saveSettings);
-  $("#save-ic").addEventListener("click", () => saveProfileSchedule("ic"));
-  $("#save-isf").addEventListener("click", () => saveProfileSchedule("isf"));
-  for (const kind of ["ic", "isf"]) {
-    $("#" + kind + "-rows").addEventListener("keydown", event => {
-      if (event.key === "Enter" && event.target.matches("input")) {
-        event.preventDefault();
-        saveProfileSchedule(kind);
-      }
-    });
-  }
-  $("#sync-profile").addEventListener("click", async event => {
-    const button = event.currentTarget;
-    button.disabled = true;
-    $("#isf-sync-status").textContent = "Nightscout-Profil wird synchronisiert …";
-    try {
-      const result = await api("/api/profile/sync", { method: "POST", body: JSON.stringify({}) });
-      await loadSettings();
-      await loadDay();
-      toast(result.message);
-    } catch (error) {
-      $("#isf-sync-status").textContent = error.message;
-      toast(error.message, true);
-    } finally {
-      button.disabled = false;
-    }
-  });
-  $("#summary-days").addEventListener("change", loadSummary);
-  $("#sync-range").addEventListener("click", syncRange);
-  $("#calculations").addEventListener("click", saveExclusion);
-  $("#calculations").addEventListener("change", saveDayType);
-  // A meal is corrected on its day: the analysis row opens "Tag durchgehen" at that meal.
-  $("#calculations").addEventListener("click", async event => {
-    if (event.target.closest(".exclude-meal")) return;
-    const button = event.target.closest(".open-meal-day");
-    if (!button) return;
-    state.day = button.dataset.day;
-    state.dayChosenAt = Date.now();
-    state.modeDay = state.day;
-    state.diaryMode = "review";
-    $("#selected-day").value = state.day;
-    setDefaultMealTime();
-    view("diary");
-    await loadDay();
-    $("#meal-" + CSS.escape(button.dataset.mealId))?.scrollIntoView({ block: "start" });
-  });
-  $("#test-connection").addEventListener("click", async () => {
-    $("#test-result").textContent = "Prüfe …";
-    try { const result = await api("/api/test-connection"); $("#test-result").textContent = result.message; }
-    catch (error) { $("#test-result").textContent = error.message; }
-  });
   document.addEventListener("keydown", event => {
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !$("#diary-view").hidden) {
       event.preventDefault();
@@ -3612,6 +2615,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (document.hidden) return;
     if (reloadForUpdate()) return;
     renderTimezone();
+    renderSettings();
     returnToToday();
     setDefaultMealTime({ preview: false });
     refreshTodayPreview();
@@ -3631,64 +2635,8 @@ const agent = { info: null };
 
 async function loadAgent() {
   try { agent.info = await api("/api/agent"); } catch (_) { agent.info = null; }
-  renderAgentSettings();
+  renderSettings();
   updateEntryAgent();
-}
-
-function renderAgentSettings() {
-  const info = agent.info;
-  if (!info) return;
-  const ready = info.providers.filter(item => item.configured);
-  $("#agent-settings-status").textContent = !ready.length
-    ? "Noch kein Anbieter eingerichtet."
-    : info.available ? "" : "Bitte ein Modell wählen.";
-  const select = $("#agent-provider");
-  select.replaceChildren(...info.providers.map(item => {
-    const option = new Option(item.label + (item.configured ? "" : " (kein Schlüssel)"), item.id);
-    option.disabled = !item.configured;
-    return option;
-  }));
-  select.value = info.provider || "";
-  select.disabled = !ready.length;
-  const current = info.providers.find(item => item.id === info.provider);
-  $("#agent-model").value = current?.model || "";
-  $("#agent-model").disabled = !current;
-  $("#agent-web-search").checked = info.web_search;
-  $("#agent-transcribe-model").value = info.transcribe_model;
-  $("#agent-transcribe-model").disabled = !info.transcribe_available;
-  $("#agent-models-load").disabled = !current;
-  const kinds = { estimate: "Einschätzungen", transcribe: "Transkriptionen" };
-  $("#agent-usage").textContent = info.usage_month.length ? "Diesen Monat: " + info.usage_month.map(row =>
-    row.calls + " " + (kinds[row.kind] || row.kind) + " mit " + row.model + " (" +
-    num((row.input_tokens + row.output_tokens) / 1000, 0) + " Tsd. Token" +
-    (row.cost_usd != null ? ", " + num(row.cost_usd, 2) + " $" : "") + ")").join("; ") : "";
-}
-
-async function saveAgentSettings(body) {
-  try {
-    agent.info = await api("/api/agent/settings", { method: "POST", body: JSON.stringify(body) });
-    renderAgentSettings();
-    updateEntryAgent();
-  } catch (error) { toast(error.message, true); renderAgentSettings(); }
-}
-
-async function loadAgentModels() {
-  const button = $("#agent-models-load");
-  button.disabled = true;
-  try {
-    const provider = $("#agent-provider").value;
-    const data = await api("/api/agent/models?provider=" + encodeURIComponent(provider));
-    const option = model => '<option value="' + escapeHTML(model.id) + '">' + escapeHTML(model.name) + '</option>';
-    $("#agent-model-options").innerHTML = data.models.filter(model => model.image !== false).map(option).join("");
-    if (provider === "openrouter" || !agent.info.transcribe_available)
-      $("#agent-audio-options").innerHTML = data.models.filter(model => model.audio).map(option).join("");
-    else {
-      const router = await api("/api/agent/models?provider=openrouter");
-      $("#agent-audio-options").innerHTML = router.models.filter(model => model.audio).map(option).join("");
-    }
-    toast(data.models.length + " Modelle geladen, im Feld Modell auswählen oder tippen");
-  } catch (error) { toast(error.message, true); }
-  finally { button.disabled = false; }
 }
 
 // The entry form's agent line: the button, and what an applied estimate will save with the entry.
@@ -3827,50 +2775,14 @@ function closeEntryDrawer() {
   delete $("#entry-drawer")?.dataset.quick;
 }
 
-// Settings on phones: a list of pages (one per panel, grouped by the headings), one page at a time.
-function setupSettingsPages() {
-  const root = $("#settings-view");
-  const index = $("#settings-index");
-  const groups = [{ title: "Allgemein", pages: [] }];
-  let count = 0;
-  $$(".settings-heading, .panel", root).forEach(node => {
-    if (node.matches(".settings-heading")) { groups.push({ title: node.textContent.trim(), pages: [] }); return; }
-    if (node.matches(".settings-save")) return;
-    const heading = node.querySelector(":scope > h2");
-    if (!heading) return;
-    const id = "page-" + (++count);
-    node.dataset.settingsPage = id;
-    groups[groups.length - 1].pages.push({ id, title: heading.firstChild?.textContent?.trim() || heading.textContent.trim() });
-  });
-  index.replaceChildren(...groups.filter(group => group.pages.length).map(group => {
-    const section = document.createElement("div");
-    section.className = "settings-index-group";
-    const title = document.createElement("h2");
-    title.textContent = group.title;
-    section.append(title, ...group.pages.map(page => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "settings-index-item";
-      button.dataset.settingsOpen = page.id;
-      button.textContent = page.title;
-      return button;
-    }));
-    return section;
-  }));
-}
-
+// Settings on phones: a list of pages, one page at a time (the CSS reads data-page and page-in-form).
 function showSettingsPage(id) {
   const root = $("#settings-view");
+  state.settingsPage = id;
   if (id) root.dataset.page = id;
   else delete root.dataset.page;
-  let inForm = false;
-  $$("[data-settings-page]", root).forEach(panel => {
-    const current = panel.dataset.settingsPage === id;
-    panel.classList.toggle("is-current", current);
-    if (current) inForm = Boolean(panel.closest("#settings-form"));
-  });
-  root.classList.toggle("page-in-form", inForm);
-  $("#settings-back").hidden = !id;
+  root.classList.toggle("page-in-form", FORM_PAGES.has(id));
+  renderSettings();
   window.scrollTo({ top: 0 });
 }
 
@@ -3888,67 +2800,15 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#entry-title").textContent = "Eintrag hinzufügen";
     delete $("#entry-drawer").dataset.quick;
   }));
-  setupSettingsPages();
-  $("#settings-index").addEventListener("click", event => {
-    const button = event.target.closest("[data-settings-open]");
-    if (button) showSettingsPage(button.dataset.settingsOpen);
-  });
-  $("#settings-back").addEventListener("click", () => showSettingsPage(null));
   updateNav();
 });
-
-// ---- Dish catalogue (Analyse → Gerichte): each dish with how its main meals turned out. ----
-const MEAL_NAMES = { breakfast: "Frühstück", lunch: "Mittag", dinner: "Abend" };
-
-function dishHTML(dish, all) {
-  const outcome = dish.outcome;
-  const rows = dish.history.map(row => '<tr><td>' + escapeHTML(new Date(row.day + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "numeric" })) +
-    ' ' + escapeHTML(MEAL_NAMES[row.meal] || "") + '</td><td>' + (row.carbs_g != null ? num(row.carbs_g, 0) + ' g' : '—') +
-    '</td><td>' + (row.rapid_units != null ? num(row.rapid_units) + ' IE' : '—') +
-    '</td><td>' + (row.factor != null ? num(row.factor, 2) : escapeHTML(row.excluded ? "ausgeklammert" : "kein Faktor")) +
-    '</td><td>' + (row.ratio != null ? signedPercent(row.ratio) : '—') +
-    '</td><td>' + (row.g0_mgdl != null && row.g_end_mgdl != null ? num(row.g0_mgdl, 0) + ' → ' + num(row.g_end_mgdl, 0) : '—') +
-    '</td><td>' + escapeHTML(row.place || "") + '</td></tr>').join("");
-  const others = all.filter(other => other.id !== dish.id);
-  return '<details class="dish-item" data-dish-id="' + dish.id + '"><summary><strong>' + escapeHTML(dish.name) + '</strong>' +
-    (dish.category ? ' <span class="place-badge">' + escapeHTML(dish.category) + '</span>' : '') +
-    (dish.archived ? ' <span class="outlier-badge">archiviert</span>' : '') +
-    '<span class="hint dish-hint">' + escapeHTML(dish.hint) + '</span></summary>' +
-    (outcome.meals ? '<p class="hint">' + outcome.meals + ' Hauptmahlzeiten im Zeitraum, davon ' + outcome.valid + ' mit Vergleich' +
-      (outcome.delta_mgdl != null ? ' · BZ-Änderung im Median ' + signedChange(outcome.delta_mgdl, 0) : '') +
-      (outcome.end_mgdl != null ? ' · Endwert im Median ' + outcome.end_mgdl + ' mg/dL' : '') + '</p>' : '') +
-    (rows ? '<div class="table-wrap"><table class="analysis-table compact"><thead><tr><th>Mahlzeit</th><th>KH</th><th>Insulin</th><th>Faktor</th><th>zu üblich</th><th>BZ</th><th>Ort</th></tr></thead><tbody>' +
-      rows + '</tbody></table></div>' : '<p class="hint">Noch keine Hauptmahlzeit mit diesem Gericht im Zeitraum.</p>') +
-    '<div class="dish-edit"><input type="text" class="dish-name" maxlength="60" value="' + escapeHTML(dish.name) + '" aria-label="Name des Gerichts">' +
-    '<input type="text" class="dish-category" maxlength="40" value="' + escapeHTML(dish.category) + '" placeholder="Kategorie" aria-label="Kategorie">' +
-    (others.length ? '<select class="dish-merge" aria-label="Zusammenlegen mit"><option value="">Zusammenlegen mit …</option>' +
-      others.map(other => '<option value="' + other.id + '">' + escapeHTML(other.name) + '</option>').join("") + '</select>' : '') +
-    '<button type="button" class="quiet" data-dish-action="archive">' + (dish.archived ? "Wieder nutzen" : "Archivieren") + '</button>' +
-    '<button type="button" class="quiet delete-treatment" data-dish-action="delete">Löschen</button></div></details>';
-}
-
-function renderDishes(data) {
-  state.dishes = data;
-  $("#dishes-count").textContent = data.dishes.length + (data.dishes.length === 1 ? " Gericht" : " Gerichte") + " · letzte " + data.days + " Tage";
-  const open = new Set($$("#dishes-list details[open]").map(node => node.dataset.dishId));
-  $("#dishes-list").innerHTML = data.dishes.length ? data.dishes.map(dish => dishHTML(dish, data.dishes)).join("")
-    : '<p class="hint">Noch keine Gerichte. Sie entstehen, wenn der Essens-Agent eine Mahlzeit einschätzt oder du in „Tag durchgehen“ an einem Eintrag ein Gericht einträgst.</p>';
-  $$("#dishes-list details").forEach(node => { node.open = open.has(node.dataset.dishId); });
-}
-
-async function loadDishes() {
-  try { renderDishes(await api("/api/dishes")); } catch (error) { toast(error.message, true); }
-}
-
-async function dishAction(body) {
-  try { renderDishes(await api("/api/dishes", { method: "POST", body: JSON.stringify(body) })); }
-  catch (error) { toast(error.message, true); if (state.dishes) renderDishes(state.dishes); }
-}
 
 // Tables become cards on phones (concept 2026-11-18, user report: tables are bad on mobile): every
 // cell carries its column's name, which the phone layout shows above the value (styles.css).
 function labelTables(root) {
-  const tables = root.matches?.(".analysis-table") ? [root] : root.querySelectorAll?.(".analysis-table") || [];
+  // Preact adds rows to a table that is already on the page, so a row counts for its table too.
+  const own = root.closest?.(".analysis-table");
+  const tables = own ? [own] : root.querySelectorAll?.(".analysis-table") || [];
   for (const table of tables) {
     const heads = [...table.querySelectorAll("thead th")].map(cell => cell.textContent.replace(/\s+/g, " ").trim());
     for (const row of table.querySelectorAll("tbody tr")) {
@@ -3968,26 +2828,4 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#entry-agent-open").addEventListener("click", openAgent);
   $("#entry-agent-clear").addEventListener("click", () => { state.entryAgent = null; updateEntryAgent(); });
   $$(".entry-mode").forEach(button => button.addEventListener("click", () => setTimeout(updateEntryAgent)));
-  $("#agent-provider").addEventListener("change", event => saveAgentSettings({ provider: event.target.value }));
-  $("#agent-model").addEventListener("change", event =>
-    saveAgentSettings({ ["model_" + $("#agent-provider").value]: event.target.value }));
-  $("#agent-web-search").addEventListener("change", event => saveAgentSettings({ web_search: event.target.checked }));
-  $("#agent-transcribe-model").addEventListener("change", event => saveAgentSettings({ transcribe_model: event.target.value }));
-  $("#agent-models-load").addEventListener("click", loadAgentModels);
-  $("#dishes-list").addEventListener("click", event => {
-    const button = event.target.closest("[data-dish-action]");
-    if (!button) return;
-    const id = button.closest(".dish-item").dataset.dishId;
-    const dish = state.dishes.dishes.find(item => String(item.id) === id);
-    if (button.dataset.dishAction === "archive") dishAction({ action: "archive", id, archived: !dish.archived });
-    else if (button.dataset.armed) dishAction({ action: "delete", id });
-    else { button.dataset.armed = "1"; button.textContent = "Wirklich löschen?"; }
-  });
-  $("#dishes-list").addEventListener("change", event => {
-    const id = event.target.closest(".dish-item")?.dataset.dishId;
-    if (!id) return;
-    if (event.target.matches(".dish-name")) dishAction({ action: "rename", id, name: event.target.value });
-    else if (event.target.matches(".dish-category")) dishAction({ action: "category", id, category: event.target.value });
-    else if (event.target.matches(".dish-merge") && event.target.value) dishAction({ action: "merge", id, into_id: event.target.value });
-  });
 });
