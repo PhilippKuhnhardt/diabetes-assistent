@@ -78,6 +78,7 @@ async function run(browser, name, options) {
   } else {
     check(await page.isVisible("[name=dose_target_mgdl]"), `${name}: all settings on one page`);
     await settings(page, name);
+    await saving(page, name);
   }
   await page.click("[data-nav=today]");
   const active = await page.$$eval(".appnav-item.active", items => items.map(item => item.dataset.nav));
@@ -109,7 +110,36 @@ async function doseHelp(page, name) {
   check(true, `${name}: no carbs, no meal recommendation`);
 }
 
-const toastSays =(page, text) => page.waitForFunction(wanted => document.querySelector("#toast")?.textContent.includes(wanted), text);
+// The entry form (web/ui/entry.js) saves a meal with its dose and takes it back, and saves basal.
+async function saving(page, name) {
+  await page.click("[data-nav=today]");
+  await page.click("[data-entry-mode=meal]");
+  await page.fill("#entry-form [name=carbs]", "20");
+  await page.fill("#entry-form [name=insulin]", "1");
+  check((await page.textContent("#entry-submit")).includes("20 g + 1 IE"), `${name}: the button names what it saves`);
+  await page.click("#entry-submit");
+  await toastSays(page, "20 g + 1 IE gespeichert");
+  check(await page.inputValue("#entry-form [name=carbs]") === "", `${name}: a saved entry empties the form`);
+  await page.click("#toast .toast-action");
+  await toastSays(page, "Eintrag aus Nightscout entfernt");
+  await page.waitForFunction(() => document.querySelector("#entry-form [name=carbs]").value === "20");
+  check(await page.inputValue("#entry-form [name=insulin]") === "1", `${name}: undo puts the entry back into the form`);
+  await page.fill("#entry-form [name=carbs]", "");
+  await page.fill("#entry-form [name=insulin]", "");
+  await page.click("[data-entry-mode=basal]");
+  check(Number(await page.inputValue("#entry-form [name=basal_units]")) > 0, `${name}: basal starts with the usual dose`);
+  await page.fill("#entry-form [name=basal_units]", "2.5");
+  await page.click("#entry-submit");
+  await toastSays(page, "Basal 2,5 IE");
+  await page.click("#toast .toast-action");
+  await toastSays(page, "Basal entfernt");
+  check(true, `${name}: basal is saved and taken back`);
+  await page.click("[data-entry-mode=exercise]");
+  check(await page.inputValue("#entry-form [name=sport_effect_mgdl]") !== "", `${name}: sport starts with its kind's effect`);
+  await page.click("[data-entry-mode=meal]");
+}
+
+const toastSays = (page, text) => page.waitForFunction(wanted => document.querySelector("#toast")?.textContent.includes(wanted), text);
 
 // "Tag durchgehen" (web/ui/day.js): the day chart and effects, a meal excluded and counted again, and the
 // window editor: dragging, nudging, saving and going back to the standard window.
