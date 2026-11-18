@@ -932,3 +932,29 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .dish-hint { flex-basis: 100%; }
 .dish-edit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
 .dish-edit input[type="text"] { flex: 1 1 140px; min-width: 0; }
+
+/* Phones: analysis tables as cards (concept 2026-11-18). Each row is a card, the first cell its title,
+   the other cells label (from data-label, set in app.js) over value in three columns. */
+@media (max-width: 650px) {
+  .table-wrap { overflow: visible; }
+  .analysis-table, .analysis-table.compact { display: block; min-width: 0; }
+  .analysis-table thead { display: none; }
+  .analysis-table tbody { display: block; }
+  .analysis-table tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; margin: 0 0 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); }
+  .analysis-table td { display: block; min-width: 0; padding: 0; border: 0; white-space: normal; font-size: 13px; }
+  .analysis-table td.surcharge-cell { min-width: 0; }
+  .analysis-table td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 1px; color: var(--muted); font-size: 11px; font-weight: 650; }
+  .analysis-table td:not([data-label]) { align-self: end; justify-self: end; }
+  .analysis-table td[colspan] { grid-column: 1 / -1; justify-self: stretch; }
+  .analysis-table.matrix tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analysis-table:not(.matrix) td:first-child { grid-column: 1 / -1; font-size: 14.5px; font-weight: 650; }
+  .analysis-table:not(.matrix) td:first-child::before { display: none; }
+  .analysis-table td:empty { display: none; }
+  .analysis-table tr.analysis-day-row { display: block; margin: 16px 0 6px; padding: 0 2px; border: 0; background: none; }
+  .analysis-table tr.analysis-day-row th { display: block; padding: 0; border: 0; white-space: normal; color: var(--ink); font-size: 13px; }
+  .analysis-table .analysis-excluded { background: #f4f5f2; }
+  .matrix .matrix-cell { min-width: 0; padding: 6px; border-radius: 8px; }
+  .analysis-table .glucose-change { padding: 2px 5px; font-size: 12px; }
+  .analysis-table td:first-child > small, .analysis-table td:first-child > .summary-unavailable { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; }
+  .analysis-table tr.matrix-group td { border-top: 0; }
+}
