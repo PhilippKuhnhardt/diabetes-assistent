@@ -60,6 +60,7 @@ async function run(browser, name, options) {
     check(await page.isVisible("#settings-index"), `${name}: back to the settings list`);
   } else {
     check(await page.isVisible("[name=dose_target_mgdl]"), `${name}: all settings on one page`);
+    await settings(page, name);
   }
   await page.click("[data-nav=today]");
   const active = await page.$$eval(".appnav-item.active", items => items.map(item => item.dataset.nav));
@@ -105,6 +106,43 @@ async function analysis(page, name) {
   check(await page.isVisible("#diary-view"), `${name}: a calculation opens its day`);
   await page.click("[data-nav=analysis]");
   await page.waitForSelector("#calculations tbody tr");
+}
+
+// Settings (web/ui/settings.js): the model form saves and keeps the value, places can be created,
+// renamed and deleted, a notification kind switches.
+async function settings(page, name) {
+  const target = await page.inputValue("[name=dose_target_mgdl]");
+  await page.fill("[name=dose_target_mgdl]", "105");
+  await page.click("#settings-form button[type=submit]");
+  await page.waitForFunction(() => document.querySelector("#toast")?.textContent.includes("Einstellungen gespeichert"));
+  check(await page.inputValue("[name=dose_target_mgdl]") === "105", `${name}: a saved setting stays`);
+  await page.fill("[name=dose_target_mgdl]", target);
+  await page.click("#settings-form button[type=submit]");
+  await page.waitForFunction(wanted => document.querySelector("[name=dose_target_mgdl]")?.value === wanted &&
+    document.querySelector("#settings-version")?.textContent !== "", target);
+  await page.fill("#place-new input[name=name]", "Testort");
+  await page.click("#place-new button[type=submit]");
+  await page.waitForSelector(".place-item .place-name");
+  check(await page.inputValue(".place-item .place-name") === "Testort", `${name}: a place is created`);
+  await page.fill(".place-item .place-name", "Testort 2");
+  await page.press(".place-item .place-name", "Enter");
+  await page.locator(".place-item .place-name").blur();
+  await page.waitForFunction(() => document.querySelector(".place-item .hint")?.textContent.includes("Eintr"));
+  page.once("dialog", dialog => dialog.accept());
+  await page.click(".place-item .delete-treatment");
+  await page.waitForFunction(() => !document.querySelector(".place-item"));
+  check(true, `${name}: a place is deleted`);
+  const toggle = ".notify-toggle[data-kind=check]";
+  await page.waitForSelector(toggle + ":not([disabled])");
+  const was = await page.isChecked(toggle);
+  await page.click(toggle);
+  await page.waitForFunction(([selector, before]) => {
+    const input = document.querySelector(selector);
+    return input.checked !== before && !input.disabled;
+  }, [toggle, was]);
+  await page.click(toggle);
+  await page.waitForFunction(([selector, before]) => document.querySelector(selector).checked === before, [toggle, was]);
+  check(true, `${name}: a notification kind switches`);
 }
 
 (async () => {
