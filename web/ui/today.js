@@ -9,14 +9,14 @@ import { dayBounds } from "./day.js";
 const HOURS = [[3, "3 h"], [6, "6 h"], [24, "Tag"]];
 
 // Today's "Wirkt noch" card: what still lowers and raises glucose and the expected value after it.
-function ActiveCard({ active }) {
+export function ActiveCard({ active, id = "day-overview-active" }) {
   const until = value => value ? "bis " + timeOnly(value) : "wirkt nicht mehr";
   const nothing = !active.lowering_until && !active.raising_until;
   const value = (sign, mgdl) => html`${sign + num(mgdl, 0)} <small>mg/dL</small>`;
   const Item = ({ label, strong, lines, className = "" }) => html`<div class=${"active-item" + className}><span>${label}</span>
     <strong>${strong}</strong>${lines.map(line => html`<small>${line}</small>`)}</div>`;
   const split = active.split_plan;
-  return html`<div id="day-overview-active" class="active-card" aria-label="Was noch wirkt" aria-live="polite">
+  return html`<div id=${id} class="active-card" aria-label="Was noch wirkt" aria-live="polite">
     <${Item} label="Senkt noch" strong=${value("−", active.lowering_mgdl)} lines=${["Insulin " + num(active.insulin_units, 1) + " IE",
       ...(active.sports || []).filter(row => Number(row.remaining_mgdl) > 0).map(row =>
         (sportNames[row.kind] || "Sport") + " " + timeOnly(row.at) + " −" + num(row.remaining_mgdl, 0)),
@@ -51,8 +51,29 @@ function Recent({ treatments }) {
     ? html`<span class="recent-label">Letzte 3 h</span>${items}` : html`<span class="recent-label">Letzte 3 h: keine Einträge</span>`}</div>`;
 }
 
+// Today's meals in short (user request 2026-11-18): time, carbs, insulin and the factor once it is known;
+// a tap opens the meal's card. The full review stays in "Verlauf".
+function MealsToday({ meals, onEdit }) {
+  if (!meals.length) return html`<div class="meals-today"><span class="recent-label">Mahlzeiten heute: noch keine</span></div>`;
+  return html`<div class="meals-today" aria-label="Mahlzeiten heute"><span class="recent-label">Mahlzeiten heute</span>
+    <ul>${meals.map(meal => {
+      // The meal's own entries (meal plus snacks); the factor once the window is over.
+      const events = meal.events || [];
+      const carbs = events.reduce((sum, row) => sum + (Number(row.carbs) || 0), 0) || meal.carbs;
+      const insulin = events.reduce((sum, row) => sum + (Number(row.insulin) || 0), 0);
+      const snacks = Math.max(0, events.filter(row => Number(row.carbs) > 0).length - 1);
+      const factor = meal.calculation?.factor_units_per_ke;
+      const running = factor == null && meal.window?.end && new Date(meal.window.end).getTime() > Date.now();
+      return html`<li><button type="button" class="meal-today" onClick=${() => onEdit(meal.source_id)}>
+        <time>${timeOnly(meal.at)}</time><b>${names[meal.meal] || "Mahlzeit"}</b>
+        <span>${[carbs != null ? num(carbs, 0) + " g" : "", Number(insulin) > 0 ? num(insulin, 1) + " IE" : "",
+          snacks ? "+ " + snacks + " Snack" + (snacks > 1 ? "s" : "") : ""].filter(Boolean).join(" · ")}</span>
+        <small>${factor != null ? num(factor, 2) + " IE/KE" : running ? "bis " + timeOnly(meal.window.end) : ""}</small></button></li>`;
+    })}</ul></div>`;
+}
+
 // Today the last hours up to now (3 h, 6 h or the whole day), other days the whole day.
-export function Overview({ data, day, today, active, hours, onHours }) {
+export function Overview({ data, day, today, active, hours, onHours, onEdit = () => {} }) {
   const isToday = day === today;
   const bounds = data ? dayBounds(data, day) : null;
   let view = bounds && { from: bounds.dayStart, to: bounds.dayEnd };
@@ -71,6 +92,7 @@ export function Overview({ data, day, today, active, hours, onHours }) {
           onClick=${() => onHours(value)}>${label}</button>`)}</div></div>
     ${data ? html`<${DayChart} id="day-overview-chart" data=${data} view=${view} clipId="overview-clip" />` : html`<div class="day-overview-chart"></div>`}
     ${isToday && active && html`<${ActiveCard} active=${active} />`}
+    ${isToday && data && html`<${MealsToday} meals=${data.meals || []} onEdit=${onEdit} />`}
     ${isToday && data && html`<${Recent} treatments=${[...data.treatments, ...(data.basal || []).map(dose => ({ at: dose.at, basal: dose.units }))]} />`}
     ${note && html`<p id="day-overview-note" class="hint">${note}</p>`}</div>`;
 }

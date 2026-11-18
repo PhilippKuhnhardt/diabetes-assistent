@@ -21,10 +21,10 @@ async function run(browser, name, options) {
 
   if (!compact) await doseHelp(page, name);
 
-  for (const choice of ["meal", "correction", "carbs", "exercise", "basal"]) {
+  for (const choice of ["meal", "manual", "exercise", "basal"]) {
     await page.click("#nav-add");
     await page.waitForSelector("#add-dialog[open] .choice");
-    check((await page.$$(".choice")).length === 5, `${name}: "+" offers 5 choices`);
+    check((await page.$$(".choice")).length === 4, `${name}: "+" offers 4 choices`);
     await page.click(`.choice[data-choice=${choice}]`);
     check(!(await page.evaluate(() => document.querySelector("#add-dialog").open)), `${name}: choice ${choice} closes "+"`);
     const kind = await page.inputValue("#entry-kind");
@@ -42,6 +42,7 @@ async function run(browser, name, options) {
   await page.click("[data-overview-hours='6']");
   check(await page.getAttribute("[data-overview-hours='6']", "aria-pressed") === "true", `${name}: the chart shows 6 h`);
   await page.click("[data-overview-hours='3']");
+  check((await page.$$(".meal-today")).length > 0, `${name}: Heute lists today's meals`);
   if (name === "phone") {
     await page.waitForSelector("#inbox-new .inbox-item");
     await page.click("#inbox-new .inbox-item >> nth=0");
