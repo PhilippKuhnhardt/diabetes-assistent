@@ -3759,6 +3759,25 @@ async function dishAction(body) {
   catch (error) { toast(error.message, true); if (state.dishes) renderDishes(state.dishes); }
 }
 
+// Tables become cards on phones (concept 2026-11-18, user report: tables are bad on mobile): every
+// cell carries its column's name, which the phone layout shows above the value (styles.css).
+function labelTables(root) {
+  const tables = root.matches?.(".analysis-table") ? [root] : root.querySelectorAll?.(".analysis-table") || [];
+  for (const table of tables) {
+    const heads = [...table.querySelectorAll("thead th")].map(cell => cell.textContent.replace(/\s+/g, " ").trim());
+    for (const row of table.querySelectorAll("tbody tr")) {
+      let column = 0;
+      for (const cell of row.children) {
+        if (cell.tagName === "TD" && cell.colSpan === 1 && heads[column] && !cell.dataset.label) cell.dataset.label = heads[column];
+        column += cell.colSpan || 1;
+      }
+    }
+  }
+}
+new MutationObserver(records => {
+  for (const record of records) for (const node of record.addedNodes) if (node.nodeType === 1) labelTables(node);
+}).observe(document.documentElement, { childList: true, subtree: true });
+
 document.addEventListener("DOMContentLoaded", () => {
   $("#entry-agent-open").addEventListener("click", openAgent);
   $("#entry-agent-clear").addEventListener("click", () => { state.entryAgent = null; updateEntryAgent(); });
