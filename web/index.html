@@ -27,6 +27,15 @@
       <div class="topbar-actions"><button type="button" id="inbox-badge" class="inbox-badge" hidden></button><div id="connection" class="status" hidden></div></div>
     </header>
 
+    <!-- App navigation (concept 2026-11-18): a tab bar at the bottom on phones and tablets, a rail on the left
+         on wide screens. "+" opens the choice of what to enter (web/ui/quick-add.js). -->
+    <nav class="appnav" aria-label="Navigation">
+      <a href="?view=diary" class="appnav-item" data-nav="today"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span>Heute</span></a>
+      <a href="?view=diary" class="appnav-item" data-nav="history"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v15H4z M4 10h16 M9 3v4 M15 3v4"/></svg><span>Verlauf</span></a>
+      <button type="button" class="appnav-add" id="nav-add" aria-label="Eintragen" aria-haspopup="dialog"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14 M5 12h14"/></svg><span>Eintragen</span></button>
+      <a href="?view=analysis" class="appnav-item" data-nav="analysis"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10 M10 20V4 M16 20v-7 M22 20H2"/></svg><span>Analyse</span></a>
+      <a href="?view=settings" class="appnav-item" data-nav="settings"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16 M4 12h16 M4 18h16"/></svg><span>Mehr</span></a>
+    </nav>
     <nav class="tabs" aria-label="Bereiche">
       <a class="tab active" href="?view=diary" data-view="diary">Tagebuch</a>
       <a class="tab" href="?view=analysis" data-view="analysis">Analyse</a>
@@ -71,7 +80,13 @@
               <div id="day-overview-recent" class="overview-recent" aria-label="Einträge der letzten 3 Stunden"></div>
               <p id="day-overview-note" class="hint"></p>
             </div>
-            <div class="section-head"><h2 id="entry-title">Eintrag hinzufügen</h2></div>
+            <!-- On phones and tablets the entry is a full-screen sheet opened from "+"; on wide screens it stays here. -->
+            <div id="entry-drawer" class="entry-drawer">
+            <div class="section-head entry-drawer-head">
+              <button type="button" id="entry-back" class="quiet entry-drawer-nav" aria-label="Zurück zur Auswahl">‹ Auswahl</button>
+              <h2 id="entry-title">Eintrag hinzufügen</h2>
+              <button type="button" id="entry-close" class="quiet entry-drawer-nav" aria-label="Schließen">×</button>
+            </div>
             <form id="entry-form">
               <div class="entry-switch" role="group" aria-label="Eintragsart">
                 <button type="button" class="entry-mode" data-entry-mode="meal" aria-pressed="true">Essen &amp; Insulin</button>
@@ -136,6 +151,7 @@
               <div class="entry-chips"><button type="button" id="entry-finger-chip" class="chip quiet-chip" aria-controls="entry-finger-field" aria-expanded="false" hidden>+ BZ blutig</button><button type="button" id="entry-note-chip" class="chip quiet-chip" aria-controls="entry-note-field" aria-expanded="false">+ Notiz</button></div>
               <div class="form-actions entry-actions"><button class="primary" type="submit" id="entry-submit">In Nightscout speichern</button></div>
             </form>
+            </div>
           </section>
           <section class="records review-panel">
             <section class="panel">
@@ -227,6 +243,9 @@
 
       <section id="settings-view" class="view" hidden>
         <div class="page-head"><div><h1>Profil &amp; Modell</h1></div></div>
+        <!-- Phones and tablets: a list of the settings pages; one page at a time (app.js setupSettingsPages). -->
+        <nav id="settings-index" class="settings-index" aria-label="Einstellungen"></nav>
+        <button type="button" id="settings-back" class="quiet settings-back" hidden>‹ Einstellungen</button>
         <div class="settings-grid settings-top">
           <section class="panel">
             <h2>Nightscout</h2>
@@ -388,6 +407,8 @@
       </section>
     </main>
   </div>
+  <!-- The choice behind "+" (web/ui/quick-add.js) renders in here. -->
+  <dialog id="add-dialog" class="add-dialog" aria-label="Eintragen"></dialog>
   <!-- A saved entry as a card (web/ui/entry-card.js) renders in here. -->
   <dialog id="edit-dialog" class="card-dialog" aria-labelledby="edit-dialog-title"></dialog>
   <!-- The meal chat (web/ui/agent-chat.js) renders in here. -->

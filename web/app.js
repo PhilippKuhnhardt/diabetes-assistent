@@ -237,6 +237,9 @@ function view(name, options = {}) {
   if (name === "analysis") loadSummary();
   if (changed) releaseEntryTime();
   if (name === "diary") setDefaultMealTime();
+  if (name === "settings" && changed) showSettingsPage(null);
+  if (changed) closeEntryDrawer();
+  updateNav();
 }
 
 // Analysis sub-pages: values of the chosen period, or how the Automatik would have done.
@@ -1305,6 +1308,7 @@ function applyDiaryMode() {
   $("#diary-view").dataset.mode = state.diaryMode;
   $$("[data-diary-mode]").forEach(button =>
     button.setAttribute("aria-pressed", String(button.dataset.diaryMode === state.diaryMode)));
+  updateNav();
 }
 
 function renderVisibleCharts() {
@@ -2452,6 +2456,7 @@ function resetEntryForm() {
   state.entryPlace = undefined;
   state.entryAgent = null;
   updateEntryAgent();
+  closeEntryDrawer();
   delete form.elements.sport_effect_mgdl.dataset.touched;
   setDefaultMealTime();
   updateEntryFields();
@@ -3710,6 +3715,157 @@ function applyAgent({ session, estimate, carbs, certainty, fat_protein, fast }) 
   requestEntryPosition();
   schedulePreview(0);
 }
+
+// ---- Navigation and quick entry (concept 2026-11-18) ----
+// Phones and tablets: tab bar at the bottom (Heute, Verlauf, +, Analyse, Mehr), the entry as a
+// full-screen sheet opened from "+", settings as one page at a time. Wide screens: a rail on the left,
+// the entry stays in the page. The breakpoint matches the CSS.
+const compactLayout = () => matchMedia("(max-width: 950px)").matches;
+const QUICK_TITLES = { meal: "Essen", correction: "Korrektur", carbs: "KH direkt", exercise: "Sport", basal: "Basal" };
+
+function updateNav() {
+  const current = state.view === "diary" ? (state.diaryMode === "review" ? "history" : "today") : state.view;
+  $$(".appnav-item").forEach(link => {
+    const active = link.dataset.nav === current;
+    link.classList.toggle("active", active);
+    if (active) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
+}
+
+function navigate(target) {
+  if (target === "today" || target === "history") {
+    view("diary");
+    if (target === "today" && state.day !== todayDay()) changeDay(todayDay());
+    state.modeDay = state.day;
+    state.diaryMode = target === "today" ? "now" : "review";
+    applyDiaryMode();
+    renderVisibleCharts();
+    if (target === "history" && !compactLayout()) $(".review-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    else window.scrollTo({ top: 0 });
+  } else {
+    view(target);
+    window.scrollTo({ top: 0 });
+  }
+}
+
+// Each choice says what it would do: the correction dose now, whether today's basal is still open.
+function quickAddHints() {
+  const today = state.day === todayDay();
+  const hints = { meal: agent.info?.available ? "Foto, Sprache oder Text" : "KH eintragen", carbs: "Gramm direkt eingeben",
+    exercise: "Art, Dauer, Wirkung", correction: "nur Insulin", basal: "" };
+  const preview = state.preview;
+  const suggested = today && preview && preview.day === state.day && preview.mode === "meal" && !(Number(preview.carbs_g) > 0)
+    ? (preview.options || []).find(option => option.suggested) : null;
+  if (suggested && Number(suggested.units) > 0) hints.correction = "jetzt " + num(suggested.units, 1) + " IE empfohlen";
+  if (today && state.dayData) {
+    const doses = state.dayData.basal || [];
+    hints.basal = doses.length ? "heute " + num(doses[doses.length - 1].units, 1) + " IE um " + timeOnly(doses[doses.length - 1].at) : "heute noch offen";
+  }
+  return hints;
+}
+
+function openQuickAdd() {
+  if (!window.quickAdd) { toast("Seite neu laden, die Auswahl ist noch nicht geladen", true); return; }
+  window.quickAdd.open({ hints: quickAddHints(), onChoose: chooseEntry });
+}
+
+function chooseEntry(kind) {
+  if (state.view !== "diary") view("diary");
+  const mode = kind === "exercise" || kind === "basal" ? kind : "meal";
+  $('.entry-mode[data-entry-mode="' + mode + '"]')?.click();
+  $("#entry-title").textContent = QUICK_TITLES[kind] || "Eintrag hinzufügen";
+  openEntryDrawer();
+  const form = $("#entry-form");
+  if (kind === "meal" && agent.info?.available) openAgent();
+  else if (kind === "meal" || kind === "carbs") form.elements.carbs.focus();
+  else if (kind === "correction") $("#entry-dose")?.scrollIntoView({ block: "start" });
+  else if (kind === "exercise") form.elements.sport_kind.focus();
+  else if (kind === "basal") form.elements.basal_units.focus();
+}
+
+function openEntryDrawer() {
+  if (compactLayout()) {
+    document.body.classList.add("entry-open");
+    $("#entry-drawer").scrollTop = 0;
+  } else {
+    $("#entry-drawer").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function closeEntryDrawer() {
+  document.body.classList.remove("entry-open");
+  const title = $("#entry-title");
+  if (title) title.textContent = "Eintrag hinzufügen";
+}
+
+// Settings on phones: a list of pages (one per panel, grouped by the headings), one page at a time.
+function setupSettingsPages() {
+  const root = $("#settings-view");
+  const index = $("#settings-index");
+  const groups = [{ title: "Allgemein", pages: [] }];
+  let count = 0;
+  $$(".settings-heading, .panel", root).forEach(node => {
+    if (node.matches(".settings-heading")) { groups.push({ title: node.textContent.trim(), pages: [] }); return; }
+    if (node.matches(".settings-save")) return;
+    const heading = node.querySelector(":scope > h2");
+    if (!heading) return;
+    const id = "page-" + (++count);
+    node.dataset.settingsPage = id;
+    groups[groups.length - 1].pages.push({ id, title: heading.firstChild?.textContent?.trim() || heading.textContent.trim() });
+  });
+  index.replaceChildren(...groups.filter(group => group.pages.length).map(group => {
+    const section = document.createElement("div");
+    section.className = "settings-index-group";
+    const title = document.createElement("h2");
+    title.textContent = group.title;
+    section.append(title, ...group.pages.map(page => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "settings-index-item";
+      button.dataset.settingsOpen = page.id;
+      button.textContent = page.title;
+      return button;
+    }));
+    return section;
+  }));
+}
+
+function showSettingsPage(id) {
+  const root = $("#settings-view");
+  if (id) root.dataset.page = id;
+  else delete root.dataset.page;
+  let inForm = false;
+  $$("[data-settings-page]", root).forEach(panel => {
+    const current = panel.dataset.settingsPage === id;
+    panel.classList.toggle("is-current", current);
+    if (current) inForm = Boolean(panel.closest("#settings-form"));
+  });
+  root.classList.toggle("page-in-form", inForm);
+  $("#settings-back").hidden = !id;
+  window.scrollTo({ top: 0 });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  $$(".appnav-item").forEach(link => link.addEventListener("click", event => {
+    event.preventDefault();
+    navigate(link.dataset.nav);
+  }));
+  $("#nav-add").addEventListener("click", openQuickAdd);
+  $("#entry-back").addEventListener("click", () => { closeEntryDrawer(); openQuickAdd(); });
+  $("#entry-close").addEventListener("click", closeEntryDrawer);
+  // Switching the kind by hand (wide screens) drops the title the "+" choice gave.
+  $$(".entry-mode").forEach(button => button.addEventListener("click", event => {
+    if (event.isTrusted) $("#entry-title").textContent = "Eintrag hinzufügen";
+  }));
+  setupSettingsPages();
+  $("#settings-index").addEventListener("click", event => {
+    const button = event.target.closest("[data-settings-open]");
+    if (button) showSettingsPage(button.dataset.settingsOpen);
+  });
+  $("#settings-back").addEventListener("click", () => showSettingsPage(null));
+  updateNav();
+});
 
 // ---- Dish catalogue (Analyse → Gerichte): each dish with how its main meals turned out. ----
 const MEAL_NAMES = { breakfast: "Frühstück", lunch: "Mittag", dinner: "Abend" };
