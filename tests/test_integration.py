@@ -482,6 +482,21 @@ class IntegrationTests(unittest.TestCase):
             "id": session["id"], "day": "2026-09-23", "reset": True})
         self.assertEqual(Decimal(self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]["sport_effect_mgdl"]),
                          Decimal(24))
+        # Its own effect duration (user request 2026-11-18): over 10 h the window holds 3 of 10 h, so 12 mg/dL.
+        self.request("/api/analysis/sport-session", method="POST", body={
+            "id": session["id"], "day": "2026-09-23", "minutes": 600})
+        after = self.request("/api/day?date=2026-09-23")
+        self.assertEqual(Decimal(after["meals"][0]["calculation"]["sport_effect_mgdl"]), Decimal(12))
+        session = next(item for item in after["timeline"] if item["kind"] == "exercise")
+        self.assertEqual((session["sport_minutes"], session["sport_minutes_default"], session["sport_minutes_custom"],
+                          Decimal(session["sport_effect_mgdl"])), (600, 300, True, Decimal(40)))
+        with self.assertRaises(urllib.error.HTTPError):
+            self.request("/api/analysis/sport-session", method="POST", body={
+                "id": session["id"], "day": "2026-09-23", "minutes": 10})
+        self.request("/api/analysis/sport-session", method="POST", body={
+            "id": session["id"], "day": "2026-09-23", "minutes": None})
+        self.assertEqual(Decimal(self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]["sport_effect_mgdl"]),
+                         Decimal(24))
         # A value on the meal still replaces it, and "Kein Einfluss" drops it.
         self.request("/api/analysis/sport", method="POST", body={
             "meal_id": meal["id"], "day": "2026-09-23", "status": "affected",

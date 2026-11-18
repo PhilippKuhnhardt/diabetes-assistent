@@ -100,8 +100,11 @@ def sport_remaining(minutes_after_end: Decimal, duration: Decimal = SPORT_MINUTE
     return max(Decimal(0), 1 - minutes_after_end / duration)
 
 
-def sport_minutes(item: dict, settings: dict) -> Decimal:
-    """Minutes after its end over which a session acts: the setting of its kind."""
+def sport_minutes(item: dict, settings: dict, overrides: dict | None = None) -> Decimal:
+    """Minutes after its end over which a session acts: Philipp's value for this session, else the
+    setting of its kind."""
+    if overrides and item.get("id") in overrides:
+        return Decimal(int(overrides[item["id"]]))
     return Decimal(int(settings.get("sport_durations_minutes", {}).get(item.get("sport_type"), SPORT_MINUTES)))
 
 
@@ -133,11 +136,11 @@ def is_main_meal(item: dict) -> bool:
 
 def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, surcharge_mgdl: Decimal | None,
             surcharge_share, keep_all: bool = False, sport_overrides: dict | None = None,
-            fat_surcharge_mgdl: Decimal = Decimal(0), scale=None) -> dict:
+            fat_surcharge_mgdl: Decimal = Decimal(0), scale=None, sport_minutes_overrides: dict | None = None) -> dict:
     """The doses, carb entries, surcharges and sport sessions that may still act at `now`, with their full
     effect in mg/dL. carb_factor(at) gives the IE/KE that values a carb entry made at `at`. keep_all keeps
     everything up to `now` however old, for a whole-day timeline. sport_overrides maps a session's id to
-    the drop Philipp set for it. A fat/protein main meal carries fat_surcharge_mgdl more surcharge;
+    the drop Philipp set for it, sport_minutes_overrides its effect duration. A fat/protein main meal carries fat_surcharge_mgdl more surcharge;
     scale(item) gives the place factor of an entry (None = 1) for its carbs and surcharge."""
     zone = settings["timezone"]
     isf = lambda at: calculation.isf_at(at, settings.get("isf_schedule", []), zone)
@@ -149,7 +152,7 @@ def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, 
         if item.get("eventType") == "Exercise" and item.get("sport_type"):
             seen.add(key)
             effect = sport_effect(item, settings, sport_overrides)
-            duration = sport_minutes(item, settings)
+            duration = sport_minutes(item, settings, sport_minutes_overrides)
             ahead = timedelta(0) if keep_all else SPORT_AHEAD
             if (effect != 0 and item["at"] <= now + ahead
                     and (keep_all or _minutes(now, sport_end(item)) < duration)):

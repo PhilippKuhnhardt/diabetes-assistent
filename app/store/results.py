@@ -75,6 +75,7 @@ def _shared_inputs(db) -> list:
         "SELECT meal_id,status,effect_mgdl FROM analysis_sport_marks ORDER BY meal_id",
         "SELECT meal_id,start_at,end_at FROM analysis_windows ORDER BY meal_id",
         "SELECT session_id,effect_mgdl FROM sport_session_effects ORDER BY session_id",
+        "SELECT session_id,minutes FROM sport_session_minutes ORDER BY session_id",
         "SELECT meal_id FROM analysis_exclusions ORDER BY meal_id",
         "SELECT day,day_type FROM analysis_day_types ORDER BY day",
         "SELECT start_day,end_day FROM vacation_periods ORDER BY id",

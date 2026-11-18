@@ -122,6 +122,7 @@ def compute_day(day: str) -> dict:
     meals = episodes.meals_for_day(treatments, day, settings["timezone"], settings)
     sport_marks = marks.analysis_sport_marks()
     session_effects = marks.sport_session_effects()
+    session_minutes = marks.sport_session_minutes()
     manual_windows = marks.analysis_windows()
     exclusions = marks.analysis_exclusions()
     place_names = {place["id"]: place["name"] for place in place_store.all_places()}
@@ -156,7 +157,7 @@ def compute_day(day: str) -> dict:
             span = {"start": meal["at"], "end": meal["at"] + timedelta(minutes=int(meal_settings["window_minutes"]))}
         sport_parts = [
             (item, on_board.sport_effect(item, meal_settings, session_effects)
-             * on_board.sport_share(item, span["start"], span["end"], on_board.sport_minutes(item, meal_settings)))
+             * on_board.sport_share(item, span["start"], span["end"], on_board.sport_minutes(item, meal_settings, session_minutes)))
             for item in treatments
             if item.get("eventType") == "Exercise" and item.get("sport_type") and item["at"] < span["end"]]
         sport_parts = [(item, effect) for item, effect in sport_parts if effect != 0]
@@ -242,7 +243,7 @@ def compute_day(day: str) -> dict:
                 "id": item["id"], "at": item["at"],
                 "kind": kind, "label": episodes.SPORT_LABELS.get(kind, "Sportart unbekannt"),
                 "duration_minutes": item["duration"], "notes": note,
-                **sport_session(item, settings, session_effects),
+                **sport_session(item, settings, session_effects, session_minutes),
             })
             continue
         other_events.append({
@@ -302,7 +303,7 @@ def compute_day(day: str) -> dict:
             "carbs": item["carbs"], "insulin": item["insulin"],
             "basal_units": item["basal_units"], "duration_minutes": item["duration"],
             "sport_kind": item.get("sport_type"), "notes": note,
-            **(sport_session(item, settings, session_effects) if kind == "exercise" else {}),
+            **(sport_session(item, settings, session_effects, session_minutes) if kind == "exercise" else {}),
             "carbs_certainty": item.get("carbs_certainty"), "fat_protein": item.get("fat_protein", False),
             "alcohol": item.get("alcohol", False), "fast": item.get("fast", False), "place": place_of(item),
             "dish": dish_of(item), "event_id": item.get("event_id"),
@@ -349,11 +350,14 @@ def compute_day(day: str) -> dict:
     })
 
 
-def sport_session(item: dict, settings: dict, session_effects: dict) -> dict:
-    """A session's glucose drop as it counts, and whether Philipp set it himself."""
+def sport_session(item: dict, settings: dict, session_effects: dict, session_minutes: dict) -> dict:
+    """A session's glucose drop and effect duration as they count, and whether Philipp set them himself."""
     return {"sport_effect_mgdl": str(on_board.sport_effect(item, settings, session_effects)),
             "sport_effect_default_mgdl": str(on_board.sport_effect(item, settings)),
-            "sport_effect_custom": item["id"] in session_effects}
+            "sport_effect_custom": item["id"] in session_effects,
+            "sport_minutes": int(on_board.sport_minutes(item, settings, session_minutes)),
+            "sport_minutes_default": int(on_board.sport_minutes(item, settings)),
+            "sport_minutes_custom": item["id"] in session_minutes}
 
 
 def meal_review(meal: dict) -> dict:

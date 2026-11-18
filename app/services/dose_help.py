@@ -62,7 +62,8 @@ def dose_help(payload: dict) -> dict:
         active = on_board.summary(on_board.sources(
             treatments, now, current_settings, carb_factor,
             surcharge_mgdl if method == forecast.SURCHARGE else None, forecast.surcharge_share,
-            sport_overrides=marks.sport_session_effects(), fat_surcharge_mgdl=fat_mgdl,
+            sport_overrides=marks.sport_session_effects(),
+            sport_minutes_overrides=marks.sport_session_minutes(), fat_surcharge_mgdl=fat_mgdl,
             scale=factors.entry_scale(scales)), now)
     except ValueError:
         active = None

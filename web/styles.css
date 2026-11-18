@@ -309,16 +309,67 @@ span.range-high { color: #9a6410; font-weight: 650; }
   .diary-analysis .meal-list { grid-template-columns: 1fr; }
 }
 
-#edit-dialog { width: min(460px, calc(100vw - 28px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; scroll-padding-bottom: 90px; border: 1px solid var(--line); border-radius: 15px; padding: 24px; color: var(--ink); box-shadow: 0 18px 70px #10281840; }
+/* A saved entry as a card (web/ui/entry-card.js): header, scrolling body, save button at the bottom. */
+#edit-dialog { width: min(480px, calc(100vw - 28px)); max-height: min(820px, calc(100vh - 32px)); max-height: min(820px, calc(100dvh - 32px)); overflow: hidden; border: 1px solid var(--line); border-radius: 15px; padding: 0; color: var(--ink); background: var(--canvas); box-shadow: 0 18px 70px #10281840; }
+#edit-dialog[open] { display: flex; }
 #edit-dialog::backdrop { background: #0c2419a8; }
-#edit-dialog .section-head { align-items: center; }
-#edit-dialog .section-head button { font-size: 22px; line-height: 1; padding: 3px 9px; }
-#edit-dialog .primary { flex: 1; }
-/* On phones the dialog sits at the top so the keyboard covers as little as possible; the rest scrolls. */
+.entry-sheet { display: flex; flex-direction: column; width: 100%; min-height: 0; }
+.card-head { align-items: center; margin: 0; padding: 14px 18px 10px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.card-head h2 { margin: 0; }
+.card-date { color: var(--muted); font-size: 13px; }
+.card-head button.quiet { font-size: 22px; line-height: 1; padding: 3px 9px; }
+.card-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 12px; }
+.card-foot { padding: 12px 18px max(14px, env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); background: var(--surface); }
+.card-foot .primary { width: 100%; }
+.card-photos { display: grid; gap: 6px; }
+.card-photos.many { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.card-photos img { display: block; width: 100%; max-height: 220px; object-fit: cover; border-radius: 14px; border: 1px solid var(--line); }
+.card-photos.many img { height: 120px; }
+.card-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.card-tiles.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.card-tiles.one { grid-template-columns: minmax(0, 1fr); }
+.tile { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 0; padding: 10px 8px 9px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); text-align: center; font-weight: 650; }
+.tile > small { color: var(--muted); font-size: 11.5px; font-weight: 600; }
+.tile-value { display: flex; align-items: baseline; justify-content: center; gap: 3px; color: var(--ink); }
+.tile-value small { color: var(--muted); font-size: 12px; font-weight: 600; }
+.tile-value b { font-size: 22px; letter-spacing: -.03em; }
+.tile input { width: 3.6em; min-height: 0; margin: 0; padding: 0; border: 0; border-bottom: 1px dashed #b9c7bf; border-radius: 0; background: none; text-align: center; font-size: 22px; font-weight: 800; letter-spacing: -.03em; }
+.tile input:focus-visible { outline: none; border-bottom: 2px solid var(--green); }
+.card-tiles.one .tile input { width: 4.5em; }
+.tile button.meter { display: inline-flex; gap: 3px; margin-top: 4px; min-height: 0; padding: 6px 6px; border: 0; border-radius: 6px; background: none; }
+.meter i { width: 14px; height: 5px; border-radius: 3px; background: #d6ddd9; }
+.meter[data-level="unsure"] i.on { background: #e5786d; }
+.meter[data-level="known"] i.on { background: #ecc94b; }
+.meter[data-level="weighed"] i.on { background: #4fa36f; }
+.card-certainty { display: flex; padding: 4px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.card-food { display: flex; flex-direction: column; gap: 8px; }
+.card-food textarea { width: 100%; min-height: 6em; max-height: 50vh; field-sizing: content; resize: vertical; padding: 10px 12px; border: 1px solid #cddbd2; border-radius: 12px; background: #fff; color: var(--ink); font: inherit; font-size: 15px; font-weight: 400; line-height: 1.45; }
+.card-food .entry-chips { align-items: center; gap: 6px; }
+.card-food .card-refine { margin-left: auto; }
+.card-list { border: 1px solid var(--line); border-radius: 13px; background: var(--surface); }
+.card-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin: 0; padding: 7px 13px; min-height: 46px; border-top: 1px solid var(--line); font-size: 14px; font-weight: 600; }
+.card-row:first-child { border-top: 0; }
+.card-row > span:first-child { color: var(--ink); font-weight: 600; }
+.card-row input, .card-row select { flex: 1 1 auto; width: auto; max-width: 62%; min-height: 34px; margin: 0; padding: 4px 6px; border: 0; background: none; text-align: right; font-weight: 700; }
+.card-row input[type=time] { flex: 0 0 auto; text-align: right; }
+.card-row select { text-align-last: right; }
+.card-number { display: inline-flex; align-items: baseline; gap: 4px; color: var(--ink); }
+.card-row .card-number input { width: 4.5em; max-width: none; }
+.card-number small { color: var(--muted); }
+.card-number.wide { padding: 4px 12px; border: 1px solid #cddbd2; border-radius: 10px; background: #fff; }
+.card-number.wide input { width: 4.5em; min-height: 36px; margin: 0; padding: 0; border: 0; background: none; font-size: 18px; font-weight: 750; }
+.card-group { display: flex; flex-direction: column; gap: 8px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); }
+.card-group-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+.card-group-head small { color: var(--muted); font-size: 12.5px; }
+.card-group-head:not(:first-child) { margin-top: 6px; }
+.segments { display: flex; gap: 4px; padding: 3px; border-radius: 11px; background: #edf2ee; }
+.segments button { flex: 1; min-height: 36px; padding: 6px 8px; border: 0 !important; border-radius: 8px !important; background: transparent !important; color: var(--muted) !important; font-size: 13px; font-weight: 700; }
+.segments button[aria-pressed="true"] { background: var(--surface) !important; color: var(--ink) !important; box-shadow: 0 1px 3px #18322922; }
+.card-body button.card-delete { align-self: center; min-height: 0; margin-top: 2px; padding: 8px 14px; border: 0; background: none; color: #a8322a; font-size: 13px; font-weight: 650; }
+.card-body button.card-delete.armed { background: #fdecea; border-radius: 9px; }
 @media (max-width: 650px) {
-  #edit-dialog { margin: 12px auto auto; padding: 18px; width: calc(100vw - 20px); }
+  #edit-dialog { width: 100vw; max-width: none; height: 100%; max-height: none; margin: 0; border: 0; border-radius: 0; padding-top: env(safe-area-inset-top, 0px); }
 }
-
 
 /* Compact analysis controls */
 .summary-card .summary-primary { margin-top: 14px; }
@@ -456,7 +507,6 @@ span.range-high { color: #9a6410; font-weight: 650; }
 .inline-unit > span { font-size: 12px; }
 .entry-quality-row { margin: 0; }
 .entry-chips button.chip.quiet-chip { background: none; border-style: dashed; color: var(--muted); }
-#edit-quality { margin: 0 0 14px; }
 .entry-chips button.chip, .entry-chips label.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; margin: 0; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--canvas); color: var(--ink); font-size: 12px; font-weight: 650; cursor: pointer; }
 .entry-chips button.chip:disabled { cursor: default; color: var(--muted); }
 label.chip span { color: inherit; font-weight: inherit; }
@@ -599,7 +649,6 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .day-meal-details { margin-top: 4px; border-top: 1px solid var(--line); padding-top: 8px; }
 .day-meal-details summary { cursor: pointer; color: var(--green-dark); font-size: 12px; font-weight: 700; padding: 2px 0 4px; }
 .day-meal-details[open] summary { margin-bottom: 8px; }
-#delete-edit { margin-top: 12px; width: 100%; }
 @media (max-width: 650px) { .records .night-values { grid-template-columns: 1fr 1fr; } .records .night-card .section-head { display: block; } }
 
 /* Factor facts in the analysis summary cards */
@@ -815,10 +864,8 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 /* Meal agent: the chat (web/ui/agent-chat.js) with photos, bubbles and, at the end, the carbs to take over. */
 #agent-dialog { width: min(520px, calc(100vw - 28px)); height: min(760px, calc(100vh - 32px)); height: min(760px, calc(100dvh - 32px)); max-height: none; overflow: hidden; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 15px; padding: 0; color: var(--ink); background: var(--canvas); box-shadow: 0 18px 70px #10281840; }
 #agent-dialog::backdrop { background: #0c2419a8; }
-#edit-dialog textarea { width: 100%; resize: vertical; font: inherit; font-weight: 400; }
 /* The description is the entry's content: room for several lines, growing with the text where the browser can. */
 label textarea { display: block; margin-top: 7px; background: white; color: var(--ink); border: 1px solid #cddbd2; border-radius: 8px; padding: 9px 11px; font-weight: 400; line-height: 1.45; }
-#edit-dialog textarea[name="description"] { min-height: 7.5em; max-height: 50vh; field-sizing: content; }
 .agent-entry { align-items: center; }
 .agent-chip::before { content: "✦ "; }
 .agent-summary { font-size: 12px; color: var(--muted); }

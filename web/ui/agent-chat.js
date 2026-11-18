@@ -54,7 +54,7 @@ export function CertaintySlider({ level, onChange }) {
   </span>`;
 }
 
-const FactorChip = ({ name, label, title, checked, onChange }) => html`
+export const FactorChip = ({ name, label, title, checked, onChange }) => html`
   <label class="chip chip-toggle factor-chip" title=${title}>
     <input type="checkbox" name=${name} aria-label=${label} checked=${checked} onChange=${event => onChange(event.currentTarget.checked)} />
     <span class=${"factor-icon factor-" + name} aria-hidden="true"></span><span>${label}</span>

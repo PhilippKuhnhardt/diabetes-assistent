@@ -35,9 +35,22 @@ def set_sport_session(payload: dict) -> dict:
     if session_id not in {item["id"] for item in day_view.day_payload(day, refresh=False)["timeline"]
                           if item["kind"] == "exercise"}:
         raise ValueError("Sporteinheit nicht gefunden")
+    # The effect duration is optional: "minutes" set (a number) or reset (null) it, absent leaves it.
+    if "minutes" in payload:
+        minutes = payload["minutes"]
+        if minutes is not None:
+            try:
+                minutes = int(minutes)
+            except (TypeError, ValueError):
+                raise ValueError("Ungültige Wirkdauer") from None
+            if not 30 <= minutes <= 1440:
+                raise ValueError("Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen")
+        marks.set_sport_session_minutes(session_id, minutes)
     if payload.get("reset"):
         marks.set_sport_session_effect(session_id, None)
         return {"id": session_id, "effect_mgdl": None}
+    if "effect_mgdl" not in payload and "minutes" in payload:
+        return {"id": session_id, "minutes": payload["minutes"]}
     effect = calculation.dec(payload.get("effect_mgdl", 0))
     if not effect.is_finite() or not -500 <= effect <= 500:
         raise ValueError("Ungültiger Sporteffekt")

@@ -388,34 +388,8 @@
       </section>
     </main>
   </div>
-  <dialog id="edit-dialog" aria-labelledby="edit-dialog-title">
-    <form id="edit-form">
-      <div class="section-head"><h2 id="edit-dialog-title">Eintrag bearbeiten</h2><button id="close-edit" type="button" class="quiet" aria-label="Schließen">×</button></div>
-      <p id="edit-date" class="hint"></p>
-      <label>Zeitpunkt (24 h)<input name="at" type="time" step="60" required></label>
-      <div id="edit-meal-fields" class="field-pair">
-        <label>Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"></label>
-        <label>Insulin <span>IE</span><input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"></label>
-      </div>
-      <div id="edit-quality" class="entry-chips entry-quality">
-        <span class="certainty-slider"><input type="range" name="certainty_level" min="0" max="2" step="1" value="1" aria-label="KH-Sicherheit: unsicher, halbwegs sicher, sicher (gewogen oder genormt)"><output class="certainty-label">KH halbwegs</output></span>
-        <label class="chip chip-toggle factor-chip" title="Fett- oder eiweißreiche Mahlzeit"><input type="checkbox" name="fat_protein"><span class="factor-icon factor-fat_protein" aria-hidden="true"></span><span>Fettreich</span></label>
-        <label class="chip chip-toggle factor-chip" title="Wirkt schnell (z. B. Saft, Weißbrot)"><input type="checkbox" name="fast"><span class="factor-icon factor-fast" aria-hidden="true"></span><span>Schnell</span></label>
-      </div>
-      <label id="edit-place-field" hidden>Ort<select name="place_id"></select></label>
-      <div id="edit-food-fields" hidden>
-        <label>Beschreibung<textarea name="description" rows="5" maxlength="1000"></textarea></label>
-        <div class="entry-chips"><button type="button" id="edit-agent-open" class="chip agent-chip">Agent</button></div>
-        <label>Gericht<input name="dish_name" type="text" maxlength="60" list="edit-dish-options" autocomplete="off"></label>
-        <datalist id="edit-dish-options"></datalist>
-      </div>
-      <label id="edit-sport-field" hidden>Sportart<select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select></label>
-      <label id="edit-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
-      <label>Notiz <span>optional</span><input name="notes" type="text" maxlength="500"></label>
-      <div class="form-actions"><button class="primary" type="submit">Speichern</button><button id="cancel-edit" type="button" class="quiet">Abbrechen</button></div>
-      <button id="delete-edit" type="button" class="delete-treatment">Eintrag löschen</button>
-    </form>
-  </dialog>
+  <!-- A saved entry as a card (web/ui/entry-card.js) renders in here. -->
+  <dialog id="edit-dialog" class="card-dialog" aria-labelledby="edit-dialog-title"></dialog>
   <!-- The meal chat (web/ui/agent-chat.js) renders in here. -->
   <dialog id="agent-dialog" class="chat-dialog" aria-labelledby="agent-dialog-title"></dialog>
   <dialog id="window-dialog" aria-labelledby="window-dialog-title">
