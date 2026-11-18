@@ -19,6 +19,8 @@ async function run(browser, name, options) {
   check(await page.isVisible(".appnav"), `${name}: navigation visible`);
   check(!(await page.isVisible(".tabs")), `${name}: old tabs hidden`);
 
+  if (!compact) await doseHelp(page, name);
+
   for (const choice of ["meal", "manual", "exercise", "basal"]) {
     await page.click("#nav-add");
     await page.waitForSelector("#add-dialog[open] .choice");
@@ -83,7 +85,31 @@ async function run(browser, name, options) {
   await context.close();
 }
 
-const toastSays = (page, text) => page.waitForFunction(wanted => document.querySelector("#toast")?.textContent.includes(wanted), text);
+// Dose help (web/ui/dose.js): carbs bring the slider with the expected value; moving it fills the insulin
+// field, an own dose stops it following, and an emptied field hands the dose back.
+async function doseHelp(page, name) {
+  const form = "#entry-form";
+  await page.fill(form + " [name=carbs]", "60");
+  await page.waitForSelector("#dose-result .ds-range");
+  check(await page.isVisible("#dose-result .ds-pill"), `${name}: the slider shows where glucose lands`);
+  const readout = () => page.$eval("#dose-result .ds-dose strong", node => node.firstChild.textContent);
+  const max = await page.getAttribute("#dose-result .ds-range", "max");
+  await page.$eval("#dose-result .ds-range", (range, value) => {
+    range.value = value;
+    range.dispatchEvent(new Event("input", { bubbles: true }));
+  }, max);
+  await page.waitForFunction(value => document.querySelector("#dose-result .ds-range").value === value, max);
+  const units = await page.inputValue(form + " [name=insulin]");
+  check(units !== "" && (await readout()).replace(",", ".") === max, `${name}: moving the slider fills the insulin field`);
+  await page.fill(form + " [name=insulin]", "0.5");
+  check((await readout()) === "0,5" && await page.inputValue(form + " [name=insulin]") === "0.5", `${name}: an own dose shows on the slider`);
+  await page.fill(form + " [name=insulin]", "");
+  await page.fill(form + " [name=carbs]", "");
+  await page.waitForFunction(() => !document.querySelector("#dose-result .dose-heading")?.textContent.includes("Empfehlung"));
+  check(true, `${name}: no carbs, no meal recommendation`);
+}
+
+const toastSays =(page, text) => page.waitForFunction(wanted => document.querySelector("#toast")?.textContent.includes(wanted), text);
 
 // "Tag durchgehen" (web/ui/day.js): the day chart and effects, a meal excluded and counted again, and the
 // window editor: dragging, nudging, saving and going back to the standard window.
