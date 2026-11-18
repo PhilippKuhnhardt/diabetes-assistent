@@ -92,8 +92,8 @@ export function Overview({ data, day, today, active, hours, onHours, onEdit = ()
           onClick=${() => onHours(value)}>${label}</button>`)}</div></div>
     ${data ? html`<${DayChart} id="day-overview-chart" data=${data} view=${view} clipId="overview-clip" />` : html`<div class="day-overview-chart"></div>`}
     ${isToday && active && html`<${ActiveCard} active=${active} />`}
-    ${isToday && data && html`<${MealsToday} meals=${data.meals || []} onEdit=${onEdit} />`}
     ${isToday && data && html`<${Recent} treatments=${[...data.treatments, ...(data.basal || []).map(dose => ({ at: dose.at, basal: dose.units }))]} />`}
+    ${isToday && data && html`<${MealsToday} meals=${data.meals || []} onEdit=${onEdit} />`}
     ${note && html`<p id="day-overview-note" class="hint">${note}</p>`}</div>`;
 }
 
