@@ -130,6 +130,9 @@ class McpTests(unittest.TestCase):
     def test_split_and_correction_and_delete(self):
         os.environ["MCP_API_KEY"] = KEY
         self.fresh_glucose()
+        # 100 g need 10 IE before noon but 5 IE after it (test profile I:C 10 / 20 g): keep the split
+        # limit below both, so the test does not depend on the time of day it runs.
+        self.request("/api/settings", method="POST", body={"split_min_units": 5})
         preview = self.call("preview_entry", carbs_g=100)
         self.assertTrue(preview["split"]["active"])
         normal = next(option for option in preview["dose"]["options"] if option["variant"] == "normal")

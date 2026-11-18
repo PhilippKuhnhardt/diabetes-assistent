@@ -364,7 +364,7 @@ function updateEntryDayType() {
   if (!dayType) return;
   $$(".day-type-option", $("#entry-day-type")).forEach(button =>
     button.setAttribute("aria-pressed", String(button.dataset.dayType === dayType.value)));
-  $("#entry-day-type-hint").textContent = (dayTypeSources[dayType.source] || "") + " · bestimmt den Frühstücksfaktor";
+  $("#entry-day-type-hint").textContent = (dayTypeSources[dayType.source] || "");
 }
 
 async function saveEntryDayType(event) {
@@ -392,7 +392,7 @@ function renderReviewDayType(data) {
   if (!data.day_type) return;
   $$("[data-review-day-type]").forEach(button =>
     button.setAttribute("aria-pressed", String(button.dataset.reviewDayType === data.day_type)));
-  $("#review-day-type-hint").textContent = (dayTypeSources[data.day_type_source] || "") + " · bestimmt den Frühstücksfaktor" +
+  $("#review-day-type-hint").textContent = (dayTypeSources[data.day_type_source] || "") +
     (data.vacation && data.day_type_source !== "vacation" ? " · Urlaubstag" : "");
 }
 
@@ -787,7 +787,6 @@ function updateEntryFields() {
   $("#entry-sport-field").hidden = mode !== "exercise";
   $("#entry-duration-field").hidden = mode !== "exercise";
   $("#entry-sport-effect-field").hidden = mode !== "exercise";
-  $("#entry-sport-effect-hint").hidden = mode !== "exercise";
   form.elements.sport_effect_mgdl.disabled = mode !== "exercise";
   if (mode === "exercise") setSportEffectDefault();
   form.elements.carbs.disabled = mode !== "meal";
@@ -2375,7 +2374,7 @@ function doseHelpHTML(data, changed = {}) {
   }).join("");
   const anyChanged = Object.keys(changed).length > 0;
   return '<div class="dose-head"><span class="dose-heading">' + (withCarbs ? "Empfehlung" : "Korrektur ohne Essen") +
-    '</span>' + (options ? '<span class="dose-hint">Antippen speichert direkt</span>' : '') + '</div>' +
+    '</span></div>' +
     (anyChanged ? '<p class="dose-changed" role="status">' + icon("alert") + ' Neu berechnet mit neueren Daten' +
       (data.glucose_at ? ' (CGM ' + escapeHTML(timeOnly(data.glucose_at)) + ')' : '') +
       '. Markierte Werte haben sich geändert, bitte prüfen.</p>' : '') +
@@ -3769,7 +3768,7 @@ function agentEstimateHTML(estimate) {
     ? '<p class="agent-dish">Gericht: <strong>' + escapeHTML(estimate.dish.name) + '</strong>' +
       (estimate.dish.new ? ' <span class="outlier-badge">neu</span>' : '') +
       (estimate.dish.hint ? '<br><small>' + escapeHTML(estimate.dish.hint) + '</small>' : '') + '</p>'
-    : '<p class="agent-dish">Kein wiederkehrendes Gericht erkannt.</p>';
+    : '';
   const sources = estimate.sources?.length ? '<p class="agent-sources">Quellen: ' + estimate.sources.map(source =>
     '<a href="' + escapeHTML(source.url) + '" target="_blank" rel="noopener noreferrer">' +
     escapeHTML(source.title || new URL(source.url).hostname) + '</a>').join(", ") + '</p>' : "";
@@ -3808,7 +3807,7 @@ function renderAgent() {
   $("#agent-apply").hidden = !agent.estimate;
   $("#agent-apply").classList.toggle("primary", Boolean(agent.estimate));
   $("#agent-apply").disabled = agent.busy;
-  $("#agent-status").textContent = agent.busy ? "Der Agent schätzt, das dauert meist 10 bis 40 Sekunden …" : "";
+  $("#agent-status").textContent = agent.busy ? "Schätzt …" : "";
 }
 
 // A photo as a JPEG data URL, scaled down so the longer side has at most AGENT_PHOTO_SIDE pixels.

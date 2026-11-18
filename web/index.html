@@ -115,8 +115,7 @@
                 <select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select>
               </label>
               <label id="entry-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
-              <label id="entry-sport-effect-field" hidden>Einfluss <span>mg/dL, − senkt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1" aria-describedby="entry-sport-effect-hint"></label>
-              <p id="entry-sport-effect-hint" class="hint" hidden>Wirkt automatisch über die Wirkdauer der Sportart (Einstellungen) nach dem Ende auf Vorhersage und Dosis. Später änderbar in „Tag durchgehen“.</p>
+              <label id="entry-sport-effect-field" hidden>Einfluss <span>mg/dL, − senkt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1"></label>
               <section id="entry-influences" class="entry-card" aria-label="Einflüsse" hidden>
                 <p class="entry-card-title">Einflüsse</p>
                 <div id="entry-day-type" class="entry-day-type" hidden>
@@ -153,7 +152,6 @@
                 <summary>Wirkungen über den Tag <span id="effects-summary" class="hint"></span></summary>
                 <div id="effects-chart" class="effects-chart"></div>
                 <p class="effects-legend"><span class="legend-measured">gemessen</span><span class="legend-model">Modell aus dem BZ 3 h vorher</span><span class="legend-raising">hebt: KH, Fett/Eiweiß</span><span class="legend-lowering">senkt: Insulin</span></p>
-                <p class="hint">Unten: wie stark gerade gehoben und gesenkt wird, in mg/dL pro Stunde. Wo gemessen und Modell auseinanderlaufen, hat das Modell etwas nicht erfasst, etwa unterschätzte KH, Fett oder Sport.</p>
               </details>
               <section id="night-card" class="night-card" aria-live="polite" hidden>
                 <div class="section-head"><h2>Nacht</h2><span id="night-window" class="hint"></span></div>
@@ -189,7 +187,6 @@
             <div class="section-head"><h2>Sport &amp; Rennsport · Wirkung auf den BG</h2><span id="sport-analysis-count" class="hint"></span></div>
             <div id="sport-analysis-kinds" class="summary-grid"></div>
             <div id="sport-analysis-sessions"></div>
-            <p class="hint">Sportwirkung = gemessene BG-Änderung minus erwartete Änderung mit dem Median-Insulinfaktor der Mahlzeiten desselben Typs ohne Sport im Zeitraum. Negativ: BG endete tiefer als üblich, positiv: höher. Modellschätzung, keine Dosierempfehlung.</p>
           </section>
           <section class="analysis-list panel">
             <div class="section-head"><h2>Nachtübersicht</h2><span id="night-summary-count" class="hint"></span></div>
@@ -198,7 +195,6 @@
           </section>
         </div>
         <div id="analysis-automatik" class="analysis-pane" hidden>
-          <p class="hint automatik-intro">Rückblick auf die Mahlzeiten der letzten 90 Tage, unabhängig vom Zeitraum unter „Werte“. Gezählt wird, wo der BZ am Endpunkt mit dem jeweiligen Vorschlag gelandet wäre (unter 80, 80–160, über 160 mg/dL). Modellrechnung, keine Dosierempfehlung.</p>
           <section class="analysis-list panel">
             <div class="section-head"><h2>So rechnet die Automatik</h2><span id="automatik-status" class="hint" role="status"></span></div>
             <div id="automatik-explain"></div>
@@ -221,7 +217,6 @@
           </details>
         </div>
         <div id="analysis-gerichte" class="analysis-pane" hidden>
-          <p class="hint automatik-intro">Jedes Gericht mit seinen Hauptmahlzeiten. „Brauchte … als üblich“ vergleicht den Faktor der Mahlzeit mit dem üblichen Faktor derselben Mahlzeitenart in den 30 Tagen davor; daraus folgt, wie viele KH sich das Gericht verhielt. Genannt ab 3 gültigen Mahlzeiten. Nur ein Hinweis, die Dosis ändert sich dadurch nicht.</p>
           <section class="analysis-list panel">
             <div class="section-head"><h2>Gerichte</h2><span id="dishes-count" class="hint"></span></div>
             <div id="dishes-list" aria-live="polite"></div>
@@ -251,7 +246,6 @@
               <button type="button" id="timezone-home" class="quiet" hidden></button>
               <button type="button" id="timezone-undo" class="quiet" hidden>Letzten Wechsel zurücknehmen</button>
             </div>
-            <p class="hint">Auf Reisen rechnet die App ab dem Wechsel mit der Uhrzeit vor Ort: Frühstück, Mittag und Abend, Korrekturfaktor nach Uhrzeit, Warnzeiten und Tagesgrenzen. Tage vor dem Wechsel bleiben unverändert. Die Zeitzone im Nightscout-Profil bitte nicht ändern, sie verschiebt sonst alle früheren Tage.</p>
           </section>
           <section class="panel">
             <h2>Urlaub</h2>
@@ -269,22 +263,18 @@
             </div>
             <div class="notify-option">
               <label class="check-label"><input type="checkbox" class="notify-toggle" data-kind="split"> 2. Split-Teil fällig</label>
-              <p class="hint">Sobald der geplante 2. Teil fällig ist und noch kein Insulin danach erfasst wurde.</p>
               <select class="notify-priority" data-kind="split" aria-label="Stufe für 2. Split-Teil fällig"></select>
             </div>
             <div class="notify-option">
               <label class="check-label"><input type="checkbox" class="notify-toggle" data-kind="low"> Tief droht</label>
-              <p class="hint">Tagsüber (6–23 Uhr), wenn die Prognose aus Insulin, KH und dem Verlauf der letzten 30 min in der nächsten Stunde unter 70 mg/dL geht. Nicht in den ersten 30 min nach einem KH-Eintrag, höchstens einmal pro Stunde.</p>
               <select class="notify-priority" data-kind="low" aria-label="Stufe für Tief droht"></select>
             </div>
             <div class="notify-option">
               <label class="check-label"><input type="checkbox" class="notify-toggle" data-kind="high"> Hoch droht</label>
-              <p class="hint">Tagsüber (6–23 Uhr), wenn dieselbe Prognose in der nächsten Stunde über 250 mg/dL geht. Höchstens einmal pro Stunde.</p>
               <select class="notify-priority" data-kind="high" aria-label="Stufe für Hoch droht"></select>
             </div>
             <div class="notify-option">
               <label class="check-label"><input type="checkbox" class="notify-toggle" data-kind="check"> BZ prüfen</label>
-              <p class="hint">Nach einer Hauptmahlzeit (ab 2 h, ab 90 min nur bei BZ ab 200 oder ab 180 und steigend, bis 7,5 h), wenn der BZ mindestens 160 ist und auch laut „Wirkt noch“ über 160 endet. Nicht bei offenem Split-Plan und nicht in den 90 min nach Insulin. Nennt die Korrektur der Dosishilfe, die Entscheidung bleibt bei dir. Höchstens alle 90 min, auch nachts.</p>
               <select class="notify-priority" data-kind="check" aria-label="Stufe für BZ prüfen"></select>
             </div>
             <button type="button" id="notify-test">Testmeldung senden</button>
@@ -301,11 +291,9 @@
             <datalist id="agent-audio-options"></datalist>
             <div class="button-row"><button type="button" id="agent-models-load">Modelle des Anbieters laden</button></div>
             <p id="agent-usage" class="hint"></p>
-            <p class="hint">Schlüssel liegen in der Bereitstellung (Coolify): ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY. Nur Anbieter mit Schlüssel sind wählbar.</p>
           </section>
           <section class="panel places-panel">
             <h2>Orte</h2>
-            <p class="hint">Ein Ort ist ein Chip im Eintrag (Büro, Zuhause, Kantine); Orte ohne Schnellauswahl stehen dort unter „Weitere“. Ein Ort kann mehrere Standorte haben (je 150 m Umkreis); liegt der Standort beim Eintragen in einem davon, ist der Chip vorausgewählt, sonst der Ort mit „Standard woanders“ (Auswärts). Der Standort beim Eintragen wählt nur den Chip und wird nicht gespeichert. Ändert keine Rechnung.</p>
             <div id="places-list" aria-live="polite"></div>
             <form id="place-new" class="place-new">
               <input name="name" type="text" maxlength="40" placeholder="Neuer Ort, z. B. Kantine" aria-label="Name des neuen Orts" required>
@@ -339,37 +327,29 @@
               <label>Zielwert <span>mg/dL</span><input name="dose_target_mgdl" type="number" min="60" max="140" step="1" required></label>
               <label>Vorsichtiger Zielwert <span>mg/dL</span><input name="dose_cautious_target_mgdl" type="number" min="60" max="250" step="1" required></label>
               <label>Tieferer Zielwert <span>mg/dL</span><input name="dose_low_target_mgdl" type="number" min="60" max="140" step="1" required></label>
-              <p class="hint">Zusätzliche Option „Tiefer“ für Korrekturen und bis 30 g KH, die nicht unsicher oder fett-/eiweißreich sind; nur 6–20 Uhr, wenn der BZ nicht fällt und weniger als 150 mg/dL nachwirken oder die letzte Mahlzeit und Gabe mindestens 2 h her sind. Gleich dem Zielwert = aus.</p>
               <label>Automatik-Methode<select name="auto_method">
                 <option value="percentile">Perzentil</option>
                 <option value="surcharge">Perzentil + Mahlzeitzuschlag</option>
               </select></label>
               <label>Mahlzeitzuschlag <span>mg/dL</span><input name="auto_surcharge_mgdl" type="number" min="5" max="150" step="5" required></label>
-              <p class="hint">Gilt mit „Perzentil + Mahlzeitzuschlag“: je Hauptmahlzeit dieser BZ-Anstieg für Fett und Eiweiß (40 mg/dL sind bei KF 35 gut 1 IE), bis 40 g KH anteilig weniger; Snacks ohne Zuschlag. Der Faktor wird ohne diesen Anteil berechnet.</p>
               <label>Fett-Zuschlag <span>mg/dL</span><input name="auto_fat_surcharge_mgdl" type="number" min="0" max="200" step="10" required></label>
-              <p class="hint">Kommt bei als fett-/eiweißreich markierten Hauptmahlzeiten zum Mahlzeitzuschlag dazu (0 = aus). So ziehen fette Mahlzeiten den Faktor der anderen nicht mehr hoch.</p>
               <label>Automatik-Perzentil <span>%</span><input name="auto_percentile" type="number" min="25" max="50" step="0.5" required></label>
-              <p class="hint">25 % unteres Quartil, 50 % Median. Kleiner bedeutet weniger Insulin.</p>
               <label>Automatik-Zeitraum<select name="auto_lookback_days">
                 <option value="8">8 Tage</option>
                 <option value="15">15 Tage</option>
                 <option value="30">30 Tage</option>
               </select></label>
               <label>Halbwertszeit <span>Tage</span><input name="auto_half_life_days" type="number" min="1" max="28" step="0.5" required></label>
-              <p class="hint">Nach der Halbwertszeit zählt eine Mahlzeit nur noch halb. Kürzer = neue Werte zählen stärker.</p>
               <label>Urlaub in der Automatik<select name="auto_vacation">
                 <option value="separate">Im Urlaub alle Mahlzeiten, danach ohne Urlaub</option>
                 <option value="vacation_only">Im Urlaub nur Urlaubsmahlzeiten, danach ohne Urlaub</option>
                 <option value="all">Urlaub zählt wie jeder andere Tag</option>
               </select></label>
-              <p class="hint">„Danach ohne Urlaub“: Nach dem Urlaub werden Urlaubstage übersprungen, Zeitraum und Halbwertszeit reichen dann bis zu den Mahlzeiten vor dem Urlaub. „Nur Urlaubsmahlzeiten“ rechnet im Urlaub nur mit Urlaubsdaten (ab 4 Mahlzeiten je Mahlzeit, sonst Nightscout-Faktor).</p>
               <label>Basal zum Frühstück <span>IE</span><input name="basal_default_units" type="number" min="0" max="100" step="0.5" required></label>
-              <p class="hint">Wird beim Frühstück automatisch mit eingetragen, solange heute noch kein Basal erfasst ist. 0 schaltet das aus.</p>
               <label>Split-Bolus ab <span>g KH</span><input name="split_min_grams" type="number" min="0" max="300" step="5" required></label>
               <label>Split nur ab <span>IE</span><input name="split_min_units" type="number" min="0" max="30" step="0.5" required></label>
               <label>Split: Anteil jetzt <span>%</span><input name="split_first_percent" type="number" min="30" max="90" step="5" required></label>
               <label>Split: 2. Teil nach <span>min</span><input name="split_delay_minutes" type="number" min="30" max="300" step="15" required></label>
-              <p class="hint">Ab dieser KH-Menge ist bei Hauptmahlzeiten „Split“ vorausgewählt: ein Teil jetzt, der Rest später. Fett-/eiweißreiche Hauptmahlzeiten sind immer vorausgewählt. 0 schaltet das aus. Ist die normale Dosis kleiner als „Split nur ab“ (etwa weil der BZ niedrig ist), gibt es keinen Split, auch nicht bei Fett; 0 = immer.</p>
             </section>
             <section class="panel">
               <h2>Mahlzeiten</h2>
@@ -393,7 +373,6 @@
                 <label>Rennsport<input name="sport_minutes_racing" type="number" min="30" max="1440" step="1" required></label>
               </div>
               <label>Sport-Auswertung: Mahlzeiten bis <span>min danach</span><input name="sport_lookback_minutes" type="number" min="0" max="1440" step="1" required></label>
-              <p class="hint">Negativ senkt, positiv hebt den Blutzucker. Standard je Einheit; er wirkt automatisch, gleichmäßig über die Wirkdauer nach dem Ende, auf „Wirkt noch“, Dosis, Warnungen und Mahlzeitfaktor. Eine einzelne Einheit änderst du beim Eintragen oder in „Tag durchgehen“.</p>
             </section>
           </div>
           <div class="panel settings-save">
@@ -424,15 +403,15 @@
       </div>
       <label id="edit-place-field" hidden>Ort<select name="place_id"></select></label>
       <div id="edit-food-fields" hidden>
-        <label>Gericht <span>optional, neuer Name legt es an</span><input name="dish_name" type="text" maxlength="60" list="edit-dish-options" autocomplete="off"></label>
+        <label>Beschreibung<textarea name="description" rows="5" maxlength="1000"></textarea></label>
+        <div class="entry-chips"><button type="button" id="edit-agent-open" class="chip agent-chip">Agent</button></div>
+        <label>Gericht<input name="dish_name" type="text" maxlength="60" list="edit-dish-options" autocomplete="off"></label>
         <datalist id="edit-dish-options"></datalist>
-        <label>Beschreibung <span>was es war</span><textarea name="description" rows="2" maxlength="1000"></textarea></label>
-        <div class="entry-chips"><button type="button" id="edit-agent-open" class="chip agent-chip">Vom Agenten einschätzen lassen</button></div>
       </div>
       <label id="edit-sport-field" hidden>Sportart<select name="sport_kind"><option value="jogging">Joggen</option><option value="gym">Gym</option><option value="light_cardio">Leichtes Cardio</option><option value="racing">Rennsport</option></select></label>
       <label id="edit-duration-field" hidden>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"></label>
       <label>Notiz <span>optional</span><input name="notes" type="text" maxlength="500"></label>
-      <div class="form-actions"><button class="primary" type="submit">Änderung in Nightscout speichern</button><button id="cancel-edit" type="button" class="quiet">Abbrechen</button></div>
+      <div class="form-actions"><button class="primary" type="submit">Speichern</button><button id="cancel-edit" type="button" class="quiet">Abbrechen</button></div>
       <button id="delete-edit" type="button" class="delete-treatment">Eintrag löschen</button>
     </form>
   </dialog>
@@ -442,7 +421,7 @@
       <div id="agent-photos" class="agent-photos" aria-label="Fotos"></div>
       <div id="agent-turns" class="agent-turns" aria-live="polite"></div>
       <div id="agent-result" class="agent-result" aria-live="polite" hidden></div>
-      <label id="agent-text-label">Beschreibung <span>was und wie viel</span><textarea name="text" rows="3" maxlength="2000" placeholder="z. B. Porridge wie immer, dazu eine Banane"></textarea></label>
+      <label id="agent-text-label">Beschreibung <textarea name="text" rows="3" maxlength="2000" placeholder="z. B. Porridge wie immer, dazu eine Banane"></textarea></label>
       <div class="entry-chips agent-inputs">
         <label class="chip agent-photo-add" id="agent-photo-add">+ Foto<input type="file" id="agent-photo-input" accept="image/*" multiple hidden></label>
         <button type="button" id="agent-record" class="chip" hidden>Sprechen</button>
@@ -453,7 +432,6 @@
         <button class="primary" type="submit" id="agent-submit">Einschätzen</button>
         <button type="button" id="agent-apply" hidden>Übernehmen</button>
       </div>
-      <p class="hint">Der Agent schätzt nur die Kohlenhydrate. Die Dosis rechnet danach die App wie immer. Fotos und Text gehen an den gewählten KI-Anbieter.</p>
     </form>
   </dialog>
   <dialog id="window-dialog" aria-labelledby="window-dialog-title">
@@ -469,7 +447,6 @@
       <button type="button" data-nudge="1">+1 min</button><button type="button" data-nudge="5">+5 min</button>
     </div>
     <div id="window-summary" class="window-summary" aria-live="polite"></div>
-    <p class="hint">Griffe ziehen oder auf die Kurve tippen, um den ausgewählten Griff zu setzen. Sie rasten an Insulin, Kohlenhydraten, Sport und am Standardzeitraum ein. Gezählt wird ab Beginn bis ausschließlich Ende; der Zeitraum wird nur lokal gespeichert, nicht in Nightscout.</p>
     <div class="form-actions"><button id="save-window" class="primary" type="button">Zeitraum speichern</button><button id="default-window" type="button" class="quiet">Standard</button><button id="cancel-window" type="button" class="quiet">Abbrechen</button></div>
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>

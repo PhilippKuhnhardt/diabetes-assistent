@@ -1966,6 +1966,9 @@ class IntegrationTests(unittest.TestCase):
 
     def test_large_meal_is_split_and_the_second_part_is_offered_later(self):
         self.request("/api/settings")
+        # 100 g need 10 IE before noon but 5 IE after it (test profile I:C 10 / 20 g): keep the split
+        # limit below both, so the test does not depend on the time of day it runs.
+        self.request("/api/settings", method="POST", body={"split_min_units": 5})
         now = datetime.now(timezone.utc)
         today = now.astimezone(ZoneInfo("Europe/Berlin")).date().isoformat()
         current_day = {
