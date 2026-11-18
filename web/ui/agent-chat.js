@@ -4,6 +4,7 @@
 // fills the form the chat was opened from, and the dose help calculates as always.
 import { html, useState, useEffect, useRef } from "./html.js";
 import { photoDataURL, canRecord, startRecording, recordingToWav } from "./media.js";
+import { GlucoseBadge } from "./glucose.js";
 
 export const CERTAINTY_LEVELS = ["unsure", "known", "weighed"];
 const CERTAINTY_LABELS = ["KH unsicher", "KH halbwegs", "KH sicher"];
@@ -82,6 +83,7 @@ function EstimateDetails({ estimate }) {
 function Bubbles({ conversation, estimate, busy }) {
   const lastAnswer = conversation.map(row => row.role).lastIndexOf("assistant");
   return html`<div class="chat-bubbles" aria-live="polite">
+    ${!conversation.length && !busy && html`<p class="chat-empty">Foto, Sprache oder Text, z. B. „Porridge wie immer, dazu eine Banane“.</p>`}
     ${conversation.map((row, index) => row.role === "user"
       ? html`<div class="bubble me">${row.text === "(nur Fotos)" ? "Nur Fotos" : row.text}</div>`
       : html`<div class=${"bubble ai" + (index === lastAnswer ? " latest" : "")}>
@@ -114,6 +116,13 @@ export function MealChat({ info, target, eventId, initialText, previousCarbs, co
   const field = useRef(null);
   const photoLimit = info?.limits?.photos || 4;
   const followUp = Boolean(session);
+  // The field grows with the text; Safari has no field-sizing yet, so set the height by hand there.
+  useEffect(() => {
+    const node = field.current;
+    if (!node || CSS.supports("field-sizing", "content")) return;
+    node.style.height = "auto";
+    node.style.height = Math.min(node.scrollHeight + 2, 140) + "px";
+  }, [text]);
 
   const takeEstimate = (result, rows) => {
     setEstimate(result);
@@ -210,14 +219,14 @@ export function MealChat({ info, target, eventId, initialText, previousCarbs, co
   const voice = info?.transcribe_available && canRecord();
   const title = target === "edit" ? (followUp ? "Nachbessern" : "Essen einschätzen") : "Essen";
   const placeholder = followUp ? (target === "edit" ? "z. B. ich hatte noch einen zweiten Teller" : "Korrektur oder Antwort …")
-    : "Was und wie viel, z. B. Porridge wie immer, dazu eine Banane";
+    : "Was und wie viel?";
   const onKey = event => {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); send(); }
   };
 
   return html`<div class="meal-chat">
     <div class="section-head chat-head">
-      <h2 id="agent-dialog-title">${title}</h2>
+      <div class="chat-title"><h2 id="agent-dialog-title">${title}</h2><${GlucoseBadge} /></div>
       <button type="button" class="quiet" aria-label="Schließen" onClick=${onClose}>×</button>
     </div>
     <div class="chat-body" ref=${scroller}>
@@ -243,7 +252,7 @@ export function MealChat({ info, target, eventId, initialText, previousCarbs, co
       <div class="chat-input">
         ${!followUp && photos.length < photoLimit && html`<label class="round-button" aria-label="Foto hinzufügen" title="Foto">
           <${Icon} name="camera" /><input type="file" accept="image/*" multiple hidden onChange=${addPhotos} /></label>`}
-        <textarea ref=${field} rows=${estimate ? 1 : 2} maxlength="2000" placeholder=${placeholder} aria-label=${followUp ? "Antwort oder Korrektur" : "Beschreibung"}
+        <textarea ref=${field} rows="1" maxlength="2000" placeholder=${placeholder} aria-label=${followUp ? "Antwort oder Korrektur" : "Beschreibung"}
           value=${text} onInput=${event => setText(event.currentTarget.value)} onKeyDown=${onKey}></textarea>
         ${estimate && text.trim()
           ? html`<button type="button" class="round-button send" aria-label="Senden" disabled=${busy} onClick=${send}><${Icon} name="send" /></button>`

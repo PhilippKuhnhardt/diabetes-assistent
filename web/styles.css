@@ -1045,3 +1045,23 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .entry-drawer { scroll-margin-top: 90px; }
 /* In the sheet the kind was chosen behind "+" ("‹ Auswahl" goes back), so the switch is not repeated. */
 @media (max-width: 950px) { .entry-drawer .entry-switch { display: none; } }
+
+/* The current glucose in full-screen views (meal chat, entry sheet): a dose decision needs it in sight. */
+.glucose-badge { display: inline-flex; align-items: baseline; gap: 6px; padding: 3px 10px; border: 1px solid #cddbd2; border-radius: 999px; background: #edf1ee; color: #44564d; white-space: nowrap; }
+.glucose-badge strong { font-size: 15px; letter-spacing: -.02em; }
+.glucose-badge small { font-size: 11px; font-weight: 650; }
+.glucose-badge[data-status="in_range"] { background: #e0f3e7; border-color: #acd9ba; color: #145c38; }
+.glucose-badge[data-status="outside"] { background: #fff3ce; border-color: #e9d782; color: #70510b; }
+.glucose-badge[data-status="low"] { background: #fde8e7; border-color: #edb4b1; color: #9a2925; }
+.glucose-badge[data-status="high"] { background: #ffeddb; border-color: #edc09b; color: #9b4d11; }
+.chat-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-width: 0; }
+.chat-empty { margin: auto 0 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.entry-drawer-title { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.entry-drawer-head .entry-drawer-title h2 { font-size: 16px; }
+@media (max-width: 950px) { .entry-drawer .glucose-badge.entry-drawer-nav { display: inline-flex; } }
+
+/* Chat input row: the camera is a label and the mic a button, so both need selectors that beat the global
+   label margin and button radius; all three controls share one height and sit on one line. */
+.chat-input { align-items: center; }
+.chat-input label.round-button, .chat-input button.round-button { margin: 0; width: 44px; height: 44px; min-height: 0; padding: 0; border-radius: 50%; }
+.chat-input textarea { min-height: 44px; }

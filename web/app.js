@@ -165,8 +165,25 @@ function loadCurrentGlucose() {
       $("#glucose-meta").textContent = "CGM derzeit nicht verfügbar";
       $("#glucose-meta").hidden = false;
     }
+    publishGlucose();
   })().finally(() => { glucoseRefresh = null; });
   return glucoseRefresh;
+}
+
+// Full-screen views cover the top bar, but a dose decision always needs the glucose in sight
+// (user feedback 2026-11-18): the entry sheet shows a copy, the meal chat listens (web/ui/glucose.js).
+function publishGlucose() {
+  const stale = $("#glucose-meta").hidden ? "" : $("#glucose-meta").textContent;
+  const glucose = { value: $("#glucose-value").textContent, status: $("#current-glucose").dataset.status,
+    trend: stale || $("#glucose-trend").textContent };
+  window.currentGlucose = glucose;
+  const badge = $("#entry-glucose");
+  if (badge) {
+    badge.dataset.status = glucose.status;
+    badge.querySelector("strong").textContent = glucose.value;
+    badge.querySelector("small").textContent = glucose.trend;
+  }
+  document.dispatchEvent(new CustomEvent("glucose:update", { detail: glucose }));
 }
 
 function validDay(value) {
@@ -3689,6 +3706,7 @@ function openAgent() {
     return;
   }
   if (!window.mealChat) { toast("Seite neu laden, der Chat ist noch nicht geladen", true); return; }
+  loadCurrentGlucose();
   const form = $("#entry-form");
   window.mealChat.open({
     target: "entry", info: agent.info, api, toast, previousCarbs: form.elements.carbs.value,
@@ -3786,6 +3804,7 @@ function chooseEntry(kind) {
 
 function openEntryDrawer() {
   if (compactLayout()) {
+    loadCurrentGlucose();
     document.body.classList.add("entry-open");
     $("#entry-drawer").scrollTop = 0;
   } else {
