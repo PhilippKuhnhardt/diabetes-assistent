@@ -182,7 +182,26 @@ def estimate(payload: dict) -> dict:
     store.save_session(session_id, at, provider, model, turns, result, len(photos), answer["usage"])
     store.log_usage("estimate", provider, model, answer["usage"])
     return {"session_id": session_id, "estimate": result, "provider": provider, "model": model,
-            "turns": [turn["text"] for turn in turns if turn["role"] == "user"], "photos": len(photos)}
+            "turns": [turn["text"] for turn in turns if turn["role"] == "user"], "conversation": _conversation(turns),
+            "photos": len(photos)}
+
+
+def _conversation(messages: list[dict]) -> list[dict]:
+    """The session as the chat shows it: Philipp's words and, for each answer, its carbs with range
+    and reasoning (the stored answer is the JSON replayed to the model)."""
+    rows = []
+    for turn in messages:
+        if turn["role"] == "user":
+            rows.append({"role": "user", "text": turn["text"]})
+            continue
+        try:
+            data = json.loads(turn["text"])
+        except (TypeError, ValueError):
+            continue
+        rows.append({"role": "assistant", "carbs_g": data.get("carbs_g"), "carbs_low_g": data.get("carbs_low_g"),
+                     "carbs_high_g": data.get("carbs_high_g"), "reasoning": data.get("reasoning") or "",
+                     "question": data.get("question") or ""})
+    return rows
 
 
 def transcribe(payload: dict) -> dict:
@@ -235,6 +254,7 @@ def for_entry(params: dict) -> dict:
     return {"session": {
         "session_id": session["id"], "estimate": session["estimate"], "photos": session["photos"],
         "turns": [turn["text"] for turn in session["messages"] if turn["role"] == "user"],
+        "conversation": _conversation(session["messages"]),
         "can_continue": len(session["messages"]) < rules.MAX_TURNS * 2,
     }}
 

@@ -260,6 +260,10 @@ class AgentServiceTests(unittest.TestCase):
             self.assertEqual((len(messages[0]["images"]), messages[2]["text"]), (1, "mit 2 Bananen"))
         self.assertEqual(second["session_id"], first["session_id"])
         self.assertEqual(second["turns"], ["Porridge wie immer", "mit 2 Bananen"])
+        # The chat shows the whole conversation: Philipp's words and each answer's carbs (user request 2026-11-18).
+        self.assertEqual([row["role"] for row in second["conversation"]], ["user", "assistant", "user", "assistant"])
+        self.assertEqual(second["conversation"][1]["carbs_g"], 58)
+        self.assertEqual(second["conversation"][2]["text"], "mit 2 Bananen")
         session = agent_store.session(first["session_id"])
         self.assertEqual((session["calls"], session["input_tokens"], session["photos"]), (2, 200, 1))
         self.assertTrue(agent.photo(first["session_id"], "0").startswith(b"\xff\xd8"))
@@ -274,6 +278,7 @@ class AgentServiceTests(unittest.TestCase):
         self.assertEqual((earlier["session_id"], earlier["turns"], earlier["photos"], earlier["can_continue"]),
                          (first["session_id"], ["Porridge wie immer", "mit 2 Bananen"], 1, True))
         self.assertEqual(earlier["estimate"]["carbs_g"], 58)
+        self.assertEqual(len(earlier["conversation"]), 4)
         self.assertIsNone(agent.for_entry({"event_id": ["nope"]})["session"])
         self.assertIsNone(agent.for_entry({})["session"])
         self.assertEqual(agent.view()["usage_month"][0]["calls"], 2)
