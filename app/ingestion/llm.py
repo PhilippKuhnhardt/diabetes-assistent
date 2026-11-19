@@ -16,6 +16,7 @@ import json
 import os
 import re
 from typing import Callable
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import anthropic
 import openai
@@ -101,9 +102,18 @@ def _field(item, name: str, default=None):
     return getattr(item, name, default)
 
 
+def clean_url(url: str) -> str:
+    """A source link without tracking parameters (utm_*, e.g. utm_source=openai that OpenAI's search adds)."""
+    parts = urlsplit(url)
+    query = [(key, value) for key, value in parse_qsl(parts.query, keep_blank_values=True)
+             if not key.lower().startswith("utm_")]
+    return urlunsplit(parts._replace(query=urlencode(query)))
+
+
 def _sources(found: list[tuple[str, str]]) -> list[dict]:
     seen, result = set(), []
     for url, title in found:
+        url = clean_url(url) if isinstance(url, str) else url
         if isinstance(url, str) and url.startswith("http") and url not in seen:
             seen.add(url)
             result.append({"url": url[:500], "title": str(title or "")[:200]})

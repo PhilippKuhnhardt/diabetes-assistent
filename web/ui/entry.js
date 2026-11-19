@@ -371,7 +371,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     if (!window.mealChat) { toast("Seite neu laden, der Chat ist noch nicht geladen", true); return; }
     props.current.onGlucose();
     window.mealChat.open({
-      target: "entry", info: agentInfo, api, toast, previousCarbs: store.current.carbs,
+      info: agentInfo, api, toast, previousCarbs: store.current.carbs, sessionId: store.current.agent?.session_id || null,
       context: () => {
         let at = null;
         try { at = toInstant(props.current.day, store.current.at); } catch (_) { /* Without a valid time the server takes now. */ }
@@ -527,7 +527,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     <section id="entry-meal-fields" class="entry-card" aria-label="Essen" hidden=${!meal}>
       <p class="entry-card-title">Essen</p>
       <div class="entry-chips agent-entry">
-        <button type="button" id="entry-agent-open" class="chip agent-chip" onClick=${openAgent}>Essen einschätzen</button>
+        <button type="button" id="entry-agent-open" class="chip agent-chip" onClick=${openAgent}>${f.agent ? "Nachbessern" : "Essen einschätzen"}</button>
         ${f.agent && html`<span id="entry-agent-summary" class="agent-summary">${(f.agent.dish_name ? "Gericht: " + f.agent.dish_name : "Ohne Gericht") + " · geschätzt " + f.agent.range}</span>
           <button type="button" id="entry-agent-clear" class="chip quiet-chip" aria-label="Einschätzung verwerfen" onClick=${() => set({ agent: null })}>×</button>`}
       </div>

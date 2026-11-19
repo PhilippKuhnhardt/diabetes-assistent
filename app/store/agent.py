@@ -96,10 +96,13 @@ def photo_path(session_id: str, index: int) -> Path:
     return photo_dir() / session_id / f"{index}.jpg"
 
 
-def save_photos(session_id: str, photos: list[bytes]) -> None:
+def save_photos(session_id: str, photos: list[bytes], start: int = 0) -> None:
+    """Photos of an estimate, numbered from `start` (photos added in a follow-up come after the first ones)."""
+    if not photos:
+        return
     folder = photo_dir() / session_id
     folder.mkdir(parents=True, exist_ok=True)
-    for index, data in enumerate(photos):
+    for index, data in enumerate(photos, start):
         (folder / f"{index}.jpg").write_bytes(data)
 
 
