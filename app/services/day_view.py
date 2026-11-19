@@ -308,7 +308,7 @@ def compute_day(day: str) -> dict:
             **(sport_session(item, settings, session_effects, session_minutes) if kind == "exercise" else {}),
             "carbs_certainty": item.get("carbs_certainty"), "fat_protein": item.get("fat_protein", False),
             "alcohol": item.get("alcohol", False), "fast": item.get("fast", False), "place": place_of(item),
-            "dish": dish_of(item), "event_id": item.get("event_id"),
+            "dish": dish_of(item), "event_id": item.get("event_id"), "surcharge": item.get("surcharge"),
             "description": (meal_records.get(item.get("event_id") or "") or {}).get("description") or "",
             "glucose_mgdl": glucose, "glucose_at": glucose_at,
             **({"nightscout_synced": item["nightscout_synced"]} if kind == "basal" else {}),

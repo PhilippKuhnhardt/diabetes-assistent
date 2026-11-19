@@ -7,9 +7,10 @@ import base64
 import binascii
 import json
 import uuid
+from decimal import Decimal
 from datetime import datetime, timezone
 
-from app import episodes, meal_agent as rules
+from app import episodes, fpe, meal_agent as rules
 from app.common import local_zone, parse_instant
 from app.ingestion import llm
 from app.services import dishes
@@ -285,7 +286,16 @@ def for_entry(params: dict) -> dict:
         "turns": [turn["text"] for turn in session["messages"] if turn["role"] == "user"],
         "conversation": _conversation(session["messages"], session["photos"]),
         "can_continue": len(session["messages"]) < rules.MAX_TURNS * 2,
+        # The calculated fat/protein surcharge the meal card offers next to the static one (app/fpe.py).
+        "fpe": _fpe_view(session["estimate"]),
     }}
+
+
+def _fpe_view(estimate: dict | None) -> dict | None:
+    _, settings = config.get_settings()
+    found = fpe.estimate(estimate or {}, settings) if settings.get("auto_method") == "surcharge" else None
+    return found and {"fpe": str(found["fpe"].quantize(Decimal("0.1"))), "mgdl": str(found["mgdl"]),
+                      "minutes": found["minutes"], "fat_g": estimate.get("fat_g"), "protein_g": estimate.get("protein_g")}
 
 
 def records(event_ids: list[str]) -> dict[str, dict]:
