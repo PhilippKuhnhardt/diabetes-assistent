@@ -37,6 +37,8 @@ function initial(item) {
     fat: Boolean(item.fat_protein), fast: Boolean(item.fast),
     description: item.description || "", dish: item.dish?.name || "", place: item.place ? String(item.place.id) : "",
     notes: item.notes || "", session: null,
+    // Static or calculated fat/protein surcharge (app/fpe.py); the calculated one needs the agent's estimate.
+    surchargeMode: item.surcharge ? "fpe" : "static",
     sportKind: item.sport_kind || "jogging", duration: item.duration_minutes ? String(Number(item.duration_minutes)) : "",
     effectMode: !sport || !item.sport_effect_custom ? "standard" : effect === 0 ? "none" : "own",
     effect: item.sport_effect_custom && effect !== 0 ? String(effect) : "",
@@ -52,6 +54,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
   const [busy, setBusy] = useState(false);
   const [armed, setArmed] = useState(false);
   const [photos, setPhotos] = useState([]);
+  const [fpe, setFpe] = useState(null);
   const set = patch => setV(current => ({ ...current, ...patch }));
   const kind = item.kind;
   const sport = kind === "exercise";
@@ -67,6 +70,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
     let live = true;
     api("/api/agent/session?event_id=" + encodeURIComponent(item.event_id)).then(data => {
       const found = data.session;
+      if (live && kind === "meal") setFpe(found?.fpe || null);
       if (live && found?.photos) setPhotos(Array.from({ length: found.photos }, (_, index) =>
         "/api/agent/photo?session=" + encodeURIComponent(found.session_id) + "&n=" + index));
     }).catch(() => {});
@@ -86,6 +90,8 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
         set({ carbs: String(result.carbs), level: CERTAINTY_LEVELS.indexOf(result.certainty), fat: result.fat_protein,
               fast: result.fast, dish: result.estimate.dish?.name || "", description: result.estimate.description,
               session: result.session });
+        // A new estimate brings new fat and protein: show the calculated surcharge it gives.
+        api("/api/agent/session?session_id=" + encodeURIComponent(result.session)).then(data => setFpe(data.session?.fpe || null)).catch(() => {});
       },
     });
   }
@@ -97,6 +103,8 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
     try {
       await onSave({ ...v, carbs, insulin: parse(v.insulin) || 0, units: parse(v.units) || 0, duration: parse(v.duration) || 0,
         certainty: v.level == null ? undefined : CERTAINTY_LEVELS[v.level],
+        // Only a meal whose estimate gives a calculated surcharge can switch; otherwise the saved one stays.
+        surchargeMode: kind === "meal" && fpe ? v.surchargeMode : null,
         effect: v.effectMode === "own" ? parse(v.effect) : v.effectMode === "none" ? 0 : null,
         minutes: v.minutesMode === "own" ? Math.round(parse(v.hours) * 60) : null });
     } catch (error) { toast(error.message, true); }
@@ -139,6 +147,13 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
           <${FactorChip} name="fast" label="Schnell" title="Wirkt schnell (z. B. Saft, Weißbrot)" checked=${v.fast} onChange=${fast => set({ fast })} />
           <button type="button" class="chip agent-chip card-refine" onClick=${refine}>Nachbessern</button>
         </div>
+      </div>`}
+
+      ${eats && kind === "meal" && fpe && html`<div class="card-group card-surcharge">
+        <div class="card-group-head"><b>Zuschlag Fett/Eiweiß</b>
+          <small>${fmt(fpe.fat_g, 0)} g Fett, ${fmt(fpe.protein_g, 0)} g Eiweiß = ${fmt(fpe.fpe)} FPE · wirkt bis ${hours(fpe.minutes)}</small></div>
+        <${Segments} label="Zuschlag" value=${v.surchargeMode} onChange=${surchargeMode => set({ surchargeMode })}
+          options=${[["static", "Fest" + (v.fat ? " (fettreich)" : "")], ["fpe", "Berechnet " + fmt(fpe.mgdl, 0) + " mg/dL"]]} />
       </div>`}
 
       ${sport && html`<div class="card-list">

@@ -526,7 +526,8 @@
     "meal_id": "t-0001",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -549,7 +550,8 @@
     "meal_id": "t-0002",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -572,7 +574,8 @@
     "meal_id": "t-0003",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -1266,7 +1269,8 @@
     "meal_id": "t-0004",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -1289,7 +1293,8 @@
     "meal_id": "t-0005",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -1312,7 +1317,8 @@
     "meal_id": "t-0005",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -1335,7 +1341,8 @@
     "meal_id": "t-0007",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -2016,7 +2023,8 @@
     "meal_id": "t-0008",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2039,7 +2047,8 @@
     "meal_id": "t-0009",
     "notes": "Pizza",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2062,7 +2071,8 @@
     "meal_id": "t-0010",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -2762,7 +2772,8 @@
     "meal_id": "t-0011",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2785,7 +2796,8 @@
     "meal_id": "t-0012",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2808,7 +2820,8 @@
     "meal_id": "t-0013",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2831,7 +2844,8 @@
     "meal_id": "t-0013",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -3345,7 +3359,8 @@
     "meal_id": "t-0015",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -3368,7 +3383,8 @@
     "meal_id": "t-0016",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -4121,7 +4137,8 @@
     "meal_id": "t-0017",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4144,7 +4161,8 @@
     "meal_id": "t-0017",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4167,7 +4185,8 @@
     "meal_id": "t-0019",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4190,7 +4209,8 @@
     "meal_id": "t-0019",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4213,7 +4233,8 @@
     "meal_id": "t-0021",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -4935,7 +4956,8 @@
     "meal_id": "t-0022",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4958,7 +4980,8 @@
     "meal_id": "t-0023",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4987,7 +5010,8 @@
     "sport_kind": "gym",
     "sport_minutes": 300,
     "sport_minutes_custom": false,
-    "sport_minutes_default": 300
+    "sport_minutes_default": 300,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5010,7 +5034,8 @@
     "meal_id": "t-0025",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -5698,7 +5723,8 @@
     "meal_id": "t-0026",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5721,7 +5747,8 @@
     "meal_id": "t-0027",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5744,7 +5771,8 @@
     "meal_id": "t-0028",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -6454,7 +6482,8 @@
     "nightscout_synced": true,
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -6477,7 +6506,8 @@
     "meal_id": "t-0029",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -6500,7 +6530,8 @@
     "meal_id": "t-0030",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -6523,7 +6554,8 @@
     "meal_id": "t-0031",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -7205,7 +7237,8 @@
     "meal_id": "t-0033",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7228,7 +7261,8 @@
     "meal_id": "t-0034",
     "notes": "Pizza",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7251,7 +7285,8 @@
     "meal_id": "t-0034",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7274,7 +7309,8 @@
     "meal_id": "t-0036",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7297,7 +7333,8 @@
     "meal_id": "t-0036",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -7998,7 +8035,8 @@
     "meal_id": "t-0038",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8021,7 +8059,8 @@
     "meal_id": "t-0039",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8044,7 +8083,8 @@
     "meal_id": "t-0040",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -8733,7 +8773,8 @@
     "meal_id": "t-0041",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8756,7 +8797,8 @@
     "meal_id": "t-0042",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8779,7 +8821,8 @@
     "meal_id": "t-0043",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -9314,7 +9357,8 @@
     "meal_id": "t-0044",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9337,7 +9381,8 @@
     "meal_id": null,
     "notes": "nur KH",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9360,7 +9405,8 @@
     "meal_id": null,
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9383,7 +9429,8 @@
     "meal_id": "t-0047",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -9933,7 +9980,8 @@
     "meal_id": "t-0048",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9956,7 +10004,8 @@
     "meal_id": "t-0048",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9979,7 +10028,8 @@
     "meal_id": "t-0050",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -10640,7 +10690,8 @@
     "meal_id": "t-0051",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -10663,7 +10714,8 @@
     "meal_id": "t-0052",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -10686,7 +10738,8 @@
     "meal_id": "t-0053",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -11412,7 +11465,8 @@
     "meal_id": "t-0054",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -11435,7 +11489,8 @@
     "meal_id": "t-0055",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -11458,7 +11513,8 @@
     "meal_id": "t-0056",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -11481,7 +11537,8 @@
     "meal_id": "t-0056",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -11504,7 +11561,8 @@
     "meal_id": "t-0056",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -12205,7 +12263,8 @@
     "meal_id": "t-0059",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12228,7 +12287,8 @@
     "meal_id": "t-0060",
     "notes": "Pizza",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12251,7 +12311,8 @@
     "meal_id": "t-0061",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -13042,7 +13103,8 @@
     "meal_id": "t-0062",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13065,7 +13127,8 @@
     "meal_id": "t-0063",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13088,7 +13151,8 @@
     "meal_id": "t-0063",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13117,7 +13181,8 @@
     "sport_kind": "racing",
     "sport_minutes": 300,
     "sport_minutes_custom": false,
-    "sport_minutes_default": 300
+    "sport_minutes_default": 300,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13140,7 +13205,8 @@
     "meal_id": "t-0066",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -13870,7 +13936,8 @@
     "nightscout_synced": true,
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13893,7 +13960,8 @@
     "meal_id": "t-0067",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13916,7 +13984,8 @@
     "meal_id": "t-0068",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13939,7 +14008,8 @@
     "meal_id": "t-0069",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -14660,7 +14730,8 @@
     "meal_id": "t-0071",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -14683,7 +14754,8 @@
     "meal_id": "t-0072",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -14706,7 +14778,8 @@
     "meal_id": "t-0073",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -15367,7 +15440,8 @@
     "meal_id": "t-0074",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -15390,7 +15464,8 @@
     "meal_id": "t-0075",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -15413,7 +15488,8 @@
     "meal_id": "t-0076",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -16184,7 +16260,8 @@
     "meal_id": "t-0077",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16207,7 +16284,8 @@
     "meal_id": "t-0077",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16230,7 +16308,8 @@
     "meal_id": "t-0079",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16253,7 +16332,8 @@
     "meal_id": "t-0079",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16276,7 +16356,8 @@
     "meal_id": "t-0081",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16299,7 +16380,8 @@
     "meal_id": "t-0081",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -17036,7 +17118,8 @@
     "meal_id": "t-0083",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -17059,7 +17142,8 @@
     "meal_id": "t-0084",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -17082,7 +17166,8 @@
     "meal_id": "t-0085",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -17762,7 +17847,8 @@
     "meal_id": "t-0086",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -17785,7 +17871,8 @@
     "meal_id": "t-0087",
     "notes": "Pizza",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -17808,7 +17895,8 @@
     "meal_id": "t-0088",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -18468,7 +18556,8 @@
     "meal_id": "t-0089",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -18491,7 +18580,8 @@
     "meal_id": "t-0090",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -18514,7 +18604,8 @@
     "meal_id": "t-0091",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -19219,7 +19310,8 @@
     "meal_id": "t-0092",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19242,7 +19334,8 @@
     "meal_id": "t-0093",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19265,7 +19358,8 @@
     "meal_id": "t-0093",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19288,7 +19382,8 @@
     "meal_id": "t-0095",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -19888,7 +19983,8 @@
     "meal_id": "t-0096",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19911,7 +20007,8 @@
     "meal_id": "t-0097",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19934,7 +20031,8 @@
     "meal_id": "t-0098",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -20631,7 +20729,8 @@
     "meal_id": "t-0099",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -20654,7 +20753,8 @@
     "meal_id": "t-0100",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -20677,7 +20777,8 @@
     "meal_id": "t-0101",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -20700,7 +20801,8 @@
     "meal_id": "t-0101",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -21432,7 +21534,8 @@
     "nightscout_synced": true,
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21455,7 +21558,8 @@
     "meal_id": "t-0103",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21478,7 +21582,8 @@
     "meal_id": "t-0104",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21507,7 +21612,8 @@
     "sport_kind": "gym",
     "sport_minutes": 300,
     "sport_minutes_custom": false,
-    "sport_minutes_default": 300
+    "sport_minutes_default": 300,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21530,7 +21636,8 @@
     "meal_id": "t-0106",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -22342,7 +22449,8 @@
     "meal_id": "t-0108",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22365,7 +22473,8 @@
     "meal_id": "t-0108",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22388,7 +22497,8 @@
     "meal_id": "t-0110",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22411,7 +22521,8 @@
     "meal_id": "t-0110",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22434,7 +22545,8 @@
     "meal_id": "t-0112",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -23164,7 +23276,8 @@
     "meal_id": "t-0113",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -23187,7 +23300,8 @@
     "meal_id": "t-0114",
     "notes": "Pizza",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -23210,7 +23324,8 @@
     "meal_id": "t-0114",
     "notes": "ignored",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -23233,7 +23348,8 @@
     "meal_id": "t-0115",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -23737,7 +23853,8 @@
     "meal_id": "t-0117",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -23760,7 +23877,8 @@
     "meal_id": "t-0118",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -24420,7 +24538,8 @@
     "meal_id": "t-0119",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24443,7 +24562,8 @@
     "meal_id": "t-0120",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24466,7 +24586,8 @@
     "meal_id": "t-0121",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -25207,7 +25328,8 @@
     "meal_id": "t-0122",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25230,7 +25352,8 @@
     "meal_id": "t-0123",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25253,7 +25376,8 @@
     "meal_id": "t-0123",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25276,7 +25400,8 @@
     "meal_id": "t-0125",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25299,7 +25424,8 @@
     "meal_id": "t-0125",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -26000,7 +26126,8 @@
     "meal_id": "t-0127",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -26023,7 +26150,8 @@
     "meal_id": "t-0128",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -26046,7 +26174,8 @@
     "meal_id": "t-0129",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -26756,7 +26885,8 @@
     "meal_id": "t-0130",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -26779,7 +26909,8 @@
     "meal_id": "t-0131",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -26802,7 +26933,8 @@
     "meal_id": "t-0132",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -27463,7 +27595,8 @@
     "meal_id": "t-0133",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27486,7 +27619,8 @@
     "meal_id": "t-0134",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27509,7 +27643,8 @@
     "meal_id": "t-0135",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -28270,7 +28405,8 @@
     "meal_id": "t-0136",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28293,7 +28429,8 @@
     "meal_id": "t-0136",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28316,7 +28453,8 @@
     "meal_id": "t-0138",
     "notes": "Pizza",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28339,7 +28477,8 @@
     "meal_id": "t-0138",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28362,7 +28501,8 @@
     "meal_id": "t-0140",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -29099,7 +29239,8 @@
     "nightscout_synced": true,
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29122,7 +29263,8 @@
     "meal_id": "t-0141",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29145,7 +29287,8 @@
     "meal_id": "t-0142",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29168,7 +29311,8 @@
     "meal_id": "t-0143",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
@@ -29739,7 +29883,8 @@
     "nightscout_synced": true,
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29762,7 +29907,8 @@
     "meal_id": "t-0145",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29791,7 +29937,8 @@
     "sport_kind": "jogging",
     "sport_minutes": 300,
     "sport_minutes_custom": false,
-    "sport_minutes_default": 300
+    "sport_minutes_default": 300,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29814,7 +29961,8 @@
     "meal_id": "ns-0002",
     "notes": "Mittag",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29837,7 +29985,8 @@
     "meal_id": "ns-0002",
     "notes": "",
     "place": null,
-    "sport_kind": null
+    "sport_kind": null,
+    "surcharge": null
    }
   ],
   "timezone": "Europe/Berlin",
