@@ -346,3 +346,21 @@ class SplitTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CalculatedSurchargeTests(unittest.TestCase):
+    def test_a_meal_with_the_calculated_surcharge_uses_its_own_amount_and_duration(self):
+        from datetime import datetime, timedelta, timezone
+        from decimal import Decimal
+        from app import on_board
+        now = datetime(2026, 11, 19, 12, tzinfo=timezone.utc)
+        settings = {"timezone": "UTC", "isf_schedule": [], "breakfast_end_minute": 600}
+        meal = {"id": "m", "at": now - timedelta(minutes=120), "eventType": "Meal Bolus", "role": "meal", "carbs": 80,
+                "insulin": 0, "surcharge": {"mgdl": "120", "minutes": 360}}
+        found = on_board.sources([meal], now, settings, lambda at: None, Decimal(80), lambda grams: Decimal(1),
+                                 fat_surcharge_mgdl=Decimal(120))
+        self.assertEqual(found["surcharges"][0]["mgdl"], Decimal(120))
+        # Linear from the meal start to 360 min: after 120 min two thirds are left.
+        self.assertEqual(on_board.effects_at(found, now)["surcharge_mgdl"], Decimal(80))
+        later = on_board.effects_at(found, now + timedelta(minutes=239))["surcharge_mgdl"]
+        self.assertGreater(later, 0)
