@@ -16,6 +16,11 @@ while t <= now:
     entries.append({"_id": f"g{i}", "date": int(t.timestamp()*1000), "type": "sgv", "sgv": int(v), "direction": "Flat"})
     t += timedelta(minutes=5); i += 1
 entries.reverse()
+# A sensor gap over lunch two days ago: that meal's factor cannot be calculated, so "Zu erledigen"
+# always has a hint to open, whatever the hour the suite runs (CI run 2026-11-19 02:30 UTC had none).
+gap_day = (now - timedelta(days=2)).replace(hour=0, minute=0)
+gap = (int((gap_day + timedelta(hours=10, minutes=30)).timestamp() * 1000), int((gap_day + timedelta(hours=15)).timestamp() * 1000))
+entries = [entry for entry in entries if not gap[0] <= entry["date"] <= gap[1]]
 treat = []
 def add(dt, **kw):
     kw.update({"_id": f"t{len(treat)}", "created_at": dt.strftime("%Y-%m-%dT%H:%M:%S.000Z"), "eventType": "Meal Bolus"})
@@ -27,6 +32,12 @@ for d in range(3, -1, -1):
         if dt < now: add(dt, carbs=c, insulin=ins, notes="")
     dt = day + timedelta(hours=14)
     if dt < now: add(dt, carbs=15, notes="")
+# "Heute" always has a meal, whatever the hour the suite runs: before the first fixed meal (06:20 UTC)
+# today would be empty and the smoke test of today's meals fails (CI run 2026-11-19 02:30 UTC).
+from zoneinfo import ZoneInfo
+berlin_midnight = now.astimezone(ZoneInfo("Europe/Berlin")).replace(hour=0, minute=0).astimezone(timezone.utc)
+if not any(t["created_at"] >= berlin_midnight.strftime("%Y-%m-%dT%H:%M:%S.000Z") and t.get("insulin") for t in treat):
+    add(max(now - timedelta(minutes=40), berlin_midnight + timedelta(minutes=1)), carbs=30, insulin=2.5, notes="")
 PROFILE = {"_id": "p", "startDate": "2026-01-01T00:00:00.000Z", "defaultProfile": "Default", "store": {"Default": {
   "timezone": "Europe/Berlin", "units": "mg/dl",
   "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 40}],
