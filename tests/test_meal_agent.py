@@ -92,6 +92,14 @@ class ProviderTests(unittest.TestCase):
         self.addCleanup(self.env.stop)
         self.messages = [{"role": "user", "text": "Porridge", "images": [JPEG]}]
 
+    def test_links_leave_the_text_and_sources_lose_tracking(self):
+        # User report 2026-11-19: a raw Markdown link with utm_source=openai in the reasoning.
+        self.assertEqual(meal_agent.plain_text("Mini-Pains au chocolat. ([fdc.nal.usda.gov](https://fdc.nal.usda.gov/"
+                                               "food-search/?query=bread&utm_source=openai)) Die Spanne"),
+                         "Mini-Pains au chocolat. Die Spanne")
+        self.assertEqual(meal_agent.plain_text("Laut [USDA](https://x.y/a) 20 g (https://a.b/c). Ende"), "Laut USDA 20 g. Ende")
+        self.assertEqual(llm.clean_url("https://a.b/s?query=bread&utm_source=openai"), "https://a.b/s?query=bread")
+
     def test_json_is_found_inside_a_fence_or_prose(self):
         self.assertEqual(llm.parse_json('```json\n{"a": 1}\n```'), {"a": 1})
         self.assertEqual(llm.parse_json('Hier: {"a": {"b": 2}} fertig'), {"a": {"b": 2}})
@@ -282,6 +290,33 @@ class AgentServiceTests(unittest.TestCase):
         self.assertIsNone(agent.for_entry({"event_id": ["nope"]})["session"])
         self.assertIsNone(agent.for_entry({})["session"])
         self.assertEqual(agent.view()["usage_month"][0]["calls"], 2)
+
+    def test_a_follow_up_can_add_photos_that_stay_with_its_turn(self):
+        # User request 2026-11-19: "Nachbessern" takes a photo of the second plate.
+        answer = {"data": ANSWER | {"reasoning": "Laut ([fdc.nal.usda.gov](https://fdc.nal.usda.gov/?q=bread&utm_source=openai)) passt das."},
+                  "sources": [], "usage": {}, "tool_calls": []}
+        with patch.object(llm, "run", return_value=answer) as complete:
+            first = agent.estimate({"text": "Brot", "photos": [JPEG], "at": "2026-11-19T02:00:00+00:00"})
+            second = agent.estimate({"session_id": first["session_id"], "photos": [JPEG, JPEG]})
+            messages = complete.call_args.args[3]
+            self.assertEqual([len(message["images"]) for message in messages], [1, 0, 2])
+            self.assertEqual(messages[2]["text"], "(nur Fotos)")
+            third = agent.estimate({"session_id": first["session_id"], "text": "noch ein Ei"})
+            self.assertEqual([len(message["images"]) for message in complete.call_args.args[3]], [1, 0, 2, 0, 0])
+            with self.assertRaisesRegex(ValueError, "Höchstens 4 Fotos"):
+                agent.estimate({"session_id": first["session_id"], "photos": [JPEG] * 5})
+            self.assertEqual(agent.estimate({"session_id": first["session_id"], "photos": [JPEG] * 4})["photos"], 7)
+            with self.assertRaisesRegex(ValueError, "Höchstens 8 Fotos"):
+                agent.estimate({"session_id": first["session_id"], "photos": [JPEG] * 2})
+        self.assertEqual((second["photos"], third["photos"]), (3, 3))
+        users = [row for row in third["conversation"] if row["role"] == "user"]
+        self.assertEqual([(row["text"], row["photos"]) for row in users], [("Brot", [0]), ("", [1, 2]), ("noch ein Ei", [])])
+        self.assertEqual(third["conversation"][1]["reasoning"], "Laut passt das.")
+        self.assertTrue(agent.photo(first["session_id"], "2").startswith(b"\xff\xd8"))
+
+    def test_older_sessions_keep_all_photos_on_the_first_turn(self):
+        turns = [{"role": "user", "text": "a"}, {"role": "assistant", "text": "{}"}, {"role": "user", "text": "b"}]
+        self.assertEqual(agent._photo_shares(turns, 2), [(0, 2), (2, 2), (2, 2)])
 
     def test_estimate_needs_input_and_valid_photos(self):
         for payload in ({}, {"photos": ["data:image/jpeg;base64,AAAA"]}, {"photos": [JPEG] * 5},

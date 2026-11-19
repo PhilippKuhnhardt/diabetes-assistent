@@ -80,32 +80,46 @@ function EstimateDetails({ estimate }) {
     </details>`}`;
 }
 
-function Bubbles({ conversation, estimate, busy }) {
+// A sent photo as the page loads it, or a data URL while the message is still on its way.
+const photoSrc = (session, photo) => typeof photo === "string" ? photo
+  : "/api/agent/photo?session=" + encodeURIComponent(session) + "&n=" + photo;
+
+function Bubbles({ conversation, estimate, busy, session }) {
   const lastAnswer = conversation.map(row => row.role).lastIndexOf("assistant");
   return html`<div class="chat-bubbles" aria-live="polite">
     ${!conversation.length && !busy && html`<p class="chat-empty">Foto, Sprache oder Text, z. B. „Porridge wie immer, dazu eine Banane“.</p>`}
     ${conversation.map((row, index) => row.role === "user"
-      ? html`<div class="bubble me">${row.text === "(nur Fotos)" ? "Nur Fotos" : row.text}</div>`
-      : html`<div class=${"bubble ai" + (index === lastAnswer ? " latest" : "")}>
-          <b>${row.carbs_g} g</b>${row.carbs_low_g != null && html`<span class="muted"> · ${row.carbs_low_g}–${row.carbs_high_g} g</span>`}
-          ${row.reasoning && html`<p>${row.reasoning}</p>`}
-          ${row.question && html`<p class="chat-question">${row.question}</p>`}
-          ${index === lastAnswer && estimate && html`<${EstimateDetails} estimate=${estimate} />`}
-        </div>`)}
+      ? html`<div class=${"chat-turn me" + (row.pending ? " pending" : "")}>
+          ${row.photos?.length > 0 && html`<div class="chat-turn-photos">${row.photos.map((photo, n) => html`
+            <img key=${n} src=${photoSrc(session, photo)} alt=${"Foto " + (n + 1)} />`)}</div>`}
+          ${row.text && html`<div class="bubble me">${row.text}</div>`}
+        </div>`
+      : index === lastAnswer
+        ? html`<div class="bubble ai latest">
+            <b>${row.carbs_g} g</b>${row.carbs_low_g != null && html`<span class="muted"> · ${row.carbs_low_g}–${row.carbs_high_g} g</span>`}
+            ${row.reasoning && html`<p>${row.reasoning}</p>`}
+            ${row.question && html`<p class="chat-question">${row.question}</p>`}
+            ${estimate && html`<${EstimateDetails} estimate=${estimate} />`}
+          </div>`
+        : html`<div class="bubble ai earlier"><b>${row.carbs_g} g</b>${row.carbs_low_g != null
+            && html`<span class="muted"> · ${row.carbs_low_g}–${row.carbs_high_g} g</span>`}</div>`)}
     ${busy && html`<div class="chat-typing">Schätzt …</div>`}
   </div>`;
 }
 
-// One chat per opening. `target` is "entry" (the entry form) or "edit" (an existing meal, where an
-// earlier estimate continues: "Nachbessern"). `api` and `toast` come from the page.
-export function MealChat({ info, target, eventId, initialText, previousCarbs, context, api, toast, onApply, onClose }) {
+// One chat per opening, the same wherever it opens (Philipp 2026-11-19: correcting a saved meal and the
+// first estimate must not differ). With `sessionId` (an estimate already taken over) or `eventId` (a
+// saved meal's card) the earlier estimate continues. `api` and `toast` come from the page.
+export function MealChat({ info, eventId, sessionId, initialText, previousCarbs, context, api, toast, onApply, onClose }) {
+  // Photos picked for the next message (data URLs); sent ones live in the conversation rows.
   const [photos, setPhotos] = useState([]);
+  const [sentPhotos, setSentPhotos] = useState(0);
   const [session, setSession] = useState(null);
   const [estimate, setEstimate] = useState(null);
   const [conversation, setConversation] = useState([]);
   const [text, setText] = useState(initialText || "");
   const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(Boolean(eventId));
+  const [loading, setLoading] = useState(Boolean(sessionId || eventId));
   const [recording, setRecording] = useState(null);
   const [voiceStatus, setVoiceStatus] = useState("");
   const [pick, setPick] = useState(null);
@@ -114,7 +128,8 @@ export function MealChat({ info, target, eventId, initialText, previousCarbs, co
   const [fast, setFast] = useState(false);
   const scroller = useRef(null);
   const field = useRef(null);
-  const photoLimit = info?.limits?.photos || 4;
+  const perMessage = info?.limits?.photos || 4;
+  const photoRoom = Math.min(perMessage - photos.length, (info?.limits?.session_photos || 8) - sentPhotos - photos.length);
   const followUp = Boolean(session);
   // The field grows with the text; Safari has no field-sizing yet, so set the height by hand there.
   useEffect(() => {
@@ -136,14 +151,14 @@ export function MealChat({ info, target, eventId, initialText, previousCarbs, co
   // An entry the agent already estimated continues that conversation (photos, turns, last answer),
   // so a second plate is told as a correction instead of starting over.
   useEffect(() => {
-    if (!eventId) return;
+    if (!sessionId && !eventId) return;
     let live = true;
-    api("/api/agent/session?event_id=" + encodeURIComponent(eventId)).then(data => {
+    api("/api/agent/session?" + (sessionId ? "session_id=" + encodeURIComponent(sessionId)
+      : "event_id=" + encodeURIComponent(eventId))).then(data => {
       const earlier = data.session;
       if (!live || !earlier?.can_continue) return;
       setSession(earlier.session_id);
-      setPhotos(Array.from({ length: earlier.photos }, (_, index) =>
-        "/api/agent/photo?session=" + encodeURIComponent(earlier.session_id) + "&n=" + index));
+      setSentPhotos(earlier.photos);
       takeEstimate(earlier.estimate, earlier.conversation || []);
       setText("");
     }).catch(error => toast(error.message, true)).finally(() => live && setLoading(false));
@@ -160,32 +175,44 @@ export function MealChat({ info, target, eventId, initialText, previousCarbs, co
   }, [conversation.length, busy]);
 
   async function addPhotos(event) {
-    const files = [...event.currentTarget.files].slice(0, photoLimit - photos.length);
+    const files = [...event.currentTarget.files].slice(0, Math.max(0, photoRoom));
     event.currentTarget.value = "";
     try {
       const added = [];
       for (const file of files) added.push(await photoDataURL(file));
-      setPhotos(current => [...current, ...added].slice(0, photoLimit));
+      setPhotos(current => [...current, ...added].slice(0, perMessage));
     } catch (error) { toast(error.message, true); }
   }
 
+  // A message shows up in the chat at once (user request 2026-11-19) and stays there marked as
+  // pending until the answer comes; a failed send puts the words and photos back into the field.
   async function send() {
     if (busy) return;
     const words = text.trim();
-    if (!words && (followUp || !photos.length)) {
-      toast(followUp ? "Bitte eine Antwort oder Korrektur eingeben" : "Bitte ein Foto aufnehmen oder das Essen beschreiben", true);
+    const sending = photos;
+    if (!words && !sending.length) {
+      toast(followUp ? "Bitte eine Antwort, Korrektur oder ein Foto schicken" : "Bitte ein Foto aufnehmen oder das Essen beschreiben", true);
       return;
     }
     const { at, placeId } = context();
+    const before = conversation;
+    setConversation([...before, { role: "user", text: words, photos: sending, pending: true }]);
+    setText("");
+    setPhotos([]);
     setBusy(true);
     try {
       const data = await api("/api/agent/estimate", { method: "POST", body: JSON.stringify(followUp
-        ? { session_id: session, text: words, at, place_id: placeId }
-        : { text: words, photos, at, place_id: placeId }) });
+        ? { session_id: session, text: words, photos: sending, at, place_id: placeId }
+        : { text: words, photos: sending, at, place_id: placeId }) });
       setSession(data.session_id);
+      setSentPhotos(data.photos || 0);
       takeEstimate(data.estimate, data.conversation || []);
-      setText("");
-    } catch (error) { toast(error.message, true); }
+    } catch (error) {
+      setConversation(before);
+      setText(current => current || words);
+      setPhotos(current => [...sending, ...current].slice(0, perMessage));
+      toast(error.message, true);
+    }
     setBusy(false);
   }
 
@@ -217,30 +244,23 @@ export function MealChat({ info, target, eventId, initialText, previousCarbs, co
   }
 
   const voice = info?.transcribe_available && canRecord();
-  const title = target === "edit" ? (followUp ? "Nachbessern" : "Essen einschätzen") : "Essen";
-  const placeholder = followUp ? (target === "edit" ? "z. B. ich hatte noch einen zweiten Teller" : "Korrektur oder Antwort …")
-    : "Was und wie viel?";
+  const placeholder = followUp ? "Ergänzen oder korrigieren" : "Was und wie viel?";
+  const ready = Boolean(text.trim() || photos.length);
   const onKey = event => {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); send(); }
   };
 
   return html`<div class="meal-chat">
     <div class="section-head chat-head">
-      <div class="chat-title"><h2 id="agent-dialog-title">${title}</h2><${GlucoseBadge} /></div>
-      <button type="button" class="quiet" aria-label="Schließen" onClick=${onClose}>×</button>
+      <div class="chat-title"><h2 id="agent-dialog-title">Essen</h2><${GlucoseBadge} /></div>
+      <button type="button" class="quiet chat-close" aria-label="Schließen" onClick=${onClose}>×</button>
     </div>
     <div class="chat-body" ref=${scroller}>
-      ${photos.length > 0 && html`<div class=${"chat-photos" + (conversation.length ? " small" : "")}>
-        ${photos.map((photo, index) => html`<figure key=${photo.slice(-24) + index}>
-          <img src=${photo} alt=${"Foto " + (index + 1)} />
-          ${!followUp && html`<button type="button" class="quiet" aria-label=${"Foto " + (index + 1) + " entfernen"}
-            onClick=${() => setPhotos(photos.filter((_, other) => other !== index))}>×</button>`}
-        </figure>`)}
-      </div>`}
-      ${loading ? html`<p class="chat-typing">Lädt …</p>` : html`<${Bubbles} conversation=${conversation} estimate=${estimate} busy=${busy} />`}
+      ${loading ? html`<p class="chat-typing">Lädt …</p>`
+        : html`<${Bubbles} conversation=${conversation} estimate=${estimate} busy=${busy} session=${session} />`}
     </div>
     <div class="chat-foot">
-      ${estimate && pick != null && html`
+      ${estimate && pick != null && html`<div class="chat-pick">
         <${CarbRange} low=${estimate.carbs_low_g} estimate=${estimate.carbs_g} high=${estimate.carbs_high_g}
           value=${pick} previous=${previousCarbs} onChange=${setPick}>
           <span class="entry-chips">
@@ -248,13 +268,21 @@ export function MealChat({ info, target, eventId, initialText, previousCarbs, co
             <${FactorChip} name="fast" label="Schnell" title="Wirkt schnell (z. B. Saft, Weißbrot)" checked=${fast} onChange=${setFast} />
           </span>
         <//>
-        <${CertaintySlider} level=${level} onChange=${setLevel} />`}
+        <${CertaintySlider} level=${level} onChange=${setLevel} />
+      </div>`}
+      ${photos.length > 0 && html`<div class="chat-photos" aria-label="Fotos für die nächste Nachricht">
+        ${photos.map((photo, index) => html`<figure key=${photo.slice(-24) + index}>
+          <img src=${photo} alt=${"Neues Foto " + (index + 1)} />
+          <button type="button" class="quiet" aria-label=${"Foto " + (index + 1) + " entfernen"}
+            onClick=${() => setPhotos(photos.filter((_, other) => other !== index))}>×</button>
+        </figure>`)}
+      </div>`}
       <div class="chat-input">
-        ${!followUp && photos.length < photoLimit && html`<label class="round-button" aria-label="Foto hinzufügen" title="Foto">
+        ${photoRoom > 0 && html`<label class="round-button" aria-label="Foto hinzufügen" title="Foto">
           <${Icon} name="camera" /><input type="file" accept="image/*" multiple hidden onChange=${addPhotos} /></label>`}
         <textarea ref=${field} rows="1" maxlength="2000" placeholder=${placeholder} aria-label=${followUp ? "Antwort oder Korrektur" : "Beschreibung"}
           value=${text} onInput=${event => setText(event.currentTarget.value)} onKeyDown=${onKey}></textarea>
-        ${estimate && text.trim()
+        ${estimate && ready
           ? html`<button type="button" class="round-button send" aria-label="Senden" disabled=${busy} onClick=${send}><${Icon} name="send" /></button>`
           : voice && html`<button type="button" class="round-button" aria-label=${recording ? "Aufnahme beenden" : "Sprechen"}
               aria-pressed=${recording ? "true" : "false"} onClick=${toggleVoice}><${Icon} name=${recording ? "stop" : "mic"} /></button>`}

@@ -1087,9 +1087,9 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
   .topbar-actions button.inbox-badge { min-height: 32px; padding: 4px 10px; font-size: 13px; }
   .inbox-badge-label { display: none; }
   .glucose-main span { font-size: 12px; }
-  #agent-dialog { top: var(--topbar-h, 0px); height: calc(100dvh - var(--topbar-h, 0px)); margin: 0; padding-top: 0; }
-  #agent-dialog::backdrop { background: transparent; }
-  .chat-title .glucose-badge { display: none; }
+  /* The meal chat covers the whole screen with one head that shows the glucose itself, the same from the
+     entry form and from a saved meal's card (Philipp 2026-11-19: no second head or close button above it). */
+  #agent-dialog { top: 0; height: 100dvh; margin: 0; padding-top: env(safe-area-inset-top, 0px); }
 }
 @media (max-width: 950px) {
   body.entry-open .entry-drawer { top: var(--topbar-h, 0px); z-index: 40; }
@@ -1117,3 +1117,21 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 /* "+" is a 2 × 2 grid of four tiles (user request 2026-11-18); Essen keeps its green. */
 .choices button.choice.main { grid-column: auto; min-height: 96px; }
 .choices button.choice { min-height: 96px; }
+
+/* Meal chat, calmer (user report 2026-11-19): photos sit in the message they came with and a sent
+   message shows at once; older answers show only their grams. */
+.chat-turn { align-self: flex-end; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: 88%; }
+.chat-turn .bubble.me { max-width: 100%; }
+.chat-turn.pending { opacity: .65; }
+.chat-turn-photos { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+.chat-turn-photos img { display: block; width: 72px; height: 72px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }
+.bubble.ai.earlier { padding: 6px 12px; font-size: 13px; }
+.bubble.ai.earlier > b { font-size: 14px; }
+.chat-foot .chat-photos img { width: 56px; height: 56px; border-radius: 8px; }
+.chat-head button.chat-close { flex: none; }
+@media (max-width: 650px) {
+  .chat-title { flex-wrap: nowrap; }
+  .chat-head { padding: 10px 16px 8px; }
+  .chat-head h2 { font-size: 19px; }
+}
+.chat-pick { display: flex; flex-direction: column; gap: 10px; }

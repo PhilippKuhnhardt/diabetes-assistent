@@ -10,10 +10,14 @@ more insulin than usual is estimated higher next time; that adjustment is named 
 from __future__ import annotations
 
 import json
+import re
 
 from app import dishes
 
 MAX_PHOTOS = 4
+# Photos per estimate in all: the first ones plus those added when correcting it ("Nachbessern", user
+# request 2026-11-19: a photo of the second plate).
+MAX_SESSION_PHOTOS = 8
 MAX_PHOTO_BYTES = 3_000_000
 MAX_TEXT = 2000
 MAX_TURNS = 8
@@ -78,7 +82,8 @@ Mahlzeiten taugen als Referenz, auch wenn keine genau passt.
 - Philipps eigene Angaben (gewogen, Packungswerte) gehen vor dem Foto.
 - In späteren Nachrichten korrigiert oder ergänzt Philipp die Mahlzeit, auch nachträglich ("noch ein zweiter \
 Teller", "die Hälfte liegen lassen"). Deine Antwort beschreibt dann immer die ganze Mahlzeit, wie sie \
-tatsächlich gegessen wurde, mit allen Bestandteilen in items und description.
+tatsächlich gegessen wurde, mit allen Bestandteilen in items und description. Eine spätere Nachricht kann \
+neue Fotos bringen (etwa vom zweiten Teller); sie gehören zur selben Mahlzeit.
 
 Deine Antwort ist ein JSON-Objekt mit genau diesen Feldern:
 - items: Bestandteile mit name, amount (Menge), carbs_g (verwertbare KH ohne Ballaststoffe), fat_g (Fett) \
@@ -98,7 +103,8 @@ Weißbrot, Süßes ohne Fett),
 etwas Wiederkehrendes, sonst leer; dish_category: eine Kategorie (vorhandene nutzen, wo sie passen),
 - description: ein bis zwei Sätze, was es war, mit den wichtigsten Mengen,
 - reasoning: zwei bis vier kurze Sätze auf Deutsch, worauf die Schätzung beruht (auch welche früheren \
-Mahlzeiten oder Quellen) und was sie unsicher macht,
+Mahlzeiten oder Quellen) und was sie unsicher macht; ohne Links, URLs oder Markdown, die App zeigt die \
+Quellen der Websuche selbst,
 - question: höchstens eine Rückfrage, wenn die Antwort die KH deutlich ändern würde, sonst leer. Schätze \
 trotzdem immer.
 Kein Text vor oder nach dem JSON."""
@@ -167,6 +173,21 @@ def _total(value, items: list[dict], key: str) -> int:
     return round(_number(value))
 
 
+# Links the model writes into its text anyway: "([site](url))", "[site](url)" and bare URLs (OpenAI's search
+# adds them with utm_source=openai). The page shows plain text; the search's sources are listed separately.
+_LINK_IN_PARENS = re.compile(r"\s*\(\s*\[[^\]]*\]\([^)\s]*\)\s*\)")
+_MARKDOWN_LINK = re.compile(r"\[([^\]]*)\]\([^)\s]*\)")
+_BARE_URL = re.compile(r"\s*\(?https?://[^\s)]+\)?")
+
+
+def plain_text(text) -> str:
+    """The agent's words without links or Markdown links, spaces tidied (user report 2026-11-19)."""
+    text = _LINK_IN_PARENS.sub("", str(text or ""))
+    text = _MARKDOWN_LINK.sub(r"\1", text)
+    text = _BARE_URL.sub("", text)
+    return re.sub(r"[ \t]{2,}", " ", re.sub(r"\s+([.,;:])", r"\1", text)).strip()
+
+
 def check(data: dict, catalogue: list[dict]) -> dict:
     """An answer in the form the page shows: whole grams, a range that holds the estimate, a dish
     matched to the catalogue by name, and texts cut to size. Raises ValueError on a broken answer."""
@@ -193,8 +214,8 @@ def check(data: dict, catalogue: list[dict]) -> dict:
                   "category": (known or {}).get("category") or dishes.validate_category(data.get("dish_category")),
                   "hint": (known or {}).get("hint")} if name else None),
         "description": dishes.validate_description(data.get("description")),
-        "reasoning": str(data.get("reasoning") or "").strip()[:1500],
-        "question": str(data.get("question") or "").strip()[:400],
+        "reasoning": plain_text(data.get("reasoning"))[:1500],
+        "question": plain_text(data.get("question"))[:400],
     }
 
 
