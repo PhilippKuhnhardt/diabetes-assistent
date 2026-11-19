@@ -345,6 +345,7 @@ function ModelForm({ page, data, onReload }) {
         auto_half_life_days: f.auto_half_life_days.value,
         auto_surcharge_mgdl: f.auto_surcharge_mgdl.value,
         auto_fat_surcharge_mgdl: f.auto_fat_surcharge_mgdl.value,
+        fpe_surcharge_mgdl: f.fpe_surcharge_mgdl.value,
         auto_vacation: f.auto_vacation.value,
         basal_default_units: f.basal_default_units.value,
         split_min_grams: Number(f.split_min_grams.value),
@@ -374,6 +375,7 @@ function ModelForm({ page, data, onReload }) {
         <${Field} label="Automatik-Methode"><${Choice} name="auto_method" value=${s.auto_method || "percentile"} options=${[["percentile", "Perzentil"], ["surcharge", "Perzentil + Mahlzeitzuschlag"]]} /><//>
         <${Field} label="Mahlzeitzuschlag" unit="mg/dL"><${NumberInput} name="auto_surcharge_mgdl" min="5" max="150" step="5" defaultValue=${s.auto_surcharge_mgdl ?? 40} /><//>
         <${Field} label="Fett-Zuschlag" unit="mg/dL"><${NumberInput} name="auto_fat_surcharge_mgdl" min="0" max="200" step="10" defaultValue=${s.auto_fat_surcharge_mgdl ?? 120} /><//>
+        <${Field} label="Zuschlag je FPE (berechnet)" unit="mg/dL"><${NumberInput} name="fpe_surcharge_mgdl" min="5" max="60" step="1" defaultValue=${s.fpe_surcharge_mgdl ?? 20} /><//>
         <${Field} label="Automatik-Perzentil" unit="%"><${NumberInput} name="auto_percentile" min="25" max="50" step="0.5" defaultValue=${s.auto_percentile} /><//>
         <${Field} label="Automatik-Zeitraum"><${Choice} name="auto_lookback_days" value=${String(s.auto_lookback_days)} options=${[["8", "8 Tage"], ["15", "15 Tage"], ["30", "30 Tage"]]} /><//>
         <${Field} label="Halbwertszeit" unit="Tage"><${NumberInput} name="auto_half_life_days" min="1" max="28" step="0.5" defaultValue=${s.auto_half_life_days} /><//>

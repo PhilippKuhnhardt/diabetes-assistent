@@ -44,6 +44,7 @@ def default_settings() -> dict:
         "auto_method": "percentile",
         "auto_surcharge_mgdl": "40",
         "auto_fat_surcharge_mgdl": "120",
+        "fpe_surcharge_mgdl": "20",
         "auto_vacation": DEFAULT_AUTO_VACATION,
         "peak_minutes": 60,
         "duration_minutes": 180,
@@ -97,6 +98,7 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result.setdefault("auto_surcharge_mgdl", "40")
     # Fat surcharge approved by Philipp 2026-11-06 (analysen/modell-review-2026-11-06.md); older versions lack it.
     result.setdefault("auto_fat_surcharge_mgdl", "120")
+    result.setdefault("fpe_surcharge_mgdl", "20")
     if result.get("auto_vacation") not in AUTO_VACATION_MODES:
         result["auto_vacation"] = DEFAULT_AUTO_VACATION
     result.setdefault("lunch_end_minute", 1020)

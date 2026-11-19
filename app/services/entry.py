@@ -7,7 +7,7 @@ import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
-from app import calculation, correction_scale, episodes, split as split_bolus
+from app import calculation, correction_scale, episodes, forecast, fpe, split as split_bolus
 from app.common import local_zone, parse_instant
 from app.ingestion import nightscout
 from app.services import basal, day_view, diary, dose_help, places, settings as settings_service
@@ -236,12 +236,25 @@ def _split(context: dict, assignment: dict | None, payload: dict) -> dict | None
     carbs, at = context["carbs"], context["at"]
     if context["mode"] != "meal" or not carbs or at is None:
         return None
+    calculated = _fpe_surcharge(context, assignment, payload)
+    # With the calculated surcharge every main meal may split ("carbs now, surcharge later"); _dose drops the
+    # split again when the surcharge part stays small (app/fpe.py).
     offer = split_bolus.offer(carbs, bool(assignment and assignment["snack"]), context["settings"],
-                              fat=payload.get("fat_protein") is True)
+                              fat=payload.get("fat_protein") is True or calculated is not None)
     if offer is None:
         return None
+    if calculated is not None:
+        offer = {**offer, "fpe": True}
     return {**offer, "active": payload.get("split") is not False,
             "due_at": (at + timedelta(minutes=offer["delay_minutes"])).isoformat()}
+
+
+def _fpe_surcharge(context: dict, assignment: dict | None, payload: dict) -> dict | None:
+    """The calculated fat/protein surcharge (app/fpe.py) when the form chose it for a main meal, else None."""
+    if (payload.get("surcharge_mode") != "fpe" or context["mode"] != "meal" or not context["carbs"]
+            or (assignment and assignment["snack"]) or context["settings"].get("auto_method") != forecast.SURCHARGE):
+        return None
+    return fpe.estimate(payload, context["settings"])
 
 
 def _low_blocked(carbs: Decimal, payload: dict, result: dict, split: dict | None) -> str | None:
@@ -281,6 +294,8 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
                                   "snack": bool(assignment and assignment["snack"]),
                                   "solo_snack": _solo_snack(context, assignment),
                                   "fat_protein": carbs > 0 and payload.get("fat_protein") is True,
+                                  **({key: payload.get(key) for key in ("fat_g", "protein_g", "surcharge_mode")}
+                                     if carbs > 0 else {}),
                                   "place_id": _place_choice(context, payload) if carbs > 0 else None,
                                   "finger_mgdl": context["finger"], "finger_at": context["at"]})
     # With carbs every option uses the calculated factor; until it has enough meals the
@@ -289,6 +304,20 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
     if split and not split_bolus.worth_it(result.get(prefix + "entry_units"), context["settings"]):
         # The normal dose is too small to split (e.g. shrunk by a low glucose): all of it now, no chip.
         split = None
+    if split and split.get("fpe"):
+        # Calculated surcharge: the carbs (and correction) now, the surcharge later (user request 2026-11-19).
+        chosen = (result.get("surcharge_choice") or {}).get("mode") == "fpe"
+        later = split_bolus.dosing.half_units(Decimal(str(result.get("auto_surcharge_units") or 0))) if chosen else None
+        full = result.get(prefix + "entry_units")
+        if not chosen:
+            # The static surcharge was used after all: the usual rule (carbs, fat mark) decides.
+            split = (split if carbs >= int(context["settings"].get("split_min_grams", 80)) or payload.get("fat_protein") is True
+                     else None)
+        elif later < fpe.SPLIT_LATER_MIN_UNITS and carbs < int(context["settings"].get("split_min_grams", 80)):
+            split = None
+        else:
+            share = (100 * (Decimal(str(full)) - later) / Decimal(str(full))) if full and Decimal(str(full)) > 0 else 100
+            split = {**split, "later_units": str(later), "first_percent": int(round(max(0, min(100, share))))}
     keys = {"normal": ("entry_units", "expected_glucose_mgdl"),
             "low": ("low_entry_units", "low_expected_glucose_mgdl"),
             "cautious": ("cautious_entry_units", "cautious_expected_glucose_mgdl"),
@@ -319,7 +348,8 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
         option = {"variant": variant, "units": units, "expected_mgdl": result.get(prefix + keys[variant][1])}
         if split and split["active"]:
             # The shown units are the first part; the expected value assumes the planned second part too.
-            first, later = split_bolus.parts(Decimal(str(units)), split["first_percent"])
+            first, later = split_bolus.parts(Decimal(str(units)), split["first_percent"],
+                                             Decimal(split["later_units"]) if split.get("later_units") else None)
             option.update({"units": str(first), "full_units": str(units), "later_units": str(later),
                            "later_at": split["due_at"]})
         option["savable"] = Decimal(option["units"]) <= 100
@@ -359,7 +389,9 @@ def _slider(result: dict, options: list[dict], carbs: Decimal, scale: dict | Non
     out = correction_scale.dose_range(normal, carbs == 0, tempo)
     out.update({"expected_mgdl": base.get("expected_mgdl"), "isf_mgdl_per_unit": result.get("isf_mgdl_per_unit"),
                 "first_percent": split["first_percent"] if split and split["active"] else None,
-                "later_at": split["due_at"] if split and split["active"] else None})
+                "later_at": split["due_at"] if split and split["active"] else None,
+                # Calculated surcharge: the later part is that surcharge, whatever total is chosen.
+                "later_units": split.get("later_units") if split and split["active"] else None})
     return out
 
 
@@ -474,6 +506,8 @@ def save(payload: dict) -> dict:
            if carbs > 0 else {}),
         **({"split_units": split_units, "split_delay_minutes": split["delay_minutes"]}
            if split_units and kind == "meal" else {}),
+        **({"fpe_surcharge": {"mgdl": str(calculated["mgdl"]), "minutes": calculated["minutes"]}}
+           if kind == "meal" and (calculated := _fpe_surcharge(context, assignment, payload)) else {}),
     })
     day = saved["day"]
     close = assignment and assignment.get("close")

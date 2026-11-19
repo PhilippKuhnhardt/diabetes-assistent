@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from app import calculation, correction_scale, dosing, forecast, on_board, split
+from app import calculation, correction_scale, dosing, forecast, fpe, on_board, split
 from app.common import local_zone, parse_instant
 from app.services import day_view, factors
 from app.store import config, marks
@@ -73,6 +73,13 @@ def dose_help(payload: dict) -> dict:
     surcharge = (method == forecast.SURCHARGE and auto_value is not None
                  and (payload.get("snack") is not True or payload.get("solo_snack") is True))
     meal_surcharge = factors.meal_surcharge_mgdl(current_settings, payload.get("fat_protein") is True)
+    # Transition phase (user request 2026-11-19): with the agent's fat and protein estimate the form offers
+    # the calculated surcharge next to the static one, and Philipp picks which one the dose uses (app/fpe.py).
+    calculated = (fpe.estimate(payload, current_settings)
+                  if surcharge and payload.get("snack") is not True and meal_surcharge is not None else None)
+    use_fpe = calculated is not None and payload.get("surcharge_mode") == "fpe"
+    if use_fpe:
+        meal_surcharge = calculated["mgdl"]
     result = dosing.suggest(payload.get("carbs", 0), current_settings, entries, treatments, now,
                             activity_change=payload.get("activity_change_mgdl", 0),
                             units_per_ke=factor["median_units_per_ke"] if use_factor else None,
@@ -92,7 +99,15 @@ def dose_help(payload: dict) -> dict:
     result["on_board"] = on_board_view(active, result) if active else None
     result.update({
         "auto_meal": meal_kind, "solo_snack": bool(surcharge and payload.get("snack") is True), "auto_factor_count": prediction["count"], "auto_method": method,
-        "auto_fat_surcharge_mgdl": str(fat_mgdl) if surcharge and payload.get("fat_protein") is True else None,
+        "auto_fat_surcharge_mgdl": (str(fat_mgdl) if surcharge and payload.get("fat_protein") is True and not use_fpe
+                                    else None),
+        "surcharge_choice": calculated and {
+            "mode": "fpe" if use_fpe else "static",
+            "static_mgdl": str(factors.meal_surcharge_mgdl(current_settings, payload.get("fat_protein") is True)),
+            "static_fat": payload.get("fat_protein") is True,
+            "fpe": str(calculated["fpe"].quantize(Decimal("0.1"))), "fpe_mgdl": str(calculated["mgdl"].quantize(Decimal(1))),
+            "fpe_minutes": calculated["minutes"], "per_fpe_mgdl": str(fpe.per_fpe_mgdl(current_settings)),
+            "fat_g": str(payload.get("fat_g")), "protein_g": str(payload.get("protein_g"))},
         "place_factor": ({"name": place["name"], "count": place["count"], "min_meals": place["min_meals"],
                           "days": place["days"], "scale": str(place["scale"]) if place["scale"] is not None else None}
                          if place else None),

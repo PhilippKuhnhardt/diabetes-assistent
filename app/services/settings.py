@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from app import auth, calculation, episodes, forecast
+from app import auth, calculation, episodes, forecast, fpe
 from app.common import local_zone, parse_instant, unit_text, zone_name_at
 from app.ingestion import nightscout, sync
 from app.store import config, marks, timezones
@@ -33,6 +33,7 @@ MESSAGES = {
     "auto_method": "Unbekannte Methode der Automatik",
     "auto_surcharge_mgdl": "Mahlzeitzuschlag muss zwischen 5 und 150 mg/dL liegen",
     "auto_fat_surcharge_mgdl": "Fett-Zuschlag muss zwischen 0 und 200 mg/dL liegen",
+    "fpe_surcharge_mgdl": "Zuschlag je FPE muss zwischen 5 und 60 mg/dL liegen",
     "auto_vacation": "Unbekannte Urlaubs-Einstellung der Automatik",
     "basal_default_units": "Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen",
     "split_min_grams": SPLIT_MESSAGE, "split_first_percent": SPLIT_MESSAGE, "split_delay_minutes": SPLIT_MESSAGE,
@@ -65,6 +66,7 @@ class SettingsInput(BaseModel):
     auto_method: Literal[forecast.METHODS] = "percentile"
     auto_surcharge_mgdl: Annotated[Decimal, Field(ge=5, le=150)] = forecast.SURCHARGE_MGDL
     auto_fat_surcharge_mgdl: Annotated[Decimal, Field(ge=0, le=200)] = forecast.FAT_SURCHARGE_MGDL
+    fpe_surcharge_mgdl: Annotated[Decimal, Field(ge=5, le=60)] = fpe.PER_FPE_MGDL
     auto_vacation: Literal[config.AUTO_VACATION_MODES] = config.DEFAULT_AUTO_VACATION
     basal_default_units: Annotated[Decimal, Field(ge=0, le=100, multiple_of=Decimal("0.5"))] = \
         Decimal(str(config.DEFAULT_BASAL_UNITS))
@@ -139,7 +141,7 @@ def validate_settings(value: dict) -> dict:
                                       "auto_lookback_days", "auto_method", "auto_vacation", *config.DEFAULT_SPLIT}),
         **{key: str(getattr(checked, key)) for key in (
             "dose_target_mgdl", "dose_cautious_target_mgdl", "dose_low_target_mgdl", "auto_percentile",
-            "auto_half_life_days", "auto_surcharge_mgdl", "auto_fat_surcharge_mgdl")},
+            "auto_half_life_days", "auto_surcharge_mgdl", "auto_fat_surcharge_mgdl", "fpe_surcharge_mgdl")},
         "sport_effects_mgdl": {kind: str(amount) for kind, amount in checked.sport_effects_mgdl.items()},
         "sport_durations_minutes": checked.sport_durations_minutes or dict(config.DEFAULT_SPORT_DURATIONS),
         "basal_default_units": unit_text(checked.basal_default_units),

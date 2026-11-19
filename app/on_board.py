@@ -77,7 +77,12 @@ def carb_remaining(minutes: Decimal, grams: Decimal) -> Decimal:
     return max(Decimal(0), 1 - minutes / carb_minutes(grams))
 
 
-def surcharge_remaining(minutes: Decimal, fat: bool = False, breakfast: bool = False) -> Decimal:
+def surcharge_remaining(minutes: Decimal, fat: bool = False, breakfast: bool = False,
+                        until: Decimal | None = None) -> Decimal:
+    """Share of a main meal's surcharge still to come. `until`: the calculated fat/protein surcharge
+    (app/fpe.py) acts linearly from the meal start until then (minutes)."""
+    if until is not None:
+        return Decimal(1) if minutes <= 0 else max(Decimal(0), (until - minutes) / until)
     start = Decimal(0) if fat else BREAKFAST_SURCHARGE_FROM if breakfast else SURCHARGE_FROM
     if breakfast:
         end = BREAKFAST_SURCHARGE_TO_FAT if fat else BREAKFAST_SURCHARGE_TO
@@ -176,11 +181,15 @@ def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, 
                               "mgdl_per_gram": factor * place * isf(item["at"]) / 10})
         if is_main_meal(item) and age < FRESH_MEAL_MINUTES:
             meals.append(item["at"])
-        if (surcharge_mgdl is not None and age < SURCHARGE_TO_FAT
+        # A meal dosed with the calculated fat/protein surcharge carries its own amount and duration (app/fpe.py).
+        own = item.get("surcharge") if is_main_meal(item) else None
+        until = Decimal(int(own["minutes"])) if own else None
+        if (surcharge_mgdl is not None and age < (until or SURCHARGE_TO_FAT)
                 and (is_main_meal(item) or episodes.solo_snack(item, treatments, settings))):
-            full = surcharge_mgdl + (fat_surcharge_mgdl if fat else Decimal(0))
+            full = (calculation.dec(own["mgdl"]) if own
+                    else surcharge_mgdl + (fat_surcharge_mgdl if fat else Decimal(0)))
             surcharges.append({"at": item["at"], "fat": fat, "breakfast": is_breakfast(item["at"], settings),
-                               "mgdl": full * surcharge_share(grams) * place})
+                               "until": until, "mgdl": full * surcharge_share(grams) * place})
     return {"doses": doses, "carbs": carbs, "surcharges": surcharges, "fresh_meals": meals, "sports": sports}
 
 
@@ -197,7 +206,8 @@ def effects_at(found: dict, moment: datetime, cutoff: datetime | None = None) ->
                     for dose in found["doses"]), Decimal(0))
     carbs = sum((row["grams"] * carb_remaining(_minutes(moment, row["at"]), row["grams"]) * row["mgdl_per_gram"]
                  for row in found["carbs"]), Decimal(0))
-    surcharge = sum((row["mgdl"] * surcharge_remaining(_minutes(moment, row["at"]), row["fat"], row.get("breakfast", False))
+    surcharge = sum((row["mgdl"] * surcharge_remaining(_minutes(moment, row["at"]), row["fat"], row.get("breakfast", False),
+                                                       row.get("until"))
                      for row in found["surcharges"]), Decimal(0))
     sport = sum((row["mgdl"] * sport_remaining(_minutes(moment, row["end"]), row["minutes"]) for row in sports),
                 Decimal(0))

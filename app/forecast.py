@@ -135,7 +135,10 @@ def surcharge_units_per_ke(grams: Decimal, carbs_isf: Decimal, mgdl: Decimal = S
 
 def meal_surcharge(point: dict, mgdl: Decimal, fat_mgdl: Decimal = Decimal(0)) -> Decimal:
     """The surcharge of one main meal: the configured one, plus the fat surcharge for a fat/protein meal.
-    Without a surcharge (plain percentile) there is no fat surcharge either."""
+    Without a surcharge (plain percentile) there is no fat surcharge either. A meal dosed with the calculated
+    fat/protein surcharge (app/fpe.py) carries that one instead (transition phase from 2026-11-19)."""
+    if mgdl and point.get("surcharge_mgdl") is not None:
+        return point["surcharge_mgdl"]
     return mgdl + fat_mgdl if mgdl and point.get("fat") else mgdl
 
 
