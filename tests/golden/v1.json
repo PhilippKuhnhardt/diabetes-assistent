@@ -3910,6 +3910,7 @@
    "dose_low_target_mgdl": "100",
    "dose_target_mgdl": "120",
    "duration_minutes": 180,
+   "fpe_surcharge_mgdl": "20",
    "ic_schedule": [
     {
      "grams_per_unit": "6",

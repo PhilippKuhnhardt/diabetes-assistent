@@ -2034,6 +2034,41 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(dose["split_plan"]["state"], "later")
         self.assertEqual(dose["split_plan"]["due_at"], (meal_at + timedelta(minutes=120)).isoformat())
 
+    def test_calculated_fat_protein_surcharge_can_be_chosen_and_splits_carbs_now_surcharge_later(self):
+        # Transition phase (user request 2026-11-19): static surcharge or one calculated from the agent's estimate.
+        self.request("/api/settings")
+        self.request("/api/settings", method="POST", body={"auto_method": "surcharge", "split_min_units": 1})
+        now = datetime.now(timezone.utc)
+        today = now.astimezone(ZoneInfo("Europe/Berlin")).date().isoformat()
+        current_day = {
+            "day": today, "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 120}],
+            "treatments": [], "basal": [], "day_type": "work", "day_type_source": "weekday", "meals": [],
+        }
+        entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "60", "as": "meal",
+                 "fat_g": "37", "protein_g": "48"}
+        auto = {"units_per_ke": Decimal("0.5"), "count": 6}
+        with fake_days(return_value=current_day), patch.object(forecast, "predict_method", return_value=auto):
+            static = self.request("/api/entry/preview", method="POST", body=entry)
+            choice = static["dose"]["surcharge_choice"]
+            self.assertEqual((choice["mode"], choice["static_mgdl"], choice["fpe"], choice["fpe_mgdl"], choice["fpe_minutes"]),
+                             ("static", "40", "5.2", "105", 337))
+            self.assertIsNone(static["split"])  # 60 g, no fat mark: no split with the static surcharge
+            chosen = self.request("/api/entry/preview", method="POST", body={**entry, "surcharge_mode": "fpe"})
+            dose = chosen["dose"]
+            self.assertEqual(dose["surcharge_choice"]["mode"], "fpe")
+            self.assertGreater(Decimal(dose["auto_surcharge_units"]), Decimal(static["dose"]["auto_surcharge_units"]))
+            # Carbs now, the surcharge later.
+            later = dosing.half_units(Decimal(dose["auto_surcharge_units"]))
+            normal = dose["options"][0]
+            self.assertEqual(Decimal(normal["later_units"]), later)
+            self.assertEqual(Decimal(normal["units"]) + later, Decimal(normal["full_units"]))
+            self.assertEqual(Decimal(dose["slider"]["later_units"]), later)
+            self.request("/api/entry", method="POST", body={**entry, "surcharge_mode": "fpe", "insulin": normal["units"],
+                                                           "dose_variant": "normal"})
+        note = FakeNightscout.treatments[-1]["notes"]
+        self.assertIn(episodes.surcharge_tag("105", 337), note)
+        self.assertEqual(episodes.surcharge_plan(note), {"mgdl": "105", "minutes": 337})
+
     def test_window_editor_reads_cgm_per_minute_and_counts_a_candidate_window(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",

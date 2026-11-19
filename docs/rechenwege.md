@@ -49,6 +49,22 @@ G vorsichtig  = max(G − max(0, Senkt − KH-Rest − Zuschlag-Rest), G normal 
 - Der Faktor je Hauptmahlzeit (unten) zählt alle IE im Fenster voll; die Kurve nutzt er nur für Injektionen vor dem Fenster.
 - „Wirkungen über den Tag“ (Tag durchgehen) rechnet dasselbe Modell alle 5 Minuten: wie viel mg/dL pro Stunde gerade gehoben (KH, Zuschlag) und gesenkt (Insulin) werden, und als Vergleichslinie `BZ(t − 3 h) − Insulin wirkte seitdem + KH und Zuschlag wirkten seitdem`. KH werden mit dem Automatik-Faktor des Tages bewertet. Angezeigt werden die mittlere Abweichung zum gemessenen BZ und die größte Abweichung nach oben und unten ab 40 mg/dL.
 
+### Berechneter Fett/Eiweiß-Zuschlag (Übergang, seit 19.11.2026)
+
+Hat der Essens-Agent Fett und Eiweiß geschätzt, zeigt das Eintragsformular einer Hauptmahlzeit (nur mit Methode „Perzentil + Mahlzeitzuschlag“) zwei Zuschläge zur Auswahl: **Fest** (Mahlzeitzuschlag, mit „Fettreich“ plus Fett-Zuschlag, wie bisher) und **Berechnet**. Philipp wählt, die Wahl bleibt im Browser gespeichert; darunter stehen die Insulinoptionen wie gehabt.
+
+```text
+FPE        = (9 × Fett in g + 4 × Eiweiß in g) / 100
+Zuschlag   = fpe_surcharge_mgdl × FPE (Standard 20 mg/dL je FPE, Einstellung „Zuschlag je FPE“), höchstens 200 mg/dL
+wirkt      = gleichmäßig vom Mahlzeitbeginn bis 3 h + 30 min × FPE, höchstens 8 h
+Split      = KH (und Korrektur) jetzt, der Zuschlag (auf 0,5 IE gerundet) als 2. Teil
+```
+
+- Mit „Berechnet“ wird Split auch unter `split_min_grams` angeboten, sobald der Zuschlag-Teil mindestens 2 IE ist; `split_min_units` gilt weiter.
+- Die Mahlzeit bekommt `[DAZ:<mg/dL>@<min>]` in die Nightscout-Notiz. „Wirkt noch“, Prognose, Warnungen, der 2. Split-Teil und die Bereinigung der früheren Faktoren in der Automatik nehmen für diese Mahlzeit diesen Zuschlag statt des festen. Kombinationen (eine Mahlzeit fest, die nächste berechnet) gehen daher ohne Weiteres.
+- Die Regler-Tabellen der Analyse (Zuschlag aus/20/40/…) rechnen berechnete Mahlzeiten mit ihrem gespeicherten Wert.
+- Grundlage: Projektdateien `analysen/fett-eiweiss-2026-11-19.md` (5 Mahlzeiten, erste Tendenz). Nach 15–20 Mahlzeiten neu kalibrieren.
+
 ### Split-Bolus
 
 Ab `split_min_grams` KH (Standard 80 g, 0 = aus) ist bei einer Hauptmahlzeit „Split“ vorausgewählt, bei einer fett-/eiweißreich markierten Hauptmahlzeit unabhängig von der KH-Menge (seit 14.11.); ein Snack bekommt keinen. Ist die Normal-Empfehlung (volle Dosis) kleiner als `split_min_units` (Standard 6,5 IE in 0,5er-Schritten, 0 = immer; Philipps Wahl 6.11., am 17.11. von 5 auf 6,5 IE angehoben), etwa weil ein niedriger BZ sie verkleinert, gibt es keinen Split und alles wird auf einmal vorgeschlagen; das gilt auch mit Fett-Marke. Jede Option zeigt dann den ersten Teil und den Rest:

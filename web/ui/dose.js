@@ -31,6 +31,8 @@ export function sliderUnits(slider, chosen, clamp = true) {
 
 // With a split the first part is given now: the share of the total, in half units.
 export function firstPart(slider, units) {
+  // Calculated fat/protein surcharge: the surcharge comes later, the rest now.
+  if (slider.later_units != null) return Math.max(0, units - Number(slider.later_units));
   return slider.first_percent != null ? halfUnits(units * Number(slider.first_percent) / 100) : null;
 }
 
@@ -94,7 +96,7 @@ function FactorLine({ data }) {
   const factor = value => html`<strong>${factorNum(value)} IE/KE</strong>`;
   const count = " (" + (data.auto_factor_count || 0) + "/" + data.auto_factor_min_meals + ")";
   const surcharge = data.auto_surcharge_units != null
-    ? html` + Zuschlag <strong>${num(data.auto_surcharge_units, 2)} IE</strong>${data.auto_fat_surcharge_mgdl != null ? " (fettreich +" + num(data.auto_fat_surcharge_mgdl, 0) + " mg/dL)" : ""}${data.solo_snack ? " · Snack ohne Mahlzeit, Zuschlag wie Hauptmahlzeit" : ""}`
+    ? html` + Zuschlag <strong>${num(data.auto_surcharge_units, 2)} IE</strong>${data.surcharge_choice?.mode === "fpe" ? " (berechnet, " + num(data.surcharge_choice.fpe, 1) + " FPE)" : data.auto_fat_surcharge_mgdl != null ? " (fettreich +" + num(data.auto_fat_surcharge_mgdl, 0) + " mg/dL)" : ""}${data.solo_snack ? " · Snack ohne Mahlzeit, Zuschlag wie Hauptmahlzeit" : ""}`
     : data.auto_method === "surcharge" && data.auto_units_per_ke != null ? " · Snack ohne Zuschlag" : "";
   // The place factor is already in the factor and surcharge shown.
   const place = data.place_factor;

@@ -110,6 +110,9 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
                               if result.get("carbs_times_isf_total") is not None else None),
                 "carbs_g": Decimal(result["carbs_total"]) if result.get("carbs_total") is not None else None,
                 "fat": bool((meal.get("quality") or {}).get("fat_protein")),
+                # Dosed with the calculated fat/protein surcharge: that one replaces the static one (app/fpe.py).
+                "surcharge_mgdl": (Decimal((meal.get("fpe_surcharge") or {})["mgdl"])
+                                   if meal.get("fpe_surcharge") else None),
                 "place_id": (meal.get("place") or {}).get("id"),
                 # A meal at a place with its own place factor stays out of the Automatik's history.
                 "own_place": (meal.get("place") or {}).get("id") in own_places,

@@ -110,7 +110,17 @@ def save_diary_treatment(payload: dict) -> dict:
         elif kind == "meal" and existing:
             kept = episodes.SPLIT_TAG.search(str(existing.get("notes") or ""))
             split = " " + kept.group(0) if kept else ""
-        notes = (note + marker + quality + split + f" [DAE:{event_id}]").strip()
+        surcharge = ""
+        if kind == "meal" and payload.get("fpe_surcharge"):
+            value = payload["fpe_surcharge"]
+            mgdl, minutes = calculation.dec(value["mgdl"]), int(value["minutes"])
+            if not mgdl.is_finite() or not 0 <= mgdl <= 200 or not 60 <= minutes <= 600:
+                raise ValueError("Ungültiger Fett/Eiweiß-Zuschlag")
+            surcharge = " " + episodes.surcharge_tag(unit_text(mgdl.quantize(Decimal(1))), minutes)
+        elif kind == "meal" and existing and "fpe_surcharge" not in payload:
+            kept = episodes.SURCHARGE_TAG.search(str(existing.get("notes") or ""))
+            surcharge = " " + kept.group(0) if kept else ""
+        notes = (note + marker + quality + split + surcharge + f" [DAE:{event_id}]").strip()
         legacy = episodes.TAG.search(str((existing or {}).get("notes") or ""))
         if kind == "meal" and legacy and legacy.group(3) == "meal":
             notes += " " + legacy.group(0)

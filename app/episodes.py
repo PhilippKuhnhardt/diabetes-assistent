@@ -9,9 +9,11 @@ from decimal import Decimal, InvalidOperation
 from app.common import local_zone
 
 TAG = re.compile(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction|snack)\]")
-EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal|basal)|DASP:\d+(?:\.\d+)?@\d+)\]")
+EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal|basal)|DASP:\d+(?:\.\d+)?@\d+|DAZ:\d+(?:\.\d+)?@\d+)\]")
 # A split bolus on a main meal: the second part's planned IE and its delay in minutes after the meal.
 SPLIT_TAG = re.compile(r"\[DASP:(\d+(?:\.\d+)?)@(\d+)\]")
+# A main meal dosed with the calculated fat/protein surcharge (app/fpe.py): its mg/dL and how many minutes it acts.
+SURCHARGE_TAG = re.compile(r"\[DAZ:(\d+(?:\.\d+)?)@(\d+)\]")
 BASAL_MARKER = "[DA2:basal]"
 SNACK_GAP = timedelta(minutes=120)
 # A carb entry below this that would start a main meal defaults to a snack of no meal (user request 2026-10-19);
@@ -52,6 +54,15 @@ def split_plan(notes: str) -> dict | None:
 
 def split_tag(units, delay_minutes: int) -> str:
     return f"[DASP:{units}@{int(delay_minutes)}]"
+
+
+def surcharge_plan(notes: str) -> dict | None:
+    match = SURCHARGE_TAG.search(notes)
+    return {"mgdl": match.group(1), "minutes": int(match.group(2))} if match else None
+
+
+def surcharge_tag(mgdl, minutes: int) -> str:
+    return f"[DAZ:{mgdl}@{int(minutes)}]"
 
 
 def least_certain(levels) -> str | None:
@@ -152,6 +163,7 @@ def normalize_treatments(raw: list[dict]) -> list[dict]:
             "carbs_certainty": carbs_certainty(str(item.get("notes") or "")),
             **{flag: tag in str(item.get("notes") or "") for flag, tag in QUALITY_MARKERS.items()},
             "split": split_plan(str(item.get("notes") or "")),
+            "surcharge": surcharge_plan(str(item.get("notes") or "")),
             "finger_mgdl": finger_mgdl(item),
             "event_id": event_id(item),
             **marker,
