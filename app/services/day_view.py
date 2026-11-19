@@ -200,6 +200,8 @@ def compute_day(day: str) -> dict:
         output["quality"] = {
             "carbs_certainty": episodes.least_certain(item.get("carbs_certainty") for item in treatments if item["id"] in carb_ids),
             **{flag: any(item.get(flag) for item in treatments if item["id"] in carb_ids) for flag in episodes.QUALITY_MARKERS}}
+        # The calculated fat/protein surcharge its own entry was dosed with (app/fpe.py), else None (static).
+        output["fpe_surcharge"] = next((item.get("surcharge") for item in treatments if item["id"] == meal["source_id"]), None)
         # Where the meal was eaten: its own entry's place, else that of its first counted carb entry with one.
         carb_entries = sorted((item for item in treatments if item["id"] in carb_ids),
                               key=lambda item: (item["id"] != meal["source_id"], item["at"]))

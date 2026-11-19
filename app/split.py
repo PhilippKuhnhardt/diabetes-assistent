@@ -55,8 +55,12 @@ def worth_it(full_units, settings: dict) -> bool:
     return Decimal(str(full_units)) >= Decimal(str(settings.get("split_min_units", "6.5")))
 
 
-def parts(full_units: Decimal, first_percent: int) -> tuple[Decimal, Decimal]:
-    """The injectable first part (0.5 IE steps) and the rest of an already rounded dose."""
+def parts(full_units: Decimal, first_percent: int, later_units: Decimal | None = None) -> tuple[Decimal, Decimal]:
+    """The injectable first part (0.5 IE steps) and the rest of an already rounded dose. With later_units
+    (the calculated fat/protein surcharge, app/fpe.py) the rest is that amount, at most the whole dose."""
+    if later_units is not None:
+        later = min(max(later_units, Decimal(0)), full_units)
+        return full_units - later, later
     now = dosing.half_units(full_units * Decimal(first_percent) / 100)
     return now, full_units - now
 

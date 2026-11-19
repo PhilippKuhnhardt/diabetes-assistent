@@ -33,6 +33,16 @@ const doseShown = option => ({ units: option.units, later_units: option.later_un
 const sameDose = (a, b) => Number(a.units) === Number(b.units) &&
   (a.later_units == null ? b.later_units == null : b.later_units != null && Number(a.later_units) === Number(b.later_units));
 
+// Which meal surcharge the dose uses while both are compared (user request 2026-11-19): the static one
+// (80, +120 with "Fettreich") or the one calculated from the agent's fat and protein. The last choice stays.
+const SURCHARGE_MODE_KEY = "entrySurchargeMode";
+function storedSurchargeMode() {
+  try { return localStorage.getItem(SURCHARGE_MODE_KEY) === "fpe" ? "fpe" : "static"; } catch (_) { return "static"; }
+}
+function storeSurchargeMode(mode) {
+  try { localStorage.setItem(SURCHARGE_MODE_KEY, mode); } catch (_) { /* Private mode: the choice holds for this form only. */ }
+}
+
 function blank(kind = "meal") {
   return {
     kind, at: nowTime(), timeTouched: false, timeOpen: false, noteOpen: false, fingerOpen: false,
@@ -41,7 +51,7 @@ function blank(kind = "meal") {
     entryAs: null, split: null, closeMeal: false, place: undefined, agent: null,
     position: null, positionAt: 0, positionPending: false, positionError: null,
     preview: null, busy: false, doseChoice: null, slider: null, sliderKey: null, doseNote: "", doseChanged: {},
-    saving: false, dayTypeSaving: false,
+    saving: false, dayTypeSaving: false, surchargeMode: storedSurchargeMode(),
   };
 }
 
@@ -104,6 +114,10 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
       // Saving re-checks the shown options with these, so the preview must send the same marks.
       carbs_certainty: carbs ? certaintyValue(s) : null,
       fat_protein: carbs && s.fat, fast: carbs && s.fast,
+      // The agent's fat and protein estimate offers the calculated surcharge next to the static one.
+      fat_g: carbs && s.agent?.fat_g != null ? s.agent.fat_g : null,
+      protein_g: carbs && s.agent?.protein_g != null ? s.agent.protein_g : null,
+      surcharge_mode: carbs ? s.surchargeMode : null,
       // A position only rides along while the entry is "now" and only picks the chip; the server checks that again.
       position: !s.timeTouched && s.position ? s.position : null,
       place_id: placeId(s),
@@ -388,6 +402,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     set({ carbs: String(carbs), certainty: index < 0 ? 1 : index, certaintyUnset: certainty !== undefined && index < 0,
       fat: Boolean(fat_protein), fast: Boolean(fast),
       agent: { session_id: session, dish_name: estimate.dish?.name || "", description: estimate.description,
+        fat_g: estimate.fat_g ?? null, protein_g: estimate.protein_g ?? null,
         range: estimate.carbs_low_g + "–" + estimate.carbs_high_g + " g" } });
     requestPosition();
     schedule(0);
@@ -457,6 +472,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
   const preview = current(f);
   const help = doseHelp(f);
   const meal = f.kind === "meal";
+  const choice = meal && help?.surcharge_choice ? help.surcharge_choice : null;
   const assignment = meal ? preview?.assignment : null;
   const close = assignment?.close;
   const split = meal ? preview?.split : null;
@@ -577,6 +593,13 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     <section id="entry-dose" class="entry-card entry-dose-card" aria-label="Dosis" hidden=${!meal}>
       <label id="entry-finger-field" hidden=${!fingerOpen}>BZ blutig gemessen <span>mg/dL</span><input name="finger_mgdl" type="number" min="20" max="600" step="1" inputmode="numeric"
         ref=${refs.finger} value=${f.finger} disabled=${!fingerActive(f)} onInput=${event => { refs.carbs.current.setCustomValidity(""); set({ finger: event.currentTarget.value }); schedule(); }} /></label>
+      ${choice && html`<div id="entry-surcharge" class="entry-surcharge">
+        <div class="entry-switch" role="group" aria-label="Zuschlag für Fett und Eiweiß">${[
+          ["static", "Fest " + num(choice.static_mgdl, 0) + " mg/dL" + (choice.static_fat ? " (fettreich)" : "")],
+          ["fpe", "Berechnet " + num(choice.fpe_mgdl, 0) + " mg/dL"]].map(([mode, label]) =>
+          html`<button type="button" class="surcharge-option" data-surcharge-mode=${mode} aria-pressed=${String(choice.mode === mode)}
+            onClick=${() => { storeSurchargeMode(mode); toggle({ surchargeMode: mode }); }}>${label}</button>`)}</div>
+        <p id="entry-surcharge-hint" class="hint">Fett ${num(choice.fat_g, 0)} g, Eiweiß ${num(choice.protein_g, 0)} g = ${num(choice.fpe, 1)} FPE × ${num(choice.per_fpe_mgdl, 0)} mg/dL, wirkt bis ${num(choice.fpe_minutes / 60, 1)} h${choice.mode === "fpe" ? " · Split: KH jetzt, Zuschlag später" : ""}</p></div>`}
       <div id="dose-result" class="help-result" aria-live="polite" aria-busy=${meal && f.busy ? "true" : null}>
         <${DoseHelp} help=${help} note=${f.doseNote} changed=${f.doseChanged} choice=${f.doseChoice} chosen=${f.slider} onChoose=${chooseDose} onSlide=${slide} /></div>
       <label id="entry-insulin-field">Eigene IE<input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"

@@ -121,10 +121,12 @@
       "insulin": 8.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0001",
     "imported": true,
     "meal": "breakfast",
@@ -275,10 +277,12 @@
       "insulin": 10.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0002",
     "imported": true,
     "meal": "lunch",
@@ -420,10 +424,12 @@
       "insulin": 5.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0003",
     "imported": true,
     "meal": "dinner",
@@ -588,7 +594,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -607,7 +614,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -626,7 +634,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -645,7 +654,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -664,7 +674,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -797,10 +808,12 @@
       "insulin": 6.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0004",
     "imported": true,
     "meal": "breakfast",
@@ -968,7 +981,8 @@
       "insulin": 16.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -986,10 +1000,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0005",
     "imported": true,
     "meal": "lunch",
@@ -1148,10 +1164,12 @@
       "insulin": 3.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0007",
     "imported": true,
     "meal": "dinner",
@@ -1339,7 +1357,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -1358,7 +1377,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -1377,7 +1397,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -1396,7 +1417,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -1415,7 +1437,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -1434,7 +1457,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -1453,7 +1477,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -1586,10 +1611,12 @@
       "insulin": 10.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0008",
     "imported": true,
     "meal": "breakfast",
@@ -1740,10 +1767,12 @@
       "insulin": 3.0,
       "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0009",
     "imported": true,
     "meal": "lunch",
@@ -1885,10 +1914,12 @@
       "insulin": 15.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0010",
     "imported": true,
     "meal": "dinner",
@@ -2053,7 +2084,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2072,7 +2104,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2091,7 +2124,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2110,7 +2144,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2129,7 +2164,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2148,7 +2184,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2167,7 +2204,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -2300,10 +2338,12 @@
       "insulin": 10.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0011",
     "imported": true,
     "meal": "breakfast",
@@ -2454,10 +2494,12 @@
       "insulin": 10.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": true,
+    "fpe_surcharge": null,
     "id": "t-0012",
     "imported": true,
     "meal": "lunch",
@@ -2608,7 +2650,8 @@
       "insulin": 9.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -2626,10 +2669,12 @@
       "insulin": 1.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0013",
     "imported": true,
     "meal": "dinner",
@@ -2808,7 +2853,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2827,7 +2873,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2846,7 +2893,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2865,7 +2913,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2884,7 +2933,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -2903,7 +2953,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -3036,10 +3087,12 @@
       "insulin": 8.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0015",
     "imported": true,
     "meal": "lunch",
@@ -3190,10 +3243,12 @@
       "insulin": 10.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0016",
     "imported": true,
     "meal": "dinner",
@@ -3335,7 +3390,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -3354,7 +3410,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -3373,7 +3430,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -3392,7 +3450,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -3411,7 +3470,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -3430,7 +3490,8 @@
     "notes": "",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -3449,7 +3510,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -3590,7 +3652,8 @@
       "insulin": 13.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -3608,10 +3671,12 @@
       "insulin": 0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0017",
     "imported": true,
     "meal": "breakfast",
@@ -3779,7 +3844,8 @@
       "insulin": 6.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -3797,10 +3863,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0019",
     "imported": true,
     "meal": "lunch",
@@ -3951,10 +4019,12 @@
       "insulin": 12.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0021",
     "imported": true,
     "meal": "dinner",
@@ -4165,7 +4235,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4184,7 +4255,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4203,7 +4275,8 @@
     "notes": "",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4222,7 +4295,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4241,7 +4315,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4260,7 +4335,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4279,7 +4355,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4298,7 +4375,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -4445,10 +4523,12 @@
       "insulin": 20.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0022",
     "imported": true,
     "meal": "breakfast",
@@ -4599,10 +4679,12 @@
       "insulin": 5.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0023",
     "imported": true,
     "meal": "lunch",
@@ -4744,10 +4826,12 @@
       "insulin": 7.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0025",
     "imported": true,
     "meal": "dinner",
@@ -4948,7 +5032,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4967,7 +5052,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -4986,7 +5072,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5005,7 +5092,8 @@
     "notes": "Gym [DAS1:gym]",
     "rapid": false,
     "split": null,
-    "sport_type": "gym"
+    "sport_type": "gym",
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5024,7 +5112,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5043,7 +5132,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5062,7 +5152,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -5202,10 +5293,12 @@
       "insulin": 9.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0026",
     "imported": true,
     "meal": "breakfast",
@@ -5356,10 +5449,12 @@
       "insulin": 4.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0027",
     "imported": true,
     "meal": "lunch",
@@ -5501,10 +5596,12 @@
       "insulin": 15.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0028",
     "imported": true,
     "meal": "dinner",
@@ -5669,7 +5766,8 @@
     "notes": "Gym [DAS1:gym]",
     "rapid": false,
     "split": null,
-    "sport_type": "gym"
+    "sport_type": "gym",
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5688,7 +5786,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5707,7 +5806,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5726,7 +5826,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5745,7 +5846,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5764,7 +5866,8 @@
     "notes": "Basal 17 IE [DA2:basal] [DAE:00000000-0000-4000-8000-000000000008]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5783,7 +5886,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -5802,7 +5906,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -5943,10 +6048,12 @@
       "insulin": 11.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0029",
     "imported": true,
     "meal": "breakfast",
@@ -6097,10 +6204,12 @@
       "insulin": 3.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0030",
     "imported": true,
     "meal": "lunch",
@@ -6242,10 +6351,12 @@
       "insulin": 9.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0031",
     "imported": true,
     "meal": "dinner",
@@ -6434,7 +6545,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -6453,7 +6565,8 @@
     "notes": "Basal 17 IE [DA2:basal] [DAE:00000000-0000-4000-8000-000000000008]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -6472,7 +6585,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -6491,7 +6605,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -6510,7 +6625,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -6529,7 +6645,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -6548,7 +6665,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -6610,10 +6728,12 @@
       "insulin": 11.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0033",
     "imported": true,
     "meal": "breakfast",
@@ -6780,7 +6900,8 @@
       "insulin": 7.0,
       "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -6798,10 +6919,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0034",
     "imported": true,
     "meal": "lunch",
@@ -6961,7 +7084,8 @@
       "insulin": 4.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -6979,10 +7103,12 @@
       "insulin": 1.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0036",
     "imported": true,
     "meal": "dinner",
@@ -7193,7 +7319,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7212,7 +7339,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7231,7 +7359,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7250,7 +7379,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7269,7 +7399,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7288,7 +7419,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7307,7 +7439,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7326,7 +7459,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -7458,10 +7592,12 @@
       "insulin": 9.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0038",
     "imported": true,
     "meal": "breakfast",
@@ -7612,10 +7748,12 @@
       "insulin": 7.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0039",
     "imported": true,
     "meal": "lunch",
@@ -7758,10 +7896,12 @@
       "insulin": 7.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0040",
     "imported": true,
     "meal": "dinner",
@@ -7926,7 +8066,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7945,7 +8086,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7964,7 +8106,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -7983,7 +8126,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8002,7 +8146,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8021,7 +8166,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8040,7 +8186,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -8172,10 +8319,12 @@
       "insulin": 6.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0041",
     "imported": true,
     "meal": "breakfast",
@@ -8326,10 +8475,12 @@
       "insulin": 7.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0042",
     "imported": true,
     "meal": "lunch",
@@ -8480,10 +8631,12 @@
       "insulin": 10.5,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0043",
     "imported": true,
     "meal": "dinner",
@@ -8648,7 +8801,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8667,7 +8821,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8686,7 +8841,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8705,7 +8861,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8724,7 +8881,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8743,7 +8901,8 @@
     "notes": "nur KH",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -8762,7 +8921,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -8895,10 +9055,12 @@
       "insulin": 13.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0044",
     "imported": true,
     "meal": "breakfast",
@@ -9040,10 +9202,12 @@
       "insulin": 6.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0047",
     "imported": true,
     "meal": "dinner",
@@ -9241,7 +9405,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9260,7 +9425,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9279,7 +9445,8 @@
     "notes": "nur KH",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9298,7 +9465,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9317,7 +9485,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9336,7 +9505,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -9486,7 +9656,8 @@
       "insulin": 9.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -9504,10 +9675,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0048",
     "imported": true,
     "meal": "lunch",
@@ -9658,10 +9831,12 @@
       "insulin": 12.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0050",
     "imported": true,
     "meal": "dinner",
@@ -9826,7 +10001,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9845,7 +10021,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9864,7 +10041,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9883,7 +10061,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9902,7 +10081,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -9921,7 +10101,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -10054,10 +10235,12 @@
       "insulin": 11.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0051",
     "imported": true,
     "meal": "breakfast",
@@ -10208,10 +10391,12 @@
       "insulin": 10.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0052",
     "imported": true,
     "meal": "lunch",
@@ -10353,10 +10538,12 @@
       "insulin": 11.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0053",
     "imported": true,
     "meal": "dinner",
@@ -10521,7 +10708,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -10540,7 +10728,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -10559,7 +10748,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -10578,7 +10768,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -10597,7 +10788,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -10616,7 +10808,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -10749,10 +10942,12 @@
       "insulin": 7.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0054",
     "imported": true,
     "meal": "breakfast",
@@ -10903,10 +11098,12 @@
       "insulin": 13.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0055",
     "imported": true,
     "meal": "lunch",
@@ -11075,7 +11272,8 @@
       "insulin": 5.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -11093,7 +11291,8 @@
       "insulin": 2,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -11111,10 +11310,12 @@
       "insulin": 1.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0056",
     "imported": true,
     "meal": "dinner",
@@ -11325,7 +11526,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -11344,7 +11546,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -11363,7 +11566,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -11382,7 +11586,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -11401,7 +11606,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -11420,7 +11626,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -11439,7 +11646,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -11458,7 +11666,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -11591,10 +11800,12 @@
       "insulin": 7.5,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0059",
     "imported": true,
     "meal": "breakfast",
@@ -11745,10 +11956,12 @@
       "insulin": 9.5,
       "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0060",
     "imported": true,
     "meal": "lunch",
@@ -11890,10 +12103,12 @@
       "insulin": 17.5,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0061",
     "imported": true,
     "meal": "dinner",
@@ -12058,7 +12273,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12077,7 +12293,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12096,7 +12313,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12115,7 +12333,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12134,7 +12353,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12153,7 +12373,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12172,7 +12393,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12191,7 +12413,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -12347,10 +12570,12 @@
       "insulin": 4.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0062",
     "imported": true,
     "meal": "breakfast",
@@ -12518,7 +12743,8 @@
       "insulin": 5.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -12536,10 +12762,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0063",
     "imported": true,
     "meal": "lunch",
@@ -12705,10 +12933,12 @@
       "insulin": 7.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0066",
     "imported": true,
     "meal": "dinner",
@@ -12932,7 +13162,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12951,7 +13182,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12970,7 +13202,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -12989,7 +13222,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13008,7 +13242,8 @@
     "notes": "Racing [DAS1:racing]",
     "rapid": false,
     "split": null,
-    "sport_type": "racing"
+    "sport_type": "racing",
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13027,7 +13262,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13046,7 +13282,8 @@
     "notes": "Basal 17 IE [DA2:basal] [DAE:00000000-0000-4000-8000-000000000018]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13065,7 +13302,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13084,7 +13322,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -13225,10 +13464,12 @@
       "insulin": 11.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0067",
     "imported": true,
     "meal": "breakfast",
@@ -13379,10 +13620,12 @@
       "insulin": 4.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0068",
     "imported": true,
     "meal": "lunch",
@@ -13524,10 +13767,12 @@
       "insulin": 6.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0069",
     "imported": true,
     "meal": "dinner",
@@ -13716,7 +13961,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13735,7 +13981,8 @@
     "notes": "Racing [DAS1:racing]",
     "rapid": false,
     "split": null,
-    "sport_type": "racing"
+    "sport_type": "racing",
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13754,7 +14001,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13773,7 +14021,8 @@
     "notes": "Basal 17 IE [DA2:basal] [DAE:00000000-0000-4000-8000-000000000018]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13792,7 +14041,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13811,7 +14061,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13830,7 +14081,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13849,7 +14101,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -13868,7 +14121,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -14001,10 +14255,12 @@
       "insulin": 4.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0071",
     "imported": true,
     "meal": "breakfast",
@@ -14155,10 +14411,12 @@
       "insulin": 10.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0072",
     "imported": true,
     "meal": "lunch",
@@ -14300,10 +14558,12 @@
       "insulin": 12.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0073",
     "imported": true,
     "meal": "dinner",
@@ -14468,7 +14728,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -14487,7 +14748,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -14506,7 +14768,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -14525,7 +14788,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -14544,7 +14808,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -14563,7 +14828,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -14696,10 +14962,12 @@
       "insulin": 4.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0074",
     "imported": true,
     "meal": "breakfast",
@@ -14850,10 +15118,12 @@
       "insulin": 4.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0075",
     "imported": true,
     "meal": "lunch",
@@ -14995,10 +15265,12 @@
       "insulin": 11.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0076",
     "imported": true,
     "meal": "dinner",
@@ -15163,7 +15435,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -15182,7 +15455,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -15201,7 +15475,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -15220,7 +15495,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -15239,7 +15515,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -15258,7 +15535,8 @@
     "notes": "",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -15277,7 +15555,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -15417,7 +15696,8 @@
       "insulin": 12.5,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -15435,10 +15715,12 @@
       "insulin": 0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0077",
     "imported": true,
     "meal": "breakfast",
@@ -15606,7 +15888,8 @@
       "insulin": 10.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -15624,10 +15907,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0079",
     "imported": true,
     "meal": "lunch",
@@ -15787,7 +16072,8 @@
       "insulin": 3.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -15805,10 +16091,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0081",
     "imported": true,
     "meal": "dinner",
@@ -16033,7 +16321,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16052,7 +16341,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16071,7 +16361,8 @@
     "notes": "",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16090,7 +16381,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16109,7 +16401,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16128,7 +16421,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16147,7 +16441,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16166,7 +16461,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -16324,10 +16620,12 @@
       "insulin": 5.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0083",
     "imported": true,
     "meal": "lunch",
@@ -16480,10 +16778,12 @@
       "insulin": 4,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0084",
     "imported": true,
     "meal": "lunch",
@@ -16634,10 +16934,12 @@
       "insulin": 4.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0085",
     "imported": true,
     "meal": "dinner",
@@ -16802,7 +17104,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16821,7 +17124,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16840,7 +17144,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16859,7 +17164,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16878,7 +17184,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16897,7 +17204,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -16916,7 +17224,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -17048,10 +17357,12 @@
       "insulin": 13.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0086",
     "imported": true,
     "meal": "breakfast",
@@ -17202,10 +17513,12 @@
       "insulin": 7.5,
       "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0087",
     "imported": true,
     "meal": "lunch",
@@ -17347,10 +17660,12 @@
       "insulin": 14.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0088",
     "imported": true,
     "meal": "dinner",
@@ -17515,7 +17830,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -17534,7 +17850,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -17553,7 +17870,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -17572,7 +17890,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -17591,7 +17910,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -17610,7 +17930,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -17742,10 +18063,12 @@
       "insulin": 7.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0089",
     "imported": true,
     "meal": "breakfast",
@@ -17896,10 +18219,12 @@
       "insulin": 12.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0090",
     "imported": true,
     "meal": "lunch",
@@ -18041,10 +18366,12 @@
       "insulin": 6.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0091",
     "imported": true,
     "meal": "dinner",
@@ -18209,7 +18536,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -18228,7 +18556,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -18247,7 +18576,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -18266,7 +18596,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -18285,7 +18616,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -18304,7 +18636,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -18436,10 +18769,12 @@
       "insulin": 6.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0092",
     "imported": true,
     "meal": "breakfast",
@@ -18607,7 +18942,8 @@
       "insulin": 6.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -18625,10 +18961,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0093",
     "imported": true,
     "meal": "lunch",
@@ -18779,10 +19117,12 @@
       "insulin": 3.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0095",
     "imported": true,
     "meal": "dinner",
@@ -18970,7 +19310,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -18989,7 +19330,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19008,7 +19350,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19027,7 +19370,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19046,7 +19390,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19065,7 +19410,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19084,7 +19430,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -19217,10 +19564,12 @@
       "insulin": 14.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0096",
     "imported": true,
     "meal": "breakfast",
@@ -19291,10 +19640,12 @@
       "insulin": 9.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0097",
     "imported": true,
     "meal": "lunch",
@@ -19435,10 +19786,12 @@
       "insulin": 11.5,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0098",
     "imported": true,
     "meal": "dinner",
@@ -19603,7 +19956,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19622,7 +19976,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19641,7 +19996,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19660,7 +20016,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19679,7 +20036,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -19698,7 +20056,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -19839,10 +20198,12 @@
       "insulin": 5.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0099",
     "imported": true,
     "meal": "breakfast",
@@ -19993,10 +20354,12 @@
       "insulin": 9.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0100",
     "imported": true,
     "meal": "lunch",
@@ -20147,7 +20510,8 @@
       "insulin": 12.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -20165,10 +20529,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0101",
     "imported": true,
     "meal": "dinner",
@@ -20356,7 +20722,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -20375,7 +20742,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -20394,7 +20762,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -20413,7 +20782,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -20432,7 +20802,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -20451,7 +20822,8 @@
     "notes": "Basal 17 IE [DA2:basal] [DAE:00000000-0000-4000-8000-000000000028]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -20470,7 +20842,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -20489,7 +20862,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -20645,10 +21019,12 @@
       "insulin": 12.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0103",
     "imported": true,
     "meal": "breakfast",
@@ -20799,10 +21175,12 @@
       "insulin": 9.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0104",
     "imported": true,
     "meal": "lunch",
@@ -20944,10 +21322,12 @@
       "insulin": 14.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0106",
     "imported": true,
     "meal": "dinner",
@@ -21172,7 +21552,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21191,7 +21572,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21210,7 +21592,8 @@
     "notes": "Basal 17 IE [DA2:basal] [DAE:00000000-0000-4000-8000-000000000028]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21229,7 +21612,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21248,7 +21632,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21267,7 +21652,8 @@
     "notes": "Gym [DAS1:gym]",
     "rapid": false,
     "split": null,
-    "sport_type": "gym"
+    "sport_type": "gym",
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21286,7 +21672,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21305,7 +21692,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21324,7 +21712,8 @@
     "notes": "",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -21343,7 +21732,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -21483,7 +21873,8 @@
       "insulin": 11.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -21501,10 +21892,12 @@
       "insulin": 0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0108",
     "imported": true,
     "meal": "breakfast",
@@ -21672,7 +22065,8 @@
       "insulin": 4.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -21690,10 +22084,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0110",
     "imported": true,
     "meal": "lunch",
@@ -21844,10 +22240,12 @@
       "insulin": 8.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0112",
     "imported": true,
     "meal": "dinner",
@@ -22058,7 +22456,8 @@
     "notes": "Gym [DAS1:gym]",
     "rapid": false,
     "split": null,
-    "sport_type": "gym"
+    "sport_type": "gym",
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22077,7 +22476,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22096,7 +22496,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22115,7 +22516,8 @@
     "notes": "",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22134,7 +22536,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22153,7 +22556,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22172,7 +22576,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22191,7 +22596,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22210,7 +22616,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -22342,10 +22749,12 @@
       "insulin": 13.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0113",
     "imported": true,
     "meal": "breakfast",
@@ -22496,10 +22905,12 @@
       "insulin": 9.0,
       "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0114",
     "imported": true,
     "meal": "lunch",
@@ -22650,10 +23061,12 @@
       "insulin": 11.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0115",
     "imported": true,
     "meal": "dinner",
@@ -22842,7 +23255,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22861,7 +23275,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22880,7 +23295,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22899,7 +23315,8 @@
     "notes": "ignored",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22918,7 +23335,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -22937,7 +23355,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -23069,10 +23488,12 @@
       "insulin": 14.5,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0117",
     "imported": true,
     "meal": "lunch",
@@ -23214,10 +23635,12 @@
       "insulin": 7.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0118",
     "imported": true,
     "meal": "dinner",
@@ -23359,7 +23782,8 @@
     "notes": "ignored",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -23378,7 +23802,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -23397,7 +23822,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -23416,7 +23842,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -23435,7 +23862,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -23454,7 +23882,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -23586,10 +24015,12 @@
       "insulin": 14.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0119",
     "imported": true,
     "meal": "breakfast",
@@ -23740,10 +24171,12 @@
       "insulin": 4.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0120",
     "imported": true,
     "meal": "lunch",
@@ -23885,10 +24318,12 @@
       "insulin": 7.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0121",
     "imported": true,
     "meal": "dinner",
@@ -24053,7 +24488,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24072,7 +24508,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24091,7 +24528,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24110,7 +24548,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24129,7 +24568,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24148,7 +24588,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -24280,10 +24721,12 @@
       "insulin": 19.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0122",
     "imported": true,
     "meal": "breakfast",
@@ -24451,7 +24894,8 @@
       "insulin": 13.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -24469,10 +24913,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0123",
     "imported": true,
     "meal": "lunch",
@@ -24640,7 +25086,8 @@
       "insulin": 4.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -24658,10 +25105,12 @@
       "insulin": 2,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0125",
     "imported": true,
     "meal": "dinner",
@@ -24872,7 +25321,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24891,7 +25341,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24910,7 +25361,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24929,7 +25381,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24948,7 +25401,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24967,7 +25421,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -24986,7 +25441,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25005,7 +25461,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": true,
@@ -25138,10 +25595,12 @@
       "insulin": 5.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0127",
     "imported": true,
     "meal": "breakfast",
@@ -25292,10 +25751,12 @@
       "insulin": 8.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0128",
     "imported": true,
     "meal": "lunch",
@@ -25437,10 +25898,12 @@
       "insulin": 9.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0129",
     "imported": true,
     "meal": "dinner",
@@ -25605,7 +26068,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25624,7 +26088,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25643,7 +26108,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25662,7 +26128,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25681,7 +26148,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25700,7 +26168,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25719,7 +26188,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -25738,7 +26208,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": true,
@@ -25871,10 +26342,12 @@
       "insulin": 17.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0130",
     "imported": true,
     "meal": "breakfast",
@@ -26025,10 +26498,12 @@
       "insulin": 7.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0131",
     "imported": true,
     "meal": "lunch",
@@ -26179,10 +26654,12 @@
       "insulin": 15.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0132",
     "imported": true,
     "meal": "dinner",
@@ -26347,7 +26824,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -26366,7 +26844,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -26385,7 +26864,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -26404,7 +26884,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -26423,7 +26904,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -26442,7 +26924,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -26575,10 +27058,12 @@
       "insulin": 11.5,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0133",
     "imported": true,
     "meal": "breakfast",
@@ -26729,10 +27214,12 @@
       "insulin": 9.5,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0134",
     "imported": true,
     "meal": "lunch",
@@ -26874,10 +27361,12 @@
       "insulin": 9.0,
       "notes": "[DAQ:weighed]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0135",
     "imported": true,
     "meal": "dinner",
@@ -27042,7 +27531,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27061,7 +27551,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27080,7 +27571,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27099,7 +27591,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27118,7 +27611,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27137,7 +27631,8 @@
     "notes": "",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27156,7 +27651,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -27305,7 +27801,8 @@
       "insulin": 8.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -27323,10 +27820,12 @@
       "insulin": 0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0136",
     "imported": true,
     "meal": "breakfast",
@@ -27494,7 +27993,8 @@
       "insulin": 10.5,
       "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      },
      {
       "alcohol": false,
@@ -27512,10 +28012,12 @@
       "insulin": 1,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0138",
     "imported": true,
     "meal": "lunch",
@@ -27666,10 +28168,12 @@
       "insulin": 11.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0140",
     "imported": true,
     "meal": "dinner",
@@ -27880,7 +28384,8 @@
     "notes": "[DAQ:weighed]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27899,7 +28404,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27918,7 +28424,8 @@
     "notes": "",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27937,7 +28444,8 @@
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27956,7 +28464,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27975,7 +28484,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -27994,7 +28504,8 @@
     "notes": "Basal 17 IE [DA2:basal] [DAE:00000000-0000-4000-8000-000000000038]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28013,7 +28524,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28032,7 +28544,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -28180,10 +28693,12 @@
       "insulin": 12.5,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0141",
     "imported": true,
     "meal": "breakfast",
@@ -28334,10 +28849,12 @@
       "insulin": 5.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0142",
     "imported": true,
     "meal": "lunch",
@@ -28479,10 +28996,12 @@
       "insulin": 6.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0143",
     "imported": true,
     "meal": "dinner",
@@ -28671,7 +29190,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28690,7 +29210,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28709,7 +29230,8 @@
     "notes": "Basal 17 IE [DA2:basal] [DAE:00000000-0000-4000-8000-000000000038]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28728,7 +29250,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28747,7 +29270,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28766,7 +29290,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28785,7 +29310,8 @@
     "notes": "Basal 17 IE [DA2:basal] [DAE:11111111-1111-4111-8111-111111111111]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28804,7 +29330,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28823,7 +29350,8 @@
     "notes": "Joggen — Runde [DAS1:jogging] [DAE:44444444-4444-4444-8444-444444444444]",
     "rapid": false,
     "split": null,
-    "sport_type": "jogging"
+    "sport_type": "jogging",
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28842,7 +29370,8 @@
     "notes": "Mittag [DAQ:known] [DAQ:fat] [DAE:22222222-2222-4222-8222-222222222222]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -28861,7 +29390,8 @@
     "notes": "[DA2:snack] [DAE:33333333-3333-4333-8333-333333333333]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
@@ -29016,10 +29546,12 @@
       "insulin": 8.0,
       "notes": "",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "t-0145",
     "imported": true,
     "meal": "breakfast",
@@ -29097,10 +29629,12 @@
       "insulin": 7.0,
       "notes": "Mittag [DAQ:known] [DAQ:fat] [DAE:22222222-2222-4222-8222-222222222222]",
       "split": null,
-      "sport_type": null
+      "sport_type": null,
+      "surcharge": null
      }
     ],
     "excluded": false,
+    "fpe_surcharge": null,
     "id": "ns-0002",
     "imported": true,
     "meal": "lunch",
@@ -29325,7 +29859,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29344,7 +29879,8 @@
     "notes": "Basal 17 IE [DA2:basal] [DAE:11111111-1111-4111-8111-111111111111]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29363,7 +29899,8 @@
     "notes": "",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29382,7 +29919,8 @@
     "notes": "Joggen — Runde [DAS1:jogging] [DAE:44444444-4444-4444-8444-444444444444]",
     "rapid": false,
     "split": null,
-    "sport_type": "jogging"
+    "sport_type": "jogging",
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29401,7 +29939,8 @@
     "notes": "Mittag [DAQ:known] [DAQ:fat] [DAE:22222222-2222-4222-8222-222222222222]",
     "rapid": true,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    },
    {
     "alcohol": false,
@@ -29420,7 +29959,8 @@
     "notes": "[DA2:snack] [DAE:33333333-3333-4333-8333-333333333333]",
     "rapid": false,
     "split": null,
-    "sport_type": null
+    "sport_type": null,
+    "surcharge": null
    }
   ],
   "vacation": false,
