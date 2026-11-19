@@ -48,7 +48,7 @@ def view(params: dict | None = None) -> dict:
         "web_search": current["web_search"],
         "transcribe_model": current["transcribe_model"],
         "transcribe_available": bool(llm.api_key("openrouter")),
-        "limits": {"photos": rules.MAX_PHOTOS, "text": rules.MAX_TEXT},
+        "limits": {"photos": rules.MAX_PHOTOS, "session_photos": rules.MAX_SESSION_PHOTOS, "text": rules.MAX_TEXT},
         "usage_month": store.usage_since(month),
     }
 
@@ -142,18 +142,21 @@ def estimate(payload: dict) -> dict:
     session = store.session(str(payload["session_id"])) if payload.get("session_id") else None
     if payload.get("session_id") and session is None:
         raise ValueError("Einschätzung nicht gefunden")
+    new_photos = _photos(payload.get("photos"))
     if session:
-        if not text:
-            raise ValueError("Bitte eine Antwort oder Korrektur eingeben")
+        if not text and not new_photos:
+            raise ValueError("Bitte eine Antwort, Korrektur oder ein Foto schicken")
         if len(session["messages"]) >= rules.MAX_TURNS * 2:
             raise ValueError("Zu viele Rückfragen, bitte neu einschätzen")
-        session_id, photos = session["id"], store.load_photos(session["id"], session["photos"])
+        if session["photos"] + len(new_photos) > rules.MAX_SESSION_PHOTOS:
+            raise ValueError(f"Höchstens {rules.MAX_SESSION_PHOTOS} Fotos je Einschätzung")
+        session_id, earlier = session["id"], session["photos"]
+        photos = store.load_photos(session_id, earlier) + new_photos
         history = session["messages"]
     else:
-        photos = _photos(payload.get("photos"))
-        if not text and not photos:
+        if not text and not new_photos:
             raise ValueError("Bitte ein Foto aufnehmen oder das Essen beschreiben")
-        session_id, history = str(uuid.uuid4()), []
+        session_id, earlier, photos, history = str(uuid.uuid4()), 0, new_photos, []
     _, settings = config.get_settings()
     zone = local_zone(settings["timezone"])
     catalogue = dishes.view()["dishes"]
@@ -163,11 +166,12 @@ def estimate(payload: dict) -> dict:
                                  episodes.meal_kind_at(at, settings)[1], place,
                                  rules.catalogue_text(catalogue, _examples()),
                                  [item["name"] for item in place_store.all_places()])
-    turns = history + [{"role": "user", "text": text or "(nur Fotos)"}]
+    turns = history + [{"role": "user", "text": text or "(nur Fotos)", "photos": len(new_photos)}]
     encoded = [base64.b64encode(photo).decode() for photo in photos]
+    shares = _photo_shares(turns, len(photos))
     messages = [{"role": turn["role"],
                  "text": (context + "\n\nPhilipp: " + turn["text"]) if index == 0 else turn["text"],
-                 "images": encoded if index == 0 else []} for index, turn in enumerate(turns)]
+                 "images": encoded[shares[index][0]:shares[index][1]]} for index, turn in enumerate(turns)]
     try:
         answer = llm.run(provider, model, rules.SYSTEM, messages, rules.SCHEMA, rules.TOOLS, _call_tool,
                          current["web_search"])
@@ -176,31 +180,45 @@ def estimate(payload: dict) -> dict:
         raise ValueError(str(error)) from None
     result["sources"] = answer["sources"]
     result["lookups"] = rules.lookups(answer.get("tool_calls") or [])
-    if not session:
-        store.save_photos(session_id, photos)
+    store.save_photos(session_id, new_photos, start=earlier)
     turns.append({"role": "assistant", "text": rules.answer_text(result)})
     store.save_session(session_id, at, provider, model, turns, result, len(photos), answer["usage"])
     store.log_usage("estimate", provider, model, answer["usage"])
     return {"session_id": session_id, "estimate": result, "provider": provider, "model": model,
-            "turns": [turn["text"] for turn in turns if turn["role"] == "user"], "conversation": _conversation(turns),
+            "turns": [turn["text"] for turn in turns if turn["role"] == "user"], "conversation": _conversation(turns, len(photos)),
             "photos": len(photos)}
 
 
-def _conversation(messages: list[dict]) -> list[dict]:
-    """The session as the chat shows it: Philipp's words and, for each answer, its carbs with range
-    and reasoning (the stored answer is the JSON replayed to the model)."""
+def _photo_shares(turns: list[dict], total: int) -> list[tuple[int, int]]:
+    """Which of a session's photos belong to each turn, as [start, end) indices. A turn stores how many
+    photos it added; the first turn of an older session has no count and holds all photos before the
+    later turns' ones (photos used to come only with the first message)."""
+    later = sum(turn.get("photos") or 0 for turn in turns[1:] if turn["role"] == "user")
+    shares, at = [], 0
+    for index, turn in enumerate(turns):
+        count = 0 if turn["role"] != "user" else (max(0, total - later) if index == 0 else turn.get("photos") or 0)
+        shares.append((at, min(at + count, total)))
+        at += count
+    return shares
+
+
+def _conversation(messages: list[dict], photos: int = 0) -> list[dict]:
+    """The session as the chat shows it: Philipp's words with the indices of the photos he sent with
+    them and, for each answer, its carbs with range and reasoning (the stored answer is the JSON
+    replayed to the model; links in older answers are dropped, user report 2026-11-19)."""
     rows = []
-    for turn in messages:
+    for (start, end), turn in zip(_photo_shares(messages, photos), messages):
         if turn["role"] == "user":
-            rows.append({"role": "user", "text": turn["text"]})
+            rows.append({"role": "user", "text": "" if turn["text"] == "(nur Fotos)" else turn["text"],
+                         "photos": list(range(start, end))})
             continue
         try:
             data = json.loads(turn["text"])
         except (TypeError, ValueError):
             continue
         rows.append({"role": "assistant", "carbs_g": data.get("carbs_g"), "carbs_low_g": data.get("carbs_low_g"),
-                     "carbs_high_g": data.get("carbs_high_g"), "reasoning": data.get("reasoning") or "",
-                     "question": data.get("question") or ""})
+                     "carbs_high_g": data.get("carbs_high_g"), "reasoning": rules.plain_text(data.get("reasoning")),
+                     "question": rules.plain_text(data.get("question"))})
     return rows
 
 
@@ -245,16 +263,27 @@ def photo(session_id: str, index: str) -> bytes | None:
 
 
 def for_entry(params: dict) -> dict:
-    """The newest estimate linked to a diary entry, so the edit dialog can continue it
-    (user request 2026-11-17: a second plate is told to the agent instead of starting over)."""
+    """The newest estimate linked to a diary entry, or the one named by `session_id`, so the chat can
+    continue it (user request 2026-11-17: a second plate is told to the agent instead of starting over)."""
     event_id = str((params.get("event_id") or [""])[0])
-    session = store.sessions_for([event_id]).get(event_id) if event_id else None
+    session_id = str((params.get("session_id") or [""])[0])
+    # An estimate taken over into a form that is not saved yet is continued by its own id (Philipp
+    # 2026-11-19: correcting works the same before and after saving).
+    if session_id:
+        try:
+            session = store.session(str(uuid.UUID(session_id)))
+        except ValueError:
+            session = None
+    else:
+        session = store.sessions_for([event_id]).get(event_id) if event_id else None
     if not session:
         return {"session": None}
     return {"session": {
-        "session_id": session["id"], "estimate": session["estimate"], "photos": session["photos"],
+        "session_id": session["id"], "photos": session["photos"],
+        "estimate": session["estimate"] and {**session["estimate"], "sources": [
+            {**source, "url": llm.clean_url(source["url"])} for source in session["estimate"].get("sources") or []]},
         "turns": [turn["text"] for turn in session["messages"] if turn["role"] == "user"],
-        "conversation": _conversation(session["messages"]),
+        "conversation": _conversation(session["messages"], session["photos"]),
         "can_continue": len(session["messages"]) < rules.MAX_TURNS * 2,
     }}
 

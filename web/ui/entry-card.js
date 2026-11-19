@@ -79,7 +79,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
       return;
     }
     window.mealChat.open({
-      target: "edit", info: agentInfo, api, toast, eventId: item.event_id || null,
+      info: agentInfo, api, toast, eventId: item.event_id || null, sessionId: v.session || null,
       initialText: v.description, previousCarbs: carbs || "",
       context: () => ({ at: instant(v.at), placeId: v.place || null }),
       onApply: result => {
