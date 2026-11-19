@@ -61,6 +61,7 @@ Split      = KH (und Korrektur) jetzt, der Zuschlag (auf 0,5 IE gerundet) als 2.
 ```
 
 - Mit „Berechnet“ wird Split auch unter `split_min_grams` angeboten, sobald der Zuschlag-Teil mindestens 2 IE ist; `split_min_units` gilt weiter.
+- Auf der Mahlzeit-Karte (Tagebuch → Mahlzeit antippen) lässt sich der Zuschlag auch nachträglich umstellen („Zuschlag Fett/Eiweiß“: Fest oder Berechnet), sobald die Mahlzeit eine Agent-Schätzung mit Fett und Eiweiß hat. Speichern setzt oder entfernt die Markierung, Prognose und Faktor rechnen danach neu.
 - Die Mahlzeit bekommt `[DAZ:<mg/dL>@<min>]` in die Nightscout-Notiz. „Wirkt noch“, Prognose, Warnungen, der 2. Split-Teil und die Bereinigung der früheren Faktoren in der Automatik nehmen für diese Mahlzeit diesen Zuschlag statt des festen. Kombinationen (eine Mahlzeit fest, die nächste berechnet) gehen daher ohne Weiteres.
 - Die Regler-Tabellen der Analyse (Zuschlag aus/20/40/…) rechnen berechnete Mahlzeiten mit ihrem gespeicherten Wert.
 - Grundlage: Projektdateien `analysen/fett-eiweiss-2026-11-19.md` (5 Mahlzeiten, erste Tendenz). Nach 15–20 Mahlzeiten neu kalibrieren.

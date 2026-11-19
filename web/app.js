@@ -538,6 +538,7 @@ async function saveEditedEntry(item, values) {
     // No chip any more (user request 2026-11-15); an old mark stays when the entry is edited.
     alcohol: carbs > 0 && Boolean(item.alcohol),
     fast: carbs > 0 && values.fast,
+    ...(kind === "meal" && carbs > 0 && values.surchargeMode ? { surcharge_mode: values.surchargeMode } : {}),
     ...(carbs > 0 ? { place_id: values.place || null, dish_id: null, dish_name: values.dish.trim(), description: values.description } : {}),
     ...(values.session ? { agent_session: values.session } : {}),
   };

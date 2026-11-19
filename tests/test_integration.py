@@ -2069,6 +2069,34 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn(episodes.surcharge_tag("105", 337), note)
         self.assertEqual(episodes.surcharge_plan(note), {"mgdl": "105", "minutes": 337})
 
+    def test_meal_card_switches_a_saved_meal_between_static_and_calculated_surcharge(self):
+        # Philipp 2026-11-19: choose the surcharge on the meal itself; the estimate comes from the linked agent session.
+        from app.store import agent as agent_store
+        self.request("/api/settings")
+        self.request("/api/settings", method="POST", body={"auto_method": "surcharge"})
+        saved = self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": MEAL_AT, "carbs": "90", "insulin": "5"})
+        event_id = saved["event_id"]
+        session_id = str(uuid.uuid4())
+        agent_store.save_session(session_id, datetime(2026, 9, 23, 10, tzinfo=timezone.utc), "test", "model", [],
+                                 {"carbs_g": 90, "fat_g": 37, "protein_g": 48}, 0, {})
+        agent_store.link_session(session_id, event_id)
+        view = self.request("/api/agent/session?event_id=" + event_id)["session"]["fpe"]
+        self.assertEqual((view["fpe"], view["mgdl"], view["minutes"]), ("5.2", "105", 337))
+        row = next(item for item in self.request("/api/day?date=2026-09-23")["timeline"] if item.get("event_id") == event_id)
+        self.assertIsNone(row["surcharge"])
+        edit = {"id": row["id"], "original_day": "2026-09-23", "kind": "meal", "at": MEAL_AT, "carbs": 90, "insulin": 5,
+                "event_id": event_id}
+        self.request("/api/treatment", method="POST", body={**edit, "surcharge_mode": "fpe"})
+        self.assertIn(episodes.surcharge_tag("105", 337), FakeNightscout.treatments[-1]["notes"])
+        row = next(item for item in self.request("/api/day?date=2026-09-23")["timeline"] if item.get("event_id") == event_id)
+        self.assertEqual(row["surcharge"], {"mgdl": "105", "minutes": 337})
+        # An edit without a choice keeps it, "static" removes it.
+        self.request("/api/treatment", method="POST", body=edit)
+        self.assertIn("[DAZ:105@337]", FakeNightscout.treatments[-1]["notes"])
+        self.request("/api/treatment", method="POST", body={**edit, "surcharge_mode": "static"})
+        self.assertNotIn("[DAZ:", FakeNightscout.treatments[-1]["notes"])
+
     def test_window_editor_reads_cgm_per_minute_and_counts_a_candidate_window(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",

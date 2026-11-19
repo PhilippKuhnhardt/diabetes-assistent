@@ -6,11 +6,11 @@ import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
-from app import calculation, episodes
+from app import calculation, episodes, fpe
 from app.common import MEALS, local_day_range, local_zone, parse_instant, unit_text
 from app.ingestion import nightscout
 from app.services import day_view, dishes, places
-from app.store import config, dishes as dish_store, mirror
+from app.store import agent as agent_store, config, dishes as dish_store, mirror
 
 
 DOSAGE_ROLES = {"meal-dose", "correction", "snack"}
@@ -31,6 +31,22 @@ def ensure_not_duplicate(day: str, event_id: str) -> bool:
     start, end = local_day_range(day, settings["timezone"])
     _, existing = nightscout.fetch_range(start, end)
     return any(item.get("identifier") == event_id or f"[DAE:{event_id}]" in str(item.get("notes") or "") for item in existing)
+
+
+def _calculated_surcharge(event_id: str, settings: dict, session_id: str | None = None) -> dict:
+    """The calculated surcharge from the agent's estimate: the session the save links (an estimate improved
+    on the card), else the one already linked to the entry."""
+    session = None
+    if session_id:
+        try:
+            session = agent_store.session(str(uuid.UUID(str(session_id))))
+        except ValueError:
+            session = None
+    session = session or agent_store.sessions_for([event_id]).get(event_id)
+    found = fpe.estimate((session or {}).get("estimate") or {}, settings) if settings.get("auto_method") == "surcharge" else None
+    if found is None:
+        raise ValueError("Ohne Fett/Eiweiß-Schätzung des Agenten gibt es keinen berechneten Zuschlag")
+    return {"mgdl": str(found["mgdl"]), "minutes": found["minutes"]}
 
 
 def save_diary_treatment(payload: dict) -> dict:
@@ -111,6 +127,11 @@ def save_diary_treatment(payload: dict) -> dict:
             kept = episodes.SPLIT_TAG.search(str(existing.get("notes") or ""))
             split = " " + kept.group(0) if kept else ""
         surcharge = ""
+        if kind == "meal" and "fpe_surcharge" not in payload and payload.get("surcharge_mode") in fpe.MODES:
+            # The meal card switches a saved meal between the static and the calculated surcharge; the
+            # calculated one comes from the agent's estimate linked to the entry (app/fpe.py).
+            payload = {**payload, "fpe_surcharge": _calculated_surcharge(event_id, settings, payload.get("agent_session"))
+                       if payload["surcharge_mode"] == "fpe" else None}
         if kind == "meal" and payload.get("fpe_surcharge"):
             value = payload["fpe_surcharge"]
             mgdl, minutes = calculation.dec(value["mgdl"]), int(value["minutes"])
