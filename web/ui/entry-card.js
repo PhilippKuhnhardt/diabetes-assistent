@@ -5,11 +5,12 @@
 // (standard, own value, none) and effect duration; basal its units. Saving and deleting stay in
 // app.js (onSave, onDelete), which knows the day and redraws it.
 import { html, useState, useEffect } from "./html.js";
+import { api, toast, num, sportNames } from "./lib.js";
+import { mealChat } from "./main.js";
 import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, Segments, SurchargeChoice } from "./meal-fields.js";
 
-const SPORT_KINDS = { jogging: "Joggen", gym: "Gym", light_cardio: "Leichtes Cardio", racing: "Rennsport" };
 const KIND_TITLES = { meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur", exercise: "Sport", basal: "Basal" };
-const fmt = (value, digits = 1) => Number(value).toLocaleString("de-DE", { maximumFractionDigits: digits });
+const fmt = (value, digits = 1) => num(value, digits);
 const parse = text => Number(String(text ?? "").replace(",", ".").trim());
 const blank = value => value == null || Number(value) === 0 ? "" : fmt(value);
 const hours = minutes => fmt(minutes / 60) + " h";
@@ -43,7 +44,7 @@ function initial(item) {
   };
 }
 
-export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaults, agentInfo, api, toast, instant, onSave, onDelete, onClose }) {
+export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaults, agentInfo, instant, onSave, onDelete, onClose }) {
   const [v, setV] = useState(() => initial(item));
   const [showCertainty, setShowCertainty] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -77,8 +78,8 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
       toast("Essens-Agent ist nicht eingerichtet: in den Einstellungen Anbieter und Modell wählen", true);
       return;
     }
-    window.mealChat.open({
-      info: agentInfo, api, toast, eventId: item.event_id || null, sessionId: v.session || null,
+    mealChat.open({
+      info: agentInfo, eventId: item.event_id || null, sessionId: v.session || null,
       initialText: v.description, previousCarbs: carbs || "",
       context: () => ({ at: instant(v.at), placeId: v.place || null }),
       onApply: result => {
@@ -160,7 +161,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
 
       ${sport && html`<div class="card-list">
         <${Row} label="Sportart"><select value=${v.sportKind} onChange=${event => set({ sportKind: event.currentTarget.value })}>
-          ${Object.entries(SPORT_KINDS).map(([key, name]) => html`<option value=${key}>${name}</option>`)}</select><//>
+          ${Object.entries(sportNames).map(([key, name]) => html`<option value=${key}>${name}</option>`)}</select><//>
         <${Row} label="Start"><input type="time" step="60" required value=${v.at} onInput=${event => set({ at: event.currentTarget.value })} /><//>
         <${Row} label="Dauer"><span class="card-number"><input inputmode="numeric" required value=${v.duration}
           onInput=${event => set({ duration: event.currentTarget.value })} aria-label="Dauer in Minuten" /><small>min</small></span><//>

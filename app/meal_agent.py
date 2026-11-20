@@ -152,7 +152,7 @@ def context_text(local_time: str, meal: str | None, place: str | None, catalogue
     return (f"Zeitpunkt der Mahlzeit: {local_time}" + (f" ({MEAL_LABELS[meal]})" if meal in MEAL_LABELS else "")
             + f"\nOrt: {place or 'nicht angegeben'}"
             + (f"\nPhilipps Orte: {', '.join(places)}" if places else "")
-            + f"\n\nPhilipps Gerichte-Katalog (je Gericht der Verlauf, darunter der letzte Eintrag; mehr über "
+            + "\n\nPhilipps Gerichte-Katalog (je Gericht der Verlauf, darunter der letzte Eintrag; mehr über "
             + f"dish_history und search_meals):\n{catalogue}")
 
 

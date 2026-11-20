@@ -3,7 +3,7 @@
 // with "Übernehmen" for a settings change the server attaches) and Gerichte (the dish catalogue).
 // The summary comes from /api/summary; every number, verdict and best cell is the server's.
 import { html, useState, useEffect, useRef } from "./html.js";
-import { api, post, toast, busy, num, factorNum, signedChange, sportChange, timeOnly, signedPercent, dayDate, names,
+import { api, post, toast, num, factorNum, signedChange, sportChange, timeOnly, signedPercent, dayDate, names,
   Icon, GlucoseChange, ExcludeButton } from "./lib.js";
 
 const TABS = [["werte", "Werte"], ["automatik", "Automatik"], ["gerichte", "Gerichte"]];

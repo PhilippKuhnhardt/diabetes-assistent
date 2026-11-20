@@ -94,9 +94,6 @@ POST_ROUTES = {
     "/api/agent/estimate": agent.estimate,
     "/api/agent/transcribe": agent.transcribe,
     "/api/inbox/seen": inbox.mark_seen,
-    "/api/episode": diary.save_episode,
-    "/api/exercise": diary.save_exercise,
-    "/api/dose": diary.save_dose,
 }
 
 

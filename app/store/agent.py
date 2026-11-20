@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -109,9 +108,3 @@ def save_photos(session_id: str, photos: list[bytes], start: int = 0) -> None:
 def load_photos(session_id: str, count: int) -> list[bytes]:
     return [photo_path(session_id, index).read_bytes() for index in range(count)
             if photo_path(session_id, index).is_file()]
-
-
-def delete_session(session_id: str) -> None:
-    with connect() as db:
-        db.execute("DELETE FROM agent_sessions WHERE id=?", (session_id,))
-    shutil.rmtree(photo_dir() / session_id, ignore_errors=True)

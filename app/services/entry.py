@@ -21,16 +21,6 @@ DOSE_VARIANTS = ("fast", "normal", "slow", "low", "cautious", "carbs")
 # not marked unsure and not fat-/protein-rich, so no carb uncertainty asks for a cautious estimate.
 LOW_TARGET_MAX_GRAMS = Decimal(30)
 SMALL_SNACK_GRAMS = episodes.SMALL_SNACK_GRAMS
-# Why the lower target is not offered, for the hint under the options (off, equal doses and larger meals stay silent).
-LOW_BLOCKED = {
-    "low": "BZ unter 70 mg/dL",
-    "falling": "BZ fällt",
-    "evening": "nur 6–20 Uhr",
-    "acting": "es wirkt noch zu viel",
-    "unsure": "KH unsicher",
-    "fat": "fett-/eiweißreich",
-    "split": "2. Split-Teil offen",
-}
 # The planned second part of a split bolus, offered as its own option while it is open.
 SPLIT_VARIANT = "split"
 # The fields a shown suggestion depends on; saving a tapped suggestion re-checks them together with the
