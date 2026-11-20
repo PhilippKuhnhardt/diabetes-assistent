@@ -35,11 +35,6 @@
       <a href="?view=analysis" class="appnav-item" data-nav="analysis"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10 M10 20V4 M16 20v-7 M22 20H2"/></svg><span>Analyse</span></a>
       <a href="?view=settings" class="appnav-item" data-nav="settings"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16 M4 12h16 M4 18h16"/></svg><span>Mehr</span></a>
     </nav>
-    <nav class="tabs" aria-label="Bereiche">
-      <a class="tab active" href="?view=diary" data-view="diary">Tagebuch</a>
-      <a class="tab" href="?view=analysis" data-view="analysis">Analyse</a>
-      <a class="tab" href="?view=settings" data-view="settings">Einstellungen</a>
-    </nav>
 
     <main>
       <section id="diary-view" class="view">
@@ -51,10 +46,6 @@
             <button type="button" id="next-day" aria-label="Nächster Tag">→</button>
             <button type="button" id="refresh-day" class="quiet" aria-label="Aktualisieren" title="Aktualisieren"><span aria-hidden="true">↻</span><span class="refresh-label">Aktualisieren</span></button>
           </div>
-        </div>
-        <div class="diary-mode" role="group" aria-label="Ansicht im Tagebuch">
-          <button type="button" data-diary-mode="now" aria-pressed="true">Jetzt</button>
-          <button type="button" data-diary-mode="review" aria-pressed="false">Tag durchgehen</button>
         </div>
         <div id="banner" class="banner" hidden></div>
         <div id="timezone-banner" class="banner timezone-banner" hidden></div>

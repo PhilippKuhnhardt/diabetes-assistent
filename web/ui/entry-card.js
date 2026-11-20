@@ -5,11 +5,12 @@
 // (standard, own value, none) and effect duration; basal its units. Saving and deleting stay in
 // app.js (onSave, onDelete), which knows the day and redraws it.
 import { html, useState, useEffect } from "./html.js";
-import { CERTAINTY_LEVELS, CertaintySlider, FactorChip } from "./agent-chat.js";
+import { api, toast, num, sportNames } from "./lib.js";
+import { mealChat } from "./main.js";
+import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, Segments, SurchargeChoice } from "./meal-fields.js";
 
-const SPORT_KINDS = { jogging: "Joggen", gym: "Gym", light_cardio: "Leichtes Cardio", racing: "Rennsport" };
 const KIND_TITLES = { meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur", exercise: "Sport", basal: "Basal" };
-const fmt = (value, digits = 1) => Number(value).toLocaleString("de-DE", { maximumFractionDigits: digits });
+const fmt = (value, digits = 1) => num(value, digits);
 const parse = text => Number(String(text ?? "").replace(",", ".").trim());
 const blank = value => value == null || Number(value) === 0 ? "" : fmt(value);
 const hours = minutes => fmt(minutes / 60) + " h";
@@ -22,11 +23,6 @@ function Meter({ level, onClick }) {
 }
 
 const Row = ({ label, children, hint }) => html`<label class="card-row"><span>${label}</span>${children}${hint && html`<small>${hint}</small>`}</label>`;
-
-function Segments({ value, options, onChange, label }) {
-  return html`<div class="segments" role="group" aria-label=${label}>${options.map(([key, text]) => html`
-    <button type="button" aria-pressed=${value === key ? "true" : "false"} onClick=${() => onChange(key)}>${text}</button>`)}</div>`;
-}
 
 function initial(item) {
   const sport = item.kind === "exercise";
@@ -48,7 +44,7 @@ function initial(item) {
   };
 }
 
-export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaults, agentInfo, api, toast, instant, onSave, onDelete, onClose }) {
+export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaults, agentInfo, instant, onSave, onDelete, onClose }) {
   const [v, setV] = useState(() => initial(item));
   const [showCertainty, setShowCertainty] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -82,8 +78,8 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
       toast("Essens-Agent ist nicht eingerichtet: in den Einstellungen Anbieter und Modell wählen", true);
       return;
     }
-    window.mealChat.open({
-      info: agentInfo, api, toast, eventId: item.event_id || null, sessionId: v.session || null,
+    mealChat.open({
+      info: agentInfo, eventId: item.event_id || null, sessionId: v.session || null,
       initialText: v.description, previousCarbs: carbs || "",
       context: () => ({ at: instant(v.at), placeId: v.place || null }),
       onApply: result => {
@@ -101,12 +97,24 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
     if (busy) return;
     setBusy(true);
     try {
-      await onSave({ ...v, carbs, insulin: parse(v.insulin) || 0, units: parse(v.units) || 0, duration: parse(v.duration) || 0,
-        certainty: v.level == null ? undefined : CERTAINTY_LEVELS[v.level],
-        // Only a meal whose estimate gives a calculated surcharge can switch; otherwise the saved one stays.
-        surchargeMode: kind === "meal" && fpe ? v.surchargeMode : null,
-        effect: v.effectMode === "own" ? parse(v.effect) : v.effectMode === "none" ? 0 : null,
-        minutes: v.minutesMode === "own" ? Math.round(parse(v.hours) * 60) : null });
+      // A typed value that is no number goes as "", so the server refuses it instead of taking the default.
+      const number = text => Number.isFinite(parse(text)) ? parse(text) : "";
+      await onSave({
+        at: v.at, notes: v.notes,
+        ...(sport ? {
+          sport_kind: v.sportKind, duration_minutes: parse(v.duration) || 0,
+          // The signed glucose change as shown (− lowers); null: the kind's setting.
+          sport_effect_change_mgdl: v.effectMode === "own" ? number(v.effect) : v.effectMode === "none" ? 0 : null,
+          sport_minutes: v.minutesMode === "own" ? (Number.isFinite(parse(v.hours)) ? Math.round(parse(v.hours) * 60) : "") : null,
+        } : basal ? { units: parse(v.units) || 0 } : {
+          carbs, insulin: parse(v.insulin) || 0,
+          carbs_certainty: v.level == null ? item.carbs_certainty ?? null : CERTAINTY_LEVELS[v.level],
+          fat_protein: v.fat, fast: v.fast, place_id: v.place || null, dish_name: v.dish, description: v.description,
+          // Only a meal whose estimate gives a calculated surcharge can switch; otherwise the saved one stays.
+          surcharge_mode: kind === "meal" && fpe ? v.surchargeMode : null,
+          agent_session: v.session,
+        }),
+      });
     } catch (error) { toast(error.message, true); }
     setBusy(false);
   }
@@ -143,22 +151,17 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
         <textarea rows="4" maxlength="1000" placeholder="Was gab es?" aria-label="Beschreibung" value=${v.description}
           onInput=${event => set({ description: event.currentTarget.value })}></textarea>
         <div class="entry-chips">
-          <${FactorChip} name="fat_protein" label="Fettreich" title="Fett- oder eiweißreiche Mahlzeit" checked=${v.fat} onChange=${fat => set({ fat })} />
-          <${FactorChip} name="fast" label="Schnell" title="Wirkt schnell (z. B. Saft, Weißbrot)" checked=${v.fast} onChange=${fast => set({ fast })} />
+          <${FactorChips} fat=${v.fat} fast=${v.fast} onFat=${fat => set({ fat })} onFast=${fast => set({ fast })} />
           <button type="button" class="chip agent-chip card-refine" onClick=${refine}>Nachbessern</button>
         </div>
       </div>`}
 
-      ${eats && kind === "meal" && fpe && html`<div class="card-group card-surcharge">
-        <div class="card-group-head"><b>Zuschlag Fett/Eiweiß</b>
-          <small>${fmt(fpe.fat_g, 0)} g Fett, ${fmt(fpe.protein_g, 0)} g Eiweiß = ${fmt(fpe.fpe)} FPE · wirkt bis ${hours(fpe.minutes)}</small></div>
-        <${Segments} label="Zuschlag" value=${v.surchargeMode} onChange=${surchargeMode => set({ surchargeMode })}
-          options=${[["static", "Fest" + (v.fat ? " (fettreich)" : "")], ["fpe", "Berechnet " + fmt(fpe.mgdl, 0) + " mg/dL"]]} />
-      </div>`}
+      ${eats && kind === "meal" && fpe && html`<${SurchargeChoice} mode=${v.surchargeMode} calculated=${fpe} fat=${v.fat}
+        staticMgdl=${fpe.static_mgdl?.[v.fat ? "fat" : "plain"]} onChange=${surchargeMode => set({ surchargeMode })} />`}
 
       ${sport && html`<div class="card-list">
         <${Row} label="Sportart"><select value=${v.sportKind} onChange=${event => set({ sportKind: event.currentTarget.value })}>
-          ${Object.entries(SPORT_KINDS).map(([key, name]) => html`<option value=${key}>${name}</option>`)}</select><//>
+          ${Object.entries(sportNames).map(([key, name]) => html`<option value=${key}>${name}</option>`)}</select><//>
         <${Row} label="Start"><input type="time" step="60" required value=${v.at} onInput=${event => set({ at: event.currentTarget.value })} /><//>
         <${Row} label="Dauer"><span class="card-number"><input inputmode="numeric" required value=${v.duration}
           onInput=${event => set({ duration: event.currentTarget.value })} aria-label="Dauer in Minuten" /><small>min</small></span><//>

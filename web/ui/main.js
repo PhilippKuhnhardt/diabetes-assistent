@@ -1,5 +1,5 @@
-// Entry point for the Preact parts of the page. app.js stays the classic script that owns the
-// page; it opens these components through small openers on window (mealChat, entryCard).
+// The dialogs of the page (meal chat, a saved entry's card, "+"), opened through the small openers
+// exported here (mealChat, entryCard, quickAdd).
 import { html, render } from "./html.js";
 import { MealChat } from "./agent-chat.js";
 import { EntryCard } from "./entry-card.js";
@@ -28,8 +28,8 @@ function dialogHost(id, onClosed = () => {}, closeOnBackdrop = false) {
 }
 
 const chat = dialogHost("agent-dialog");
-// options: { target, info, eventId, initialText, previousCarbs, context() -> {at, placeId}, api, toast, onApply }
-window.mealChat = {
+// options: { info, eventId, sessionId, initialText, previousCarbs, context() -> {at, placeId}, onApply }
+export const mealChat = {
   open: options => chat.show(html`<${MealChat} ...${options} onClose=${chat.close}
     onApply=${result => { options.onApply(result); chat.close(); }} />`),
   close: chat.close,
@@ -38,7 +38,7 @@ window.mealChat = {
 let cardClosed = () => {};
 const card = dialogHost("edit-dialog", () => cardClosed());
 // options: see EntryCard; onClosed runs whenever the card goes away.
-window.entryCard = {
+export const entryCard = {
   open: options => {
     cardClosed = options.onClosed || (() => {});
     card.show(html`<${EntryCard} key=${options.item.id} ...${options} onClose=${card.close} />`);
@@ -49,7 +49,7 @@ window.entryCard = {
 
 const add = dialogHost("add-dialog", () => {}, true);
 // options: { hints: {meal, correction, carbs, exercise, basal}, onChoose(kind) }
-window.quickAdd = {
+export const quickAdd = {
   open: options => add.show(html`<${QuickAdd} hints=${options.hints} onClose=${add.close}
     onChoose=${kind => { add.close(); options.onChoose(kind); }} />`),
   close: add.close,
