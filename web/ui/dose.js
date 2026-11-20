@@ -4,7 +4,7 @@
 // normal dose moved by the KF, with the corridor past doses showed around it: dark = every second case,
 // line = 8 of 10). The component only draws; app.js keeps the choice, fills the insulin field and saves.
 import { html } from "./html.js";
-import { num, factorNum, signedChange, signedPercent, timeOnly, SPLIT_TIMING, Icon } from "./lib.js";
+import { num, signedChange, timeOnly, SPLIT_TIMING, Icon } from "./lib.js";
 
 const LAND_AXIS = [40, 280];
 const landX = value => Math.max(0, Math.min(100, (value - LAND_AXIS[0]) / (LAND_AXIS[1] - LAND_AXIS[0]) * 100));
@@ -88,29 +88,6 @@ function DoseOption({ option, before, chosen, onChoose }) {
       ? " + " + num(before.later_units, 1) : ""}</span>`}</button>`;
 }
 
-// The factor all suggestions use; a stand-in is named while Automatik lacks meals.
-function FactorLine({ data }) {
-  if (data.units_per_ke == null) return null;
-  const kf = "KF " + num(data.isf_mgdl_per_unit, 1) + " mg/dL/IE";
-  if (!(Number(data.carbs_g) > 0)) return html`<p class="dose-factor">${kf}</p>`;
-  const factor = value => html`<strong>${factorNum(value)} IE/KE</strong>`;
-  const count = " (" + (data.auto_factor_count || 0) + "/" + data.auto_factor_min_meals + ")";
-  const surcharge = data.auto_surcharge_units != null
-    ? html` + Zuschlag <strong>${num(data.auto_surcharge_units, 2)} IE</strong>${data.surcharge_choice?.mode === "fpe" ? " (berechnet, " + num(data.surcharge_choice.fpe, 1) + " FPE)" : data.auto_fat_surcharge_mgdl != null ? " (fettreich +" + num(data.auto_fat_surcharge_mgdl, 0) + " mg/dL)" : ""}${data.solo_snack ? " · Snack ohne Mahlzeit, Zuschlag wie Hauptmahlzeit" : ""}`
-    : data.auto_method === "surcharge" && data.auto_units_per_ke != null ? " · Snack ohne Zuschlag" : "";
-  // The place factor is already in the factor and surcharge shown.
-  const place = data.place_factor;
-  const placeText = !place || data.auto_units_per_ke == null ? ""
-    : place.scale != null
-      ? html` · Ort ${place.name} <strong>${signedPercent(place.scale)}</strong> (${place.count} Essen, ${place.days} T.)`
-      : " · Ort " + place.name + ": noch kein Ortsfaktor (" + place.count + "/" + place.min_meals + " Essen)";
-  const used = data.auto_units_per_ke != null
-    ? html`Berechneter Faktor ${factor(data.auto_units_per_ke)}${count}${surcharge}${placeText}`
-    : html`Berechneter Faktor –${count} · ersatzweise ${data.factor_source === "breakfast_day_type"
-      ? "Frühstück " + (data.day_type === "free" ? "frei" : "Arbeit") : "Nightscout"} ${factor(data.units_per_ke)}`;
-  return html`<p class="dose-factor">${used} · ${kf}</p>`;
-}
-
 // `help` is the preview's dose with options; without it `note` (a message, "wird berechnet", an error) shows.
 export function DoseHelp({ help, note, changed = {}, choice, chosen, onChoose, onSlide }) {
   if (!help) return note || null;
@@ -121,7 +98,6 @@ export function DoseHelp({ help, note, changed = {}, choice, chosen, onChoose, o
   const board = help.on_board;
   return html`<div class="dose-head"><span class="dose-heading">${withCarbs ? "Empfehlung" : "Korrektur ohne Essen"}</span></div>
     ${anyChanged && html`<p class="dose-changed" role="status"><${Icon} name="alert" /> Neu berechnet mit neueren Daten${help.glucose_at ? " (CGM " + timeOnly(help.glucose_at) + ")" : ""}. Markierte Werte haben sich geändert, bitte prüfen.</p>`}
-    <${FactorLine} data=${help} />
     ${help.glucose_source === "finger" && help.glucose_fresh && html`<p class="dose-factor">Startwert blutig <strong>${num(help.glucose_mgdl, 0)} mg/dL</strong> um ${timeOnly(help.glucose_at)}</p>`}
     ${!help.slider && html`<div class="dose-options">${help.options.map(option => html`<${DoseOption} key=${option.variant} option=${option}
       before=${changed[option.variant]} chosen=${option.variant === choice} onChoose=${onChoose} />`)}</div>`}

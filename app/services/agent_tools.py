@@ -32,7 +32,7 @@ DOSE_KEYS = (
     "message", "reason", "options", "carbs_g", "glucose_mgdl", "glucose_at", "glucose_fresh", "glucose_source",
     "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl", "low_target_mgdl", "low_note", "forecast_mgdl", "cautious_forecast_mgdl",
     "recent_rapid_doses", "auto_meal", "auto_method", "auto_factor_count",
-    "auto_factor_min_meals", "auto_surcharge_units", "solo_snack", "day_type", "day_type_source", "split_plan", "slider")
+    "auto_factor_min_meals", "auto_surcharge_units", "surcharge_choice", "solo_snack", "day_type", "day_type_source", "split_plan", "slider")
 
 
 class ToolError(ValueError):
@@ -81,6 +81,13 @@ class EntryArgs(Args):
     fat_protein: Annotated[bool | None, Field(description="true = fett-/eiweißreich.")] = None
     fast: Annotated[bool | None, Field(description=
         "true = wirkt schnell (z. B. Saft, Weißbrot; nur erfasst, ändert keine Rechnung). Mit fat_protein kombinierbar.")] = None
+    fat_g: Annotated[Decimal | None, Field(ge=0, le=500, description=
+        "Geschätztes Fett der ganzen Mahlzeit in Gramm. Mit protein_g bietet die Empfehlung den berechneten "
+        "Fett/Eiweiß-Zuschlag an (surcharge_choice).")] = None
+    protein_g: Annotated[Decimal | None, Field(ge=0, le=500, description="Geschätztes Eiweiß der ganzen Mahlzeit in Gramm.")] = None
+    surcharge_mode: Annotated[Literal["static", "fpe"] | None, Field(description=
+        "Zuschlag der Hauptmahlzeit: static = fest (Mahlzeitzuschlag, mit fat_protein plus Fett-Zuschlag), fpe = aus fat_g "
+        "und protein_g berechnet (dann Split: KH jetzt, Zuschlag später). Weglassen = static.")] = None
     place: Annotated[str | None, Field(description=
         "Ort-Chip, an dem gegessen wurde (z. B. Kantine, Restaurant), nur bei KH. Die Vorschau listet die vorhandenen "
         "Orte in places; weglassen, wenn Philipp keinen nennt.")] = None
@@ -313,6 +320,8 @@ def _form(args: EntryArgs, at: datetime) -> dict:
         "carbs_certainty": args.carbs_certainty if carbs > 0 else None,
         "fat_protein": carbs > 0 and args.fat_protein is True,
         "fast": carbs > 0 and args.fast is True,
+        # The calculated fat/protein surcharge (app/fpe.py), as the entry form sends it.
+        **({"fat_g": args.fat_g, "protein_g": args.protein_g, "surcharge_mode": args.surcharge_mode} if carbs > 0 else {}),
     }
 
 
