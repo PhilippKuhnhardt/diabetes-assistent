@@ -9,8 +9,8 @@ from decimal import Decimal
 from app import calculation, episodes, fpe
 from app.common import MEALS, local_day_range, local_zone, parse_instant, unit_text
 from app.ingestion import nightscout
-from app.services import day_view, dishes, places
-from app.store import agent as agent_store, config, dishes as dish_store, mirror
+from app.services import annotations, basal, day_view, dishes, places
+from app.store import agent as agent_store, config, dishes as dish_store, marks, mirror
 
 
 DOSAGE_ROLES = {"meal-dose", "correction", "snack"}
@@ -43,10 +43,10 @@ def _calculated_surcharge(event_id: str, settings: dict, session_id: str | None 
         except ValueError:
             session = None
     session = session or agent_store.sessions_for([event_id]).get(event_id)
-    found = fpe.estimate((session or {}).get("estimate") or {}, settings) if settings.get("auto_method") == "surcharge" else None
+    found = fpe.estimate((session or {}).get("estimate"), settings)
     if found is None:
         raise ValueError("Ohne Fett/Eiweiß-Schätzung des Agenten gibt es keinen berechneten Zuschlag")
-    return {"mgdl": str(found["mgdl"]), "minutes": found["minutes"]}
+    return fpe.plan(found)
 
 
 def save_diary_treatment(payload: dict) -> dict:
@@ -114,8 +114,13 @@ def save_diary_treatment(payload: dict) -> dict:
             certainty = "unsure"
         if certainty not in (None, "", *episodes.CERTAINTIES):
             raise ValueError("Unbekannte KH-Sicherheit")
+        # A mark the payload does not name stays on an edited entry (the Alkohol chip is gone since
+        # 2026-11-15, its old marks are kept).
+        flags = {flag: (payload[flag] is True if flag in payload
+                        else tag in str((existing or {}).get("notes") or ""))
+                 for flag, tag in episodes.QUALITY_MARKERS.items()}
         quality = (f" [DAQ:{certainty}]" if carbs > 0 and certainty else "") + "".join(
-            " " + tag for flag, tag in episodes.QUALITY_MARKERS.items() if carbs > 0 and payload.get(flag) is True)
+            " " + tag for flag, tag in episodes.QUALITY_MARKERS.items() if carbs > 0 and flags[flag])
         split = ""
         if kind == "meal" and payload.get("split_units") is not None:
             units_later = calculation.dec(payload["split_units"])
@@ -198,6 +203,92 @@ def save_diary_treatment(payload: dict) -> dict:
         from app.services import agent
         agent.link(payload["agent_session"], event_id)
     return {"id": record_id or None, "event_id": event_id, "day": day}
+
+
+EDITABLE_KINDS = {"meal", "snack", "carbs", "correction", "exercise", "basal"}
+
+
+def edit_entry(payload: dict) -> dict:
+    """A saved entry changed on its card (web/ui/entry-card.js). The card sends what it shows, as the entry
+    form does; the kind follows from the entry's kind (`original_kind`) and the new values, and every check
+    lives here and in save_diary_treatment. Returns the entry's day and that day's view."""
+    original = str(payload.get("original_kind") or "")
+    if original not in EDITABLE_KINDS:
+        raise ValueError("Dieser Eintragstyp kann hier nicht bearbeitet werden")
+    record_id = payload.get("id")
+    old_day = str(payload.get("original_day") or "")
+    if not isinstance(record_id, str) or not 0 < len(record_id) <= 200:
+        raise ValueError("Ungültiger Eintrag")
+    date.fromisoformat(old_day)
+    if original == "basal":
+        return _replace_basal(record_id, payload)
+    sport = original == "exercise"
+    carbs = Decimal(0) if sport else calculation.dec(payload.get("carbs") or 0)
+    units = Decimal(0) if sport else calculation.dec(payload.get("insulin") or 0)
+    if not sport and carbs <= 0 and units <= 0:
+        raise ValueError("Bitte Kohlenhydrate, Insulin oder beides eintragen.")
+    if sport:
+        kind = "exercise"
+        _edit_sport_session(record_id, old_day, payload)
+    elif carbs > 0:
+        kind = "snack" if original == "snack" else "carbs" if original == "carbs" and units == 0 else "meal"
+    else:
+        kind = "correction"
+    food = {key: payload.get(key) for key in ("carbs_certainty", "place_id", "dish_name", "description")}
+    saved = save_diary_treatment({
+        "id": record_id, "original_day": old_day, "kind": kind, "at": payload.get("at"),
+        "carbs": str(carbs), "insulin": str(units), "notes": payload.get("notes") or "",
+        "sport_kind": payload.get("sport_kind"), "duration_minutes": payload.get("duration_minutes") if sport else 0,
+        "fat_protein": carbs > 0 and payload.get("fat_protein") is True, "fast": carbs > 0 and payload.get("fast") is True,
+        **({**food, "dish_id": None, "dish_name": str(food["dish_name"] or "").strip()} if carbs > 0 else {}),
+        # Only a meal whose agent estimate gives a calculated surcharge offers the choice; without one the saved stays.
+        **({"surcharge_mode": payload["surcharge_mode"]} if kind == "meal" and carbs > 0 and payload.get("surcharge_mode") else {}),
+        **({"agent_session": payload["agent_session"]} if payload.get("agent_session") else {}),
+    })
+    current = day_view.day_payload(saved["day"])
+    row = next((item for item in current["timeline"] if item["id"] == record_id), None)
+    if row is None or calculation.dec(row.get("carbs") or 0) != carbs or calculation.dec(row.get("insulin") or 0) != units:
+        raise ValueError("Die Änderung ist in Nightscout noch nicht sichtbar. Bitte Eintrag aktualisieren.")
+    return {"day": saved["day"], "day_view": current}
+
+
+def _edit_sport_session(record_id: str, day: str, payload: dict) -> None:
+    """The session's own effect and duration (null = its kind's setting), written before the Nightscout update:
+    right after it the day's cached copy may not hold the session yet. Only a change is written."""
+    duration = payload.get("duration_minutes")
+    if not isinstance(duration, (int, float)) or not 1 <= duration <= 1440:
+        raise ValueError("Bitte eine Dauer zwischen 1 und 1440 Minuten eintragen.")
+    change, minutes = payload.get("sport_effect_change_mgdl"), payload.get("sport_minutes")
+    if change is not None and not (isinstance(change, int) and not isinstance(change, bool) and abs(change) <= 500):
+        raise ValueError("Bitte eine BZ-Wirkung zwischen −500 und +500 mg/dL eintragen.")
+    if minutes is not None and not (isinstance(minutes, (int, float)) and 30 <= minutes <= 1440):
+        raise ValueError("Die Wirkdauer muss zwischen 0,5 und 24 h liegen.")
+    effects, durations = marks.sport_session_effects(), marks.sport_session_minutes()
+    changes = {}
+    # The API stores a session's effect as a glucose drop; the card shows the signed change.
+    if change is None and record_id in effects:
+        changes["reset"] = True
+    elif change is not None and (record_id not in effects or calculation.dec(effects[record_id]) != -change):
+        changes["effect_mgdl"] = -change
+    if minutes != durations.get(record_id):
+        changes["minutes"] = minutes
+    if changes:
+        annotations.set_sport_session({"id": record_id, "day": day, **changes})
+
+
+def _replace_basal(record_id: str, payload: dict) -> dict:
+    """An edited basal dose is saved new and the old one deleted, so Nightscout's note changes too."""
+    saved = basal.save_basal({"at": payload.get("at"), "units": payload.get("units"), "notes": payload.get("notes"),
+                              "event_id": payload.get("event_id")})
+    try:
+        basal.delete_basal(record_id)
+    except (ValueError, nightscout.NightscoutError):
+        try:
+            basal.delete_basal(saved["id"])
+        except (ValueError, nightscout.NightscoutError):
+            pass  # The old dose's error is the one to show.
+        raise
+    return {"day": saved["day"], "day_view": None}
 
 
 def save_glucose_check(at: datetime, mgdl: Decimal, event_id: str) -> None:

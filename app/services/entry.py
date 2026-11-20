@@ -7,7 +7,7 @@ import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
-from app import calculation, correction_scale, episodes, forecast, fpe, split as split_bolus
+from app import calculation, correction_scale, episodes, fpe, split as split_bolus
 from app.common import local_zone, parse_instant
 from app.ingestion import nightscout
 from app.services import basal, day_view, diary, dose_help, places, settings as settings_service
@@ -252,7 +252,7 @@ def _split(context: dict, assignment: dict | None, payload: dict) -> dict | None
 def _fpe_surcharge(context: dict, assignment: dict | None, payload: dict) -> dict | None:
     """The calculated fat/protein surcharge (app/fpe.py) when the form chose it for a main meal, else None."""
     if (payload.get("surcharge_mode") != "fpe" or context["mode"] != "meal" or not context["carbs"]
-            or (assignment and assignment["snack"]) or context["settings"].get("auto_method") != forecast.SURCHARGE):
+            or (assignment and assignment["snack"])):
         return None
     return fpe.estimate(payload, context["settings"])
 
@@ -506,7 +506,7 @@ def save(payload: dict) -> dict:
            if carbs > 0 else {}),
         **({"split_units": split_units, "split_delay_minutes": split["delay_minutes"]}
            if split_units and kind == "meal" else {}),
-        **({"fpe_surcharge": {"mgdl": str(calculated["mgdl"]), "minutes": calculated["minutes"]}}
+        **({"fpe_surcharge": fpe.plan(calculated)}
            if kind == "meal" and (calculated := _fpe_surcharge(context, assignment, payload)) else {}),
     })
     day = saved["day"]
