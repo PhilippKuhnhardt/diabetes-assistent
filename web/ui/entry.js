@@ -515,7 +515,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
 
   return html`<form id="entry-form" ref=${refs.form} onSubmit=${event => { event.preventDefault(); save(); }}
     onFocusIn=${() => syncTime()} onInputCapture=${touch} onChangeCapture=${touch} onPointerDownCapture=${touch} onKeyDownCapture=${touch}>
-    <div class="entry-switch" role="group" aria-label="Eintragsart">${[["meal", "Essen & Insulin"], ["exercise", "Sport"], ["basal", "Basal"]].map(([kind, label]) =>
+    <div class="entry-switch entry-mode-switch" role="group" aria-label="Eintragsart">${[["meal", "Essen & Insulin"], ["exercise", "Sport"], ["basal", "Basal"]].map(([kind, label]) =>
       html`<button type="button" class="entry-mode" data-entry-mode=${kind} aria-pressed=${String(f.kind === kind)} onClick=${event => {
         setKind(kind);
         if (event.isTrusted) control?.onManualKind?.();
@@ -599,7 +599,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
           ["fpe", "Berechnet " + num(choice.fpe_mgdl, 0) + " mg/dL"]].map(([mode, label]) =>
           html`<button type="button" class="surcharge-option" data-surcharge-mode=${mode} aria-pressed=${String(choice.mode === mode)}
             onClick=${() => { storeSurchargeMode(mode); toggle({ surchargeMode: mode }); }}>${label}</button>`)}</div>
-        <p id="entry-surcharge-hint" class="hint">Fett ${num(choice.fat_g, 0)} g, Eiweiß ${num(choice.protein_g, 0)} g = ${num(choice.fpe, 1)} FPE × ${num(choice.per_fpe_mgdl, 0)} mg/dL, wirkt bis ${num(choice.fpe_minutes / 60, 1)} h${choice.mode === "fpe" ? " · Split: KH jetzt, Zuschlag später" : ""}</p></div>`}
+        <p id="entry-surcharge-hint" class="hint">Berechnet aus Fett ${num(choice.fat_g, 0)} g und Eiweiß ${num(choice.protein_g, 0)} g (${num(choice.fpe, 1)} FPE), wirkt bis ${num(choice.fpe_minutes / 60, 1)} h${choice.mode === "fpe" ? " · Split: KH jetzt, Zuschlag später" : ""}</p></div>`}
       <div id="dose-result" class="help-result" aria-live="polite" aria-busy=${meal && f.busy ? "true" : null}>
         <${DoseHelp} help=${help} note=${f.doseNote} changed=${f.doseChanged} choice=${f.doseChoice} chosen=${f.slider} onChoose=${chooseDose} onSlide=${slide} /></div>
       <label id="entry-insulin-field">Eigene IE<input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"
