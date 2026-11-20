@@ -65,6 +65,7 @@ async function run(browser, name, options) {
     check(true, `${name}: entry card opens`);
     await page.keyboard.press("Escape");
   }
+  await editMeal(page, name);
 
   await page.click("[data-nav=analysis]");
   check(await page.isVisible("#analysis-view"), `${name}: Analyse opens`);
@@ -140,6 +141,25 @@ async function saving(page, name) {
   await page.click("[data-entry-mode=exercise]");
   check(await page.inputValue("#entry-form [name=sport_effect_mgdl]") !== "", `${name}: sport starts with its kind's effect`);
   await page.click("[data-entry-mode=meal]");
+}
+
+// The meal card (web/ui/entry-card.js) saves through the server (/api/entry/edit), which checks it.
+async function editMeal(page, name) {
+  const card = page.locator("#timeline .day-meal .edit-entry").first();
+  await card.click();
+  await page.waitForSelector("#edit-dialog[open] .entry-sheet");
+  const carbs = page.locator("#edit-dialog [aria-label='Kohlenhydrate in g']");
+  const before = await carbs.inputValue();
+  await carbs.fill("0");
+  await page.fill("#edit-dialog [aria-label='Insulin in IE']", "0");
+  await page.click("#edit-dialog .card-foot .primary");
+  await toastSays(page, "Bitte Kohlenhydrate, Insulin oder beides eintragen.");
+  check(await page.evaluate(() => document.querySelector("#edit-dialog").open), `${name}: the server refuses an empty meal on the card`);
+  await carbs.fill(String(Number(before) + 5));
+  await page.fill("#edit-dialog [aria-label='Insulin in IE']", "2");
+  await page.click("#edit-dialog .card-foot .primary");
+  await toastSays(page, "Änderung in Nightscout gespeichert");
+  check(!(await page.evaluate(() => document.querySelector("#edit-dialog").open)), `${name}: a changed meal is saved from its card`);
 }
 
 const toastSays = (page, text) => page.waitForFunction(wanted => document.querySelector("#toast")?.textContent.includes(wanted), text);

@@ -217,6 +217,15 @@ function ReviewSummary({ data }) {
     ${data.meals.length > 0 && !review.blocked && html`<span class="review-chip is-clean"><${Icon} name="check" /> Tag geprüft</span>`}</div>`;
 }
 
+// Work or free day for the breakfast factor; the entry form asks it before breakfast, "Tag durchgehen" any time.
+// `data` names the buttons' data attribute (data-<data>=work|free), `hint` the source of the current value.
+export function DayTypeSwitch({ value, onChoose, disabled, label, data, hint, hintId, extra = "" }) {
+  return html`<div class="entry-switch" role="group" aria-label=${label}>${[["work", "Arbeitstag"], ["free", "Freier Tag"]].map(([key, text]) =>
+      html`<button type="button" class="day-type-option" ...${{ ["data-" + data]: key }} aria-pressed=${String(value === key)}
+        disabled=${disabled} onClick=${() => onChoose(key)}>${text}</button>`)}</div>
+    <p id=${hintId} class="hint">${(dayTypeSources[hint] || "") + extra}</p>`;
+}
+
 function ReviewDayType({ data, day, reload }) {
   const [saving, setSaving] = useState(false);
   if (!data.day_type) return null;
@@ -227,10 +236,8 @@ function ReviewDayType({ data, day, reload }) {
     finally { setSaving(false); }
   }
   return html`<div id="review-day-type" class="review-day-type">
-    <div class="entry-switch" role="group" aria-label="Tagesart">${[["work", "Arbeitstag"], ["free", "Freier Tag"]].map(([value, label]) =>
-      html`<button type="button" class="day-type-option" data-review-day-type=${value} aria-pressed=${String(data.day_type === value)}
-        disabled=${saving} onClick=${() => choose(value)}>${label}</button>`)}</div>
-    <p id="review-day-type-hint" class="hint">${(dayTypeSources[data.day_type_source] || "") + (data.vacation && data.day_type_source !== "vacation" ? " · Urlaubstag" : "")}</p></div>`;
+    <${DayTypeSwitch} label="Tagesart" value=${data.day_type} data="review-day-type" disabled=${saving} onChoose=${choose}
+      hintId="review-day-type-hint" hint=${data.day_type_source} extra=${data.vacation && data.day_type_source !== "vacation" ? " · Urlaubstag" : ""} /></div>`;
 }
 
 function Night({ night }) {

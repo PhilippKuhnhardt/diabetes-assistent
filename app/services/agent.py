@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from app import episodes, fpe, meal_agent as rules
 from app.common import local_zone, parse_instant
 from app.ingestion import llm
-from app.services import dishes
+from app.services import dishes, factors
 from app.store import agent as store, config, dishes as dish_store, places as place_store
 
 DEFAULT_TRANSCRIBE_MODEL = "google/gemini-2.5-flash"
@@ -286,8 +286,17 @@ def for_entry(params: dict) -> dict:
         "conversation": _conversation(session["messages"], session["photos"]),
         "can_continue": len(session["messages"]) < rules.MAX_TURNS * 2,
         # The calculated fat/protein surcharge the meal card offers next to the static one (app/fpe.py).
-        "fpe": fpe.view(fpe.estimate(session["estimate"], config.get_settings()[1]), session["estimate"] or {}),
+        "fpe": _surcharge_view(session["estimate"]),
     }}
+
+
+def _surcharge_view(estimate: dict | None) -> dict | None:
+    """The calculated surcharge (app/fpe.py) with the static one beside it, without and with the fat mark,
+    since the card switches that mark itself."""
+    _, settings = config.get_settings()
+    view = fpe.view(fpe.estimate(estimate, settings), estimate or {})
+    return view and {**view, "static_mgdl": {"plain": str(factors.meal_surcharge_mgdl(settings, False)),
+                                             "fat": str(factors.meal_surcharge_mgdl(settings, True))}}
 
 
 def records(event_ids: list[str]) -> dict[str, dict]:

@@ -5,7 +5,7 @@
 // (standard, own value, none) and effect duration; basal its units. Saving and deleting stay in
 // app.js (onSave, onDelete), which knows the day and redraws it.
 import { html, useState, useEffect } from "./html.js";
-import { CERTAINTY_LEVELS, CertaintySlider, FactorChip } from "./agent-chat.js";
+import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, Segments, SurchargeChoice } from "./meal-fields.js";
 
 const SPORT_KINDS = { jogging: "Joggen", gym: "Gym", light_cardio: "Leichtes Cardio", racing: "Rennsport" };
 const KIND_TITLES = { meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur", exercise: "Sport", basal: "Basal" };
@@ -22,11 +22,6 @@ function Meter({ level, onClick }) {
 }
 
 const Row = ({ label, children, hint }) => html`<label class="card-row"><span>${label}</span>${children}${hint && html`<small>${hint}</small>`}</label>`;
-
-function Segments({ value, options, onChange, label }) {
-  return html`<div class="segments" role="group" aria-label=${label}>${options.map(([key, text]) => html`
-    <button type="button" aria-pressed=${value === key ? "true" : "false"} onClick=${() => onChange(key)}>${text}</button>`)}</div>`;
-}
 
 function initial(item) {
   const sport = item.kind === "exercise";
@@ -155,18 +150,13 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
         <textarea rows="4" maxlength="1000" placeholder="Was gab es?" aria-label="Beschreibung" value=${v.description}
           onInput=${event => set({ description: event.currentTarget.value })}></textarea>
         <div class="entry-chips">
-          <${FactorChip} name="fat_protein" label="Fettreich" title="Fett- oder eiweißreiche Mahlzeit" checked=${v.fat} onChange=${fat => set({ fat })} />
-          <${FactorChip} name="fast" label="Schnell" title="Wirkt schnell (z. B. Saft, Weißbrot)" checked=${v.fast} onChange=${fast => set({ fast })} />
+          <${FactorChips} fat=${v.fat} fast=${v.fast} onFat=${fat => set({ fat })} onFast=${fast => set({ fast })} />
           <button type="button" class="chip agent-chip card-refine" onClick=${refine}>Nachbessern</button>
         </div>
       </div>`}
 
-      ${eats && kind === "meal" && fpe && html`<div class="card-group card-surcharge">
-        <div class="card-group-head"><b>Zuschlag Fett/Eiweiß</b>
-          <small>${fmt(fpe.fat_g, 0)} g Fett, ${fmt(fpe.protein_g, 0)} g Eiweiß = ${fmt(fpe.fpe)} FPE · wirkt bis ${hours(fpe.minutes)}</small></div>
-        <${Segments} label="Zuschlag" value=${v.surchargeMode} onChange=${surchargeMode => set({ surchargeMode })}
-          options=${[["static", "Fest" + (v.fat ? " (fettreich)" : "")], ["fpe", "Berechnet " + fmt(fpe.mgdl, 0) + " mg/dL"]]} />
-      </div>`}
+      ${eats && kind === "meal" && fpe && html`<${SurchargeChoice} mode=${v.surchargeMode} calculated=${fpe} fat=${v.fat}
+        staticMgdl=${fpe.static_mgdl?.[v.fat ? "fat" : "plain"]} onChange=${surchargeMode => set({ surchargeMode })} />`}
 
       ${sport && html`<div class="card-list">
         <${Row} label="Sportart"><select value=${v.sportKind} onChange=${event => set({ sportKind: event.currentTarget.value })}>

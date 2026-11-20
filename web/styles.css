@@ -78,10 +78,8 @@ input[type=time]::-webkit-date-and-time-value { text-align: left; min-height: 1.
 .entry-day-type .entry-switch { margin-bottom: 0; }
 .entry-switch button.day-type-option { min-height: 40px; padding: 8px 10px; background: var(--canvas); border: 1px solid var(--line); border-radius: 9px; color: var(--ink); font-size: 12px; font-weight: 700; }
 .entry-switch button.day-type-option[aria-pressed="true"] { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
-.entry-surcharge .entry-switch { margin-bottom: 4px; }
-.entry-surcharge .hint { margin: 0 0 10px; }
-.entry-switch button.surcharge-option { min-height: 40px; padding: 8px 10px; background: var(--canvas); border: 1px solid var(--line); border-radius: 9px; color: var(--ink); font-size: 12px; font-weight: 700; }
-.entry-switch button.surcharge-option[aria-pressed="true"] { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+#entry-dose .meal-surcharge { margin-bottom: 12px; }
+.meal-surcharge .hint { margin: 0; }
 .entry-day-type .hint { margin: 6px 0 0; }
 .panel > .check-label, .notify-option > .check-label { display: flex; align-items: center; gap: 9px; font-size: 14px; }
 .panel > .check-label input, .notify-option > .check-label input { width: 18px; height: 18px; min-height: 18px; margin: 0; accent-color: var(--green); }

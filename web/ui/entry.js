@@ -7,13 +7,11 @@
 import { html, useRef, useState, useEffect } from "./html.js";
 import { api, post, toast, num, timeOnly, names, sportNames, sportChange, localInputTime, toInstant, currentPosition } from "./lib.js";
 import { DoseHelp, sliderUnits, firstPart } from "./dose.js";
-import { dayTypeSources } from "./day.js";
+import { DayTypeSwitch } from "./day.js";
+import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, SurchargeChoice } from "./meal-fields.js";
 
 const ENTRY_TIME_HOLD_MS = 10 * 60000;
 const POSITION_MAX_AGE_MS = 2 * 60000;
-// KH-Sicherheit is a three-stop slider (unsure, roughly known, weighed) that starts in the middle.
-const CERTAINTY_LEVELS = ["unsure", "known", "weighed"];
-const CERTAINTY_SLIDER_LABELS = ["KH unsicher", "KH halbwegs", "KH sicher"];
 const positionHints = { denied: "Standort nicht freigegeben, Ort bitte selbst wählen",
   failed: "Standort nicht ermittelt, Ort bitte selbst wählen" };
 const nowTime = () => localInputTime(new Date()).slice(11, 16);
@@ -511,7 +509,6 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     schedule();
   };
   const toggle = (patch, delay = 0) => { set(patch); schedule(delay); };
-  const certaintyIndex = f.certainty;
 
   return html`<form id="entry-form" ref=${refs.form} onSubmit=${event => { event.preventDefault(); save(); }}
     onFocusIn=${() => syncTime()} onInputCapture=${touch} onChangeCapture=${touch} onPointerDownCapture=${touch} onKeyDownCapture=${touch}>
@@ -551,17 +548,11 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
         <label id="entry-carbs-field">Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"
           ref=${refs.carbs} value=${f.carbs} disabled=${!meal} onInput=${event => typeCarbs(event.currentTarget.value)} /></label>
         <div id="entry-factors" class="entry-chips entry-factor-chips" hidden=${!quality}>
-          <label class="chip chip-toggle factor-chip" title="Fett- oder eiweißreiche Mahlzeit"><input type="checkbox" name="fat_protein" aria-label="Fettreich"
-            checked=${f.fat} onChange=${event => toggle({ fat: event.currentTarget.checked })} /><span class="factor-icon factor-fat_protein" aria-hidden="true"></span><span>Fettreich</span></label>
-          <label class="chip chip-toggle factor-chip" title="Wirkt schnell (z. B. Saft, Weißbrot)"><input type="checkbox" name="fast" aria-label="Schnell"
-            checked=${f.fast} onChange=${event => set({ fast: event.currentTarget.checked })} /><span class="factor-icon factor-fast" aria-hidden="true"></span><span>Schnell</span></label>
+          <${FactorChips} fat=${f.fat} fast=${f.fast} onFat=${fat => toggle({ fat })} onFast=${fast => set({ fast })} />
         </div>
       </div>
       <div id="entry-quality" class="entry-chips entry-quality-row" hidden=${!quality}>
-        <span class="certainty-slider" data-level=${CERTAINTY_LEVELS[certaintyIndex]}><input type="range" name="certainty_level" min="0" max="2" step="1"
-          value=${certaintyIndex} aria-label="KH-Sicherheit: unsicher, halbwegs sicher, sicher (gewogen oder genormt)"
-          onInput=${event => set({ certainty: Number(event.currentTarget.value), certaintyUnset: false })}
-          onChange=${() => schedule(0)} /><output class="certainty-label">${CERTAINTY_SLIDER_LABELS[certaintyIndex]}</output></span>
+        <${CertaintySlider} level=${f.certainty} onChange=${certainty => set({ certainty, certaintyUnset: false })} onCommit=${() => schedule(0)} />
       </div>
       ${place && html`<div id="entry-place" class="entry-place">
         <div id="entry-place-chips" class="entry-chips" role="group" aria-label="Ort">${chips.map(option =>
@@ -585,21 +576,15 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     <section id="entry-influences" class="entry-card" aria-label="Einflüsse" hidden=${!dayType}>
       <p class="entry-card-title">Einflüsse</p>
       ${dayType && html`<div id="entry-day-type" class="entry-day-type">
-        <div class="entry-switch" role="group" aria-label="Tagesart für das Frühstück">${[["work", "Arbeitstag"], ["free", "Freier Tag"]].map(([value, label]) =>
-          html`<button type="button" class="day-type-option" data-day-type=${value} aria-pressed=${String(dayType.value === value)} disabled=${f.dayTypeSaving}
-            onClick=${() => chooseDayType(value)}>${label}</button>`)}</div>
-        <p id="entry-day-type-hint" class="hint">${dayTypeSources[dayType.source] || ""}</p></div>`}
+        <${DayTypeSwitch} label="Tagesart für das Frühstück" value=${dayType.value} data="day-type" disabled=${f.dayTypeSaving}
+          onChoose=${chooseDayType} hintId="entry-day-type-hint" hint=${dayType.source} /></div>`}
     </section>
     <section id="entry-dose" class="entry-card entry-dose-card" aria-label="Dosis" hidden=${!meal}>
       <label id="entry-finger-field" hidden=${!fingerOpen}>BZ blutig gemessen <span>mg/dL</span><input name="finger_mgdl" type="number" min="20" max="600" step="1" inputmode="numeric"
         ref=${refs.finger} value=${f.finger} disabled=${!fingerActive(f)} onInput=${event => { refs.carbs.current.setCustomValidity(""); set({ finger: event.currentTarget.value }); schedule(); }} /></label>
-      ${choice && html`<div id="entry-surcharge" class="entry-surcharge">
-        <div class="entry-switch" role="group" aria-label="Zuschlag für Fett und Eiweiß">${[
-          ["static", "Fest " + num(choice.static_mgdl, 0) + " mg/dL" + (choice.static_fat ? " (fettreich)" : "")],
-          ["fpe", "Berechnet " + num(choice.fpe_mgdl, 0) + " mg/dL"]].map(([mode, label]) =>
-          html`<button type="button" class="surcharge-option" data-surcharge-mode=${mode} aria-pressed=${String(choice.mode === mode)}
-            onClick=${() => { storeSurchargeMode(mode); toggle({ surchargeMode: mode }); }}>${label}</button>`)}</div>
-        <p id="entry-surcharge-hint" class="hint">Berechnet aus Fett ${num(choice.fat_g, 0)} g und Eiweiß ${num(choice.protein_g, 0)} g (${num(choice.fpe, 1)} FPE), wirkt bis ${num(choice.fpe_minutes / 60, 1)} h${choice.mode === "fpe" ? " · Split: KH jetzt, Zuschlag später" : ""}</p></div>`}
+      ${choice && html`<${SurchargeChoice} mode=${choice.mode} staticMgdl=${choice.static_mgdl} fat=${choice.static_fat} splitNote
+        calculated=${{ fpe: choice.fpe, mgdl: choice.fpe_mgdl, minutes: choice.fpe_minutes, fat_g: choice.fat_g, protein_g: choice.protein_g }}
+        onChange=${mode => { storeSurchargeMode(mode); toggle({ surchargeMode: mode }); }} />`}
       <div id="dose-result" class="help-result" aria-live="polite" aria-busy=${meal && f.busy ? "true" : null}>
         <${DoseHelp} help=${help} note=${f.doseNote} changed=${f.doseChanged} choice=${f.doseChoice} chosen=${f.slider} onChoose=${chooseDose} onSlide=${slide} /></div>
       <label id="entry-insulin-field">Eigene IE<input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"
