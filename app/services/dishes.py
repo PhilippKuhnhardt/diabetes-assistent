@@ -2,7 +2,7 @@
 what an entry was. Outcomes come from the stored day results; nothing is calculated twice."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from app import dishes as rules
 from app.common import local_zone, parse_instant

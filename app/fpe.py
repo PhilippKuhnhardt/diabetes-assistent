@@ -51,9 +51,25 @@ def per_fpe_mgdl(settings: dict) -> Decimal:
     return Decimal(str(settings.get("fpe_surcharge_mgdl", PER_FPE_MGDL)))
 
 
-def estimate(payload: dict, settings: dict) -> dict | None:
-    """The calculated surcharge for the fat and protein the entry carries: FPE, mg/dL and minutes."""
-    fpe = units(payload.get("fat_g"), payload.get("protein_g"))
+def estimate(values: dict | None, settings: dict) -> dict | None:
+    """The calculated surcharge for fat_g and protein_g (an entry payload or the agent's estimate): FPE, mg/dL
+    and minutes. None without both values, or while the Automatik does not use the surcharge method, since
+    only that one has a meal surcharge to replace. Every caller (dose help, entry form, meal card, agent
+    session) reads it here."""
+    if settings.get("auto_method") != "surcharge":
+        return None
+    fpe = units((values or {}).get("fat_g"), (values or {}).get("protein_g"))
     if fpe is None:
         return None
     return {"fpe": fpe, "mgdl": surcharge_mgdl(fpe, per_fpe_mgdl(settings)).quantize(Decimal(1)), "minutes": minutes(fpe)}
+
+
+def plan(found: dict) -> dict:
+    """What a meal saved with the calculated surcharge stores ([DAZ:<mgdl>@<minutes>], episodes.surcharge_tag)."""
+    return {"mgdl": str(found["mgdl"]), "minutes": found["minutes"]}
+
+
+def view(found: dict | None, values: dict) -> dict | None:
+    """The calculated surcharge as the page shows it next to the static one."""
+    return found and {"fpe": str(found["fpe"].quantize(Decimal("0.1"))), "mgdl": str(found["mgdl"]),
+                      "minutes": found["minutes"], "fat_g": values.get("fat_g"), "protein_g": values.get("protein_g")}

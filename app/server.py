@@ -71,6 +71,7 @@ POST_ROUTES = {
     "/api/vacation": settings.set_vacation,
     "/api/timezone": lambda payload: settings.set_timezone(payload),
     "/api/treatment": diary.save_diary_treatment,
+    "/api/entry/edit": diary.edit_entry,
     "/api/analysis/sport": annotations.set_sport_mark,
     "/api/analysis/sport-session": annotations.set_sport_session,
     "/api/analysis/window": annotations.set_window,
@@ -93,9 +94,6 @@ POST_ROUTES = {
     "/api/agent/estimate": agent.estimate,
     "/api/agent/transcribe": agent.transcribe,
     "/api/inbox/seen": inbox.mark_seen,
-    "/api/episode": diary.save_episode,
-    "/api/exercise": diary.save_exercise,
-    "/api/dose": diary.save_dose,
 }
 
 
