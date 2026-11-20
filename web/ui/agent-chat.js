@@ -5,9 +5,8 @@
 import { html, useState, useEffect, useRef } from "./html.js";
 import { photoDataURL, canRecord, startRecording, recordingToWav } from "./media.js";
 import { GlucoseBadge } from "./glucose.js";
+import { CERTAINTY_LEVELS, CertaintySlider, FactorChips } from "./meal-fields.js";
 
-export const CERTAINTY_LEVELS = ["unsure", "known", "weighed"];
-const CERTAINTY_LABELS = ["KH unsicher", "KH halbwegs", "KH sicher"];
 const fmt = value => Number(value).toLocaleString("de-DE", { maximumFractionDigits: 1 });
 
 const Icon = ({ name }) => {
@@ -45,21 +44,6 @@ export function CarbRange({ low, estimate, high, value, previous, onChange, chil
     </div>`}
   </div>`;
 }
-
-export function CertaintySlider({ level, onChange }) {
-  return html`<span class="certainty-slider" data-level=${CERTAINTY_LEVELS[level]}>
-    <input type="range" min="0" max="2" step="1" value=${level}
-      aria-label="KH-Sicherheit: unsicher, halbwegs sicher, sicher (gewogen oder genormt)"
-      onInput=${event => onChange(Number(event.currentTarget.value))} />
-    <output class="certainty-label">${CERTAINTY_LABELS[level]}</output>
-  </span>`;
-}
-
-export const FactorChip = ({ name, label, title, checked, onChange }) => html`
-  <label class="chip chip-toggle factor-chip" title=${title}>
-    <input type="checkbox" name=${name} aria-label=${label} checked=${checked} onChange=${event => onChange(event.currentTarget.checked)} />
-    <span class=${"factor-icon factor-" + name} aria-hidden="true"></span><span>${label}</span>
-  </label>`;
 
 function EstimateDetails({ estimate }) {
   const extra = estimate.items.length + (estimate.lookups?.length || 0) + (estimate.sources?.length || 0);
@@ -264,8 +248,7 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
         <${CarbRange} low=${estimate.carbs_low_g} estimate=${estimate.carbs_g} high=${estimate.carbs_high_g}
           value=${pick} previous=${previousCarbs} onChange=${setPick}>
           <span class="entry-chips">
-            <${FactorChip} name="fat_protein" label="Fettreich" title="Fett- oder eiweißreiche Mahlzeit" checked=${fat} onChange=${setFat} />
-            <${FactorChip} name="fast" label="Schnell" title="Wirkt schnell (z. B. Saft, Weißbrot)" checked=${fast} onChange=${setFast} />
+            <${FactorChips} fat=${fat} fast=${fast} onFat=${setFat} onFast=${setFast} />
           </span>
         <//>
         <${CertaintySlider} level=${level} onChange=${setLevel} />

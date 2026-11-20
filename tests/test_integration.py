@@ -2083,6 +2083,8 @@ class IntegrationTests(unittest.TestCase):
         agent_store.link_session(session_id, event_id)
         view = self.request("/api/agent/session?event_id=" + event_id)["session"]["fpe"]
         self.assertEqual((view["fpe"], view["mgdl"], view["minutes"]), ("5.2", "105", 337))
+        # The static surcharge beside it, as the card shows it with and without "Fettreich".
+        self.assertEqual(view["static_mgdl"], {"plain": "40", "fat": "160"})
         row = next(item for item in self.request("/api/day?date=2026-09-23")["timeline"] if item.get("event_id") == event_id)
         self.assertIsNone(row["surcharge"])
         edit = {"id": row["id"], "original_day": "2026-09-23", "kind": "meal", "at": MEAL_AT, "carbs": 90, "insulin": 5,
