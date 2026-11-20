@@ -1048,7 +1048,7 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 }
 .entry-drawer { scroll-margin-top: 90px; }
 /* In the sheet the kind was chosen behind "+" ("‹ Auswahl" goes back), so the switch is not repeated. */
-@media (max-width: 950px) { .entry-drawer .entry-switch { display: none; } }
+@media (max-width: 950px) { .entry-drawer .entry-mode-switch { display: none; } }
 
 /* The current glucose in full-screen views (meal chat, entry sheet): a dose decision needs it in sight. */
 .glucose-badge { display: inline-flex; align-items: baseline; gap: 6px; padding: 3px 10px; border: 1px solid #cddbd2; border-radius: 999px; background: #edf1ee; color: #44564d; white-space: nowrap; }
