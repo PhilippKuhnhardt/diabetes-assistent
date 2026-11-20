@@ -191,17 +191,25 @@ function MealBlock({ meal, items, data, ctx }) {
       ${meal.notes && html`<p class="meal-note">${meal.notes}</p>`}</details></article>`;
 }
 
-// One chronological list: each main meal as a block holding the entries the server grouped under it.
-function DayList({ data, ctx }) {
-  if (!data.timeline.length) return html`<div class="empty">Für diesen Tag liegen noch keine Einträge vor.</div>`;
+// The day's entries grouped as the server does it (`meal_id`, day_view.block_meal_id): each main meal with
+// its own entry, snacks, corrections and sport in its window; `rest` holds what belongs to no meal.
+export function mealBlocks(data) {
   const blocks = new Map(data.meals.map(meal => [meal.id, { meal, items: [] }]));
-  const rows = [];
+  const rest = [];
   for (const item of data.timeline) {
     const block = blocks.get(item.meal_id);
     if (block) block.items.push(item);
-    else rows.push({ t: new Date(item.at).getTime(), item });
+    else rest.push(item);
   }
-  return [...[...blocks.values()].map(block => ({ t: new Date(block.meal.at).getTime(), block })), ...rows]
+  return { blocks: [...blocks.values()], rest };
+}
+
+// One chronological list: each main meal as a block holding the entries the server grouped under it.
+function DayList({ data, ctx }) {
+  if (!data.timeline.length) return html`<div class="empty">Für diesen Tag liegen noch keine Einträge vor.</div>`;
+  const { blocks, rest } = mealBlocks(data);
+  return [...blocks.map(block => ({ t: new Date(block.meal.at).getTime(), block })),
+    ...rest.map(item => ({ t: new Date(item.at).getTime(), item }))]
     .sort((a, b) => a.t - b.t)
     .map(row => row.block
       ? html`<${MealBlock} key=${"meal-" + row.block.meal.id} meal=${row.block.meal} items=${row.block.items} data=${data} ctx=${ctx} />`

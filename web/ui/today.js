@@ -1,10 +1,10 @@
 // "Heute": the chart of the last hours with what still acts ("Wirkt noch") and the entries of the last
 // three hours, and the list of things to do across the last days ("Zu erledigen"). The server sends the
 // day, the forecast (`on_board` of /api/entry/preview) and the inbox; these components only draw them.
-import { html } from "./html.js";
+import { html, useState } from "./html.js";
 import { MINUTE, num, timeOnly, names, sportNames, SPLIT_TIMING, FactorIcons } from "./lib.js";
 import { DayChart, glucosePoints } from "./charts.js";
-import { dayBounds } from "./day.js";
+import { dayBounds, mealBlocks, entryLabel } from "./day.js";
 
 const HOURS = [[3, "3 h"], [6, "6 h"], [24, "Tag"]];
 
@@ -51,25 +51,45 @@ function Recent({ treatments }) {
     ? html`<span class="recent-label">Letzte 3 h</span>${items}` : html`<span class="recent-label">Letzte 3 h: keine Einträge</span>`}</div>`;
 }
 
-// Today's meals in short (user request 2026-11-18): time, carbs, insulin and the factor once it is known;
-// a tap opens the meal's card. The full review stays in "Verlauf".
-function MealsToday({ meals, onEdit }) {
-  if (!meals.length) return html`<div class="meals-today"><span class="recent-label">Mahlzeiten heute: noch keine</span></div>`;
+// Today's meals in short (user request 2026-11-18): time, carbs, insulin and the factor once it is known.
+// Each row sums all entries the server grouped under the meal (`meal_id`, as in "Verlauf") and unfolds to
+// them, each tappable to correct it; the meal still running is unfolded (user request 2026-11-20).
+const sumOf = (items, key) => items.reduce((sum, item) => sum + (Number(item[key]) || 0), 0);
+const amounts = item => [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 1) + " IE" : "",
+  item.kind === "exercise" ? num(item.duration_minutes, 0) + " min" : ""].filter(Boolean);
+
+function MealToday({ meal, items, data, onEdit }) {
+  const factor = meal.calculation?.factor_units_per_ke;
+  const running = factor == null && meal.window?.end && new Date(meal.window.end).getTime() > Date.now();
+  const [open, setOpen] = useState(Boolean(running));
+  // Basal stands on its own; an entry the card cannot edit is still listed for context.
+  const entries = items.filter(item => item.kind !== "basal");
+  const carbs = sumOf(entries, "carbs");
+  const insulin = sumOf(entries, "insulin");
+  const listId = "meal-today-" + meal.id;
+  return html`<li class=${open ? "is-open" : ""}>
+    <button type="button" class="meal-today" aria-expanded=${String(open)} aria-controls=${listId} onClick=${() => setOpen(!open)}>
+      <time>${timeOnly(meal.at)}</time><b>${names[meal.meal] || "Mahlzeit"}</b>
+      <span>${[num(carbs, 0) + " g", insulin > 0 ? num(insulin, 1) + " IE" : "",
+        entries.length > 1 ? entries.length + " Einträge" : ""].filter(Boolean).join(" · ")}</span>
+      <small>${factor != null ? num(factor, 2) + " IE/KE" : running ? "bis " + timeOnly(meal.window.end) : ""}</small>
+      <i class="meal-today-toggle" aria-hidden="true">›</i></button>
+    <ul id=${listId} class="meal-today-entries" hidden=${!open}>${entries.map(item => {
+      const editable = item.kind !== "other" && item.kind !== "finger";
+      const label = entryLabel(item, data);
+      return html`<li key=${item.id}><button type="button" class="meal-today-entry" disabled=${!editable}
+        aria-label=${label + " um " + timeOnly(item.at) + (editable ? " bearbeiten" : "")} onClick=${() => onEdit(item.id)}>
+        <time>${timeOnly(item.at)}</time><b>${label}<${FactorIcons} marks=${item} /></b>
+        <span>${amounts(item).join(" + ")}</span>
+        ${item.dish?.name && html`<small>${item.dish.name}</small>`}</button></li>`;
+    })}</ul></li>`;
+}
+
+function MealsToday({ data, onEdit }) {
+  const { blocks } = mealBlocks(data);
+  if (!blocks.length) return html`<div class="meals-today"><span class="recent-label">Mahlzeiten heute: noch keine</span></div>`;
   return html`<div class="meals-today" aria-label="Mahlzeiten heute"><span class="recent-label">Mahlzeiten heute</span>
-    <ul>${meals.map(meal => {
-      // The meal's own entries (meal plus snacks); the factor once the window is over.
-      const events = meal.events || [];
-      const carbs = events.reduce((sum, row) => sum + (Number(row.carbs) || 0), 0) || meal.carbs;
-      const insulin = events.reduce((sum, row) => sum + (Number(row.insulin) || 0), 0);
-      const snacks = Math.max(0, events.filter(row => Number(row.carbs) > 0).length - 1);
-      const factor = meal.calculation?.factor_units_per_ke;
-      const running = factor == null && meal.window?.end && new Date(meal.window.end).getTime() > Date.now();
-      return html`<li><button type="button" class="meal-today" onClick=${() => onEdit(meal.source_id)}>
-        <time>${timeOnly(meal.at)}</time><b>${names[meal.meal] || "Mahlzeit"}</b>
-        <span>${[carbs != null ? num(carbs, 0) + " g" : "", Number(insulin) > 0 ? num(insulin, 1) + " IE" : "",
-          snacks ? "+ " + snacks + " Snack" + (snacks > 1 ? "s" : "") : ""].filter(Boolean).join(" · ")}</span>
-        <small>${factor != null ? num(factor, 2) + " IE/KE" : running ? "bis " + timeOnly(meal.window.end) : ""}</small></button></li>`;
-    })}</ul></div>`;
+    <ul>${blocks.map(({ meal, items }) => html`<${MealToday} key=${meal.id} meal=${meal} items=${items} data=${data} onEdit=${onEdit} />`)}</ul></div>`;
 }
 
 // Today the last hours up to now (3 h, 6 h or the whole day), other days the whole day.
@@ -93,7 +113,7 @@ export function Overview({ data, day, today, active, hours, onHours, onEdit = ()
     ${data ? html`<${DayChart} id="day-overview-chart" data=${data} view=${view} clipId="overview-clip" />` : html`<div class="day-overview-chart"></div>`}
     ${isToday && active && html`<${ActiveCard} active=${active} />`}
     ${isToday && data && html`<${Recent} treatments=${[...data.treatments, ...(data.basal || []).map(dose => ({ at: dose.at, basal: dose.units }))]} />`}
-    ${isToday && data && html`<${MealsToday} meals=${data.meals || []} onEdit=${onEdit} />`}
+    ${isToday && data && html`<${MealsToday} data=${data} onEdit=${onEdit} />`}
     ${note && html`<p id="day-overview-note" class="hint">${note}</p>`}</div>`;
 }
 

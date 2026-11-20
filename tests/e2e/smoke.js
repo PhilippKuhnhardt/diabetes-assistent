@@ -46,6 +46,15 @@ async function run(browser, name, options) {
   // A long meal row must not widen the page (iPhone report 2026-11-18).
   await page.evaluate(() => { document.querySelector(".meal-today span").textContent = "128 g · 11 IE · + 1 Snack · Abendessen lang"; });
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${name}: Heute fits the screen width`);
+  // A meal row unfolds to its single entries; each opens its card (user request 2026-11-20).
+  const head = page.locator(".meal-today").first();
+  if (await head.getAttribute("aria-expanded") !== "true") await head.click();
+  check(await page.isVisible(".meal-today-entry >> nth=0"), `${name}: a meal of Heute unfolds to its entries`);
+  await page.click(".meal-today-entry:not([disabled]) >> nth=0");
+  await page.waitForSelector("#edit-dialog[open] .entry-sheet");
+  check(true, `${name}: an entry of a meal in Heute opens its card`);
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => !document.querySelector("#edit-dialog").open);
   if (name === "phone") {
     await page.waitForSelector("#inbox-new .inbox-item");
     await page.click("#inbox-new .inbox-item >> nth=0");
