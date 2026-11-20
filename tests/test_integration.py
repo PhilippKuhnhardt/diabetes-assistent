@@ -2097,6 +2097,80 @@ class IntegrationTests(unittest.TestCase):
         self.request("/api/treatment", method="POST", body={**edit, "surcharge_mode": "static"})
         self.assertNotIn("[DAZ:", FakeNightscout.treatments[-1]["notes"])
 
+    def test_meal_card_edit_derives_the_kind_and_checks_on_the_server(self):
+        # The card sends what it shows (diary.edit_entry); kind and checks are the server's.
+        def row(day, match):
+            return next(item for item in day["timeline"] if match(item))
+
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4", "alcohol": True})
+        self.request("/api/treatment", method="POST", body={"kind": "carbs", "at": "2026-09-23T15:00:00Z", "carbs": "15"})
+        day = self.request("/api/day?date=2026-09-23")
+        meal = row(day, lambda item: item["kind"] == "meal")
+        edit = {"id": meal["id"], "original_day": "2026-09-23", "original_kind": "meal", "at": MEAL_AT}
+        result = self.request("/api/entry/edit", method="POST", body={
+            **edit, "carbs": 50, "insulin": 5, "carbs_certainty": "weighed", "fat_protein": True, "fast": False,
+            "dish_name": " Porridge ", "description": "mit Banane", "place_id": None, "notes": "x"})
+        self.assertEqual(result["day"], "2026-09-23")
+        saved = row(result["day_view"], lambda item: item["id"] == meal["id"])
+        self.assertEqual((Decimal(str(saved["carbs"])), Decimal(str(saved["insulin"])), saved["carbs_certainty"],
+                          saved["fat_protein"], saved["dish"]["name"]), (Decimal(50), Decimal(5), "weighed", True, "Porridge"))
+        # The old Alkohol mark has no chip any more and stays.
+        self.assertIn("[DAQ:alcohol]", FakeNightscout.treatments[0]["notes"])
+        # No carbs: a correction; nothing at all is refused.
+        self.request("/api/entry/edit", method="POST", body={**edit, "carbs": 0, "insulin": 2})
+        self.assertEqual(FakeNightscout.treatments[0]["eventType"], "Correction Bolus")
+        with self.assertRaises(urllib.error.HTTPError) as empty:
+            self.request("/api/entry/edit", method="POST", body={**edit, "carbs": 0, "insulin": 0})
+        self.assertEqual(empty.exception.code, 400)
+        empty.exception.close()
+        # Carbs without insulin keep a carbs entry; with insulin it becomes a meal.
+        carbs = row(self.request("/api/day?date=2026-09-23"), lambda item: item["kind"] == "carbs")
+        edit = {"id": carbs["id"], "original_day": "2026-09-23", "original_kind": "carbs", "at": "2026-09-23T15:00:00Z"}
+        self.request("/api/entry/edit", method="POST", body={**edit, "carbs": 20, "insulin": 0})
+        self.assertEqual(FakeNightscout.treatments[1]["eventType"], "Carb Correction")
+        self.request("/api/entry/edit", method="POST", body={**edit, "carbs": 20, "insulin": 1})
+        self.assertEqual(FakeNightscout.treatments[1]["eventType"], "Meal Bolus")
+        with self.assertRaises(urllib.error.HTTPError) as unknown:
+            self.request("/api/entry/edit", method="POST", body={**edit, "original_kind": "finger", "carbs": 20})
+        unknown.exception.close()
+
+    def test_meal_card_edit_sets_a_sport_sessions_effect_and_replaces_basal(self):
+        self.request("/api/treatment", method="POST", body={
+            "kind": "exercise", "at": "2026-09-23T08:00:00Z", "sport_kind": "gym", "duration_minutes": 60})
+        session = next(item for item in self.request("/api/day?date=2026-09-23")["timeline"] if item["kind"] == "exercise")
+        edit = {"id": session["id"], "original_day": "2026-09-23", "original_kind": "exercise",
+                "at": "2026-09-23T08:00:00Z", "sport_kind": "gym", "duration_minutes": 45}
+        # The card shows the signed change: −100 lowers by 100 mg/dL.
+        result = self.request("/api/entry/edit", method="POST", body={
+            **edit, "sport_effect_change_mgdl": -100, "sport_minutes": 600})
+        saved = next(item for item in result["day_view"]["timeline"] if item["kind"] == "exercise")
+        self.assertEqual((Decimal(saved["sport_effect_mgdl"]), saved["sport_effect_custom"], saved["sport_minutes"],
+                          saved["duration_minutes"]), (Decimal(100), True, 600, 45))
+        result = self.request("/api/entry/edit", method="POST", body={**edit, "sport_effect_change_mgdl": None, "sport_minutes": None})
+        saved = next(item for item in result["day_view"]["timeline"] if item["kind"] == "exercise")
+        self.assertEqual((saved["sport_effect_custom"], saved["sport_minutes_custom"]), (False, False))
+        for wrong in ({"sport_effect_change_mgdl": 600}, {"sport_effect_change_mgdl": ""}, {"sport_minutes": 10},
+                      {"duration_minutes": 0}):
+            with self.assertRaises(urllib.error.HTTPError) as refused:
+                self.request("/api/entry/edit", method="POST", body={**edit, **wrong})
+            refused.exception.close()
+
+        old = self.request("/api/basal", method="POST", body={"at": "2026-09-23T06:00:00Z", "units": "17"})
+        result = self.request("/api/entry/edit", method="POST", body={
+            "id": old["id"], "original_day": "2026-09-23", "original_kind": "basal", "at": "2026-09-23T06:30:00Z",
+            "units": 16, "notes": "neu"})
+        self.assertEqual(result["day"], "2026-09-23")
+        basal = self.request("/api/day?date=2026-09-23")["basal"]
+        self.assertEqual([item["units"] for item in basal], ["16"])
+        self.assertNotEqual(basal[0]["id"], old["id"])
+        with self.assertRaises(urllib.error.HTTPError) as refused:
+            self.request("/api/entry/edit", method="POST", body={
+                "id": basal[0]["id"], "original_day": "2026-09-23", "original_kind": "basal", "at": "2026-09-23T06:30:00Z",
+                "units": 0.3})
+        refused.exception.close()
+        self.assertEqual([item["units"] for item in self.request("/api/day?date=2026-09-23")["basal"]], ["16"])
+
     def test_window_editor_reads_cgm_per_minute_and_counts_a_candidate_window(self):
         self.request("/api/treatment", method="POST", body={
             "kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4",

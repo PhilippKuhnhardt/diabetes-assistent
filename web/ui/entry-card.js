@@ -101,12 +101,24 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
     if (busy) return;
     setBusy(true);
     try {
-      await onSave({ ...v, carbs, insulin: parse(v.insulin) || 0, units: parse(v.units) || 0, duration: parse(v.duration) || 0,
-        certainty: v.level == null ? undefined : CERTAINTY_LEVELS[v.level],
-        // Only a meal whose estimate gives a calculated surcharge can switch; otherwise the saved one stays.
-        surchargeMode: kind === "meal" && fpe ? v.surchargeMode : null,
-        effect: v.effectMode === "own" ? parse(v.effect) : v.effectMode === "none" ? 0 : null,
-        minutes: v.minutesMode === "own" ? Math.round(parse(v.hours) * 60) : null });
+      // A typed value that is no number goes as "", so the server refuses it instead of taking the default.
+      const number = text => Number.isFinite(parse(text)) ? parse(text) : "";
+      await onSave({
+        at: v.at, notes: v.notes,
+        ...(sport ? {
+          sport_kind: v.sportKind, duration_minutes: parse(v.duration) || 0,
+          // The signed glucose change as shown (− lowers); null: the kind's setting.
+          sport_effect_change_mgdl: v.effectMode === "own" ? number(v.effect) : v.effectMode === "none" ? 0 : null,
+          sport_minutes: v.minutesMode === "own" ? (Number.isFinite(parse(v.hours)) ? Math.round(parse(v.hours) * 60) : "") : null,
+        } : basal ? { units: parse(v.units) || 0 } : {
+          carbs, insulin: parse(v.insulin) || 0,
+          carbs_certainty: v.level == null ? item.carbs_certainty ?? null : CERTAINTY_LEVELS[v.level],
+          fat_protein: v.fat, fast: v.fast, place_id: v.place || null, dish_name: v.dish, description: v.description,
+          // Only a meal whose estimate gives a calculated surcharge can switch; otherwise the saved one stays.
+          surcharge_mode: kind === "meal" && fpe ? v.surchargeMode : null,
+          agent_session: v.session,
+        }),
+      });
     } catch (error) { toast(error.message, true); }
     setBusy(false);
   }

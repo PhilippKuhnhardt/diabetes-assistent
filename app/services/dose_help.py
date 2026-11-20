@@ -105,7 +105,7 @@ def dose_help(payload: dict) -> dict:
             "mode": "fpe" if use_fpe else "static",
             "static_mgdl": str(factors.meal_surcharge_mgdl(current_settings, payload.get("fat_protein") is True)),
             "static_fat": payload.get("fat_protein") is True,
-            "fpe": str(calculated["fpe"].quantize(Decimal("0.1"))), "fpe_mgdl": str(calculated["mgdl"].quantize(Decimal(1))),
+            "fpe": str(calculated["fpe"].quantize(Decimal("0.1"))), "fpe_mgdl": str(calculated["mgdl"]),
             "fpe_minutes": calculated["minutes"], "per_fpe_mgdl": str(fpe.per_fpe_mgdl(current_settings)),
             "fat_g": str(payload.get("fat_g")), "protein_g": str(payload.get("protein_g"))},
         "place_factor": ({"name": place["name"], "count": place["count"], "min_meals": place["min_meals"],
