@@ -5,9 +5,9 @@
 import { html, useState, useEffect, useRef } from "./html.js";
 import { photoDataURL, canRecord, startRecording, recordingToWav } from "./media.js";
 import { GlucoseBadge } from "./glucose.js";
+import { api, toast, num } from "./lib.js";
 import { CERTAINTY_LEVELS, CertaintySlider, FactorChips } from "./meal-fields.js";
 
-const fmt = value => Number(value).toLocaleString("de-DE", { maximumFractionDigits: 1 });
 
 const Icon = ({ name }) => {
   const paths = {
@@ -30,7 +30,7 @@ export function CarbRange({ low, estimate, high, value, previous, onChange, chil
     return [estimate, low, high].find(stop => Math.abs(grams - stop) <= near) ?? grams;
   };
   const note = [value === estimate ? "Schätzung" : "Schätzung " + estimate + " g",
-    previous != null && previous !== "" && Number(previous) !== value ? "vorher " + fmt(previous) + " g" : ""].filter(Boolean);
+    previous != null && previous !== "" && Number(previous) !== value ? "vorher " + num(previous, 1) + " g" : ""].filter(Boolean);
   const ticks = [[low, "start"], [estimate, "mid"], [high, "end"]].filter(([grams], index, all) =>
     all.findIndex(([other]) => other === grams) === index);
   return html`<div class="carb-pick">
@@ -57,7 +57,7 @@ function EstimateDetails({ estimate }) {
       <summary>${[estimate.items.length ? estimate.items.length + " Posten" : "",
         estimate.lookups?.length ? estimate.lookups.length + " nachgeschlagen" : ""].filter(Boolean).join(" · ") || "Quellen"}</summary>
       ${estimate.items.length > 0 && html`<ul class="chat-items">${estimate.items.map(item => html`
-        <li><span>${item.name}${item.amount && html` <small>${item.amount}</small>`}</span><b>${fmt(Math.round(item.carbs_g))} g</b></li>`)}</ul>`}
+        <li><span>${item.name}${item.amount && html` <small>${item.amount}</small>`}</span><b>${num(Math.round(item.carbs_g), 1)} g</b></li>`)}</ul>`}
       ${estimate.lookups?.length > 0 && html`<ul class="chat-lookups">${estimate.lookups.map(line => html`<li>${line}</li>`)}</ul>`}
       ${estimate.sources?.length > 0 && html`<p class="chat-note">Quellen: ${estimate.sources.map((source, index) => html`${index ? ", " : ""}<a
         href=${source.url} target="_blank" rel="noopener noreferrer">${source.title || new URL(source.url).hostname}</a>`)}</p>`}
@@ -93,8 +93,8 @@ function Bubbles({ conversation, estimate, busy, session }) {
 
 // One chat per opening, the same wherever it opens (Philipp 2026-11-19: correcting a saved meal and the
 // first estimate must not differ). With `sessionId` (an estimate already taken over) or `eventId` (a
-// saved meal's card) the earlier estimate continues. `api` and `toast` come from the page.
-export function MealChat({ info, eventId, sessionId, initialText, previousCarbs, context, api, toast, onApply, onClose }) {
+// saved meal's card) the earlier estimate continues.
+export function MealChat({ info, eventId, sessionId, initialText, previousCarbs, context, onApply, onClose }) {
   // Photos picked for the next message (data URLs); sent ones live in the conversation rows.
   const [photos, setPhotos] = useState([]);
   const [sentPhotos, setSentPhotos] = useState(0);

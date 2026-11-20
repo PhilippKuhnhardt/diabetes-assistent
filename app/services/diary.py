@@ -1,29 +1,15 @@
 """Diary entries written to Nightscout."""
 from __future__ import annotations
 
-import re
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 
 from app import calculation, episodes, fpe
-from app.common import MEALS, local_day_range, local_zone, parse_instant, unit_text
+from app.common import local_day_range, local_zone, parse_instant, unit_text
 from app.ingestion import nightscout
 from app.services import annotations, basal, day_view, dishes, places
 from app.store import agent as agent_store, config, dishes as dish_store, marks, mirror
-
-
-DOSAGE_ROLES = {"meal-dose", "correction", "snack"}
-
-
-def record_with_tag(at: datetime, event_type: str, episode_id: str, meal: str, role: str, carbs: Decimal, units: Decimal, note: str, event_id: str) -> dict:
-    marker = episodes.tag(episode_id, meal, role)
-    text = (note.strip() + " " + marker + f" [DAE:{event_id}]").strip()
-    return {
-        "eventType": event_type, "created_at": at.isoformat().replace("+00:00", "Z"),
-        "carbs": float(carbs), "insulin": float(units), "notes": text,
-        "enteredBy": "Diabetes Analysis PoC", "identifier": event_id,
-    }
 
 
 def ensure_not_duplicate(day: str, event_id: str) -> bool:
@@ -114,10 +100,10 @@ def save_diary_treatment(payload: dict) -> dict:
             certainty = "unsure"
         if certainty not in (None, "", *episodes.CERTAINTIES):
             raise ValueError("Unbekannte KH-Sicherheit")
-        # A mark the payload does not name stays on an edited entry (the Alkohol chip is gone since
-        # 2026-11-15, its old marks are kept).
-        flags = {flag: (payload[flag] is True if flag in payload
-                        else tag in str((existing or {}).get("notes") or ""))
+        # "keep" leaves a mark as the edited entry has it (the Alkohol chip is gone since 2026-11-15, its old
+        # marks stay when the meal card saves).
+        flags = {flag: (tag in str((existing or {}).get("notes") or "") if payload.get(flag) == "keep"
+                        else payload.get(flag) is True)
                  for flag, tag in episodes.QUALITY_MARKERS.items()}
         quality = (f" [DAQ:{certainty}]" if carbs > 0 and certainty else "") + "".join(
             " " + tag for flag, tag in episodes.QUALITY_MARKERS.items() if carbs > 0 and flags[flag])
@@ -240,6 +226,7 @@ def edit_entry(payload: dict) -> dict:
         "carbs": str(carbs), "insulin": str(units), "notes": payload.get("notes") or "",
         "sport_kind": payload.get("sport_kind"), "duration_minutes": payload.get("duration_minutes") if sport else 0,
         "fat_protein": carbs > 0 and payload.get("fat_protein") is True, "fast": carbs > 0 and payload.get("fast") is True,
+        "alcohol": "keep",
         **({**food, "dish_id": None, "dish_name": str(food["dish_name"] or "").strip()} if carbs > 0 else {}),
         # Only a meal whose agent estimate gives a calculated surcharge offers the choice; without one the saved stays.
         **({"surcharge_mode": payload["surcharge_mode"]} if kind == "meal" and carbs > 0 and payload.get("surcharge_mode") else {}),
@@ -327,88 +314,3 @@ def delete_treatment(payload: dict) -> dict:
         dish_store.delete_record(episodes.event_id(found))
     mirror.delete_cached_treatment(record_id)
     return {"id": record_id}
-
-
-def save_episode(payload: dict) -> dict:
-    if not nightscout.is_configured():
-        raise ValueError("Zuerst Nightscout verbinden")
-    at = parse_instant(str(payload["at"]))
-    meal = str(payload["meal"])
-    if meal not in MEALS:
-        raise ValueError("Ungültige Mahlzeit")
-    carbs = calculation.dec(payload["carbs"])
-    insulin = calculation.dec(payload.get("insulin", 0))
-    if not (0 < carbs <= 500 and 0 <= insulin <= 100):
-        raise ValueError("Kohlenhydrate oder Insulin außerhalb des erlaubten Bereichs")
-    note = str(payload.get("notes", ""))[:500]
-    episode_id = str(uuid.UUID(str(payload.get("episode_id") or uuid.uuid4())))
-    event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
-    _, settings = config.get_settings()
-    day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
-    if not ensure_not_duplicate(day, event_id):
-        record = record_with_tag(at, "Meal Bolus", episode_id, meal, "meal", carbs, insulin, note, event_id)
-        nightscout.write_treatment(record)
-    return {"episode_id": episode_id, "event_id": event_id, "day": day}
-
-
-def save_exercise(payload: dict) -> dict:
-    if not nightscout.is_configured():
-        raise ValueError("Zuerst Nightscout verbinden")
-    at = parse_instant(str(payload["at"]))
-    kind = str(payload["kind"])
-    if kind not in episodes.SPORT_LABELS:
-        raise ValueError("Ungültige Sportart")
-    duration_text = str(payload["duration_minutes"])
-    if not re.fullmatch(r"\d+", duration_text):
-        raise ValueError("Dauer muss eine ganze Minutenzahl sein")
-    duration = int(duration_text)
-    if not 1 <= duration <= 1440:
-        raise ValueError("Dauer muss zwischen 1 und 1440 Minuten liegen")
-    note = str(payload.get("notes", "")).strip()[:400]
-    event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
-    _, settings = config.get_settings()
-    day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
-    if not ensure_not_duplicate(day, event_id):
-        label = episodes.SPORT_LABELS[kind]
-        notes = f"{label}" + (f" — {note}" if note else "")
-        notes += f" [DAS1:{kind}] [DAE:{event_id}]"
-        nightscout.write_treatment({
-            "eventType": "Exercise",
-            "created_at": at.isoformat().replace("+00:00", "Z"),
-            "duration": duration,
-            "notes": notes,
-            "enteredBy": "Diabetes Analysis PoC",
-            "identifier": event_id,
-        })
-    return {"event_id": event_id, "day": day}
-
-
-def save_dose(payload: dict) -> dict:
-    if not nightscout.is_configured():
-        raise ValueError("Zuerst Nightscout verbinden")
-    at = parse_instant(str(payload["at"]))
-    episode_id = str(uuid.UUID(str(payload["episode_id"])))
-    meal = str(payload["meal"])
-    role = str(payload["role"])
-    if meal not in MEALS or role not in DOSAGE_ROLES:
-        raise ValueError("Ungültiger Dosistyp")
-    units = calculation.dec(payload["insulin"])
-    if not 0 < units <= 100:
-        raise ValueError("Insulin außerhalb des erlaubten Bereichs")
-    carbs = calculation.dec(payload.get("carbs") or 0)
-    if role == "snack" and not 0 < carbs <= 500:
-        raise ValueError("Kohlenhydrate außerhalb des erlaubten Bereichs")
-    if role != "snack" and carbs != 0:
-        raise ValueError("Kohlenhydrate nur für Zwischenmahlzeiten erlaubt")
-    event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
-    _, settings = config.get_settings()
-    day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
-    if not ensure_not_duplicate(day, event_id):
-        nearby_days = [(at.astimezone(local_zone(settings["timezone"])).date() - timedelta(days=offset)).isoformat() for offset in (0, 1)]
-        roots = [row for meal_day in nearby_days for row in day_view.day_payload(meal_day)["meals"]]
-        if not any(row["id"] == episode_id and row["meal"] == meal and 0 <= (at - parse_instant(row["at"])).total_seconds() <= 3 * 3600 for row in roots):
-            raise ValueError("Zugehörige Mahlzeit innerhalb von drei Stunden fehlt")
-        event_type = {"correction": "Correction Bolus", "meal-dose": "Meal Bolus", "snack": "Snack Bolus"}[role]
-        record = record_with_tag(at, event_type, episode_id, meal, role, carbs, units, "", event_id)
-        nightscout.write_treatment(record)
-    return {"event_id": event_id, "day": day}

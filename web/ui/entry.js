@@ -5,9 +5,10 @@
 // app.js mounts the form, passes the day and settings, and talks to it through `control`
 // (refresh, tick, choose, applyAgent, submit), since the minute tick, "+" and the agent live outside.
 import { html, useRef, useState, useEffect } from "./html.js";
-import { api, post, toast, num, timeOnly, names, sportNames, sportChange, localInputTime, toInstant, currentPosition } from "./lib.js";
+import { post, toast, num, timeOnly, names, sportNames, sportChange, localInputTime, toInstant, currentPosition } from "./lib.js";
 import { DoseHelp, sliderUnits, firstPart } from "./dose.js";
 import { DayTypeSwitch } from "./day.js";
+import { mealChat } from "./main.js";
 import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, SurchargeChoice } from "./meal-fields.js";
 
 const ENTRY_TIME_HOLD_MS = 10 * 60000;
@@ -380,10 +381,9 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
       toast("Essens-Agent ist nicht eingerichtet: in den Einstellungen Anbieter und Modell wählen", true);
       return;
     }
-    if (!window.mealChat) { toast("Seite neu laden, der Chat ist noch nicht geladen", true); return; }
     props.current.onGlucose();
-    window.mealChat.open({
-      info: agentInfo, api, toast, previousCarbs: store.current.carbs, sessionId: store.current.agent?.session_id || null,
+    mealChat.open({
+      info: agentInfo, previousCarbs: store.current.carbs, sessionId: store.current.agent?.session_id || null,
       context: () => {
         let at = null;
         try { at = toInstant(props.current.day, store.current.at); } catch (_) { /* Without a valid time the server takes now. */ }

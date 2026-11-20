@@ -1,22 +1,19 @@
 // The classic page logic, moving screen by screen into Preact components in web/ui/ (AGENTS.md).
 // Shared helpers and the API call live in web/ui/lib.js.
 import { html, render } from "./ui/html.js";
-import "./ui/main.js";
+import { entryCard, quickAdd } from "./ui/main.js";
 import { AnalysisView } from "./ui/analysis.js";
-import { DayReview, entryLabel, dayTypeSources, dayBounds } from "./ui/day.js";
+import { DayReview, entryLabel } from "./ui/day.js";
 import { Overview, Inbox, ActiveCard } from "./ui/today.js";
 import { EntryForm, deleteBasal } from "./ui/entry.js";
 import { glucosePoints } from "./ui/charts.js";
 import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
-import { names, sportNames, api, post, appUpdateWaiting, toast, num, timeOnly, toInstant, trendSymbol } from "./ui/lib.js";
+import { sportNames, api, post, appUpdateWaiting, toast, num, timeOnly, toInstant, trendSymbol } from "./ui/lib.js";
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 const state = { day: new Date().toLocaleDateString("sv-SE"), view: "diary", analysisTab: "werte", dayChosenAt: 0, settings: null, dayData: null, pendingMealId: null, pendingSportId: null, entryTimeTouched: false };
 const views = new Set(["diary", "analysis", "settings"]);
-
-// Where a carb entry was eaten; the place chip's name.
-// What a carb entry was; the dish's name from the catalogue.
 
 const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
 // Nothing typed and no dialog open: a reload loses nothing (the URL keeps view and tab).
@@ -116,23 +113,12 @@ function locationState() {
   };
 }
 
-function syncTabLinks(url = new URL(window.location.href)) {
-  $$(".tab").forEach(link => {
-    const linkURL = new URL(url);
-    linkURL.searchParams.set("view", link.dataset.view);
-    linkURL.searchParams.delete("tab");
-    linkURL.searchParams.delete("date");
-    link.href = linkURL.href;
-  });
-}
-
 function updateLocation(replace = false) {
   const url = new URL(window.location.href);
   url.searchParams.set("view", state.view);
   url.searchParams.delete("date");
   if (state.view === "analysis" && state.analysisTab !== "werte") url.searchParams.set("tab", state.analysisTab);
   else url.searchParams.delete("tab");
-  syncTabLinks(url);
   window.history[replace ? "replaceState" : "pushState"]({ view: state.view }, "", url);
 }
 
@@ -152,12 +138,6 @@ function view(name, options = {}) {
   if (!views.has(name)) return;
   const changed = state.view !== name;
   state.view = name;
-  $$(".tab").forEach(link => {
-    const active = link.dataset.view === name;
-    link.classList.toggle("active", active);
-    if (active) link.setAttribute("aria-current", "page");
-    else link.removeAttribute("aria-current");
-  });
   $$(".view").forEach(section => section.hidden = section.id !== name + "-view");
   if (changed && options.updateHistory !== false) updateLocation();
   if (name === "analysis") refreshAnalysis();
@@ -309,17 +289,11 @@ function applyDiaryMode() {
     state.diaryMode = state.day === todayDay() ? "now" : "review";
   }
   $("#diary-view").dataset.mode = state.diaryMode;
-  $$("[data-diary-mode]").forEach(button =>
-    button.setAttribute("aria-pressed", String(button.dataset.diaryMode === state.diaryMode)));
   updateNav();
 }
 
 function renderVisibleCharts() {
   if (!state.dayData) return;
-  renderDayOverview();
-}
-
-function renderActiveCard() {
   renderDayOverview();
 }
 
@@ -471,7 +445,7 @@ const refreshTodayPreview = () => entry.refresh?.();
 
 function closeEditDialog() {
   state.editing = null;
-  window.entryCard?.close();
+  entryCard.close();
 }
 
 function resetEntryForm() {
@@ -484,7 +458,6 @@ function resetEntryForm() {
 function editEntry(id) {
   const item = state.dayData?.timeline.find(row => row.id === id);
   if (!item || item.kind === "other" || item.kind === "finger") return;
-  if (!window.entryCard) { toast("Seite neu laden, die Karte ist noch nicht geladen", true); return; }
   state.editing = item;
   const meal = item.kind === "meal" ? state.dayData.meals.find(row => row.source_id === item.id) : null;
   const factor = meal?.calculation?.factor_units_per_ke;
@@ -494,13 +467,13 @@ function editEntry(id) {
   // The session's own default (from the day) wins for its current kind.
   if (item.kind === "exercise" && item.sport_kind) sportDefaults[item.sport_kind] = {
     effect: item.sport_effect_default_mgdl, minutes: item.sport_minutes_default };
-  window.entryCard.open({
+  entryCard.open({
     item: { ...item, time: timeOnly(item.at), title: entryLabel(item, state.dayData) },
     dateLabel: new Date(state.day + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long" }) +
       " · " + timeOnly(item.at),
     factor: factor == null ? null : Number(factor),
     places: state.dayData.place_options || [], dishes: state.dayData.dish_options || [],
-    sportDefaults, agentInfo: agent.info, api, toast,
+    sportDefaults, agentInfo: agent.info,
     instant: time => { try { return toInstant(state.day, time); } catch (_) { return null; } },
     onSave: values => saveEditedEntry(item, values),
     onDelete: () => deleteEditedEntry(item),
@@ -551,15 +524,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderEntry();
   view(state.view, { updateHistory: false });
   updateLocation(true);
-  $$(".tab").forEach(link => link.addEventListener("click", event => {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    view(link.dataset.view);
-  }));
   window.addEventListener("popstate", () => {
     const nextLocation = locationState();
     analysisTab(nextLocation.analysisTab, { updateHistory: false });
-    syncTabLinks();
     view(nextLocation.view, { updateHistory: false });
     if (nextLocation.view === "diary") loadDay();
   });
@@ -567,12 +534,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#next-day").addEventListener("click", () => { const d = new Date(state.day + "T12:00"); d.setDate(d.getDate() + 1); changeDay(d.toLocaleDateString("sv-SE")); });
   $("#selected-day").addEventListener("change", event => changeDay(event.target.value));
   $("#refresh-day").addEventListener("click", () => loadDay({ refresh: true }));
-  $$("[data-diary-mode]").forEach(button => button.addEventListener("click", () => {
-    state.modeDay = state.day;
-    state.diaryMode = button.dataset.diaryMode;
-    applyDiaryMode();
-    renderVisibleCharts();
-  }));
   $("#inbox-badge").addEventListener("click", () => {
     view("diary");
     $("#inbox")?.scrollIntoView({ block: "start" });
@@ -685,8 +646,7 @@ function quickAddHints() {
 }
 
 function openQuickAdd() {
-  if (!window.quickAdd) { toast("Seite neu laden, die Auswahl ist noch nicht geladen", true); return; }
-  window.quickAdd.open({ hints: quickAddHints(), onChoose: chooseEntry });
+  quickAdd.open({ hints: quickAddHints(), onChoose: chooseEntry });
 }
 
 function chooseEntry(kind) {

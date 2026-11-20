@@ -5,8 +5,8 @@
 // from the day payload (/api/day); actions post and then reload the day.
 import { html, useState, useEffect, useRef, useMemo } from "./html.js";
 import { MINUTE, api, post, toast, num, factorNum, signedChange, sportChange, timeOnly, trendSymbol, names, sportNames,
-  CERTAINTY_LABELS, Icon, FactorIcons, DishBadge, PlaceBadge, CertaintyBadge, ExcludeButton } from "./lib.js";
-import { DayChart, MealChart, mealWindow, chartEvents, chartView, chartLayout, windowLimits, glucosePoints, windowIncludes,
+  Icon, FactorIcons, DishBadge, PlaceBadge, CertaintyBadge, ExcludeButton } from "./lib.js";
+import { DayChart, MealChart, mealWindow, chartEvents, chartView, chartLayout, windowLimits,
   GlucoseChart, useWidth } from "./charts.js";
 
 const entryLabels = { finger: "BZ blutig", basal: "Basal", meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur / Bolus", exercise: "Sport", other: "Weiterer Eintrag" };
@@ -332,7 +332,6 @@ function WindowEditor({ meal, readings, data, day, onClose, onSaved }) {
   const chart = useRef(null);
   const base = useMemo(() => mealWindow(meal), [meal]);
   const limits = windowLimits(data);
-  const points = useMemo(() => glucosePoints(data.entries), [data]);
   const events = useMemo(() => chartEvents(data.treatments), [data]);
   const [ed, setEd] = useState({ start: base.start, end: base.end, active: "end", snapped: {} });
   const [view, setView] = useState(() => chartView(base, limits));
