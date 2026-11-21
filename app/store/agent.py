@@ -70,6 +70,16 @@ def link_session(session_id: str, event_id: str) -> None:
         db.execute("UPDATE agent_sessions SET event_id=?,updated_at=? WHERE id=?", (event_id, _now(), session_id))
 
 
+def set_portion(session_id: str, portion: float) -> None:
+    """The portion Philipp took the estimate over with (1 = as estimated), kept inside its estimate."""
+    with connect() as db:
+        row = db.execute("SELECT estimate FROM agent_sessions WHERE id=?", (session_id,)).fetchone()
+        if row is None or not row["estimate"]:
+            return
+        estimate = {**json.loads(row["estimate"]), "portion": portion}
+        db.execute("UPDATE agent_sessions SET estimate=? WHERE id=?", (json.dumps(estimate, ensure_ascii=False), session_id))
+
+
 def log_usage(kind: str, provider: str, model: str, usage: dict) -> None:
     with connect() as db:
         db.execute("INSERT INTO agent_usage(at,kind,provider,model,input_tokens,output_tokens,cost_usd) "

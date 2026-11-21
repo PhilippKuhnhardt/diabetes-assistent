@@ -483,7 +483,7 @@ def save(payload: dict) -> dict:
         "alcohol": carbs > 0 and payload.get("alcohol") is True,
         "fast": carbs > 0 and payload.get("fast") is True,
         "event_id": payload.get("event_id"),
-        **({key: payload[key] for key in ("dish_id", "dish_name", "description", "agent_session") if key in payload}
+        **({key: payload[key] for key in ("dish_id", "dish_name", "description", "agent_session", "portion") if key in payload}
            if carbs > 0 else {}),
         **({"split_units": split_units, "split_delay_minutes": split["delay_minutes"]}
            if split_units and kind == "meal" else {}),
