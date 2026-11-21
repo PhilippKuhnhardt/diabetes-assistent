@@ -1,5 +1,5 @@
 // The meal agent as a chat (concept 2026-11-18): photos and words in, the agent's answers as bubbles,
-// and at the end Philipp picks the carbs himself on a slider over the agent's range, sets how sure
+// and at the end Philipp scales the agent's portion on a slider (carbs, fat and protein alike), sets how sure
 // they are, fat-rich and fast, and takes that value over. Nothing is saved here: "übernehmen" only
 // fills the form the chat was opened from, and the dose help calculates as always.
 import { html, useState, useEffect, useRef } from "./html.js";
@@ -20,28 +20,38 @@ const Icon = ({ name }) => {
     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d=${paths[name]} /></svg>`;
 };
 
-// The carbs to take over: a slider from the agent's low to its high value that snaps to low,
-// estimate and high, so the usual picks need no fiddling.
-export function CarbRange({ low, estimate, high, value, previous, onChange, children }) {
-  const span = Math.max(1, high - low);
-  const at = grams => ((grams - low) / span * 100).toFixed(1) + "%";
-  const snap = grams => {
-    const near = Math.max(1, Math.round(span / 25));
-    return [estimate, low, high].find(stop => Math.abs(grams - stop) <= near) ?? grams;
-  };
-  const note = [value === estimate ? "Schätzung" : "Schätzung " + estimate + " g",
-    previous != null && previous !== "" && Number(previous) !== value ? "vorher " + num(previous, 1) + " g" : ""].filter(Boolean);
-  const ticks = [[low, "start"], [estimate, "mid"], [high, "end"]].filter(([grams], index, all) =>
-    all.findIndex(([other]) => other === grams) === index);
+// The portion to take over (user request 2026-11-21): the agent's carbs, fat and protein with their kcal, and
+// a slider that scales all of them alike ("it was 0.8× the portion"), since the agent gets the mix right more
+// often than the amount. It snaps to 1×; the agent's carb range shows as a hint.
+export const portionValues = (estimate, portion) => {
+  const scale = value => value == null ? null : Math.round(Number(value) * portion);
+  const carbs = scale(estimate.carbs_g), fat = scale(estimate.fat_g), protein = scale(estimate.protein_g);
+  return { carbs, fat, protein,
+    kcal: fat == null || protein == null ? null : Math.round((4 * carbs + 9 * fat + 4 * protein) / 10) * 10 };
+};
+
+export function PortionPick({ estimate, portion, previous, onChange, children }) {
+  const values = portionValues(estimate, portion);
+  const ratio = grams => estimate.carbs_g > 0 && grams != null ? grams / estimate.carbs_g : 1;
+  const low = Math.min(0.5, Math.floor(ratio(estimate.carbs_low_g) * 20) / 20);
+  const high = Math.max(1.5, Math.ceil(ratio(estimate.carbs_high_g) * 20) / 20);
+  const at = value => ((value - low) / (high - low) * 100).toFixed(1) + "%";
+  const snap = value => Math.abs(value - 1) <= 0.03 ? 1 : Math.round(value * 20) / 20;
+  const factor = value => num(value, 2) + "×";
+  const note = [portion === 1 ? "Schätzung" : factor(portion) + " der Schätzung",
+    estimate.carbs_low_g != null ? "KH " + estimate.carbs_low_g + "–" + estimate.carbs_high_g + " g" : "",
+    previous != null && previous !== "" && Number(previous) !== values.carbs ? "vorher " + num(previous, 1) + " g" : ""].filter(Boolean);
   return html`<div class="carb-pick">
-    <div class="carb-pick-value"><strong>${value} g</strong><span class="carb-note">${note.join(" · ")}</span>${children}</div>
-    ${high > low && html`<div class="carb-range">
-      <input type="range" min=${low} max=${high} step="1" value=${value} aria-label="KH wählen"
-        style=${{ "--fill": at(value) }} onInput=${event => onChange(snap(Number(event.currentTarget.value)))} />
-      ${ticks.map(([grams, align]) => html`<button type="button" class=${"carb-tick " + align}
-        style=${align === "mid" ? { left: at(grams) } : null} onClick=${() => onChange(grams)}>
-        ${align === "mid" ? html`<b>${grams}</b>` : grams}</button>`)}
-    </div>`}
+    <div class="carb-pick-value"><strong>${values.carbs} g</strong><span class="carb-note">${note.join(" · ")}</span>${children}</div>
+    <p class="portion-values">${[values.fat != null ? values.fat + " g Fett" : "", values.protein != null ? values.protein + " g Eiweiß" : "",
+      values.kcal != null ? values.kcal + " kcal" : ""].filter(Boolean).join(" · ")}</p>
+    <div class="carb-range">
+      <input type="range" min=${low} max=${high} step="0.05" value=${portion} aria-label="Portion"
+        style=${{ "--fill": at(portion) }} onInput=${event => onChange(snap(Number(event.currentTarget.value)))} />
+      ${[[low, "start"], [1, "mid"], [high, "end"]].map(([value, align]) => html`<button type="button" class=${"carb-tick " + align}
+        style=${align === "mid" ? { left: at(value) } : null} onClick=${() => onChange(value)}>
+        ${align === "mid" ? html`<b>${factor(value)}</b>` : factor(value)}</button>`)}
+    </div>
   </div>`;
 }
 
@@ -106,7 +116,7 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
   const [loading, setLoading] = useState(Boolean(sessionId || eventId));
   const [recording, setRecording] = useState(null);
   const [voiceStatus, setVoiceStatus] = useState("");
-  const [pick, setPick] = useState(null);
+  const [portion, setPortion] = useState(null);
   const [level, setLevel] = useState(1);
   const [fat, setFat] = useState(false);
   const [fast, setFast] = useState(false);
@@ -126,7 +136,7 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
   const takeEstimate = (result, rows) => {
     setEstimate(result);
     setConversation(rows);
-    setPick(result.carbs_g);
+    setPortion(result.portion ?? 1);
     setLevel(Math.max(0, CERTAINTY_LEVELS.indexOf(result.certainty)));
     setFat(Boolean(result.fat_protein));
     setFast(Boolean(result.fast));
@@ -223,8 +233,10 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
     } catch (_) { toast("Mikrofon nicht freigegeben", true); }
   }
 
+  const picked = estimate && portion != null ? portionValues(estimate, portion) : null;
   function apply() {
-    onApply({ session, estimate, carbs: pick, certainty: CERTAINTY_LEVELS[level], fat_protein: fat, fast });
+    onApply({ session, estimate, carbs: picked.carbs, portion, fat_g: picked.fat, protein_g: picked.protein,
+      certainty: CERTAINTY_LEVELS[level], fat_protein: fat, fast });
   }
 
   const voice = info?.transcribe_available && canRecord();
@@ -244,9 +256,8 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
         : html`<${Bubbles} conversation=${conversation} estimate=${estimate} busy=${busy} session=${session} />`}
     </div>
     <div class="chat-foot">
-      ${estimate && pick != null && html`<div class="chat-pick">
-        <${CarbRange} low=${estimate.carbs_low_g} estimate=${estimate.carbs_g} high=${estimate.carbs_high_g}
-          value=${pick} previous=${previousCarbs} onChange=${setPick}>
+      ${picked && html`<div class="chat-pick">
+        <${PortionPick} estimate=${estimate} portion=${portion} previous=${previousCarbs} onChange=${setPortion}>
           <span class="entry-chips">
             <${FactorChips} fat=${fat} fast=${fast} onFat=${setFat} onFast=${setFast} />
           </span>
@@ -272,7 +283,7 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
       </div>
       ${voiceStatus && html`<p class="hint chat-voice" role="status">${voiceStatus}</p>`}
       ${estimate
-        ? html`<button type="button" class="primary chat-apply" disabled=${busy} onClick=${apply}>${pick} g übernehmen</button>`
+        ? html`<button type="button" class="primary chat-apply" disabled=${busy} onClick=${apply}>${picked?.carbs} g übernehmen</button>`
         : html`<button type="button" class="primary chat-apply" disabled=${busy || loading} onClick=${send}>${busy ? "Schätzt …" : "Einschätzen"}</button>`}
     </div>
   </div>`;

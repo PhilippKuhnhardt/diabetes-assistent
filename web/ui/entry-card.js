@@ -83,11 +83,11 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
       initialText: v.description, previousCarbs: carbs || "",
       context: () => ({ at: instant(v.at), placeId: v.place || null }),
       onApply: result => {
-        set({ carbs: String(result.carbs), level: CERTAINTY_LEVELS.indexOf(result.certainty), fat: result.fat_protein,
+        set({ carbs: String(result.carbs), portion: result.portion ?? 1, level: CERTAINTY_LEVELS.indexOf(result.certainty), fat: result.fat_protein,
               fast: result.fast, dish: result.estimate.dish?.name || "", description: result.estimate.description,
               session: result.session });
         // A new estimate brings new fat and protein: show the calculated surcharge it gives.
-        api("/api/agent/session?session_id=" + encodeURIComponent(result.session)).then(data => setFpe(data.session?.fpe || null)).catch(() => {});
+        api("/api/agent/session?session_id=" + encodeURIComponent(result.session) + "&portion=" + (result.portion ?? 1)).then(data => setFpe(data.session?.fpe || null)).catch(() => {});
       },
     });
   }
@@ -113,7 +113,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
           // Any carb entry whose estimate gives a calculated surcharge can switch (meal or snack alike,
           // user request 2026-11-21); otherwise the saved one stays.
           surcharge_mode: fpe ? v.surchargeMode : null,
-          agent_session: v.session,
+          agent_session: v.session, ...(v.portion != null ? { portion: v.portion } : {}),
         }),
       });
     } catch (error) { toast(error.message, true); }
