@@ -844,6 +844,7 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .carb-pick-value { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
 .carb-pick-value strong { font-size: 30px; letter-spacing: -.04em; white-space: nowrap; }
 .carb-note { color: var(--muted); font-size: 12px; }
+.portion-values { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
 .carb-range { position: relative; padding: 4px 0 24px; }
 .carb-range input[type=range] { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 30px; min-height: 0; margin: 0; padding: 0; border: 0; background: none; }
 .carb-range input[type=range]::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(to right, var(--green) 0 var(--fill, 50%), #d4e6da var(--fill, 50%)); }

@@ -19,9 +19,10 @@ def ensure_not_duplicate(day: str, event_id: str) -> bool:
     return any(item.get("identifier") == event_id or f"[DAE:{event_id}]" in str(item.get("notes") or "") for item in existing)
 
 
-def _calculated_surcharge(event_id: str, settings: dict, session_id: str | None = None) -> dict:
+def _calculated_surcharge(event_id: str, settings: dict, session_id: str | None = None, portion=None) -> dict:
     """The calculated surcharge from the agent's estimate: the session the save links (an estimate improved
-    on the card), else the one already linked to the entry."""
+    on the card), else the one already linked to the entry, for the portion taken over."""
+    from app.services import agent
     session = None
     if session_id:
         try:
@@ -29,7 +30,7 @@ def _calculated_surcharge(event_id: str, settings: dict, session_id: str | None 
         except ValueError:
             session = None
     session = session or agent_store.sessions_for([event_id]).get(event_id)
-    found = fpe.estimate((session or {}).get("estimate"), settings)
+    found = fpe.estimate(agent.scaled((session or {}).get("estimate"), agent.portion_value(portion)), settings)
     if found is None:
         raise ValueError("Ohne Fett/Eiweiß-Schätzung des Agenten gibt es keinen berechneten Zuschlag")
     return fpe.plan(found)
@@ -123,7 +124,8 @@ def save_diary_treatment(payload: dict) -> dict:
         if eats and "fpe_surcharge" not in payload and payload.get("surcharge_mode") in fpe.MODES:
             # The card switches a saved entry (meal or snack alike, user request 2026-11-21) between the static and the calculated surcharge; the
             # calculated one comes from the agent's estimate linked to the entry (app/fpe.py).
-            payload = {**payload, "fpe_surcharge": _calculated_surcharge(event_id, settings, payload.get("agent_session"))
+            payload = {**payload, "fpe_surcharge": _calculated_surcharge(event_id, settings, payload.get("agent_session"),
+                                                                payload.get("portion"))
                        if payload["surcharge_mode"] == "fpe" else None}
         if eats and payload.get("fpe_surcharge"):
             value = payload["fpe_surcharge"]
@@ -189,7 +191,7 @@ def save_diary_treatment(payload: dict) -> dict:
         dish_store.delete_record(event_id)
     if payload.get("agent_session") and carbs > 0:
         from app.services import agent
-        agent.link(payload["agent_session"], event_id)
+        agent.link(payload["agent_session"], event_id, payload.get("portion"))
     return {"id": record_id or None, "event_id": event_id, "day": day}
 
 
@@ -232,7 +234,8 @@ def edit_entry(payload: dict) -> dict:
         **({**food, "dish_id": None, "dish_name": str(food["dish_name"] or "").strip()} if carbs > 0 else {}),
         # Only an entry whose agent estimate gives a calculated surcharge offers the choice; without one the saved stays.
         **({"surcharge_mode": payload["surcharge_mode"]} if carbs > 0 and payload.get("surcharge_mode") else {}),
-        **({"agent_session": payload["agent_session"]} if payload.get("agent_session") else {}),
+        **({"agent_session": payload["agent_session"], "portion": payload.get("portion")}
+           if payload.get("agent_session") else {}),
     })
     current = day_view.day_payload(saved["day"])
     row = next((item for item in current["timeline"] if item["id"] == record_id), None)

@@ -243,14 +243,39 @@ def transcribe(payload: dict) -> dict:
     return {"text": answer["text"][:rules.MAX_TEXT]}
 
 
-def link(session_id, event_id: str) -> None:
-    """A saved entry keeps the estimate it came from."""
+PORTION_MIN, PORTION_MAX = 0.1, 3.0
+
+
+def portion_value(raw) -> float | None:
+    """A portion factor from a request (0.8 = 0.8× the estimated portion), None when missing or out of range."""
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return None
+    return round(value, 2) if PORTION_MIN <= value <= PORTION_MAX else None
+
+
+def scaled(estimate: dict | None, portion: float | None = None) -> dict | None:
+    """The estimate's fat and protein for the portion taken over (user request 2026-11-21: Philipp scales the
+    whole portion on a slider, as the agent gets the mix right more often than the amount). `portion` overrides
+    the stored one; the carbs come from the entry itself."""
+    if not estimate:
+        return estimate
+    factor = portion if portion is not None else portion_value(estimate.get("portion")) or 1.0
+    scale = lambda value: None if value in (None, "") else round(float(value) * factor, 1)
+    return {**estimate, "portion": factor, "fat_g": scale(estimate.get("fat_g")), "protein_g": scale(estimate.get("protein_g"))}
+
+
+def link(session_id, event_id: str, portion=None) -> None:
+    """A saved entry keeps the estimate it came from, with the portion it was taken over with."""
     try:
         session_id = str(uuid.UUID(str(session_id)))
     except ValueError:
         return
     if store.session(session_id):
         store.link_session(session_id, event_id)
+        if (value := portion_value(portion)) is not None:
+            store.set_portion(session_id, value)
 
 
 def photo(session_id: str, index: str) -> bytes | None:
@@ -267,6 +292,8 @@ def for_entry(params: dict) -> dict:
     continue it (user request 2026-11-17: a second plate is told to the agent instead of starting over)."""
     event_id = str((params.get("event_id") or [""])[0])
     session_id = str((params.get("session_id") or [""])[0])
+    # The chat's slider shows the calculated surcharge for the portion picked before the entry is saved.
+    portion = portion_value((params.get("portion") or [None])[0])
     # An estimate taken over into a form that is not saved yet is continued by its own id (Philipp
     # 2026-11-19: correcting works the same before and after saving).
     if session_id:
@@ -286,7 +313,7 @@ def for_entry(params: dict) -> dict:
         "conversation": _conversation(session["messages"], session["photos"]),
         "can_continue": len(session["messages"]) < rules.MAX_TURNS * 2,
         # The calculated fat/protein surcharge the meal card offers next to the static one (app/fpe.py).
-        "fpe": _surcharge_view(session["estimate"]),
+        "fpe": _surcharge_view(scaled(session["estimate"], portion)),
     }}
 
 
@@ -309,6 +336,8 @@ def records(event_ids: list[str]) -> dict[str, dict]:
             "agent_carbs_high_g": estimate.get("carbs_high_g"),
             "agent_history_adjustment_g": estimate.get("history_adjustment_g"),
             "agent_fat_g": estimate.get("fat_g"), "agent_protein_g": estimate.get("protein_g"),
+            # The portion Philipp took the estimate over with (1 = as estimated); carbs_g of the entry already has it.
+            "agent_portion": portion_value(estimate.get("portion")) or 1.0,
             "agent_items": estimate.get("items"), "agent_model": session["provider"] + ":" + session["model"],
             "photos": [f"/api/v1/photo?session={session['id']}&n={index}" for index in range(session["photos"])],
         }

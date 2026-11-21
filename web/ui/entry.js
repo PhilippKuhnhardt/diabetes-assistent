@@ -327,7 +327,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
         ? sliderUnits(help.slider, s.slider) : null,
       // What the agent's estimate named; the carbs themselves are whatever the form holds now.
       ...(mode === "meal" && carbs > 0 && s.agent ? {
-        dish_name: s.agent.dish_name, description: s.agent.description, agent_session: s.agent.session_id } : {}),
+        dish_name: s.agent.dish_name, description: s.agent.description, agent_session: s.agent.session_id, portion: s.agent.portion ?? 1 } : {}),
     };
     pending.current.event = payload.event_id;
     pending.current.basal.id = payload.basal_event_id;
@@ -395,12 +395,13 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
   }
 
   // The agent only fills the form; the dose help calculates as always.
-  function applyAgent({ session, estimate, carbs, certainty, fat_protein, fast }) {
+  function applyAgent({ session, estimate, carbs, portion, fat_g, protein_g, certainty, fat_protein, fast }) {
     const index = CERTAINTY_LEVELS.indexOf(certainty);
     set({ carbs: String(carbs), certainty: index < 0 ? 1 : index, certaintyUnset: certainty !== undefined && index < 0,
       fat: Boolean(fat_protein), fast: Boolean(fast),
       agent: { session_id: session, dish_name: estimate.dish?.name || "", description: estimate.description,
-        fat_g: estimate.fat_g ?? null, protein_g: estimate.protein_g ?? null,
+        // Fat and protein scaled by the portion picked in the chat (user request 2026-11-21).
+        fat_g: fat_g ?? null, protein_g: protein_g ?? null, portion: portion ?? 1,
         range: estimate.carbs_low_g + "–" + estimate.carbs_high_g + " g" } });
     requestPosition();
     schedule(0);

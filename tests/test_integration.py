@@ -2089,6 +2089,34 @@ class IntegrationTests(unittest.TestCase):
         self.request("/api/treatment", method="POST", body={**edit, "surcharge_mode": "static"})
         self.assertNotIn("[DAZ:", FakeNightscout.treatments[-1]["notes"])
 
+    def test_portion_scales_fat_and_protein_of_the_calculated_surcharge(self):
+        # User request 2026-11-21: the chat scales the whole portion (0.5× here), fat and protein with the carbs.
+        from app.store import agent as agent_store
+        from app.services import agent
+        self.request("/api/settings")
+        self.request("/api/settings", method="POST", body={"auto_method": "surcharge"})
+        saved = self.request("/api/treatment", method="POST", body={
+            "kind": "snack", "at": MEAL_AT, "carbs": "45", "insulin": "3"})
+        event_id = saved["event_id"]
+        session_id = str(uuid.uuid4())
+        agent_store.save_session(session_id, datetime(2026, 9, 23, 10, tzinfo=timezone.utc), "test", "model", [],
+                                 {"carbs_g": 90, "fat_g": 37, "protein_g": 48}, 0, {})
+        # Before saving, the chat asks for the surcharge of the picked portion.
+        view = self.request(f"/api/agent/session?session_id={session_id}&portion=0.5")["session"]["fpe"]
+        self.assertEqual((view["fpe"], view["mgdl"], view["minutes"]), ("2.6", "52", 258))
+        row = next(item for item in self.request("/api/day?date=2026-09-23")["timeline"] if item.get("event_id") == event_id)
+        edit = {"id": row["id"], "original_day": "2026-09-23", "kind": "snack", "at": MEAL_AT, "carbs": 45, "insulin": 3,
+                "event_id": event_id, "agent_session": session_id, "portion": 0.5, "surcharge_mode": "fpe"}
+        self.request("/api/treatment", method="POST", body=edit)
+        # A snack carries the calculated surcharge like a meal, for half the portion, and keeps the portion.
+        self.assertIn(episodes.surcharge_tag("52", 258), FakeNightscout.treatments[-1]["notes"])
+        stored = agent_store.session(session_id)["estimate"]
+        self.assertEqual(stored["portion"], 0.5)
+        self.assertEqual(agent.records([event_id])[event_id]["agent_portion"], 0.5)
+        later = self.request("/api/agent/session?event_id=" + event_id)["session"]
+        self.assertEqual((later["estimate"]["portion"], later["fpe"]["mgdl"]), (0.5, "52"))
+        self.assertIsNone(agent.portion_value(5))
+
     def test_meal_card_edit_derives_the_kind_and_checks_on_the_server(self):
         # The card sends what it shows (diary.edit_entry); kind and checks are the server's.
         def row(day, match):
