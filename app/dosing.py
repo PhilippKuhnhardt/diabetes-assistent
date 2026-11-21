@@ -36,7 +36,8 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     units_per_ke replaces Nightscout's current I:C, e.g. with the breakfast factor of the day type.
     auto_units_per_ke is the cautious percentile of recent calculated meal factors (Automatik).
     auto_surcharge_mgdl, when given, adds the fixed main-meal surcharge to the auto dose:
-    surcharge_mgdl × surcharge_share(grams) / KF IE (surcharge method; never for snacks).
+    surcharge_mgdl × surcharge_share(grams) / KF IE (surcharge method; surcharge_share gives the share these
+    carbs add to their meal, app/services/dose_help.py).
     For each factor the result holds four variants: correction to the normal target, correction to
     the cautious target, correction to the lower target (dose_low_target_mgdl, from the same forecast as
     normal) and carbs only (plus sport, no BG correction; needs no fresh CGM value). low_blocked says why

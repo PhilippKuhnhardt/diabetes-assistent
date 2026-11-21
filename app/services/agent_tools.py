@@ -32,7 +32,7 @@ DOSE_KEYS = (
     "message", "reason", "options", "carbs_g", "glucose_mgdl", "glucose_at", "glucose_fresh", "glucose_source",
     "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl", "low_target_mgdl", "low_note", "forecast_mgdl", "cautious_forecast_mgdl",
     "recent_rapid_doses", "auto_meal", "auto_method", "auto_factor_count",
-    "auto_factor_min_meals", "auto_surcharge_units", "surcharge_choice", "solo_snack", "day_type", "day_type_source", "split_plan", "slider")
+    "auto_factor_min_meals", "auto_surcharge_units", "surcharge_choice", "day_type", "day_type_source", "split_plan", "slider")
 
 
 class ToolError(ValueError):

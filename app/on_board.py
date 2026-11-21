@@ -20,10 +20,11 @@ A fat/protein meal's surcharge acts from the meal start (to 6 h, breakfast 5 h):
 in the first 2 h than a surcharge starting at 2 h allows and 30-65 less after that, so the second split part and
 corrections after such meals came out about 1.5-2 IE too large (Philipp's approval 2026-11-14, 16 fat meals,
 analysen/zweitpruefung-2026-11-14.md). The meal dose itself does not change.
-The surcharge comes from the carbs of all entries of a meal (main meal and its snacks, e.g. starter and dessert)
-and is shared out by their carbs, each part acting from its entry (Philipp's approval 2026-11-20, variant C,
-analysen/fehlprognosen-2026-11-20.md); the absorption time of the carbs stays per entry. A diary snack of no meal from 20 g carries its own (episodes.solo_snack,
-user report 2026-11-08), since no meal's surcharge covers it. A place switched on for the place factor scales the carbs and surcharge of its entries.
+A meal for the surcharge is simply the carb entries at most MEAL_GAP apart, saved as meal or snack alike
+(user request 2026-11-21, replacing the snack-of-a-meal and snack-of-no-meal rules): its surcharge comes from
+the carbs of all its entries (capped) and is shared out by their carbs, each part acting from its entry
+(Philipp's approval 2026-11-20, variant C, analysen/fehlprognosen-2026-11-20.md); the absorption time of
+the carbs stays per entry. A place switched on for the place factor scales the carbs and surcharge of its entries.
 
 Sport: each session lowers glucose by its effect (the setting of its kind, or the value Philipp set on the
 session in "Tag durchgehen"; negative raises, e.g. racing), linearly from the session's end over its kind's
@@ -38,7 +39,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from app import calculation, episodes
+from app import calculation
 from app.calculation import INSULIN_DELAY, INSULIN_DURATION, INSULIN_PEAK, insulin_remaining  # noqa: F401
 from app.common import local_zone
 
@@ -48,6 +49,9 @@ SURCHARGE_FROM = Decimal(120)
 SURCHARGE_TO, SURCHARGE_TO_FAT = Decimal(300), Decimal(360)
 BREAKFAST_SURCHARGE_FROM = Decimal(60)
 BREAKFAST_SURCHARGE_TO, BREAKFAST_SURCHARGE_TO_FAT = Decimal(240), Decimal(300)
+# Carb entries at most this far apart form one meal for the surcharge (user request 2026-11-21: a bite
+# before the meal and two meals in a row must work; starter, main and dessert come within it).
+MEAL_GAP = timedelta(minutes=60)
 SPORT_MINUTES = Decimal(300)  # default; settings sport_durations_minutes per kind
 # Sessions entered for later count once they start within this time.
 SPORT_AHEAD = timedelta(hours=6)
@@ -141,55 +145,62 @@ def is_main_meal(item: dict) -> bool:
             and calculation.dec(item.get("carbs") or 0) > 0)
 
 
-def is_meal_snack(item: dict) -> bool:
-    """A snack entry (dessert, second helping) that counts to a main meal; bare carbs without insulin
-    (e.g. against a low) do not."""
-    return (item.get("role") == "snack" or item.get("eventType") == "Snack Bolus"
+def counts_to_meal(item: dict) -> bool:
+    """A carb entry that forms meals with its neighbours: main meals and snacks (starter, dessert, second
+    plate, a bite before the meal); bare carbs without insulin (e.g. against a low) do not."""
+    if calculation.dec(item.get("carbs") or 0) <= 0:
+        return False
+    return (is_main_meal(item) or item.get("role") == "snack" or item.get("eventType") == "Snack Bolus"
             or "[DA2:snack]" in str(item.get("notes") or ""))
 
 
-def _meal_of(snack: dict, groups: list[dict], treatments: list[dict], settings: dict) -> dict | None:
-    """The group of the main meal a snack entry belongs to: same episode, else the meal it follows."""
-    episode = snack.get("episode_id")
-    if episode:
-        match = next((group for group in groups if group["item"].get("episode_id") == episode), None)
-        if match:
-            return match
-    root = episodes.preceding_meal(snack["at"], [other for other in treatments if other is not snack], settings)
-    if root is None:
-        return None
-    return next((group for group in groups if group["item"]["at"] == root["at"]
-                 and group["item"].get("id") == root["id"]), None)
+def meal_groups(items: list[dict]) -> list[list[dict]]:
+    """Entries that count to a meal, grouped by time: an entry within MEAL_GAP of the previous one joins
+    its meal, a later one starts the next meal. Whether an entry was saved as meal or snack does not matter."""
+    groups: list[list[dict]] = []
+    for item in sorted((row for row in items if counts_to_meal(row)), key=lambda row: row["at"]):
+        if groups and item["at"] - groups[-1][-1]["at"] <= MEAL_GAP:
+            groups[-1].append(item)
+        else:
+            groups.append([item])
+    return groups
 
 
-def meal_surcharges(groups: list[dict], snacks: list[tuple], treatments: list[dict], now: datetime, settings: dict,
-                    surcharge_mgdl: Decimal, surcharge_share, fat_surcharge_mgdl: Decimal, keep_all: bool) -> list[dict]:
-    """The surcharge of each meal from the carbs of all its entries, shared out by their carbs, each part from
-    its entry's time (Philipp's principle 2026-11-20: starter, main and dessert in one entry or in three act
-    the same; analysen/fehlprognosen-2026-11-20.md, Nachtrag 2, variant C). The share of the full surcharge
-    follows the meal's total carbs, so it is capped per meal. A meal dosed with the calculated fat/protein
-    surcharge carries its own amount and duration (app/fpe.py); a fat/protein mark on any entry marks the meal."""
-    for snack in snacks:
-        group = _meal_of(snack[0], groups, treatments, settings)
-        if group is not None:
-            group["parts"].append(snack)
+def meal_grams_before(treatments: list[dict], now: datetime) -> Decimal:
+    """Carbs of the meal a new entry at `now` joins (0 when it starts a new meal): the dose adds only
+    the surcharge share its carbs add to that meal's."""
+    groups = meal_groups([row for row in treatments if row["at"] <= now])
+    if not groups or now - groups[-1][-1]["at"] > MEAL_GAP:
+        return Decimal(0)
+    return sum((calculation.dec(row["carbs"]) for row in groups[-1]), Decimal(0))
+
+
+def meal_surcharges(treatments: list[dict], now: datetime, settings: dict, surcharge_mgdl: Decimal, surcharge_share,
+                    fat_surcharge_mgdl: Decimal, keep_all: bool, scale=None) -> list[dict]:
+    """The surcharge of each meal (meal_groups) from the carbs of all its entries, shared out by their carbs,
+    each part from its entry's time (Philipp's principle 2026-11-20: starter, main and dessert in one entry
+    or in three act the same; analysen/fehlprognosen-2026-11-20.md, Nachtrag 2, variant C). The share of
+    the full surcharge follows the meal's total carbs, so it is capped per meal. A meal dosed with the
+    calculated fat/protein surcharge carries its own amount and duration (app/fpe.py); a fat/protein mark
+    on any entry marks the meal."""
     rows = []
-    for group in groups:
-        main = group["item"]
-        own = main.get("surcharge") if is_main_meal(main) else None
+    for group in meal_groups([row for row in treatments if row["at"] <= now]):
+        own = next((row["surcharge"] for row in group if row.get("surcharge")), None)
         until = Decimal(int(own["minutes"])) if own else None
-        fat = any(part[3] for part in group["parts"])
+        fat = any(row.get("fat_protein") for row in group)
         full = (calculation.dec(own["mgdl"]) if own
                 else surcharge_mgdl + (fat_surcharge_mgdl if fat else Decimal(0)))
-        total_grams = sum(part[1] for part in group["parts"])
+        grams = [calculation.dec(row["carbs"]) for row in group]
+        total_grams = sum(grams, Decimal(0))
         total = full * surcharge_share(total_grams)
-        breakfast = is_breakfast(main["at"], settings)
-        for item, grams, place, _ in group["parts"]:
+        breakfast = is_breakfast(group[0]["at"], settings)
+        for item, part in zip(group, grams):
             age = Decimal(0) if keep_all else _minutes(now, item["at"])
+            place = (scale(item) if scale else None) or Decimal(1)
             if age < (until or SURCHARGE_TO_FAT):
                 rows.append({"at": item["at"], "fat": fat, "breakfast": breakfast, "until": until,
-                             "mgdl": total * grams / total_grams * place})
-    return sorted(rows, key=lambda row: row["at"])
+                             "mgdl": total * part / total_grams * place})
+    return rows
 
 
 def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, surcharge_mgdl: Decimal | None,
@@ -203,7 +214,6 @@ def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, 
     zone = settings["timezone"]
     isf = lambda at: calculation.isf_at(at, settings.get("isf_schedule", []), zone)
     seen, doses, carbs, surcharges, meals, sports = set(), [], [], [], [], []
-    groups, snacks = [], []
     for item in sorted(treatments, key=lambda row: row["at"]):
         key = item.get("id") or (item["at"], item.get("insulin"), item.get("carbs"))
         if key in seen:
@@ -235,14 +245,11 @@ def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, 
                               "mgdl_per_gram": factor * place * isf(item["at"]) / 10})
         if is_main_meal(item) and age < FRESH_MEAL_MINUTES:
             meals.append(item["at"])
-        if surcharge_mgdl is not None and grams > 0:
-            if is_main_meal(item) or episodes.solo_snack(item, treatments, settings):
-                groups.append({"item": item, "parts": [(item, grams, place, fat)]})
-            elif is_meal_snack(item):
-                snacks.append((item, grams, place, fat))
     if surcharge_mgdl is not None:
-        surcharges = meal_surcharges(groups, snacks, treatments, now, settings, surcharge_mgdl, surcharge_share,
-                                     fat_surcharge_mgdl, keep_all)
+        unique = list({row.get("id") or (row["at"], row.get("insulin"), row.get("carbs")): row
+                       for row in treatments}.values())
+        surcharges = meal_surcharges(unique, now, settings, surcharge_mgdl, surcharge_share, fat_surcharge_mgdl,
+                                     keep_all, scale)
     return {"doses": doses, "carbs": carbs, "surcharges": surcharges, "fresh_meals": meals, "sports": sports}
 
 

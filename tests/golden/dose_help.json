@@ -122,7 +122,6 @@
     "units": "7.0"
    }
   ],
-  "solo_snack": false,
   "split_plan": null,
   "surcharge_choice": null,
   "target_mgdl": "120",
@@ -196,7 +195,6 @@
   "place_factor": null,
   "reason": "Kein aktueller CGM-Wert innerhalb von 15 Minuten. Ein blutig gemessener Wert kann ihn ersetzen.",
   "recent_rapid_doses": [],
-  "solo_snack": false,
   "split_plan": null,
   "surcharge_choice": null,
   "target_mgdl": "120",
@@ -333,7 +331,6 @@
     "units": "7.0"
    }
   ],
-  "solo_snack": false,
   "split_plan": null,
   "surcharge_choice": null,
   "target_mgdl": "120",
@@ -465,7 +462,6 @@
     "units": "7.0"
    }
   ],
-  "solo_snack": false,
   "split_plan": null,
   "surcharge_choice": null,
   "target_mgdl": "120",
@@ -478,30 +474,30 @@
  "lunch_surcharge": {
   "activity_change_mgdl": "0",
   "activity_units": "0",
-  "auto_carb_units": "7.408942385042545153509194205",
-  "auto_carbs_entry_units": "7.5",
-  "auto_carbs_expected_glucose_mgdl": "181.5892534273447746489607294",
-  "auto_carbs_total_units": "7.408942385042545153509194205",
-  "auto_cautious_entry_units": "6.5",
-  "auto_cautious_expected_glucose_mgdl": "156.5892534273447746489607294",
-  "auto_cautious_total_units": "6.688264383638422132827449411",
-  "auto_entry_units": "9.5",
-  "auto_expected_glucose_mgdl": "111.5892534273447746489607294",
+  "auto_carb_units": "6.266085242185402296366337062",
+  "auto_carbs_entry_units": "6.5",
+  "auto_carbs_expected_glucose_mgdl": "176.5892534273447746489607294",
+  "auto_carbs_total_units": "6.266085242185402296366337062",
+  "auto_cautious_entry_units": "5.5",
+  "auto_cautious_expected_glucose_mgdl": "151.5892534273447746489607294",
+  "auto_cautious_total_units": "5.545407240781279275684592268",
+  "auto_entry_units": "8",
+  "auto_expected_glucose_mgdl": "124.0892534273447746489607294",
   "auto_factor_count": 28,
   "auto_factor_days": 30,
   "auto_factor_min_meals": 4,
   "auto_fat_surcharge_mgdl": null,
   "auto_half_life_days": "5",
-  "auto_low_entry_units": "10",
-  "auto_low_expected_glucose_mgdl": "94.08925342734477464896072938",
-  "auto_low_total_units": "9.831121526495564989970306554",
+  "auto_low_entry_units": "8.5",
+  "auto_low_expected_glucose_mgdl": "106.5892534273447746489607294",
+  "auto_low_total_units": "8.688264383638422132827449411",
   "auto_meal": "lunch",
   "auto_median_units_per_ke": "1.262318670210159509146250242",
   "auto_method": "surcharge",
   "auto_percentile": "37.5",
   "auto_q1_units_per_ke": "1.169847310764121181157516386",
-  "auto_surcharge_units": "1.142857142857142857142857143",
-  "auto_total_units": "9.259692955066993561398877982",
+  "auto_surcharge_units": "0",
+  "auto_total_units": "8.116835812209850704256020839",
   "auto_units_per_ke": "1.044347540364233716061056177",
   "breakfast": false,
   "breakfast_factor_count": null,
@@ -598,7 +594,6 @@
     "units": "7.0"
    }
   ],
-  "solo_snack": false,
   "split_plan": null,
   "surcharge_choice": null,
   "target_mgdl": "120",
@@ -633,6 +628,7 @@
   "auto_method": "surcharge",
   "auto_percentile": "37.5",
   "auto_q1_units_per_ke": "1.169847310764121181157516386",
+  "auto_surcharge_units": "0",
   "auto_total_units": "3.939445650752915840011796131",
   "auto_units_per_ke": "1.044347540364233716061056177",
   "breakfast": false,
@@ -730,7 +726,6 @@
     "units": "7.0"
    }
   ],
-  "solo_snack": false,
   "split_plan": null,
   "surcharge_choice": null,
   "target_mgdl": "120",
@@ -804,7 +799,6 @@
   "place_factor": null,
   "reason": "Kein aktueller CGM-Wert innerhalb von 15 Minuten. Ein blutig gemessener Wert kann ihn ersetzen.",
   "recent_rapid_doses": [],
-  "solo_snack": false,
   "split_plan": null,
   "surcharge_choice": null,
   "target_mgdl": "120",
@@ -935,7 +929,6 @@
     "units": "7.0"
    }
   ],
-  "solo_snack": false,
   "split_plan": null,
   "surcharge_choice": null,
   "target_mgdl": "120",
