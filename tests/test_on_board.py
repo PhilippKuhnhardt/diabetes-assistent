@@ -241,13 +241,33 @@ class OnBoardTests(unittest.TestCase):
                                  forecast.surcharge_share)
         self.assertEqual([(row["at"], row["mgdl"]) for row in found["surcharges"]],
                          [(breakfast, 80), (snack["at"], 80)])
-        # A snack of the meal (within 2 h) or below 20 g stays without one.
-        close = {**snack, "at": breakfast + timedelta(minutes=60)}
-        small = {**snack, "carbs": 15}
-        for item in (close, small):
-            found = on_board.sources([meal, item], self.now, self.settings, lambda at: Decimal(1), Decimal(80),
-                                     forecast.surcharge_share)
-            self.assertEqual([row["at"] for row in found["surcharges"]], [breakfast])
+        # A small snack of no meal stays without one.
+        found = on_board.sources([meal, {**snack, "carbs": 15}], self.now, self.settings, lambda at: Decimal(1),
+                                 Decimal(80), forecast.surcharge_share)
+        self.assertEqual([row["at"] for row in found["surcharges"]], [breakfast])
+
+    def test_meal_surcharge_comes_from_all_entries_of_the_meal(self):
+        # Starter, main and dessert in one entry or in three: the same surcharge in total (capped per meal),
+        # shared out by carbs, each part from its entry. Bare carbs (e.g. against a low) do not count.
+        start = self.now - timedelta(hours=1)
+        whole = {"id": "w", "at": start, "eventType": "Meal Bolus", "carbs": 30, "insulin": 3}
+        starter = {**whole, "id": "m", "carbs": 10}
+        dessert = {"id": "s", "at": start + timedelta(minutes=40), "eventType": "Snack Bolus", "carbs": 20,
+                   "insulin": 2, "notes": "[DA2:snack]"}
+        low = {"id": "c", "at": start + timedelta(minutes=50), "eventType": "Carb Correction", "carbs": 15}
+        found = lambda rows: on_board.sources(rows, self.now, self.settings, lambda at: Decimal(1), Decimal(80),
+                                              forecast.surcharge_share)["surcharges"]
+        self.assertEqual([(row["at"], row["mgdl"]) for row in found([whole])], [(start, 60)])
+        self.assertEqual([(row["at"], row["mgdl"]) for row in found([starter, dessert, low])],
+                         [(start, 20), (dessert["at"], 40)])
+        # Above 40 g the meal's surcharge stays at the full 80, shared out.
+        big = [{**starter, "carbs": 60}, dessert]
+        self.assertEqual([row["mgdl"] for row in found(big)], [60, 20])
+        # A fat/protein mark on any entry marks the meal.
+        fat = on_board.sources([starter, {**dessert, "fat_protein": True}], self.now, self.settings,
+                               lambda at: Decimal(1), Decimal(80), forecast.surcharge_share,
+                               fat_surcharge_mgdl=Decimal(120))["surcharges"]
+        self.assertEqual([(row["fat"], row["mgdl"]) for row in fat], [(True, 50), (True, 100)])
 
     def test_until_marks_when_each_side_has_acted(self):
         doses = [{"id": "c", "at": self.now, "eventType": "Correction Bolus", "insulin": 2}]
