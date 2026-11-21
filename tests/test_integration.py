@@ -852,26 +852,32 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(surcharge["options"][0]["apply"], {"auto_method": "percentile"})
         self.assertEqual(surcharge["options"][1]["apply"], {"auto_method": "surcharge", "auto_surcharge_mgdl": "20"})
 
-    def test_surcharge_goes_to_main_meals_not_snacks(self):
+    def test_surcharge_follows_the_meal_not_the_entry_kind(self):
         self.request("/api/settings")  # Sync the current Nightscout I:C and KF schedules.
         self.request("/api/settings", method="POST", body={"auto_method": "surcharge"})
         now = datetime.now(timezone.utc)
-        current_day = {"entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 150}], "treatments": []}
-        with fake_days(return_value=current_day), \
-                patch("app.forecast.predict_method", return_value={"count": 5, "units_per_ke": Decimal(1)}):
-            meal = self.request("/api/dose-help", method="POST", body={"carbs": "20"})
-            snack = self.request("/api/dose-help", method="POST", body={"carbs": "20", "snack": True})
-            solo = self.request("/api/dose-help", method="POST",
-                                body={"carbs": "20", "snack": True, "solo_snack": True})
-        # 20 g is half of the full-surcharge size: 20 mg/dL at the current KF (50 or 45 by clock).
-        expected = Decimal(20) / Decimal(meal["isf_mgdl_per_unit"])
+        glucose = [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 150}]
+        earlier = lambda minutes, grams: [{"at": (now - timedelta(minutes=minutes)).isoformat(),
+                                           "eventType": "Meal Bolus", "carbs": grams, "insulin": 2, "notes": "", "id": "m"}]
+        def ask(treatments, body):
+            day = {"entries": glucose, "treatments": treatments}
+            with fake_days(return_value=day), \
+                    patch("app.forecast.predict_method", return_value={"count": 5, "units_per_ke": Decimal(1)}):
+                return self.request("/api/dose-help", method="POST", body=body)
+        meal = ask([], {"carbs": "20"})
+        # 20 g is half of the full-surcharge size (default 40 mg/dL): 20 mg/dL at the current KF.
+        isf = Decimal(meal["isf_mgdl_per_unit"])
+        expected = Decimal(20) / isf
         self.assertEqual(Decimal(meal["auto_surcharge_units"]), expected)
-        self.assertNotIn("auto_surcharge_units", snack)
-        # A snack of no meal is covered by no meal's surcharge, so it carries its own (user report 2026-11-08).
-        self.assertEqual(Decimal(solo["auto_surcharge_units"]), expected)
-        self.assertTrue(solo["solo_snack"])
-        self.assertFalse(meal["solo_snack"])
-        self.assertAlmostEqual(Decimal(meal["auto_carb_units"]) - Decimal(snack["auto_carb_units"]), expected, places=20)
+        # Saved as snack or not, an entry starting a meal carries its share (user request 2026-11-21).
+        self.assertEqual(Decimal(ask([], {"carbs": "20", "snack": True})["auto_surcharge_units"]), expected)
+        # Within 60 min of 20 g, another 20 g adds the other half; after 30 g only a quarter; after 40 g nothing.
+        for grams, share in ((20, Decimal("0.5")), (30, Decimal("0.25")), (40, Decimal(0))):
+            result = ask(earlier(30, grams), {"carbs": "20", "snack": True})
+            self.assertEqual(Decimal(result.get("auto_surcharge_units") or 0), Decimal(40) * share / isf)
+        # 2 h after a large meal, a second meal is a meal of its own.
+        later = ask(earlier(120, 80), {"carbs": "20", "snack": True})
+        self.assertEqual(Decimal(later["auto_surcharge_units"]), expected)
 
     def test_quality_marks_are_stored_in_nightscout_and_shown_per_meal(self):
         self.request("/api/treatment", method="POST", body={
