@@ -13,27 +13,31 @@ class CurveTests(unittest.TestCase):
             with self.subTest(minutes):
                 self.assertAlmostEqual(float(on_board.insulin_remaining(Decimal(minutes))), float(share), places=2)
 
-    def test_carb_absorption_grows_with_amount(self):
-        self.assertEqual(on_board.carb_minutes(Decimal(30)), 120)
-        self.assertEqual(on_board.carb_minutes(Decimal(70)), 150)
-        self.assertEqual(on_board.carb_minutes(Decimal(140)), 180)
-        self.assertEqual(on_board.carb_remaining(Decimal(60), Decimal(30)), Decimal("0.5"))
+    def test_stomach_digests_larger_and_consecutive_meals_slower(self):
+        at = datetime(2026, 10, 8, 12, tzinfo=timezone.utc)
+        left = lambda row, minutes: on_board.carb_left(row, at + timedelta(minutes=minutes))
+        small, large = {"at": at, "grams": Decimal(40)}, {"at": at, "grams": Decimal(120)}
+        # Nothing before it reaches the stomach (15 min), then 40 g are half digested after about 1 h, 90 % after 2.4 h.
+        self.assertEqual(left(small, 0), 1)
+        self.assertGreater(left(small, 15), Decimal("0.98"))
+        self.assertAlmostEqual(float(left(small, 62)), 0.5, places=2)
+        self.assertAlmostEqual(float(left(small, 142)), 0.1, places=2)
+        # 120 g take longer: half after 1.7 h, 90 % after 3.6 h.
+        self.assertAlmostEqual(float(left(large, 102)), 0.5, places=2)
+        self.assertAlmostEqual(float(left(large, 214)), 0.1, places=2)
+        # A second 60 g 45 min after the first digest more slowly than alone.
+        first, second = {"at": at, "grams": Decimal(60)}, {"at": at + timedelta(minutes=45), "grams": Decimal(60)}
+        alone = {"at": second["at"], "grams": Decimal(60)}
+        on_board.attach_stomach([first, second])
+        self.assertGreater(left(second, 45 + 120), left(alone, 45 + 120) + Decimal("0.05"))
 
-    def test_surcharge_acts_from_two_to_five_hours(self):
-        self.assertEqual(on_board.surcharge_remaining(Decimal(60)), 1)
-        self.assertEqual(on_board.surcharge_remaining(Decimal(210)), Decimal("0.5"))
+    def test_surcharge_acts_linearly_from_the_entry(self):
+        self.assertEqual(on_board.surcharge_remaining(Decimal(0)), 1)
+        self.assertEqual(on_board.surcharge_remaining(Decimal(150)), Decimal("0.5"))
         self.assertEqual(on_board.surcharge_remaining(Decimal(300)), 0)
-        # A fat/protein meal's surcharge acts from the meal start to 6 h.
-        self.assertEqual(on_board.surcharge_remaining(Decimal(0), fat=True), 1)
-        self.assertEqual(on_board.surcharge_remaining(Decimal(120), fat=True), Decimal(2) / Decimal(3))
-        self.assertEqual(on_board.surcharge_remaining(Decimal(180), fat=True), Decimal("0.5"))
-        self.assertEqual(on_board.surcharge_remaining(Decimal(360), fat=True), 0)
-
-    def test_breakfast_surcharge_acts_from_one_to_four_hours(self):
-        self.assertEqual(on_board.surcharge_remaining(Decimal(60), breakfast=True), 1)
-        self.assertEqual(on_board.surcharge_remaining(Decimal(150), breakfast=True), Decimal("0.5"))
-        self.assertEqual(on_board.surcharge_remaining(Decimal(240), breakfast=True), 0)
-        self.assertEqual(on_board.surcharge_remaining(Decimal(240), fat=True, breakfast=True), Decimal("0.2"))
+        # A fat/protein entry's surcharge acts over 6 h.
+        self.assertEqual(on_board.surcharge_remaining(Decimal(180), on_board.SURCHARGE_MINUTES_FAT), Decimal("0.5"))
+        self.assertEqual(on_board.surcharge_remaining(Decimal(360), on_board.SURCHARGE_MINUTES_FAT), 0)
 
 
 class OnBoardTests(unittest.TestCase):
@@ -51,21 +55,22 @@ class OnBoardTests(unittest.TestCase):
                                  forecast.surcharge_share)
         return on_board.summary(found, self.now)
 
-    def test_fat_meal_carries_the_fat_surcharge_and_breakfast_its_own_window(self):
+    def test_fat_entry_carries_the_fat_surcharge_over_six_hours(self):
         breakfast = datetime(2026, 10, 8, 8, tzinfo=timezone.utc)  # 10:00 in Berlin, 4 h ago
         meals = [{"id": "b", "at": breakfast, "eventType": "Meal Bolus", "carbs": 48, "insulin": 0},
                  {"id": "l", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 40,
                   "insulin": 0, "fat_protein": True}]
-        found = on_board.sources(meals, self.now, {**self.settings, "breakfast_end_minute": 660},
-                                 lambda at: Decimal(1), Decimal(80), forecast.surcharge_share,
-                                 fat_surcharge_mgdl=Decimal(120))
+        found = on_board.sources(meals, self.now, self.settings, lambda at: Decimal(1), Decimal(80),
+                                 forecast.surcharge_share, fat_surcharge_mgdl=Decimal(120))
         rows = {row["at"]: row for row in found["surcharges"]}
         self.assertEqual(rows[breakfast]["mgdl"], 80)
-        self.assertTrue(rows[breakfast]["breakfast"])
-        self.assertEqual(rows[self.now - timedelta(minutes=30)]["mgdl"], 200)
-        # Breakfast 4 h ago: its surcharge (1–4 h) has acted, with 2–5 h a third would be left;
-        # the fat lunch's 200 act from its start over 6 h, so after 30 min 11/12 are still to come.
-        self.assertEqual(on_board.effects_at(found, self.now)["surcharge_mgdl"], Decimal(200) * 11 / 12)
+        lunch = rows[self.now - timedelta(minutes=30)]
+        # The fat lunch carries 80 + 120, a little less as some breakfast is still in the stomach.
+        self.assertTrue(190 < lunch["mgdl"] < 200)
+        self.assertEqual(lunch["minutes"], 360)
+        # Breakfast 4 h ago: a fifth of its 80 is left (linear over 5 h); the fat lunch's surcharge acts over 6 h,
+        # so after 30 min 11/12 are still to come.
+        self.assertEqual(on_board.effects_at(found, self.now)["surcharge_mgdl"], Decimal(16) + lunch["mgdl"] * 11 / 12)
 
     def test_place_factor_scales_carbs_and_surcharge_of_its_entries(self):
         meal = [{"id": "k", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 40,
@@ -99,12 +104,15 @@ class OnBoardTests(unittest.TestCase):
                  "insulin": 7}]
         active = self.active(meal)
         self.assertAlmostEqual(float(active["insulin_units"]), 5.27, places=2)
-        self.assertAlmostEqual(float(active["carbs_mgdl"]), 60 * (1 - 60 / 140) / 10 * 1.17 * 35, places=6)
-        self.assertEqual(active["surcharge_mgdl"], 40)
+        left = on_board.carb_left({"at": meal[0]["at"], "grams": Decimal(60)}, self.now)
+        self.assertAlmostEqual(float(left), 0.587, places=3)
+        self.assertAlmostEqual(float(active["carbs_mgdl"]), 60 * float(left) / 10 * 1.17 * 35, places=6)
+        self.assertEqual(active["surcharge_mgdl"], 32)  # 40 linear over 5 h, after 1 h
+
         self.assertEqual(active["fresh_meal_at"], meal[0]["at"])
         result = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 170}], meal, self.now, on_board=active)
-        self.assertEqual(Decimal(result["entry_units"]), Decimal("1.5"))  # forecast ≈ 166 → (166 − 120) / 35
-        self.assertAlmostEqual(float(result["cautious_forecast_mgdl"]), 166, places=0)  # rests only cancel the bolus
+        self.assertEqual(Decimal(result["entry_units"]), Decimal(1))  # forecast ≈ 162 → (162 − 120) / 35
+        self.assertAlmostEqual(float(result["cautious_forecast_mgdl"]), 162, places=0)  # rests only cancel the bolus
         self.assertEqual(Decimal(result["cautious_entry_units"]), Decimal("0.5"))
 
     def test_cautious_counts_a_large_meal_rest_minus_the_typical_miss(self):
@@ -219,60 +227,58 @@ class OnBoardTests(unittest.TestCase):
         self.assertEqual(on_board.sport_share(gym, end + timedelta(hours=1), end + timedelta(hours=4)), Decimal("0.6"))
         self.assertEqual(on_board.sport_share(gym, self.now, end + timedelta(hours=8)), 1)
 
-    def test_snacks_basal_and_old_entries_carry_no_effect(self):
+    def test_basal_and_old_entries_carry_no_effect_and_carbs_alone_count_like_a_meal(self):
         treatments = [
             {"id": "s", "at": self.now - timedelta(minutes=30), "eventType": "Carb Correction", "carbs": 20, "insulin": 0},
             {"id": "b", "at": self.now - timedelta(minutes=30), "eventType": "Note", "basal_units": 17},
             {"id": "o", "at": self.now - timedelta(hours=7), "eventType": "Meal Bolus", "carbs": 90, "insulin": 9},
         ]
         active = self.active(treatments)
-        self.assertEqual(active["surcharge_mgdl"], 0)
+        # 20 g alone get half of the 40 surcharge, 9/10 of it still to come after 30 min.
+        self.assertEqual(active["surcharge_mgdl"], 18)
         self.assertEqual(active["insulin_units"], 0)
         self.assertEqual([row["grams"] for row in active["carbs"]], [20])
         self.assertIsNone(active["fresh_meal_at"])
 
-    def test_meals_are_entries_at_most_an_hour_apart(self):
-        # 21.11.: breakfast 77 g at 06:41, a second breakfast 155 g at 09:20 saved as snack: two meals, each
-        # with the full surcharge (user request 2026-11-21). A bite 30 min before lunch joins the lunch.
+    def test_surcharge_follows_what_is_still_in_the_stomach(self):
+        # A second breakfast 155 g 2:39 h after 77 g: about 11 g of the first are still in the stomach, so it
+        # gets the share 166 g add to 11 g (user request 2026-11-21, no grouping by time).
         first = {"id": "m", "at": self.now - timedelta(hours=2, minutes=39), "eventType": "Meal Bolus", "carbs": 77,
                  "insulin": 4.5}
         second = {"id": "s", "at": self.now, "eventType": "Snack Bolus", "carbs": 155, "insulin": 4,
                   "notes": "[DA2:snack]"}
-        found = on_board.sources([first, second], self.now, self.settings, lambda at: Decimal(1), Decimal(80),
-                                 forecast.surcharge_share)
-        self.assertEqual([(row["at"], row["mgdl"]) for row in found["surcharges"]],
-                         [(first["at"], 80), (second["at"], 80)])
+        found = lambda rows: on_board.sources(rows, self.now, self.settings, lambda at: Decimal(1), Decimal(80),
+                                              forecast.surcharge_share)["surcharges"]
+        inside = on_board.stomach_grams([first], self.now)
+        self.assertAlmostEqual(float(inside), 10.6, places=1)
+        self.assertEqual([row["mgdl"] for row in found([first, second])],
+                         [80, 80 * (1 - forecast.surcharge_share(inside))])
+        # A bite 30 min before lunch: bite and lunch together get about the surcharge of one meal.
         bite = {"id": "b", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 10, "insulin": 1}
-        lunch = {**second, "carbs": 70}
-        found = on_board.sources([bite, lunch], self.now, self.settings, lambda at: Decimal(1), Decimal(80),
-                                 forecast.surcharge_share)
-        self.assertEqual([(row["at"], row["mgdl"]) for row in found["surcharges"]],
-                         [(bite["at"], 10), (lunch["at"], 70)])
-        self.assertEqual(on_board.meal_grams_before([bite], self.now), 10)
-        self.assertEqual(on_board.meal_grams_before([first], self.now), 0)
+        rows = found([bite, {**second, "carbs": 70}])
+        self.assertEqual(rows[0]["mgdl"], 20)
+        self.assertTrue(80 <= sum(row["mgdl"] for row in rows) <= 86)
 
-    def test_meal_surcharge_comes_from_all_entries_of_the_meal(self):
-        # Starter, main and dessert in one entry or in three: the same surcharge in total (capped per meal),
-        # shared out by carbs, each part from its entry. Bare carbs (e.g. against a low) do not count.
+    def test_entries_of_one_meal_share_one_surcharge(self):
+        # Starter, main and dessert in one entry or in several: the same surcharge in total (capped as one meal),
+        # each part from its entry, whether saved as meal, snack or carbs alone.
         start = self.now - timedelta(hours=1)
         whole = {"id": "w", "at": start, "eventType": "Meal Bolus", "carbs": 30, "insulin": 3}
         starter = {**whole, "id": "m", "carbs": 10}
-        dessert = {"id": "s", "at": start + timedelta(minutes=40), "eventType": "Snack Bolus", "carbs": 20,
+        dessert = {"id": "s", "at": start + timedelta(minutes=10), "eventType": "Snack Bolus", "carbs": 20,
                    "insulin": 2, "notes": "[DA2:snack]"}
-        low = {"id": "c", "at": start + timedelta(minutes=50), "eventType": "Carb Correction", "carbs": 15}
-        found = lambda rows: on_board.sources(rows, self.now, self.settings, lambda at: Decimal(1), Decimal(80),
-                                              forecast.surcharge_share)["surcharges"]
-        self.assertEqual([(row["at"], row["mgdl"]) for row in found([whole])], [(start, 60)])
-        self.assertEqual([(row["at"], row["mgdl"]) for row in found([starter, dessert, low])],
-                         [(start, 20), (dessert["at"], 40)])
-        # Above 40 g the meal's surcharge stays at the full 80, shared out.
-        big = [{**starter, "carbs": 60}, dessert]
-        self.assertEqual([row["mgdl"] for row in found(big)], [60, 20])
-        # A fat/protein mark on any entry marks the meal.
-        fat = on_board.sources([starter, {**dessert, "fat_protein": True}], self.now, self.settings,
-                               lambda at: Decimal(1), Decimal(80), forecast.surcharge_share,
-                               fat_surcharge_mgdl=Decimal(120))["surcharges"]
-        self.assertEqual([(row["fat"], row["mgdl"]) for row in fat], [(True, 50), (True, 100)])
+        found = lambda rows, **extra: on_board.sources(rows, self.now, self.settings, lambda at: Decimal(1), Decimal(80),
+                                                       forecast.surcharge_share, **extra)["surcharges"]
+        self.assertEqual([row["mgdl"] for row in found([whole])], [60])
+        parts = found([starter, dessert])
+        self.assertEqual(parts[0]["mgdl"], 20)
+        self.assertTrue(58 <= sum(row["mgdl"] for row in parts) <= 60)
+        # Above 40 g in the stomach the surcharge stays at the full 80.
+        self.assertTrue(79 <= sum(row["mgdl"] for row in found([{**starter, "carbs": 60}, dessert])) <= 80)
+        # A fat/protein mark belongs to its entry.
+        fat = found([starter, {**dessert, "fat_protein": True}], fat_surcharge_mgdl=Decimal(120))
+        self.assertEqual([row["fat"] for row in fat], [False, True])
+        self.assertEqual(fat[0]["mgdl"], 20)
 
     def test_until_marks_when_each_side_has_acted(self):
         doses = [{"id": "c", "at": self.now, "eventType": "Correction Bolus", "insulin": 2}]
@@ -382,7 +388,7 @@ class CalculatedSurchargeTests(unittest.TestCase):
         settings = {"timezone": "UTC", "isf_schedule": [], "breakfast_end_minute": 600}
         meal = {"id": "m", "at": now - timedelta(minutes=120), "eventType": "Meal Bolus", "role": "meal", "carbs": 80,
                 "insulin": 0, "surcharge": {"mgdl": "120", "minutes": 360}}
-        found = on_board.sources([meal], now, settings, lambda at: None, Decimal(80), lambda grams: Decimal(1),
+        found = on_board.sources([meal], now, settings, lambda at: None, Decimal(80), lambda grams: min(1, grams / 40),
                                  fat_surcharge_mgdl=Decimal(120))
         self.assertEqual(found["surcharges"][0]["mgdl"], Decimal(120))
         # Linear from the meal start to 360 min: after 120 min two thirds are left.
