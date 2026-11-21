@@ -118,18 +118,20 @@ def save_diary_treatment(payload: dict) -> dict:
             kept = episodes.SPLIT_TAG.search(str(existing.get("notes") or ""))
             split = " " + kept.group(0) if kept else ""
         surcharge = ""
-        if kind == "meal" and "fpe_surcharge" not in payload and payload.get("surcharge_mode") in fpe.MODES:
-            # The meal card switches a saved meal between the static and the calculated surcharge; the
+        # The surcharge belongs to each carb entry (app/on_board.py), so any of them can carry the calculated one.
+        eats = carbs > 0
+        if eats and "fpe_surcharge" not in payload and payload.get("surcharge_mode") in fpe.MODES:
+            # The card switches a saved entry (meal or snack alike, user request 2026-11-21) between the static and the calculated surcharge; the
             # calculated one comes from the agent's estimate linked to the entry (app/fpe.py).
             payload = {**payload, "fpe_surcharge": _calculated_surcharge(event_id, settings, payload.get("agent_session"))
                        if payload["surcharge_mode"] == "fpe" else None}
-        if kind == "meal" and payload.get("fpe_surcharge"):
+        if eats and payload.get("fpe_surcharge"):
             value = payload["fpe_surcharge"]
             mgdl, minutes = calculation.dec(value["mgdl"]), int(value["minutes"])
             if not mgdl.is_finite() or not 0 <= mgdl <= 200 or not 60 <= minutes <= 600:
                 raise ValueError("Ungültiger Fett/Eiweiß-Zuschlag")
             surcharge = " " + episodes.surcharge_tag(unit_text(mgdl.quantize(Decimal(1))), minutes)
-        elif kind == "meal" and existing and "fpe_surcharge" not in payload:
+        elif eats and existing and "fpe_surcharge" not in payload:
             kept = episodes.SURCHARGE_TAG.search(str(existing.get("notes") or ""))
             surcharge = " " + kept.group(0) if kept else ""
         notes = (note + marker + quality + split + surcharge + f" [DAE:{event_id}]").strip()
@@ -228,8 +230,8 @@ def edit_entry(payload: dict) -> dict:
         "fat_protein": carbs > 0 and payload.get("fat_protein") is True, "fast": carbs > 0 and payload.get("fast") is True,
         "alcohol": "keep",
         **({**food, "dish_id": None, "dish_name": str(food["dish_name"] or "").strip()} if carbs > 0 else {}),
-        # Only a meal whose agent estimate gives a calculated surcharge offers the choice; without one the saved stays.
-        **({"surcharge_mode": payload["surcharge_mode"]} if kind == "meal" and carbs > 0 and payload.get("surcharge_mode") else {}),
+        # Only an entry whose agent estimate gives a calculated surcharge offers the choice; without one the saved stays.
+        **({"surcharge_mode": payload["surcharge_mode"]} if carbs > 0 and payload.get("surcharge_mode") else {}),
         **({"agent_session": payload["agent_session"]} if payload.get("agent_session") else {}),
     })
     current = day_view.day_payload(saved["day"])

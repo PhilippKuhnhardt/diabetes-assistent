@@ -67,18 +67,17 @@ def dose_help(payload: dict) -> dict:
             scale=factors.entry_scale(scales)), now)
     except ValueError:
         active = None
-    # The surcharge belongs to the meal, i.e. the carb entries at most on_board.MEAL_GAP apart, whether saved
-    # as meal or snack (user request 2026-11-21): this entry gets the share its carbs add to the meal's,
-    # exactly what "Wirkt noch" counts once it is saved. A first entry gets the share of its own carbs.
+    # The surcharge follows the stomach (user request 2026-11-21, app/on_board.py): this entry gets the share its
+    # carbs add to what is still in the stomach, exactly what "Wirkt noch" counts once it is saved.
     surcharge = method == forecast.SURCHARGE and auto_value is not None
-    before = on_board.meal_grams_before(treatments, now)
+    before = on_board.stomach_grams(treatments, now)
     added_share = lambda grams: forecast.surcharge_share(before + grams) - forecast.surcharge_share(before)
     meal_surcharge = factors.meal_surcharge_mgdl(current_settings, payload.get("fat_protein") is True)
     # Transition phase (user request 2026-11-19): with the agent's fat and protein estimate the form offers
     # the calculated surcharge next to the static one, and Philipp picks which one the dose uses (app/fpe.py).
-    # It belongs to an entry that starts a meal.
+    # It belongs to the entry, whatever came before (user request 2026-11-21).
     calculated = (fpe.estimate(payload, current_settings)
-                  if surcharge and before == 0 and meal_surcharge is not None else None)
+                  if surcharge and meal_surcharge is not None else None)
     use_fpe = calculated is not None and payload.get("surcharge_mode") == "fpe"
     if use_fpe:
         meal_surcharge = calculated["mgdl"]

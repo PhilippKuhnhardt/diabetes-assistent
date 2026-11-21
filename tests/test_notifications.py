@@ -205,8 +205,9 @@ class GlucoseAlertTests(unittest.TestCase):
 
     def test_falling_faster_than_the_model_warns_of_a_low(self):
         self.assertEqual(self.kinds(self.entries([116, 110, 104, 98, 92, 86, 80]), self.found()), ["low"])
+        # Enough carbs still to come hold it back (30 g 40 min ago; 20 g digest too fast in the stomach model).
         self.assertEqual(self.kinds(self.entries([116, 110, 104, 98, 92, 86, 80]),
-                                    self.found(carbs=[(self.NOW - timedelta(minutes=40), "20")])), [])
+                                    self.found(carbs=[(self.NOW - timedelta(minutes=40), "30")])), [])
 
     def test_no_low_warning_right_after_carbs(self):
         falling = self.entries([124, 116, 108, 100, 92, 84, 76])
