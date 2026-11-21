@@ -66,7 +66,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
     let live = true;
     api("/api/agent/session?event_id=" + encodeURIComponent(item.event_id)).then(data => {
       const found = data.session;
-      if (live && kind === "meal") setFpe(found?.fpe || null);
+      if (live) setFpe(found?.fpe || null);
       if (live && found?.photos) setPhotos(Array.from({ length: found.photos }, (_, index) =>
         "/api/agent/photo?session=" + encodeURIComponent(found.session_id) + "&n=" + index));
     }).catch(() => {});
@@ -110,8 +110,9 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
           carbs, insulin: parse(v.insulin) || 0,
           carbs_certainty: v.level == null ? item.carbs_certainty ?? null : CERTAINTY_LEVELS[v.level],
           fat_protein: v.fat, fast: v.fast, place_id: v.place || null, dish_name: v.dish, description: v.description,
-          // Only a meal whose estimate gives a calculated surcharge can switch; otherwise the saved one stays.
-          surcharge_mode: kind === "meal" && fpe ? v.surchargeMode : null,
+          // Any carb entry whose estimate gives a calculated surcharge can switch (meal or snack alike,
+          // user request 2026-11-21); otherwise the saved one stays.
+          surcharge_mode: fpe ? v.surchargeMode : null,
           agent_session: v.session,
         }),
       });
@@ -156,7 +157,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
         </div>
       </div>`}
 
-      ${eats && kind === "meal" && fpe && html`<${SurchargeChoice} mode=${v.surchargeMode} calculated=${fpe} fat=${v.fat}
+      ${eats && fpe && html`<${SurchargeChoice} mode=${v.surchargeMode} calculated=${fpe} fat=${v.fat}
         staticMgdl=${fpe.static_mgdl?.[v.fat ? "fat" : "plain"]} onChange=${surchargeMode => set({ surchargeMode })} />`}
 
       ${sport && html`<div class="card-list">
