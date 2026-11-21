@@ -124,14 +124,6 @@ def _assignment(context: dict, payload: dict) -> dict | None:
     return _closing(context, root, result, payload)
 
 
-def _solo_snack(context: dict, assignment: dict | None) -> bool:
-    """A snack of no meal from SMALL_SNACK_GRAMS carries its own surcharge, by the rule "Wirkt noch" applies
-    once it is saved (episodes.solo_snack): no main meal precedes it closely."""
-    if not assignment or not assignment["snack"] or context["carbs"] < SMALL_SNACK_GRAMS:
-        return False
-    return episodes.preceding_meal(context["at"], context["treatments"], context["settings"]) is None
-
-
 def _instant(value):
     return parse_instant(value) if isinstance(value, str) else value
 
@@ -282,7 +274,6 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
     # Sport is part of what still acts (app.on_board), so it needs no extra input here.
     result = dose_help.dose_help({"carbs": str(carbs),
                                   "snack": bool(assignment and assignment["snack"]),
-                                  "solo_snack": _solo_snack(context, assignment),
                                   "fat_protein": carbs > 0 and payload.get("fat_protein") is True,
                                   **({key: payload.get(key) for key in ("fat_g", "protein_g", "surcharge_mode")}
                                      if carbs > 0 else {}),

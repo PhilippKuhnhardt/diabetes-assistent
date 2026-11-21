@@ -221,30 +221,35 @@ class OnBoardTests(unittest.TestCase):
 
     def test_snacks_basal_and_old_entries_carry_no_effect(self):
         treatments = [
-            {"id": "s", "at": self.now - timedelta(minutes=30), "eventType": "Snack Bolus", "carbs": 20, "insulin": 1},
+            {"id": "s", "at": self.now - timedelta(minutes=30), "eventType": "Carb Correction", "carbs": 20, "insulin": 0},
             {"id": "b", "at": self.now - timedelta(minutes=30), "eventType": "Note", "basal_units": 17},
             {"id": "o", "at": self.now - timedelta(hours=7), "eventType": "Meal Bolus", "carbs": 90, "insulin": 9},
         ]
         active = self.active(treatments)
         self.assertEqual(active["surcharge_mgdl"], 0)
-        self.assertEqual(active["insulin_units"], Decimal(1) * on_board.insulin_remaining(Decimal(30)))
+        self.assertEqual(active["insulin_units"], 0)
         self.assertEqual([row["grams"] for row in active["carbs"]], [20])
         self.assertIsNone(active["fresh_meal_at"])
 
-    def test_diary_snack_of_no_meal_carries_its_own_surcharge(self):
-        # 8.11.: breakfast 07:01, 80 g at 10:34 as a snack of no meal (breakfast taken, 3.5 h later).
-        breakfast = self.now - timedelta(hours=3, minutes=30)
-        meal = {"id": "m", "at": breakfast, "eventType": "Meal Bolus", "carbs": 60, "insulin": 7}
-        snack = {"id": "s", "at": self.now - timedelta(minutes=10), "eventType": "Snack Bolus", "carbs": 80,
-                 "insulin": 6, "notes": "[DA2:snack]"}
-        found = on_board.sources([meal, snack], self.now, self.settings, lambda at: Decimal(1), Decimal(80),
+    def test_meals_are_entries_at_most_an_hour_apart(self):
+        # 21.11.: breakfast 77 g at 06:41, a second breakfast 155 g at 09:20 saved as snack: two meals, each
+        # with the full surcharge (user request 2026-11-21). A bite 30 min before lunch joins the lunch.
+        first = {"id": "m", "at": self.now - timedelta(hours=2, minutes=39), "eventType": "Meal Bolus", "carbs": 77,
+                 "insulin": 4.5}
+        second = {"id": "s", "at": self.now, "eventType": "Snack Bolus", "carbs": 155, "insulin": 4,
+                  "notes": "[DA2:snack]"}
+        found = on_board.sources([first, second], self.now, self.settings, lambda at: Decimal(1), Decimal(80),
                                  forecast.surcharge_share)
         self.assertEqual([(row["at"], row["mgdl"]) for row in found["surcharges"]],
-                         [(breakfast, 80), (snack["at"], 80)])
-        # A small snack of no meal stays without one.
-        found = on_board.sources([meal, {**snack, "carbs": 15}], self.now, self.settings, lambda at: Decimal(1),
-                                 Decimal(80), forecast.surcharge_share)
-        self.assertEqual([row["at"] for row in found["surcharges"]], [breakfast])
+                         [(first["at"], 80), (second["at"], 80)])
+        bite = {"id": "b", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 10, "insulin": 1}
+        lunch = {**second, "carbs": 70}
+        found = on_board.sources([bite, lunch], self.now, self.settings, lambda at: Decimal(1), Decimal(80),
+                                 forecast.surcharge_share)
+        self.assertEqual([(row["at"], row["mgdl"]) for row in found["surcharges"]],
+                         [(bite["at"], 10), (lunch["at"], 70)])
+        self.assertEqual(on_board.meal_grams_before([bite], self.now), 10)
+        self.assertEqual(on_board.meal_grams_before([first], self.now), 0)
 
     def test_meal_surcharge_comes_from_all_entries_of_the_meal(self):
         # Starter, main and dessert in one entry or in three: the same surcharge in total (capped per meal),
