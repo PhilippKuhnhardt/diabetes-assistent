@@ -232,9 +232,9 @@ def _split(context: dict, assignment: dict | None, payload: dict) -> dict | None
 
 
 def _fpe_surcharge(context: dict, assignment: dict | None, payload: dict) -> dict | None:
-    """The calculated fat/protein surcharge (app/fpe.py) when the form chose it for a main meal, else None."""
-    if (payload.get("surcharge_mode") != "fpe" or context["mode"] != "meal" or not context["carbs"]
-            or (assignment and assignment["snack"])):
+    """The calculated fat/protein surcharge (app/fpe.py) when the form chose it, else None. Snacks carry it like
+    meals (user request 2026-11-21: the surcharge belongs to each carb entry, app/on_board.py)."""
+    if payload.get("surcharge_mode") != "fpe" or context["mode"] != "meal" or not context["carbs"]:
         return None
     return fpe.estimate(payload, context["settings"])
 
@@ -488,7 +488,7 @@ def save(payload: dict) -> dict:
         **({"split_units": split_units, "split_delay_minutes": split["delay_minutes"]}
            if split_units and kind == "meal" else {}),
         **({"fpe_surcharge": fpe.plan(calculated)}
-           if kind == "meal" and (calculated := _fpe_surcharge(context, assignment, payload)) else {}),
+           if carbs > 0 and (calculated := _fpe_surcharge(context, assignment, payload)) else {}),
     })
     day = saved["day"]
     close = assignment and assignment.get("close")
