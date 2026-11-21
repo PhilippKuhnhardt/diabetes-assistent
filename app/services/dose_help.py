@@ -67,16 +67,18 @@ def dose_help(payload: dict) -> dict:
             scale=factors.entry_scale(scales)), now)
     except ValueError:
         active = None
-    # The surcharge belongs once to each main meal; a snack of a meal gets the factor only. A snack of no
-    # meal from 20 g (its kind already taken, or its meal closed) carries its own: no meal's surcharge covers
-    # it (user report 2026-11-08: 80 g at 10:34 after breakfast got 2 IE).
-    surcharge = (method == forecast.SURCHARGE and auto_value is not None
-                 and (payload.get("snack") is not True or payload.get("solo_snack") is True))
+    # The surcharge belongs to the meal, i.e. the carb entries at most on_board.MEAL_GAP apart, whether saved
+    # as meal or snack (user request 2026-11-21): this entry gets the share its carbs add to the meal's,
+    # exactly what "Wirkt noch" counts once it is saved. A first entry gets the share of its own carbs.
+    surcharge = method == forecast.SURCHARGE and auto_value is not None
+    before = on_board.meal_grams_before(treatments, now)
+    added_share = lambda grams: forecast.surcharge_share(before + grams) - forecast.surcharge_share(before)
     meal_surcharge = factors.meal_surcharge_mgdl(current_settings, payload.get("fat_protein") is True)
     # Transition phase (user request 2026-11-19): with the agent's fat and protein estimate the form offers
     # the calculated surcharge next to the static one, and Philipp picks which one the dose uses (app/fpe.py).
+    # It belongs to an entry that starts a meal.
     calculated = (fpe.estimate(payload, current_settings)
-                  if surcharge and payload.get("snack") is not True and meal_surcharge is not None else None)
+                  if surcharge and before == 0 and meal_surcharge is not None else None)
     use_fpe = calculated is not None and payload.get("surcharge_mode") == "fpe"
     if use_fpe:
         meal_surcharge = calculated["mgdl"]
@@ -85,7 +87,7 @@ def dose_help(payload: dict) -> dict:
                             units_per_ke=factor["median_units_per_ke"] if use_factor else None,
                             auto_units_per_ke=auto_value * place_scale if auto_value is not None else None,
                             auto_surcharge_mgdl=meal_surcharge * place_scale if surcharge else None,
-                            surcharge_share=forecast.surcharge_share, on_board=active, finger=finger)
+                            surcharge_share=added_share, on_board=active, finger=finger)
     if calculation.dec(payload.get("carbs") or 0) == 0:
         # A correction without food also shows the ends of what was right after recent meals (x0.6 / x1.4)
         # and marks the end the last meal's rise leans to (app/correction_scale.py).
@@ -98,7 +100,7 @@ def dose_help(payload: dict) -> dict:
                                      "latest_at": when["latest_at"].isoformat()}
     result["on_board"] = on_board_view(active, result) if active else None
     result.update({
-        "auto_meal": meal_kind, "solo_snack": bool(surcharge and payload.get("snack") is True), "auto_factor_count": prediction["count"], "auto_method": method,
+        "auto_meal": meal_kind, "auto_factor_count": prediction["count"], "auto_method": method,
         "auto_fat_surcharge_mgdl": (str(fat_mgdl) if surcharge and payload.get("fat_protein") is True and not use_fpe
                                     else None),
         "surcharge_choice": calculated and {

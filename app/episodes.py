@@ -255,21 +255,6 @@ def preceding_meal(at: datetime, treatments: list[dict], settings: dict) -> dict
     return None
 
 
-def solo_snack(item: dict, treatments: list[dict], settings: dict) -> bool:
-    """A stored diary snack of no meal from SMALL_SNACK_GRAMS: no main meal precedes it closely (its kind was
-    taken that day, or its meal was closed). No meal's surcharge covers it, so it carries its own
-    (user report 2026-11-08: 80 g at 10:34 after breakfast got 2 IE instead of about 5)."""
-    if "[DA2:snack]" not in str(item.get("notes") or ""):
-        return False
-    try:
-        grams = Decimal(str(item.get("carbs") or 0))
-    except InvalidOperation:
-        return False
-    if grams < SMALL_SNACK_GRAMS:
-        return False
-    return preceding_meal(item["at"], [other for other in treatments if other is not item], settings) is None
-
-
 def taken_meal(at: datetime, treatments: list[dict], settings: dict) -> dict | None:
     """An earlier main meal of the same day and clock-based kind as `at`; each kind counts once a day."""
     kind = meal_kind_at(at, settings)
