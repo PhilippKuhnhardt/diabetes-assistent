@@ -299,6 +299,18 @@ async function settings(page, name) {
   await page.click(toggle);
   await page.waitForFunction(([selector, before]) => document.querySelector(selector).checked === before, [toggle, was]);
   check(true, `${name}: a notification kind switches`);
+  const pause = ".notify-pause-input[data-kind=high]";
+  check(await page.inputValue(pause) === "30", `${name}: high warning pause defaults to 30 min`);
+  await page.fill(pause, "40");
+  await page.press(pause, "Enter");
+  await page.locator(pause).blur();
+  await page.waitForFunction(selector => !document.querySelector(selector).disabled, pause);
+  await page.reload();
+  await page.waitForSelector(pause + ":not([disabled])");
+  check(await page.inputValue(pause) === "40", `${name}: high warning pause is saved`);
+  await page.fill(pause, "30");
+  await page.locator(pause).blur();
+  await page.waitForFunction(selector => !document.querySelector(selector).disabled, pause);
 }
 
 (async () => {
