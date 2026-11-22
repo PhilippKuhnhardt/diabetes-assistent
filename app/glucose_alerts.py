@@ -21,8 +21,8 @@ warning needs the crossing within 30 min and BG at least 200. Daytime 21.09.-29.
 
 Pauses (Philipp 2026-11-22, both set per kind in the notification settings): no high warning for 30 min after rapid
 insulin, since a dose just given barely acts yet and the forecast still extrapolates the rise (22.11. 21:00 local,
-4 IE correction at BG 199, warned at 21:02 with a forecast of 256); no low warning for 15 min (before: 30) after a
-carb entry of at least 20 g.
+4 IE correction at BG 199, warned at 21:02 with a forecast of 256); no low warning for 15 min (before: 30) after any
+carb entry (before: only from 20 g; Philipp dropped that limit, so a small carb correction mutes it too).
 """
 from __future__ import annotations
 
@@ -50,12 +50,11 @@ FRESH_MINUTES = 10
 # No low warning this soon after a carb entry: the model lets carbs act at once, real absorption starts
 # later, so right after eating the "faster than expected" fall is mostly that lag (24 of ~100 low
 # warnings came within 45 min after carbs, 2 before a real low; a 30-min pause kept 12 of 12 lows,
-# user report 2026-10-11, analysen/fruehprognose.md section 7). Only after a meal-sized entry: a small carb
-# correction eaten because BG falls must not mute the warning (18.10. 12:17: 10 g, forecast 41, silent, low at
-# 12:31; analysen/alarme-2026-10.md).
-# Default 15 min since 2026-11-22 (Philipp), set in the notification settings.
+# user report 2026-10-11, analysen/fruehprognose.md section 7). From 2026-10-22 to 2026-11-22 only carb entries
+# of at least 20 g paused it (a 10 g correction on 18.10. 12:17 had muted a warning before a low at 12:31,
+# analysen/alarme-2026-10.md); since 2026-11-22 every carb entry pauses it again, 15 min by default (Philipp),
+# set in the notification settings.
 LOW_PAUSE_MINUTES = 15
-LOW_PAUSE_MIN_GRAMS = Decimal(20)
 # No high warning this soon after rapid insulin (Philipp 2026-11-22): the dose just given is meant to bring BG
 # down, but barely acts within the warning's 30 min, so the warning would only repeat what he just acted on.
 HIGH_PAUSE_MINUTES = 30
@@ -108,7 +107,7 @@ def _since(rows: list[dict], now: datetime, pause_minutes: int) -> bool:
 def warnings(entries: list[dict], found: dict, now: datetime, timezone_name: str,
              low_pause_minutes: int = LOW_PAUSE_MINUTES, high_pause_minutes: int = HIGH_PAUSE_MINUTES) -> list[dict]:
     """The low and high warnings due now: kind, the glucose now, when and how far the forecast crosses.
-    No low warning within low_pause_minutes after a meal-sized carb entry, no high warning within
+    No low warning within low_pause_minutes after a carb entry, no high warning within
     high_pause_minutes after rapid insulin (0 = no pause)."""
     local = now.astimezone(local_zone(timezone_name))
     if not DAY_FROM <= local.hour < DAY_TO:
@@ -119,7 +118,7 @@ def warnings(entries: list[dict], found: dict, now: datetime, timezone_name: str
     due, glucose = [], result["glucose_mgdl"]
     before = _earlier(entries, result["at"] - timedelta(minutes=LOW_FALL_MINUTES))
     falling = before is None or glucose - before <= -LOW_FALL_MGDL
-    paused = _since([row for row in found["carbs"] if row["grams"] >= LOW_PAUSE_MIN_GRAMS], now, low_pause_minutes)
+    paused = _since(found["carbs"], now, low_pause_minutes)
     low_points = [point for point in low_result["points"] if point["at"] <= result["at"] + timedelta(minutes=LOW_WITHIN_MINUTES)]
     low = next((point for point in low_points if point["mgdl"] < LOW_MGDL), None)
     if low and glucose >= LOW_MGDL and falling and not paused:

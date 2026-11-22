@@ -230,8 +230,8 @@ class GlucoseAlertTests(unittest.TestCase):
         falling = self.entries([124, 116, 108, 100, 92, 84, 76])
         just_eaten = self.found(carbs=[(self.NOW - timedelta(minutes=10), "20")])
         self.assertEqual(self.kinds(falling, just_eaten), [])
-        # A small carb correction eaten because BG falls does not pause the warning.
-        self.assertEqual(self.kinds(falling, self.found(carbs=[(self.NOW - timedelta(minutes=10), "5")])), ["low"])
+        # Any carb entry pauses it, also a small one (Philipp 2026-11-22: no 20 g limit).
+        self.assertEqual(self.kinds(falling, self.found(carbs=[(self.NOW - timedelta(minutes=10), "5")])), [])
 
     def test_low_pause_after_carbs_is_set_in_minutes(self):
         falling = self.entries([124, 116, 108, 100, 92, 84, 76])

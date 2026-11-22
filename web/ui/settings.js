@@ -144,8 +144,8 @@ function Vacation({ page, vacation, today, onVacation }) {
       : "Mo–Fr zählt als Arbeitstag.") + (past.length ? " Frühere Urlaube: " + past.join(", ") + "." : "")}</p><//>`;
 }
 
-// Pause after the trigger, in minutes (Philipp 2026-11-22): low after eating (from 20 g), high after an injection.
-const NOTIFY_PAUSES = { low: "Pause nach dem Essen (ab 20 g KH)", high: "Pause nach einer Spritze" };
+// Pause after the trigger, in minutes (Philipp 2026-11-22): low after eating, high after an injection.
+const NOTIFY_PAUSES = { low: "Pause nach dem Essen", high: "Pause nach einer Spritze" };
 const NOTIFY_KINDS = [["basal", "Basal vergessen"], ["split", "2. Split-Teil fällig"], ["low", "Tief droht"], ["high", "Hoch droht"], ["check", "BZ prüfen"]];
 
 function Notifications({ page }) {
