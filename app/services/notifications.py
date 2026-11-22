@@ -34,7 +34,7 @@ REPEAT = {"low": WARNING_REPEAT, "high": WARNING_REPEAT, "check": correction_che
 PRIORITY_LABELS = {-2: "Ganz leise (nur in der Pushover-App)", -1: "Leise (ohne Ton)", 0: "Normal",
                    1: "Hoch (auch in Ruhezeiten)", 2: "Notfall (wiederholt bis bestätigt)"}
 PRIORITIES = {kind: pushover.PRIORITY for kind in KINDS}
-# Minutes without a warning: low after a meal-sized carb entry, high after rapid insulin (Philipp 2026-11-22).
+# Minutes without a warning: low after a carb entry, high after rapid insulin (Philipp 2026-11-22).
 PAUSES = {"low": glucose_alerts.LOW_PAUSE_MINUTES, "high": glucose_alerts.HIGH_PAUSE_MINUTES}
 MAX_PAUSE_MINUTES = 180
 
