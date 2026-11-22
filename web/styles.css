@@ -83,6 +83,8 @@ input[type=time]::-webkit-date-and-time-value { text-align: left; min-height: 1.
 .notify-option { margin-bottom: 18px; }
 .notify-option > .check-label { margin-bottom: 0; }
 .settings-grid .notify-option > .hint { margin: 4px 0 0 27px; }
+.notify-option > .notify-pause { display: flex; align-items: center; gap: 8px; margin: 6px 0 0 27px; font-size: 14px; font-weight: 450; color: var(--muted); }
+.notify-option > .notify-pause input { width: 72px; }
 .notify-option > .notify-priority { display: block; margin: 6px 0 0 27px; width: calc(100% - 27px); max-width: 320px; }
 
 .timezone-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }

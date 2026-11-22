@@ -1,4 +1,4 @@
-"""Push reminders: on/off and Pushover priority per kind, and the messages already sent."""
+"""Push reminders: on/off, Pushover priority and pause per kind, and the messages already sent."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -31,6 +31,21 @@ def set_priority(kind: str, priority: int, enabled_default: bool = True) -> None
     with connect() as db:
         db.execute("INSERT INTO notification_settings(kind,enabled,priority) VALUES(?,?,?) "
                    "ON CONFLICT(kind) DO UPDATE SET priority=excluded.priority", (kind, int(enabled_default), priority))
+
+
+def pauses(defaults: dict[str, int]) -> dict[str, int]:
+    """Minutes a warning kind stays quiet after its trigger (carbs for low, insulin for high)."""
+    with connect() as db:
+        rows = db.execute("SELECT kind,pause_minutes FROM notification_settings WHERE pause_minutes IS NOT NULL").fetchall()
+    stored = {row["kind"]: int(row["pause_minutes"]) for row in rows}
+    return {kind: stored.get(kind, default) for kind, default in defaults.items()}
+
+
+def set_pause(kind: str, minutes: int, enabled_default: bool = True) -> None:
+    with connect() as db:
+        db.execute("INSERT INTO notification_settings(kind,enabled,pause_minutes) VALUES(?,?,?) "
+                   "ON CONFLICT(kind) DO UPDATE SET pause_minutes=excluded.pause_minutes",
+                   (kind, int(enabled_default), minutes))
 
 
 def last_sent(kind: str) -> datetime | None:

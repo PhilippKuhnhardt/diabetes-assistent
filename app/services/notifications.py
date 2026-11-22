@@ -34,6 +34,9 @@ REPEAT = {"low": WARNING_REPEAT, "high": WARNING_REPEAT, "check": correction_che
 PRIORITY_LABELS = {-2: "Ganz leise (nur in der Pushover-App)", -1: "Leise (ohne Ton)", 0: "Normal",
                    1: "Hoch (auch in Ruhezeiten)", 2: "Notfall (wiederholt bis bestätigt)"}
 PRIORITIES = {kind: pushover.PRIORITY for kind in KINDS}
+# Minutes without a warning: low after a meal-sized carb entry, high after rapid insulin (Philipp 2026-11-22).
+PAUSES = {"low": glucose_alerts.LOW_PAUSE_MINUTES, "high": glucose_alerts.HIGH_PAUSE_MINUTES}
+MAX_PAUSE_MINUTES = 180
 
 
 def _units(value) -> str:
@@ -80,8 +83,9 @@ def due_reminders(now: datetime, settings: dict, treatments: list[dict], basal_t
 
 
 def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entries: list[dict],
-                     enabled: dict[str, bool]) -> list[dict]:
+                     enabled: dict[str, bool], pauses: dict[str, int] | None = None) -> list[dict]:
     """Low and high warnings due now (switched-on kinds only), before the once-per-hour check."""
+    pauses = {**PAUSES, **(pauses or {})}
     if not any(enabled.get(kind) for kind in WARNINGS):
         return []
     found = _acting(now, settings, treatments)
@@ -89,7 +93,8 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
         return []
     zone = local_zone(settings["timezone"])
     reminders = []
-    for warning in glucose_alerts.warnings(entries, found, now, settings["timezone"]):
+    for warning in glucose_alerts.warnings(entries, found, now, settings["timezone"],
+                                           low_pause_minutes=pauses["low"], high_pause_minutes=pauses["high"]):
         if not enabled.get(warning["kind"]):
             continue
         minutes = max(0, round((warning["at"] - now).total_seconds() / 60))
@@ -215,7 +220,7 @@ def check(now: datetime | None = None) -> list[dict]:
     priorities = store.priorities(PRIORITIES)
     sent = []
     for reminder in (due_reminders(now, settings, treatments, basal_today, enabled, entries, _second_part)
-                     + glucose_warnings(now, settings, treatments, entries, enabled)
+                     + glucose_warnings(now, settings, treatments, entries, enabled, store.pauses(PAUSES))
                      + correction_reminder(now, settings, treatments, entries, enabled, _correction)):
         if store.was_sent(reminder["key"]):
             continue
@@ -236,6 +241,7 @@ def view() -> dict:
         "configured": pushover.is_configured(),
         "enabled": store.enabled_kinds(KINDS),
         "priorities": store.priorities(PRIORITIES),
+        "pauses": store.pauses(PAUSES),
         "priority_options": [{"value": value, "label": label} for value, label in PRIORITY_LABELS.items()],
         "basal_after": f"{minute // 60:02d}:{minute % 60:02d}",
         "recent": [{**row, "label": LABELS.get(row["kind"], row["title"])} for row in store.recent()],
@@ -243,10 +249,18 @@ def view() -> dict:
 
 
 def set_enabled(payload: dict) -> dict:
-    """Switch a kind on or off ({kind, enabled}) or set its Pushover priority ({kind, priority})."""
+    """Switch a kind on or off ({kind, enabled}), set its Pushover priority ({kind, priority}) or, for low and
+    high, its pause after carbs or insulin ({kind, pause_minutes})."""
     kind = payload.get("kind")
     if kind not in KINDS:
         raise ValueError("Ungültige Benachrichtigung")
+    if "pause_minutes" in payload:
+        minutes = payload["pause_minutes"]
+        if (kind not in PAUSES or isinstance(minutes, bool) or not isinstance(minutes, int)
+                or not 0 <= minutes <= MAX_PAUSE_MINUTES):
+            raise ValueError(f"Pause muss zwischen 0 und {MAX_PAUSE_MINUTES} Minuten liegen")
+        store.set_pause(kind, minutes, KINDS[kind])
+        return view()
     if "priority" in payload:
         priority = payload["priority"]
         if isinstance(priority, bool) or priority not in PRIORITY_LABELS:
