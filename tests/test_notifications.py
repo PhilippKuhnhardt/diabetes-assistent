@@ -131,6 +131,23 @@ class CheckTests(unittest.TestCase):
         self.assertTrue(view["configured"])
         self.assertEqual([row["kind"] for row in view["recent"]], ["basal", "split"])
 
+    def test_warning_pauses_are_stored_per_kind(self):
+        self.assertEqual(notifications.view()["pauses"], {"low": 15, "high": 30})
+        view = notifications.set_enabled({"kind": "high", "pause_minutes": 45})
+        self.assertEqual(view["pauses"], {"low": 15, "high": 45})
+        self.assertTrue(view["enabled"]["high"])
+        for bad in ({"kind": "high", "pause_minutes": -5}, {"kind": "high", "pause_minutes": 181},
+                    {"kind": "high", "pause_minutes": "30"}, {"kind": "basal", "pause_minutes": 10}):
+            with self.assertRaises(ValueError):
+                notifications.set_enabled(bad)
+        self.warnings.stop()
+        try:
+            with patch.object(notifications, "glucose_warnings", return_value=[]) as warned, patch.object(pushover, "send"):
+                notifications.check(MEAL_AT + timedelta(minutes=130))
+            self.assertEqual(warned.call_args.args[5], {"low": 15, "high": 45})
+        finally:
+            self.warnings.start()
+
     def test_switched_off_kinds_and_missing_setup_send_nothing(self):
         for kind in notifications.KINDS:
             notifications.set_enabled({"kind": kind, "enabled": False})
@@ -215,6 +232,26 @@ class GlucoseAlertTests(unittest.TestCase):
         self.assertEqual(self.kinds(falling, just_eaten), [])
         # A small carb correction eaten because BG falls does not pause the warning.
         self.assertEqual(self.kinds(falling, self.found(carbs=[(self.NOW - timedelta(minutes=10), "5")])), ["low"])
+
+    def test_low_pause_after_carbs_is_set_in_minutes(self):
+        falling = self.entries([124, 116, 108, 100, 92, 84, 76])
+        eaten = self.found(carbs=[(self.NOW - timedelta(minutes=20), "20")])
+        # Default 15 min (Philipp 2026-11-22): 20 min after eating the warning is back.
+        self.assertEqual(self.kinds(falling, eaten), ["low"])
+        warned = glucose_alerts.warnings(falling, eaten, self.NOW, "Europe/Berlin", low_pause_minutes=30)
+        self.assertEqual(warned, [])
+
+    def test_no_high_warning_right_after_an_injection(self):
+        # 22.11. 21:00: BG 199 and rising, 4 IE just given; the forecast still crosses 250 within 30 min.
+        rising = self.entries([165, 175, 185, 195, 205, 215, 225])
+        carbs = ()
+        self.assertEqual(self.kinds(rising, self.found(carbs=carbs)), ["high"])
+        injected = self.found(doses=[(self.NOW - timedelta(minutes=5), "1")], carbs=carbs)
+        self.assertEqual(self.kinds(rising, injected), [])
+        self.assertEqual([item["kind"] for item in glucose_alerts.warnings(
+            rising, injected, self.NOW, "Europe/Berlin", high_pause_minutes=0)], ["high"])
+        later = self.found(doses=[(self.NOW - timedelta(minutes=31), "1")], carbs=carbs)
+        self.assertEqual(self.kinds(rising, later), ["high"])
 
     def test_carbs_still_to_come_warn_of_a_high(self):
         found = self.found(carbs=[(self.NOW - timedelta(minutes=10), "60")])

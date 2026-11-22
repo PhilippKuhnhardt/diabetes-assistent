@@ -18,6 +18,11 @@ the crossing within 45 min, the miss fading over 25 min and BG at least 5 mg/dL 
 warning needs the crossing within 30 min and BG at least 200. Daytime 21.09.-29.10.: lows caught 23 -> 22 of 24
 (since 12.10. still 10 of 10, median 28 min ahead), highs 12 of 14 (median 18 -> 14 min ahead), warnings
 5.3 -> 3.4 a day, those without an event 4.3 -> 2.5.
+
+Pauses (Philipp 2026-11-22, both set per kind in the notification settings): no high warning for 30 min after rapid
+insulin, since a dose just given barely acts yet and the forecast still extrapolates the rise (22.11. 21:00 local,
+4 IE correction at BG 199, warned at 21:02 with a forecast of 256); no low warning for 15 min (before: 30) after a
+carb entry of at least 20 g.
 """
 from __future__ import annotations
 
@@ -48,8 +53,12 @@ FRESH_MINUTES = 10
 # user report 2026-10-11, analysen/fruehprognose.md section 7). Only after a meal-sized entry: a small carb
 # correction eaten because BG falls must not mute the warning (18.10. 12:17: 10 g, forecast 41, silent, low at
 # 12:31; analysen/alarme-2026-10.md).
-LOW_PAUSE_AFTER_CARBS = timedelta(minutes=30)
+# Default 15 min since 2026-11-22 (Philipp), set in the notification settings.
+LOW_PAUSE_MINUTES = 15
 LOW_PAUSE_MIN_GRAMS = Decimal(20)
+# No high warning this soon after rapid insulin (Philipp 2026-11-22): the dose just given is meant to bring BG
+# down, but barely acts within the warning's 30 min, so the warning would only repeat what he just acted on.
+HIGH_PAUSE_MINUTES = 30
 
 
 def _faded(minutes: Decimal, fade: Decimal = FADE_MINUTES) -> Decimal:
@@ -91,8 +100,16 @@ def forecast(entries: list[dict], found: dict, now: datetime, fade: Decimal = FA
     return {"at": start, "glucose_mgdl": glucose, "miss_per_hour": rate * 60, "points": points}
 
 
-def warnings(entries: list[dict], found: dict, now: datetime, timezone_name: str) -> list[dict]:
-    """The low and high warnings due now: kind, the glucose now, when and how far the forecast crosses."""
+def _since(rows: list[dict], now: datetime, pause_minutes: int) -> bool:
+    """Whether one of the rows (with "at") lies within the last pause_minutes before now."""
+    return any(now - timedelta(minutes=pause_minutes) < row["at"] <= now for row in rows)
+
+
+def warnings(entries: list[dict], found: dict, now: datetime, timezone_name: str,
+             low_pause_minutes: int = LOW_PAUSE_MINUTES, high_pause_minutes: int = HIGH_PAUSE_MINUTES) -> list[dict]:
+    """The low and high warnings due now: kind, the glucose now, when and how far the forecast crosses.
+    No low warning within low_pause_minutes after a meal-sized carb entry, no high warning within
+    high_pause_minutes after rapid insulin (0 = no pause)."""
     local = now.astimezone(local_zone(timezone_name))
     if not DAY_FROM <= local.hour < DAY_TO:
         return []
@@ -102,9 +119,7 @@ def warnings(entries: list[dict], found: dict, now: datetime, timezone_name: str
     due, glucose = [], result["glucose_mgdl"]
     before = _earlier(entries, result["at"] - timedelta(minutes=LOW_FALL_MINUTES))
     falling = before is None or glucose - before <= -LOW_FALL_MGDL
-    last_carbs = max((row["at"] for row in found["carbs"] if row["at"] <= now and row["grams"] >= LOW_PAUSE_MIN_GRAMS),
-                     default=None)
-    paused = last_carbs is not None and now - last_carbs < LOW_PAUSE_AFTER_CARBS
+    paused = _since([row for row in found["carbs"] if row["grams"] >= LOW_PAUSE_MIN_GRAMS], now, low_pause_minutes)
     low_points = [point for point in low_result["points"] if point["at"] <= result["at"] + timedelta(minutes=LOW_WITHIN_MINUTES)]
     low = next((point for point in low_points if point["mgdl"] < LOW_MGDL), None)
     if low and glucose >= LOW_MGDL and falling and not paused:
@@ -112,7 +127,7 @@ def warnings(entries: list[dict], found: dict, now: datetime, timezone_name: str
                     "mgdl": min(point["mgdl"] for point in low_points)})
     high_points = [point for point in result["points"] if point["at"] <= result["at"] + timedelta(minutes=HIGH_WITHIN_MINUTES)]
     high = next((point for point in high_points if point["mgdl"] > HIGH_MGDL), None)
-    if high and HIGH_FROM_MGDL <= glucose <= HIGH_MGDL:
+    if high and HIGH_FROM_MGDL <= glucose <= HIGH_MGDL and not _since(found["doses"], now, high_pause_minutes):
         due.append({"kind": "high", "glucose_mgdl": glucose, "at": high["at"],
                     "mgdl": max(point["mgdl"] for point in high_points)})
     return due

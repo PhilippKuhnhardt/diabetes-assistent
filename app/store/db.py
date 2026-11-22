@@ -169,6 +169,13 @@ def _notification_priority(db: sqlite3.Connection) -> None:
     db.execute("ALTER TABLE notification_settings ADD COLUMN priority INTEGER")
 
 
+def _notification_pause(db: sqlite3.Connection) -> None:
+    """Minutes a low/high warning stays quiet after carbs/insulin (NULL = the kind's default; Philipp 2026-11-22)."""
+    columns = {row[1] for row in db.execute("PRAGMA table_info(notification_settings)")}
+    if "pause_minutes" not in columns:
+        db.execute("ALTER TABLE notification_settings ADD COLUMN pause_minutes INTEGER")
+
+
 def _places(db: sqlite3.Connection) -> None:
     """Eating places (chips) with their spots, and where each diary carb entry was eaten (by its
     event id); positions stay local."""
@@ -358,7 +365,7 @@ MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_res
                                                           _inbox_seen, _sport_sessions, _places_without_positions,
                                                           _place_factor, _timezone_periods, _prior_insulin_percentile,
                                                           _dishes, _agent, _browser_sessions, _split_min_units,
-                                                          _sport_session_minutes]
+                                                          _sport_session_minutes, _notification_pause]
 
 
 def init() -> None:
