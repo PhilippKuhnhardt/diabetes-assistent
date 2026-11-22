@@ -144,6 +144,8 @@ function Vacation({ page, vacation, today, onVacation }) {
       : "Mo–Fr zählt als Arbeitstag.") + (past.length ? " Frühere Urlaube: " + past.join(", ") + "." : "")}</p><//>`;
 }
 
+// Pause after the trigger, in minutes (Philipp 2026-11-22): low after eating, high after an injection.
+const NOTIFY_PAUSES = { low: "Pause nach dem Essen", high: "Pause nach einer Spritze" };
 const NOTIFY_KINDS = [["basal", "Basal vergessen"], ["split", "2. Split-Teil fällig"], ["low", "Tief droht"], ["high", "Hoch droht"], ["check", "BZ prüfen"]];
 
 function Notifications({ page }) {
@@ -166,6 +168,10 @@ function Notifications({ page }) {
       <label class="check-label"><input type="checkbox" class="notify-toggle" data-kind=${kind} checked=${Boolean(data?.enabled[kind])}
         disabled=${!data || saving === kind} onChange=${event => save(kind, { enabled: event.currentTarget.checked })} /> ${label}</label>
       ${kind === "basal" && html`<p id="notify-basal-hint" class="hint">${data ? "Wenn bis " + data.basal_after + " (Frühstücksende) heute noch kein Basal erfasst ist." : ""}</p>`}
+      ${NOTIFY_PAUSES[kind] && html`<label class="notify-pause">${NOTIFY_PAUSES[kind]}
+        <input type="number" class="notify-pause-input" data-kind=${kind} min="0" max="180" step="5" inputmode="numeric"
+          value=${data ? String(data.pauses[kind]) : ""} disabled=${!data || saving === kind}
+          onChange=${event => save(kind, { pause_minutes: Number(event.currentTarget.value) })} /> min</label>`}
       <select class="notify-priority" data-kind=${kind} aria-label=${"Stufe für " + label} value=${data ? String(data.priorities[kind]) : ""}
         disabled=${!data || saving === kind} onChange=${event => save(kind, { priority: Number(event.currentTarget.value) })}>
         ${(data?.priority_options || []).map(option => html`<option value=${String(option.value)}>Stufe: ${option.label}</option>`)}</select></div>`)}
