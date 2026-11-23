@@ -1104,9 +1104,7 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .history-chart .meal-chart-plot { margin: 0 -4px; }
 .history-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .history .history-actions button { min-height: 36px; padding: 6px 11px; font-size: 13px; white-space: nowrap; }
-.history-actions { flex-wrap: nowrap; }
 .history .history-actions button.history-more-entries { margin-left: auto; }
-@media (max-width: 380px) { .history-actions { flex-wrap: wrap; } }
 .history .history-actions button.primary { width: auto; }
 .history .history-actions button.window-check.is-checked { display: inline-flex; align-items: center; gap: 5px; background: var(--green-light); border-color: #b9d8c5; color: var(--green-dark); }
 .history-actions .ui-icon { width: 15px; height: 15px; }
