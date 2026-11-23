@@ -64,6 +64,16 @@ def _sport_drop(payload: dict) -> Decimal | None:
     return -change
 
 
+def _sport_minutes(payload: dict) -> int | None:
+    """The session's own effect duration in minutes (the same field as on the entry card); None follows its kind."""
+    minutes = payload.get("sport_minutes")
+    if minutes is None or minutes == "":
+        return None
+    if isinstance(minutes, bool) or not isinstance(minutes, (int, float)) or not 30 <= minutes <= 1440:
+        raise ValueError("Die Wirkdauer muss zwischen 0,5 und 24 h liegen.")
+    return int(round(minutes))
+
+
 def _finger(payload: dict) -> Decimal | None:
     """Blood glucose measured by hand in the form; empty means none, out of range raises."""
     raw = str(payload.get("finger_mgdl") if payload.get("finger_mgdl") is not None else "").strip()
@@ -439,10 +449,11 @@ def save(payload: dict) -> dict:
             return {"day": day, "kind": "finger", "event_id": event_id, "id": None, "split_units": None,
                     "carbs": "0", "insulin": "0", "finger_mgdl": str(finger), "basal": None,
                     "basal_error": None,
-                    "day_view": day_view.day_payload(day)}
+                    "day_view": day_view.with_checks(day_view.day_payload(day))}
     assignment = _assignment(context, payload)
     basal_units = _basal_units(context) if payload.get("with_basal") else Decimal(0)
     sport_drop = _sport_drop(payload) if mode == "exercise" else None
+    sport_minutes = _sport_minutes(payload) if mode == "exercise" else None
     split = _split(context, assignment, payload) if carbs > 0 else None
     dose = (_dose(context, payload, assignment, split)
             if payload.get("dose_check") or (split and split["active"]) else {})
@@ -511,10 +522,13 @@ def save(payload: dict) -> dict:
         if sport_drop != calculation.dec(context["settings"]["sport_effects_mgdl"].get(payload.get("sport_kind"), 0)):
             marks.set_sport_session_effect(treatment["id"], str(sport_drop))
             current = day_view.day_payload(day, refresh=False)
+    if treatment and sport_minutes is not None:
+        marks.set_sport_session_minutes(treatment["id"], sport_minutes)
+        current = day_view.day_payload(day, refresh=False)
     return {
         "day": day, "kind": kind, "event_id": saved["event_id"], "id": treatment and treatment["id"],
         "split_units": split_units if kind == "meal" else None,
         "carbs": str(carbs), "insulin": str(insulin), "finger_mgdl": str(finger) if finger is not None else None,
         "basal": basal_result and {**basal_result, "units": str(basal_units)}, "basal_error": basal_error,
-        "day_view": current,
+        "day_view": day_view.with_checks(current),
     }

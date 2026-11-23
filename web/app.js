@@ -4,7 +4,7 @@ import { html, render } from "./ui/html.js";
 import { entryCard, quickAdd } from "./ui/main.js";
 import { AnalysisView } from "./ui/analysis.js";
 import { DayReview, entryLabel } from "./ui/day.js";
-import { Overview, Inbox, ActiveCard } from "./ui/today.js";
+import { Overview, ActiveCard } from "./ui/today.js";
 import { EntryForm, deleteBasal } from "./ui/entry.js";
 import { glucosePoints } from "./ui/charts.js";
 import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
@@ -73,7 +73,7 @@ function loadCurrentGlucose() {
 }
 
 // A dose decision always needs the glucose in sight (user feedback 2026-11-18): on phones the top bar is
-// one line (logo, value, inbox) and full-screen views open below it; the meal chat on wider screens is a
+// one line (logo, value) and full-screen views open below it; the meal chat on wider screens is a
 // modal over the dimmed page and shows a copy (web/ui/glucose.js).
 function publishGlucose() {
   const stale = $("#glucose-meta").hidden ? "" : $("#glucose-meta").textContent;
@@ -313,49 +313,20 @@ function renderDay(data) {
   renderVisibleCharts();
 }
 
-// "Tag durchgehen" (web/ui/day.js): the day's chart, effects, night and list with the window editor.
+// Verlauf (web/ui/day.js): week strip, the day's meal and sport cards, the window editor.
 function renderReview() {
-  render(html`<${DayReview} data=${state.dayData} day=${state.day} status=${state.dayStatus} reload=${loadDay}
-    onEdit=${editEntry} onAnalysisChanged=${refreshAnalysis} />`, $(".review-panel"));
+  render(html`<${DayReview} data=${state.dayData} day=${state.day} today=${todayDay()} status=${state.dayStatus} reload=${loadDay}
+    onEdit=${editEntry} onAnalysisChanged=${refreshAnalysis} onDay=${historyDay} onRefresh=${() => loadDay({ refresh: true })} />`, $(".review-panel"));
 }
 
-// "Zu erledigen": what needs an action across the last days (user request 2026-10-21). The server decides what
-// is open; an opened hint folds away, and a done one is no longer listed.
-function renderInbox(data) {
-  state.inbox = data;
-  const fresh = data.items.filter(item => !item.seen);
-  // The header names new hints on every page, since the list itself sits in the diary.
-  const badge = $("#inbox-badge");
-  badge.hidden = !fresh.length;
-  // On phones only the number shows, so logo, glucose and inbox fit one line.
-  badge.innerHTML = fresh.length + '<span class="inbox-badge-label"> zu erledigen</span>';
-  badge.setAttribute("aria-label", fresh.length + " zu erledigen");
-  render(html`<${Inbox} data=${data} today=${todayDay()} onOpen=${openInboxItem} />`, $("#inbox-host"));
-}
-
-async function loadInbox() {
-  try {
-    renderInbox(await api("/api/inbox"));
-  } catch {
-    // The hint list is extra; the diary works without it.
-  }
-}
-
-// A hint opens "Tag durchgehen" at its meal and counts as seen from then on.
-async function openInboxItem(item) {
-  api("/api/inbox/seen", { method: "POST", body: JSON.stringify({ key: item.key }) })
-    .then(renderInbox).catch(() => {});
-  state.modeDay = item.day;
+// Verlauf's week strip picks a day and stays in Verlauf, also for today.
+function historyDay(day) {
+  if (day === state.day) return;
+  changeDay(day, { load: false });
+  state.modeDay = day;
   state.diaryMode = "review";
-  if (state.day !== item.day) changeDay(item.day, { load: false });
-  else markDayActivity();
   applyDiaryMode();
-  await loadDay();
-  const meal = $("#meal-" + CSS.escape(item.meal_id));
-  if (!meal) return;
-  meal.scrollIntoView({ block: "start" });
-  meal.classList.add("is-target");
-  setTimeout(() => meal.classList.remove("is-target"), 2500);
+  loadDay();
 }
 
 // The server reads its local copy, which the background sync keeps current; refresh asks Nightscout first.
@@ -369,7 +340,6 @@ async function loadDay({ refresh = false } = {}) {
   }
   try {
     renderDay(await api("/api/day?date=" + encodeURIComponent(state.day) + (refresh ? "&refresh=1" : "")));
-    loadInbox();
     await updatePreview();
   } catch (error) {
     state.dayStatus = "error";
@@ -534,10 +504,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#next-day").addEventListener("click", () => { const d = new Date(state.day + "T12:00"); d.setDate(d.getDate() + 1); changeDay(d.toLocaleDateString("sv-SE")); });
   $("#selected-day").addEventListener("change", event => changeDay(event.target.value));
   $("#refresh-day").addEventListener("click", () => loadDay({ refresh: true }));
-  $("#inbox-badge").addEventListener("click", () => {
-    view("diary");
-    $("#inbox")?.scrollIntoView({ block: "start" });
-  });
   $("#timezone-banner").addEventListener("click", event => {
     const button = event.target.closest("[data-timezone-switch]");
     if (button) switchTimezone({ zone: button.dataset.timezoneSwitch });
@@ -562,8 +528,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // A form left open keeps showing "jetzt" with the current clock, and an old manual time expires.
   setInterval(() => { if (!document.hidden) entry.tick?.(); }, 30000);
   setInterval(returnToToday, 60000);
-  // A meal finishes on its own, so its hint can appear without a reload.
-  setInterval(() => { if (!document.hidden) loadInbox(); }, 5 * 60000);
   document.addEventListener("pointerdown", markDayActivity, true);
   document.addEventListener("keydown", markDayActivity, true);
   // A home-screen app has no reload button: coming back to the foreground refreshes everything shown
@@ -576,7 +540,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     returnToToday();
     entry.tick?.();
     refreshTodayPreview();
-    loadInbox();
     await loadCurrentGlucose();
     reloadForUpdate();
   };

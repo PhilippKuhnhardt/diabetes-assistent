@@ -335,13 +335,6 @@ class GoldenMasterTests(unittest.TestCase):
         # Local decisions, as the diary and analysis pages store them.
         record["post_exclusion"] = cls.call("/api/analysis/exclusion", {
             "meal_id": meal_id(days[3], "lunch"), "day": days[3], "excluded": True})
-        sport_day = days[6]
-        record["post_sport"] = cls.call("/api/analysis/sport", {
-            "meal_id": meal_id(sport_day, "dinner"), "day": sport_day, "status": "affected", "effect_mgdl": "35"})
-        record["post_sport_racing"] = cls.call("/api/analysis/sport", {
-            "meal_id": meal_id(days[17], "dinner"), "day": days[17], "status": "affected", "effect_mgdl": "-40"})
-        record["post_sport_unaffected"] = cls.call("/api/analysis/sport", {
-            "meal_id": meal_id(days[28], "dinner"), "day": days[28], "status": "unaffected"})
         window_day = days[10]
         window_meal = next(meal for meal in loaded[window_day]["meals"] if meal["meal"] == "dinner")
         meal_at = real_datetime.fromisoformat(window_meal["at"])
@@ -430,8 +423,7 @@ class GoldenMasterTests(unittest.TestCase):
         self.assertEqual(json.loads(path.read_text()), value, f"{name} weicht vom Referenzstand ab")
 
     def test_posts_and_settings(self):
-        for name in ("settings_initial_save", "settings_mid_save", "post_exclusion", "post_sport",
-                     "post_sport_racing", "post_sport_unaffected", "post_window", "post_window_invalid",
+        for name in ("settings_initial_save", "settings_mid_save", "post_exclusion", "post_window", "post_window_invalid",
                      "post_window_blocked", "post_day_type_free", "post_day_type_work", "post_vacation_on",
                      "post_vacation_off", "post_basal", "post_meal", "post_snack_auto", "post_exercise",
                      "post_invalid_treatment", "settings", "glucose_current", "settings_surcharge_save"):
@@ -463,7 +455,7 @@ class GoldenMasterTests(unittest.TestCase):
         self.assertGreaterEqual(len(meals), 100)
         self.assertGreaterEqual(len(reasons), 2, reasons)
         self.assertTrue(any((meal.get("calculation") or {}).get("manual_window") for meal in meals))
-        self.assertTrue(any(meal["sport"]["status"] == "affected" for meal in meals))
+        self.assertTrue(any(meal["sport"]["suggested"] for meal in meals))
         self.assertTrue(any((meal.get("calculation") or {}).get("extra_carb_count") for meal in meals))
         cells = self.results["summary_30"]["suggestion_derivation"]["variants"]
         self.assertTrue(any(cell["stats"]["glucose_count"] for row in cells for cell in row["cells"]))

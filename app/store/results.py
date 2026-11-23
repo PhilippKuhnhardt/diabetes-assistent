@@ -72,7 +72,6 @@ def _shared_inputs(db) -> list:
         "SELECT id,effective_at FROM settings_versions ORDER BY id",
         "SELECT start_at,profile_id,profile_name,timezone,isf_schedule,ic_schedule,target_schedule "
         "FROM nightscout_profiles ORDER BY start_at",
-        "SELECT meal_id,status,effect_mgdl FROM analysis_sport_marks ORDER BY meal_id",
         "SELECT meal_id,start_at,end_at FROM analysis_windows ORDER BY meal_id",
         "SELECT session_id,effect_mgdl FROM sport_session_effects ORDER BY session_id",
         "SELECT session_id,minutes FROM sport_session_minutes ORDER BY session_id",

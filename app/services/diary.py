@@ -241,7 +241,7 @@ def edit_entry(payload: dict) -> dict:
     row = next((item for item in current["timeline"] if item["id"] == record_id), None)
     if row is None or calculation.dec(row.get("carbs") or 0) != carbs or calculation.dec(row.get("insulin") or 0) != units:
         raise ValueError("Die Änderung ist in Nightscout noch nicht sichtbar. Bitte Eintrag aktualisieren.")
-    return {"day": saved["day"], "day_view": current}
+    return {"day": saved["day"], "day_view": day_view.with_checks(current)}
 
 
 def _edit_sport_session(record_id: str, day: str, payload: dict) -> None:

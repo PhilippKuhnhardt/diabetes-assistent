@@ -7,7 +7,15 @@ import { MINUTE, num, timeOnly, sportNames } from "./lib.js";
 
 export function chartLayout(width) {
   const clamped = Math.max(300, Math.min(900, Math.round(width || 600)));
-  return { width: clamped, left: 36, right: clamped - 12, plotTop: 70, plotBottom: 258 };
+  return { width: clamped, left: 36, right: clamped - 12, plotTop: 70, plotBottom: 258, height: 284,
+    lanes: { insulin: 14, carbs: 34, sport: 46 } };
+}
+
+// Verlauf's meal cards (user request 2026-11-23): the same chart, lower, with its event lanes kept.
+export function compactLayout(width) {
+  const clamped = Math.max(260, Math.min(900, Math.round(width || 600)));
+  return { width: clamped, left: 30, right: clamped - 8, plotTop: 50, plotBottom: 150, height: 172, compact: true,
+    lanes: { insulin: 10, carbs: 26, sport: 34 } };
 }
 
 // The width of an element, kept current while it is resized, opened (a <details>) or shown again.
@@ -100,10 +108,11 @@ function EventLanes({ events, scales, view, range, layout }) {
     const included = windowIncludes(range, event) ? " is-included" : "";
     if (event.kind === "sport") {
       const width = Math.max(4, scales.x(Math.min(event.end, view.to)) - x);
-      return html`<g class=${"chart-event sport" + included}><rect x=${x.toFixed(1)} y="46" width=${width.toFixed(1)} height="14" rx="4" />
-        <text x=${(x + 4).toFixed(1)} y="57">${event.label}</text></g>`;
+      const top = layout.lanes.sport;
+      return html`<g class=${"chart-event sport" + included}><rect x=${x.toFixed(1)} y=${top} width=${width.toFixed(1)} height="14" rx="4" />
+        <text x=${(x + 4).toFixed(1)} y=${top + 11}>${event.label}</text></g>`;
     }
-    const y = event.kind === "insulin" ? 14 : 34;
+    const y = layout.lanes[event.kind];
     const label = event.kind === "insulin" ? num(event.amount, 1) + " IE" : num(event.amount, 0) + " g";
     // Labels near the right edge flip left; a label that would overlap its lane neighbour is left out.
     const labelWidth = label.length * 6;
@@ -125,7 +134,7 @@ function Handle({ name, t, scales, layout, interactive, reading, active, snapped
   return html`<g class=${"window-handle" + (active ? " is-active" : "") + (snapped ? " is-snapped" : "")} data-handle=${name}
     transform=${"translate(" + scales.x(t).toFixed(1) + " 0)"} tabindex=${interactive ? "0" : null} role=${interactive ? "slider" : null}
     aria-label=${interactive ? label + " des Zeitraums" : null} aria-valuetext=${interactive ? timeOnly(t) + " Uhr" : null}>
-    <line class="handle-line" x1="0" y1="64" x2="0" y2=${interactive ? 290 : layout.plotBottom} />
+    <line class="handle-line" x1="0" y1=${layout.plotTop - 6} x2="0" y2=${interactive ? 290 : layout.plotBottom} />
     <circle class="handle-dot" data-tone=${reading?.tone || "none"} cx="0" cy=${dotY.toFixed(1)} r=${interactive ? 7 : 4.5} hidden=${value == null} />
     ${interactive && html`<rect class="handle-hit" x="-24" y="62" width="48" height="262" />
       <g class="handle-knob"><rect x="-21" y="288" width="42" height="30" rx="15" /><path d="M-5 297v12M0 297v12M5 297v12" /></g>`}</g>`;
@@ -133,12 +142,14 @@ function Handle({ name, t, scales, layout, interactive, reading, active, snapped
 
 // One chart. `range` is a meal window (or {start: -Infinity, end: Infinity, mealAt} for the day),
 // `overview` draws the day without a window, `editor` adds the window editor's handles and readings.
-export function GlucoseChart({ layout, range, view, entries, treatments, bands, overview, clipId, editor }) {
+// `sport` lists sessions acting on a meal ({from, until} of their effect): a blue band along the bottom, darker
+// where it lies inside the window, so the share a meal takes is visible (user request 2026-11-23).
+export function GlucoseChart({ layout, range, view, entries, treatments, bands, overview, clipId, editor, sport }) {
   const interactive = Boolean(editor);
   const points = glucosePoints(entries);
   const scales = chartScales(layout, view, points);
   const visible = points.filter(point => point.t >= view.from - 10 * MINUTE && point.t <= view.to + 10 * MINUTE);
-  const height = interactive ? 324 : 284;
+  const height = interactive ? 324 : layout.height;
   const { left, right, plotTop, plotBottom, width } = layout;
   const grid = [];
   for (let g = Math.ceil(scales.bottom / 50) * 50; g <= scales.top; g += 50) grid.push(g);
@@ -179,6 +190,13 @@ export function GlucoseChart({ layout, range, view, entries, treatments, bands, 
         width=${(scales.x(range.end) - scales.x(range.start)).toFixed(1)} height=${plotBottom - plotTop + 6} />`}
       ${!overview && (range.manual || interactive) && (range.autoStart !== range.start || range.autoEnd !== range.end) &&
         [range.autoStart, range.autoEnd].map(t => html`<line class="auto-marker" x1=${scales.x(t).toFixed(1)} x2=${scales.x(t).toFixed(1)} y1=${plotTop} y2=${plotBottom} />`)}
+      ${(sport || []).map(band => {
+        const from = Math.max(band.from, view.from), to = Math.min(band.until, view.to);
+        const inFrom = Math.max(from, range.start), inTo = Math.min(to, range.end);
+        if (to <= from) return null;
+        return html`<g class="sport-band"><rect x=${scales.x(from).toFixed(1)} y=${plotBottom - 7} width=${(scales.x(to) - scales.x(from)).toFixed(1)} height="7" />
+          ${inTo > inFrom && html`<rect class="is-inside" x=${scales.x(inFrom).toFixed(1)} y=${plotBottom - 7} width=${(scales.x(inTo) - scales.x(inFrom)).toFixed(1)} height="7" />`}</g>`;
+      })}
       <${EventLanes} events=${chartEvents(treatments)} scales=${scales} view=${view} range=${range} layout=${layout} />
       ${segments.filter(item => item.length > 1).map(item => html`<polyline class="curve" points=${item.join(" ")} />`)}
       ${overview
@@ -190,7 +208,7 @@ export function GlucoseChart({ layout, range, view, entries, treatments, bands, 
     ${ticks.map(t => html`<line class="tick" x1=${scales.x(t).toFixed(1)} x2=${scales.x(t).toFixed(1)} y1=${plotBottom} y2=${plotBottom + 5} />
       <text class="x-label" x=${scales.x(t).toFixed(1)} y=${plotBottom + 19} text-anchor="middle">${timeOnly(t)}</text>`)}
     ${grid.map(g => html`<text class="y-label" x=${left - 6} y=${(scales.y(g) + 4).toFixed(1)} text-anchor="end">${g}</text>`)}
-    <text class="y-unit" x="2" y=${plotTop - 16}>mg/dL</text></svg>`;
+    ${!layout.compact && html`<text class="y-unit" x="2" y=${plotTop - 16}>mg/dL</text>`}</svg>`;
 }
 
 // The day as one chart: today the last hours up to now, otherwise the whole day.
@@ -202,9 +220,12 @@ export function DayChart({ data, view, clipId, className = "day-overview-chart",
 }
 
 // A meal's curve with its counted window; drawn once its block is open and has a width.
-export function MealChart({ meal, data }) {
+export function MealChart({ meal, data, compact }) {
   const [ref, width] = useWidth();
   const range = mealWindow(meal);
-  return html`<div class="meal-chart-plot" data-meal-id=${meal.id} ref=${ref}>${width > 0 && html`<${GlucoseChart} layout=${chartLayout(width)}
+  const sport = (meal.sport?.events || []).filter(event => event.effect_from && event.effect_until)
+    .map(event => ({ from: new Date(event.effect_from).getTime(), until: new Date(event.effect_until).getTime() }));
+  return html`<div class="meal-chart-plot" data-meal-id=${meal.id} ref=${ref}>${width > 0 && html`<${GlucoseChart}
+    layout=${compact ? compactLayout(width) : chartLayout(width)} sport=${sport}
     range=${range} view=${chartView(range, windowLimits(data))} entries=${data.entries} treatments=${data.treatments} bands=${data.target_bands} />`}</div>`;
 }

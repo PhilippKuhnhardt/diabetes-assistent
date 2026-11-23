@@ -76,21 +76,22 @@ def day_type_for(day: str, overrides: dict[str, str], periods: list[dict]) -> tu
     return ("free" if date.fromisoformat(day).weekday() >= 5 else "work"), "weekday"
 
 
-def analysis_sport_marks() -> dict[str, dict]:
+def window_checks() -> dict[str, tuple[str, str]]:
+    """Meal windows Philipp marked as right ("Passt"): meal id -> (start, end) of the window he checked."""
     with connect() as db:
-        rows = db.execute("SELECT meal_id,status,effect_mgdl FROM analysis_sport_marks").fetchall()
-    return {row["meal_id"]: {"status": row["status"], "effect_mgdl": row["effect_mgdl"]}
-            for row in rows}
+        rows = db.execute("SELECT meal_id,start_at,end_at FROM window_checks").fetchall()
+    return {row["meal_id"]: (row["start_at"], row["end_at"]) for row in rows}
 
 
-def set_analysis_sport_mark(meal_id: str, status: str, effect_mgdl: str = "0") -> None:
+def set_window_check(meal_id: str, start: str | None, end: str | None) -> None:
     with connect() as db:
-        if status == "auto":
-            db.execute("DELETE FROM analysis_sport_marks WHERE meal_id=?", (meal_id,))
+        if start is None or end is None:
+            db.execute("DELETE FROM window_checks WHERE meal_id=?", (meal_id,))
         else:
-            db.execute("INSERT INTO analysis_sport_marks(meal_id,status,effect_mgdl) VALUES(?,?,?) "
-                       "ON CONFLICT(meal_id) DO UPDATE SET status=excluded.status,effect_mgdl=excluded.effect_mgdl",
-                       (meal_id, status, effect_mgdl))
+            db.execute("INSERT INTO window_checks(meal_id,start_at,end_at,checked_at) VALUES(?,?,?,?) "
+                       "ON CONFLICT(meal_id) DO UPDATE SET start_at=excluded.start_at,end_at=excluded.end_at,"
+                       "checked_at=excluded.checked_at",
+                       (meal_id, start, end, datetime.now(timezone.utc).isoformat()))
 
 
 def sport_session_effects() -> dict[str, str]:

@@ -7,14 +7,13 @@
 import { html, useState, useEffect } from "./html.js";
 import { api, toast, num, sportNames } from "./lib.js";
 import { mealChat } from "./main.js";
-import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, Segments, SurchargeChoice } from "./meal-fields.js";
+import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, SurchargeChoice } from "./meal-fields.js";
+import { SportEffectFields, SportShares, sportFields, sportValues } from "./sport.js";
 
 const KIND_TITLES = { meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur", exercise: "Sport", basal: "Basal" };
 const fmt = (value, digits = 1) => num(value, digits);
 const parse = text => Number(String(text ?? "").replace(",", ".").trim());
 const blank = value => value == null || Number(value) === 0 ? "" : fmt(value);
-const hours = minutes => fmt(minutes / 60) + " h";
-const signed = value => (value > 0 ? "+" : value < 0 ? "−" : "±") + fmt(Math.abs(value), 0);
 
 function Meter({ level, onClick }) {
   return html`<button type="button" class="meter" data-level=${level == null ? "" : CERTAINTY_LEVELS[level]} onClick=${onClick}
@@ -26,7 +25,6 @@ const Row = ({ label, children, hint }) => html`<label class="card-row"><span>${
 
 function initial(item) {
   const sport = item.kind === "exercise";
-  const effect = sport ? -Number(item.sport_effect_mgdl || 0) : 0;
   return {
     at: item.time, carbs: blank(item.carbs), insulin: blank(item.insulin),
     level: CERTAINTY_LEVELS.includes(item.carbs_certainty) ? CERTAINTY_LEVELS.indexOf(item.carbs_certainty) : null,
@@ -36,10 +34,7 @@ function initial(item) {
     // Static or calculated fat/protein surcharge (app/fpe.py); the calculated one needs the agent's estimate.
     surchargeMode: item.surcharge ? "fpe" : "static",
     sportKind: item.sport_kind || "jogging", duration: item.duration_minutes ? String(Number(item.duration_minutes)) : "",
-    effectMode: !sport || !item.sport_effect_custom ? "standard" : effect === 0 ? "none" : "own",
-    effect: item.sport_effect_custom && effect !== 0 ? String(effect) : "",
-    minutesMode: item.sport_minutes_custom ? "own" : "standard",
-    hours: item.sport_minutes_custom ? fmt(item.sport_minutes / 60) : "",
+    sportFx: sportFields(sport ? item : null),
     units: item.kind === "basal" ? fmt(item.basal_units) : "",
   };
 }
@@ -97,15 +92,13 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
     if (busy) return;
     setBusy(true);
     try {
-      // A typed value that is no number goes as "", so the server refuses it instead of taking the default.
-      const number = text => Number.isFinite(parse(text)) ? parse(text) : "";
       await onSave({
         at: v.at, notes: v.notes,
         ...(sport ? {
           sport_kind: v.sportKind, duration_minutes: parse(v.duration) || 0,
           // The signed glucose change as shown (− lowers); null: the kind's setting.
-          sport_effect_change_mgdl: v.effectMode === "own" ? number(v.effect) : v.effectMode === "none" ? 0 : null,
-          sport_minutes: v.minutesMode === "own" ? (Number.isFinite(parse(v.hours)) ? Math.round(parse(v.hours) * 60) : "") : null,
+          sport_effect_change_mgdl: sportValues(v.sportFx).change,
+          sport_minutes: sportValues(v.sportFx).minutes,
         } : basal ? { units: parse(v.units) || 0 } : {
           carbs, insulin: parse(v.insulin) || 0,
           carbs_certainty: v.level == null ? item.carbs_certainty ?? null : CERTAINTY_LEVELS[v.level],
@@ -167,22 +160,8 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
         <${Row} label="Dauer"><span class="card-number"><input inputmode="numeric" required value=${v.duration}
           onInput=${event => set({ duration: event.currentTarget.value })} aria-label="Dauer in Minuten" /><small>min</small></span><//>
       </div>
-      <div class="card-group">
-        <div class="card-group-head"><b>Wirkung auf den BZ</b>
-          <small>${v.effectMode === "standard" ? "Standard " + signed(-Number(defaults.effect || 0)) + " mg/dL"
-            : v.effectMode === "none" ? "Kein Einfluss" : "− senkt, + hebt"}</small></div>
-        <${Segments} label="Wirkung" value=${v.effectMode} onChange=${effectMode => set({ effectMode })}
-          options=${[["standard", "Standard"], ["own", "Eigener"], ["none", "Keine"]]} />
-        ${v.effectMode === "own" && html`<span class="card-number wide"><input inputmode="numeric" required aria-label="Wirkung in mg/dL"
-          placeholder=${signed(-Number(defaults.effect || 0))} value=${v.effect} onInput=${event => set({ effect: event.currentTarget.value })} /><small>mg/dL</small></span>`}
-        ${v.effectMode !== "none" && html`
-          <div class="card-group-head"><b>Wirkdauer nach dem Ende</b>
-            <small>${v.minutesMode === "standard" ? "Standard " + hours(defaults.minutes || 300) : "30 min bis 24 h"}</small></div>
-          <${Segments} label="Wirkdauer" value=${v.minutesMode} onChange=${minutesMode => set({ minutesMode })}
-            options=${[["standard", "Standard"], ["own", "Eigene"]]} />
-          ${v.minutesMode === "own" && html`<span class="card-number wide"><input inputmode="decimal" required aria-label="Wirkdauer in Stunden"
-            placeholder=${fmt((defaults.minutes || 300) / 60)} value=${v.hours} onInput=${event => set({ hours: event.currentTarget.value })} /><small>h</small></span>`}`}
-      </div>`}
+      <${SportEffectFields} fields=${v.sportFx} defaults=${defaults} onChange=${sportFx => set({ sportFx })} />
+      ${item.sport_shares && html`<${SportShares} item=${item} />`}`}
 
       ${basal && html`<div class="card-tiles one"><label class="tile"><small>Basal</small><span class="tile-value"><input inputmode="decimal"
         required aria-label="Basal in IE" value=${v.units} onInput=${event => set({ units: event.currentTarget.value })} /><small>IE</small></span></label></div>`}
