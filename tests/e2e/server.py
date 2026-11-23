@@ -32,6 +32,10 @@ for d in range(3, -1, -1):
         if dt < now: add(dt, carbs=c, insulin=ins, notes="")
     dt = day + timedelta(hours=14)
     if dt < now: add(dt, carbs=15, notes="")
+# A run yesterday afternoon: its effect reaches into lunch and dinner, so Verlauf shows a sport card and shares.
+run = (now - timedelta(days=1)).replace(hour=15, minute=0)
+treat.append({"_id": f"t{len(treat)}", "created_at": run.strftime("%Y-%m-%dT%H:%M:%S.000Z"), "eventType": "Exercise",
+              "duration": 45, "notes": "Joggen [DAS1:jogging]"})
 # "Heute" always has a meal, whatever the hour the suite runs: before the first fixed meal (06:20 UTC)
 # today would be empty and the smoke test of today's meals fails (CI run 2026-11-19 02:30 UTC).
 from zoneinfo import ZoneInfo

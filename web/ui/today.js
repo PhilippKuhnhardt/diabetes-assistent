@@ -1,10 +1,12 @@
-// "Heute": the chart of the last hours with what still acts ("Wirkt noch") and the entries of the last
-// three hours, and the list of things to do across the last days ("Zu erledigen"). The server sends the
-// day, the forecast (`on_board` of /api/entry/preview) and the inbox; these components only draw them.
+// "Heute": the chart of the last hours with what still acts ("Wirkt noch"), the entries of the last three
+// hours and today's meals and sport. The server sends the day and the forecast (`on_board` of
+// /api/entry/preview); these components only draw them. Open tasks of past days live in Verlauf's week
+// strip and day cards (the former "Zu erledigen" list was removed 2026-11-23).
 import { html, useState } from "./html.js";
 import { MINUTE, num, timeOnly, names, sportNames, SPLIT_TIMING, FactorIcons } from "./lib.js";
 import { DayChart, glucosePoints } from "./charts.js";
 import { dayBounds, mealBlocks, entryLabel } from "./day.js";
+import { sportSummary } from "./sport.js";
 
 const HOURS = [[3, "3 h"], [6, "6 h"], [24, "Tag"]];
 
@@ -62,8 +64,8 @@ function MealToday({ meal, items, data, onEdit }) {
   const factor = meal.calculation?.factor_units_per_ke;
   const running = factor == null && meal.window?.end && new Date(meal.window.end).getTime() > Date.now();
   const [open, setOpen] = useState(Boolean(running));
-  // Basal stands on its own; an entry the card cannot edit is still listed for context.
-  const entries = items.filter(item => item.kind !== "basal");
+  // Basal stands on its own and sport has its own row; an entry the card cannot edit is still listed for context.
+  const entries = items.filter(item => item.kind !== "basal" && item.kind !== "exercise");
   const carbs = sumOf(entries, "carbs");
   const insulin = sumOf(entries, "insulin");
   const listId = "meal-today-" + meal.id;
@@ -85,11 +87,27 @@ function MealToday({ meal, items, data, onEdit }) {
     })}</ul></li>`;
 }
 
+// A sport session of today: what it does and which meals it reaches; a tap opens the same card as in Verlauf.
+function SportToday({ item, onEdit }) {
+  const summary = sportSummary(item);
+  return html`<li><button type="button" class="meal-today sport-today" onClick=${() => onEdit(item.id)}
+    aria-label=${summary.title + " um " + timeOnly(item.at) + " öffnen"}>
+    <time>${timeOnly(item.at)}</time><b>${summary.title}</b>
+    <span>${summary.parts.map(part => part.text).join(" · ") || "wirkt in keiner Mahlzeit"}</span>
+    <small>${summary.effect}</small><i class="meal-today-toggle" aria-hidden="true">›</i></button></li>`;
+}
+
 function MealsToday({ data, onEdit }) {
   const { blocks } = mealBlocks(data);
-  if (!blocks.length) return html`<div class="meals-today"><span class="recent-label">Mahlzeiten heute: noch keine</span></div>`;
-  return html`<div class="meals-today" aria-label="Mahlzeiten heute"><span class="recent-label">Mahlzeiten heute</span>
-    <ul>${blocks.map(({ meal, items }) => html`<${MealToday} key=${meal.id} meal=${meal} items=${items} data=${data} onEdit=${onEdit} />`)}</ul></div>`;
+  const sessions = data.timeline.filter(item => item.kind === "exercise");
+  const label = sessions.length ? "Mahlzeiten und Sport heute" : "Mahlzeiten heute";
+  if (!blocks.length && !sessions.length) return html`<div class="meals-today"><span class="recent-label">Mahlzeiten heute: noch keine</span></div>`;
+  const rows = [...blocks.map(block => ({ t: new Date(block.meal.at).getTime(), block })),
+    ...sessions.map(item => ({ t: new Date(item.at).getTime(), item }))].sort((a, b) => a.t - b.t);
+  return html`<div class="meals-today" aria-label=${label}><span class="recent-label">${label}</span>
+    <ul>${rows.map(row => row.block
+      ? html`<${MealToday} key=${row.block.meal.id} meal=${row.block.meal} items=${row.block.items} data=${data} onEdit=${onEdit} />`
+      : html`<${SportToday} key=${row.item.id} item=${row.item} onEdit=${onEdit} />`)}</ul></div>`;
 }
 
 // Today the last hours up to now (3 h, 6 h or the whole day), other days the whole day.
@@ -115,30 +133,4 @@ export function Overview({ data, day, today, active, hours, onHours, onEdit = ()
     ${isToday && data && html`<${Recent} treatments=${[...data.treatments, ...(data.basal || []).map(dose => ({ at: dose.at, basal: dose.units }))]} />`}
     ${isToday && data && html`<${MealsToday} data=${data} onEdit=${onEdit} />`}
     ${note && html`<p id="day-overview-note" class="hint">${note}</p>`}</div>`;
-}
-
-// "Zu erledigen": what needs an action across the last days (user request 2026-10-21). The server decides
-// what is open; an opened hint folds away, and a done one is no longer listed.
-function dayLabel(day, today) {
-  const yesterday = new Date(new Date(today + "T12:00:00").getTime() - 24 * 60 * MINUTE).toLocaleDateString("sv-SE");
-  if (day === today) return "heute";
-  if (day === yesterday) return "gestern";
-  return new Date(day + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" });
-}
-
-function InboxItem({ item, today, onOpen }) {
-  return html`<li><button type="button" class="inbox-item" onClick=${() => onOpen(item)}><span>
-    <strong>${names[item.meal] + " " + dayLabel(item.day, today) + ", " + timeOnly(item.at)}</strong>
-    ${item.reasons.map(reason => html`<small>${reason.text}</small>`)}</span><span class="inbox-go" aria-hidden="true">›</span></button></li>`;
-}
-
-export function Inbox({ data, today, onOpen }) {
-  const items = data?.items || [];
-  const fresh = items.filter(item => !item.seen);
-  const seen = items.filter(item => item.seen);
-  return html`<section id="inbox" class=${"inbox" + (fresh.length ? "" : " is-quiet")} aria-label="Zu erledigen" hidden=${!items.length}>
-    <h2 class="inbox-title">Zu erledigen <span id="inbox-count" class="inbox-count">${fresh.length || ""}</span></h2>
-    <ul id="inbox-new" class="inbox-list">${fresh.map(item => html`<${InboxItem} key=${item.key} item=${item} today=${today} onOpen=${onOpen} />`)}</ul>
-    ${seen.length > 0 && html`<details id="inbox-seen" class="inbox-seen"><summary>${seen.length + (seen.length === 1 ? " Mahlzeit noch offen, schon angesehen" : " Mahlzeiten noch offen, schon angesehen")}</summary>
-      <ul class="inbox-list">${seen.map(item => html`<${InboxItem} key=${item.key} item=${item} today=${today} onOpen=${onOpen} />`)}</ul></details>`}</section>`;
 }

@@ -5,7 +5,8 @@
 // app.js mounts the form, passes the day and settings, and talks to it through `control`
 // (refresh, tick, choose, applyAgent, submit), since the minute tick, "+" and the agent live outside.
 import { html, useRef, useState, useEffect } from "./html.js";
-import { post, toast, num, timeOnly, names, sportNames, sportChange, localInputTime, toInstant, currentPosition } from "./lib.js";
+import { post, toast, num, timeOnly, names, sportNames, localInputTime, toInstant, currentPosition } from "./lib.js";
+import { SportEffectFields, sportFields, sportValues } from "./sport.js";
 import { DoseHelp, sliderUnits, firstPart } from "./dose.js";
 import { DayTypeSwitch } from "./day.js";
 import { mealChat } from "./main.js";
@@ -46,7 +47,7 @@ function blank(kind = "meal") {
   return {
     kind, at: nowTime(), timeTouched: false, timeOpen: false, noteOpen: false, fingerOpen: false,
     carbs: "", insulin: "", finger: "", notes: "", certainty: 1, certaintyUnset: false, fat: false, fast: false,
-    withBasal: true, basalUnits: "", sportKind: "jogging", duration: "", sportEffect: "", sportEffectTouched: false,
+    withBasal: true, basalUnits: "", sportKind: "jogging", duration: "", sportFx: sportFields(null),
     entryAs: null, split: null, closeMeal: false, place: undefined, agent: null,
     position: null, positionAt: 0, positionPending: false, positionError: null,
     preview: null, busy: false, doseChoice: null, slider: null, sliderKey: null, doseNote: "", doseChanged: {},
@@ -73,7 +74,8 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     const units = Number(props.current.settings?.basal_default_units ?? 17);
     return Number.isFinite(units) && units > 0 ? units : 0;
   };
-  const sportDefault = kind => sportChange(props.current.settings?.sport_effects_mgdl?.[kind]);
+  const sportDefaults = kind => ({ effect: props.current.settings?.sport_effects_mgdl?.[kind] ?? 0,
+    minutes: props.current.settings?.sport_durations_minutes?.[kind] ?? 300 });
   const isToday = () => props.current.day === props.current.today;
   const fingerActive = s => s.kind === "meal" && isToday();
   const current = (s = store.current) => s.preview && s.preview.day === props.current.day && s.preview.mode === s.kind ? s.preview : null;
@@ -308,12 +310,13 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     const basalUnits = entryBasalUnits(s);
     const chosenOption = mode === "meal" && s.doseChoice && help ? help.options.find(option => option.variant === s.doseChoice) : null;
     const chosen = chosenOption?.units ?? null;
-    const sportEffect = sportEffectValue(s);
+    const sport = sportValues(s.sportFx);
     const payload = {
       ...previewRequest(), at, carbs: s.carbs, insulin: s.insulin, with_basal: basalUnits > 0,
       sport_kind: s.sportKind,
-      // Only a changed value is stored on the session; the default keeps following the setting.
-      sport_effect_mgdl: mode === "exercise" && sportEffect !== "" && Number(sportEffect) !== sportDefault(s.sportKind) ? sportEffect : null,
+      // Only an own value is stored on the session; Standard keeps following the setting of its kind.
+      sport_effect_mgdl: mode === "exercise" && sport.change !== null ? String(sport.change) : null,
+      sport_minutes: mode === "exercise" ? sport.minutes : null,
       duration_minutes: s.duration || 0, notes: s.notes,
       carbs_certainty: carbs > 0 ? certaintyValue(s) : null,
       fat_protein: carbs > 0 && s.fat, fast: carbs > 0 && s.fast,
@@ -372,8 +375,6 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
   // The server offers the usual basal dose with an entry before breakfast end while the day has none.
   const previewBasalUnits = s => s.kind === "meal" && current(s) ? Number(current(s).basal_units) : 0;
   const entryBasalUnits = s => previewBasalUnits(s) > 0 && s.withBasal ? previewBasalUnits(s) : 0;
-  // A sport entry starts with its kind's setting; a typed value stays until the entry is saved.
-  const sportEffectValue = s => s.sportEffectTouched ? s.sportEffect : String(sportDefault(s.sportKind));
 
   function openAgent() {
     const { agentInfo } = props.current;
@@ -572,8 +573,8 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
         html`<option value=${kind} selected=${f.sportKind === kind}>${label}</option>`)}</select></label>
     <label id="entry-duration-field" hidden=${f.kind !== "exercise"}>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"
       value=${f.duration} disabled=${f.kind !== "exercise"} required=${f.kind === "exercise"} onInput=${event => set({ duration: event.currentTarget.value })} /></label>
-    <label id="entry-sport-effect-field" hidden=${f.kind !== "exercise"}>Einfluss <span>mg/dL, − senkt</span><input name="sport_effect_mgdl" type="number" min="-500" max="500" step="1"
-      value=${sportEffectValue(f)} disabled=${f.kind !== "exercise"} onInput=${event => set({ sportEffect: event.currentTarget.value, sportEffectTouched: true })} /></label>
+    ${f.kind === "exercise" && html`<${SportEffectFields} id="entry-sport-effect-field" fields=${f.sportFx} defaults=${sportDefaults(f.sportKind)}
+      onChange=${sportFx => set({ sportFx })} />`}
     <section id="entry-influences" class="entry-card" aria-label="Einflüsse" hidden=${!dayType}>
       <p class="entry-card-title">Einflüsse</p>
       ${dayType && html`<div id="entry-day-type" class="entry-day-type">

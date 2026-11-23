@@ -140,9 +140,12 @@
       "events": [
        {
         "at": "2026-10-07T07:40:00+00:00",
+        "effect_from": "2026-10-07T08:20:00+00:00",
         "effect_mgdl": "5.333333333333333333333333332",
+        "effect_until": "2026-10-07T13:20:00+00:00",
         "id": "ns-0004",
-        "kind": "jogging"
+        "kind": "jogging",
+        "previous_day": false
        }
       ],
       "status": "auto",
@@ -1047,30 +1050,33 @@
      "day": "2026-09-26",
      "day_type": "free",
      "delta_mgdl": "-80.97298983348300895997148170",
-     "deviation_mgdl": "-86.80632316681634229330481500",
+     "deviation_mgdl": "-64.13965650014967562663814833",
      "end": "2026-09-26T19:05:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "5.8333333333333333333333333",
+     "expected_delta_mgdl": "-16.83333333333333333333333337",
      "id": "t-0106",
      "manual_window": false,
      "rapid_units_in_window": "14.5",
      "reason": null,
      "sport": {
-      "effect_mgdl": "0",
+      "effect_mgdl": "22.66666666666666666666666667",
       "events": [
        {
         "at": "2026-09-26T13:45:00+00:00",
+        "effect_from": "2026-09-26T14:45:00+00:00",
         "effect_mgdl": "22.66666666666666666666666667",
+        "effect_until": "2026-09-26T19:45:00+00:00",
         "id": "t-0105",
-        "kind": "gym"
+        "kind": "gym",
+        "previous_day": false
        }
       ],
-      "status": "unaffected",
+      "status": "auto",
       "suggested": true,
       "suggested_effect_mgdl": "22.66666666666666666666666667"
      },
      "strong_outlier": false,
-     "units_per_ke": "1.107862364068875301402671476"
+     "units_per_ke": "1.166736822943334175861545935"
     },
     {
      "at": "2026-09-25T16:40:00+00:00",
@@ -1318,30 +1324,33 @@
      "day": "2026-09-15",
      "day_type": "work",
      "delta_mgdl": "-2.5005956376523561375645883",
-     "deviation_mgdl": "-128.5697647643742884565584570",
+     "deviation_mgdl": "-112.5697647643742884565584570",
      "end": "2026-09-15T19:10:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "126.0691691267219323189938687",
+     "expected_delta_mgdl": "110.0691691267219323189938687",
      "id": "t-0066",
      "manual_window": false,
      "rapid_units_in_window": "7.5",
      "reason": null,
      "sport": {
-      "effect_mgdl": "-40",
+      "effect_mgdl": "-24.0",
       "events": [
        {
         "at": "2026-09-15T13:40:00+00:00",
+        "effect_from": "2026-09-15T14:40:00+00:00",
         "effect_mgdl": "-24.0",
+        "effect_until": "2026-09-15T19:40:00+00:00",
         "id": "t-0065",
-        "kind": "racing"
+        "kind": "racing",
+        "previous_day": false
        }
       ],
-      "status": "affected",
+      "status": "auto",
       "suggested": true,
       "suggested_effect_mgdl": "-24.0"
      },
      "strong_outlier": false,
-     "units_per_ke": "0.84354375327857413921311064"
+     "units_per_ke": "0.9044961342309550915940630210"
     },
     {
      "at": "2026-09-14T16:35:00+00:00",
@@ -1515,9 +1524,9 @@
    "count": 29,
    "excluded_count": 0,
    "max_units_per_ke": "1.531182492648713724055320570",
-   "mean_units_per_ke": "1.171428677241078228310282205",
-   "median_g_per_unit": "8.726400478739319791216463313",
-   "median_units_per_ke": "1.145947865258262109238978457",
+   "mean_units_per_ke": "1.17556063723510718785648313",
+   "median_g_per_unit": "8.706927104101627415775102224",
+   "median_units_per_ke": "1.148510821376836441840243076",
    "min_units_per_ke": "0.7997597216149564443347522631",
    "multi_carb_count": 0,
    "nightscout_units_per_ke": [
@@ -1566,9 +1575,12 @@
       "events": [
        {
         "at": "2026-10-07T07:40:00+00:00",
+        "effect_from": "2026-10-07T08:20:00+00:00",
         "effect_mgdl": "22.66666666666666666666666667",
+        "effect_until": "2026-10-07T13:20:00+00:00",
         "id": "ns-0004",
-        "kind": "jogging"
+        "kind": "jogging",
+        "previous_day": false
        }
       ],
       "status": "auto",
@@ -2125,9 +2137,12 @@
       "events": [
        {
         "at": "2026-09-15T13:40:00+00:00",
+        "effect_from": "2026-09-15T14:40:00+00:00",
         "effect_mgdl": "-3.333333333333333333333333332",
+        "effect_until": "2026-09-15T19:40:00+00:00",
         "id": "t-0065",
-        "kind": "racing"
+        "kind": "racing",
+        "previous_day": false
        }
       ],
       "status": "auto",
@@ -2911,7 +2926,7 @@
      {
       "baseline_units_per_ke": "1.148510821376836441840243076",
       "carbs_total": "75",
-      "confirmed_effect_mgdl": "-40",
+      "confirmed_effect_mgdl": null,
       "day": "2026-09-15",
       "delta_mgdl": "-2.5005956376523561375645883",
       "effect_mgdl": "-40.0538553757938544396222644",
@@ -3005,17 +3020,22 @@
     {
      "above": 29,
      "below": 11,
-     "variants": 2
+     "variants": 1
     },
     {
      "above": 33,
-     "below": 14,
+     "below": 13,
      "variants": 3
     },
     {
-     "above": 36,
-     "below": 14,
-     "variants": 4
+     "above": 35,
+     "below": 15,
+     "variants": 1
+    },
+    {
+     "above": 38,
+     "below": 15,
+     "variants": 2
     },
     {
      "above": 38,
@@ -3023,298 +3043,283 @@
      "variants": 1
     },
     {
-     "above": 38,
-     "below": 13,
-     "variants": 2
-    },
-    {
-     "above": 29,
-     "below": 13,
-     "variants": 4
+     "above": 27,
+     "below": 12,
+     "variants": 6
     },
     {
      "above": 32,
-     "below": 14,
-     "variants": 3
-    },
-    {
-     "above": 31,
-     "below": 15,
-     "variants": 2
-    },
-    {
-     "above": 31,
-     "below": 16,
-     "variants": 1
-    },
-    {
-     "above": 36,
-     "below": 15,
-     "variants": 1
-    },
-    {
-     "above": 23,
      "below": 13,
-     "variants": 9
-    },
-    {
-     "above": 27,
-     "below": 14,
-     "variants": 5
-    },
-    {
-     "above": 26,
-     "below": 15,
-     "variants": 6
-    },
-    {
-     "above": 27,
-     "below": 16,
-     "variants": 6
+     "variants": 4
     },
     {
      "above": 30,
+     "below": 16,
+     "variants": 3
+    },
+    {
+     "above": 32,
      "below": 15,
+     "variants": 3
+    },
+    {
+     "above": 36,
+     "below": 14,
      "variants": 2
+    },
+    {
+     "above": 23,
+     "below": 12,
+     "variants": 3
+    },
+    {
+     "above": 27,
+     "below": 13,
+     "variants": 8
+    },
+    {
+     "above": 26,
+     "below": 16,
+     "variants": 4
+    },
+    {
+     "above": 27,
+     "below": 16,
+     "variants": 5
+    },
+    {
+     "above": 31,
+     "below": 15,
+     "variants": 3
     },
     {
      "above": 22,
      "below": 13,
-     "variants": 5
+     "variants": 9
     },
     {
      "above": 25,
-     "below": 14,
-     "variants": 7
+     "below": 13,
+     "variants": 5
     },
     {
      "above": 24,
-     "below": 15,
-     "variants": 25
-    },
-    {
-     "above": 26,
      "below": 16,
-     "variants": 5
+     "variants": 11
     },
     {
-     "above": 27,
+     "above": 28,
      "below": 15,
-     "variants": 5
+     "variants": 6
     },
     {
      "above": 21,
-     "below": 14,
-     "variants": 5
+     "below": 13,
+     "variants": 6
+    },
+    {
+     "above": 20,
+     "below": 15,
+     "variants": 6
     },
     {
      "above": 25,
      "below": 17,
-     "variants": 8
-    },
-    {
-     "above": 20,
-     "below": 16,
      "variants": 9
     },
     {
-     "above": 19,
-     "below": 14,
+     "above": 27,
+     "below": 15,
      "variants": 4
     },
     {
+     "above": 19,
+     "below": 15,
+     "variants": 3
+    },
+    {
      "above": 23,
-     "below": 16,
-     "variants": 12
+     "below": 17,
+     "variants": 5
     },
     {
      "above": 23,
      "below": 18,
-     "variants": 3
+     "variants": 2
+    },
+    {
+     "above": 24,
+     "below": 18,
+     "variants": 2
     },
     {
      "above": 18,
      "below": 17,
      "variants": 6
-    },
-    {
-     "above": 18,
-     "below": 15,
-     "variants": 2
     },
     {
      "above": 22,
      "below": 17,
-     "variants": 7
+     "variants": 8
     },
     {
      "above": 21,
-     "below": 19,
-     "variants": 6
+     "below": 18,
+     "variants": 8
     },
     {
-     "above": 23,
-     "below": 21,
+     "above": 24,
+     "below": 20,
      "variants": 2
     },
     {
      "above": 28,
      "below": 12,
-     "variants": 8
-    },
-    {
-     "above": 32,
-     "below": 13,
-     "variants": 1
+     "variants": 3
     },
     {
      "above": 31,
-     "below": 12,
-     "variants": 4
+     "below": 13,
+     "variants": 2
     },
     {
      "above": 35,
-     "below": 13,
+     "below": 12,
      "variants": 3
     },
     {
      "above": 37,
-     "below": 12,
-     "variants": 6
+     "below": 13,
+     "variants": 3
     },
     {
-     "above": 27,
-     "below": 13,
-     "variants": 6
+     "above": 26,
+     "below": 12,
+     "variants": 5
     },
     {
      "above": 28,
      "below": 14,
-     "variants": 4
+     "variants": 3
     },
     {
-     "above": 29,
-     "below": 14,
-     "variants": 2
-    },
-    {
-     "above": 31,
-     "below": 13,
-     "variants": 2
-    },
-    {
-     "above": 27,
+     "above": 24,
      "below": 12,
      "variants": 4
     },
     {
+     "above": 26,
+     "below": 13,
+     "variants": 3
+    },
+    {
      "above": 24,
+     "below": 15,
+     "variants": 21
+    },
+    {
+     "above": 26,
+     "below": 15,
+     "variants": 8
+    },
+    {
+     "above": 22,
+     "below": 12,
+     "variants": 3
+    },
+    {
+     "above": 25,
      "below": 14,
+     "variants": 2
+    },
+    {
+     "above": 25,
+     "below": 16,
      "variants": 6
     },
     {
-     "above": 30,
+     "above": 28,
+     "below": 16,
+     "variants": 3
+    },
+    {
+     "above": 22,
+     "below": 14,
+     "variants": 7
+    },
+    {
+     "above": 22,
+     "below": 16,
+     "variants": 6
+    },
+    {
+     "above": 27,
+     "below": 18,
+     "variants": 2
+    },
+    {
+     "above": 19,
+     "below": 16,
+     "variants": 2
+    },
+    {
+     "above": 21,
+     "below": 17,
+     "variants": 14
+    },
+    {
+     "above": 24,
+     "below": 19,
+     "variants": 3
+    },
+    {
+     "above": 20,
      "below": 16,
      "variants": 4
     },
     {
-     "above": 23,
-     "below": 14,
-     "variants": 5
-    },
-    {
-     "above": 24,
-     "below": 17,
-     "variants": 9
-    },
-    {
-     "above": 26,
-     "below": 17,
-     "variants": 6
+     "above": 17,
+     "below": 19,
+     "variants": 3
     },
     {
      "above": 21,
-     "below": 15,
-     "variants": 10
-    },
-    {
-     "above": 22,
-     "below": 14,
-     "variants": 5
-    },
-    {
-     "above": 22,
-     "below": 16,
-     "variants": 8
-    },
-    {
-     "above": 25,
-     "below": 18,
-     "variants": 1
+     "below": 19,
+     "variants": 7
     },
     {
      "above": 20,
-     "below": 15,
-     "variants": 9
-    },
-    {
-     "above": 19,
-     "below": 15,
-     "variants": 1
-    },
-    {
-     "above": 21,
      "below": 17,
      "variants": 17
     },
     {
-     "above": 23,
-     "below": 19,
-     "variants": 2
-    },
-    {
-     "above": 17,
-     "below": 20,
-     "variants": 2
-    },
-    {
-     "above": 20,
-     "below": 18,
-     "variants": 4
-    },
-    {
-     "above": 20,
-     "below": 20,
-     "variants": 8
-    },
-    {
      "above": 30,
-     "below": 12,
-     "variants": 3
-    },
-    {
-     "above": 32,
-     "below": 12,
-     "variants": 6
-    },
-    {
-     "above": 39,
      "below": 12,
      "variants": 5
     },
     {
-     "above": 28,
+     "above": 32,
+     "below": 12,
+     "variants": 5
+    },
+    {
+     "above": 38,
+     "below": 12,
+     "variants": 1
+    },
+    {
+     "above": 29,
      "below": 13,
      "variants": 3
     },
     {
-     "above": 25,
-     "below": 15,
-     "variants": 8
+     "above": 32,
+     "below": 14,
+     "variants": 1
     },
     {
      "above": 24,
-     "below": 16,
+     "below": 13,
      "variants": 8
     },
     {
@@ -3323,44 +3328,99 @@
      "variants": 4
     },
     {
-     "above": 24,
-     "below": 13,
-     "variants": 5
-    },
-    {
      "above": 23,
      "below": 15,
-     "variants": 22
+     "variants": 13
     },
     {
-     "above": 26,
-     "below": 18,
-     "variants": 1
+     "above": 28,
+     "below": 17,
+     "variants": 3
+    },
+    {
+     "above": 20,
+     "below": 14,
+     "variants": 2
     },
     {
      "above": 18,
-     "below": 18,
+     "below": 19,
      "variants": 4
     },
     {
-     "above": 21,
-     "below": 16,
-     "variants": 3
-    },
-    {
-     "above": 22,
-     "below": 19,
-     "variants": 3
-    },
-    {
-     "above": 18,
-     "below": 16,
+     "above": 20,
+     "below": 18,
      "variants": 5
     },
     {
-     "above": 18,
-     "below": 20,
+     "above": 27,
+     "below": 11,
+     "variants": 4
+    },
+    {
+     "above": 31,
+     "below": 12,
+     "variants": 6
+    },
+    {
+     "above": 33,
+     "below": 12,
+     "variants": 2
+    },
+    {
+     "above": 36,
+     "below": 12,
+     "variants": 3
+    },
+    {
+     "above": 29,
+     "below": 12,
+     "variants": 4
+    },
+    {
+     "above": 33,
+     "below": 15,
      "variants": 1
+    },
+    {
+     "above": 24,
+     "below": 14,
+     "variants": 5
+    },
+    {
+     "above": 25,
+     "below": 15,
+     "variants": 13
+    },
+    {
+     "above": 23,
+     "below": 16,
+     "variants": 15
+    },
+    {
+     "above": 21,
+     "below": 14,
+     "variants": 3
+    },
+    {
+     "above": 19,
+     "below": 19,
+     "variants": 2
+    },
+    {
+     "above": 15,
+     "below": 16,
+     "variants": 2
+    },
+    {
+     "above": 16,
+     "below": 19,
+     "variants": 2
+    },
+    {
+     "above": 20,
+     "below": 20,
+     "variants": 7
     },
     {
      "above": 19,
@@ -3368,119 +3428,64 @@
      "variants": 7
     },
     {
-     "above": 19,
-     "below": 19,
-     "variants": 4
-    },
-    {
-     "above": 28,
-     "below": 10,
-     "variants": 5
-    },
-    {
-     "above": 33,
-     "below": 12,
-     "variants": 4
-    },
-    {
-     "above": 33,
-     "below": 15,
-     "variants": 4
-    },
-    {
      "above": 26,
-     "below": 13,
-     "variants": 1
+     "below": 11,
+     "variants": 4
     },
     {
-     "above": 25,
-     "below": 13,
-     "variants": 8
-    },
-    {
-     "above": 28,
-     "below": 15,
+     "above": 37,
+     "below": 12,
      "variants": 2
     },
     {
-     "above": 20,
+     "above": 33,
      "below": 14,
-     "variants": 1
+     "variants": 3
+    },
+    {
+     "above": 21,
+     "below": 15,
+     "variants": 6
+    },
+    {
+     "above": 18,
+     "below": 15,
+     "variants": 2
     },
     {
      "above": 19,
      "below": 17,
-     "variants": 8
+     "variants": 5
     },
     {
-     "above": 15,
-     "below": 16,
+     "above": 23,
+     "below": 19,
      "variants": 2
     },
     {
-     "above": 16,
-     "below": 20,
-     "variants": 1
-    },
-    {
-     "above": 31,
-     "below": 11,
-     "variants": 3
-    },
-    {
-     "above": 27,
-     "below": 11,
-     "variants": 6
+     "above": 15,
+     "below": 19,
+     "variants": 2
     },
     {
      "above": 26,
+     "below": 10,
+     "variants": 3
+    },
+    {
+     "above": 22,
+     "below": 15,
+     "variants": 6
+    },
+    {
+     "above": 23,
      "below": 14,
      "variants": 3
     },
     {
-     "above": 25,
-     "below": 16,
-     "variants": 3
-    },
-    {
-     "above": 22,
-     "below": 18,
-     "variants": 3
-    },
-    {
-     "above": 15,
-     "below": 20,
-     "variants": 1
-    },
-    {
-     "above": 32,
-     "below": 11,
-     "variants": 5
-    },
-    {
-     "above": 37,
-     "below": 13,
-     "variants": 1
-    },
-    {
-     "above": 27,
-     "below": 10,
-     "variants": 1
-    },
-    {
-     "above": 22,
-     "below": 15,
-     "variants": 9
-    },
-    {
      "above": 16,
      "below": 15,
      "variants": 1
-    },
-    {
-     "above": 19,
-     "below": 16,
-     "variants": 5
     },
     {
      "above": 14,
@@ -3488,143 +3493,218 @@
      "variants": 2
     },
     {
-     "above": 15,
-     "below": 19,
+     "above": 22,
+     "below": 20,
      "variants": 1
     },
     {
      "above": 30,
-     "below": 11,
+     "below": 10,
+     "variants": 1
+    },
+    {
+     "above": 37,
+     "below": 16,
      "variants": 2
     },
     {
      "above": 37,
      "below": 15,
-     "variants": 1
+     "variants": 2
     },
     {
-     "above": 37,
-     "below": 16,
-     "variants": 3
-    },
-    {
-     "above": 40,
-     "below": 15,
-     "variants": 1
-    },
-    {
-     "above": 33,
-     "below": 17,
-     "variants": 1
-    },
-    {
-     "above": 29,
-     "below": 16,
-     "variants": 4
-    },
-    {
-     "above": 30,
-     "below": 17,
-     "variants": 3
-    },
-    {
-     "above": 32,
-     "below": 16,
-     "variants": 3
-    },
-    {
-     "above": 29,
-     "below": 17,
-     "variants": 1
-    },
-    {
-     "above": 20,
-     "below": 13,
+     "above": 39,
+     "below": 14,
      "variants": 1
     },
     {
      "above": 28,
-     "below": 17,
-     "variants": 5
+     "below": 13,
+     "variants": 4
     },
     {
-     "above": 20,
+     "above": 33,
+     "below": 16,
+     "variants": 1
+    },
+    {
+     "above": 34,
+     "below": 17,
+     "variants": 2
+    },
+    {
+     "above": 23,
+     "below": 13,
+     "variants": 10
+    },
+    {
+     "above": 29,
+     "below": 17,
+     "variants": 6
+    },
+    {
+     "above": 30,
+     "below": 17,
+     "variants": 2
+    },
+    {
+     "above": 19,
+     "below": 13,
+     "variants": 2
+    },
+    {
+     "above": 24,
      "below": 17,
      "variants": 8
     },
     {
      "above": 17,
-     "below": 19,
+     "below": 18,
+     "variants": 1
+    },
+    {
+     "above": 22,
+     "below": 18,
      "variants": 3
+    },
+    {
+     "above": 26,
+     "below": 17,
+     "variants": 4
+    },
+    {
+     "above": 17,
+     "below": 20,
+     "variants": 2
     },
     {
      "above": 20,
      "below": 19,
-     "variants": 4
+     "variants": 3
     },
     {
-     "above": 24,
-     "below": 20,
+     "above": 25,
+     "below": 19,
      "variants": 2
     },
     {
      "above": 28,
      "below": 9,
-     "variants": 3
-    },
-    {
-     "above": 30,
-     "below": 14,
-     "variants": 4
-    },
-    {
-     "above": 34,
-     "below": 14,
-     "variants": 3
-    },
-    {
-     "above": 25,
-     "below": 12,
-     "variants": 1
-    },
-    {
-     "above": 27,
-     "below": 18,
      "variants": 2
     },
     {
-     "above": 33,
-     "below": 11,
-     "variants": 2
-    },
-    {
-     "above": 34,
+     "above": 31,
      "below": 11,
      "variants": 1
     },
     {
-     "above": 40,
-     "below": 12,
-     "variants": 2
-    },
-    {
-     "above": 29,
-     "below": 12,
-     "variants": 1
-    },
-    {
-     "above": 30,
+     "above": 38,
      "below": 13,
      "variants": 2
     },
     {
-     "above": 24,
-     "below": 12,
+     "above": 31,
+     "below": 14,
+     "variants": 2
+    },
+    {
+     "above": 30,
+     "below": 14,
      "variants": 5
     },
     {
-     "above": 16,
+     "above": 34,
+     "below": 14,
+     "variants": 2
+    },
+    {
+     "above": 29,
      "below": 16,
+     "variants": 5
+    },
+    {
+     "above": 27,
+     "below": 9,
+     "variants": 3
+    },
+    {
+     "above": 34,
+     "below": 11,
+     "variants": 2
+    },
+    {
+     "above": 34,
+     "below": 12,
+     "variants": 3
+    },
+    {
+     "above": 36,
+     "below": 11,
+     "variants": 2
+    },
+    {
+     "above": 40,
+     "below": 12,
+     "variants": 3
+    },
+    {
+     "above": 30,
+     "below": 13,
+     "variants": 1
+    },
+    {
+     "above": 31,
+     "below": 17,
+     "variants": 2
+    },
+    {
+     "above": 27,
+     "below": 17,
+     "variants": 8
+    },
+    {
+     "above": 25,
+     "below": 18,
+     "variants": 1
+    },
+    {
+     "above": 16,
+     "below": 17,
+     "variants": 3
+    },
+    {
+     "above": 35,
+     "below": 11,
+     "variants": 4
+    },
+    {
+     "above": 29,
+     "below": 14,
+     "variants": 2
+    },
+    {
+     "above": 35,
+     "below": 14,
+     "variants": 2
+    },
+    {
+     "above": 16,
+     "below": 14,
+     "variants": 2
+    },
+    {
+     "above": 18,
+     "below": 16,
+     "variants": 3
+    },
+    {
+     "above": 21,
+     "below": 16,
+     "variants": 4
+    },
+    {
+     "above": 14,
+     "below": 15,
      "variants": 2
     },
     {
@@ -3633,99 +3713,34 @@
      "variants": 3
     },
     {
-     "above": 35,
-     "below": 10,
-     "variants": 1
-    },
-    {
-     "above": 35,
-     "below": 11,
-     "variants": 2
-    },
-    {
-     "above": 36,
-     "below": 12,
-     "variants": 1
-    },
-    {
-     "above": 40,
-     "below": 13,
-     "variants": 1
-    },
-    {
-     "above": 26,
-     "below": 9,
-     "variants": 2
-    },
-    {
-     "above": 18,
-     "below": 14,
-     "variants": 4
-    },
-    {
-     "above": 23,
-     "below": 17,
-     "variants": 5
-    },
-    {
-     "above": 15,
-     "below": 15,
-     "variants": 2
-    },
-    {
-     "above": 16,
-     "below": 18,
-     "variants": 1
-    },
-    {
      "above": 33,
-     "below": 10,
-     "variants": 2
-    },
-    {
-     "above": 35,
-     "below": 12,
-     "variants": 2
-    },
-    {
-     "above": 25,
-     "below": 9,
-     "variants": 1
-    },
-    {
-     "above": 31,
-     "below": 14,
-     "variants": 2
-    },
-    {
-     "above": 28,
-     "below": 16,
-     "variants": 1
-    },
-    {
-     "above": 21,
-     "below": 13,
-     "variants": 1
-    },
-    {
-     "above": 16,
-     "below": 17,
+     "below": 11,
      "variants": 3
     },
     {
-     "above": 30,
+     "above": 39,
+     "below": 11,
+     "variants": 3
+    },
+    {
+     "above": 25,
+     "below": 10,
+     "variants": 1
+    },
+    {
+     "above": 17,
+     "below": 14,
+     "variants": 2
+    },
+    {
+     "above": 29,
      "below": 7,
      "variants": 1
     },
     {
-     "above": 34,
-     "below": 12,
-     "variants": 1
-    },
-    {
-     "above": 26,
+     "above": 32,
      "below": 11,
-     "variants": 1
+     "variants": 3
     },
     {
      "above": 36,
@@ -3733,43 +3748,38 @@
      "variants": 2
     },
     {
-     "above": 23,
-     "below": 11,
-     "variants": 1
-    },
-    {
-     "above": 21,
-     "below": 12,
-     "variants": 2
-    },
-    {
-     "above": 19,
-     "below": 13,
-     "variants": 1
-    },
-    {
-     "above": 15,
+     "above": 26,
      "below": 14,
      "variants": 1
     },
     {
+     "above": 14,
+     "below": 14,
+     "variants": 3
+    },
+    {
      "above": 15,
      "below": 17,
      "variants": 2
     },
     {
-     "above": 38,
-     "below": 15,
+     "above": 17,
+     "below": 17,
      "variants": 2
     },
     {
      "above": 38,
-     "below": 17,
+     "below": 16,
+     "variants": 2
+    },
+    {
+     "above": 41,
+     "below": 14,
      "variants": 1
     },
     {
-     "above": 42,
-     "below": 15,
+     "above": 27,
+     "below": 14,
      "variants": 1
     },
     {
@@ -3779,43 +3789,28 @@
     },
     {
      "above": 33,
-     "below": 16,
-     "variants": 1
-    },
-    {
-     "above": 35,
-     "below": 17,
-     "variants": 1
-    },
-    {
-     "above": 31,
      "below": 17,
      "variants": 2
     },
     {
-     "above": 34,
-     "below": 16,
+     "above": 35,
+     "below": 17,
+     "variants": 2
+    },
+    {
+     "above": 32,
+     "below": 17,
      "variants": 1
     },
     {
-     "above": 21,
-     "below": 18,
+     "above": 18,
+     "below": 14,
      "variants": 3
     },
     {
-     "above": 27,
-     "below": 9,
-     "variants": 1
-    },
-    {
-     "above": 41,
-     "below": 12,
-     "variants": 1
-    },
-    {
-     "above": 35,
-     "below": 14,
-     "variants": 1
+     "above": 18,
+     "below": 18,
+     "variants": 3
     },
     {
      "above": 17,
@@ -3824,18 +3819,28 @@
     },
     {
      "above": 18,
-     "below": 19,
-     "variants": 1
-    },
-    {
-     "above": 22,
      "below": 20,
      "variants": 1
     },
     {
-     "above": 23,
+     "above": 31,
+     "below": 16,
+     "variants": 2
+    },
+    {
+     "above": 21,
      "below": 12,
-     "variants": 4
+     "variants": 2
+    },
+    {
+     "above": 16,
+     "below": 16,
+     "variants": 1
+    },
+    {
+     "above": 28,
+     "below": 8,
+     "variants": 1
     },
     {
      "above": 39,
@@ -3843,32 +3848,17 @@
      "variants": 1
     },
     {
-     "above": 28,
-     "below": 11,
+     "above": 40,
+     "below": 10,
      "variants": 1
     },
     {
-     "above": 27,
-     "below": 17,
-     "variants": 2
-    },
-    {
-     "above": 17,
-     "below": 14,
+     "above": 16,
+     "below": 18,
      "variants": 1
     },
     {
-     "above": 14,
-     "below": 15,
-     "variants": 1
-    },
-    {
-     "above": 30,
-     "below": 8,
-     "variants": 2
-    },
-    {
-     "above": 38,
+     "above": 39,
      "below": 12,
      "variants": 1
     },
@@ -3878,23 +3868,13 @@
      "variants": 1
     },
     {
-     "above": 24,
-     "below": 11,
-     "variants": 1
-    },
-    {
-     "above": 22,
-     "below": 12,
-     "variants": 1
-    },
-    {
-     "above": 14,
+     "above": 37,
      "below": 14,
      "variants": 1
     },
     {
-     "above": 33,
-     "below": 13,
+     "above": 30,
+     "below": 11,
      "variants": 1
     },
     {
@@ -3903,23 +3883,18 @@
      "variants": 1
     },
     {
-     "above": 26,
-     "below": 12,
-     "variants": 1
-    },
-    {
-     "above": 34,
+     "above": 35,
      "below": 13,
      "variants": 1
     },
     {
      "above": 22,
      "below": 11,
-     "variants": 2
+     "variants": 1
     },
     {
-     "above": 21,
-     "below": 11,
+     "above": 17,
+     "below": 15,
      "variants": 1
     }
    ],
@@ -3931,15 +3906,15 @@
     "half_life_days": "5",
     "in_range": 41,
     "lookback_days": 30,
-    "median_abs_deviation": "0.1507543073105164230507085819",
-    "median_glucose": "130.1226739374100229538464166",
+    "median_abs_deviation": "0.1489204390300190025137794216",
+    "median_glucose": "130.9644668302860125418890428",
     "percentile": "37.5",
     "surcharge_mgdl": "40",
-    "variants": 25
+    "variants": 21
    },
    "line": [
     {
-     "above": 30,
+     "above": 29,
      "apply": {
       "auto_half_life_days": "14",
       "auto_lookback_days": 15,
@@ -3953,11 +3928,11 @@
       "percentile",
       "surcharge"
      ],
-     "delta_above": 6,
+     "delta_above": 5,
      "delta_below": -8,
-     "delta_median_glucose": "8.3773848288613147160877163",
+     "delta_median_glucose": "7.5355919359853251280450901",
      "half_life_days": "14",
-     "in_range": 43,
+     "in_range": 44,
      "lookback_days": 15,
      "median_abs_deviation": "0.1472836679754519359978304902",
      "median_glucose": "138.5000587662713376699341329",
@@ -3966,7 +3941,7 @@
      "variants": 1
     },
     {
-     "above": 29,
+     "above": 28,
      "apply": {
       "auto_method": "percentile",
       "auto_percentile": "25"
@@ -3976,44 +3951,42 @@
       "percentile",
       "surcharge"
      ],
-     "delta_above": 5,
+     "delta_above": 4,
      "delta_below": -7,
-     "delta_median_glucose": "9.6886922800908954392198550",
+     "delta_median_glucose": "9.0778831739792497707504424",
      "half_life_days": "5",
-     "in_range": 43,
+     "in_range": 44,
      "lookback_days": 30,
-     "median_abs_deviation": "0.1400419980983381194148161300",
-     "median_glucose": "139.8113662175009183930662716",
+     "median_abs_deviation": "0.1404478786846673864672914016",
+     "median_glucose": "140.0423500042652623126394852",
      "percentile": "25",
      "surcharge_mgdl": "0",
-     "variants": 3
+     "variants": 1
     },
     {
-     "above": 25,
+     "above": 27,
      "apply": {
-      "auto_half_life_days": "7",
-      "auto_lookback_days": 15,
+      "auto_half_life_days": "2",
       "auto_method": "percentile",
-      "auto_percentile": "30"
+      "auto_percentile": "25"
      },
      "below": 9,
      "changes": [
-      "lookback",
       "half_life",
       "percentile",
       "surcharge"
      ],
-     "delta_above": 1,
+     "delta_above": 3,
      "delta_below": -6,
-     "delta_median_glucose": "5.2766270576109361046938254",
-     "half_life_days": "7",
-     "in_range": 46,
-     "lookback_days": 15,
-     "median_abs_deviation": "0.1382276245284753100868493704",
-     "median_glucose": "135.3993009950209590585402420",
-     "percentile": "30",
+     "delta_median_glucose": "9.9763710014223513853762968",
+     "half_life_days": "2",
+     "in_range": 44,
+     "lookback_days": 30,
+     "median_abs_deviation": "0.1387379946744101186898685964",
+     "median_glucose": "140.9408378317083639272653396",
+     "percentile": "25",
      "surcharge_mgdl": "0",
-     "variants": 1
+     "variants": 3
     },
     {
      "above": 24,
@@ -4030,22 +4003,22 @@
      ],
      "delta_above": 0,
      "delta_below": -5,
-     "delta_median_glucose": "4.1750329908820416577429018",
+     "delta_median_glucose": "5.0755905200445869614675612",
      "half_life_days": "7",
      "in_range": 46,
      "lookback_days": 30,
-     "median_abs_deviation": "0.1316822273276684686764360701",
-     "median_glucose": "134.2977069282920646115893184",
+     "median_abs_deviation": "0.1338178675471205285611202286",
+     "median_glucose": "136.0400573503305995033566040",
      "percentile": "30",
      "surcharge_mgdl": "0",
      "variants": 1
     },
     {
-     "above": 21,
+     "above": 22,
      "apply": {
       "auto_half_life_days": "14",
       "auto_method": "percentile",
-      "auto_percentile": "40"
+      "auto_percentile": "35"
      },
      "below": 11,
      "changes": [
@@ -4053,22 +4026,47 @@
       "percentile",
       "surcharge"
      ],
-     "delta_above": -3,
+     "delta_above": -2,
      "delta_below": -4,
-     "delta_median_glucose": "-4.6352750611283863730474494",
+     "delta_median_glucose": "-2.8316181281524507618858652",
      "half_life_days": "14",
-     "in_range": 48,
+     "in_range": 47,
      "lookback_days": 30,
-     "median_abs_deviation": "0.1285458305001854051763870952",
-     "median_glucose": "125.4873988762816365807989672",
-     "percentile": "40",
+     "median_abs_deviation": "0.1308859730418917406380057972",
+     "median_glucose": "128.1328487021335617800031776",
+     "percentile": "35",
      "surcharge_mgdl": "0",
      "variants": 1
     },
     {
+     "above": 21,
+     "apply": {
+      "auto_half_life_days": "3",
+      "auto_method": "percentile",
+      "auto_percentile": "40"
+     },
+     "below": 12,
+     "changes": [
+      "half_life",
+      "percentile",
+      "surcharge"
+     ],
+     "delta_above": -3,
+     "delta_below": -3,
+     "delta_median_glucose": "-4.3733558957683731528497994",
+     "half_life_days": "3",
+     "in_range": 47,
+     "lookback_days": 30,
+     "median_abs_deviation": "0.1300220441703063040296394968",
+     "median_glucose": "126.5911109345176393890392434",
+     "percentile": "40",
+     "surcharge_mgdl": "0",
+     "variants": 2
+    },
+    {
      "above": 19,
      "apply": {
-      "auto_half_life_days": "14",
+      "auto_half_life_days": "1",
       "auto_lookback_days": 15,
       "auto_method": "percentile",
       "auto_percentile": "40"
@@ -4082,40 +4080,38 @@
      ],
      "delta_above": -5,
      "delta_below": -2,
-     "delta_median_glucose": "-4.4486583542046188185792830",
-     "half_life_days": "14",
+     "delta_median_glucose": "-6.3367140589631118309140472",
+     "half_life_days": "1",
      "in_range": 48,
      "lookback_days": 15,
-     "median_abs_deviation": "0.1262138568563210964488127930",
-     "median_glucose": "125.6740155832054041352671336",
+     "median_abs_deviation": "0.1249834996816263372455469128",
+     "median_glucose": "124.6277527713229007109749956",
      "percentile": "40",
      "surcharge_mgdl": "0",
-     "variants": 1
+     "variants": 2
     },
     {
      "above": 14,
      "apply": {
-      "auto_half_life_days": "7",
       "auto_method": "percentile",
       "auto_percentile": "50"
      },
      "below": 14,
      "changes": [
-      "half_life",
       "percentile",
       "surcharge"
      ],
      "delta_above": -10,
      "delta_below": -1,
-     "delta_median_glucose": "-10.9618768348405530422367168",
-     "half_life_days": "7",
+     "delta_median_glucose": "-10.9212935934859312554616358",
+     "half_life_days": "5",
      "in_range": 52,
      "lookback_days": 30,
-     "median_abs_deviation": "0.1089154569952543839682243070",
-     "median_glucose": "119.1607971025694699116096998",
+     "median_abs_deviation": "0.1085402448083609240805021402",
+     "median_glucose": "120.0431732368000812864274070",
      "percentile": "50",
      "surcharge_mgdl": "0",
-     "variants": 1
+     "variants": 3
     }
    ],
    "meal_count": 80
@@ -4132,14 +4128,14 @@
       "apply": {
        "auto_percentile": "25"
       },
-      "below": 13,
+      "below": 12,
       "best": false,
       "count": 88,
       "glucose_count": 88,
-      "in_range": 39,
-      "mean_glucose": "144.7763172304732120991565608",
-      "median_abs_deviation": "0.1622512342768991493992858938",
-      "median_glucose": "148.9723690305153055951236311",
+      "in_range": 40,
+      "mean_glucose": "145.127239623638746182902305",
+      "median_abs_deviation": "0.1662281578710344417940661778",
+      "median_glucose": "148.0053416914508381313777356",
       "value": "25"
      },
      {
@@ -4153,9 +4149,9 @@
       "count": 88,
       "glucose_count": 88,
       "in_range": 43,
-      "mean_glucose": "136.3069399591781321445315172",
-      "median_abs_deviation": "0.1559766353962427241771673343",
-      "median_glucose": "135.2388503523292889239824646",
+      "mean_glucose": "136.4378690465686939602977634",
+      "median_abs_deviation": "0.1603554043670574827009483074",
+      "median_glucose": "135.7647438836993196116321270",
       "value": "30"
      },
      {
@@ -4169,9 +4165,9 @@
       "count": 88,
       "glucose_count": 88,
       "in_range": 47,
-      "mean_glucose": "129.2330798327305433412062176",
-      "median_abs_deviation": "0.1481488043532740913719053752",
-      "median_glucose": "129.4415803467466590100707624",
+      "mean_glucose": "129.1695611682503630127283583",
+      "median_abs_deviation": "0.1440233857285933672728093312",
+      "median_glucose": "130.4996646895732397427643077",
       "value": "35"
      },
      {
@@ -4185,9 +4181,9 @@
       "count": 88,
       "glucose_count": 88,
       "in_range": 47,
-      "mean_glucose": "126.1366869858178891565574290",
-      "median_abs_deviation": "0.1472448786911267560526574744",
-      "median_glucose": "127.8518974864450228549394205",
+      "mean_glucose": "126.0656365228588276330650022",
+      "median_abs_deviation": "0.1378454526104050331194229102",
+      "median_glucose": "129.8325181342453839471309083",
       "value": "37.5"
      },
      {
@@ -4196,14 +4192,14 @@
       "apply": {
        "auto_percentile": "40"
       },
-      "below": 16,
+      "below": 17,
       "best": false,
       "count": 88,
       "glucose_count": 88,
-      "in_range": 48,
-      "mean_glucose": "123.6135424423082304845865795",
-      "median_abs_deviation": "0.1400961751469615564861802858",
-      "median_glucose": "125.2990544542697647376488968",
+      "in_range": 47,
+      "mean_glucose": "123.4742713743113906890159310",
+      "median_abs_deviation": "0.1337554220859234152944629550",
+      "median_glucose": "127.3405993881892104764956926",
       "value": "40"
      },
      {
@@ -4212,14 +4208,14 @@
       "apply": {
        "auto_percentile": "45"
       },
-      "below": 16,
+      "below": 17,
       "best": false,
       "count": 88,
       "glucose_count": 88,
-      "in_range": 50,
-      "mean_glucose": "119.12050617317165664890490",
+      "in_range": 49,
+      "mean_glucose": "119.1585842340923510158475690",
       "median_abs_deviation": "0.1330977473480840875929002254",
-      "median_glucose": "121.5433159647016401055209934",
+      "median_glucose": "122.8241095527329684735859672",
       "value": "45"
      },
      {
@@ -4228,14 +4224,14 @@
       "apply": {
        "auto_percentile": "50"
       },
-      "below": 17,
+      "below": 18,
       "best": true,
       "count": 88,
       "glucose_count": 88,
-      "in_range": 51,
-      "mean_glucose": "114.8143427100702611905960201",
+      "in_range": 50,
+      "mean_glucose": "114.8679221559574386608065928",
       "median_abs_deviation": "0.1217352148685287812425068820",
-      "median_glucose": "115.1006614397423879111934191",
+      "median_glucose": "117.7072620365583051343928106",
       "value": "50"
      }
     ],
@@ -4252,14 +4248,14 @@
       "apply": {
        "auto_method": "percentile"
       },
-      "below": 14,
-      "best": true,
+      "below": 15,
+      "best": false,
       "count": 88,
       "glucose_count": 88,
-      "in_range": 50,
-      "mean_glucose": "127.1589581621272068599760655",
-      "median_abs_deviation": "0.1295242884137517289662622176",
-      "median_glucose": "126.6389963219757464705760026",
+      "in_range": 49,
+      "mean_glucose": "126.6799241612429744489981545",
+      "median_abs_deviation": "0.1256222205661071359325483074",
+      "median_glucose": "126.7761646984686743702074364",
       "value": "0"
      },
      {
@@ -4270,13 +4266,13 @@
        "auto_surcharge_mgdl": "20"
       },
       "below": 16,
-      "best": false,
+      "best": true,
       "count": 88,
       "glucose_count": 88,
       "in_range": 50,
-      "mean_glucose": "124.0604269969406996627504223",
-      "median_abs_deviation": "0.1337069212020235241695758108",
-      "median_glucose": "126.6012525383797636647382398",
+      "mean_glucose": "123.7186927153568340247052053",
+      "median_abs_deviation": "0.1230986937313383447513885054",
+      "median_glucose": "126.8641931788921546184658128",
       "value": "20"
      },
      {
@@ -4291,13 +4287,13 @@
       "count": 88,
       "glucose_count": 88,
       "in_range": 47,
-      "mean_glucose": "126.1366869858178891565574290",
-      "median_abs_deviation": "0.1472448786911267560526574744",
-      "median_glucose": "127.8518974864450228549394205",
+      "mean_glucose": "126.0656365228588276330650022",
+      "median_abs_deviation": "0.1378454526104050331194229102",
+      "median_glucose": "129.8325181342453839471309083",
       "value": "40"
      },
      {
-      "above": 25,
+      "above": 26,
       "active": false,
       "apply": {
        "auto_method": "surcharge",
@@ -4307,14 +4303,14 @@
       "best": false,
       "count": 88,
       "glucose_count": 88,
-      "in_range": 47,
-      "mean_glucose": "130.0229588381530179539223016",
-      "median_abs_deviation": "0.1547078337879877064202039626",
-      "median_glucose": "131.0064466462019598833318130",
+      "in_range": 46,
+      "mean_glucose": "130.3381160198884377712946682",
+      "median_abs_deviation": "0.1528002140360862313309776976",
+      "median_glucose": "129.1524751305944554160030333",
       "value": "60"
      },
      {
-      "above": 30,
+      "above": 31,
       "active": false,
       "apply": {
        "auto_method": "surcharge",
@@ -4324,9 +4320,9 @@
       "best": false,
       "count": 88,
       "glucose_count": 88,
-      "in_range": 40,
-      "mean_glucose": "133.2459543573920281070902957",
-      "median_abs_deviation": "0.1661611342136929318722326052",
+      "in_range": 39,
+      "mean_glucose": "134.430005844908213292668435",
+      "median_abs_deviation": "0.1663114904484554402409112014",
       "median_glucose": "129.4157659495305818149609042",
       "value": "80"
      }
@@ -4344,14 +4340,14 @@
       "apply": {
        "auto_half_life_days": "1"
       },
-      "below": 18,
+      "below": 19,
       "best": false,
       "count": 88,
       "glucose_count": 88,
-      "in_range": 42,
-      "mean_glucose": "127.4998477898686857679109107",
-      "median_abs_deviation": "0.1703508513563701513796598153",
-      "median_glucose": "123.8367931296146213219642876",
+      "in_range": 41,
+      "mean_glucose": "127.4408924092206711175884858",
+      "median_abs_deviation": "0.1733317717228083030994887755",
+      "median_glucose": "124.1692685104173863129024666",
       "value": "1"
      },
      {
@@ -4365,8 +4361,8 @@
       "count": 88,
       "glucose_count": 88,
       "in_range": 45,
-      "mean_glucose": "125.6135031592639049795933581",
-      "median_abs_deviation": "0.1573916797006985385305256098",
+      "mean_glucose": "125.9499410144166301418853226",
+      "median_abs_deviation": "0.1546589326472307357076075530",
       "median_glucose": "127.6495837635343713485937722",
       "value": "2"
      },
@@ -4376,14 +4372,14 @@
       "apply": {
        "auto_half_life_days": "3"
       },
-      "below": 16,
-      "best": true,
+      "below": 17,
+      "best": false,
       "count": 88,
       "glucose_count": 88,
-      "in_range": 47,
-      "mean_glucose": "127.148462001887404043136565",
-      "median_abs_deviation": "0.1488425638287720346144457637",
-      "median_glucose": "126.6400966647012108405740368",
+      "in_range": 46,
+      "mean_glucose": "127.0701184564931185363438501",
+      "median_abs_deviation": "0.1502603761549664342120236443",
+      "median_glucose": "127.6840129114577962129914788",
       "value": "3"
      },
      {
@@ -4393,13 +4389,13 @@
        "auto_half_life_days": "5"
       },
       "below": 16,
-      "best": false,
+      "best": true,
       "count": 88,
       "glucose_count": 88,
       "in_range": 47,
-      "mean_glucose": "126.1366869858178891565574290",
-      "median_abs_deviation": "0.1472448786911267560526574744",
-      "median_glucose": "127.8518974864450228549394205",
+      "mean_glucose": "126.0656365228588276330650022",
+      "median_abs_deviation": "0.1378454526104050331194229102",
+      "median_glucose": "129.8325181342453839471309083",
       "value": "5"
      },
      {
@@ -4413,9 +4409,9 @@
       "count": 88,
       "glucose_count": 88,
       "in_range": 47,
-      "mean_glucose": "125.5931330559330046494195323",
-      "median_abs_deviation": "0.1408341109010469527737141246",
-      "median_glucose": "129.1779648633834015469331812",
+      "mean_glucose": "125.5001259921388233375929616",
+      "median_abs_deviation": "0.1358984080042988937809264226",
+      "median_glucose": "129.6690914375099051610770740",
       "value": "7"
      },
      {
@@ -4429,9 +4425,9 @@
       "count": 88,
       "glucose_count": 88,
       "in_range": 47,
-      "mean_glucose": "125.0824049563422985766977773",
-      "median_abs_deviation": "0.1454959778553608052294519222",
-      "median_glucose": "126.8630508442785409734789134",
+      "mean_glucose": "125.27009183101448005943942",
+      "median_abs_deviation": "0.1447621783936829709195216076",
+      "median_glucose": "127.4708068490075006905632214",
       "value": "14"
      }
     ],
@@ -4443,7 +4439,7 @@
     "noise_meals": "4.00",
     "options": [
      {
-      "above": 24,
+      "above": 23,
       "active": false,
       "apply": {
        "auto_lookback_days": 8
@@ -4452,10 +4448,10 @@
       "best": false,
       "count": 80,
       "glucose_count": 80,
-      "in_range": 40,
-      "mean_glucose": "126.4675158350612129637788315",
+      "in_range": 41,
+      "mean_glucose": "126.1804512958253918771723171",
       "median_abs_deviation": "0.1429856600721204085934672556",
-      "median_glucose": "127.6291384532361795586807328",
+      "median_glucose": "129.1293823310319991022942240",
       "value": 8
      },
      {
@@ -4469,9 +4465,9 @@
       "count": 80,
       "glucose_count": 80,
       "in_range": 42,
-      "mean_glucose": "126.5965712764491773770908344",
-      "median_abs_deviation": "0.1476876365141674282986711544",
-      "median_glucose": "126.6614294818517477019589922",
+      "mean_glucose": "126.3953521665198545219673638",
+      "median_abs_deviation": "0.1415633831921547342141889005",
+      "median_glucose": "126.9076345624764346718850796",
       "value": 15
      },
      {
@@ -4485,9 +4481,9 @@
       "count": 80,
       "glucose_count": 80,
       "in_range": 41,
-      "mean_glucose": "125.9122751683044244796863151",
-      "median_abs_deviation": "0.1507543073105164230507085819",
-      "median_glucose": "130.1226739374100229538464166",
+      "mean_glucose": "125.8341196590494568038446458",
+      "median_abs_deviation": "0.1489204390300190025137794216",
+      "median_glucose": "130.9644668302860125418890428",
       "value": 30
      }
     ],
@@ -4512,9 +4508,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 40,
-       "mean_glucose": "137.9150063390018139741652092",
-       "median_abs_deviation": "0.1612623943987381527272212336",
-       "median_glucose": "138.2150431561024407479286997"
+       "mean_glucose": "137.6164900598920629156081684",
+       "median_abs_deviation": "0.1619266137024132535544732454",
+       "median_glucose": "136.4709397865040451755953701"
       }
      },
      {
@@ -4532,9 +4528,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 45,
-       "mean_glucose": "125.2496414189831550471531135",
-       "median_abs_deviation": "0.1278132450680568503764758820",
-       "median_glucose": "126.8594807356683922376523760"
+       "mean_glucose": "125.3674046109160641419117621",
+       "median_abs_deviation": "0.1237836228889764347893756246",
+       "median_glucose": "126.4186465937357752301253277"
       }
      },
      {
@@ -4552,8 +4548,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 45,
-       "mean_glucose": "114.7303084203817442823190844",
-       "median_abs_deviation": "0.1359216955204889805376332658",
+       "mean_glucose": "115.5172022025075879052098583",
+       "median_abs_deviation": "0.1330477601654361004917158234",
        "median_glucose": "116.3619624552309814724302526"
       }
      },
@@ -4563,17 +4559,17 @@
       "percentile": "surcharge",
       "shares": {
        "above": "30",
-       "below": "18.75",
-       "in_range": "51.25"
+       "below": "20",
+       "in_range": "50"
       },
       "stats": {
        "above": 24,
-       "below": 15,
+       "below": 16,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 41,
-       "mean_glucose": "129.4519123341756867229387082",
-       "median_abs_deviation": "0.1730932734878681926217894402",
+       "in_range": 40,
+       "mean_glucose": "129.0453187172420122235515139",
+       "median_abs_deviation": "0.1817853299092661303369946465",
        "median_glucose": "130.4890269192970994123798267"
       }
      }
@@ -4598,9 +4594,95 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 40,
-       "mean_glucose": "139.0575393746270446457208279",
-       "median_abs_deviation": "0.1559922404249316412928809452",
-       "median_glucose": "136.9400733196866226581365608"
+       "mean_glucose": "138.5584748647180202663066595",
+       "median_abs_deviation": "0.1567192135852878784344640860",
+       "median_glucose": "136.3465863527720292485571332"
+      }
+     },
+     {
+      "active": false,
+      "best": null,
+      "percentile": "37.5",
+      "shares": {
+       "above": "27.5",
+       "below": "15",
+       "in_range": "57.5"
+      },
+      "stats": {
+       "above": 22,
+       "below": 12,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 46,
+       "mean_glucose": "126.3688762444324556435388058",
+       "median_abs_deviation": "0.1212656968765793891942847268",
+       "median_glucose": "125.9663732212517787623049426"
+      }
+     },
+     {
+      "active": false,
+      "best": null,
+      "percentile": "50",
+      "shares": {
+       "above": "25",
+       "below": "20",
+       "in_range": "55"
+      },
+      "stats": {
+       "above": 20,
+       "below": 16,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 44,
+       "mean_glucose": "116.0487145175974634671636083",
+       "median_abs_deviation": "0.1064644922320147508575903832",
+       "median_glucose": "118.5357822358202729693984788"
+      }
+     },
+     {
+      "active": false,
+      "best": null,
+      "percentile": "surcharge",
+      "shares": {
+       "above": "30",
+       "below": "18.75",
+       "in_range": "51.25"
+      },
+      "stats": {
+       "above": 24,
+       "below": 15,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 41,
+       "mean_glucose": "127.0047494048845487396713062",
+       "median_abs_deviation": "0.1502167502197921141992716294",
+       "median_glucose": "128.3276666765998680208522544"
+      }
+     }
+    ],
+    "half_life_days": "2",
+    "lookback_days": 8
+   },
+   {
+    "cells": [
+     {
+      "active": false,
+      "best": null,
+      "percentile": "25",
+      "shares": {
+       "above": "33.75",
+       "below": "15",
+       "in_range": "51.25"
+      },
+      "stats": {
+       "above": 27,
+       "below": 12,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 41,
+       "mean_glucose": "138.7223963281794677454275945",
+       "median_abs_deviation": "0.1488085181625293445289024727",
+       "median_glucose": "138.3741651401383121268993990"
       }
      },
      {
@@ -4618,94 +4700,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 45,
-       "mean_glucose": "126.2157095475654449100274568",
-       "median_abs_deviation": "0.1186966648787896425101538808",
-       "median_glucose": "125.9663732212517787623049426"
-      }
-     },
-     {
-      "active": false,
-      "best": null,
-      "percentile": "50",
-      "shares": {
-       "above": "25",
-       "below": "18.75",
-       "in_range": "56.25"
-      },
-      "stats": {
-       "above": 20,
-       "below": 15,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 45,
-       "mean_glucose": "115.5519905666615593833577040",
-       "median_abs_deviation": "0.1144317236996465081192476202",
-       "median_glucose": "118.5357822358202729693984788"
-      }
-     },
-     {
-      "active": false,
-      "best": null,
-      "percentile": "surcharge",
-      "shares": {
-       "above": "28.75",
-       "below": "17.5",
-       "in_range": "53.75"
-      },
-      "stats": {
-       "above": 23,
-       "below": 14,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 43,
-       "mean_glucose": "127.1554478329673980882681985",
-       "median_abs_deviation": "0.1580018813063767675640498675",
-       "median_glucose": "128.8531636246053676538446051"
-      }
-     }
-    ],
-    "half_life_days": "2",
-    "lookback_days": 8
-   },
-   {
-    "cells": [
-     {
-      "active": false,
-      "best": null,
-      "percentile": "25",
-      "shares": {
-       "above": "35",
-       "below": "15",
-       "in_range": "50"
-      },
-      "stats": {
-       "above": 28,
-       "below": 12,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 40,
-       "mean_glucose": "139.536309405870880973758942",
-       "median_abs_deviation": "0.1523446933097402894277761751",
-       "median_glucose": "136.4632857158060506390505123"
-      }
-     },
-     {
-      "active": false,
-      "best": null,
-      "percentile": "37.5",
-      "shares": {
-       "above": "26.25",
-       "below": "17.5",
-       "in_range": "56.25"
-      },
-      "stats": {
-       "above": 21,
-       "below": 14,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 45,
-       "mean_glucose": "126.293843579138369536494518",
-       "median_abs_deviation": "0.1169842506468308299746149910",
+       "mean_glucose": "126.5318054727866416805325939",
+       "median_abs_deviation": "0.1194924124595826565365426249",
        "median_glucose": "126.8045881900740814271695953"
       }
      },
@@ -4715,17 +4711,17 @@
       "percentile": "50",
       "shares": {
        "above": "22.5",
-       "below": "20",
-       "in_range": "57.5"
+       "below": "21.25",
+       "in_range": "56.25"
       },
       "stats": {
        "above": 18,
-       "below": 16,
+       "below": 17,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 46,
-       "mean_glucose": "115.4460783348877127851680386",
-       "median_abs_deviation": "0.1227402610300321790387802113",
+       "in_range": 45,
+       "mean_glucose": "115.8158931867389006443777989",
+       "median_abs_deviation": "0.1103841163081427783820461737",
        "median_glucose": "120.1836149629667739354173738"
       }
      },
@@ -4744,9 +4740,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 42,
-       "mean_glucose": "126.8622828915557536168448708",
+       "mean_glucose": "126.6660568303265496904708026",
        "median_abs_deviation": "0.1491948803753534463431574782",
-       "median_glucose": "126.6209872188506777407533634"
+       "median_glucose": "126.7070574548791966328465580"
       }
      }
     ],
@@ -4760,19 +4756,19 @@
       "best": null,
       "percentile": "25",
       "shares": {
-       "above": "35",
-       "below": "12.5",
+       "above": "33.75",
+       "below": "13.75",
        "in_range": "52.5"
       },
       "stats": {
-       "above": 28,
-       "below": 10,
+       "above": 27,
+       "below": 11,
        "count": 80,
        "glucose_count": 80,
        "in_range": 42,
-       "mean_glucose": "139.8371406918675505656322561",
-       "median_abs_deviation": "0.1554148320211776934881334281",
-       "median_glucose": "138.3175482368199362606780459"
+       "mean_glucose": "138.9566250798765736505535402",
+       "median_abs_deviation": "0.1466165569520375835605063914",
+       "median_glucose": "139.4239047981231545278493084"
       }
      },
      {
@@ -4790,9 +4786,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 44,
-       "mean_glucose": "126.4657418704998013235231299",
-       "median_abs_deviation": "0.1165714821271198274536315826",
-       "median_glucose": "129.3712539193805351510749365"
+       "mean_glucose": "126.5499479108648241237569179",
+       "median_abs_deviation": "0.1150961427089835469735529934",
+       "median_glucose": "129.4098599580471197238158441"
       }
      },
      {
@@ -4810,8 +4806,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 49,
-       "mean_glucose": "114.8867515556335112460903345",
-       "median_abs_deviation": "0.1107970896525368842803397972",
+       "mean_glucose": "115.1422150029414758877166496",
+       "median_abs_deviation": "0.1009731763526671427436702541",
        "median_glucose": "120.9962927338636524004842804"
       }
      },
@@ -4820,19 +4816,19 @@
       "best": null,
       "percentile": "surcharge",
       "shares": {
-       "above": "30",
+       "above": "28.75",
        "below": "20",
-       "in_range": "50"
+       "in_range": "51.25"
       },
       "stats": {
-       "above": 24,
+       "above": 23,
        "below": 16,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 40,
-       "mean_glucose": "126.4675158350612129637788315",
+       "in_range": 41,
+       "mean_glucose": "126.1804512958253918771723171",
        "median_abs_deviation": "0.1429856600721204085934672556",
-       "median_glucose": "127.6291384532361795586807328"
+       "median_glucose": "129.1293823310319991022942240"
       }
      }
     ],
@@ -4846,19 +4842,19 @@
       "best": null,
       "percentile": "25",
       "shares": {
-       "above": "35",
-       "below": "12.5",
-       "in_range": "52.5"
+       "above": "32.5",
+       "below": "13.75",
+       "in_range": "53.75"
       },
       "stats": {
-       "above": 28,
-       "below": 10,
+       "above": 26,
+       "below": 11,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 42,
-       "mean_glucose": "139.9622183459235506853218974",
-       "median_abs_deviation": "0.1510411599202164352292308356",
-       "median_glucose": "138.2843110855183665197586462"
+       "in_range": 43,
+       "mean_glucose": "139.0633133592141982096103804",
+       "median_abs_deviation": "0.1428655881556230742081307438",
+       "median_glucose": "139.1308404910758903935056342"
       }
      },
      {
@@ -4866,19 +4862,19 @@
       "best": null,
       "percentile": "37.5",
       "shares": {
-       "above": "27.5",
+       "above": "26.25",
        "below": "17.5",
-       "in_range": "55"
+       "in_range": "56.25"
       },
       "stats": {
-       "above": 22,
+       "above": 21,
        "below": 14,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 44,
-       "mean_glucose": "126.55065210345056358658706",
-       "median_abs_deviation": "0.1167935753899933662132499058",
-       "median_glucose": "129.7148682701981506088114083"
+       "in_range": 45,
+       "mean_glucose": "126.5354268962394909980737769",
+       "median_abs_deviation": "0.1158831002533949893638324688",
+       "median_glucose": "131.0458971570407479875439303"
       }
      },
      {
@@ -4896,8 +4892,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 49,
-       "mean_glucose": "114.5403316349028383928319460",
-       "median_abs_deviation": "0.1088510767734256272584897974",
+       "mean_glucose": "114.8273929259633643675676300",
+       "median_abs_deviation": "0.1016459619532163436520287176",
        "median_glucose": "121.5562626891812656071997253"
       }
      },
@@ -4906,19 +4902,19 @@
       "best": null,
       "percentile": "surcharge",
       "shares": {
-       "above": "30",
-       "below": "18.75",
+       "above": "28.75",
+       "below": "20",
        "in_range": "51.25"
       },
       "stats": {
-       "above": 24,
-       "below": 15,
+       "above": 23,
+       "below": 16,
        "count": 80,
        "glucose_count": 80,
        "in_range": 41,
-       "mean_glucose": "126.3094441264379406346675611",
+       "mean_glucose": "125.9782900842411511160364732",
        "median_abs_deviation": "0.1345499716012465795312570704",
-       "median_glucose": "128.5081793798904774713732806"
+       "median_glucose": "128.7117891199850621428254634"
       }
      }
     ],
@@ -4932,19 +4928,19 @@
       "best": null,
       "percentile": "25",
       "shares": {
-       "above": "35",
+       "above": "32.5",
        "below": "12.5",
-       "in_range": "52.5"
+       "in_range": "55"
       },
       "stats": {
-       "above": 28,
+       "above": 26,
        "below": 10,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 42,
-       "mean_glucose": "140.0536668419794617511769651",
-       "median_abs_deviation": "0.1506703327587032226698185186",
-       "median_glucose": "138.5858304120900081004870934"
+       "in_range": 44,
+       "mean_glucose": "139.2186360037389235113866519",
+       "median_abs_deviation": "0.1440814687346231110913690556",
+       "median_glucose": "138.9887420789674787738900648"
       }
      },
      {
@@ -4962,9 +4958,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 43,
-       "mean_glucose": "126.6155843053011536396585256",
+       "mean_glucose": "126.4777734894485317244245991",
        "median_abs_deviation": "0.1164411878570752341388964481",
-       "median_glucose": "130.8700991758381721445815922"
+       "median_glucose": "132.6430696528729565351354758"
       }
      },
      {
@@ -4982,8 +4978,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 50,
-       "mean_glucose": "114.3822528541777344130046929",
-       "median_abs_deviation": "0.1043661768545783664132697766",
+       "mean_glucose": "114.6136080897816616031500536",
+       "median_abs_deviation": "0.1031545197676771925232008947",
        "median_glucose": "122.4212806134018203176081654"
       }
      },
@@ -4992,19 +4988,19 @@
       "best": null,
       "percentile": "surcharge",
       "shares": {
-       "above": "30",
+       "above": "28.75",
        "below": "17.5",
-       "in_range": "52.5"
+       "in_range": "53.75"
       },
       "stats": {
-       "above": 24,
+       "above": 23,
        "below": 14,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 42,
-       "mean_glucose": "126.2917258730101087995824181",
-       "median_abs_deviation": "0.1290918831790531098786617117",
-       "median_glucose": "129.6645200454910075752349524"
+       "in_range": 43,
+       "mean_glucose": "125.9475139172155719135795069",
+       "median_abs_deviation": "0.1307382161831331321615585044",
+       "median_glucose": "129.2282117703154718947880434"
       }
      }
     ],
@@ -5019,18 +5015,18 @@
       "percentile": "25",
       "shares": {
        "above": "37.5",
-       "below": "13.75",
-       "in_range": "48.75"
+       "below": "12.5",
+       "in_range": "50"
       },
       "stats": {
        "above": 30,
-       "below": 11,
+       "below": 10,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 39,
-       "mean_glucose": "139.775503929843125286413482",
+       "in_range": 40,
+       "mean_glucose": "139.4049580017202841643744411",
        "median_abs_deviation": "0.1582936308189789045243841186",
-       "median_glucose": "134.3800561013135687128563670"
+       "median_glucose": "132.8589416731249339374399941"
       }
      },
      {
@@ -5038,19 +5034,19 @@
       "best": null,
       "percentile": "37.5",
       "shares": {
-       "above": "28.75",
+       "above": "26.25",
        "below": "16.25",
-       "in_range": "55"
+       "in_range": "57.5"
       },
       "stats": {
-       "above": 23,
+       "above": 21,
        "below": 13,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 44,
-       "mean_glucose": "126.2663941495611981645277662",
-       "median_abs_deviation": "0.1292455904101327851290504360",
-       "median_glucose": "127.2890750656994887510510862"
+       "in_range": 46,
+       "mean_glucose": "125.6240809948711743488155432",
+       "median_abs_deviation": "0.1272471032684972588896105366",
+       "median_glucose": "125.9061373158404810550472524"
       }
      },
      {
@@ -5059,18 +5055,18 @@
       "percentile": "50",
       "shares": {
        "above": "21.25",
-       "below": "23.75",
-       "in_range": "55"
+       "below": "25",
+       "in_range": "53.75"
       },
       "stats": {
        "above": 17,
-       "below": 19,
+       "below": 20,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 44,
-       "mean_glucose": "115.8464132808653104614985010",
-       "median_abs_deviation": "0.1376056866630281521200924988",
-       "median_glucose": "117.7726145800331896108302204"
+       "in_range": 43,
+       "mean_glucose": "115.1875258077609807918426238",
+       "median_abs_deviation": "0.1369941178352280784413799384",
+       "median_glucose": "115.2782087888610987633057568"
       }
      },
      {
@@ -5079,18 +5075,18 @@
       "percentile": "surcharge",
       "shares": {
        "above": "31.25",
-       "below": "20",
-       "in_range": "48.75"
+       "below": "21.25",
+       "in_range": "47.5"
       },
       "stats": {
        "above": 25,
-       "below": 16,
+       "below": 17,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 39,
-       "mean_glucose": "128.0807793155095087242986452",
-       "median_abs_deviation": "0.1732893053738859481714603649",
-       "median_glucose": "123.8370961415141464725510438"
+       "in_range": 38,
+       "mean_glucose": "127.8398334398087441377317394",
+       "median_abs_deviation": "0.1793192636986321106607842200",
+       "median_glucose": "122.9827124211733396087375062"
       }
      }
     ],
@@ -5114,8 +5110,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 43,
-       "mean_glucose": "141.5132892278001084363329295",
-       "median_abs_deviation": "0.1371748487244385746293100136",
+       "mean_glucose": "140.6849798187323312194900075",
+       "median_abs_deviation": "0.1310771096333054946767967348",
        "median_glucose": "140.0895851178166792694368426"
       }
      },
@@ -5124,19 +5120,19 @@
       "best": null,
       "percentile": "37.5",
       "shares": {
-       "above": "30",
-       "below": "17.5",
-       "in_range": "52.5"
+       "above": "27.5",
+       "below": "16.25",
+       "in_range": "56.25"
       },
       "stats": {
-       "above": 24,
-       "below": 14,
+       "above": 22,
+       "below": 13,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 42,
-       "mean_glucose": "128.359161556180138611414147",
-       "median_abs_deviation": "0.1212461030630412853574502894",
-       "median_glucose": "129.6495183211774289642628740"
+       "in_range": 45,
+       "mean_glucose": "127.5831288924017285620673801",
+       "median_abs_deviation": "0.1270211893878303453631961094",
+       "median_glucose": "126.1408343371418073271176683"
       }
      },
      {
@@ -5145,17 +5141,17 @@
       "percentile": "50",
       "shares": {
        "above": "22.5",
-       "below": "20",
-       "in_range": "57.5"
+       "below": "21.25",
+       "in_range": "56.25"
       },
       "stats": {
        "above": 18,
-       "below": 16,
+       "below": 17,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 46,
-       "mean_glucose": "115.7630205809129928958487152",
-       "median_abs_deviation": "0.1160786660704101084502505630",
+       "in_range": 45,
+       "mean_glucose": "115.7160922180758671333034436",
+       "median_abs_deviation": "0.1087475480188399090712046956",
        "median_glucose": "115.2218776122605988340279094"
       }
      },
@@ -5174,13 +5170,99 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 41,
-       "mean_glucose": "127.3489456224344110198087069",
-       "median_abs_deviation": "0.1614181819005383120082360428",
-       "median_glucose": "129.9405302735353627762384088"
+       "mean_glucose": "127.7582071605287024938327031",
+       "median_abs_deviation": "0.1597305160300664164186635513",
+       "median_glucose": "129.5321121758295927692444448"
       }
      }
     ],
     "half_life_days": "2",
+    "lookback_days": 15
+   },
+   {
+    "cells": [
+     {
+      "active": false,
+      "best": null,
+      "percentile": "25",
+      "shares": {
+       "above": "33.75",
+       "below": "11.25",
+       "in_range": "55"
+      },
+      "stats": {
+       "above": 27,
+       "below": 9,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 44,
+       "mean_glucose": "141.357080586239646789310871",
+       "median_abs_deviation": "0.1425061241970217151120515086",
+       "median_glucose": "140.5032765346407723111718140"
+      }
+     },
+     {
+      "active": false,
+      "best": null,
+      "percentile": "37.5",
+      "shares": {
+       "above": "28.75",
+       "below": "16.25",
+       "in_range": "55"
+      },
+      "stats": {
+       "above": 23,
+       "below": 13,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 44,
+       "mean_glucose": "127.7043007430198829290090744",
+       "median_abs_deviation": "0.1259622075160729715883901686",
+       "median_glucose": "126.9372018158817023511613928"
+      }
+     },
+     {
+      "active": false,
+      "best": null,
+      "percentile": "50",
+      "shares": {
+       "above": "20",
+       "below": "21.25",
+       "in_range": "58.75"
+      },
+      "stats": {
+       "above": 16,
+       "below": 17,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 47,
+       "mean_glucose": "115.7944137860218590349825939",
+       "median_abs_deviation": "0.1026393152884049703954950606",
+       "median_glucose": "118.7081129523105933318986670"
+      }
+     },
+     {
+      "active": false,
+      "best": null,
+      "percentile": "surcharge",
+      "shares": {
+       "above": "28.75",
+       "below": "20",
+       "in_range": "51.25"
+      },
+      "stats": {
+       "above": 23,
+       "below": 16,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 41,
+       "mean_glucose": "127.0265624947005934414242041",
+       "median_abs_deviation": "0.1590532037287722836151792282",
+       "median_glucose": "129.6845036044258343113382017"
+      }
+     }
+    ],
+    "half_life_days": "3",
     "lookback_days": 15
    },
    {
@@ -5200,95 +5282,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 43,
-       "mean_glucose": "142.2083206778861313058294001",
-       "median_abs_deviation": "0.1465080537206267833258042612",
-       "median_glucose": "139.6960383975862612670641900"
-      }
-     },
-     {
-      "active": false,
-      "best": null,
-      "percentile": "37.5",
-      "shares": {
-       "above": "30",
-       "below": "16.25",
-       "in_range": "53.75"
-      },
-      "stats": {
-       "above": 24,
-       "below": 13,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 43,
-       "mean_glucose": "128.1458130505651888608765146",
-       "median_abs_deviation": "0.1259622075160729715883901686",
-       "median_glucose": "126.6147815235342167065622636"
-      }
-     },
-     {
-      "active": false,
-      "best": null,
-      "percentile": "50",
-      "shares": {
-       "above": "20",
-       "below": "20",
-       "in_range": "60"
-      },
-      "stats": {
-       "above": 16,
-       "below": 16,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 48,
-       "mean_glucose": "115.9109795630695318302112836",
-       "median_abs_deviation": "0.1110591430278177187629537806",
-       "median_glucose": "118.7081129523105933318986670"
-      }
-     },
-     {
-      "active": false,
-      "best": null,
-      "percentile": "surcharge",
-      "shares": {
-       "above": "28.75",
-       "below": "18.75",
-       "in_range": "52.5"
-      },
-      "stats": {
-       "above": 23,
-       "below": 15,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 42,
-       "mean_glucose": "127.1104009923781977756155275",
-       "median_abs_deviation": "0.1570959954309654641014864936",
-       "median_glucose": "127.1177686636051779109976940"
-      }
-     }
-    ],
-    "half_life_days": "3",
-    "lookback_days": 15
-   },
-   {
-    "cells": [
-     {
-      "active": false,
-      "best": null,
-      "percentile": "25",
-      "shares": {
-       "above": "36.25",
-       "below": "10",
-       "in_range": "53.75"
-      },
-      "stats": {
-       "above": 29,
-       "below": 8,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 43,
-       "mean_glucose": "142.2939193120545594960321336",
+       "mean_glucose": "141.9576610641519940450042881",
        "median_abs_deviation": "0.1411523898950122681948781932",
-       "median_glucose": "138.6207405664556506575002726"
+       "median_glucose": "139.6661125447655970825158818"
       }
      },
      {
@@ -5306,9 +5302,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 44,
-       "mean_glucose": "127.635573303998217535766097",
-       "median_abs_deviation": "0.1283053924471921481446512129",
-       "median_glucose": "127.4250204755293837748785383"
+       "mean_glucose": "127.2057601247822946966504009",
+       "median_abs_deviation": "0.1216510101823974066785976653",
+       "median_glucose": "128.3074797316115688501418044"
       }
      },
      {
@@ -5316,19 +5312,19 @@
       "best": null,
       "percentile": "50",
       "shares": {
-       "above": "18.75",
+       "above": "17.5",
        "below": "18.75",
-       "in_range": "62.5"
+       "in_range": "63.75"
       },
       "stats": {
-       "above": 15,
+       "above": 14,
        "below": 15,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 50,
-       "mean_glucose": "115.9529295268315434407501589",
-       "median_abs_deviation": "0.1055363071177536208853993820",
-       "median_glucose": "121.9170075364261107928630464"
+       "in_range": 51,
+       "mean_glucose": "115.8337297485014225175536597",
+       "median_abs_deviation": "0.1086092277536080127903764868",
+       "median_glucose": "121.8280870004205746074322234"
       }
      },
      {
@@ -5346,9 +5342,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 42,
-       "mean_glucose": "126.5965712764491773770908344",
-       "median_abs_deviation": "0.1476876365141674282986711544",
-       "median_glucose": "126.6614294818517477019589922"
+       "mean_glucose": "126.3953521665198545219673638",
+       "median_abs_deviation": "0.1415633831921547342141889005",
+       "median_glucose": "126.9076345624764346718850796"
       }
      }
     ],
@@ -5372,8 +5368,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 43,
-       "mean_glucose": "142.0724611090394495355812446",
-       "median_abs_deviation": "0.1459631893841319906015049433",
+       "mean_glucose": "142.1236269855141982350128301",
+       "median_abs_deviation": "0.1433876741645944939831447824",
        "median_glucose": "139.1624065208552770046285760"
       }
      },
@@ -5392,9 +5388,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 44,
-       "mean_glucose": "127.053804206758386576712387",
-       "median_abs_deviation": "0.1242571233777146030954213252",
-       "median_glucose": "126.3572982361598479503243630"
+       "mean_glucose": "126.7106406732281260763303685",
+       "median_abs_deviation": "0.1222382528190532595271756956",
+       "median_glucose": "127.7706560377764922205993918"
       }
      },
      {
@@ -5402,19 +5398,19 @@
       "best": null,
       "percentile": "50",
       "shares": {
-       "above": "18.75",
+       "above": "17.5",
        "below": "18.75",
-       "in_range": "62.5"
+       "in_range": "63.75"
       },
       "stats": {
-       "above": 15,
+       "above": 14,
        "below": 15,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 50,
-       "mean_glucose": "116.1082953084936934573339827",
-       "median_abs_deviation": "0.1052900039707658194306048373",
-       "median_glucose": "121.5050071569307287910310314"
+       "in_range": 51,
+       "mean_glucose": "116.0258217386349654627575778",
+       "median_abs_deviation": "0.1071446181793046550123575408",
+       "median_glucose": "121.8527102115389619849359930"
       }
      },
      {
@@ -5432,8 +5428,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 42,
-       "mean_glucose": "126.2193423719901818071347832",
-       "median_abs_deviation": "0.1454729673071081933976029390",
+       "mean_glucose": "126.0611518309705912788716065",
+       "median_abs_deviation": "0.1414141555674214619196938206",
        "median_glucose": "128.3274051355046231331696819"
       }
      }
@@ -5448,17 +5444,17 @@
       "best": null,
       "percentile": "25",
       "shares": {
-       "above": "37.5",
+       "above": "36.25",
        "below": "8.75",
-       "in_range": "53.75"
+       "in_range": "55"
       },
       "stats": {
-       "above": 30,
+       "above": 29,
        "below": 7,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 43,
-       "mean_glucose": "141.6379546533820564232033101",
+       "in_range": 44,
+       "mean_glucose": "141.970186312340085888896286",
        "median_abs_deviation": "0.1472836679754519359978304902",
        "median_glucose": "138.5000587662713376699341329"
       }
@@ -5469,38 +5465,38 @@
       "percentile": "37.5",
       "shares": {
        "above": "26.25",
-       "below": "15",
-       "in_range": "58.75"
+       "below": "16.25",
+       "in_range": "57.5"
       },
       "stats": {
        "above": 21,
-       "below": 12,
+       "below": 13,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 47,
-       "mean_glucose": "126.3654109502475123197774992",
-       "median_abs_deviation": "0.1279959474436583007547562886",
-       "median_glucose": "126.5856152557840780833766961"
+       "in_range": 46,
+       "mean_glucose": "126.1882411854917985576999292",
+       "median_abs_deviation": "0.1227442044604855889452215376",
+       "median_glucose": "128.1852598483879666659726497"
       }
      },
      {
       "active": false,
-      "best": "lookback",
+      "best": "overall",
       "percentile": "50",
       "shares": {
-       "above": "18.75",
+       "above": "17.5",
        "below": "17.5",
-       "in_range": "63.75"
+       "in_range": "65"
       },
       "stats": {
-       "above": 15,
+       "above": 14,
        "below": 14,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 51,
-       "mean_glucose": "116.2262572851590864834874471",
+       "in_range": 52,
+       "mean_glucose": "116.1711828181137894021457355",
        "median_abs_deviation": "0.1040142494498910232194634980",
-       "median_glucose": "120.4869222989663919538834349"
+       "median_glucose": "121.3210347273152525734279558"
       }
      },
      {
@@ -5508,19 +5504,19 @@
       "best": null,
       "percentile": "surcharge",
       "shares": {
-       "above": "28.75",
+       "above": "30",
        "below": "18.75",
-       "in_range": "52.5"
+       "in_range": "51.25"
       },
       "stats": {
-       "above": 23,
+       "above": 24,
        "below": 15,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 42,
-       "mean_glucose": "125.9510678392378646580672115",
-       "median_abs_deviation": "0.1485043814040759604172804990",
-       "median_glucose": "126.7101141593178252213313036"
+       "in_range": 41,
+       "mean_glucose": "125.9556290185474873478659785",
+       "median_abs_deviation": "0.1456765650846758753752105064",
+       "median_glucose": "126.8557541451990643906972295"
       }
      }
     ],
@@ -5544,9 +5540,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 38,
-       "mean_glucose": "139.2011762567559352474028426",
-       "median_abs_deviation": "0.1681173089800731151182531308",
-       "median_glucose": "140.4070105898530075999147086"
+       "mean_glucose": "138.9424044148764967325854231",
+       "median_abs_deviation": "0.1676294332411963293975428550",
+       "median_glucose": "136.8254245528579394985775259"
       }
      },
      {
@@ -5554,19 +5550,19 @@
       "best": null,
       "percentile": "37.5",
       "shares": {
-       "above": "27.5",
+       "above": "25",
        "below": "17.5",
-       "in_range": "55"
+       "in_range": "57.5"
       },
       "stats": {
-       "above": 22,
+       "above": 20,
        "below": 14,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 44,
-       "mean_glucose": "126.1931190218379005229678979",
-       "median_abs_deviation": "0.1292455904101327851290504360",
-       "median_glucose": "128.9904817798463534076339950"
+       "in_range": 46,
+       "mean_glucose": "125.7312336295304322433170735",
+       "median_abs_deviation": "0.1283295001348504190383722172",
+       "median_glucose": "127.2815134605043556671273338"
       }
      },
      {
@@ -5584,9 +5580,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 43,
-       "mean_glucose": "115.0251346986189208170795407",
+       "mean_glucose": "114.6138290796320497824693890",
        "median_abs_deviation": "0.1344799846555390571068211084",
-       "median_glucose": "116.2945729107732066000607567"
+       "median_glucose": "114.4531060191303927507866854"
       }
      },
      {
@@ -5595,17 +5591,17 @@
       "percentile": "surcharge",
       "shares": {
        "above": "33.75",
-       "below": "20",
-       "in_range": "46.25"
+       "below": "21.25",
+       "in_range": "45"
       },
       "stats": {
        "above": 27,
-       "below": 16,
+       "below": 17,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 37,
-       "mean_glucose": "128.5763793743823513877072926",
-       "median_abs_deviation": "0.1732249481366884756036656376",
+       "in_range": 36,
+       "mean_glucose": "128.5115284556695352723526252",
+       "median_abs_deviation": "0.1793192636986321106607842200",
        "median_glucose": "127.2685794734353161841674860"
       }
      }
@@ -5630,9 +5626,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 44,
-       "mean_glucose": "141.3089280101425331839461654",
-       "median_abs_deviation": "0.1370211529860435673196019210",
-       "median_glucose": "140.7497326690891382414929780"
+       "mean_glucose": "140.638162657582907691908017",
+       "median_abs_deviation": "0.1387379946744101186898685964",
+       "median_glucose": "140.9408378317083639272653396"
       }
      },
      {
@@ -5640,19 +5636,19 @@
       "best": null,
       "percentile": "37.5",
       "shares": {
-       "above": "30",
+       "above": "27.5",
        "below": "17.5",
-       "in_range": "52.5"
+       "in_range": "55"
       },
       "stats": {
-       "above": 24,
+       "above": 22,
        "below": 14,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 42,
-       "mean_glucose": "127.9981929774642968209822464",
-       "median_abs_deviation": "0.1329273416770506665607081424",
-       "median_glucose": "129.8549082956095588770435879"
+       "in_range": 44,
+       "mean_glucose": "127.1376297587812603637547961",
+       "median_abs_deviation": "0.1270802149896966893606653522",
+       "median_glucose": "127.2082305096530175842398404"
       }
      },
      {
@@ -5670,8 +5666,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 47,
-       "mean_glucose": "115.3034476660163641976718924",
-       "median_abs_deviation": "0.1321527424444718043748345103",
+       "mean_glucose": "115.2980268600332873352887515",
+       "median_abs_deviation": "0.1266329601071705636928860725",
        "median_glucose": "115.2218776122605988340279094"
       }
      },
@@ -5690,8 +5686,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 40,
-       "mean_glucose": "126.2686755141094346950769486",
-       "median_abs_deviation": "0.1592866934063111657895521719",
+       "mean_glucose": "126.6387571547774323735981098",
+       "median_abs_deviation": "0.1573916797006985385305256098",
        "median_glucose": "129.5321121758295927692444448"
       }
      }
@@ -5706,19 +5702,19 @@
       "best": null,
       "percentile": "25",
       "shares": {
-       "above": "35",
+       "above": "33.75",
        "below": "11.25",
-       "in_range": "53.75"
+       "in_range": "55"
       },
       "stats": {
-       "above": 28,
+       "above": 27,
        "below": 9,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 43,
-       "mean_glucose": "142.62669844794533327739132",
-       "median_abs_deviation": "0.1515857313775395429717244857",
-       "median_glucose": "140.5032765346407723111718140"
+       "in_range": 44,
+       "mean_glucose": "141.879351488325902460527967",
+       "median_abs_deviation": "0.1416763299160805247808346654",
+       "median_glucose": "141.2412161938891502787118787"
       }
      },
      {
@@ -5726,19 +5722,19 @@
       "best": null,
       "percentile": "37.5",
       "shares": {
-       "above": "28.75",
+       "above": "27.5",
        "below": "15",
-       "in_range": "56.25"
+       "in_range": "57.5"
       },
       "stats": {
-       "above": 23,
+       "above": 22,
        "below": 12,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 45,
-       "mean_glucose": "128.4343430002311838525898976",
+       "in_range": 46,
+       "mean_glucose": "128.1007405957453217728061038",
        "median_abs_deviation": "0.1262799872267630392459174357",
-       "median_glucose": "126.8371979400632456454075779"
+       "median_glucose": "128.4648242836496803181206386"
       }
      },
      {
@@ -5756,13 +5752,99 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 48,
-       "mean_glucose": "115.3807426360249056574469038",
-       "median_abs_deviation": "0.1046045919101421452364526252",
+       "mean_glucose": "115.4085260199731521305184042",
+       "median_abs_deviation": "0.1013848563257573744640347387",
        "median_glucose": "117.3547200706483127753808004"
       }
      },
      {
       "active": false,
+      "best": null,
+      "percentile": "surcharge",
+      "shares": {
+       "above": "30",
+       "below": "20",
+       "in_range": "50"
+      },
+      "stats": {
+       "above": 24,
+       "below": 16,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 40,
+       "mean_glucose": "127.0508540301497269565752252",
+       "median_abs_deviation": "0.1568467905685115736212265810",
+       "median_glucose": "128.7479725888942936057210764"
+      }
+     }
+    ],
+    "half_life_days": "3",
+    "lookback_days": 30
+   },
+   {
+    "cells": [
+     {
+      "active": false,
+      "best": null,
+      "percentile": "25",
+      "shares": {
+       "above": "35",
+       "below": "10",
+       "in_range": "55"
+      },
+      "stats": {
+       "above": 28,
+       "below": 8,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 44,
+       "mean_glucose": "142.536342963711331096660705",
+       "median_abs_deviation": "0.1404478786846673864672914016",
+       "median_glucose": "140.0423500042652623126394852"
+      }
+     },
+     {
+      "active": false,
+      "best": null,
+      "percentile": "37.5",
+      "shares": {
+       "above": "28.75",
+       "below": "16.25",
+       "in_range": "55"
+      },
+      "stats": {
+       "above": 23,
+       "below": 13,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 44,
+       "mean_glucose": "127.3454099717203932795654571",
+       "median_abs_deviation": "0.1244121039485410675571083814",
+       "median_glucose": "126.7761646984686743702074364"
+      }
+     },
+     {
+      "active": false,
+      "best": "lookback",
+      "percentile": "50",
+      "shares": {
+       "above": "17.5",
+       "below": "17.5",
+       "in_range": "65"
+      },
+      "stats": {
+       "above": 14,
+       "below": 14,
+       "count": 80,
+       "glucose_count": 80,
+       "in_range": 52,
+       "mean_glucose": "115.7196794112521413755522752",
+       "median_abs_deviation": "0.1085402448083609240805021402",
+       "median_glucose": "120.0431732368000812864274070"
+      }
+     },
+     {
+      "active": true,
       "best": null,
       "percentile": "surcharge",
       "shares": {
@@ -5776,13 +5858,13 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 41,
-       "mean_glucose": "127.1370319300834410140472118",
-       "median_abs_deviation": "0.1532261920087290041696316066",
-       "median_glucose": "127.0230040223980243814074344"
+       "mean_glucose": "125.8341196590494568038446458",
+       "median_abs_deviation": "0.1489204390300190025137794216",
+       "median_glucose": "130.9644668302860125418890428"
       }
      }
     ],
-    "half_life_days": "3",
+    "half_life_days": "5",
     "lookback_days": 30
    },
    {
@@ -5802,95 +5884,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 43,
-       "mean_glucose": "142.6947491221880516958449055",
-       "median_abs_deviation": "0.1400419980983381194148161300",
-       "median_glucose": "139.8113662175009183930662716"
-      }
-     },
-     {
-      "active": false,
-      "best": null,
-      "percentile": "37.5",
-      "shares": {
-       "above": "28.75",
-       "below": "15",
-       "in_range": "56.25"
-      },
-      "stats": {
-       "above": 23,
-       "below": 12,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 45,
-       "mean_glucose": "127.8723473726930489316411592",
-       "median_abs_deviation": "0.1295242884137517289662622176",
-       "median_glucose": "126.6389963219757464705760026"
-      }
-     },
-     {
-      "active": false,
-      "best": null,
-      "percentile": "50",
-      "shares": {
-       "above": "17.5",
-       "below": "18.75",
-       "in_range": "63.75"
-      },
-      "stats": {
-       "above": 14,
-       "below": 15,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 51,
-       "mean_glucose": "115.6947830363308561728523581",
-       "median_abs_deviation": "0.1170709837872686924991211656",
-       "median_glucose": "120.0431732368000812864274070"
-      }
-     },
-     {
-      "active": true,
-      "best": null,
-      "percentile": "surcharge",
-      "shares": {
-       "above": "30",
-       "below": "18.75",
-       "in_range": "51.25"
-      },
-      "stats": {
-       "above": 24,
-       "below": 15,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 41,
-       "mean_glucose": "125.9122751683044244796863151",
-       "median_abs_deviation": "0.1507543073105164230507085819",
-       "median_glucose": "130.1226739374100229538464166"
-      }
-     }
-    ],
-    "half_life_days": "5",
-    "lookback_days": 30
-   },
-   {
-    "cells": [
-     {
-      "active": false,
-      "best": null,
-      "percentile": "25",
-      "shares": {
-       "above": "37.5",
-       "below": "10",
-       "in_range": "52.5"
-      },
-      "stats": {
-       "above": 30,
-       "below": 8,
-       "count": 80,
-       "glucose_count": 80,
-       "in_range": 42,
-       "mean_glucose": "141.9261562782159138622340392",
-       "median_abs_deviation": "0.1435096185345688317858149700",
-       "median_glucose": "139.4707738409693294689949556"
+       "mean_glucose": "142.2307600061634198971718708",
+       "median_abs_deviation": "0.1419067504870379200088716851",
+       "median_glucose": "140.1496206907336403567334756"
       }
      },
      {
@@ -5899,23 +5895,23 @@
       "percentile": "37.5",
       "shares": {
        "above": "27.5",
-       "below": "15",
-       "in_range": "57.5"
+       "below": "16.25",
+       "in_range": "56.25"
       },
       "stats": {
        "above": 22,
-       "below": 12,
+       "below": 13,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 46,
-       "mean_glucose": "127.1035627788749098790542862",
-       "median_abs_deviation": "0.1270262039846866287145835274",
-       "median_glucose": "126.9681567584032886236788979"
+       "in_range": 45,
+       "mean_glucose": "126.7536445581896589077427861",
+       "median_abs_deviation": "0.1232605278943581569843389370",
+       "median_glucose": "127.0670164457852828349688018"
       }
      },
      {
       "active": false,
-      "best": "overall",
+      "best": null,
       "percentile": "50",
       "shares": {
        "above": "17.5",
@@ -5928,8 +5924,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 52,
-       "mean_glucose": "115.4932550805730773446918831",
-       "median_abs_deviation": "0.1089154569952543839682243070",
+       "mean_glucose": "115.6240409931510347176871675",
+       "median_abs_deviation": "0.1073662842011064506697685588",
        "median_glucose": "119.1607971025694699116096998"
       }
      },
@@ -5948,9 +5944,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 41,
-       "mean_glucose": "125.2678424378662042898997372",
+       "mean_glucose": "125.1655346676926048468905094",
        "median_abs_deviation": "0.1489140579340876465726606178",
-       "median_glucose": "129.7333156389195363143014209"
+       "median_glucose": "130.1699958636901462966316683"
       }
      }
     ],
@@ -5964,19 +5960,19 @@
       "best": null,
       "percentile": "25",
       "shares": {
-       "above": "37.5",
+       "above": "36.25",
        "below": "10",
-       "in_range": "52.5"
+       "in_range": "53.75"
       },
       "stats": {
-       "above": 30,
+       "above": 29,
        "below": 8,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 42,
-       "mean_glucose": "140.6632651550918228420347972",
-       "median_abs_deviation": "0.1385161137423254497545655382",
-       "median_glucose": "139.4490267352014681510099834"
+       "in_range": 43,
+       "mean_glucose": "141.0090984884251561753681306",
+       "median_abs_deviation": "0.1375394277019743822371261320",
+       "median_glucose": "140.6357626412712858329334189"
       }
      },
      {
@@ -5985,18 +5981,18 @@
       "percentile": "37.5",
       "shares": {
        "above": "27.5",
-       "below": "13.75",
-       "in_range": "58.75"
+       "below": "15",
+       "in_range": "57.5"
       },
       "stats": {
        "above": 22,
-       "below": 11,
+       "below": 12,
        "count": 80,
        "glucose_count": 80,
-       "in_range": 47,
-       "mean_glucose": "126.074742506994468119260052",
-       "median_abs_deviation": "0.1303707650455262921218923026",
-       "median_glucose": "126.5897270633190599900237886"
+       "in_range": 46,
+       "mean_glucose": "125.8369240101847392542302129",
+       "median_abs_deviation": "0.1253363495737722807523271128",
+       "median_glucose": "126.8661407630880485429888228"
       }
      },
      {
@@ -6014,8 +6010,8 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 50,
-       "mean_glucose": "114.8623488919475688369845044",
-       "median_abs_deviation": "0.1061196746849836673167151573",
+       "mean_glucose": "114.9999472150102234944355654",
+       "median_abs_deviation": "0.1056700364697483518143487448",
        "median_glucose": "116.5476558199684283366553571"
       }
      },
@@ -6034,9 +6030,9 @@
        "count": 80,
        "glucose_count": 80,
        "in_range": 41,
-       "mean_glucose": "124.6260100114295476306646018",
-       "median_abs_deviation": "0.1465049864469316997616690318",
-       "median_glucose": "127.4708068490075006905632214"
+       "mean_glucose": "124.8324655735689472616804088",
+       "median_abs_deviation": "0.1457711869852538654517387174",
+       "median_glucose": "128.7706714928478082827912908"
       }
      }
     ],
