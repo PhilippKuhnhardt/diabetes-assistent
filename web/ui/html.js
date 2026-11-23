@@ -4,5 +4,5 @@ import { h, render } from "../vendor/preact.js";
 import htm from "../vendor/htm.js";
 
 export { h, render };
-export { useState, useEffect, useRef, useMemo, useCallback } from "../vendor/preact-hooks.js";
+export { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from "../vendor/preact-hooks.js";
 export const html = htm.bind(h);
