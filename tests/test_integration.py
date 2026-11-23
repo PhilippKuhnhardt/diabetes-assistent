@@ -774,7 +774,7 @@ class IntegrationTests(unittest.TestCase):
             days = connection.execute("SELECT COUNT(*) FROM day_results").fetchone()[0]
             pages = {row[0] for row in connection.execute("SELECT key FROM summary_results")}
         self.assertEqual(days, summary.history_days(30) + 1)
-        self.assertEqual(pages, {"1", "3", "7", "14", "30", "effects:" + today.isoformat()})
+        self.assertEqual(pages, {"1", "3", "7", "14", "30"})
         # Stored results answer the next request without calculating again.
         with patch("app.services.summary.compute_summary") as compute, \
                 patch("app.services.day_view.compute_day") as compute_day:
@@ -783,16 +783,13 @@ class IntegrationTests(unittest.TestCase):
             compute_day.assert_not_called()
         # The diary page reads what the round mirrored and stored: no Nightscout read, no recalculation.
         with patch("app.ingestion.nightscout.fetch_range") as fetch, \
-                patch("app.services.day_view.compute_day") as compute_day, \
-                patch("app.services.effects._compute") as compute_effects:
+                patch("app.services.day_view.compute_day") as compute_day:
             self.request("/api/day?date=" + today.isoformat())
-            self.request("/api/day/effects?date=" + today.isoformat())
             self.request("/api/entry/preview", method="POST", body={
                 "day": today.isoformat(), "mode": "meal", "carbs": "",
                 "at": datetime.now(timezone.utc).isoformat()})
             fetch.assert_not_called()
             compute_day.assert_not_called()
-            compute_effects.assert_not_called()
         # "Aktualisieren" and a write to Nightscout ask Nightscout again.
         with patch("app.ingestion.nightscout.fetch_range", return_value=([], [])) as fetch:
             self.request("/api/day?date=" + today.isoformat() + "&refresh=1")

@@ -360,6 +360,11 @@ def _split_min_units(db: sqlite3.Connection) -> None:
                (now, now, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))))
 
 
+def _drop_day_effects(db: sqlite3.Connection) -> None:
+    # The "Wirkungen über den Tag" card was removed (user request 2026-11-23); its stored days go with it.
+    db.execute("DELETE FROM summary_results WHERE key LIKE 'effects:%'")
+
+
 def _window_checks(db: sqlite3.Connection) -> None:
     """"Passt" in Verlauf (user request 2026-11-23): Philipp checked a meal's counted window. The window it was
     checked for is kept, so the check lapses by itself once the window changes."""
@@ -376,7 +381,8 @@ MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_res
                                                           _inbox_seen, _sport_sessions, _places_without_positions,
                                                           _place_factor, _timezone_periods, _prior_insulin_percentile,
                                                           _dishes, _agent, _browser_sessions, _split_min_units,
-                                                          _sport_session_minutes, _notification_pause, _window_checks]
+                                                          _sport_session_minutes, _notification_pause, _window_checks,
+                                                          _drop_day_effects]
 
 
 def init() -> None:
