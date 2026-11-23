@@ -204,6 +204,23 @@ async function history(page, name) {
 
 // Verlauf's day (web/ui/day.js): the day chart and effects folded away, a meal excluded and counted again,
 // and the window editor: dragging, nudging, saving and going back to the standard window.
+// Clicks a nav item; on a miss it prints what covers it, since CI fonts differ from a dev machine.
+async function clickNav(page, nav) {
+  try {
+    await page.click(`[data-nav=${nav}]`, { timeout: 10000 });
+  } catch (error) {
+    console.log("covered nav", await page.evaluate(nav => {
+      const link = document.querySelector(`[data-nav=${nav}]`), box = link.getBoundingClientRect();
+      const chain = [];
+      for (let el = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2); el; el = el.parentElement)
+        chain.push(el.tagName + "." + [...el.classList].join(".") + "#" + el.id + " " + getComputedStyle(el).position + "/" + getComputedStyle(el).zIndex);
+      return JSON.stringify({ box, vw: innerWidth, vh: innerHeight, sw: document.documentElement.scrollWidth, sy: scrollY,
+        body: document.body.className, dialogs: [...document.querySelectorAll("dialog")].map(d => d.id + ":" + d.open), chain });
+    }, nav));
+    throw error;
+  }
+}
+
 async function review(page, name) {
   await page.waitForSelector("#timeline .history-meal");
   if (!(await page.$eval(".history-more", details => details.open))) await page.click(".history-more summary");
@@ -295,7 +312,7 @@ async function analysis(page, name) {
   await page.waitForSelector("#timeline .history-meal");
   check(await page.isVisible("#diary-view"), `${name}: a calculation opens its day`);
   await review(page, name);
-  await page.click("[data-nav=analysis]");
+  await clickNav(page, "analysis");
   await page.waitForSelector("#calculations tbody tr");
 }
 
