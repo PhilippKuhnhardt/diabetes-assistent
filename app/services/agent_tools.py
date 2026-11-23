@@ -477,7 +477,8 @@ TOOLS = [
                        "(10/25/50/75/90 %, Abweichung vom erwarteten BG expected_mgdl der Normal-Dosis; je IE mehr isf_mgdl_per_unit tiefer); "
                        "ohne KH nach einer Mahlzeit zusätzlich fast (wenig Bedarf, x0,6) / slow (viel, x1,4), suggested = Tendenz aus dem Anstieg; "
                        "bei Split units = jetzt und "
-                       "later_units/later_at = zweiter Teil; ohne KH ggf. Option split = geplanter 2. Teil. "
+                       "later_units/later_at = zweiter Teil; ohne KH ggf. Option split = geplanter 2. Teil; mit KH bei offenem "
+                       "split_plan nur die KH (der Anstieg bleibt beim 2. Teil). "
                        "Speichert nichts.",
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
         **_bind(EntryArgs, preview_entry),

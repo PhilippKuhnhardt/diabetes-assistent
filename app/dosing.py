@@ -30,7 +30,7 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
             activity_change: object = 0, units_per_ke: Decimal | None = None,
             auto_units_per_ke: Decimal | None = None, auto_surcharge_mgdl: Decimal | None = None,
             surcharge_share=None, on_board: dict | None = None,
-            finger: list[dict] | None = None) -> dict:
+            finger: list[dict] | None = None, hold_rise: bool = False) -> dict:
     """activity_change is a signed, user-estimated BG change in mg/dL from sport
     (negative lowers BG and therefore the dose; positive, e.g. adrenaline, raises it).
     units_per_ke replaces Nightscout's current I:C, e.g. with the breakfast factor of the day type.
@@ -50,7 +50,10 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     carbs and surcharge only cancel active insulin. Below 70 mg/dL the same forecast applies (no special rule,
     user request 2026-10-23).
     finger holds blood glucose measured by hand ({"at", "mgdl"}); a measurement newer than the latest
-    CGM value is the start glucose instead (same 15-minute freshness, no trend)."""
+    CGM value is the start glucose instead (same 15-minute freshness, no trend).
+    hold_rise (carbs while a split bolus' second part is open, user request 2026-11-23): the forecast's rise above
+    a target belongs to that second part, which follows later from the forecast (app/split.py), so the options
+    only correct downwards; their expected values then assume that second part."""
     now = now or datetime.now(timezone.utc)
     grams = calculation.dec(carbs)
     if not grams.is_finite() or not 0 <= grams <= 500:
@@ -125,6 +128,11 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         low = latest[1] < glucose.LOW_MGDL
         cautious_start = max(guarded, full - FORECAST_SPREAD_MGDL)
         start = full
+        # The rise the open second part covers is left to it: injected now with the new carbs, it would act long
+        # before the meal's late rise (fat/protein, slow carbs) and lower glucose in between.
+        dose_start = min(start, target) if hold_rise else start
+        cautious_start = min(cautious_start, cautious_target) if hold_rise else cautious_start
+        low_start = min(start, low_target) if hold_rise else start
         hour = now.astimezone(local_zone(timezone_name)).hour
         if low_target >= target:
             result["low_blocked"] = "off"
@@ -147,13 +155,13 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
             result[prefix + "carbs_entry_units"] = str(half_units(carbs_total))
             if fresh:
                 result[prefix + "carbs_expected_glucose_mgdl"] = str(
-                    start + (units - half_units(carbs_total)) * isf)
+                    dose_start + (units - half_units(carbs_total)) * isf)
     if fresh:
         # Sport shifts the modelled start glucose, so its effect flows through the correction factor;
         # so do the insulin, carbs and surcharge still acting.
         result["forecast_mgdl"] = str(start)
         result["cautious_forecast_mgdl"] = str(cautious_start)
-        correction_units = (start - target) / isf
+        correction_units = (dose_start - target) / isf
         cautious_correction_units = (cautious_start - cautious_target) / isf
         total = max(Decimal(0), carb_units + correction_units)
         cautious_total = max(Decimal(0), carb_units + cautious_correction_units)
@@ -162,29 +170,29 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         result["correction_units"] = str(correction_units)
         result["total_units"] = str(total)
         result["entry_units"] = str(entry_units)
-        result["expected_glucose_mgdl"] = str(start + (carb_units - entry_units) * isf)
+        result["expected_glucose_mgdl"] = str(dose_start + (carb_units - entry_units) * isf)
         result["cautious_correction_units"] = str(cautious_correction_units)
         result["cautious_total_units"] = str(cautious_total)
         result["cautious_entry_units"] = str(cautious_entry_units)
         result["cautious_expected_glucose_mgdl"] = str(cautious_start + (carb_units - cautious_entry_units) * isf)
-        low_correction_units = (start - low_target) / isf
+        low_correction_units = (low_start - low_target) / isf
         low_total = max(Decimal(0), carb_units + low_correction_units)
         result["low_correction_units"] = str(low_correction_units)
         result["low_total_units"] = str(low_total)
         result["low_entry_units"] = str(half_units(low_total))
-        result["low_expected_glucose_mgdl"] = str(start + (carb_units - half_units(low_total)) * isf)
+        result["low_expected_glucose_mgdl"] = str(low_start + (carb_units - half_units(low_total)) * isf)
         if auto_carb_units is not None:
             auto_low_total = max(Decimal(0), auto_carb_units + low_correction_units)
             result["auto_low_total_units"] = str(auto_low_total)
             result["auto_low_entry_units"] = str(half_units(auto_low_total))
             result["auto_low_expected_glucose_mgdl"] = str(
-                start + (auto_carb_units - half_units(auto_low_total)) * isf)
+                low_start + (auto_carb_units - half_units(auto_low_total)) * isf)
             auto_total = max(Decimal(0), auto_carb_units + correction_units)
             auto_entry_units = (auto_total * 2).quantize(Decimal("1"), rounding=ROUND_HALF_UP) / 2
             result["auto_total_units"] = str(auto_total)
             result["auto_entry_units"] = str(auto_entry_units)
             # Expected glucose follows the auto factor's own carb model, not Nightscout's I:C.
-            result["auto_expected_glucose_mgdl"] = str(start + (auto_carb_units - auto_entry_units) * isf)
+            result["auto_expected_glucose_mgdl"] = str(dose_start + (auto_carb_units - auto_entry_units) * isf)
             auto_cautious_total = max(Decimal(0), auto_carb_units + cautious_correction_units)
             auto_cautious_entry_units = half_units(auto_cautious_total)
             result["auto_cautious_total_units"] = str(auto_cautious_total)

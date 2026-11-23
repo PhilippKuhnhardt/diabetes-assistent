@@ -103,6 +103,7 @@ export function DoseHelp({ help, note, changed = {}, choice, chosen, onChoose, o
       before=${changed[option.variant]} chosen=${option.variant === choice} onChoose=${onChoose} />`)}</div>`}
     ${help.slider && html`<${DoseSlider} slider=${help.slider} chosen=${chosen} onSlide=${onSlide} />`}
     ${help.slider && splitPart && html`<p class="dose-factor">2. Teil: ${splitOptionNote(splitPart)}</p>`}
+    ${withCarbs && help.split_plan && html`<p class="dose-factor">Nur für diese KH · 2. Teil bleibt offen (geplant ${num(help.split_plan.units, 1)} IE um ${timeOnly(help.split_plan.due_at)}, Menge dann aus der Prognose)</p>`}
     ${Number(help.activity_change_mgdl) !== 0 && help.activity_units != null && html`<p class="dose-factor">Sport <strong>${signedChange(help.activity_change_mgdl, 0)}</strong> · ${(Number(help.activity_units) > 0 ? "+" : "") + num(help.activity_units, 2)} IE</p>`}
     ${board && (board.lowering_until || board.raising_until) && html`<p class="dose-factor">Wirkt noch <strong>−${num(board.lowering_mgdl, 0)} / +${num(board.raising_mgdl, 0)} mg/dL</strong> · eingerechnet</p>`}
     ${help.low_note && html`<p class="dose-factor">Tiefer (${num(help.low_target_mgdl, 0)} mg/dL) nicht angeboten: ${help.low_note}</p>`}

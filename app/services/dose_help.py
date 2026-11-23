@@ -81,18 +81,19 @@ def dose_help(payload: dict) -> dict:
     use_fpe = calculated is not None and payload.get("surcharge_mode") == "fpe"
     if use_fpe:
         meal_surcharge = calculated["mgdl"]
+    plan = split.open_plan(treatments, now)
     result = dosing.suggest(payload.get("carbs", 0), current_settings, entries, treatments, now,
                             activity_change=payload.get("activity_change_mgdl", 0),
                             units_per_ke=factor["median_units_per_ke"] if use_factor else None,
                             auto_units_per_ke=auto_value * place_scale if auto_value is not None else None,
                             auto_surcharge_mgdl=meal_surcharge * place_scale if surcharge else None,
-                            surcharge_share=added_share, on_board=active, finger=finger)
+                            surcharge_share=added_share, on_board=active, finger=finger,
+                            hold_rise=plan is not None and calculation.dec(payload.get("carbs") or 0) > 0)
     if calculation.dec(payload.get("carbs") or 0) == 0:
         # A correction without food also shows the ends of what was right after recent meals (x0.6 / x1.4)
         # and marks the end the last meal's rise leans to (app/correction_scale.py).
         result["correction_scale"] = correction_scale.scale(
             result, correction_scale.meal_rise(entries, treatments, now))
-    plan = split.open_plan(treatments, now)
     when = split.timing(plan, entries, current_settings, now) if plan else None
     result["split_plan"] = plan and {"meal_at": plan["meal_at"].isoformat(), "units": str(plan["units"]),
                                      "due_at": plan["due_at"].isoformat(), "state": when["state"],

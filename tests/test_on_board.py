@@ -373,6 +373,9 @@ class SplitTests(unittest.TestCase):
         self.assertIsNotNone(split.open_plan([meal, first_part], meal_at + timedelta(hours=2)))
         second = {"at": meal_at + timedelta(minutes=125), "insulin": "4", "eventType": "Correction Bolus"}
         self.assertIsNone(split.open_plan([meal, second], meal_at + timedelta(minutes=130)))
+        # A dessert's own dose covers its carbs only; the second part stays open (user report 2026-11-23).
+        dessert = {"at": meal_at + timedelta(minutes=40), "carbs": "30", "insulin": "1.5", "eventType": "Meal Bolus"}
+        self.assertIsNotNone(split.open_plan([meal, dessert], meal_at + timedelta(minutes=60)))
 
 
 if __name__ == "__main__":
