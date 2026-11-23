@@ -175,8 +175,24 @@ const toastSays = (page, text) => page.waitForFunction(wanted => document.queryS
 
 // Verlauf (web/ui/day.js): the week strip picks a day with a task and one with sport, whose card shows
 // where its effect lands; "Passt" checks a meal.
+// A sideways swipe over the week strip: dx > 0 goes back a week.
+async function swipeWeek(page, dx) {
+  const before = await page.textContent(".week-head span");
+  const box = await page.locator(".week-days").boundingBox();
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  await page.dispatchEvent(".week-day >> nth=3", "pointerdown", { clientX: x, clientY: y, pointerType: "touch", bubbles: true });
+  await page.dispatchEvent(".week-day >> nth=3", "pointerup", { clientX: x + dx, clientY: y + 6, pointerType: "touch", bubbles: true });
+  await page.dispatchEvent(".week-day >> nth=3", "click");
+  await page.waitForFunction(text => document.querySelector(".week-head span")?.textContent !== text, before);
+}
+
 async function history(page, name) {
   await page.waitForSelector(".week-days .week-day");
+  const shown = await page.getAttribute(".week-day[aria-current=date]", "data-day");
+  await swipeWeek(page, 120);
+  check(!(await page.$(`.week-day[data-day="${shown}"]`)), `${name}: a swipe to the right shows the week before`);
+  await swipeWeek(page, -120);
+  check(!!(await page.$(`.week-day[data-day="${shown}"]`)), `${name}: a swipe to the left comes back`);
   // The fake data has a sport session yesterday and a sensor gap two days ago.
   if (!(await page.$(".week-sport"))) { await page.click(".week-prev"); await page.waitForSelector(".week-sport"); }
   await page.click(".week-day[data-state=open] >> nth=0");
@@ -202,8 +218,6 @@ async function history(page, name) {
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${name}: Verlauf fits the screen width`);
 }
 
-// Verlauf's day (web/ui/day.js): the day chart and effects folded away, a meal excluded and counted again,
-// and the window editor: dragging, nudging, saving and going back to the standard window.
 // The innermost elements reaching past the screen's right edge (a wider page makes a phone zoom out).
 function widerThanScreen(page) {
   return page.evaluate(() => {
@@ -232,13 +246,11 @@ async function clickNav(page, nav) {
   }
 }
 
+// Verlauf's day (web/ui/day.js): no day chart, effects or night any more, a meal excluded and counted again,
+// and the window editor: dragging, nudging, saving and going back to the standard window.
 async function review(page, name) {
   await page.waitForSelector("#timeline .history-meal");
-  if (!(await page.$eval(".history-more", details => details.open))) await page.click(".history-more summary");
-  await page.waitForSelector("#review-chart svg");
-  check(true, `${name}: the day chart is drawn`);
-  await page.waitForSelector("#effects-chart svg, #effects-chart .hint");
-  check(true, `${name}: Wirkungen load`);
+  check(!(await page.$(".history-more, #review-chart, #effects-card, #night-card")), `${name}: Verlauf has no day chart, effects or night`);
   const more = page.locator("#timeline .history-meal:has(.exclude-meal) .history-more-entries").first();
   if (!(await more.count())) {
     const all = page.locator("#timeline .history-more-entries");

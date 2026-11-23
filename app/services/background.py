@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 
 from app.common import local_zone
 from app.ingestion import nightscout, pushover, sync
-from app.services import day_view, effects, notifications, summary
+from app.services import day_view, notifications, summary
 from app.store import config
 
 PERIODS = (14, 30, 7, 3, 1)  # the analysis page's default first
@@ -52,7 +52,7 @@ def run_once() -> dict:
 
 
 def _after_sync(today, errors: dict) -> dict:
-    """Precompute, reminders and today's effects, all from the copy the round just mirrored."""
+    """Precompute and reminders, both from the copy the round just mirrored."""
     result = {"errors": errors, "computed": _precompute(today)}
     # Reminders only read a freshly mirrored today, so an injected dose cannot be reminded again.
     if today.isoformat() not in errors:
@@ -64,9 +64,6 @@ def _after_sync(today, errors: dict) -> dict:
             result["notify_error"] = str(error)
     if not errors and "notify_error" not in result:
         pushover.heartbeat()
-    if today.isoformat() not in errors:
-        # Today's effects end at this sync, so they are stored afresh each round for the page to read.
-        effects.day_effects({"date": [today.isoformat()]})
     return result
 
 

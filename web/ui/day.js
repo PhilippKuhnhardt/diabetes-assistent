@@ -2,13 +2,13 @@
 // the only place a day's data is maintained (page roles, AGENTS.md). A week strip picks the day; each main
 // meal is a card with the entries the server grouped under it, its curve and counted window ("Passt"
 // checks it, "Zeitraum anpassen" opens the window editor) and exclusion; sport sessions are cards of their
-// own; the day's chart, effects and night are folded away. Everything shown comes from the day payload
+// own (the day's chart, effects and night cards were removed 2026-11-23). Everything shown comes from the day payload
 // (/api/day) and the week (/api/days/week); actions post and then reload the day.
 import { html, useState, useEffect, useRef, useMemo } from "./html.js";
 import { MINUTE, api, post, toast, num, factorNum, signedChange, sportChange, timeOnly, trendSymbol, names, sportNames,
   dayDate, Icon, FactorIcons, ExcludeButton } from "./lib.js";
 import { sportSummary, signedMgdl } from "./sport.js";
-import { DayChart, MealChart, mealWindow, chartEvents, chartView, chartLayout, windowLimits,
+import { MealChart, mealWindow, chartEvents, chartView, chartLayout, windowLimits,
   GlucoseChart, useWidth } from "./charts.js";
 
 const entryLabels = { finger: "BZ blutig", basal: "Basal", meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur / Bolus", exercise: "Sport", other: "Weiterer Eintrag" };
@@ -46,7 +46,7 @@ async function act(event, action) {
 
 // ---- Verlauf (user request 2026-11-23, design B): a week strip to pick the day, then the day's meals as
 // cards with their curve and counted window ("Passt" checks it, "Zeitraum anpassen" opens the editor),
-// sport sessions as cards of their own between them, and the day's curve, effects and night folded away.
+// sport sessions as cards of their own between them.
 
 const sumOf = (items, key) => items.reduce((sum, item) => sum + (Number(item[key]) || 0), 0);
 
@@ -149,7 +149,7 @@ function MealCard({ meal, items, data, ctx }) {
     <div class="history-actions">
       ${review.checkable && html`<button type="button" class=${"window-check" + (review.checked ? " is-checked" : " primary")} aria-pressed=${String(Boolean(review.checked))}
         disabled=${saving} onClick=${check}>${review.checked ? html`<${Icon} name="check" /> Geprüft` : "Passt"}</button>`}
-      ${hasCurve && html`<button type="button" class="open-window-editor" onClick=${() => ctx.openEditor(meal)}>Zeitraum anpassen</button>`}
+      ${hasCurve && html`<button type="button" class="open-window-editor" aria-label="Zeitraum anpassen" onClick=${() => ctx.openEditor(meal)}>Zeitraum<span class="wide-only"> anpassen</span></button>`}
       <button type="button" class="history-more-entries" aria-expanded=${String(open)} aria-controls=${listId} onClick=${() => setOpen(!open)}>
         ${"Einträge (" + entries.length + ")"}</button>
     </div>
@@ -247,11 +247,32 @@ function WeekStrip({ day, today, data, onDay }) {
     onDay(next > today ? today : next);
   };
   const rows = week?.days || [];
+  const atToday = rows.some(row => row.day === today);
+  // A sideways swipe over the days turns the week (user request 2026-11-23); a mostly vertical one scrolls the page.
+  const swipe = useRef(null);
+  const swipeStart = event => { swipe.current = { x: event.clientX, y: event.clientY, moved: false }; };
+  const swipeEnd = event => {
+    const start = swipe.current;
+    if (!start) return;
+    const dx = event.clientX - start.x, dy = event.clientY - start.y;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < 1.5 * Math.abs(dy)) return;
+    start.moved = true;
+    if (dx > 0) shift(-7);
+    else if (!atToday) shift(7);
+  };
+  // A swipe that ends on a day must not also pick that day.
+  const swallowClick = event => {
+    if (!swipe.current?.moved) return;
+    swipe.current = null;
+    event.stopPropagation();
+    event.preventDefault();
+  };
   return html`<div class="week-strip">
     <div class="week-head"><button type="button" class="quiet week-prev" aria-label="Woche zurück" onClick=${() => shift(-7)}>‹</button>
       <span>${week ? "KW " + week.week : ""}</span>
-      <button type="button" class="quiet week-next" aria-label="Woche vor" disabled=${rows.some(row => row.day === today)} onClick=${() => shift(7)}>›</button></div>
-    <div class="week-days" role="group" aria-label="Tag wählen">${rows.map(row => {
+      <button type="button" class="quiet week-next" aria-label="Woche vor" disabled=${atToday} onClick=${() => shift(7)}>›</button></div>
+    <div class="week-days" role="group" aria-label="Tag wählen" onPointerDown=${swipeStart} onPointerUp=${swipeEnd}
+      onPointerCancel=${() => { swipe.current = null; }} onClickCapture=${swallowClick}>${rows.map(row => {
       const state = row.future || !row.meals ? "none" : row.done ? "done" : row.tasks ? "open" : "todo";
       const label = dayDate(row.day, { weekday: "long", day: "numeric", month: "long" }) +
         ({ done: ", geprüft", open: ", Aufgabe offen", todo: ", noch zu prüfen", none: "" })[state] + (row.sport ? ", mit Sport" : "");
@@ -261,89 +282,6 @@ function WeekStrip({ day, today, data, onDay }) {
         <i class="week-dot" aria-hidden="true"></i>
         <em>${row.future ? "" : row.day_type === "free" ? "Frei" : "Arb"}</em>${row.sport && html`<s class="week-sport" aria-hidden="true"></s>`}</button>`;
     })}</div></div>`;
-}
-
-function Night({ night }) {
-  const startTime = night.start ? timeOnly(night.start) : null;
-  const endTime = night.end ? timeOnly(night.end) : null;
-  const Metric = ({ label, value, detail }) => html`<div class="night-metric"><span>${label}</span><strong>${value == null ? "—" : html`${num(value, 1)} <small>mg/dL</small>`}<small>${detail}</small></strong></div>`;
-  const values = [night.start_glucose, night.end_glucose, night.minimum_glucose].some(value => value != null);
-  return html`<section id="night-card" class="night-card" aria-live="polite">
-    <div class="section-head"><h2>Nacht</h2><span id="night-window" class="hint">${startTime && endTime ? startTime + " bis " + endTime + " Uhr" : "Drei Stunden nach letzter Injektion bis Beginn Frühstück"}</span></div>
-    ${values && html`<div id="night-values" class="night-values">
-      <${Metric} label="Startwert" value=${night.start_glucose} detail=${startTime ? "3 h nach letzter Injektion · " + startTime : "3 h nach letzter Injektion"} />
-      <${Metric} label="Endwert" value=${night.end_glucose} detail=${endTime ? "Beginn Frühstück · " + endTime : "Beginn Frühstück"} />
-      <div class="night-metric"><span>Veränderung</span><strong>${signedChange(night.delta_mgdl)}</strong></div>
-      <${Metric} label="Minimalwert" value=${night.minimum_glucose} detail=${night.minimum_at ? "um " + timeOnly(night.minimum_at) : "im Nachtfenster"} /></div>`}
-    ${night.reason && html`<p id="night-reason" class="hint">${night.reason}</p>`}</section>`;
-}
-
-// "Wirkungen": measured glucose against the 3-h model, and how strongly carbs raise and insulin lowers.
-function effectsSummaryText(data) {
-  const summary = data.summary;
-  if (!summary?.count) return data.reason || "Noch keine Werte für das Modell.";
-  const parts = ["Modell im Mittel " + num(summary.mean_abs_mgdl, 0) + " mg/dL daneben"];
-  if (summary.max_above) parts.push("BZ bis " + signedChange(summary.max_above.mgdl, 0) + " über Modell um " + timeOnly(summary.max_above.at));
-  if (summary.max_below) parts.push("bis " + signedChange(summary.max_below.mgdl, 0) + " darunter um " + timeOnly(summary.max_below.at));
-  return parts.join(" · ");
-}
-
-function EffectsChart({ data, width }) {
-  const W = Math.max(300, Math.min(900, Math.round(width))), L = 36, R = W - 10;
-  const top = 8, mid = 168, rateTop = 186, rateBottom = 290, H = 312;
-  const from = new Date(data.from).getTime(), to = Math.max(new Date(data.to).getTime(), from + 60 * MINUTE);
-  const rows = data.rows.map(row => ({ t: new Date(row.at).getTime(), g: row.glucose_mgdl == null ? null : Number(row.glucose_mgdl),
-    m: row.model_mgdl == null ? null : Number(row.model_mgdl), up: Number(row.raising_per_hour), down: Number(row.lowering_per_hour) }));
-  const values = rows.flatMap(row => [row.g, row.m]).filter(value => value != null);
-  const gTop = Math.max(250, Math.ceil((Math.max(0, ...values) + 10) / 50) * 50);
-  const gBottom = Math.min(50, Math.floor(Math.min(400, ...values) / 10) * 10);
-  const rateMax = Math.max(60, ...rows.map(row => Math.max(row.up, row.down)));
-  const x = t => L + (t - from) / (to - from) * (R - L);
-  const y = g => mid - (Math.min(Math.max(g, gBottom), gTop) - gBottom) / (gTop - gBottom) * (mid - top);
-  const zero = (rateTop + rateBottom) / 2;
-  const r = v => v / rateMax * (rateBottom - rateTop) / 2;
-  const line = key => {
-    let d = "", open = false;
-    for (const row of rows) {
-      if (row[key] == null) { open = false; continue; }
-      d += (open ? "L" : "M") + x(row.t).toFixed(1) + " " + y(row[key]).toFixed(1);
-      open = true;
-    }
-    return d;
-  };
-  const area = (key, sign) => rows.length ? "M" + x(rows[0].t).toFixed(1) + " " + zero + rows.map(row =>
-    "L" + x(row.t).toFixed(1) + " " + (zero - sign * r(row[key])).toFixed(1)).join("") + "L" + x(rows[rows.length - 1].t).toFixed(1) + " " + zero + "Z" : "";
-  const grid = [];
-  for (let g = Math.ceil(gBottom / 50) * 50; g <= gTop; g += 50) grid.push(g);
-  const ticks = [];
-  for (let t = Math.ceil(from / (180 * MINUTE)) * 180 * MINUTE; t <= to; t += 180 * MINUTE) ticks.push(t);
-  return html`<svg class="window-chart-svg" viewBox=${"0 0 " + W + " " + H} role="img" aria-label="Gemessener BZ, Modell und Wirkungen">
-    ${grid.map(g => html`<line class="grid" x1=${L} x2=${R} y1=${y(g).toFixed(1)} y2=${y(g).toFixed(1)} /><text x=${L - 6} y=${(y(g) + 4).toFixed(1)} text-anchor="end">${g}</text>`)}
-    ${ticks.map(t => html`<line class="grid" x1=${x(t).toFixed(1)} x2=${x(t).toFixed(1)} y1=${top} y2=${rateBottom} /><text x=${x(t).toFixed(1)} y=${rateBottom + 16} text-anchor="middle">${timeOnly(t)}</text>`)}
-    <path class="model" d=${line("m")} /><path class="measured" d=${line("g")} />
-    <path class="raising" d=${area("up", 1)} /><path class="lowering" d=${area("down", -1)} />
-    <line class="axis" x1=${L} x2=${R} y1=${zero} y2=${zero} />
-    <text x=${L - 6} y=${rateTop + 8} text-anchor="end">+${Math.round(rateMax)}</text>
-    <text x=${L - 6} y=${rateBottom} text-anchor="end">−${Math.round(rateMax)}</text>
-    <text class="y-unit" x=${L} y=${rateTop - 4}>mg/dL pro h</text></svg>`;
-}
-
-function Effects({ day, data }) {
-  const [effects, setEffects] = useState(null);
-  const [ref, width] = useWidth();
-  useEffect(() => {
-    let live = true;
-    api("/api/day/effects?date=" + encodeURIComponent(day))
-      .then(result => live && setEffects(result))
-      .catch(error => live && setEffects({ day, rows: [], reason: error.message }));
-    return () => { live = false; };
-  }, [day, data]);
-  const shown = effects && effects.day === day;
-  return html`<details id="effects-card" class="effects-card" open hidden=${!shown}>
-    <summary>Wirkungen über den Tag <span id="effects-summary" class="hint">${shown ? effectsSummaryText(effects) : ""}</span></summary>
-    <div id="effects-chart" class="effects-chart" ref=${ref}>${shown && width > 0 && (effects.rows.length
-      ? html`<${EffectsChart} data=${effects} width=${width} />` : html`<p class="hint">Keine Daten für diesen Tag.</p>`)}</div>
-    <p class="effects-legend"><span class="legend-measured">gemessen</span><span class="legend-model">Modell aus dem BZ 3 h vorher</span><span class="legend-raising">hebt: KH, Fett/Eiweiß</span><span class="legend-lowering">senkt: Insulin</span></p></details>`;
 }
 
 // ---- Window editor: the counted window of one meal, moved by dragging, tapping or nudging. ----
@@ -539,7 +477,6 @@ function WindowEditor({ meal, readings, data, day, onClose, onSaved }) {
 // The Verlauf page. `status` is "loading" while the day is fetched, "error" when it failed.
 export function DayReview({ data, day, today, status, reload, onEdit, onAnalysisChanged, onDay, onRefresh }) {
   const [editor, setEditor] = useState(null);
-  const [more, setMore] = useState(false);
   const head = html`<div class="section-head history-head"><h2>Verlauf</h2>
     <button type="button" class="quiet history-refresh" aria-label="Aktualisieren" title="Aktualisieren" onClick=${onRefresh}>↻</button></div>
     <${WeekStrip} day=${day} today=${today} data=${data} onDay=${onDay} />`;
@@ -556,7 +493,6 @@ export function DayReview({ data, day, today, status, reload, onEdit, onAnalysis
   }
   const sessions = new Set(data.timeline.filter(item => item.kind === "exercise").map(item => item.id));
   const ctx = { day, reload, onEdit, onAnalysisChanged, openEditor, sessions };
-  const { dayStart, dayEnd } = dayBounds(data, day);
   const review = data.review || {};
   const meals = data.meals.length;
   const tasks = data.meals.filter(meal => (meal.review?.open || []).length && !meal.review.checked && !meal.excluded);
@@ -575,11 +511,6 @@ export function DayReview({ data, day, today, status, reload, onEdit, onAnalysis
         ${(sportNames[event.kind] || "Sport") + " vom Vortag, " + timeOnly(event.at) + " Uhr: wirkt noch in diesen Tag"}</p>`)}
     <div id="timeline" class="day-list history-list" aria-live="polite">${status === "error"
       ? html`<div class="empty">Daten konnten nicht geladen werden.</div>` : html`<${DayList} data=${data} ctx=${ctx} />`}</div>
-    <details class="history-more" open=${more} onToggle=${event => setMore(event.currentTarget.open)}>
-      <summary>BZ-Tag, Wirkungen, Nacht</summary>
-      ${more && html`<${DayChart} id="review-chart" className="day-overview-chart review-chart" data=${data} view=${{ from: dayStart, to: dayEnd }} clipId="review-clip" />
-        <${Effects} day=${day} data=${data} />
-        <${Night} night=${data.night || { reason: "Nachtanalyse nicht verfügbar." }} />`}</details>
     ${editor && html`<${WindowEditor} key=${editor.meal.id} meal=${editor.meal} readings=${editor.readings} data=${data} day=${day}
       onClose=${() => setEditor(null)} onSaved=${async () => { await reload(); onAnalysisChanged(); }} />`}
   </section>`;
