@@ -421,8 +421,7 @@ def week_view(params: dict) -> dict:
             payload = with_checks(day_payload(current.isoformat(), refresh=not mirror.synced_at(current.isoformat())))
             review = payload["review"]
             row.update({"day_type": payload["day_type"], "meals": len(payload["meals"]),
-                        "checked": review["checked"], "tasks": review["tasks"], "done": review["done"],
-                        "sport": any(item["kind"] == "exercise" for item in payload["timeline"])})
+                        "checked": review["checked"], "tasks": review["tasks"], "done": review["done"]})
         days.append(row)
     return {"date": day.isoformat(), "today": today.isoformat(), "week": int(monday.isocalendar()[1]), "days": days}
 

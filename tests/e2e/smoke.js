@@ -191,11 +191,13 @@ async function history(page, name) {
   await swipeWeek(page, -120);
   check(!!(await page.$(`.week-panel.is-current .week-day[data-day="${shown}"]`)), `${name}: a swipe to the left comes back`);
   // The fake data has a sport session yesterday and a sensor gap two days ago.
-  if (!(await page.$(".week-panel.is-current .week-sport"))) { await page.click(".week-prev"); await page.waitForSelector(".week-panel.is-current .week-sport"); }
+  const yesterday = await page.evaluate(() => new Date(Date.now() - 864e5).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }));
+  const yesterdayButton = `.week-panel.is-current .week-day[data-day="${yesterday}"]`;
+  if (!(await page.$(yesterdayButton))) { await page.click(".week-prev"); await page.waitForSelector(yesterdayButton); }
   await page.click(".week-panel.is-current .week-day[data-state=open] >> nth=0");
   await page.waitForSelector(".history-tasks a");
   check(true, `${name}: a day with an open task lists it`);
-  const sport = await page.$(".week-panel.is-current .week-day:has(.week-sport)");
+  const sport = await page.$(yesterdayButton);
   if (sport) {
     await sport.click();
     await page.waitForSelector("#timeline .history-sport");
