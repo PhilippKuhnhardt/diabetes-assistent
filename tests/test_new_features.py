@@ -42,6 +42,27 @@ class DosingTests(unittest.TestCase):
         self.assertEqual(Decimal(result["trend_delta_mgdl"]), Decimal(30))
         self.assertEqual(result["trend_direction"], "up_fast")
 
+    def test_carbs_during_an_open_split_leave_the_forecast_rise_to_the_second_part(self):
+        # User report 2026-11-23: a dessert after a split pizza suggested its carbs plus the whole rise the
+        # second part is planned for. With hold_rise only the carbs (and a correction downwards) count.
+        entries = [{"at": self.now - timedelta(minutes=5), "sgv": 165}]
+        rising = {"lowering_mgdl": Decimal(200), "raising_mgdl": Decimal(310)}
+        full = dosing.suggest("30", self.settings, entries, [], self.now, on_board=rising)
+        held = dosing.suggest("30", self.settings, entries, [], self.now, on_board=rising, hold_rise=True)
+        self.assertEqual(Decimal(full["forecast_mgdl"]), Decimal(275))
+        self.assertEqual(Decimal(full["entry_units"]), Decimal("8.5"))
+        self.assertEqual(Decimal(held["forecast_mgdl"]), Decimal(275))
+        self.assertEqual(Decimal(held["correction_units"]), 0)
+        self.assertEqual(Decimal(held["entry_units"]), Decimal("4"))
+        self.assertEqual(Decimal(held["cautious_entry_units"]), Decimal("4"))
+        # The expected value assumes the second part brings the rise down to the target.
+        self.assertEqual(Decimal(held["expected_glucose_mgdl"]), Decimal("108"))
+        # A forecast below the target still lowers the carb dose.
+        falling = {"lowering_mgdl": Decimal(105), "raising_mgdl": Decimal(0)}
+        low = dosing.suggest("30", self.settings, entries, [], self.now, on_board=falling, hold_rise=True)
+        self.assertEqual(Decimal(low["correction_units"]), Decimal("-1"))
+        self.assertEqual(Decimal(low["entry_units"]), Decimal("3"))
+
     def test_finger_check_replaces_stale_cgm_as_start_value(self):
         entries = [{"at": self.now - timedelta(hours=2), "sgv": 300}]
         stale = dosing.suggest("20", self.settings, entries, [], self.now)

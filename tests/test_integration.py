@@ -2032,6 +2032,16 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(Decimal(dose["options"][0]["planned_units"]), later)
         self.assertEqual(dose["split_plan"]["state"], "later")
         self.assertEqual(dose["split_plan"]["due_at"], (meal_at + timedelta(minutes=120)).isoformat())
+        # A dessert while the second part is open (user report 2026-11-23): its dose covers its carbs only,
+        # never the forecast's rise the second part is planned for.
+        with fake_days(return_value=current_day):
+            dessert = self.request("/api/entry/preview", method="POST", body={**entry, "carbs": "30"})["dose"]
+        self.assertGreater(Decimal(dessert["forecast_mgdl"]), Decimal(dessert["target_mgdl"]))
+        dessert_normal = next(option for option in dessert["options"] if option["variant"] == "normal")
+        dessert_carbs = next(option for option in dessert["options"] if option["variant"] == "carbs")
+        self.assertEqual(Decimal(dessert_normal["units"]), Decimal(dessert_carbs["units"]))
+        self.assertNotIn("split", [option["variant"] for option in dessert["options"]])
+        self.assertEqual(dessert["split_plan"]["state"], "later")
 
     def test_calculated_fat_protein_surcharge_can_be_chosen_and_splits_carbs_now_surcharge_later(self):
         # Transition phase (user request 2026-11-19): static surcharge or one calculated from the agent's estimate.
