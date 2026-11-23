@@ -877,7 +877,7 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .appnav button.appnav-add .ui-icon { box-sizing: content-box; width: 26px; height: 26px; padding: 11px; border-radius: 50%; background: var(--green); color: #fff; box-shadow: 0 6px 16px #17674655; }
 .appnav button.appnav-add:hover .ui-icon { background: var(--green-dark); }
 @media (max-width: 950px) {
-  .appnav { left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; height: calc(62px + env(safe-area-inset-bottom, 0px)); padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); border-top-width: 1px; }
+  .appnav { left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; height: calc(63px + env(safe-area-inset-bottom, 0px)); padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); border-top-width: 1px; }
   .appnav-item { height: 62px; }
   .appnav button.appnav-add { height: 62px; justify-content: flex-end; padding-bottom: 7px; }
   .appnav button.appnav-add .ui-icon { margin-top: -22px; }

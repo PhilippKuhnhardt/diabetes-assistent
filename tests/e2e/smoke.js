@@ -204,6 +204,17 @@ async function history(page, name) {
 
 // Verlauf's day (web/ui/day.js): the day chart and effects folded away, a meal excluded and counted again,
 // and the window editor: dragging, nudging, saving and going back to the standard window.
+// The innermost elements reaching past the screen's right edge (a wider page makes a phone zoom out).
+function widerThanScreen(page) {
+  return page.evaluate(() => {
+    const limit = Math.min(screen.width, document.documentElement.clientWidth) + 1;
+    return [...document.querySelectorAll("body *")].filter(el => {
+      const box = el.getBoundingClientRect();
+      return box.width && box.right > limit && ![...el.children].some(child => child.getBoundingClientRect().right > limit);
+    }).slice(0, 8).map(el => el.tagName + "." + [...el.classList].join(".") + " " + Math.round(el.getBoundingClientRect().right) + " " + (el.textContent || "").trim().slice(0, 40));
+  });
+}
+
 // Clicks a nav item; on a miss it prints what covers it, since CI fonts differ from a dev machine.
 async function clickNav(page, nav) {
   try {
@@ -312,6 +323,8 @@ async function analysis(page, name) {
   await page.waitForSelector("#timeline .history-meal");
   check(await page.isVisible("#diary-view"), `${name}: a calculation opens its day`);
   await review(page, name);
+  const wide = await widerThanScreen(page);
+  check(!wide.length, `${name}: the day review fits the screen ${wide.join(" | ")}`);
   await clickNav(page, "analysis");
   await page.waitForSelector("#calculations tbody tr");
 }
