@@ -120,7 +120,6 @@ def compute_day(day: str) -> dict:
     treatments = episodes.normalize_treatments(raw_treatments)
     episodes.group_diary_followups(treatments, settings)
     meals = episodes.meals_for_day(treatments, day, settings["timezone"], settings)
-    sport_marks = marks.analysis_sport_marks()
     session_effects = marks.sport_session_effects()
     session_minutes = marks.sport_session_minutes()
     manual_windows = marks.analysis_windows()
@@ -148,9 +147,9 @@ def compute_day(day: str) -> dict:
         meal_settings_id, meal_settings = config.get_settings_at(meal["at"])
         associated = [item for item in treatments if item.get("episode_id") == meal["id"] or item.get("id") == meal["source_id"]]
         output = {**meal}
-        mark = sport_marks.get(meal["id"], {})
-        # Sport counts automatically with the share of each session's effect that acts inside the meal's
-        # window (the same curve as "Wirkt noch"); a value set on the meal replaces it, "unaffected" drops it.
+        # Sport counts with the share of each session's effect that acts inside the meal's window (the same
+        # curve as "Wirkt noch"). Its effect is set on the session only (user decision 2026-11-23: a value per
+        # meal could contradict the session), so the former per-meal marks are no longer read.
         try:
             span = manual_windows.get(meal["id"]) or calculation.automatic_window(meal, treatments, entries, meal_settings)
         except (ValueError, KeyError):
@@ -162,9 +161,7 @@ def compute_day(day: str) -> dict:
             if item.get("eventType") == "Exercise" and item.get("sport_type") and item["at"] < span["end"]]
         sport_parts = [(item, effect) for item, effect in sport_parts if effect != 0]
         auto_effect = sum((effect for _, effect in sport_parts), Decimal(0))
-        status = mark.get("status", "auto")
-        confirmed_effect = (calculation.dec(mark.get("effect_mgdl", 0)) if status == "affected"
-                            else auto_effect if status == "auto" else Decimal(0))
+        confirmed_effect = auto_effect
         if not meal_settings["isf_schedule"]:
             output["calculation"] = {"reason": "Korrekturfaktor-Profil aus Nightscout fehlt"}
         else:
@@ -187,11 +184,14 @@ def compute_day(day: str) -> dict:
                 "window_end": (manual or automatic)["end"].isoformat(),
             })
         output["sport"] = {
-            "status": status,
+            "status": "auto",
             "suggested": bool(sport_parts),
             "suggested_effect_mgdl": str(auto_effect),
             "effect_mgdl": str(confirmed_effect),
-            "events": [{"id": item["id"], "at": item["at"], "kind": item.get("sport_type"), "effect_mgdl": str(effect)}
+            "events": [{"id": item["id"], "at": item["at"], "kind": item.get("sport_type"), "effect_mgdl": str(effect),
+                        "previous_day": item["at"].astimezone(local_zone(settings["timezone"])).date().isoformat() < day,
+                        # When the session's effect acts (its end until its effect duration ran out), for the curve's band.
+                        **_effect_span(item, meal_settings, session_minutes)}
                        for item, effect in sport_parts],
         }
         # A meal carries a data-quality mark when any of its counted carb entries does.
@@ -315,6 +315,8 @@ def compute_day(day: str) -> dict:
         })
     for item in timeline:
         item["meal_id"] = block_meal_id(item, rendered)
+        if item["kind"] == "exercise":
+            item.update(sport_shares(item, rendered))
     periods = marks.vacation_periods()
     day_type, day_type_source = marks.day_type_for(day, marks.analysis_day_types(), periods)
     # Vacation mark (user request 2026-11-06): every meal of a vacation day carries it, independent
@@ -360,6 +362,69 @@ def sport_session(item: dict, settings: dict, session_effects: dict, session_min
             "sport_minutes": int(on_board.sport_minutes(item, settings, session_minutes)),
             "sport_minutes_default": int(on_board.sport_minutes(item, settings)),
             "sport_minutes_custom": item["id"] in session_minutes}
+
+
+def _effect_span(item: dict, settings: dict, session_minutes: dict) -> dict:
+    end = item["at"] + timedelta(minutes=float(item.get("duration") or 0))
+    return {"effect_from": end, "effect_until": end + timedelta(minutes=float(on_board.sport_minutes(item, settings, session_minutes)))}
+
+
+def sport_shares(item: dict, meals: list[dict]) -> dict:
+    """Where a session's effect lands (Verlauf's sport card, the entry card): each meal of the day gets the
+    part acting inside its window; the rest acts between or after the meals (also next morning)."""
+    shares = [{"meal_id": meal["id"], "meal": meal["meal"], "effect_mgdl": event["effect_mgdl"]}
+              for meal in meals for event in meal["sport"]["events"] if event["id"] == item["id"]]
+    total = calculation.dec(item["sport_effect_mgdl"])
+    rest = total - sum((calculation.dec(share["effect_mgdl"]) for share in shares), Decimal(0))
+    until = item["at"] + timedelta(minutes=float(item["duration_minutes"] or 0) + item["sport_minutes"])
+    return {"sport_shares": shares, "sport_rest_mgdl": str(rest.quantize(Decimal("0.1"))),
+            "sport_effect_until": until if total else None}
+
+
+def with_checks(payload: dict, now: datetime | None = None) -> dict:
+    """The day with Philipp's "Passt" (user request 2026-11-23) laid over it at request time, so a check
+    never recalculates a stored day. A check holds only for the window it was given for; a finished meal
+    can be checked. The day is done once every meal is checked or excluded."""
+    now = now or datetime.now(timezone.utc)
+    checks = marks.window_checks()
+    meals = []
+    for meal in payload.get("meals", []):
+        window = meal.get("window") or {}
+        stored = checks.get(meal["id"])
+        checked = bool(stored and window.get("start") and window.get("end")
+                       and parse_instant(stored[0]) == _instant(window["start"])
+                       and parse_instant(stored[1]) == _instant(window["end"]))
+        finished = bool(window.get("end")) and _instant(window["end"]) <= now
+        meals.append({**meal, "review": {**meal["review"], "checked": checked, "checkable": finished}})
+    review = {**payload.get("review", {}),
+              "checked": sum(meal["review"]["checked"] for meal in meals),
+              "tasks": sum(bool(meal["review"]["open"]) and not meal["review"]["checked"] and not meal.get("excluded")
+                           for meal in meals),
+              "done": bool(meals) and all(meal["review"]["checked"] or meal.get("excluded") for meal in meals)}
+    return {**payload, "meals": meals, "review": review}
+
+
+def week_view(params: dict) -> dict:
+    """Verlauf's week strip (user request 2026-11-23): Monday to Sunday of the week holding `date`, each day
+    with its day type, whether it has sport, open tasks and whether every meal is checked. Days after
+    today are only named; they are not calculated."""
+    day = date.fromisoformat((params.get("date") or [""])[0])
+    _, settings = config.get_settings()
+    today = datetime.now(timezone.utc).astimezone(local_zone(settings["timezone"])).date()
+    monday = day - timedelta(days=day.weekday())
+    days = []
+    for offset in range(7):
+        current = monday + timedelta(days=offset)
+        row = {"day": current.isoformat(), "future": current > today}
+        if not row["future"]:
+            # A day never mirrored yet is read from Nightscout once, so its dot is right without opening it.
+            payload = with_checks(day_payload(current.isoformat(), refresh=not mirror.synced_at(current.isoformat())))
+            review = payload["review"]
+            row.update({"day_type": payload["day_type"], "meals": len(payload["meals"]),
+                        "checked": review["checked"], "tasks": review["tasks"], "done": review["done"],
+                        "sport": any(item["kind"] == "exercise" for item in payload["timeline"])})
+        days.append(row)
+    return {"date": day.isoformat(), "today": today.isoformat(), "week": int(monday.isocalendar()[1]), "days": days}
 
 
 def meal_review(meal: dict) -> dict:

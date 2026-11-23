@@ -360,12 +360,23 @@ def _split_min_units(db: sqlite3.Connection) -> None:
                (now, now, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))))
 
 
+def _window_checks(db: sqlite3.Connection) -> None:
+    """"Passt" in Verlauf (user request 2026-11-23): Philipp checked a meal's counted window. The window it was
+    checked for is kept, so the check lapses by itself once the window changes."""
+    db.execute("""CREATE TABLE IF NOT EXISTS window_checks (
+        meal_id TEXT PRIMARY KEY,
+        start_at TEXT NOT NULL,
+        end_at TEXT NOT NULL,
+        checked_at TEXT NOT NULL
+    )""")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
                                                           _notifications, _notification_priority, _places,
                                                           _inbox_seen, _sport_sessions, _places_without_positions,
                                                           _place_factor, _timezone_periods, _prior_insulin_percentile,
                                                           _dishes, _agent, _browser_sessions, _split_min_units,
-                                                          _sport_session_minutes, _notification_pause]
+                                                          _sport_session_minutes, _notification_pause, _window_checks]
 
 
 def init() -> None:

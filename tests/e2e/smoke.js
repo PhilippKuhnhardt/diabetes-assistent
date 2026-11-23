@@ -55,18 +55,13 @@ async function run(browser, name, options) {
   check(true, `${name}: an entry of a meal in Heute opens its card`);
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => !document.querySelector("#edit-dialog").open);
-  if (name === "phone") {
-    await page.waitForSelector("#inbox-new .inbox-item");
-    await page.click("#inbox-new .inbox-item >> nth=0");
-    await page.waitForSelector(".day-meal.is-target");
-    check(await page.isVisible(".review-panel"), `${name}: a hint opens its meal in Tag durchgehen`);
-    await page.waitForSelector("#inbox-seen");
-    check(true, `${name}: an opened hint folds away`);
-  }
+  check(!(await page.$("#inbox, #inbox-badge")), `${name}: no "Zu erledigen" list any more`);
 
   await page.click("[data-nav=history]");
   check(await page.isVisible(".review-panel"), `${name}: Verlauf shows the day`);
-  const card = await page.$(".edit-entry:visible");
+  await history(page, name);
+  await page.click("#timeline .history-more-entries >> nth=0");
+  const card = await page.$("#timeline .history-meal .edit-entry:visible");
   check(Boolean(card), `${name}: a saved entry has a card button`);
   if (card) {
     await card.click();
@@ -148,13 +143,18 @@ async function saving(page, name) {
   await toastSays(page, "Basal entfernt");
   check(true, `${name}: basal is saved and taken back`);
   await page.click("[data-entry-mode=exercise]");
-  check(await page.inputValue("#entry-form [name=sport_effect_mgdl]") !== "", `${name}: sport starts with its kind's effect`);
+  check(await page.getAttribute("#entry-sport-effect-field [data-sport-effect=standard]", "aria-pressed") === "true", `${name}: sport starts with its kind's effect`);
+  await page.click("#entry-sport-effect-field [data-sport-effect=own]");
+  check(await page.isVisible("#entry-sport-effect-field [name=sport_effect_mgdl]"), `${name}: sport takes an own effect like its card`);
+  await page.click("#entry-sport-effect-field [data-sport-effect=standard]");
   await page.click("[data-entry-mode=meal]");
 }
 
 // The meal card (web/ui/entry-card.js) saves through the server (/api/entry/edit), which checks it.
 async function editMeal(page, name) {
-  const card = page.locator("#timeline .day-meal .edit-entry").first();
+  const more = page.locator("#timeline .history-more-entries").first();
+  if (await more.getAttribute("aria-expanded") !== "true") await more.click();
+  const card = page.locator("#timeline .history-meal .edit-entry").first();
   await card.click();
   await page.waitForSelector("#edit-dialog[open] .entry-sheet");
   const carbs = page.locator("#edit-dialog [aria-label='Kohlenhydrate in g']");
@@ -173,15 +173,50 @@ async function editMeal(page, name) {
 
 const toastSays = (page, text) => page.waitForFunction(wanted => document.querySelector("#toast")?.textContent.includes(wanted), text);
 
-// "Tag durchgehen" (web/ui/day.js): the day chart and effects, a meal excluded and counted again, and the
-// window editor: dragging, nudging, saving and going back to the standard window.
+// Verlauf (web/ui/day.js): the week strip picks a day with a task and one with sport, whose card shows
+// where its effect lands; "Passt" checks a meal.
+async function history(page, name) {
+  await page.waitForSelector(".week-days .week-day");
+  // The fake data has a sport session yesterday and a sensor gap two days ago.
+  if (!(await page.$(".week-sport"))) { await page.click(".week-prev"); await page.waitForSelector(".week-sport"); }
+  await page.click(".week-day[data-state=open] >> nth=0");
+  await page.waitForSelector(".history-tasks a");
+  check(true, `${name}: a day with an open task lists it`);
+  const sport = await page.$(".week-day:has(.week-sport)");
+  if (sport) {
+    await sport.click();
+    await page.waitForSelector("#timeline .history-sport");
+    await page.click("#timeline .history-sport");
+    await page.waitForSelector("#edit-dialog[open] .sport-shares li");
+    check(true, `${name}: a sport session shows where its effect lands`);
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => !document.querySelector("#edit-dialog").open);
+  } else check(false, `${name}: the week has a day with sport`);
+  const check0 = page.locator("#timeline .window-check").first();
+  const was = await check0.getAttribute("aria-pressed");
+  await check0.click();
+  await page.waitForFunction(before => document.querySelector("#timeline .window-check")?.getAttribute("aria-pressed") !== before, was);
+  await page.locator("#timeline .window-check").first().click();
+  await page.waitForFunction(before => document.querySelector("#timeline .window-check")?.getAttribute("aria-pressed") === before, was);
+  check(true, `${name}: "Passt" checks a meal and takes it back`);
+  check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${name}: Verlauf fits the screen width`);
+}
+
+// Verlauf's day (web/ui/day.js): the day chart and effects folded away, a meal excluded and counted again,
+// and the window editor: dragging, nudging, saving and going back to the standard window.
 async function review(page, name) {
-  await page.waitForSelector("#timeline .day-meal");
-  // Wide screens show the day in the chart above the form; phones draw it in the review.
-  await page.waitForSelector(name === "phone" ? "#review-chart svg" : "#day-overview-chart svg");
+  await page.waitForSelector("#timeline .history-meal");
+  if (!(await page.$eval(".history-more", details => details.open))) await page.click(".history-more summary");
+  await page.waitForSelector("#review-chart svg");
   check(true, `${name}: the day chart is drawn`);
   await page.waitForSelector("#effects-chart svg, #effects-chart .hint");
   check(true, `${name}: Wirkungen load`);
+  const more = page.locator("#timeline .history-meal:has(.exclude-meal) .history-more-entries").first();
+  if (!(await more.count())) {
+    const all = page.locator("#timeline .history-more-entries");
+    for (let i = 0; i < await all.count(); i++) if (await all.nth(i).getAttribute("aria-expanded") !== "true") await all.nth(i).click();
+  }
+  else if (await more.getAttribute("aria-expanded") !== "true") await more.click();
   const exclude = "#timeline .exclude-meal";
   const before = await page.$eval(exclude, button => button.getAttribute("aria-pressed"));
   await page.click(exclude + " >> nth=0");
@@ -190,8 +225,6 @@ async function review(page, name) {
   await page.waitForFunction(([selector, was]) => document.querySelector(selector)?.getAttribute("aria-pressed") === was, [exclude, before]);
   check(true, `${name}: a meal in the day is excluded and counted again`);
 
-  const details = page.locator("#timeline .day-meal-details").first();
-  if (!(await details.evaluate(node => node.open))) await details.locator("summary").click();
   await page.waitForSelector("#timeline .meal-chart-plot svg");
   check(true, `${name}: a meal shows its curve`);
   await page.click("#timeline .open-window-editor >> nth=0");
@@ -221,6 +254,8 @@ async function review(page, name) {
   await toastSays(page, "Standardzeitraum wiederhergestellt");
   await page.waitForFunction(() => !document.querySelector("#timeline .day-meal-window")?.textContent.includes("manuell"));
   check(true, `${name}: the standard window comes back`);
+  await page.waitForSelector("#timeline .history-meal .window-check[aria-pressed=true]");
+  check(true, `${name}: a window saved in the editor counts as checked`);
 }
 
 // Analyse (web/ui/analysis.js): Werte with the summary and every calculation, exclusion and day type,
@@ -257,7 +292,7 @@ async function analysis(page, name) {
   await page.click("[data-analysis-tab=werte]");
   await page.waitForSelector("#calculations tr:has(.exclude-meal) .open-meal-day");
   await page.click("#calculations tr:has(.exclude-meal) .open-meal-day >> nth=0");
-  await page.waitForSelector("#timeline .day-meal");
+  await page.waitForSelector("#timeline .history-meal");
   check(await page.isVisible("#diary-view"), `${name}: a calculation opens its day`);
   await review(page, name);
   await page.click("[data-nav=analysis]");
