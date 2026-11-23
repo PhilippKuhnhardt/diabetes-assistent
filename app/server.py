@@ -13,7 +13,7 @@ from urllib.parse import parse_qs, urlparse
 from app import auth, mcp, oauth
 from app.common import json_safe
 from app.ingestion import nightscout
-from app.services import agent, annotations, background, basal, day_view, diary, dishes, dose_help, effects, entry, inbox, notifications, places, read_api, settings, summary, sync, window_editor
+from app.services import agent, annotations, background, basal, day_view, diary, dishes, dose_help, effects, entry, notifications, places, read_api, settings, summary, sync, window_editor
 from app.store import config, db
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -43,7 +43,7 @@ def day_view_request(params: dict) -> dict:
         raise ValueError("Datum fehlt")
     date.fromisoformat(day)
     # The page reads the local copy the background job keeps current; "Aktualisieren" asks Nightscout.
-    return day_view.day_payload(day, refresh=params.get("refresh") == ["1"] or not day_view.mirror_current(day))
+    return day_view.with_checks(day_view.day_payload(day, refresh=params.get("refresh") == ["1"] or not day_view.mirror_current(day)))
 
 
 GET_ROUTES = {
@@ -61,7 +61,7 @@ GET_ROUTES = {
     "/api/agent": agent.view,
     "/api/agent/models": agent.models,
     "/api/agent/session": agent.for_entry,
-    "/api/inbox": inbox.view,
+    "/api/days/week": day_view.week_view,
 }
 
 POST_ROUTES = {
@@ -72,7 +72,7 @@ POST_ROUTES = {
     "/api/timezone": lambda payload: settings.set_timezone(payload),
     "/api/treatment": diary.save_diary_treatment,
     "/api/entry/edit": diary.edit_entry,
-    "/api/analysis/sport": annotations.set_sport_mark,
+    "/api/analysis/window-check": annotations.set_window_check,
     "/api/analysis/sport-session": annotations.set_sport_session,
     "/api/analysis/window": annotations.set_window,
     "/api/analysis/window/preview": window_editor.preview,
@@ -93,7 +93,6 @@ POST_ROUTES = {
     "/api/agent/settings": agent.save_settings,
     "/api/agent/estimate": agent.estimate,
     "/api/agent/transcribe": agent.transcribe,
-    "/api/inbox/seen": inbox.mark_seen,
 }
 
 

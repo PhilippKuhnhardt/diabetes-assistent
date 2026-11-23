@@ -554,7 +554,6 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
   #diary-view[data-mode="now"] .review-panel { display: none; }
   #diary-view[data-mode="review"] .entry-panel { display: none; }
 }
-@media (min-width: 951px) { .review-chart { display: none; } }
 .review-chart { margin: 4px 0 8px; }
 .effects-card { margin: 4px 0 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
 .effects-card summary { cursor: pointer; font-size: 13px; font-weight: 700; }
@@ -762,32 +761,6 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
   .day-meal-result { grid-column: 1; grid-row: auto; justify-content: space-between; }
 }
 
-/* "Zu erledigen": things that need an action (user request 2026-10-21). New ones stand out, opened ones fold away. */
-.inbox { margin: 0 0 16px; padding: 12px 14px; border: 1px solid #e0c27a; border-radius: 13px; background: var(--amber-light); }
-.inbox.is-quiet { padding: 8px 14px; border-color: var(--line); background: var(--surface); }
-.inbox-title { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 14px; }
-.inbox.is-quiet .inbox-title { display: none; }
-.inbox-count { min-width: 20px; padding: 1px 7px; border-radius: 999px; background: var(--amber); color: #fff; font-size: 12px; text-align: center; }
-.inbox-count:empty { display: none; }
-.inbox-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.inbox-list:empty { display: none; }
-#inbox button.inbox-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px 10px; width: 100%; min-height: 48px; padding: 8px 12px; border: 1px solid #e0c27a; border-radius: 10px; background: var(--surface); color: var(--ink); text-align: left; }
-#inbox button.inbox-item:hover { border-color: var(--amber); }
-.inbox-item::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
-.inbox-item strong { font-size: 14px; }
-.inbox-item small { display: block; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
-.inbox-item .inbox-go { color: var(--amber); font-size: 18px; line-height: 1; }
-#inbox .inbox-seen button.inbox-item { border-color: var(--line); background: var(--canvas); }
-.inbox-seen .inbox-item::before { background: transparent; border: 1.5px solid #b9c6bf; }
-.inbox-seen .inbox-item .inbox-go { color: var(--muted); }
-.topbar-actions button.inbox-badge { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 5px 12px; border: 1px solid #e0c27a; border-radius: 999px; background: var(--amber-light); color: var(--amber); font-size: 13px; font-weight: 700; white-space: nowrap; }
-.inbox-badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
-.topbar-actions button.inbox-badge[hidden] { display: none; }
-#inbox { scroll-margin-top: 170px; }
-.inbox-seen summary { cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 650; }
-.inbox-seen[open] summary { margin-bottom: 8px; }
-.inbox-list + .inbox-seen { margin-top: 8px; }
-@media (min-width: 951px) { .inbox-list { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } }
 .day-meal.is-target { box-shadow: 0 0 0 3px #e0c27a; transition: box-shadow .3s; }
 /* iOS Safari zooms into any focused field below 16px and stays zoomed. Only iOS matches this @supports, so Android and desktop keep the compact sizes; pinch zoom stays available. */
 @supports (-webkit-touch-callout: none) {
@@ -904,7 +877,7 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .appnav button.appnav-add .ui-icon { box-sizing: content-box; width: 26px; height: 26px; padding: 11px; border-radius: 50%; background: var(--green); color: #fff; box-shadow: 0 6px 16px #17674655; }
 .appnav button.appnav-add:hover .ui-icon { background: var(--green-dark); }
 @media (max-width: 950px) {
-  .appnav { left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; height: calc(62px + env(safe-area-inset-bottom, 0px)); padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); border-top-width: 1px; }
+  .appnav { left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; height: calc(63px + env(safe-area-inset-bottom, 0px)); padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); border-top-width: 1px; }
   .appnav-item { height: 62px; }
   .appnav button.appnav-add { height: 62px; justify-content: flex-end; padding-bottom: 7px; }
   .appnav button.appnav-add .ui-icon { margin-top: -22px; }
@@ -1002,7 +975,7 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .chat-input textarea { min-height: 44px; }
 
 /* One header on every page (user request 2026-11-18): on phones the top bar is a single line with the
-   logo, the glucose and the inbox; the entry sheet and the meal chat open below it, so the value stays in sight. */
+   logo and the glucose; the entry sheet and the meal chat open below it, so the value stays in sight. */
 @media (max-width: 650px) {
   .topbar { flex-wrap: nowrap; min-height: 0; gap: 8px; padding: calc(8px + env(safe-area-inset-top, 0px)) 0 8px; }
   .brand strong { display: none; }
@@ -1012,8 +985,6 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
   .glucose-main strong { font-size: 19px; }
   .glucose-main span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
   .topbar-actions { flex-direction: row; flex: none; }
-  .topbar-actions button.inbox-badge { min-height: 32px; padding: 4px 10px; font-size: 13px; }
-  .inbox-badge-label { display: none; }
   .glucose-main span { font-size: 12px; }
   /* The meal chat covers the whole screen with one head that shows the glucose itself, the same from the
      entry form and from a saved meal's card (Philipp 2026-11-19: no second head or close button above it). */
@@ -1075,3 +1046,137 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
   .chat-head h2 { font-size: 19px; }
 }
 .chat-pick { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---- Verlauf (user request 2026-11-23, design B): week strip, meal cards with their curve, sport cards.
+   The same quiet cards, chips and rows as "Heute"; sport keeps the chart's violet. ---- */
+.history { --sport: #6a4bb3; --sport-light: #f1edfa; --sport-line: #d4c8ee; }
+.history-head { margin-bottom: 10px; align-items: center; }
+.history-head h2 { font-size: 20px; letter-spacing: -.03em; }
+.history button.history-refresh { min-height: 34px; padding: 4px 11px; font-size: 16px; }
+.week-strip { display: grid; gap: 6px; margin: 0 0 14px; }
+.week-head { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 12px; font-weight: 700; }
+.history .week-head button { min-height: 30px; padding: 2px 12px; font-size: 18px; line-height: 1; }
+.week-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.history button.week-day { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; min-height: 0; padding: 6px 0 5px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); color: var(--muted); font-size: 11px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.week-day b { color: var(--ink); font-size: 16px; line-height: 1.2; }
+.week-day em { font-style: normal; font-size: 9.5px; font-weight: 750; letter-spacing: .03em; text-transform: uppercase; min-height: 12px; }
+.week-dot { width: 7px; height: 7px; margin: 2px 0 1px; border-radius: 50%; background: transparent; border: 1.5px solid #b9c6bf; }
+.week-day[data-state="done"] .week-dot { background: var(--green); border-color: var(--green); }
+.week-day[data-state="open"] .week-dot { background: #d9a441; border-color: #d9a441; }
+.week-day[data-state="none"] .week-dot { border-color: transparent; }
+.week-sport { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 2px; background: var(--sport); text-decoration: none; }
+.history button.week-day[aria-current="date"] { border-color: var(--green); background: var(--green-light); }
+.history button.week-day:disabled { opacity: .45; cursor: default; }
+.history-day-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 10px; }
+.history-day-head h3 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
+.history-day-head #record-count { flex: 1; }
+.history .chip { display: inline-flex; align-items: center; gap: 4px; min-height: 0; padding: 2px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--canvas); color: var(--ink); font-size: 11.5px; font-weight: 650; white-space: nowrap; }
+.history .chip .ui-icon { width: 13px; height: 13px; }
+.history .chip.is-ok { background: var(--green-light); border-color: #b9d8c5; color: var(--green-dark); }
+.history-day-type { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.history .history-day-type button { min-height: 30px; padding: 3px 12px; border: 0; border-radius: 0; background: none; color: var(--muted); font-size: 12px; font-weight: 700; }
+.history .history-day-type button[aria-pressed="true"] { background: var(--green); color: #fff; }
+.history-tasks { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+.history-tasks a { display: grid; gap: 1px; padding: 8px 12px 8px 28px; position: relative; border: 1px solid #e0c27a; border-radius: 11px; background: var(--amber-light); color: var(--amber); font-size: 12px; text-decoration: none; }
+.history-tasks a::before { content: ""; position: absolute; left: 12px; top: 13px; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+.history-tasks b { color: var(--ink); font-size: 13px; }
+.history-previous-sport { margin: 0 0 10px; padding: 7px 12px; border: 1px solid var(--sport-line); border-radius: 11px; background: var(--sport-light); color: var(--sport); font-size: 12px; font-weight: 650; }
+.history-list { gap: 10px; }
+.history-meal { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 11px 13px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); scroll-margin-top: 90px; }
+.history-meal.needs-check { border-color: #e0c27a; box-shadow: inset 3px 0 0 #d9a441; }
+.history-meal-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: baseline; }
+.history-meal-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
+.history-meal-title .meal-type { font-size: 15px; letter-spacing: -.01em; text-transform: none; color: var(--ink); }
+.history-meal-title time { color: var(--muted); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.history-factor { color: var(--green-dark); font-size: 17px; font-weight: 750; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.history-factor small { font-size: 10.5px; font-weight: 650; }
+.history-factor.is-missing { color: var(--amber); }
+.history-meal.is-excluded .history-factor { color: var(--muted); text-decoration: line-through; }
+/* Dish names and descriptions can be long (Philipp 2026-11-23): two lines at most, the entry list shows them in full. */
+.history-meal-name { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.35; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.history-meal-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.history-meal-meta > span:first-child { color: var(--ink); font-weight: 600; }
+.history .chip.sport-chip { background: var(--sport-light); border-color: var(--sport-line); color: var(--sport); white-space: normal; text-align: left; }
+.history button.chip.sport-chip { cursor: pointer; }
+.history-task { margin: 0; padding: 6px 10px; border-radius: 9px; background: var(--amber-light); color: var(--amber); font-size: 12px; overflow-wrap: anywhere; }
+.history-chart { margin: 0; }
+.history-chart .meal-chart-plot { margin: 0 -4px; }
+.history-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.history .history-actions button { min-height: 36px; padding: 6px 11px; font-size: 13px; white-space: nowrap; }
+.history .history-actions button.history-more-entries { margin-left: auto; }
+.history .history-actions button.primary { width: auto; }
+.history .history-actions button.window-check.is-checked { display: inline-flex; align-items: center; gap: 5px; background: var(--green-light); border-color: #b9d8c5; color: var(--green-dark); }
+.history-actions .ui-icon { width: 15px; height: 15px; }
+.history-meal-details { border-top: 1px solid var(--line); padding-top: 6px; display: grid; gap: 6px; }
+.history-meal-details[hidden] { display: none; }
+.history-entries { list-style: none; margin: 0; padding: 0; }
+.history-entries li + li { border-top: 1px solid var(--line); }
+.history .history-entry-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: baseline; gap: 2px 8px; width: 100%; min-height: 0; padding: 8px 2px; border: 0; border-radius: 0; background: none; color: var(--ink); text-align: left; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.history .history-entry-row:hover:not(:disabled) { background: var(--canvas); }
+.history .history-entry-row:disabled { opacity: 1; cursor: default; }
+.history-entry-row time { color: var(--muted); font-weight: 650; }
+.history-entry-row b { min-width: 0; font-weight: 650; overflow-wrap: anywhere; }
+.history-entry-row > span { font-weight: 650; white-space: nowrap; }
+.history-entry-row small { grid-column: 2 / -1; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.history .history-entry-row .delete-treatment { min-height: 30px; padding: 3px 9px; font-size: 12px; }
+.history-loose { padding: 2px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.history-calc { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.history-exclude .exclude-meal { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 5px 10px; border-color: #bdd8c5; background: var(--green-light); color: var(--green-dark); font-size: 12px; }
+.history-exclude .exclude-meal.is-excluded { background: #f3f4f1; border-color: var(--line); color: var(--muted); }
+.history button.history-sport { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: baseline; gap: 4px 8px; width: 100%; min-height: 0; padding: 10px 13px; border: 1px solid var(--sport-line); border-radius: 14px; background: var(--sport-light); color: var(--ink); text-align: left; font-size: 13px; }
+.history-sport time { color: var(--muted); font-weight: 650; font-variant-numeric: tabular-nums; }
+.history-sport b { min-width: 0; overflow-wrap: anywhere; }
+.history-sport-effect { color: var(--sport); font-weight: 750; white-space: nowrap; }
+.history-sport-parts { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 4px; }
+.history-sport-parts span { padding: 1px 8px; border: 1px solid var(--sport-line); border-radius: 999px; background: var(--surface); color: var(--sport); font-size: 11.5px; font-weight: 650; }
+.history-sport-parts span.is-rest { color: var(--muted); }
+.history-more { margin-top: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 0 13px; }
+.history-more > summary { cursor: pointer; padding: 11px 0; color: var(--green-dark); font-size: 13px; font-weight: 700; }
+.history-more[open] { padding-bottom: 12px; }
+.history-more .effects-card, .history-more .night-card { margin-top: 12px; }
+.window-chart-svg .sport-band rect { fill: #6a4bb326; }
+.window-chart-svg .sport-band rect.is-inside { fill: #6a4bb399; }
+@media (max-width: 950px) {
+  /* Verlauf picks its day in the week strip; the date row above belongs to "Heute". */
+  #diary-view[data-mode="review"] .diary-head { display: none; }
+}
+@media (max-width: 650px) {
+  .history.panel { padding: 14px 12px; }
+  .history-meal { padding: 10px 11px 11px; }
+}
+
+/* Sport sessions in "Heute" and the shared sport fields (web/ui/sport.js). */
+.meals-today button.sport-today small { color: #6a4bb3; font-weight: 700; }
+.meals-today button.sport-today span { color: var(--muted); font-weight: 600; }
+.sport-shares ul { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 10px; }
+.sport-shares li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 10px; font-size: 13px; }
+.sport-shares li + li { border-top: 1px solid var(--line); }
+.sport-shares li b { color: #6a4bb3; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sport-shares li.is-rest { color: var(--muted); }
+.sport-shares li.is-total { font-weight: 750; }
+.sport-shares .hint { margin: 0; }
+#entry-sport-effect-field { margin-bottom: 16px; }
+
+/* "Zeitraum anpassen" in the app's light look (Philipp 2026-11-23: the editor works well, it only has to
+   match): same events on the time axis, same snapping, the chart on the light plot of the meal cards. */
+.window-readout { border-radius: 12px; background: var(--canvas); color: var(--ink); border: 1px solid var(--line); }
+.window-readout[data-tone="in-range"] { background: var(--green-light); border-color: #b9d8c5; color: var(--green-dark); }
+.window-readout[data-tone="outside"] { background: #fff3ce; border-color: #e9d782; color: #70510b; }
+.window-readout[data-tone="low"] { background: #fde8e7; border-color: #edb4b1; color: #9a2925; }
+.window-readout[data-tone="high"] { background: #ffeddb; border-color: #edc09b; color: #9b4d11; }
+.window-readout .readout-value strong { font-size: 40px; }
+.window-readout .readout-trend { font-size: 26px; }
+.window-handle-switch { display: flex; gap: 4px; margin: 10px 0 6px; padding: 3px; border-radius: 11px; background: #edf2ee; }
+.window-handle-switch button { flex: 1; min-height: 36px; border-radius: 8px !important; color: var(--muted) !important; font-weight: 700; }
+.window-handle-switch button[aria-pressed="true"] { background: var(--surface) !important; color: var(--ink) !important; box-shadow: 0 1px 3px #18322922; }
+.window-chart { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.window-chart .window-chart-svg { --plot: #fbfcfa; --grid: #e3ebe5; --label: var(--muted); --curve: #267855; --band: #dff0e5; --shade: #17674614; --handle: #0e4b32; --event: #50645b; }
+.window-chart .chart-event.carbs path { stroke: #b7791f; }
+.window-chart .chart-event.insulin path { stroke: #2f6fa8; }
+.window-chart .handle-knob rect { fill: var(--surface); stroke: #8fa69a; }
+.window-chart .handle-knob path { stroke: var(--green-dark); }
+.window-chart .window-handle.is-active .handle-knob rect { fill: var(--green); stroke: var(--green); }
+.window-chart .window-handle.is-active .handle-knob path { stroke: #fff; }
+.window-chart .window-handle.is-snapped .handle-line { stroke: #d9a441; }
+.window-nudge button { border-radius: 999px !important; }

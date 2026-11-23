@@ -140,6 +140,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -296,6 +298,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -443,6 +447,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -490,8 +496,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -830,6 +839,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -1022,6 +1033,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -1186,6 +1199,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -1233,8 +1248,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -1637,6 +1655,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -1793,6 +1813,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -1940,6 +1962,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -1987,8 +2011,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -2367,6 +2394,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -2523,6 +2552,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -2698,6 +2729,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -2736,8 +2769,11 @@
   "review": {
    "blocked": 0,
    "calculated": 2,
+   "checked": 0,
+   "done": false,
    "excluded": 1,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -3120,6 +3156,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -3276,6 +3314,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -3323,8 +3363,11 @@
   "review": {
    "blocked": 0,
    "calculated": 2,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -3706,6 +3749,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -3898,6 +3943,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -4054,6 +4101,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -4101,8 +4150,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -4563,6 +4615,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -4719,6 +4773,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -4751,7 +4807,7 @@
     "at": "2026-09-04T16:20:00+00:00",
     "calculation": {
      "actual_window_minutes": "180",
-     "adjusted_delta_mgdl": "-13.95847541160612593910980924",
+     "adjusted_delta_mgdl": "-24.95847541160612593910980924",
      "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -4778,7 +4834,7 @@
      "carbs_times_isf_total": "1575",
      "carbs_total": "45",
      "delta_mgdl": "-48.95847541160612593910980924",
-     "denominator_mgdl": "231.0415245883938740608901908",
+     "denominator_mgdl": "220.0415245883938740608901908",
      "doses": [
       {
        "at": "2026-09-04T16:20:00+00:00",
@@ -4794,7 +4850,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-04T19:20:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.466930314846945232132636132",
+     "factor_units_per_ke": "1.397089045005675390862794862",
      "g0": "88.95847541160612593910980924",
      "g0_source": "cgm",
      "g0_sources": [
@@ -4821,10 +4877,10 @@
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "7.0",
-     "ratio_g_per_unit": "6.816956401261206248612412172",
+     "ratio_g_per_unit": "7.157739899076638331509154613",
      "reason": null,
      "settings_version": 1,
-     "sport_effect_mgdl": "35",
+     "sport_effect_mgdl": "24.0",
      "start": "2026-09-04T16:20:00+00:00",
      "window_minutes": 180
     },
@@ -4866,21 +4922,26 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
     "source_id": "t-0025",
     "sport": {
-     "effect_mgdl": "35",
+     "effect_mgdl": "24.0",
      "events": [
       {
        "at": "2026-09-04T13:50:00+00:00",
+       "effect_from": "2026-09-04T14:50:00+00:00",
        "effect_mgdl": "24.0",
+       "effect_until": "2026-09-04T19:50:00+00:00",
        "id": "t-0024",
-       "kind": "gym"
+       "kind": "gym",
+       "previous_day": false
       }
      ],
-     "status": "affected",
+     "status": "auto",
      "suggested": true,
      "suggested_effect_mgdl": "24.0"
     },
@@ -4920,8 +4981,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -5007,10 +5071,19 @@
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "40",
     "sport_effect_mgdl": "40",
+    "sport_effect_until": "2026-09-04T19:50:00+00:00",
     "sport_kind": "gym",
     "sport_minutes": 300,
     "sport_minutes_custom": false,
     "sport_minutes_default": 300,
+    "sport_rest_mgdl": "16.0",
+    "sport_shares": [
+     {
+      "effect_mgdl": "24.0",
+      "meal": "dinner",
+      "meal_id": "t-0025"
+     }
+    ],
     "surcharge": null
    },
    {
@@ -5337,6 +5410,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -5493,6 +5568,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -5640,6 +5717,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -5687,8 +5766,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -6095,6 +6177,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -6251,6 +6335,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -6398,6 +6484,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -6445,8 +6533,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -6779,6 +6870,8 @@
     },
     "review": {
      "calculated": false,
+     "checkable": true,
+     "checked": false,
      "excludable": false,
      "open": [
       "blocked"
@@ -6970,6 +7063,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -7154,6 +7249,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -7201,8 +7298,11 @@
   "review": {
    "blocked": 1,
    "calculated": 2,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": "t-0033"
+   "first_open": "t-0033",
+   "tasks": 1
   },
   "settings_version": 2,
   "sync_error": null,
@@ -7648,6 +7748,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -7804,6 +7906,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -7952,6 +8056,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": true,
      "excludable": true,
      "open": []
     },
@@ -7999,8 +8105,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 1,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -8378,6 +8487,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -8534,6 +8645,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -8690,6 +8803,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -8737,8 +8852,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -9117,6 +9235,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -9264,6 +9384,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -9321,8 +9443,11 @@
   "review": {
    "blocked": 0,
    "calculated": 2,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -9741,6 +9866,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -9897,6 +10024,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -9944,8 +10073,11 @@
   "review": {
    "blocked": 0,
    "calculated": 2,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -10304,6 +10436,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -10460,6 +10594,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -10607,6 +10743,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -10654,8 +10792,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -11014,6 +11155,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -11170,6 +11313,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -11382,6 +11527,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -11429,8 +11576,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -11877,6 +12027,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -12033,6 +12185,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -12180,6 +12334,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -12227,8 +12383,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -12650,6 +12809,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -12842,6 +13003,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -12851,9 +13014,12 @@
      "events": [
       {
        "at": "2026-09-15T13:40:00+00:00",
+       "effect_from": "2026-09-15T14:40:00+00:00",
        "effect_mgdl": "-3.333333333333333333333333332",
+       "effect_until": "2026-09-15T19:40:00+00:00",
        "id": "t-0065",
-       "kind": "racing"
+       "kind": "racing",
+       "previous_day": false
       }
      ],
      "status": "auto",
@@ -12881,7 +13047,7 @@
     "at": "2026-09-15T16:10:00+00:00",
     "calculation": {
      "actual_window_minutes": "180",
-     "adjusted_delta_mgdl": "-42.5005956376523561375645883",
+     "adjusted_delta_mgdl": "-26.5005956376523561375645883",
      "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -12908,7 +13074,7 @@
      "carbs_times_isf_total": "2625",
      "carbs_total": "75",
      "delta_mgdl": "-2.5005956376523561375645883",
-     "denominator_mgdl": "221.4302352356257115434415430",
+     "denominator_mgdl": "237.4302352356257115434415430",
      "doses": [
       {
        "at": "2026-09-15T16:10:00+00:00",
@@ -12924,7 +13090,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-15T19:10:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "0.84354375327857413921311064",
+     "factor_units_per_ke": "0.9044961342309550915940630210",
      "g0": "149.9934809727569046692867970",
      "g0_source": "cgm",
      "g0_sources": [
@@ -12968,10 +13134,10 @@
      ],
      "prior_insulin_effect_mgdl": "1.430830873278067681006131300",
      "rapid_units_in_window": "7.5",
-     "ratio_g_per_unit": "11.85474963347582674264381957",
+     "ratio_g_per_unit": "11.05587920340031923887226119",
      "reason": null,
      "settings_version": 1,
-     "sport_effect_mgdl": "-40",
+     "sport_effect_mgdl": "-24.0",
      "start": "2026-09-15T16:10:00+00:00",
      "window_minutes": 180
     },
@@ -13013,21 +13179,26 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
     "source_id": "t-0066",
     "sport": {
-     "effect_mgdl": "-40",
+     "effect_mgdl": "-24.0",
      "events": [
       {
        "at": "2026-09-15T13:40:00+00:00",
+       "effect_from": "2026-09-15T14:40:00+00:00",
        "effect_mgdl": "-24.0",
+       "effect_until": "2026-09-15T19:40:00+00:00",
        "id": "t-0065",
-       "kind": "racing"
+       "kind": "racing",
+       "previous_day": false
       }
      ],
-     "status": "affected",
+     "status": "auto",
      "suggested": true,
      "suggested_effect_mgdl": "-24.0"
     },
@@ -13067,8 +13238,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -13178,10 +13352,24 @@
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "-40",
     "sport_effect_mgdl": "-40",
+    "sport_effect_until": "2026-09-15T19:40:00+00:00",
     "sport_kind": "racing",
     "sport_minutes": 300,
     "sport_minutes_custom": false,
     "sport_minutes_default": 300,
+    "sport_rest_mgdl": "-12.7",
+    "sport_shares": [
+     {
+      "effect_mgdl": "-3.333333333333333333333333332",
+      "meal": "lunch",
+      "meal_id": "t-0063"
+     },
+     {
+      "effect_mgdl": "-24.0",
+      "meal": "dinner",
+      "meal_id": "t-0066"
+     }
+    ],
     "surcharge": null
    },
    {
@@ -13549,6 +13737,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -13705,6 +13895,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -13852,6 +14044,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -13899,8 +14093,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -14344,6 +14541,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -14500,6 +14699,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -14647,6 +14848,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -14694,8 +14897,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -15054,6 +15260,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -15210,6 +15418,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -15357,6 +15567,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -15404,8 +15616,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -15810,6 +16025,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -16002,6 +16219,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -16186,6 +16405,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -16224,8 +16445,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -16721,6 +16945,8 @@
     },
     "review": {
      "calculated": false,
+     "checkable": true,
+     "checked": true,
      "excludable": false,
      "open": [
       "blocked"
@@ -16879,6 +17105,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -17035,6 +17263,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -17082,8 +17312,11 @@
   "review": {
    "blocked": 1,
    "calculated": 2,
+   "checked": 1,
+   "done": false,
    "excluded": 0,
-   "first_open": "t-0083"
+   "first_open": "t-0083",
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -17461,6 +17694,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -17617,6 +17852,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -17764,6 +18001,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -17811,8 +18050,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -18170,6 +18412,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -18326,6 +18570,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -18473,6 +18719,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -18520,8 +18768,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -18879,6 +19130,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -19071,6 +19324,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -19227,6 +19482,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -19274,8 +19531,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -19678,6 +19938,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -19754,6 +20016,8 @@
     },
     "review": {
      "calculated": false,
+     "checkable": true,
+     "checked": false,
      "excludable": false,
      "open": [
       "blocked"
@@ -19900,6 +20164,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -19947,8 +20213,11 @@
   "review": {
    "blocked": 1,
    "calculated": 2,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": "t-0097"
+   "first_open": "t-0097",
+   "tasks": 1
   },
   "settings_version": 2,
   "sync_error": null,
@@ -20315,6 +20584,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -20471,6 +20742,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -20646,6 +20919,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -20693,8 +20968,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -21140,6 +21418,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -21296,6 +21576,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -21328,7 +21610,7 @@
     "at": "2026-09-26T16:15:00+00:00",
     "calculation": {
      "actual_window_minutes": "170",
-     "adjusted_delta_mgdl": "-80.97298983348300895997148170",
+     "adjusted_delta_mgdl": "-58.30632316681634229330481503",
      "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -21355,7 +21637,7 @@
      "carbs_times_isf_total": "3850",
      "carbs_total": "110",
      "delta_mgdl": "-80.97298983348300895997148170",
-     "denominator_mgdl": "426.5270101665169910400285183",
+     "denominator_mgdl": "449.1936768331836577066951850",
      "doses": [
       {
        "at": "2026-09-26T16:15:00+00:00",
@@ -21371,7 +21653,7 @@
      "end_reason": "fixed_window",
      "extended_end": "2026-09-26T19:05:00+00:00",
      "extra_carb_count": 0,
-     "factor_units_per_ke": "1.107862364068875301402671476",
+     "factor_units_per_ke": "1.166736822943334175861545935",
      "g0": "120.9729898334830089599714817",
      "g0_source": "cgm",
      "g0_sources": [
@@ -21398,10 +21680,10 @@
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
      "rapid_units_in_window": "14.5",
-     "ratio_g_per_unit": "9.026392017933289526555463606",
+     "ratio_g_per_unit": "8.570913168552389006338192669",
      "reason": null,
      "settings_version": 2,
-     "sport_effect_mgdl": "0",
+     "sport_effect_mgdl": "22.66666666666666666666666667",
      "start": "2026-09-26T16:15:00+00:00",
      "window_minutes": 170
     },
@@ -21443,21 +21725,26 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
     "source_id": "t-0106",
     "sport": {
-     "effect_mgdl": "0",
+     "effect_mgdl": "22.66666666666666666666666667",
      "events": [
       {
        "at": "2026-09-26T13:45:00+00:00",
+       "effect_from": "2026-09-26T14:45:00+00:00",
        "effect_mgdl": "22.66666666666666666666666667",
+       "effect_until": "2026-09-26T19:45:00+00:00",
        "id": "t-0105",
-       "kind": "gym"
+       "kind": "gym",
+       "previous_day": false
       }
      ],
-     "status": "unaffected",
+     "status": "auto",
      "suggested": true,
      "suggested_effect_mgdl": "22.66666666666666666666666667"
     },
@@ -21497,8 +21784,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -21609,10 +21899,19 @@
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "40",
     "sport_effect_mgdl": "40",
+    "sport_effect_until": "2026-09-26T19:45:00+00:00",
     "sport_kind": "gym",
     "sport_minutes": 300,
     "sport_minutes_custom": false,
     "sport_minutes_default": 300,
+    "sport_rest_mgdl": "17.3",
+    "sport_shares": [
+     {
+      "effect_mgdl": "22.66666666666666666666666667",
+      "meal": "dinner",
+      "meal_id": "t-0106"
+     }
+    ],
     "surcharge": null
    },
    {
@@ -22018,6 +22317,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -22210,6 +22511,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -22366,6 +22669,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -22413,8 +22718,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -22880,6 +23188,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -23036,6 +23346,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -23192,6 +23504,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -23240,8 +23554,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -23623,6 +23940,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -23770,6 +24089,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -23817,8 +24138,11 @@
   "review": {
    "blocked": 0,
    "calculated": 2,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -24152,6 +24476,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -24308,6 +24634,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -24455,6 +24783,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -24502,8 +24832,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -24861,6 +25194,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -25053,6 +25388,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -25245,6 +25582,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -25292,8 +25631,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -25740,6 +26082,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -25896,6 +26240,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -26043,6 +26389,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -26090,8 +26438,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -26490,6 +26841,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -26646,6 +26999,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -26802,6 +27157,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -26849,8 +27206,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -27209,6 +27569,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -27365,6 +27727,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -27512,6 +27876,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -27559,8 +27925,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -27974,6 +28343,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -28166,6 +28537,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -28322,6 +28695,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -28369,8 +28744,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -28852,6 +29230,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -29008,6 +29388,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -29155,6 +29537,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -29202,8 +29586,11 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": null
+   "first_open": null,
+   "tasks": 0
   },
   "settings_version": 2,
   "sync_error": null,
@@ -29709,6 +30096,8 @@
     },
     "review": {
      "calculated": true,
+     "checkable": true,
+     "checked": false,
      "excludable": true,
      "open": []
     },
@@ -29718,9 +30107,12 @@
      "events": [
       {
        "at": "2026-10-07T07:40:00+00:00",
+       "effect_from": "2026-10-07T08:20:00+00:00",
        "effect_mgdl": "5.333333333333333333333333332",
+       "effect_until": "2026-10-07T13:20:00+00:00",
        "id": "ns-0004",
-       "kind": "jogging"
+       "kind": "jogging",
+       "previous_day": false
       }
      ],
      "status": "auto",
@@ -29792,6 +30184,8 @@
     },
     "review": {
      "calculated": false,
+     "checkable": false,
+     "checked": false,
      "excludable": false,
      "open": [
       "blocked"
@@ -29803,9 +30197,12 @@
      "events": [
       {
        "at": "2026-10-07T07:40:00+00:00",
+       "effect_from": "2026-10-07T08:20:00+00:00",
        "effect_mgdl": "22.66666666666666666666666667",
+       "effect_until": "2026-10-07T13:20:00+00:00",
        "id": "ns-0004",
-       "kind": "jogging"
+       "kind": "jogging",
+       "previous_day": false
       }
      ],
      "status": "auto",
@@ -29846,8 +30243,11 @@
   "review": {
    "blocked": 1,
    "calculated": 1,
+   "checked": 0,
+   "done": false,
    "excluded": 0,
-   "first_open": "ns-0002"
+   "first_open": "ns-0002",
+   "tasks": 1
   },
   "settings_version": 2,
   "sync_error": null,
@@ -29934,10 +30334,24 @@
     "sport_effect_custom": false,
     "sport_effect_default_mgdl": "40",
     "sport_effect_mgdl": "40",
+    "sport_effect_until": "2026-10-07T13:20:00+00:00",
     "sport_kind": "jogging",
     "sport_minutes": 300,
     "sport_minutes_custom": false,
     "sport_minutes_default": 300,
+    "sport_rest_mgdl": "12.0",
+    "sport_shares": [
+     {
+      "effect_mgdl": "5.333333333333333333333333332",
+      "meal": "breakfast",
+      "meal_id": "t-0145"
+     },
+     {
+      "effect_mgdl": "22.66666666666666666666666667",
+      "meal": "lunch",
+      "meal_id": "ns-0002"
+     }
+    ],
     "surcharge": null
    },
    {

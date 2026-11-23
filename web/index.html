@@ -23,7 +23,7 @@
         <div class="glucose-main"><strong id="glucose-value">—</strong><span id="glucose-trend">Trend nicht verfügbar</span></div>
         <small id="glucose-meta" hidden></small>
       </div>
-      <div class="topbar-actions"><button type="button" id="inbox-badge" class="inbox-badge" hidden></button><div id="connection" class="status" hidden></div></div>
+      <div class="topbar-actions"><div id="connection" class="status" hidden></div></div>
     </header>
 
     <!-- App navigation (concept 2026-11-18): a tab bar at the bottom on phones and tablets, a rail on the left
@@ -49,8 +49,6 @@
         </div>
         <div id="banner" class="banner" hidden></div>
         <div id="timezone-banner" class="banner timezone-banner" hidden></div>
-        <!-- "Zu erledigen" across the last days (web/ui/today.js, from /api/inbox). -->
-        <div id="inbox-host"></div>
         <div class="diary-grid">
           <section class="panel entry-panel">
             <!-- Chart, "Wirkt noch" and the last three hours (web/ui/today.js). -->
@@ -68,7 +66,7 @@
             <div id="entry-form-host"></div>
             </div>
           </section>
-          <!-- "Tag durchgehen" (web/ui/day.js) renders in here. -->
+          <!-- Verlauf (web/ui/day.js) renders in here. -->
           <section class="records review-panel"></section>
         </div>
       </section>

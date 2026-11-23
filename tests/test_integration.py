@@ -17,7 +17,7 @@ from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 from app import auth, dosing, episodes, forecast, on_board
-from app.common import unit_text
+from app.common import parse_instant, unit_text
 from app.analysis.night import night_analysis
 from app.services import day_view
 from app.ingestion import nightscout
@@ -497,21 +497,16 @@ class IntegrationTests(unittest.TestCase):
             "id": session["id"], "day": "2026-09-23", "minutes": None})
         self.assertEqual(Decimal(self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]["sport_effect_mgdl"]),
                          Decimal(24))
-        # A value on the meal still replaces it, and "Kein Einfluss" drops it.
-        self.request("/api/analysis/sport", method="POST", body={
-            "meal_id": meal["id"], "day": "2026-09-23", "status": "affected",
-            "effect_mgdl": "35",
-        })
-        after = self.request("/api/day?date=2026-09-23")["meals"][0]
-        self.assertEqual(Decimal(after["calculation"]["sport_effect_mgdl"]), Decimal(35))
-        self.assertEqual(
-            Decimal(after["calculation"]["adjusted_delta_mgdl"]),
-            Decimal(after["calculation"]["delta_mgdl"]) + 35,
-        )
-        self.request("/api/analysis/sport", method="POST", body={
-            "meal_id": meal["id"], "day": "2026-09-23", "status": "unaffected"})
-        self.assertEqual(Decimal(self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]["sport_effect_mgdl"]),
-                         Decimal(0))
+        # The session shows where its effect lands (user request 2026-11-23): 24 in the meal, the rest outside.
+        after = self.request("/api/day?date=2026-09-23")
+        session = next(item for item in after["timeline"] if item["kind"] == "exercise")
+        self.assertEqual([(share["meal_id"], Decimal(share["effect_mgdl"])) for share in session["sport_shares"]],
+                         [(meal["id"], Decimal(24))])
+        self.assertEqual(Decimal(session["sport_rest_mgdl"]), Decimal(16))
+        # The effect is set on the session only; the former per-meal value is gone.
+        with self.assertRaises(urllib.error.HTTPError):
+            self.request("/api/analysis/sport", method="POST", body={
+                "meal_id": meal["id"], "day": "2026-09-23", "status": "affected", "effect_mgdl": "35"})
         self.assertEqual(marks.analysis_exclusions(), set())
         with self.assertRaises(urllib.error.HTTPError):
             self.request("/api/analysis/sport-session", method="POST", body={
@@ -570,15 +565,10 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(racing["sport_kind"], "racing")
         meal = day["meals"][0]
         self.assertEqual(Decimal(meal["sport"]["suggested_effect_mgdl"]), Decimal(-24))
-        self.request("/api/analysis/sport", method="POST", body={
-            "meal_id": meal["id"], "day": "2026-09-23", "status": "affected",
-            "effect_mgdl": "-30",
-        })
-        after = self.request("/api/day?date=2026-09-23")["meals"][0]
-        self.assertEqual(Decimal(after["calculation"]["sport_effect_mgdl"]), Decimal(-30))
+        self.assertEqual(Decimal(meal["calculation"]["sport_effect_mgdl"]), Decimal(-24))
         self.assertEqual(
-            Decimal(after["calculation"]["adjusted_delta_mgdl"]),
-            Decimal(after["calculation"]["delta_mgdl"]) - 30,
+            Decimal(meal["calculation"]["adjusted_delta_mgdl"]),
+            Decimal(meal["calculation"]["delta_mgdl"]) - 24,
         )
 
     def test_settings_without_racing_get_its_default_and_stay_editable(self):
@@ -670,6 +660,31 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(reset["end"], "2026-09-23T13:00:00+00:00")
         self.assertEqual(marks.analysis_windows(), {})
 
+    def test_window_check_holds_for_the_checked_window_only(self):
+        """"Passt" in Verlauf (user request 2026-11-23): a finished meal's window is checked without
+        recalculating the day; a new window takes the check back, saving one in the editor checks it."""
+        from app.services import day_view
+        self.request("/api/treatment", method="POST", body={"kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4"})
+        meal = self.request("/api/day?date=2026-09-23")["meals"][0]
+        self.assertEqual((meal["review"]["checked"], meal["review"]["checkable"]), (False, True))
+        with patch("app.services.day_view.compute_day", wraps=day_view.compute_day) as compute:
+            result = self.request("/api/analysis/window-check", method="POST",
+                                  body={"meal_id": meal["id"], "day": "2026-09-23", "checked": True})
+            self.assertEqual(compute.call_count, 0)
+        self.assertTrue(result["meals"][0]["review"]["checked"])
+        self.assertTrue(result["review"]["done"])
+        week = self.request("/api/days/week?date=2026-09-23")
+        self.assertEqual(len(week["days"]), 7)
+        self.assertTrue(next(row for row in week["days"] if row["day"] == "2026-09-23")["done"])
+        # Another window (a later end) is not the checked one.
+        marks.set_analysis_window(meal["id"], parse_instant(meal["window"]["start"]), parse_instant(meal["window"]["end"]) + timedelta(minutes=30))
+        self.assertFalse(self.request("/api/day?date=2026-09-23")["meals"][0]["review"]["checked"])
+        # Saving a window in the editor checks it.
+        self.request("/api/analysis/window", method="POST", body={"meal_id": meal["id"], "day": "2026-09-23", "reset": True})
+        self.assertTrue(self.request("/api/day?date=2026-09-23")["meals"][0]["review"]["checked"])
+        self.request("/api/analysis/window-check", method="POST", body={"meal_id": meal["id"], "day": "2026-09-23", "checked": False})
+        self.assertFalse(self.request("/api/day?date=2026-09-23")["meals"][0]["review"]["checked"])
+
     def test_calculated_day_is_stored_and_recalculated_when_an_input_changes(self):
         from app.services import day_view
         self.request("/api/treatment", method="POST", body={
@@ -677,12 +692,10 @@ class IntegrationTests(unittest.TestCase):
         })
         first = self.request("/api/day?date=2026-09-23")
         with patch("app.services.day_view.compute_day", wraps=day_view.compute_day) as compute:
-            self.assertEqual(day_view.day_payload("2026-09-23", refresh=False)["meals"], first["meals"])
+            self.assertEqual(day_view.with_checks(day_view.day_payload("2026-09-23", refresh=False))["meals"], first["meals"])
             self.assertEqual(compute.call_count, 0)
             meal_id = first["meals"][0]["id"]
             changes = [
-                ("/api/analysis/sport", {"meal_id": meal_id, "day": "2026-09-23", "status": "affected",
-                                         "effect_mgdl": "30"}),
                 ("/api/analysis/window", {"meal_id": meal_id, "day": "2026-09-23",
                                           "start": MEAL_AT, "end": "2026-09-23T14:00:00Z"}),
                 ("/api/analysis/day-type", {"day": "2026-09-23", "day_type": "free"}),
@@ -713,7 +726,6 @@ class IntegrationTests(unittest.TestCase):
                 day_view.day_payload("2026-09-23", refresh=False)
             self.assertEqual(compute.call_count, calls + 2)
         stored = day_view.day_payload("2026-09-23", refresh=False)
-        self.assertEqual(stored["meals"][0]["sport"]["effect_mgdl"], "30")
         self.assertTrue(stored["meals"][0]["calculation"]["manual_window"])
         self.assertEqual(stored["day_type"], "free")
         self.assertEqual(len(stored["basal"]), 1)
