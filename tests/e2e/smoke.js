@@ -175,30 +175,27 @@ const toastSays = (page, text) => page.waitForFunction(wanted => document.queryS
 
 // Verlauf (web/ui/day.js): the week strip picks a day with a task and one with sport, whose card shows
 // where its effect lands; "Passt" checks a meal.
-// A sideways swipe over the week strip: dx > 0 goes back a week.
+// A sideways swipe over the week strip: the row scrolls and snaps; dx > 0 goes back a week.
 async function swipeWeek(page, dx) {
   const before = await page.textContent(".week-head span");
-  const box = await page.locator(".week-days").boundingBox();
-  const x = box.x + box.width / 2, y = box.y + box.height / 2;
-  await page.dispatchEvent(".week-day >> nth=3", "pointerdown", { clientX: x, clientY: y, pointerType: "touch", bubbles: true });
-  await page.dispatchEvent(".week-day >> nth=3", "pointerup", { clientX: x + dx, clientY: y + 6, pointerType: "touch", bubbles: true });
-  await page.dispatchEvent(".week-day >> nth=3", "click");
+  await page.$eval(".week-track", (track, dx) => track.scrollTo({ left: track.scrollLeft - Math.sign(dx) * track.clientWidth }), dx);
   await page.waitForFunction(text => document.querySelector(".week-head span")?.textContent !== text, before);
+  await page.waitForFunction(() => { const track = document.querySelector(".week-track"); return Math.abs(track.scrollLeft - track.clientWidth) < 2; });
 }
 
 async function history(page, name) {
-  await page.waitForSelector(".week-days .week-day");
+  await page.waitForSelector(".week-panel.is-current .week-day");
   const shown = await page.getAttribute(".week-day[aria-current=date]", "data-day");
   await swipeWeek(page, 120);
-  check(!(await page.$(`.week-day[data-day="${shown}"]`)), `${name}: a swipe to the right shows the week before`);
+  check(!(await page.$(`.week-panel.is-current .week-day[data-day="${shown}"]`)), `${name}: a swipe to the right shows the week before`);
   await swipeWeek(page, -120);
-  check(!!(await page.$(`.week-day[data-day="${shown}"]`)), `${name}: a swipe to the left comes back`);
+  check(!!(await page.$(`.week-panel.is-current .week-day[data-day="${shown}"]`)), `${name}: a swipe to the left comes back`);
   // The fake data has a sport session yesterday and a sensor gap two days ago.
-  if (!(await page.$(".week-sport"))) { await page.click(".week-prev"); await page.waitForSelector(".week-sport"); }
-  await page.click(".week-day[data-state=open] >> nth=0");
+  if (!(await page.$(".week-panel.is-current .week-sport"))) { await page.click(".week-prev"); await page.waitForSelector(".week-panel.is-current .week-sport"); }
+  await page.click(".week-panel.is-current .week-day[data-state=open] >> nth=0");
   await page.waitForSelector(".history-tasks a");
   check(true, `${name}: a day with an open task lists it`);
-  const sport = await page.$(".week-day:has(.week-sport)");
+  const sport = await page.$(".week-panel.is-current .week-day:has(.week-sport)");
   if (sport) {
     await sport.click();
     await page.waitForSelector("#timeline .history-sport");
@@ -224,7 +221,8 @@ function widerThanScreen(page) {
     const limit = Math.min(screen.width, document.documentElement.clientWidth) + 1;
     return [...document.querySelectorAll("body *")].filter(el => {
       const box = el.getBoundingClientRect();
-      return box.width && box.right > limit && ![...el.children].some(child => child.getBoundingClientRect().right > limit);
+      // The week row scrolls sideways on purpose; its neighbour weeks lie off screen.
+      return box.width && box.right > limit && !el.closest(".week-track") && ![...el.children].some(child => child.getBoundingClientRect().right > limit);
     }).slice(0, 8).map(el => el.tagName + "." + [...el.classList].join(".") + " " + Math.round(el.getBoundingClientRect().right) + " " + (el.textContent || "").trim().slice(0, 40));
   });
 }
