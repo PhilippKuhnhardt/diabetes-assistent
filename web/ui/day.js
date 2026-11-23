@@ -139,9 +139,8 @@ function MealCard({ meal, items, data, ctx }) {
       <span>${num(sumOf(entries, "carbs"), 0) + " g KH · " + num(sumOf(entries, "insulin"), 1) + " IE"}</span>
       <span class="day-meal-window">${timeOnly(range.start) + "–" + timeOnly(range.end) + (range.manual ? " · manuell" : "")}</span>
       ${(meal.sport?.events || []).map(event => html`<${SportChip} key=${event.id} event=${event} ctx=${ctx} />`)}
-      ${meal.vacation && html`<span class="chip" title="Urlaubstag: zählt nach dem Urlaub nicht in die Automatik">Urlaub</span>`}
-      ${meal.excluded && html`<span class="chip">ausgeklammert</span>`}
-      ${review.checked && html`<span class="chip is-ok"><${Icon} name="check" /> geprüft</span>`}
+      ${meal.vacation && html`<span class="history-meal-flag" title="Urlaubstag: zählt nach dem Urlaub nicht in die Automatik">Urlaub</span>`}
+      ${meal.excluded && html`<span class="history-meal-flag">ausgeklammert</span>`}
     </div>
     ${task && html`<p class="history-task">${calc.reason || "Faktor nicht berechenbar"}. Zeitraum anpassen oder mit „Passt“ bestätigen.</p>`}
     ${hasCurve ? html`<div class="meal-chart history-chart"><${MealChart} meal=${meal} data=${data} compact /></div>`
@@ -244,12 +243,12 @@ function WeekDays({ rows, day, onDay }) {
   return html`<div class="week-days" role="group" aria-label="Tag wählen">${rows.map(row => {
     const state = row.future || !row.meals ? "none" : row.done ? "done" : row.tasks ? "open" : "todo";
     const label = dayDate(row.day, { weekday: "long", day: "numeric", month: "long" }) +
-      ({ done: ", geprüft", open: ", Aufgabe offen", todo: ", noch zu prüfen", none: "" })[state] + (row.sport ? ", mit Sport" : "");
+      ({ done: ", geprüft", open: ", Aufgabe offen", todo: ", noch zu prüfen", none: "" })[state];
     return html`<button type="button" key=${row.day} class="week-day" data-day=${row.day} data-state=${state} aria-current=${row.day === day ? "date" : null}
       aria-label=${label} disabled=${row.future} onClick=${() => onDay(row.day)}>
       <span>${dayDate(row.day, { weekday: "short" }).replace(".", "")}</span><b>${Number(row.day.slice(8))}</b>
       <i class="week-dot" aria-hidden="true"></i>
-      <em>${row.future ? "" : row.day_type === "free" ? "Frei" : "Arb"}</em>${row.sport && html`<s class="week-sport" aria-hidden="true"></s>`}</button>`;
+      <em>${row.future ? "" : row.day_type === "free" ? "Frei" : "Arb"}</em></button>`;
   })}</div>`;
 }
 
