@@ -4,7 +4,7 @@
 // checks it, "Zeitraum anpassen" opens the window editor) and exclusion; sport sessions are cards of their
 // own (the day's chart, effects and night cards were removed 2026-11-23). Everything shown comes from the day payload
 // (/api/day) and the week (/api/days/week); actions post and then reload the day.
-import { html, useState, useEffect, useRef, useMemo } from "./html.js";
+import { html, useState, useEffect, useLayoutEffect, useRef, useMemo } from "./html.js";
 import { MINUTE, api, post, toast, num, factorNum, signedChange, sportChange, timeOnly, trendSymbol, names, sportNames,
   dayDate, Icon, FactorIcons, ExcludeButton } from "./lib.js";
 import { sportSummary, signedMgdl } from "./sport.js";
@@ -235,53 +235,70 @@ function HistoryDayType({ data, day, reload }) {
 
 // Monday to Sunday of the shown day (GET /api/days/week): a dot per day (green: every meal checked, amber:
 // a task open, grey: still to check), its day type and a mark for sport. Arrows move a week.
+const plusDays = (date, days) => new Date(new Date(date + "T12:00:00").getTime() + days * 24 * 60 * MINUTE).toLocaleDateString("sv-SE");
+// Monday of a date's week, the key of a week in the strip.
+const weekOf = date => plusDays(date, -((new Date(date + "T12:00:00").getDay() + 6) % 7));
+
+function WeekDays({ rows, day, onDay }) {
+  if (!rows) return html`<div class="week-days" aria-hidden="true">${Array.from({ length: 7 }, (_, i) => html`<span key=${i} class="week-day is-empty"></span>`)}</div>`;
+  return html`<div class="week-days" role="group" aria-label="Tag wählen">${rows.map(row => {
+    const state = row.future || !row.meals ? "none" : row.done ? "done" : row.tasks ? "open" : "todo";
+    const label = dayDate(row.day, { weekday: "long", day: "numeric", month: "long" }) +
+      ({ done: ", geprüft", open: ", Aufgabe offen", todo: ", noch zu prüfen", none: "" })[state] + (row.sport ? ", mit Sport" : "");
+    return html`<button type="button" key=${row.day} class="week-day" data-day=${row.day} data-state=${state} aria-current=${row.day === day ? "date" : null}
+      aria-label=${label} disabled=${row.future} onClick=${() => onDay(row.day)}>
+      <span>${dayDate(row.day, { weekday: "short" }).replace(".", "")}</span><b>${Number(row.day.slice(8))}</b>
+      <i class="week-dot" aria-hidden="true"></i>
+      <em>${row.future ? "" : row.day_type === "free" ? "Frei" : "Arb"}</em>${row.sport && html`<s class="week-sport" aria-hidden="true"></s>`}</button>`;
+  })}</div>`;
+}
+
+// The weeks as one row that follows the finger and snaps to a week (user request 2026-11-23): the shown week
+// sits between the week before and after (none after the current week), each drawn from /api/days/week; when
+// the row comes to rest on a neighbour, that week is shown and the row is re-centred on it.
 function WeekStrip({ day, today, data, onDay }) {
-  const [week, setWeek] = useState(null);
+  const [weeks, setWeeks] = useState({});
+  const current = weekOf(day);
+  const atToday = current === weekOf(today);
+  const keys = [plusDays(current, -7), current, ...(atToday ? [] : [plusDays(current, 7)])];
+  const index = 1;
   useEffect(() => {
     let live = true;
-    api("/api/days/week?date=" + encodeURIComponent(day)).then(result => live && setWeek(result)).catch(() => {});
+    // The shown week afresh with each loaded day, its neighbours once, so a swipe lands on a drawn week.
+    for (const key of keys) {
+      if (key !== current && weeks[key]) continue;
+      api("/api/days/week?date=" + encodeURIComponent(key)).then(result => live && setWeeks(all => ({ ...all, [key]: result }))).catch(() => {});
+    }
     return () => { live = false; };
   }, [day, data]);
   const shift = days => {
-    const next = new Date(new Date(day + "T12:00:00").getTime() + days * 24 * 60 * MINUTE).toLocaleDateString("sv-SE");
+    const next = plusDays(day, days);
     onDay(next > today ? today : next);
   };
-  const rows = week?.days || [];
-  const atToday = rows.some(row => row.day === today);
-  // A sideways swipe over the days turns the week (user request 2026-11-23); a mostly vertical one scrolls the page.
-  const swipe = useRef(null);
-  const swipeStart = event => { swipe.current = { x: event.clientX, y: event.clientY, moved: false }; };
-  const swipeEnd = event => {
-    const start = swipe.current;
-    if (!start) return;
-    const dx = event.clientX - start.x, dy = event.clientY - start.y;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < 1.5 * Math.abs(dy)) return;
-    start.moved = true;
-    if (dx > 0) shift(-7);
-    else if (!atToday) shift(7);
-  };
-  // A swipe that ends on a day must not also pick that day.
-  const swallowClick = event => {
-    if (!swipe.current?.moved) return;
-    swipe.current = null;
-    event.stopPropagation();
-    event.preventDefault();
+  const track = useRef(null);
+  const settle = useRef(0);
+  useLayoutEffect(() => {
+    const el = track.current;
+    if (el) el.scrollLeft = index * el.clientWidth;
+  }, [current, atToday]);
+  useEffect(() => () => clearTimeout(settle.current), []);
+  const onScroll = () => {
+    clearTimeout(settle.current);
+    settle.current = setTimeout(() => {
+      const el = track.current;
+      if (!el || !el.clientWidth) return;
+      const at = el.scrollLeft / el.clientWidth, snapped = Math.round(at);
+      if (Math.abs(at - snapped) > 0.02 || snapped === index) return;
+      shift((snapped - index) * 7);
+    }, 120);
   };
   return html`<div class="week-strip">
     <div class="week-head"><button type="button" class="quiet week-prev" aria-label="Woche zurück" onClick=${() => shift(-7)}>‹</button>
-      <span>${week ? "KW " + week.week : ""}</span>
+      <span>${weeks[current] ? "KW " + weeks[current].week : ""}</span>
       <button type="button" class="quiet week-next" aria-label="Woche vor" disabled=${atToday} onClick=${() => shift(7)}>›</button></div>
-    <div class="week-days" role="group" aria-label="Tag wählen" onPointerDown=${swipeStart} onPointerUp=${swipeEnd}
-      onPointerCancel=${() => { swipe.current = null; }} onClickCapture=${swallowClick}>${rows.map(row => {
-      const state = row.future || !row.meals ? "none" : row.done ? "done" : row.tasks ? "open" : "todo";
-      const label = dayDate(row.day, { weekday: "long", day: "numeric", month: "long" }) +
-        ({ done: ", geprüft", open: ", Aufgabe offen", todo: ", noch zu prüfen", none: "" })[state] + (row.sport ? ", mit Sport" : "");
-      return html`<button type="button" class="week-day" data-day=${row.day} data-state=${state} aria-current=${row.day === day ? "date" : null}
-        aria-label=${label} disabled=${row.future} onClick=${() => onDay(row.day)}>
-        <span>${dayDate(row.day, { weekday: "short" }).replace(".", "")}</span><b>${Number(row.day.slice(8))}</b>
-        <i class="week-dot" aria-hidden="true"></i>
-        <em>${row.future ? "" : row.day_type === "free" ? "Frei" : "Arb"}</em>${row.sport && html`<s class="week-sport" aria-hidden="true"></s>`}</button>`;
-    })}</div></div>`;
+    <div class="week-track" ref=${track} onScroll=${onScroll}>${keys.map(key => html`<div key=${key}
+      class=${"week-panel" + (key === current ? " is-current" : "")} inert=${key !== current} aria-hidden=${key === current ? null : "true"}>
+      <${WeekDays} rows=${weeks[key]?.days} day=${day} onDay=${onDay} /></div>`)}</div></div>`;
 }
 
 // ---- Window editor: the counted window of one meal, moved by dragging, tapping or nudging. ----

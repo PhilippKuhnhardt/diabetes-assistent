@@ -1031,7 +1031,11 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .week-strip { display: grid; gap: 6px; margin: 0 0 14px; }
 .week-head { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 12px; font-weight: 700; }
 .history .week-head button { min-height: 30px; padding: 2px 12px; font-size: 18px; line-height: 1; }
-.week-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; touch-action: pan-y; }
+.week-track { display: flex; margin: 0 -2.5px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+.week-track::-webkit-scrollbar { display: none; }
+.week-panel { flex: 0 0 100%; min-width: 0; padding: 0 2.5px; scroll-snap-align: start; scroll-snap-stop: always; }
+.week-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.week-day.is-empty { min-height: 62px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
 .history button.week-day { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; min-height: 0; padding: 6px 0 5px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); color: var(--muted); font-size: 11px; font-weight: 650; font-variant-numeric: tabular-nums; }
 .week-day b { color: var(--ink); font-size: 16px; line-height: 1.2; }
 .week-day em { font-style: normal; font-size: 9.5px; font-weight: 750; letter-spacing: .03em; text-transform: uppercase; min-height: 12px; }
