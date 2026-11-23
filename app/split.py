@@ -2,8 +2,10 @@
 
 Fiasp is mostly done after 2 h while a large meal and its fat/protein still raise glucose for hours,
 so the full dose up front means too much insulin early and too little late. The plan is stored with
-the meal entry in Nightscout ([DASP:<IE>@<minutes>]); any later rapid dose counts as its second part,
-which the dose help suggests from the current forecast (app/on_board.py) next to the planned amount.
+the meal entry in Nightscout ([DASP:<IE>@<minutes>]); any later rapid dose without carbs counts as its second
+part, which the dose help suggests from the current forecast (app/on_board.py) next to the planned amount.
+Carbs eaten while it is open (a dessert) get a dose for themselves only: the forecast's rise stays with the second
+part (user request 2026-11-23: the dessert suggested the whole second part at once, which would have caused a low).
 
 When the second part fits best follows the glucose course (user approval 2026-10-22, analysis in the
 project files analysen/pruefstand-2026-10/split-bolus.md): 60 to 105 min after the meal, glucose from
@@ -74,9 +76,11 @@ def open_plan(treatments: list[dict], now: datetime) -> dict | None:
     due = meal["at"] + timedelta(minutes=int(meal["split"]["delay_minutes"]))
     if now > due + OPEN_AFTER_DUE:
         return None
+    # A dose with carbs of its own (a dessert, a snack) covers those carbs only (dosing.suggest hold_rise,
+    # user request 2026-11-23), so the second part stays open for the meal's later rise.
     later_doses = [item for item in treatments
                    if meal["at"] + FIRST_PART_MINUTES < item["at"] <= now and calculation.is_rapid_insulin(item)
-                   and calculation.dec(item.get("insulin") or 0) > 0]
+                   and calculation.dec(item.get("insulin") or 0) > 0 and calculation.dec(item.get("carbs") or 0) <= 0]
     if later_doses:
         return None
     return {"meal_at": meal["at"], "units": calculation.dec(meal["split"]["units"]), "due_at": due}
