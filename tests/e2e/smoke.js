@@ -70,6 +70,7 @@ async function run(browser, name, options) {
     await page.keyboard.press("Escape");
   }
   await editMeal(page, name);
+  await addFromHistory(page, name, compact);
 
   await page.click("[data-nav=analysis]");
   check(await page.isVisible("#analysis-view"), `${name}: Analyse opens`);
@@ -388,6 +389,23 @@ async function settings(page, name) {
   await page.fill(pause, "30");
   await page.locator(pause).blur();
   await page.waitForFunction(selector => !document.querySelector(selector).disabled, pause);
+}
+
+// "+" from Verlauf (bug 2026-11-24): the entry sheet shows there as well, and Verlauf stays the tab.
+async function addFromHistory(page, name, compact) {
+  for (const choice of ["meal", "manual"]) {
+    await page.click("#nav-add");
+    await page.waitForSelector("#add-dialog[open] .choice");
+    await page.click(`.choice[data-choice=${choice}]`);
+    if (await page.evaluate(() => document.querySelector("#agent-dialog").open)) await page.keyboard.press("Escape");
+    check(await page.isVisible("#entry-drawer"), `${name}: entry form visible after "+" ${choice} from Verlauf`);
+    check(await page.isVisible("#entry-form-host input[name=carbs]"), `${name}: entry fields visible from Verlauf (${choice})`);
+    if (compact) {
+      await page.click("#entry-close");
+      check(!(await page.isVisible("#entry-drawer")), `${name}: entry sheet from Verlauf closes`);
+      check(await page.isVisible(".review-panel"), `${name}: Verlauf still shown after closing the entry`);
+    }
+  }
 }
 
 (async () => {
