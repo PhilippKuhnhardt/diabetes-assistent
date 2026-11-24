@@ -79,4 +79,7 @@ threading.Thread(target=fake.serve_forever, daemon=True).start()
 os.environ.update({"NIGHTSCOUT_URL": "http://127.0.0.1:8799", "NIGHTSCOUT_AUTH_MODE": "token", "NIGHTSCOUT_CREDENTIAL": "x", "APP_PASSWORD": "", "OPENROUTER_API_KEY": "dummy"})
 db.init()
 from app.server import Handler
+from app.services import day_view
+# The red dot on "Verlauf" counts from a fixed day in production; here the fake days of the last week count.
+day_view.REVIEW_SINCE = (datetime.now(ZoneInfo("Europe/Berlin")).date() - timedelta(days=7)).isoformat()
 ThreadingHTTPServer(("127.0.0.1", 8765), Handler).serve_forever()

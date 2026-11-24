@@ -20,11 +20,16 @@
  "review": {
   "blocked": 0,
   "calculated": 0,
+  "checkable": true,
   "checked": 0,
   "done": false,
+  "entries": 0,
+  "entries_checked": 0,
   "excluded": 0,
   "first_open": null,
-  "tasks": 0
+  "tasks": 0,
+  "total": 0,
+  "unchecked": 0
  },
  "settings_version": 2,
  "sync_error": null,

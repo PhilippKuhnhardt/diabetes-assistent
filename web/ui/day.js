@@ -57,6 +57,19 @@ function mealName(meal, items) {
   return meal.dish?.name || own?.dish?.name || own?.description || "";
 }
 
+// The check on an entry outside the meal cards (user request 2026-11-24): the server marks those entries
+// with `checked`; entries inside a meal card count with the meal's "Passt".
+function EntryCheck({ item, ctx, label }) {
+  if (!("checked" in item)) return null;
+  const flip = event => act(event, async () => {
+    await post("/api/review/entry", { id: item.id, day: ctx.day, checked: !item.checked });
+    await ctx.reload();
+  });
+  return html`<button type="button" class=${"entry-check" + (item.checked ? " is-checked" : "")} aria-pressed=${String(Boolean(item.checked))}
+    aria-label=${label + " um " + timeOnly(item.at) + (item.checked ? " geprüft" : " als geprüft markieren")} title=${item.checked ? "Geprüft" : "Als geprüft markieren"}
+    onClick=${flip}><${Icon} name="check" /></button>`;
+}
+
 // One entry inside a meal or loose in the day: tap opens its card; a blood glucose reading can only be deleted.
 function EntryRow({ item, data, ctx }) {
   const label = entryLabel(item, data);
@@ -73,14 +86,15 @@ function EntryRow({ item, data, ctx }) {
         await ctx.reload();
       });
     };
-    return html`<li class="history-entry"><div class="history-entry-row"><time>${timeOnly(item.at)}</time><b>${label}</b><span>${amounts}</span>
-      <button type="button" class="delete-treatment quiet" aria-label=${"Blutige Messung um " + timeOnly(item.at) + " löschen"} onClick=${remove}>Löschen</button></div></li>`;
+    return html`<li class=${"history-entry" + ("checked" in item ? " has-check" : "")}><div class="history-entry-row"><time>${timeOnly(item.at)}</time><b>${label}</b><span>${amounts}</span>
+      <button type="button" class="delete-treatment quiet" aria-label=${"Blutige Messung um " + timeOnly(item.at) + " löschen"} onClick=${remove}>Löschen</button></div>
+      <${EntryCheck} item=${item} ctx=${ctx} label=${label} /></li>`;
   }
   const editable = item.kind !== "other";
-  return html`<li class="history-entry"><button type="button" class="history-entry-row edit-entry" data-id=${item.id} disabled=${!editable}
+  return html`<li class=${"history-entry" + ("checked" in item ? " has-check" : "")}><button type="button" class="history-entry-row edit-entry" data-id=${item.id} disabled=${!editable}
       aria-label=${label + " um " + timeOnly(item.at) + (editable ? " bearbeiten" : "")} onClick=${() => ctx.onEdit(item.id)}>
     <time>${timeOnly(item.at)}</time><b>${label}<${FactorIcons} marks=${item} /></b><span>${amounts}</span>
-    ${detail && html`<small>${detail}</small>`}</button></li>`;
+    ${detail && html`<small>${detail}</small>`}</button><${EntryCheck} item=${item} ctx=${ctx} label=${label} /></li>`;
 }
 
 function Calculation({ result }) {
@@ -164,11 +178,12 @@ function MealCard({ meal, items, data, ctx }) {
 // the same one "Heute" opens (web/ui/sport.js).
 function SportCard({ item, ctx }) {
   const summary = sportSummary(item);
-  return html`<button type="button" class="history-sport edit-entry" data-id=${item.id} onClick=${() => ctx.onEdit(item.id)}
+  return html`<div class="history-sport-item"><button type="button" class="history-sport edit-entry" data-id=${item.id} onClick=${() => ctx.onEdit(item.id)}
     aria-label=${summary.title + " um " + timeOnly(item.at) + " öffnen"}>
     <time>${timeOnly(item.at)}</time><b>${summary.title}</b><span class="history-sport-effect">${summary.effect}</span>
     ${summary.parts.length > 0 && html`<span class="history-sport-parts">${summary.parts.map(part =>
-      html`<span key=${part.key} class=${part.rest ? "is-rest" : ""}>${part.text}</span>`)}</span>`}</button>`;
+      html`<span key=${part.key} class=${part.rest ? "is-rest" : ""}>${part.text}</span>`)}</span>`}</button>
+    <${EntryCheck} item=${item} ctx=${ctx} label=${summary.title} /></div>`;
 }
 
 // The day's entries grouped as the server does it (`meal_id`, day_view.block_meal_id): each main meal with
@@ -232,8 +247,8 @@ function HistoryDayType({ data, day, reload }) {
       disabled=${saving} onClick=${() => choose(key)}>${text}</button>`)}</div>`;
 }
 
-// Monday to Sunday of the shown day (GET /api/days/week): a dot per day (green: every meal checked, amber:
-// a task open, grey: still to check), its day type and a mark for sport. Arrows move a week.
+// Monday to Sunday of the shown day (GET /api/days/week): a dot per day (green: every meal and entry checked,
+// amber: a task open, grey: still to check) and its day type. Arrows move a week.
 const plusDays = (date, days) => new Date(new Date(date + "T12:00:00").getTime() + days * 24 * 60 * MINUTE).toLocaleDateString("sv-SE");
 // Monday of a date's week, the key of a week in the strip.
 const weekOf = date => plusDays(date, -((new Date(date + "T12:00:00").getDay() + 6) % 7));
@@ -241,7 +256,7 @@ const weekOf = date => plusDays(date, -((new Date(date + "T12:00:00").getDay() +
 function WeekDays({ rows, day, onDay }) {
   if (!rows) return html`<div class="week-days" aria-hidden="true">${Array.from({ length: 7 }, (_, i) => html`<span key=${i} class="week-day is-empty"></span>`)}</div>`;
   return html`<div class="week-days" role="group" aria-label="Tag wählen">${rows.map(row => {
-    const state = row.future || !row.meals ? "none" : row.done ? "done" : row.tasks ? "open" : "todo";
+    const state = row.future || !(row.meals || row.entries) ? "none" : row.done ? "done" : row.tasks ? "open" : "todo";
     const label = dayDate(row.day, { weekday: "long", day: "numeric", month: "long" }) +
       ({ done: ", geprüft", open: ", Aufgabe offen", todo: ", noch zu prüfen", none: "" })[state];
     return html`<button type="button" key=${row.day} class="week-day" data-day=${row.day} data-state=${state} aria-current=${row.day === day ? "date" : null}
@@ -510,13 +525,13 @@ export function DayReview({ data, day, today, status, reload, onEdit, onAnalysis
   const sessions = new Set(data.timeline.filter(item => item.kind === "exercise").map(item => item.id));
   const ctx = { day, reload, onEdit, onAnalysisChanged, openEditor, sessions };
   const review = data.review || {};
-  const meals = data.meals.length;
+  const total = review.total ?? data.meals.length;
   const tasks = data.meals.filter(meal => (meal.review?.open || []).length && !meal.review.checked && !meal.excluded);
   return html`<section class="panel history">${head}
     <div class="history-day-head">
       <h3>${dayDate(day, { weekday: "short", day: "numeric", month: "numeric" })}</h3>
-      ${meals > 0 && html`<span id="review-summary" class=${"chip" + (review.done ? " is-ok" : "")}>${review.done
-        ? html`<${Icon} name="check" /> Tag geprüft` : (review.checked || 0) + " von " + meals + " geprüft"}</span>`}
+      ${total > 0 && html`<span id="review-summary" class=${"chip" + (review.done ? " is-ok" : "")}>${review.done
+        ? html`<${Icon} name="check" /> Tag geprüft` : (total - (review.unchecked ?? 0)) + " von " + total + " geprüft"}</span>`}
       <span id="record-count" class="hint">${data.timeline.length + (data.timeline.length === 1 ? " Eintrag" : " Einträge")}</span>
       <${HistoryDayType} data=${data} day=${day} reload=${reload} />
     </div>
@@ -527,6 +542,9 @@ export function DayReview({ data, day, today, status, reload, onEdit, onAnalysis
         ${(sportNames[event.kind] || "Sport") + " vom Vortag, " + timeOnly(event.at) + " Uhr: wirkt noch in diesen Tag"}</p>`)}
     <div id="timeline" class="day-list history-list" aria-live="polite">${status === "error"
       ? html`<div class="empty">Daten konnten nicht geladen werden.</div>` : html`<${DayList} data=${data} ctx=${ctx} />`}</div>
+    ${!review.done && review.unchecked > 0 && review.checkable && html`<button id="check-day" type="button" class="primary check-day"
+      onClick=${event => act(event, async () => { await post("/api/review/day", { day, checked: true }); await reload(); toast("Tag geprüft"); })}>
+      <${Icon} name="check" /> Tag als geprüft markieren</button>`}
     ${editor && html`<${WindowEditor} key=${editor.meal.id} meal=${editor.meal} readings=${editor.readings} data=${data} day=${day}
       onClose=${() => setEditor(null)} onSaved=${async () => { await reload(); onAnalysisChanged(); }} />`}
   </section>`;

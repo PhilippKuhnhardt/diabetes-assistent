@@ -496,11 +496,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -1248,11 +1253,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -2011,11 +2021,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -2769,11 +2784,16 @@
   "review": {
    "blocked": 0,
    "calculated": 2,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 1,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 2
   },
   "settings_version": 2,
   "sync_error": null,
@@ -3363,11 +3383,16 @@
   "review": {
    "blocked": 0,
    "calculated": 2,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 2,
+   "unchecked": 2
   },
   "settings_version": 2,
   "sync_error": null,
@@ -4150,11 +4175,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -4981,11 +5011,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 1,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 4,
+   "unchecked": 4
   },
   "settings_version": 2,
   "sync_error": null,
@@ -5053,6 +5088,7 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "checked": false,
     "description": "",
     "dish": null,
     "duration_minutes": 60,
@@ -5766,11 +5802,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -6533,11 +6574,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 1,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 4,
+   "unchecked": 4
   },
   "settings_version": 2,
   "sync_error": null,
@@ -6557,6 +6603,7 @@
     "basal_units": "17",
     "carbs": 0,
     "carbs_certainty": null,
+    "checked": false,
     "description": "",
     "dish": null,
     "duration_minutes": 0,
@@ -7298,11 +7345,16 @@
   "review": {
    "blocked": 1,
    "calculated": 2,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": "t-0033",
-   "tasks": 1
+   "tasks": 1,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -8105,11 +8157,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 1,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 2
   },
   "settings_version": 2,
   "sync_error": null,
@@ -8852,11 +8909,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -9443,11 +9505,16 @@
   "review": {
    "blocked": 0,
    "calculated": 2,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 2,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 4,
+   "unchecked": 4
   },
   "settings_version": 2,
   "sync_error": null,
@@ -9491,6 +9558,7 @@
     "basal_units": 0,
     "carbs": 30,
     "carbs_certainty": null,
+    "checked": false,
     "description": "",
     "dish": null,
     "duration_minutes": 0,
@@ -9515,6 +9583,7 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "checked": false,
     "description": "",
     "dish": null,
     "duration_minutes": 0,
@@ -10073,11 +10142,16 @@
   "review": {
    "blocked": 0,
    "calculated": 2,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 2,
+   "unchecked": 2
   },
   "settings_version": 2,
   "sync_error": null,
@@ -10792,11 +10866,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -11576,11 +11655,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -12383,11 +12467,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -13238,11 +13327,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 1,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 4,
+   "unchecked": 4
   },
   "settings_version": 2,
   "sync_error": null,
@@ -13334,6 +13428,7 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "checked": false,
     "description": "",
     "dish": null,
     "duration_minutes": 60,
@@ -14093,11 +14188,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 1,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 4,
+   "unchecked": 4
   },
   "settings_version": 2,
   "sync_error": null,
@@ -14117,6 +14217,7 @@
     "basal_units": "17",
     "carbs": 0,
     "carbs_certainty": null,
+    "checked": false,
     "description": "",
     "dish": null,
     "duration_minutes": 0,
@@ -14897,11 +14998,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -15616,11 +15722,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -16445,11 +16556,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -17312,11 +17428,16 @@
   "review": {
    "blocked": 1,
    "calculated": 2,
+   "checkable": true,
    "checked": 1,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": "t-0083",
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 2
   },
   "settings_version": 2,
   "sync_error": null,
@@ -18050,11 +18171,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -18768,11 +18894,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -19531,11 +19662,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -20213,11 +20349,16 @@
   "review": {
    "blocked": 1,
    "calculated": 2,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": "t-0097",
-   "tasks": 1
+   "tasks": 1,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -20968,11 +21109,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -21784,11 +21930,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 2,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 5,
+   "unchecked": 5
   },
   "settings_version": 2,
   "sync_error": null,
@@ -21808,6 +21959,7 @@
     "basal_units": "17",
     "carbs": 0,
     "carbs_certainty": null,
+    "checked": false,
     "description": "",
     "dish": null,
     "duration_minutes": 0,
@@ -21881,6 +22033,7 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "checked": false,
     "description": "",
     "dish": null,
     "duration_minutes": 60,
@@ -22718,11 +22871,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -23554,11 +23712,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -24138,11 +24301,16 @@
   "review": {
    "blocked": 0,
    "calculated": 2,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 2,
+   "unchecked": 2
   },
   "settings_version": 2,
   "sync_error": null,
@@ -24832,11 +25000,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -25631,11 +25804,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -26438,11 +26616,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -27206,11 +27389,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -27925,11 +28113,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -28744,11 +28937,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 0,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 3,
+   "unchecked": 3
   },
   "settings_version": 2,
   "sync_error": null,
@@ -29586,11 +29784,16 @@
   "review": {
    "blocked": 0,
    "calculated": 3,
+   "checkable": true,
    "checked": 0,
    "done": false,
+   "entries": 1,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": null,
-   "tasks": 0
+   "tasks": 0,
+   "total": 4,
+   "unchecked": 4
   },
   "settings_version": 2,
   "sync_error": null,
@@ -29610,6 +29813,7 @@
     "basal_units": "17",
     "carbs": 0,
     "carbs_certainty": null,
+    "checked": false,
     "description": "",
     "dish": null,
     "duration_minutes": 0,
@@ -30243,11 +30447,16 @@
   "review": {
    "blocked": 1,
    "calculated": 1,
+   "checkable": false,
    "checked": 0,
    "done": false,
+   "entries": 2,
+   "entries_checked": 0,
    "excluded": 0,
    "first_open": "ns-0002",
-   "tasks": 1
+   "tasks": 1,
+   "total": 4,
+   "unchecked": 4
   },
   "settings_version": 2,
   "sync_error": null,
@@ -30267,6 +30476,7 @@
     "basal_units": "17",
     "carbs": 0,
     "carbs_certainty": null,
+    "checked": false,
     "description": "",
     "dish": null,
     "duration_minutes": 0,
@@ -30316,6 +30526,7 @@
     "basal_units": 0,
     "carbs": 0,
     "carbs_certainty": null,
+    "checked": false,
     "description": "",
     "dish": null,
     "duration_minutes": 40,
