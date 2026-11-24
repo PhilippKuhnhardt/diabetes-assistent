@@ -88,6 +88,7 @@ async function run(browser, name, options) {
     await settings(page, name);
     await saving(page, name);
   }
+  await reviewDay(page, name);
   await page.click("[data-nav=today]");
   const active = await page.$$eval(".appnav-item.active", items => items.map(item => item.dataset.nav));
   check(active.join() === "today", `${name}: Heute active`);
@@ -173,6 +174,26 @@ async function editMeal(page, name) {
 
 const toastSays = (page, text) => page.waitForFunction(wanted => document.querySelector("#toast")?.textContent.includes(wanted), text);
 
+// The red dot on "Verlauf" (user request 2026-11-24): a finished day with unchecked entries shows it, a tap
+// on "Verlauf" opens that day and "Tag als geprüft markieren" checks its meals and entries at once.
+async function reviewDay(page, name) {
+  await page.click("[data-nav=today]");
+  await page.waitForSelector(".appnav-item[data-nav=history].has-pending");
+  check(true, `${name}: a red dot on Verlauf marks unchecked days`);
+  await page.click("[data-nav=history]");
+  await page.waitForSelector("#check-day");
+  const day = await page.$eval(".week-panel.is-current .week-day[aria-current=date]", el => el.dataset.day);
+  check(day < await page.evaluate(() => new Date().toLocaleDateString("sv-SE")), `${name}: Verlauf opens an unchecked earlier day`);
+  if (await page.$("#timeline .entry-check")) {
+    await page.click("#timeline .entry-check >> nth=0");
+    await page.waitForSelector("#timeline .entry-check.is-checked");
+    check(true, `${name}: an entry outside the meals can be checked`);
+  }
+  await page.click("#check-day");
+  await page.waitForSelector("#review-summary.is-ok");
+  check(!(await page.$("#check-day")), `${name}: "Tag als geprüft markieren" checks the whole day`);
+}
+
 // Verlauf (web/ui/day.js): the week strip picks a day with a task and one with sport, whose card shows
 // where its effect lands; "Passt" checks a meal.
 // A sideways swipe over the week strip: the row scrolls and snaps; dx > 0 goes back a week.
@@ -193,7 +214,8 @@ async function history(page, name) {
   // The fake data has a sport session yesterday and a sensor gap two days ago.
   const yesterday = await page.evaluate(() => new Date(Date.now() - 864e5).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }));
   const yesterdayButton = `.week-panel.is-current .week-day[data-day="${yesterday}"]`;
-  if (!(await page.$(yesterdayButton))) { await page.click(".week-prev"); await page.waitForSelector(yesterdayButton); }
+  // Verlauf may open an earlier unchecked day (the red dot), so yesterday can lie in the week before or after.
+  if (!(await page.$(yesterdayButton))) { await page.click(yesterday < shown ? ".week-prev" : ".week-next"); await page.waitForSelector(yesterdayButton); }
   await page.click(".week-panel.is-current .week-day[data-state=open] >> nth=0");
   await page.waitForSelector(".history-tasks a");
   check(true, `${name}: a day with an open task lists it`);

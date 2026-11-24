@@ -340,12 +340,27 @@ async function loadDay({ refresh = false } = {}) {
   }
   try {
     renderDay(await api("/api/day?date=" + encodeURIComponent(state.day) + (refresh ? "&refresh=1" : "")));
+    loadReviewPending();
     await updatePreview();
   } catch (error) {
     state.dayStatus = "error";
     renderReview();
     toast(error.message, true);
   }
+}
+
+// The red dot on "Verlauf" (user request 2026-11-24): finished days (from the server's start date up to
+// yesterday) with an entry not yet checked, oldest first; a tap on "Verlauf" opens the first of them.
+let reviewPending = [];
+
+async function loadReviewPending() {
+  try { reviewPending = (await api("/api/review/pending")).days || []; } catch (_) { return; }
+  const link = $('.appnav-item[data-nav="history"]');
+  if (!link) return;
+  const count = reviewPending.length;
+  link.classList.toggle("has-pending", count > 0);
+  if (count) link.setAttribute("aria-label", "Verlauf, " + count + (count === 1 ? " Tag" : " Tage") + " noch nicht geprüft");
+  else link.removeAttribute("aria-label");
 }
 
 // The header reads Nightscout directly, the day the local copy. On the iPhone home screen the page
@@ -540,6 +555,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     returnToToday();
     entry.tick?.();
     refreshTodayPreview();
+    loadReviewPending();
     await loadCurrentGlucose();
     reloadForUpdate();
   };
@@ -580,6 +596,7 @@ function navigate(target) {
   if (target === "today" || target === "history") {
     view("diary");
     if (target === "today" && state.day !== todayDay()) changeDay(todayDay());
+    if (target === "history" && reviewPending.length && !reviewPending.includes(state.day)) changeDay(reviewPending[0]);
     state.modeDay = state.day;
     state.diaryMode = target === "today" ? "now" : "review";
     applyDiaryMode();

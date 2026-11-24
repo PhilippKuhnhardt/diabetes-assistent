@@ -376,13 +376,22 @@ def _window_checks(db: sqlite3.Connection) -> None:
     )""")
 
 
+def _entry_checks(db: sqlite3.Connection) -> None:
+    """Verlauf's day check (user request 2026-11-24): Philipp checked an entry that belongs to no meal card
+    (a sport session, a correction, basal, a blood glucose reading) by its id."""
+    db.execute("""CREATE TABLE IF NOT EXISTS entry_checks (
+        entry_id TEXT PRIMARY KEY,
+        checked_at TEXT NOT NULL
+    )""")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
                                                           _notifications, _notification_priority, _places,
                                                           _inbox_seen, _sport_sessions, _places_without_positions,
                                                           _place_factor, _timezone_periods, _prior_insulin_percentile,
                                                           _dishes, _agent, _browser_sessions, _split_min_units,
                                                           _sport_session_minutes, _notification_pause, _window_checks,
-                                                          _drop_day_effects]
+                                                          _drop_day_effects, _entry_checks]
 
 
 def init() -> None:

@@ -381,10 +381,24 @@ def sport_shares(item: dict, meals: list[dict]) -> dict:
             "sport_effect_until": until if total else None}
 
 
+# Philipp reviews every entry from this day on (user request 2026-11-24: no backlog for the months before);
+# the red dot on "Verlauf" counts finished days from here up to yesterday.
+REVIEW_SINCE = "2026-11-24"
+
+
+def loose_entries(payload: dict) -> list[dict]:
+    """The day's entries outside the meal cards, as Verlauf draws them: every sport session and each entry
+    that belongs to no main meal (a correction, basal, a blood glucose reading between the meals)."""
+    meal_ids = {meal["id"] for meal in payload.get("meals", [])}
+    return [item for item in payload.get("timeline", [])
+            if item.get("kind") == "exercise" or item.get("meal_id") not in meal_ids]
+
+
 def with_checks(payload: dict, now: datetime | None = None) -> dict:
-    """The day with Philipp's "Passt" (user request 2026-11-23) laid over it at request time, so a check
-    never recalculates a stored day. A check holds only for the window it was given for; a finished meal
-    can be checked. The day is done once every meal is checked or excluded."""
+    """The day with Philipp's checks laid over it at request time, so a check never recalculates a stored
+    day: "Passt" on a meal (user request 2026-11-23) holds only for the window it was given for, and only
+    a finished meal can be checked; an entry outside the meal cards is checked by its id (user request
+    2026-11-24). The day is done once every meal is checked or excluded and every other entry checked."""
     now = now or datetime.now(timezone.utc)
     checks = marks.window_checks()
     meals = []
@@ -396,18 +410,28 @@ def with_checks(payload: dict, now: datetime | None = None) -> dict:
                        and parse_instant(stored[1]) == _instant(window["end"]))
         finished = bool(window.get("end")) and _instant(window["end"]) <= now
         meals.append({**meal, "review": {**meal["review"], "checked": checked, "checkable": finished}})
+    entry_checks = marks.entry_checks()
+    loose = {item["id"] for item in loose_entries(payload)}
+    timeline = [{**item, "checked": item["id"] in entry_checks} if item["id"] in loose else item
+                for item in payload.get("timeline", [])]
+    entries_checked = sum(item.get("checked", False) for item in timeline if item["id"] in loose)
+    open_meals = sum(not meal["review"]["checked"] and not meal.get("excluded") for meal in meals)
     review = {**payload.get("review", {}),
               "checked": sum(meal["review"]["checked"] for meal in meals),
               "tasks": sum(bool(meal["review"]["open"]) and not meal["review"]["checked"] and not meal.get("excluded")
                            for meal in meals),
-              "done": bool(meals) and all(meal["review"]["checked"] or meal.get("excluded") for meal in meals)}
-    return {**payload, "meals": meals, "review": review}
+              "entries": len(loose), "entries_checked": entries_checked, "total": len(meals) + len(loose),
+              # What still waits for a look, and whether "Tag prüfen" can check it all (every meal finished).
+              "unchecked": open_meals + len(loose) - entries_checked,
+              "checkable": all(meal["review"]["checkable"] for meal in meals),
+              "done": bool(meals or loose) and open_meals == 0 and entries_checked == len(loose)}
+    return {**payload, "meals": meals, "timeline": timeline, "review": review}
 
 
 def week_view(params: dict) -> dict:
     """Verlauf's week strip (user request 2026-11-23): Monday to Sunday of the week holding `date`, each day
-    with its day type, whether it has sport, open tasks and whether every meal is checked. Days after
-    today are only named; they are not calculated."""
+    with its day type, open tasks and whether everything on it is checked. Days after today are only
+    named; they are not calculated."""
     day = date.fromisoformat((params.get("date") or [""])[0])
     _, settings = config.get_settings()
     today = datetime.now(timezone.utc).astimezone(local_zone(settings["timezone"])).date()
@@ -417,13 +441,30 @@ def week_view(params: dict) -> dict:
         current = monday + timedelta(days=offset)
         row = {"day": current.isoformat(), "future": current > today}
         if not row["future"]:
-            # A day never mirrored yet is read from Nightscout once, so its dot is right without opening it.
-            payload = with_checks(day_payload(current.isoformat(), refresh=not mirror.synced_at(current.isoformat())))
-            review = payload["review"]
-            row.update({"day_type": payload["day_type"], "meals": len(payload["meals"]),
+            review = _checked_day(current.isoformat())
+            row.update({"day_type": review["day_type"], "meals": review["meals"], "entries": review["entries"],
                         "checked": review["checked"], "tasks": review["tasks"], "done": review["done"]})
         days.append(row)
     return {"date": day.isoformat(), "today": today.isoformat(), "week": int(monday.isocalendar()[1]), "days": days}
+
+
+def _checked_day(day: str) -> dict:
+    # A day never mirrored yet is read from Nightscout once, so its dot is right without opening it.
+    payload = with_checks(day_payload(day, refresh=not mirror.synced_at(day)))
+    return {**payload["review"], "day_type": payload["day_type"], "meals": len(payload["meals"])}
+
+
+def pending_review(params: dict | None = None) -> dict:
+    """The red dot on "Verlauf" (user request 2026-11-24): finished days (before today) since REVIEW_SINCE
+    with something not yet checked, oldest first, so a tap can open the first of them."""
+    _, settings = config.get_settings()
+    today = datetime.now(timezone.utc).astimezone(local_zone(settings["timezone"])).date()
+    current, days = date.fromisoformat(REVIEW_SINCE), []
+    while current < today:
+        if _checked_day(current.isoformat())["unchecked"]:
+            days.append(current.isoformat())
+        current += timedelta(days=1)
+    return {"since": REVIEW_SINCE, "days": days}
 
 
 def meal_review(meal: dict) -> dict:

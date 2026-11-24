@@ -95,6 +95,40 @@ def set_window_check(payload: dict) -> dict:
     return day_view.with_checks(current)
 
 
+def set_day_check(payload: dict) -> dict:
+    """"Tag prüfen" in Verlauf (user request 2026-11-24): every finished meal is checked for its current
+    window and every entry outside the meal cards by its id; `checked: false` takes the day's checks back."""
+    day = str(payload.get("day", ""))
+    date.fromisoformat(day)
+    checked = payload.get("checked")
+    if not isinstance(checked, bool):
+        raise ValueError("Ungültige Prüfung")
+    current = day_view.with_checks(day_view.day_payload(day, refresh=False))
+    if checked and not current["review"]["checkable"]:
+        raise ValueError("Eine Mahlzeit läuft noch; den Tag prüfen geht nach dem Ende ihres Zeitraums.")
+    for meal in current["meals"]:
+        if checked and meal.get("window"):
+            marks.set_window_check(meal["id"], str(meal["window"]["start"]), str(meal["window"]["end"]))
+        elif not checked:
+            marks.set_window_check(meal["id"], None, None)
+    marks.set_entry_checks([item["id"] for item in day_view.loose_entries(current)], checked)
+    return day_view.with_checks(current)
+
+
+def set_entry_check(payload: dict) -> dict:
+    """The check on one entry outside the meal cards (a sport session, a correction between meals)."""
+    day = str(payload.get("day", ""))
+    date.fromisoformat(day)
+    entry_id, checked = payload.get("id"), payload.get("checked")
+    if not isinstance(entry_id, str) or not 0 < len(entry_id) <= 200 or not isinstance(checked, bool):
+        raise ValueError("Ungültige Prüfung")
+    current = day_view.with_checks(day_view.day_payload(day, refresh=False))
+    if entry_id not in {item["id"] for item in day_view.loose_entries(current)}:
+        raise ValueError("Eintrag nicht gefunden")
+    marks.set_entry_checks([entry_id], checked)
+    return day_view.with_checks(current)
+
+
 def set_day_type(payload: dict) -> dict:
     day = payload.get("day")
     day_type = payload.get("day_type")
