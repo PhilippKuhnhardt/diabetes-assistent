@@ -543,6 +543,10 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 @media (max-width: 950px) {
   #diary-view[data-mode="now"] .review-panel { display: none; }
   #diary-view[data-mode="review"] .entry-panel { display: none; }
+  /* "+" from Verlauf: the entry sheet lives in the entry panel, so it has to show there too (bug 2026-11-24:
+     after the meal chat's "Übernehmen" nothing appeared). Only the sheet, Heute's overview stays hidden. */
+  body.entry-open #diary-view[data-mode="review"] .entry-panel { display: block; }
+  body.entry-open #diary-view[data-mode="review"] #overview-host { display: none; }
 }
 .review-summary { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
 .review-summary:empty { display: none; }
