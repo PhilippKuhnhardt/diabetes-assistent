@@ -61,6 +61,7 @@ GET_ROUTES = {
     "/api/agent/models": agent.models,
     "/api/agent/session": agent.for_entry,
     "/api/days/week": day_view.week_view,
+    "/api/review/pending": day_view.pending_review,
 }
 
 POST_ROUTES = {
@@ -72,6 +73,8 @@ POST_ROUTES = {
     "/api/treatment": diary.save_diary_treatment,
     "/api/entry/edit": diary.edit_entry,
     "/api/analysis/window-check": annotations.set_window_check,
+    "/api/review/day": annotations.set_day_check,
+    "/api/review/entry": annotations.set_entry_check,
     "/api/analysis/sport-session": annotations.set_sport_session,
     "/api/analysis/window": annotations.set_window,
     "/api/analysis/window/preview": window_editor.preview,

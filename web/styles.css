@@ -851,6 +851,9 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .appnav-item, .appnav button.appnav-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--muted); font-size: 11px; font-weight: 650; text-decoration: none; }
 .appnav .ui-icon { width: 24px; height: 24px; }
 .appnav-item.active { color: var(--green-dark); }
+/* Red dot on "Verlauf" while a finished day has unchecked entries (user request 2026-11-24). */
+.appnav-item { position: relative; }
+.appnav-item.has-pending::after { content: ""; position: absolute; top: 9px; left: calc(50% + 8px); width: 9px; height: 9px; border-radius: 50%; background: #d64545; box-shadow: 0 0 0 2px var(--surface); }
 .appnav-item.active .ui-icon { stroke-width: 2.4; }
 .appnav button.appnav-add { border: 0; border-radius: 0; background: none; padding: 0; color: var(--green-dark); }
 .appnav button.appnav-add .ui-icon { box-sizing: content-box; width: 26px; height: 26px; padding: 11px; border-radius: 50%; background: var(--green); color: #fff; box-shadow: 0 6px 16px #17674655; }
@@ -1165,3 +1168,13 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .window-chart .window-handle.is-active .handle-knob path { stroke: #fff; }
 .window-chart .window-handle.is-snapped .handle-line { stroke: #d9a441; }
 .window-nudge button { border-radius: 999px !important; }
+
+/* Checks on entries outside the meal cards and for the whole day (user request 2026-11-24). */
+.history-entry.has-check { display: flex; align-items: center; gap: 6px; }
+.history-entry.has-check > .history-entry-row { flex: 1; min-width: 0; }
+.history-sport-item { display: flex; align-items: center; gap: 8px; }
+.history-sport-item > .history-sport { flex: 1; min-width: 0; }
+.history button.entry-check { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; min-height: 0; padding: 0; border: 1.5px solid var(--line); border-radius: 50%; background: var(--surface); color: #b9c6bf; }
+.history button.entry-check .ui-icon { width: 18px; height: 18px; }
+.history button.entry-check.is-checked { border-color: var(--green); background: var(--green); color: #fff; }
+.history button.check-day { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 14px 0 0; }
