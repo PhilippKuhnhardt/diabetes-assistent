@@ -437,6 +437,13 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     set(s => settleDose({ ...s, slider: { units, follow: true }, doseChoice: null }));
   }
 
+  // "0" beside the slider: no insulin until the slider moves or IE are typed; a second tap goes back
+  // to the recommendation.
+  function zeroDose() {
+    refs.carbs.current?.setCustomValidity("");
+    set(s => settleDose({ ...s, slider: s.slider?.zero ? null : { units: 0, follow: true, zero: true }, doseChoice: null }));
+  }
+
   // Own IE: the slider shows where they land (as a total without a split) and stops filling the field;
   // an emptied field hands the dose back to the slider.
   function typeInsulin(value) {
@@ -588,7 +595,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
         calculated=${{ fpe: choice.fpe, mgdl: choice.fpe_mgdl, minutes: choice.fpe_minutes, fat_g: choice.fat_g, protein_g: choice.protein_g }}
         onChange=${mode => { storeSurchargeMode(mode); toggle({ surchargeMode: mode }); }} />`}
       <div id="dose-result" class="help-result" aria-live="polite" aria-busy=${meal && f.busy ? "true" : null}>
-        <${DoseHelp} help=${help} note=${f.doseNote} changed=${f.doseChanged} choice=${f.doseChoice} chosen=${f.slider} onChoose=${chooseDose} onSlide=${slide} /></div>
+        <${DoseHelp} help=${help} note=${f.doseNote} changed=${f.doseChanged} choice=${f.doseChoice} chosen=${f.slider} onChoose=${chooseDose} onSlide=${slide} onZero=${zeroDose} /></div>
       <label id="entry-insulin-field">Eigene IE<input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"
         ref=${refs.insulin} value=${f.insulin} disabled=${!meal} onInput=${event => typeInsulin(event.currentTarget.value)} /></label>
     </section>
