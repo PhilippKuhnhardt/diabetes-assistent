@@ -685,19 +685,16 @@ class IntegrationTests(unittest.TestCase):
         self.request("/api/analysis/window-check", method="POST", body={"meal_id": meal["id"], "day": "2026-09-23", "checked": False})
         self.assertFalse(self.request("/api/day?date=2026-09-23")["meals"][0]["review"]["checked"])
 
-    def test_day_check_covers_meals_and_loose_entries_and_feeds_the_red_dot(self):
-        """Verlauf's day check (user request 2026-11-24): entries outside the meal cards are checked by id,
-        "Tag prüfen" checks everything, and the red dot lists finished days since REVIEW_SINCE that are not."""
+    def test_day_check_covers_the_meals_and_feeds_the_red_dot(self):
+        """Verlauf's day check (user request 2026-11-24): "Tag prüfen" checks every meal, and the red dot lists
+        finished days since REVIEW_SINCE that are not. Only main meals need a check (Philipp 2026-11-25:
+        reviewing is about the factor), so an entry outside the meals never holds a day open."""
         from app.services import day_view
         self.request("/api/treatment", method="POST", body={"kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4"})
         self.request("/api/treatment", method="POST", body={"kind": "correction", "at": "2026-09-23T20:00:00Z", "insulin": "1"})
         day = self.request("/api/day?date=2026-09-23")
-        loose = [item for item in day["timeline"] if "checked" in item]
-        self.assertEqual(len(loose), 1)
-        self.assertEqual((day["review"]["total"], day["review"]["unchecked"], day["review"]["done"]), (2, 2, False))
-        result = self.request("/api/review/entry", method="POST", body={"id": loose[0]["id"], "day": "2026-09-23", "checked": True})
-        self.assertEqual(result["review"]["unchecked"], 1)
-        self.assertFalse(result["review"]["done"])
+        self.assertFalse(any("checked" in item for item in day["timeline"]))
+        self.assertEqual((day["review"]["total"], day["review"]["unchecked"], day["review"]["done"]), (1, 1, False))
         with patch.object(day_view, "REVIEW_SINCE", "2026-09-22"):
             class Today(datetime):
                 @classmethod
@@ -710,13 +707,12 @@ class IntegrationTests(unittest.TestCase):
                 self.assertEqual(self.request("/api/review/pending")["days"], [])
                 week = self.request("/api/days/week?date=2026-09-23")
                 self.assertTrue(next(row for row in week["days"] if row["day"] == "2026-09-23")["done"])
-                # A new entry on the checked day needs a look again.
+                # A later correction outside the meal leaves the day checked.
                 self.request("/api/treatment", method="POST", body={"kind": "correction", "at": "2026-09-23T21:00:00Z", "insulin": "1"})
-                self.request("/api/day?date=2026-09-23")  # Verlauf reloads the day after saving; that mirrors it
-                self.assertEqual(self.request("/api/review/pending")["days"], ["2026-09-23"])
+                self.request("/api/day?date=2026-09-23")
+                self.assertEqual(self.request("/api/review/pending")["days"], [])
         self.request("/api/review/day", method="POST", body={"day": "2026-09-23", "checked": False})
-        undone = self.request("/api/day?date=2026-09-23")["review"]
-        self.assertEqual((undone["checked"], undone["entries_checked"]), (0, 0))
+        self.assertEqual(self.request("/api/day?date=2026-09-23")["review"]["checked"], 0)
 
     def test_calculated_day_is_stored_and_recalculated_when_an_input_changes(self):
         from app.services import day_view

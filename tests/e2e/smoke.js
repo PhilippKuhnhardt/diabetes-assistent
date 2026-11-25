@@ -176,7 +176,7 @@ async function editMeal(page, name) {
 const toastSays = (page, text) => page.waitForFunction(wanted => document.querySelector("#toast")?.textContent.includes(wanted), text);
 
 // The red dot on "Verlauf" (user request 2026-11-24): a finished day with unchecked entries shows it, a tap
-// on "Verlauf" opens that day and "Tag als geprüft markieren" checks its meals and entries at once.
+// on "Verlauf" opens that day and "Tag als geprüft markieren" checks its meals at once.
 async function reviewDay(page, name) {
   await page.click("[data-nav=today]");
   await page.waitForSelector(".appnav-item[data-nav=history].has-pending");
@@ -185,11 +185,7 @@ async function reviewDay(page, name) {
   await page.waitForSelector("#check-day");
   const day = await page.$eval(".week-panel.is-current .week-day[aria-current=date]", el => el.dataset.day);
   check(day < await page.evaluate(() => new Date().toLocaleDateString("sv-SE")), `${name}: Verlauf opens an unchecked earlier day`);
-  if (await page.$("#timeline .entry-check")) {
-    await page.click("#timeline .entry-check >> nth=0");
-    await page.waitForSelector("#timeline .entry-check.is-checked");
-    check(true, `${name}: an entry outside the meals can be checked`);
-  }
+  check(!(await page.$("#timeline .entry-check")), `${name}: entries outside the meals need no check`);
   await page.click("#check-day");
   await page.waitForSelector("#review-summary.is-ok");
   check(!(await page.$("#check-day")), `${name}: "Tag als geprüft markieren" checks the whole day`);
