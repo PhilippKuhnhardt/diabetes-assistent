@@ -112,6 +112,13 @@ async function doseHelp(page, name) {
   await page.waitForFunction(value => document.querySelector("#dose-result .ds-range").value === value, max);
   const units = await page.inputValue(form + " [name=insulin]");
   check(units !== "" && (await readout()).replace(",", ".") === max, `${name}: moving the slider fills the insulin field`);
+  // "0" beside the slider: no insulin with one tap, a second tap goes back to the recommendation.
+  await page.click("#dose-result .ds-zero");
+  check((await readout()) === "0" && await page.inputValue(form + " [name=insulin]") === "0"
+    && await page.getAttribute("#dose-result .ds-zero", "aria-pressed") === "true", `${name}: "0" chooses no insulin`);
+  check((await page.textContent("#entry-submit")).includes("speichern") && !(await page.textContent("#entry-submit")).includes("IE"), `${name}: "0" saves without insulin`);
+  await page.click("#dose-result .ds-zero");
+  check(await page.getAttribute("#dose-result .ds-zero", "aria-pressed") === "false" && await page.inputValue(form + " [name=insulin]") !== "0", `${name}: a second tap on "0" goes back`);
   await page.fill(form + " [name=insulin]", "0.5");
   check((await readout()) === "0,5" && await page.inputValue(form + " [name=insulin]") === "0.5", `${name}: an own dose shows on the slider`);
   await page.fill(form + " [name=insulin]", "");

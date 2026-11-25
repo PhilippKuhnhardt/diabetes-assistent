@@ -24,6 +24,8 @@ export function sliderLanding(slider, units) {
 // The slider's dose: the dragged or typed one, else the recommendation. Own IE may lie outside the
 // slider: unclamped they show as typed, the thumb stops at the end.
 export function sliderUnits(slider, chosen, clamp = true) {
+  // The "0" button beside the slider (user decision 2026-11-25): no insulin, e.g. for a small snack.
+  if (chosen?.zero) return 0;
   const lo = Number(slider.min_units), hi = Number(slider.max_units);
   const value = chosen?.units ?? Number(slider.recommended_units);
   return clamp || chosen?.follow !== false ? Math.max(lo, Math.min(hi, value)) : value;
@@ -43,13 +45,14 @@ function splitOptionNote(option) {
   return [option.from_forecast && Number(option.units) <= 0 ? "laut Prognose nicht nötig" : "", planned, when].filter(Boolean).join(" · ");
 }
 
-function DoseSlider({ slider, chosen, onSlide }) {
+function DoseSlider({ slider, chosen, onSlide, onZero }) {
   const lo = Number(slider.min_units), hi = Number(slider.max_units), rec = Number(slider.recommended_units);
   const pos = value => hi > lo ? (value - lo) / (hi - lo) * 100 : 50;
   const units = sliderUnits(slider, chosen, false);
   const ends = [lo, hi].map(value => sliderLanding(slider, value));
   const land = sliderLanding(slider, units);
   const first = firstPart(slider, units);
+  const zero = Boolean(chosen?.zero);
   let track = null;
   if (ends[0]) {
     const stops = [];
@@ -60,7 +63,7 @@ function DoseSlider({ slider, chosen, onSlide }) {
   const span = (from, to) => ({ left: landX(from) + "%", width: (landX(to) - landX(from)) + "%" });
   return html`<div class="ds">
     <div class="ds-read"><div class="ds-dose"><strong>${num(units, 1)}<small>IE</small></strong>
-      <span class="ds-split">${first != null ? "jetzt " + num(first, 1) + " + " + num(units - first, 1) + " um " + timeOnly(slider.later_at) : ""}</span></div>
+      <span class="ds-split">${zero ? "kein Insulin" : first != null ? "jetzt " + num(first, 1) + " + " + num(units - first, 1) + " um " + timeOnly(slider.later_at) : ""}</span></div>
       ${land && html`<div class="ds-land"><span>erwartet in 4 h</span><b class=${"ds-pill " + landClass(land[2])}>${land[2]}<small>mg/dL</small></b>
         <small class="ds-iqr">meist ${land[1]}–${land[3]}</small></div>`}</div>
     ${land && html`<div class="ds-cor" aria-hidden="true"><div class="ds-cor-axis">
@@ -68,10 +71,12 @@ function DoseSlider({ slider, chosen, onSlide }) {
       <div class="ds-cor-w" style=${span(land[0], land[4])}></div><div class="ds-cor-iqr" style=${span(land[1], land[3])}></div>
       <div class="ds-cor-med" style=${{ left: landX(land[2]) + "%" }}></div></div>
       <div class="ds-cor-scale">${[70, 90, 160, 250].map(value => html`<span style=${{ left: landX(value) + "%" }}>${value}</span>`)}</div></div>`}
-    <div class="ds-rail"><div class="ds-flag" style=${{ left: pos(rec) + "%", transform: "translateX(" + flagShift + "%)" }}><b>empfohlen ${num(rec, 1)}</b></div>
+    <div class=${"ds-rail" + (zero ? " is-zero" : "")}><button type="button" class="ds-zero" aria-pressed=${String(zero)} aria-label="Kein Insulin"
+      title="Kein Insulin (0 IE)" onClick=${onZero}>0<small>IE</small></button>
+      <div class="ds-slide"><div class="ds-flag" style=${{ left: pos(rec) + "%", transform: "translateX(" + flagShift + "%)" }}><b>empfohlen ${num(rec, 1)}</b></div>
       <i class="ds-stem" style=${{ left: "calc(14px + (100% - 28px) * " + pos(rec) / 100 + ")" }}></i>
-      <input type="range" class="ds-range" min=${lo} max=${hi} step="0.5" value=${sliderUnits(slider, chosen)} aria-label="Insulin in IE"
-        style=${track ? { "--ds-track": track } : null} onInput=${event => onSlide(Number(event.currentTarget.value))} /></div>
+      <input type="range" class="ds-range" min=${lo} max=${hi} step="0.5" value=${zero ? Number(slider.recommended_units) : sliderUnits(slider, chosen)} aria-label="Insulin in IE"
+        style=${track ? { "--ds-track": track } : null} onInput=${event => onSlide(Number(event.currentTarget.value))} /></div></div>
     <div class="ds-ends"><span>${num(lo, 1)} IE${ends[0] ? " · " + ends[0][2] : ""}</span><span>${num(hi, 1)} IE${ends[1] ? " · " + ends[1][2] : ""}</span></div></div>`;
 }
 
@@ -89,7 +94,7 @@ function DoseOption({ option, before, chosen, onChoose }) {
 }
 
 // `help` is the preview's dose with options; without it `note` (a message, "wird berechnet", an error) shows.
-export function DoseHelp({ help, note, changed = {}, choice, chosen, onChoose, onSlide }) {
+export function DoseHelp({ help, note, changed = {}, choice, chosen, onChoose, onSlide, onZero }) {
   if (!help) return note || null;
   const withCarbs = Number(help.carbs_g) > 0;
   const splitPart = help.options.find(option => option.variant === "split");
@@ -101,7 +106,7 @@ export function DoseHelp({ help, note, changed = {}, choice, chosen, onChoose, o
     ${help.glucose_source === "finger" && help.glucose_fresh && html`<p class="dose-factor">Startwert blutig <strong>${num(help.glucose_mgdl, 0)} mg/dL</strong> um ${timeOnly(help.glucose_at)}</p>`}
     ${!help.slider && html`<div class="dose-options">${help.options.map(option => html`<${DoseOption} key=${option.variant} option=${option}
       before=${changed[option.variant]} chosen=${option.variant === choice} onChoose=${onChoose} />`)}</div>`}
-    ${help.slider && html`<${DoseSlider} slider=${help.slider} chosen=${chosen} onSlide=${onSlide} />`}
+    ${help.slider && html`<${DoseSlider} slider=${help.slider} chosen=${chosen} onSlide=${onSlide} onZero=${onZero} />`}
     ${help.slider && splitPart && html`<p class="dose-factor">2. Teil: ${splitOptionNote(splitPart)}</p>`}
     ${withCarbs && help.split_plan && html`<p class="dose-factor">Nur für diese KH · 2. Teil bleibt offen (geplant ${num(help.split_plan.units, 1)} IE um ${timeOnly(help.split_plan.due_at)}, Menge dann aus der Prognose)</p>`}
     ${Number(help.activity_change_mgdl) !== 0 && help.activity_units != null && html`<p class="dose-factor">Sport <strong>${signedChange(help.activity_change_mgdl, 0)}</strong> · ${(Number(help.activity_units) > 0 ? "+" : "") + num(help.activity_units, 2)} IE</p>`}
