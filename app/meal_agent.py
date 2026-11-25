@@ -79,7 +79,14 @@ diese Anpassung. Einzelne Mahlzeiten streuen auch aus anderen Gründen (Sport, S
 - Ein Gericht fasst Mahlzeiten zusammen, die sich für den Blutzucker ähnlich verhalten; meist entscheidet \
 die Hauptquelle der KH (Reis, Pasta, Brot, Haferflocken), nicht was sonst dabei war. Ähnliche Gerichte und \
 Mahlzeiten taugen als Referenz, auch wenn keine genau passt.
-- Philipps eigene Angaben (gewogen, Packungswerte) gehen vor dem Foto.
+- Philipps eigene Angaben (gewogen, Packungswerte) gehen vor dem Foto. Halte sie so fest, dass sie beim \
+nächsten Mal wieder auffindbar sind: Produkt und Marke im item-Namen, im amount Stückzahl, Gewicht je Stück und \
+die Packungsangabe (z. B. "2 Stück à 23 g, 54 g KH/100 g"), auch in der description.
+- Isst Philipp etwas, das er schon einmal angegeben hat (gleiches Produkt, "wie neulich", "die Waffel von \
+eben"), suche es mit search_meals: jeder Treffer zeigt unter agent die damaligen items und Philipps eigene \
+Worte (philipp_said), etwa Nährwerte je 100 g und Gewicht je Stück. Rechne damit statt neu zu schätzen. Ein \
+Treffer zeigt carbs_g für den ganzen Eintrag, oft mit anderem Essen zusammen; nimm den Anteil des Produkts aus \
+den items. Was schon in einem früheren Eintrag gezählt ist, zählt nicht noch einmal.
 - In späteren Nachrichten korrigiert oder ergänzt Philipp die Mahlzeit, auch nachträglich ("noch ein zweiter \
 Teller", "die Hälfte liegen lassen"). Deine Antwort beschreibt dann immer die ganze Mahlzeit, wie sie \
 tatsächlich gegessen wurde, mit allen Bestandteilen in items und description. Eine spätere Nachricht kann \
@@ -113,12 +120,13 @@ MEAL_KINDS = ["breakfast", "lunch", "dinner"]
 TOOLS = [
     {"name": "search_meals",
      "description": "Frühere Kohlenhydrat-Einträge durchsuchen, neueste zuerst (höchstens 40). Je Eintrag: Tag, "
-                    "Uhrzeit, Mahlzeitenart, Gericht, Beschreibung, KH, Ort, KH-Sicherheit und meal_outcome der "
-                    "Hauptmahlzeit, zu der er gehört (factor, reference_factor, ratio, carbs_g und rapid_units "
+                    "Uhrzeit, Mahlzeitenart, Gericht, Beschreibung, KH, Ort, KH-Sicherheit, agent (die damaligen items "
+                    "mit Menge und KH und philipp_said, Philipps eigene Worte zur Einschätzung, etwa Nährwerte und "
+                    "Gewichte) und meal_outcome der Hauptmahlzeit, zu der er gehört (factor, reference_factor, ratio, carbs_g und rapid_units "
                     "der ganzen Mahlzeit, BZ g0_mgdl vorher und g_end_mgdl nachher, delta_mgdl).",
      "parameters": {"type": "object", "properties": {
-         "query": {"type": "string", "description": "Stichworte, die alle in Gericht oder Beschreibung vorkommen "
-                                                    "müssen, z. B. \"Reis\". Leer = alle."},
+         "query": {"type": "string", "description": "Stichworte, die alle in Gericht, Beschreibung, items oder "
+                                                    "Philipps Worten vorkommen müssen, z. B. \"Reis\". Leer = alle."},
          "meal": {"type": "string", "enum": MEAL_KINDS, "description": "Nur diese Mahlzeitenart."},
          "place": {"type": "string", "description": "Nur dieser Ort (Name wie im Kontext)."},
          "dish": {"type": "string", "description": "Nur dieses Gericht (Name aus dem Katalog)."},

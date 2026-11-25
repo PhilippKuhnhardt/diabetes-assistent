@@ -314,6 +314,30 @@ class AgentServiceTests(unittest.TestCase):
         self.assertEqual(third["conversation"][1]["reasoning"], "Laut passt das.")
         self.assertTrue(agent.photo(first["session_id"], "2").startswith(b"\xff\xd8"))
 
+    def test_search_meals_finds_a_product_by_philipps_words_and_shows_the_items(self):
+        # User report 2026-11-25: per-100-g values and the weight per waffle were only in Philipp's words.
+        from app.services import dishes as dish_service
+        answer = {"data": ANSWER | {"items": [{"name": "Hähnchenburger", "amount": "70 g", "carbs_g": 32.9, "fat_g": 5, "protein_g": 7},
+                                              {"name": "Schokowaffeln", "amount": "2 Stück à 23 g", "carbs_g": 25, "fat_g": 9, "protein_g": 3}]},
+                  "sources": [], "usage": {}, "tool_calls": []}
+        with patch.object(llm, "run", return_value=answer):
+            first = agent.estimate({"text": "Belgi Waffel 54 g KH pro 100 g, eine wiegt 23 g", "photos": [JPEG]})
+        agent.link(first["session_id"], "ev-1")
+        entry = {"day": "2026-11-25", "at": "2026-11-25T12:14+07:00", "kind": "meal", "meal": "lunch", "meal_id": "m1",
+                 "event_id": "ev-1", "carbs_g": 58.0, "dish": "Burger", "description": "Burger und zwei Waffeln",
+                 "place": None, "carbs_certainty": "weighed", "fat_protein": False, "fast": False}
+        other = entry | {"event_id": "ev-2", "description": "Reis", "dish": None}
+        with patch.object(dish_service, "_rows", return_value=([], [entry, other])):
+            found = dish_service.lookup_meals("belgi")
+            self.assertEqual(found["total"], 1)
+            row = found["entries"][0]
+            self.assertIn("54 g KH pro 100 g", row["agent"]["philipp_said"])
+            self.assertEqual(row["agent"]["items"][1], {"name": "Schokowaffeln", "amount": "2 Stück à 23 g", "carbs_g": 25})
+            self.assertNotIn("event_id", row)
+            self.assertEqual(dish_service.lookup_meals("schokowaffeln")["total"], 1)
+            everything = dish_service.lookup_meals("")["entries"]
+            self.assertEqual([("agent" in item) for item in everything], [False, True])
+
     def test_older_sessions_keep_all_photos_on_the_first_turn(self):
         turns = [{"role": "user", "text": "a"}, {"role": "assistant", "text": "{}"}, {"role": "user", "text": "b"}]
         self.assertEqual(agent._photo_shares(turns, 2), [(0, 2), (2, 2), (2, 2)])
