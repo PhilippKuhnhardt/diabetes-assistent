@@ -94,23 +94,6 @@ def set_window_check(meal_id: str, start: str | None, end: str | None) -> None:
                        (meal_id, start, end, datetime.now(timezone.utc).isoformat()))
 
 
-def entry_checks() -> set[str]:
-    """Entries outside the meal cards Philipp checked in Verlauf, by id."""
-    with connect() as db:
-        rows = db.execute("SELECT entry_id FROM entry_checks").fetchall()
-    return {row["entry_id"] for row in rows}
-
-
-def set_entry_checks(entry_ids: list[str], checked: bool) -> None:
-    with connect() as db:
-        if checked:
-            now = datetime.now(timezone.utc).isoformat()
-            db.executemany("INSERT INTO entry_checks(entry_id,checked_at) VALUES(?,?) ON CONFLICT(entry_id) DO NOTHING",
-                           [(entry_id, now) for entry_id in entry_ids])
-        else:
-            db.executemany("DELETE FROM entry_checks WHERE entry_id=?", [(entry_id,) for entry_id in entry_ids])
-
-
 def sport_session_effects() -> dict[str, str]:
     """Glucose drop per sport session set in "Tag durchgehen"; other sessions use their kind's setting."""
     with connect() as db:

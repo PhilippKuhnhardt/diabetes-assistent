@@ -386,19 +386,12 @@ def sport_shares(item: dict, meals: list[dict]) -> dict:
 REVIEW_SINCE = "2026-11-24"
 
 
-def loose_entries(payload: dict) -> list[dict]:
-    """The day's entries outside the meal cards, as Verlauf draws them: every sport session and each entry
-    that belongs to no main meal (a correction, basal, a blood glucose reading between the meals)."""
-    meal_ids = {meal["id"] for meal in payload.get("meals", [])}
-    return [item for item in payload.get("timeline", [])
-            if item.get("kind") == "exercise" or item.get("meal_id") not in meal_ids]
-
-
 def with_checks(payload: dict, now: datetime | None = None) -> dict:
     """The day with Philipp's checks laid over it at request time, so a check never recalculates a stored
     day: "Passt" on a meal (user request 2026-11-23) holds only for the window it was given for, and only
-    a finished meal can be checked; an entry outside the meal cards is checked by its id (user request
-    2026-11-24). The day is done once every meal is checked or excluded and every other entry checked."""
+    a finished meal can be checked. Only main meals need a check: reviewing is about the factor (Philipp
+    2026-11-25), so snacks, sport and other entries outside the meal cards never do. The day is done once
+    every meal is checked or excluded."""
     now = now or datetime.now(timezone.utc)
     checks = marks.window_checks()
     meals = []
@@ -410,22 +403,17 @@ def with_checks(payload: dict, now: datetime | None = None) -> dict:
                        and parse_instant(stored[1]) == _instant(window["end"]))
         finished = bool(window.get("end")) and _instant(window["end"]) <= now
         meals.append({**meal, "review": {**meal["review"], "checked": checked, "checkable": finished}})
-    entry_checks = marks.entry_checks()
-    loose = {item["id"] for item in loose_entries(payload)}
-    timeline = [{**item, "checked": item["id"] in entry_checks} if item["id"] in loose else item
-                for item in payload.get("timeline", [])]
-    entries_checked = sum(item.get("checked", False) for item in timeline if item["id"] in loose)
     open_meals = sum(not meal["review"]["checked"] and not meal.get("excluded") for meal in meals)
     review = {**payload.get("review", {}),
               "checked": sum(meal["review"]["checked"] for meal in meals),
               "tasks": sum(bool(meal["review"]["open"]) and not meal["review"]["checked"] and not meal.get("excluded")
                            for meal in meals),
-              "entries": len(loose), "entries_checked": entries_checked, "total": len(meals) + len(loose),
+              "total": len(meals),
               # What still waits for a look, and whether "Tag prüfen" can check it all (every meal finished).
-              "unchecked": open_meals + len(loose) - entries_checked,
+              "unchecked": open_meals,
               "checkable": all(meal["review"]["checkable"] for meal in meals),
-              "done": bool(meals or loose) and open_meals == 0 and entries_checked == len(loose)}
-    return {**payload, "meals": meals, "timeline": timeline, "review": review}
+              "done": bool(meals) and open_meals == 0}
+    return {**payload, "meals": meals, "review": review}
 
 
 def week_view(params: dict) -> dict:
@@ -442,7 +430,7 @@ def week_view(params: dict) -> dict:
         row = {"day": current.isoformat(), "future": current > today}
         if not row["future"]:
             review = _checked_day(current.isoformat())
-            row.update({"day_type": review["day_type"], "meals": review["meals"], "entries": review["entries"],
+            row.update({"day_type": review["day_type"], "meals": review["meals"],
                         "checked": review["checked"], "tasks": review["tasks"], "done": review["done"]})
         days.append(row)
     return {"date": day.isoformat(), "today": today.isoformat(), "week": int(monday.isocalendar()[1]), "days": days}
