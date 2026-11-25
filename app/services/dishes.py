@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from app import dishes as rules
 from app.common import local_zone, parse_instant
-from app.store import config, dishes as store, marks, mirror
+from app.store import agent as agent_store, config, dishes as store, marks, mirror
 
 VIEW_DAYS = 120
 VIEW_MAX_DAYS = 730
@@ -175,17 +175,42 @@ def _outcome(meal: dict | None) -> dict | None:
                                            "g0_mgdl", "g_end_mgdl", "delta_mgdl", "excluded", "blocked_reason")}
 
 
+SAID_MAX = 600
+
+
+def _agent_notes(event_ids: list[str]) -> dict[str, dict]:
+    """What the meal agent knew about each entry: its items (name, amount, carbs) and Philipp's own words in
+    that estimate (user report 2026-11-25: package values per 100 g and the weight per piece were only in his
+    words, so a later estimate of the same waffle could not find them)."""
+    notes = {}
+    for event_id, session in agent_store.sessions_for([event_id for event_id in event_ids if event_id]).items():
+        estimate = session.get("estimate") or {}
+        said = " | ".join(turn["text"] for turn in session.get("messages") or []
+                          if turn.get("role") == "user" and turn.get("text") and turn["text"] != "(nur Fotos)")
+        note = {"items": [{key: item.get(key) for key in ("name", "amount", "carbs_g")} for item in estimate.get("items") or []],
+                "philipp_said": said[:SAID_MAX]}
+        portion = estimate.get("portion")
+        if portion not in (None, 1, 1.0):
+            note["portion"] = portion
+        notes[event_id] = note
+    return notes
+
+
 def lookup_meals(query: str = "", meal: str | None = None, place: str | None = None, dish: str | None = None,
                  days: int = VIEW_DAYS) -> dict:
-    """Past carb entries, newest first, filtered by words (all must appear in dish or description),
-    meal kind, place and dish, each with the outcome of the main meal it belongs to."""
+    """Past carb entries, newest first, filtered by words (all must appear in dish, description, the agent's
+    items or Philipp's words to it), meal kind, place and dish, each with the outcome of the main meal it
+    belongs to and what the agent knew about it."""
     days = max(1, min(int(days or VIEW_DAYS), VIEW_MAX_DAYS))
     meals, entries = _rows(days)
     by_id = {row["meal_id"]: row for row in meals}
+    notes = _agent_notes([entry["event_id"] for entry in entries])
     words = [word.casefold() for word in str(query or "").split()]
     found = []
     for entry in reversed(entries):
-        text = f"{entry['dish'] or ''} {entry['description']}".casefold()
+        note = notes.get(entry["event_id"]) or {}
+        text = " ".join([entry["dish"] or "", entry["description"], note.get("philipp_said") or "",
+                         *(str(item.get("name") or "") for item in note.get("items") or [])]).casefold()
         if any(word not in text for word in words):
             continue
         if meal and entry["meal"] != meal:
@@ -198,6 +223,8 @@ def lookup_meals(query: str = "", meal: str | None = None, place: str | None = N
     shown = []
     for entry in found[:SEARCH_ROWS]:
         main = by_id.get(entry["meal_id"])
+        note = notes.get(entry["event_id"])
         shown.append({**{key: value for key, value in entry.items() if key not in ("meal_id", "event_id")},
+                      **({"agent": note} if note else {}),
                       "meal_outcome": _outcome(rules.with_ratio(meals, main) if main else None)})
     return {"days": days, "total": len(found), "entries": shown}
