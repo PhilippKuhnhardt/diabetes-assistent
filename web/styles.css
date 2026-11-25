@@ -1104,9 +1104,9 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .history-meal-details[hidden] { display: none; }
 .history-entries { list-style: none; margin: 0; padding: 0; }
 .history-entries li + li { border-top: 1px solid var(--line); }
-.history .history-entry-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: baseline; gap: 2px 8px; width: 100%; min-height: 0; padding: 8px 2px; border: 0; border-radius: 0; background: none; color: var(--ink); text-align: left; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.history .history-entry-row:hover:not(:disabled) { background: var(--canvas); }
-.history .history-entry-row:disabled { opacity: 1; cursor: default; }
+.history .history-entry-row, .history button.history-entry-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: baseline; gap: 2px 8px; width: 100%; min-height: 0; padding: 8px 2px; border: 0; border-radius: 0; background: none; color: var(--ink); text-align: left; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.history button.history-entry-row:hover:not(:disabled) { background: var(--canvas); }
+.history button.history-entry-row:disabled { opacity: 1; cursor: default; }
 .history-entry-row time { color: var(--muted); font-weight: 650; }
 .history-entry-row b { min-width: 0; font-weight: 650; overflow-wrap: anywhere; }
 .history-entry-row > span { font-weight: 650; white-space: nowrap; }
@@ -1169,12 +1169,5 @@ label textarea { display: block; margin-top: 7px; background: white; color: var(
 .window-chart .window-handle.is-snapped .handle-line { stroke: #d9a441; }
 .window-nudge button { border-radius: 999px !important; }
 
-/* Checks on entries outside the meal cards and for the whole day (user request 2026-11-24). */
-.history-entry.has-check { display: flex; align-items: center; gap: 6px; }
-.history-entry.has-check > .history-entry-row { flex: 1; min-width: 0; }
-.history-sport-item { display: flex; align-items: center; gap: 8px; }
-.history-sport-item > .history-sport { flex: 1; min-width: 0; }
-.history button.entry-check { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; min-height: 0; padding: 0; border: 1.5px solid var(--line); border-radius: 50%; background: var(--surface); color: #b9c6bf; }
-.history button.entry-check .ui-icon { width: 18px; height: 18px; }
-.history button.entry-check.is-checked { border-color: var(--green); background: var(--green); color: #fff; }
+/* "Tag als geprüft markieren" at the end of a day (user request 2026-11-24). */
 .history button.check-day { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 14px 0 0; }

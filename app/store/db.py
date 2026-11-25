@@ -385,13 +385,19 @@ def _entry_checks(db: sqlite3.Connection) -> None:
     )""")
 
 
+def _drop_entry_checks(db: sqlite3.Connection) -> None:
+    # Only main meals need a check (Philipp 2026-11-25: reviewing is about the factor); entries go unchecked.
+    db.execute("DROP TABLE IF EXISTS entry_checks")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [_base_schema, _day_results, _summary_results,
                                                           _notifications, _notification_priority, _places,
                                                           _inbox_seen, _sport_sessions, _places_without_positions,
                                                           _place_factor, _timezone_periods, _prior_insulin_percentile,
                                                           _dishes, _agent, _browser_sessions, _split_min_units,
                                                           _sport_session_minutes, _notification_pause, _window_checks,
-                                                          _drop_day_effects, _entry_checks]
+                                                          _drop_day_effects, _entry_checks,
+                                                          _drop_entry_checks]
 
 
 def init() -> None:
