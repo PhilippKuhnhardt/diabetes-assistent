@@ -175,7 +175,7 @@ class IntegrationTests(unittest.TestCase):
         self.base = f"http://127.0.0.1:{self.app.server_port}"
         self.request("/api/settings", method="POST", body={
             "isf_schedule": [{"start_minute": 0, "mgdl_per_unit": 50}],
-            "peak_minutes": 60, "duration_minutes": 180, "window_minutes": 180,
+            "peak_minutes": 60, "duration_minutes": 180, "window_minutes": 180, "day_types": True,
         })
 
     def tearDown(self):
@@ -1327,6 +1327,32 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(night["start"], correction + timedelta(hours=3))
         self.assertEqual(night["delta_mgdl"], -40)
         self.assertEqual(night["minimum_glucose"], 95)
+
+    def test_day_types_are_off_by_default_and_breakfast_is_one_meal_then(self):
+        # Work/free days became optional (Philipp 2026-11-26): a new installation has them off.
+        self.assertFalse(config.default_settings()["day_types"])
+        self.assertTrue(config._with_nightscout_profile({})["day_types"])   # older stored settings keep them on
+        self.request("/api/settings", method="POST", body={"day_types": False})
+        self.assertIsNone(marks.analysis_day_types())
+        today = datetime.now(ZoneInfo("Europe/Berlin")).date()
+        monday = (today - timedelta(days=today.weekday())).isoformat()
+        saturday = (today - timedelta(days=(today.weekday() - 5) % 7)).isoformat()
+        meal = lambda name, day, factor: {
+            "id": name, "meal": "breakfast", "at": day + "T08:00:00+02:00",
+            "calculation": {"factor_units_per_ke": factor, "ratio_g_per_unit": "10", "carbs_times_isf_total": "500",
+                            "insulin_effect_mgdl": "0", "delta_mgdl": "50",
+                            "carb_events": [{"at": day + "T08:00:00+02:00", "carbs": "10", "isf": "50"}]}}
+        meals_by_day = {monday: [meal("work-breakfast", monday, "1")], saturday: [meal("free-breakfast", saturday, "2")]}
+        with fake_days(side_effect=lambda day, refresh=False: {"meals": meals_by_day.get(day, [])}):
+            summary = self.request("/api/summary?days=7")
+        breakfast = summary["groups"]["breakfast"]
+        self.assertFalse(summary["day_types"])
+        self.assertIsNone(summary["day_type_ratio"])
+        self.assertEqual(breakfast["by_day_type"], {})
+        self.assertIn("suggestion", breakfast)
+        self.assertEqual({item["day_type"] for item in breakfast["calculations"]}, {None})
+        self.assertEqual([item["day_type"] for item in summary["suggestion_derivation"]["examples"]], [None, None, None])
+        self.assertEqual(marks.day_type_for(monday, None, []), (None, "off"))
 
     def test_breakfast_work_free_defaults_and_day_override(self):
         today = datetime.now(ZoneInfo("Europe/Berlin")).date()

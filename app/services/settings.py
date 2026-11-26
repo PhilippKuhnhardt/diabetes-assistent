@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Annotated, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, ValidationError, field_validator, model_validator
 
 from app import auth, calculation, episodes, forecast, fpe
 from app.common import local_zone, parse_instant, unit_text, zone_name_at
@@ -35,6 +35,7 @@ MESSAGES = {
     "auto_fat_surcharge_mgdl": tr("Fett-Zuschlag muss zwischen 0 und 200 mg/dL liegen"),
     "fpe_surcharge_mgdl": tr("Zuschlag je FPE muss zwischen 5 und 60 mg/dL liegen"),
     "auto_vacation": tr("Unbekannte Urlaubs-Einstellung der Automatik"),
+    "day_types": tr("Arbeit / Frei muss an oder aus sein"),
     "basal_default_units": tr("Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen"),
     "split_min_grams": SPLIT_MESSAGE, "split_first_percent": SPLIT_MESSAGE, "split_delay_minutes": SPLIT_MESSAGE,
     "split_min_units": tr("Split-Bolus: Mindestdosis 0–30 IE in 0,5er-Schritten (0 = immer)"),
@@ -67,6 +68,7 @@ class SettingsInput(BaseModel):
     auto_fat_surcharge_mgdl: Annotated[Decimal, Field(ge=0, le=200)] = forecast.FAT_SURCHARGE_MGDL
     fpe_surcharge_mgdl: Annotated[Decimal, Field(ge=5, le=60)] = fpe.PER_FPE_MGDL
     auto_vacation: Literal[config.AUTO_VACATION_MODES] = config.DEFAULT_AUTO_VACATION
+    day_types: StrictBool = False
     basal_default_units: Annotated[Decimal, Field(ge=0, le=100, multiple_of=Decimal("0.5"))] = \
         Decimal(str(config.DEFAULT_BASAL_UNITS))
     split_min_grams: Annotated[int, Field(ge=0, le=300)] = config.DEFAULT_SPLIT["split_min_grams"]
@@ -135,7 +137,8 @@ def validate_settings(value: dict) -> dict:
     result.update({
         **checked.model_dump(include={"timezone", "window_minutes", "peak_minutes", "duration_minutes",
                                       "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
-                                      "auto_lookback_days", "auto_method", "auto_vacation", *config.DEFAULT_SPLIT}),
+                                      "auto_lookback_days", "auto_method", "auto_vacation", "day_types",
+                                      *config.DEFAULT_SPLIT}),
         **{key: str(getattr(checked, key)) for key in (
             "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile",
             "auto_half_life_days", "auto_surcharge_mgdl", "auto_fat_surcharge_mgdl", "fpe_surcharge_mgdl")},

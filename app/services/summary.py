@@ -149,7 +149,7 @@ def compute_summary(days: int, today: date) -> dict:
         comparable = [item for item in group["calculations"] if item["units_per_ke"] is not None]
         for item in group["calculations"]:
             item["strong_outlier"] = False
-        if group is groups["breakfast"]:
+        if group is groups["breakfast"] and day_types is not None:
             comparison_sets = [[item for item in comparable if item["day_type"] == kind]
                                for kind in ("work", "free")]
         else:
@@ -185,7 +185,7 @@ def compute_summary(days: int, today: date) -> dict:
             group["trend_units_per_ke"] = None
     breakfast = groups["breakfast"]
     breakfast["by_day_type"] = {}
-    for kind in ("work", "free"):
+    for kind in (("work", "free") if day_types is not None else ()):
         items = [item for item in breakfast["calculations"] if item["day_type"] == kind]
         values = sorted(Decimal(item["units_per_ke"]) for item in items
                         if item["units_per_ke"] is not None and not item["excluded"])
@@ -216,10 +216,10 @@ def compute_summary(days: int, today: date) -> dict:
         _automatik_cache.clear()  # only the latest is ever asked for again
         _automatik_cache[key] = cached
     predictions, suggestion_derivation, day_type_ratio = cached
-    for kind in ("work", "free"):
+    for kind in breakfast["by_day_type"]:
         breakfast["by_day_type"][kind]["suggestion"] = factors.suggestion_factor(
             predictions[("breakfast", kind)], configured, surcharge_mgdl)
-    for name in ("lunch", "dinner"):
+    for name in ("lunch", "dinner") if day_types is not None else ("breakfast", "lunch", "dinner"):
         groups[name]["suggestion"] = factors.suggestion_factor(predictions[(name, None)], configured, surcharge_mgdl)
     for name, group in groups.items():
         current = set()
@@ -233,6 +233,7 @@ def compute_summary(days: int, today: date) -> dict:
     return {
         "days": days, "groups": groups, "profile_sync_error": profile_sync_error,
         "suggestion_derivation": json_safe(suggestion_derivation),
+        "day_types": day_types is not None,
         "day_type_ratio": json_safe(day_type_ratio),
         "sport_analysis": sport_analysis.analyze(
             sport_meals, sport_sessions, settings["sport_lookback_minutes"],
@@ -265,8 +266,7 @@ def _automatik(today: date, points: list[dict], settings: dict) -> tuple[dict, d
     predictions = {key: {**forecast.predict_method(points, key, today, percentile, half_life, lookback, method,
                                                    surcharge_mgdl, fat_mgdl),
                          "surcharge": method == forecast.SURCHARGE}
-                   for key in (("breakfast", "work"), ("breakfast", "free"),
-                               ("lunch", None), ("dinner", None))}
+                   for key in factors.meal_keys(settings)}
     # Backtest matrix: every lookback × half-life (plus the configured ones), each at 25 %,
     # the configured percentile and 50 %, all evaluated on the same meals of the last 90 days.
     # A last column tests the configured percentile with the fixed surcharge per main meal.
@@ -309,12 +309,12 @@ def _automatik(today: date, points: list[dict], settings: dict) -> tuple[dict, d
     suggestion_derivation["tradeoffs"] = tradeoffs
     suggestion_derivation["examples"] = [
         forecast.explain(points, key, today, lookback, half_life, percentile, active_surcharge, fat_mgdl)
-        for key in (("breakfast", "work"), ("breakfast", "free"), ("lunch", None), ("dinner", None))]
+        for key in factors.meal_keys(settings)]
     suggestion_derivation["weights"] = [
         {"age_days": age, "weight": forecast.weight(age, half_life)}
         for age in sorted({1, *(int(half_life * k) for k in (1, 2, 4)), lookback}) if 1 <= age <= lookback]
     # Information only: does the free-day factor follow the work-day factor by a stable ratio?
-    day_type_ratio = forecast.day_type_ratios(points, today)
+    day_type_ratio = forecast.day_type_ratios(points, today) if config.day_types_enabled(settings) else None
     return predictions, suggestion_derivation, day_type_ratio
 
 

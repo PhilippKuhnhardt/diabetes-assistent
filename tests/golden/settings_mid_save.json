@@ -9,6 +9,7 @@
   "auto_vacation": "separate",
   "basal_default_units": "0",
   "breakfast_end_minute": 660,
+  "day_types": true,
   "dose_cautious_target_mgdl": "150",
   "dose_target_mgdl": "120",
   "duration_minutes": 180,

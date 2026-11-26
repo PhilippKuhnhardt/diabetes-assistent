@@ -318,6 +318,7 @@ EN = {
     "Fett-Zuschlag muss zwischen 0 und 200 mg/dL liegen": "Fat surcharge must be between 0 and 200 mg/dL",
     "Zuschlag je FPE muss zwischen 5 und 60 mg/dL liegen": "Surcharge per FPU must be between 5 and 60 mg/dL",
     "Unbekannte Urlaubs-Einstellung der Automatik": "Unknown vacation setting of the automatic",
+    "Arbeit / Frei muss an oder aus sein": "Work / off must be on or off",
     "Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen": "Basal default must be between 0 and 100 U in steps of 0.5",
     "Split-Bolus: Mindestdosis 0–30 IE in 0,5er-Schritten (0 = immer)": "Split bolus: minimum dose 0–30 U in steps of 0.5 (0 = always)",
     "Ungültige Einstellungen": "Invalid settings",
