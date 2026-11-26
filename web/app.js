@@ -183,7 +183,6 @@ async function openMealDay(day, mealId) {
   state.dayChosenAt = Date.now();
   state.modeDay = state.day;
   state.diaryMode = "review";
-  $("#selected-day").value = state.day;
   view("diary");
   await loadDay();
   $("#meal-" + CSS.escape(mealId))?.scrollIntoView({ block: "start" });
@@ -194,7 +193,6 @@ function changeDay(day, options = {}) {
   resetEntryForm();
   state.day = day;
   state.dayChosenAt = Date.now();
-  $("#selected-day").value = day;
   renderEntry();
   if (options.load !== false) loadDay();
 }
@@ -319,7 +317,7 @@ function renderDay(data) {
 // Verlauf (web/ui/day.js): week strip, the day's meal and sport cards, the window editor.
 function renderReview() {
   render(html`<${DayReview} data=${state.dayData} day=${state.day} today=${todayDay()} status=${state.dayStatus} reload=${loadDay}
-    onEdit=${editEntry} onAnalysisChanged=${refreshAnalysis} onDay=${historyDay} onRefresh=${() => loadDay({ refresh: true })} />`, $(".review-panel"));
+    onEdit=${editEntry} onAnalysisChanged=${refreshAnalysis} onDay=${historyDay} />`, $(".review-panel"));
 }
 
 // Verlauf's week strip picks a day and stays in Verlauf, also for today.
@@ -332,17 +330,16 @@ function historyDay(day) {
   loadDay();
 }
 
-// The server reads its local copy, which the background sync keeps current; refresh asks Nightscout first.
-async function loadDay({ refresh = false } = {}) {
+// The server reads its local copy, which the background sync keeps current.
+async function loadDay() {
   state.dayLoadedAt = Date.now();
-  $("#selected-day").value = state.day;
   // Another day shows "loading"; reloading the same day keeps the list (and what is unfolded) in place.
   if (state.dayData?.day !== state.day) {
     state.dayStatus = "loading";
     renderReview();
   }
   try {
-    renderDay(await api("/api/day?date=" + encodeURIComponent(state.day) + (refresh ? "&refresh=1" : "")));
+    renderDay(await api("/api/day?date=" + encodeURIComponent(state.day)));
     loadReviewPending();
     await updatePreview();
   } catch (error) {
@@ -418,8 +415,7 @@ function renderEntry() {
     onSaved=${async (result, dayView) => {
       state.day = result.day;
       updateLocation(true);
-      $("#selected-day").value = state.day;
-      closeEntryDrawer();
+          closeEntryDrawer();
       if ($("#edit-dialog").open) closeEditDialog();
       if (dayView) renderDay(dayView);
       else await loadDay();
@@ -481,7 +477,6 @@ async function saveEditedEntry(item, values) {
 
 async function finishEdit(day, message, refreshed = null) {
   state.day = day;
-  $("#selected-day").value = state.day;
   updateLocation(true);
   if (refreshed) renderDay(refreshed);
   else await loadDay();
@@ -508,7 +503,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   state.day = todayDay();
   state.view = initialLocation.view;
   analysisTab(initialLocation.analysisTab, { updateHistory: false });
-  $("#selected-day").value = state.day;
   renderEntry();
   view(state.view, { updateHistory: false });
   updateLocation(true);
@@ -518,10 +512,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     view(nextLocation.view, { updateHistory: false });
     if (nextLocation.view === "diary") loadDay();
   });
-  $("#prev-day").addEventListener("click", () => { const d = new Date(state.day + "T12:00"); d.setDate(d.getDate() - 1); changeDay(d.toLocaleDateString("sv-SE")); });
-  $("#next-day").addEventListener("click", () => { const d = new Date(state.day + "T12:00"); d.setDate(d.getDate() + 1); changeDay(d.toLocaleDateString("sv-SE")); });
-  $("#selected-day").addEventListener("change", event => changeDay(event.target.value));
-  $("#refresh-day").addEventListener("click", () => loadDay({ refresh: true }));
   $("#timezone-banner").addEventListener("click", event => {
     const button = event.target.closest("[data-timezone-switch]");
     if (button) switchTimezone({ zone: button.dataset.timezoneSwitch });
