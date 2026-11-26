@@ -64,6 +64,8 @@ def default_settings() -> dict:
         "sport_lookback_minutes": 360,
         "sport_effects_mgdl": dict(DEFAULT_SPORT_EFFECTS),
         "sport_durations_minutes": dict(DEFAULT_SPORT_DURATIONS),
+        "sport_custom": {},
+        "sport_hidden": [],
         "basal_default_units": DEFAULT_BASAL_UNITS,
         **DEFAULT_SPLIT,
     }
@@ -129,6 +131,8 @@ def _with_nightscout_profile(settings: dict) -> dict:
     # Older settings versions predate newer sport types such as racing.
     result["sport_effects_mgdl"] = {**DEFAULT_SPORT_EFFECTS, **result.get("sport_effects_mgdl", {})}
     result["sport_durations_minutes"] = {**DEFAULT_SPORT_DURATIONS, **result.get("sport_durations_minutes", {})}
+    result.setdefault("sport_custom", {})
+    result.setdefault("sport_hidden", [])
     result["nightscout_profile"] = ({
         "start_at": profile["start_at"], "profile_id": profile["profile_id"],
         "profile_name": profile["profile_name"], "timezone": profile["timezone"],

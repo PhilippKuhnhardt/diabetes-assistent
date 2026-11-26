@@ -337,6 +337,8 @@ EN = {
     "I:C-Zeitplan in Nightscout gespeichert": "I:C schedule saved to Nightscout",
     "Korrekturfaktor-Zeitplan in Nightscout gespeichert": "Correction factor schedule saved to Nightscout",
     "Ungültige Sportarten": "Invalid exercise kinds",
+    "Nur für kind=exercise: jogging, gym, light_cardio, racing oder eine eigene Sportart aus den Einstellungen (Schlüssel oder Name).": "Only for kind=exercise: jogging, gym, light_cardio, racing or an own exercise kind from the settings (key or name).",
+    "Eigene Sportart: Name mit 1 bis 40 Zeichen, jeder Name nur einmal": "Own exercise kind: name of 1 to 40 characters, each name only once",
     "Es gibt keinen Zeitzonen-Wechsel zum Zurücknehmen": "There is no time zone switch to undo",
     "Zeitpunkt muss zwischen jetzt und vor {days} Tagen liegen": "The instant must be between now and {days} days ago",
     "Datum muss zwischen heute und vor {days} Tagen liegen": "The date must be between today and {days} days ago",

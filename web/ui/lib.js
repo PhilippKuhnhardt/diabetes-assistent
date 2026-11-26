@@ -10,8 +10,21 @@ export const names = { breakfast: t("meal.breakfast"), lunch: t("meal.lunch"), d
 export const CERTAINTY_LABELS = { weighed: t("certainty.weighed"), known: t("certainty.known"), unsure: t("certainty.unsure") };
 // Meal factors picked on a carb entry; shown as icons wherever the meal or entry appears.
 export const MEAL_FACTORS = { alcohol: t("factor.alcohol"), fat_protein: t("factor.fat_protein"), fast: t("factor.fast") };
-export const sportKinds = ["jogging", "gym", "light_cardio", "racing"];
-export const sportNames = Object.fromEntries(sportKinds.map(kind => [kind, t("sport.kinds." + kind)]));
+// Sport kinds: the built-in ones, then the user's own (setting `sport_custom`). `sportNames` holds every kind,
+// hidden ones too, so older sessions keep their name; `sportKinds` lists the ones the entry form offers.
+// Both are filled in place by setSportKinds when app.js loads the settings.
+export const BUILTIN_SPORT_KINDS = ["jogging", "gym", "light_cardio", "racing"];
+export const sportKinds = [...BUILTIN_SPORT_KINDS];
+export const sportNames = Object.fromEntries(BUILTIN_SPORT_KINDS.map(kind => [kind, t("sport.kinds." + kind)]));
+export function setSportKinds(settings) {
+  const custom = settings?.sport_custom || {};
+  const hidden = new Set(settings?.sport_hidden || []);
+  Object.assign(sportNames, custom);
+  sportKinds.splice(0, sportKinds.length, ...[...BUILTIN_SPORT_KINDS, ...Object.keys(custom)].filter(kind => !hidden.has(kind)));
+}
+// The kinds a picker offers: the visible ones plus the one an entry already has.
+export const sportOptions = current => [...sportKinds, ...(current && !sportKinds.includes(current) ? [current] : [])]
+  .map(kind => [kind, sportNames[kind] || kind]);
 // When the second part of a split dose is due, as the dose help and "Wirkt noch" word it.
 // Units as the page's language writes them: IE/U, the carb unit (KE/CU 10 g, BE 12 g or grams), the factor in
 // the chosen form (IE/KE, IE/BE or g/IE, web/ui/units.js) and the glucose unit.

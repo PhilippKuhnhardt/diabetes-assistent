@@ -2,7 +2,7 @@
 // one page at a time (app.js keeps which page is open and marks #settings-view for the CSS).
 // Every value comes from /api/settings and its neighbours; saving sends it back and the server checks it.
 import { html, useState, useEffect, useRef } from "./html.js";
-import { api, post, toast, busy, num, gl, glNum, signedPercent, sportKinds, sportChange, minuteClock, clockMinute, toInstant, localInputTime,
+import { api, post, toast, busy, num, gl, glNum, signedPercent, BUILTIN_SPORT_KINDS, sportChange, minuteClock, clockMinute, toInstant, localInputTime,
   pickerMinimum, currentPosition, MINUTE, UNIT } from "./lib.js";
 import { t, locale, lang, LANGUAGES, storedLanguage, setLanguage } from "./i18n.js";
 import { ThemePanel } from "./theme.js";
@@ -342,7 +342,26 @@ function Schedule({ id, page, title, unit, rows, kind, profileId, onReload, onSa
 }
 
 // ---- Modell ----
-const SPORT_LABELS = Object.fromEntries(sportKinds.map(kind => [kind, t("settings.sportShort." + kind)]));
+const SPORT_LABELS = Object.fromEntries(BUILTIN_SPORT_KINDS.map(kind => [kind, t("settings.sportShort." + kind)]));
+// A new own kind gets the next free key own_1, own_2, …; the key never changes, the name can.
+const nextSportKey = taken => { let n = 1; while (taken.includes("own_" + n)) n += 1; return "own_" + n; };
+
+// One sport kind: built-in kinds show their name, own kinds an editable one; every kind can be hidden from the
+// entry form (never deleted, so recorded sessions keep their name and effect). An unsaved new kind can be dropped.
+function SportKindFields({ kind, name, own, effect, minutes, shown, onDrop }) {
+  return html`<div class="sport-kind">
+    <div class="sport-kind-head">${own
+      ? html`<input name=${"sport_name_" + kind} required maxlength="40" aria-label=${t("settings.model.sportName")}
+          placeholder=${t("settings.model.sportName")} defaultValue=${name} />`
+      : html`<strong>${name}</strong>`}
+      <label class="check-label"><input type="checkbox" name=${"sport_show_" + kind} defaultChecked=${shown} /> ${t("settings.model.sportShown")}</label>
+      ${onDrop && html`<button type="button" class="quiet" onClick=${onDrop}>${t("settings.model.sportDrop")}</button>`}</div>
+    <div class="field-pair">
+      <${Field} label=${t("settings.model.sportEffect")} unit=${UNIT.glucose}><${GlucoseInput} name=${"sport_" + kind} min=${-500} max=${500} step=${1}
+        defaultValue=${effect} /><//>
+      <${Field} label=${t("sport.durationTitle")} unit="min"><${NumberInput} name=${"sport_minutes_" + kind} min="30" max="1440" step="1"
+        defaultValue=${minutes} /><//></div></div>`;
+}
 const Field = ({ label, unit, children }) => html`<label>${label}${unit && html` <span>${unit}</span>`}${children}</label>`;
 const NumberInput = props => html`<input type="number" required ...${props} />`;
 // A glucose setting (stored in mg/dL) in the display unit. An unchanged field sends its stored value back, so
@@ -357,6 +376,9 @@ const Choice = ({ name, value, options }) => html`<select name=${name}>${options
 
 function ModelForm({ page, data, onReload }) {
   const s = data.settings;
+  const ownKinds = Object.keys(s.sport_custom || {});
+  const [added, setAdded] = useState([]);
+  const allKinds = [...BUILTIN_SPORT_KINDS, ...ownKinds, ...added];
   async function submit(event) {
     event.preventDefault();
     const f = event.currentTarget.elements;
@@ -386,12 +408,15 @@ function ModelForm({ page, data, onReload }) {
         breakfast_end_minute: clockMinute(f.breakfast_end.value),
         lunch_end_minute: clockMinute(f.lunch_end.value),
         sport_lookback_minutes: Number(f.sport_lookback_minutes.value),
-        sport_effects_mgdl: Object.fromEntries(sportKinds.map(kind => [kind, sportChange(glucoseValue(f["sport_" + kind]))])),
-        sport_durations_minutes: Object.fromEntries(sportKinds.map(kind => [kind, Number(f["sport_minutes_" + kind].value)])),
+        sport_effects_mgdl: Object.fromEntries(allKinds.map(kind => [kind, sportChange(glucoseValue(f["sport_" + kind]))])),
+        sport_durations_minutes: Object.fromEntries(allKinds.map(kind => [kind, Number(f["sport_minutes_" + kind].value)])),
+        sport_custom: Object.fromEntries([...ownKinds, ...added].map(kind => [kind, f["sport_name_" + kind].value.trim()])),
+        sport_hidden: allKinds.filter(kind => !f["sport_show_" + kind].checked),
         effective_at: f.effective_date.value ? toInstant(f.effective_date.value, f.effective_time.value || "00:00") : null,
       };
       await post("/api/settings", payload);
       toast(t("settings.saved"));
+      setAdded([]);
       await onReload({ day: true });
     } catch (error) {
       toast(error.message, true);
@@ -428,11 +453,11 @@ function ModelForm({ page, data, onReload }) {
         <p class="hint">${t("settings.model.dayTypesHint")}</p>
       <//>
       <${Panel} id="sport" page=${page} title=${t("settings.pages.sport")} unit=${t("settings.model.sportUnit")}>
-        <div class="field-pair">${sportKinds.map(kind => html`<${Field} label=${SPORT_LABELS[kind]}><${GlucoseInput} name=${"sport_" + kind} min=${-500} max=${500} step=${1}
-          defaultValue=${sportChange(s.sport_effects_mgdl[kind])} /><//>`)}</div>
-        <h3 class="settings-subhead">${t("sport.durationTitle")} <span class="unit">min</span></h3>
-        <div class="field-pair">${sportKinds.map(kind => html`<${Field} label=${SPORT_LABELS[kind]}><${NumberInput} name=${"sport_minutes_" + kind} min="30" max="1440" step="1"
-          defaultValue=${s.sport_durations_minutes?.[kind] ?? 300} /><//>`)}</div>
+        ${allKinds.map(kind => html`<${SportKindFields} key=${kind} kind=${kind} own=${!BUILTIN_SPORT_KINDS.includes(kind)}
+          name=${SPORT_LABELS[kind] ?? s.sport_custom?.[kind] ?? ""} shown=${!(s.sport_hidden || []).includes(kind)}
+          effect=${sportChange(s.sport_effects_mgdl[kind] ?? 40)} minutes=${s.sport_durations_minutes?.[kind] ?? 300}
+          onDrop=${added.includes(kind) ? () => setAdded(added.filter(item => item !== kind)) : null} />`)}
+        <button type="button" class="quiet sport-add" onClick=${() => setAdded([...added, nextSportKey(allKinds)])}>${t("settings.model.sportAdd")}</button>
         <${Field} label=${t("settings.model.sportLookback")} unit=${t("settings.model.minutesAfter")}><${NumberInput} name="sport_lookback_minutes" min="0" max="1440" step="1" defaultValue=${s.sport_lookback_minutes} /><//>
       <//>
     </div>

@@ -599,6 +599,36 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/settings", method="POST", body={
                 "sport_durations_minutes": {**settings["sport_durations_minutes"], "gym": 10}})
 
+    def test_own_sport_kind_is_recorded_named_and_can_be_hidden(self):
+        settings = self.request("/api/settings")["settings"]
+        effects = {**settings["sport_effects_mgdl"], "own_1": "60"}
+        durations = {**settings["sport_durations_minutes"], "own_1": 240}
+        self.request("/api/settings", method="POST", body={
+            "sport_custom": {"own_1": "  Klettern "}, "sport_effects_mgdl": effects,
+            "sport_durations_minutes": durations, "sport_hidden": ["racing"],
+            "effective_at": "2026-09-01T00:00:00Z"})
+        settings = self.request("/api/settings")["settings"]
+        self.assertEqual((settings["sport_custom"], settings["sport_hidden"]), ({"own_1": "Klettern"}, ["racing"]))
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": "2026-09-23T10:00:00Z", "carbs": "40", "insulin": "4"})
+        self.request("/api/treatment", method="POST", body={
+            "kind": "exercise", "at": "2026-09-23T08:00:00Z", "sport_kind": "own_1", "duration_minutes": 60,
+            "notes": "Halle"})
+        day = self.request("/api/day?date=2026-09-23")
+        session = next(item for item in day["timeline"] if item["kind"] == "exercise")
+        self.assertEqual((session["sport_kind"], session["notes"]), ("own_1", "Halle"))
+        # Ends 09:00 and acts linearly over its own 4 h; the window from 10:00 holds 3 of them: 60 × 3/4.
+        self.assertEqual(Decimal(day["meals"][0]["calculation"]["sport_effect_mgdl"]), Decimal(45))
+        # A hidden kind is still a valid kind for recorded and new sessions.
+        self.request("/api/treatment", method="POST", body={
+            "kind": "exercise", "at": "2026-09-23T15:00:00Z", "sport_kind": "racing", "duration_minutes": 30})
+        for change in ({"sport_custom": {"own_1": "Joggen"}},
+                       {"sport_custom": {"gym": "Kraft"}},
+                       {"sport_custom": {}},
+                       {"sport_hidden": ["swimming"]}):
+            with self.subTest(change=change), self.assertRaises(urllib.error.HTTPError):
+                self.request("/api/settings", method="POST", body=change)
+
     def test_invalid_settings_name_the_field_in_german(self):
         from app.services import settings as settings_service
         _, current = config.get_settings()

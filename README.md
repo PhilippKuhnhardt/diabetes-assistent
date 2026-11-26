@@ -13,6 +13,7 @@ A personal web app for living with type 1 diabetes on multiple daily injections.
 - **Dose help.** Suggestions for a new meal or a correction use the meal factors of recent weeks, subtract what is still acting and show where glucose is likely to land. Large meals can be split into two boluses.
 - **History.** Week by week, each meal with its factor, window and curve, for checking and correcting.
 - **Analysis.** Factor statistics per meal and day type, and a 90-day backtest of the settings.
+- **Exercise.** Jogging, gym, light cardio and racing come built in; own kinds with their own glucose effect and duration are added under More → Profile & model → Sport.
 - **Units.** Glucose in mg/dL or mmol/L, the meal factor as units per 10 g (KE), per 12 g (BE) or grams per unit, set under More → Profile & model. Low and high limits for warnings and charts are settings too.
 - **Reminders.** Optional Pushover notifications for forgotten basal, a due second split bolus and low/high early warnings.
 - **Agents and scripts.** A read-only JSON API (`/api/v1`) and an MCP server (`/mcp`), so an AI assistant can check glucose, ask for a dose suggestion and log entries.
