@@ -493,10 +493,9 @@ function WindowEditor({ meal, readings, data, day, onClose, onSaved }) {
 }
 
 // The Verlauf page. `status` is "loading" while the day is fetched, "error" when it failed.
-export function DayReview({ data, day, today, status, reload, onEdit, onAnalysisChanged, onDay, onRefresh }) {
+export function DayReview({ data, day, today, status, reload, onEdit, onAnalysisChanged, onDay }) {
   const [editor, setEditor] = useState(null);
-  const head = html`<div class="section-head history-head"><h2>${t("nav.history")}</h2>
-    <button type="button" class="quiet history-refresh" aria-label=${t("common.refresh")} title=${t("common.refresh")} onClick=${onRefresh}>↻</button></div>
+  const head = html`<div class="section-head history-head"><h2>${t("nav.history")}</h2></div>
     <${WeekStrip} day=${day} today=${today} data=${data} onDay=${onDay} />`;
   if (!data || data.day !== day && status !== "ready") return html`<section class="panel history">${head}
     <div id="timeline" class="day-list" aria-live="polite"><span id="record-count" class="hint" hidden></span>

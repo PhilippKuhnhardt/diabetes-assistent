@@ -49,12 +49,8 @@ main { min-height: 70vh; }
 dialog { background: var(--surface); color: var(--ink); border-color: var(--line); }
 .page-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
 h1 { margin: 0; font-size: clamp(28px, 3vw, 38px); font-weight: 680; letter-spacing: -.045em; }
-.day-nav { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-.day-nav button, .day-nav input { min-height: 40px; }
-.day-nav button, button:not(.tab):not(.primary) { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 9px 13px; font-weight: 600; }
-.day-nav .quiet { font-size: 12px; }
+button:not(.tab):not(.primary) { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 9px 13px; font-weight: 600; }
 input, select { width: 100%; background: var(--surface); color: var(--ink); border: 1px solid light-dark(#cddbd2, #363e39); border-radius: 8px; min-height: 42px; padding: 9px 11px; }
-.day-nav input { width: auto; font-size: 13px; font-weight: 600; }
 .diary-grid { display: grid; grid-template-columns: minmax(295px, 360px) minmax(0, 1fr); gap: 30px; align-items: start; }
 .panel, .summary-card { background: var(--surface); border: 1px solid var(--line); border-radius: 15px; box-shadow: 0 5px 20px light-dark(rgba(27, 64, 41, .035), #00000010); }
 .panel { padding: 24px; }
@@ -162,7 +158,6 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
   .brand strong { font-size: 15px; }
   .status { max-width: 125px; white-space: normal; text-align: center; }
   .page-head { display: block; }
-  .day-nav { margin-top: 18px; }
   .summary-grid { grid-template-columns: 1fr; }
   .factor { text-align: left; margin-top: 15px; }
   .factor.unavailable small { max-width: none; }
@@ -540,7 +535,6 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .entry-actions { border-radius: 0 0 15px 15px; position: sticky; bottom: 0; z-index: 5; margin: 0 -24px -24px; padding: 10px 24px calc(14px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to bottom, light-dark(rgba(255,255,255,0), #18211c00), light-dark(#fff, #18211c) 30%); }
 
 /* Diary head and recent context */
-.refresh-label { margin-left: 6px; }
 .active-card { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 8px 0 4px; }
 .active-item { padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--canvas); min-width: 0; }
 .active-item span, .active-item small { display: block; color: var(--muted); font-size: 11px; font-weight: 650; }
@@ -559,11 +553,8 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
   .brand-mark { width: 32px; height: 32px; }
   .topbar { min-height: 0; padding: 8px 0; gap: 8px; }
   #diary-view.view { padding-top: 14px; }
-  .diary-head { margin-bottom: 14px; }
+  .diary-head { margin-bottom: 0; }
   .diary-head h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .diary-head .day-nav { margin-top: 0; flex-wrap: nowrap; }
-  .diary-head .day-nav input { flex: 1; min-width: 0; }
-  .refresh-label { display: none; }
   .panel { padding: 18px; }
   .entry-actions { margin: 0 -18px -18px; padding: 10px 18px calc(12px + env(safe-area-inset-bottom, 0px)); }
   /* Full width and lifted above the sticky "In Nightscout speichern" bar so neither hides the other. */
@@ -1075,7 +1066,6 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .history { --sport: light-dark(#6a4bb3, #ac90ff); --sport-light: light-dark(#f1edfa, #2a282f); --sport-line: light-dark(#d4c8ee, #453d54); }
 .history-head { margin-bottom: 10px; align-items: center; }
 .history-head h2 { font-size: 20px; letter-spacing: -.03em; }
-.history button.history-refresh { min-height: 34px; padding: 4px 11px; font-size: 16px; }
 .week-strip { display: grid; gap: 6px; margin: 0 0 14px; }
 .week-head { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 12px; font-weight: 700; }
 .history .week-head button { min-height: 30px; padding: 2px 12px; font-size: 18px; line-height: 1; }
@@ -1167,7 +1157,7 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .window-chart-svg .sport-band rect { fill: light-dark(#6a4bb326, #ac90ff26); }
 .window-chart-svg .sport-band rect.is-inside { fill: light-dark(#6a4bb399, #ac90ff99); }
 @media (max-width: 950px) {
-  /* Verlauf picks its day in the week strip; the date row above belongs to "Heute". */
+  /* Verlauf has its own heading and week strip; the page heading above belongs to "Heute". */
   #diary-view[data-mode="review"] .diary-head { display: none; }
 }
 @media (max-width: 650px) {
