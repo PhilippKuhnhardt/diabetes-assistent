@@ -27,9 +27,9 @@ const FactorChip = ({ name, label, title, checked, onChange }) => html`
     <span class=${"factor-icon factor-" + name} aria-hidden="true"></span><span>${label}</span>
   </label>`;
 
-// Fettreich and Schnell; the caller places them (inside its own chip row).
-export const FactorChips = ({ fat, fast, onFat, onFast }) => html`
-  <${FactorChip} name="fat_protein" label=${t("factor.fat_protein")} title=${t("factor.fatTitle")} checked=${fat} onChange=${onFat} />
+// Schnell; the caller places it (inside its own chip row). The Fettreich chip was replaced by the fat/protein
+// level (FatLevel) and the agent's estimate (Philipp 2026-11-26); old fat marks are still read and kept.
+export const FactorChips = ({ fast, onFast }) => html`
   <${FactorChip} name="fast" label=${t("factor.fast")} title=${t("factor.fastTitle")} checked=${fast} onChange=${onFast} />`;
 
 // A segmented switch: one of a few options, the chosen one pressed. `data` names a data attribute
@@ -39,6 +39,14 @@ export function Segments({ value, options, onChange, label, data, disabled }) {
     <button type="button" aria-pressed=${value === key ? "true" : "false"} disabled=${disabled}
       ...${data ? { ["data-" + data]: key } : {}} onClick=${() => onChange(key)}>${text}</button>`)}</div>`;
 }
+
+// Fat and protein of an entry without the agent's estimate: Nichts / Normal / Fett, which the server turns
+// into FPE (app/fpe.py LEVELS).
+export const FatLevel = ({ value, onChange }) => html`<div class="card-group meal-fat-level">
+  <div class="card-group-head"><b>${t("surcharge.levelTitle")}</b></div>
+  <${Segments} label=${t("surcharge.levelTitle")} value=${value} data="fpe-level" onChange=${onChange}
+    options=${["none", "normal", "fat"].map(key => [key, t("surcharge.levels." + key)])} />
+</div>`;
 
 // Static or calculated fat/protein surcharge (app/fpe.py). `calculated` is fpe.view from the server
 // ({fpe, mgdl, minutes, fat_g, protein_g}); `staticMgdl` the static surcharge with the fat mark as set.

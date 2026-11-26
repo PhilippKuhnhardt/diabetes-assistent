@@ -8,7 +8,7 @@ import { html, useState, useEffect } from "./html.js";
 import { api, toast, num, sportNames, UNIT } from "./lib.js";
 import { t } from "./i18n.js";
 import { mealChat } from "./main.js";
-import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, SurchargeChoice } from "./meal-fields.js";
+import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, FatLevel, SurchargeChoice } from "./meal-fields.js";
 import { SportEffectFields, SportShares, sportFields, sportValues } from "./sport.js";
 
 const KIND_TITLES = Object.fromEntries(["meal", "snack", "carbs", "correction", "exercise", "basal"].map(kind => [kind, t("card.kinds." + kind)]));
@@ -34,6 +34,8 @@ function initial(item) {
     notes: item.notes || "", session: null,
     // Static or calculated fat/protein surcharge (app/fpe.py); the calculated one needs the agent's estimate.
     surchargeMode: item.surcharge ? "fpe" : "static",
+    // Without the agent's estimate: the fat/protein level the server read from the saved entry.
+    fpeLevel: item.fpe_level ?? null,
     sportKind: item.sport_kind || "jogging", duration: item.duration_minutes ? String(Number(item.duration_minutes)) : "",
     sportFx: sportFields(sport ? item : null),
     units: item.kind === "basal" ? fmt(item.basal_units) : "",
@@ -79,7 +81,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
       initialText: v.description, previousCarbs: carbs || "",
       context: () => ({ at: instant(v.at), placeId: v.place || null }),
       onApply: result => {
-        set({ carbs: String(result.carbs), portion: result.portion ?? 1, level: CERTAINTY_LEVELS.indexOf(result.certainty), fat: result.fat_protein,
+        set({ carbs: String(result.carbs), portion: result.portion ?? 1, level: CERTAINTY_LEVELS.indexOf(result.certainty),
               fast: result.fast, dish: result.estimate.dish?.name || "", description: result.estimate.description,
               session: result.session });
         // A new estimate brings new fat and protein: show the calculated surcharge it gives.
@@ -107,6 +109,8 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
           // Any carb entry whose estimate gives a calculated surcharge can switch (meal or snack alike,
           // user request 2026-11-21); otherwise the saved one stays.
           surcharge_mode: fpe ? v.surchargeMode : null,
+          // A changed level rewrites the saved surcharge; an untouched one keeps it.
+          fpe_level: !fpe && v.fpeLevel && v.fpeLevel !== item.fpe_level ? v.fpeLevel : null,
           agent_session: v.session, ...(v.portion != null ? { portion: v.portion } : {}),
         }),
       });
@@ -146,11 +150,12 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
         <textarea rows="4" maxlength="1000" placeholder=${t("card.whatWasIt")} aria-label=${t("card.description")} value=${v.description}
           onInput=${event => set({ description: event.currentTarget.value })}></textarea>
         <div class="entry-chips">
-          <${FactorChips} fat=${v.fat} fast=${v.fast} onFat=${fat => set({ fat })} onFast=${fast => set({ fast })} />
+          <${FactorChips} fast=${v.fast} onFast=${fast => set({ fast })} />
           <button type="button" class="chip agent-chip card-refine" onClick=${refine}>${t("entry.refine")}</button>
         </div>
       </div>`}
 
+      ${eats && !fpe && v.fpeLevel && html`<${FatLevel} value=${v.fpeLevel} onChange=${fpeLevel => set({ fpeLevel })} />`}
       ${eats && fpe && html`<${SurchargeChoice} mode=${v.surchargeMode} calculated=${fpe} fat=${v.fat}
         staticMgdl=${fpe.static_mgdl?.[v.fat ? "fat" : "plain"]} onChange=${surchargeMode => set({ surchargeMode })} />`}
 
