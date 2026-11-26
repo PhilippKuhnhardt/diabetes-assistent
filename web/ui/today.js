@@ -3,7 +3,7 @@
 // /api/entry/preview); these components only draw them. Open tasks of past days live in Verlauf's week
 // strip and day cards (the former "Zu erledigen" list was removed 2026-11-23).
 import { html, useState } from "./html.js";
-import { MINUTE, num, timeOnly, names, sportNames, SPLIT_TIMING, UNIT, FactorIcons } from "./lib.js";
+import { MINUTE, num, glNum, gl, factorNum, timeOnly, names, sportNames, SPLIT_TIMING, UNIT, FactorIcons } from "./lib.js";
 import { t } from "./i18n.js";
 import { DayChart, glucosePoints } from "./charts.js";
 import { dayBounds, mealBlocks, entryLabel } from "./day.js";
@@ -15,21 +15,21 @@ const HOURS = [[3, "3 h"], [6, "6 h"], [24, t("today.wholeDay")]];
 export function ActiveCard({ active, id = "day-overview-active" }) {
   const until = value => value ? t("today.until", { time: timeOnly(value) }) : t("today.actsNoMore");
   const nothing = !active.lowering_until && !active.raising_until;
-  const value = (sign, mgdl) => html`${sign + num(mgdl, 0)} <small>mg/dL</small>`;
+  const value = (sign, mgdl) => html`${sign + glNum(mgdl, 0)} <small>${UNIT.glucose}</small>`;
   const Item = ({ label, strong, lines, className = "" }) => html`<div class=${"active-item" + className}><span>${label}</span>
     <strong>${strong}</strong>${lines.map(line => html`<small>${line}</small>`)}</div>`;
   const split = active.split_plan;
   return html`<div id=${id} class="active-card" aria-label=${t("today.activeLabel")} aria-live="polite">
     <${Item} label=${t("today.lowering")} strong=${value("−", active.lowering_mgdl)} lines=${[t("today.insulinLine", { units: num(active.insulin_units, 1), unit: UNIT.insulin }),
       ...(active.sports || []).filter(row => Number(row.remaining_mgdl) > 0).map(row =>
-        (sportNames[row.kind] || t("sport.sport")) + " " + timeOnly(row.at) + " −" + num(row.remaining_mgdl, 0)),
+        (sportNames[row.kind] || t("sport.sport")) + " " + timeOnly(row.at) + " −" + glNum(row.remaining_mgdl, 0)),
       until(active.lowering_until)]} />
-    <${Item} label=${t("today.raising")} strong=${value("+", active.raising_mgdl)} lines=${[t("today.carbsLine", { grams: num(active.carbs_remaining_g, 0), mgdl: num(active.carbs_mgdl, 0) }),
-      t("today.surchargeLine", { mgdl: num(active.surcharge_mgdl, 0) }), until(active.raising_until)]} />
+    <${Item} label=${t("today.raising")} strong=${value("+", active.raising_mgdl)} lines=${[t("today.carbsLine", { grams: num(active.carbs_remaining_g, 0), mgdl: glNum(active.carbs_mgdl, 0) }),
+      t("today.surchargeLine", { mgdl: glNum(active.surcharge_mgdl, 0) }), until(active.raising_until)]} />
     <${Item} label=${t("today.expected")} className=" expected" strong=${active.expected_mgdl == null ? "—" : value("≈ ", active.expected_mgdl)}
       lines=${active.expected_mgdl == null ? [t("today.noCgm")]
         : [(active.expected_at ? t("today.at", { time: timeOnly(active.expected_at) }) : t("today.now")),
-           t("today.likely", { low: num(active.expected_low_mgdl, 0), high: num(active.expected_high_mgdl, 0) })]} />
+           t("today.likely", { low: glNum(active.expected_low_mgdl, 0), high: glNum(active.expected_high_mgdl, 0) })]} />
     ${nothing && html`<p class="hint">${t("today.nothingActs")}</p>`}
     ${split && html`<p class="hint">${t("today.splitPlanned", { units: num(split.units, 1), unit: UNIT.insulin, time: timeOnly(split.due_at),
       state: split.state === "later" ? "" : " (" + (split.state === "wait" ? t("today.waitUntil", { wait: SPLIT_TIMING.wait, time: timeOnly(split.latest_at) }) : SPLIT_TIMING[split.state]) + ")" })}</p>`}
@@ -46,7 +46,7 @@ function Recent({ treatments }) {
       const parts = item.eventType === "Exercise"
         ? [(sportNames[item.sport_type] || t("sport.sport")) + (Number(item.duration) ? " " + num(item.duration, 0) + " min" : "")]
         : item.basal ? [t("entryKind.basal") + " " + num(item.basal, 1) + " " + UNIT.insulin]
-        : item.finger_mgdl ? [t("entryKind.finger") + " " + num(item.finger_mgdl, 0) + " mg/dL"]
+        : item.finger_mgdl ? [t("entryKind.finger") + " " + gl(item.finger_mgdl, 0)]
         : [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 2) + " " + UNIT.insulin : ""].filter(Boolean);
       return parts.length ? html`<span class="recent-chip"><time>${timeOnly(item.at)}</time> ${parts.join(" + ")}<${FactorIcons} marks=${item} /></span>` : null;
     }).filter(Boolean);
@@ -54,9 +54,9 @@ function Recent({ treatments }) {
     ? html`<span class="recent-label">${t("today.recent")}</span>${items}` : html`<span class="recent-label">${t("today.recentNone")}</span>`}</div>`;
 }
 
-// Today's meals in short (user request 2026-11-18): time, carbs, insulin and the factor once it is known.
+// Today's meals in short: time, carbs, insulin and the factor once it is known.
 // Each row sums all entries the server grouped under the meal (`meal_id`, as in "Verlauf") and unfolds to
-// them, each tappable to correct it; the meal still running is unfolded (user request 2026-11-20).
+// them, each tappable to correct it; the meal still running is unfolded.
 const sumOf = (items, key) => items.reduce((sum, item) => sum + (Number(item[key]) || 0), 0);
 const amounts = item => [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 1) + " " + UNIT.insulin : "",
   item.kind === "exercise" ? num(item.duration_minutes, 0) + " min" : ""].filter(Boolean);
@@ -75,7 +75,7 @@ function MealToday({ meal, items, data, onEdit }) {
       <time>${timeOnly(meal.at)}</time><b>${names[meal.meal] || t("meal.meal")}</b>
       <span>${[num(carbs, 0) + " g", insulin > 0 ? num(insulin, 1) + " " + UNIT.insulin : "",
         entries.length > 1 ? t("common.entries", { count: entries.length }) : ""].filter(Boolean).join(" · ")}</span>
-      <small>${factor != null ? num(factor, 2) + " " + UNIT.factor : running ? t("today.until", { time: timeOnly(meal.window.end) }) : ""}</small>
+      <small>${factor != null ? factorNum(factor) + " " + UNIT.factor : running ? t("today.until", { time: timeOnly(meal.window.end) }) : ""}</small>
       <i class="meal-today-toggle" aria-hidden="true">›</i></button>
     <ul id=${listId} class="meal-today-entries" hidden=${!open}>${entries.map(item => {
       const editable = item.kind !== "other" && item.kind !== "finger";

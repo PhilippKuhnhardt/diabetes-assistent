@@ -13,11 +13,13 @@
   "auto_vacation": "separate",
   "basal_default_units": "0",
   "breakfast_end_minute": 660,
+  "carb_unit": "ke",
   "day_types": true,
   "dose_cautious_target_mgdl": "150",
   "dose_target_mgdl": "120",
-  "duration_minutes": 180,
   "fpe_surcharge_mgdl": "20",
+  "glucose_unit": "mgdl",
+  "high_limit_mgdl": "250",
   "ic_schedule": [
    {
     "grams_per_unit": "6",
@@ -46,6 +48,7 @@
     "start_minute": 1140
    }
   ],
+  "low_limit_mgdl": "70",
   "lunch_end_minute": 1020,
   "nightscout_profile": {
    "profile_id": "golden-profile",
@@ -53,11 +56,11 @@
    "start_at": "2026-01-01T00:00:00Z",
    "timezone": "Europe/Berlin"
   },
-  "peak_minutes": 60,
   "split_delay_minutes": 120,
   "split_first_percent": 60,
   "split_min_grams": 80,
   "split_min_units": "6.5",
+  "sport_custom": {},
   "sport_durations_minutes": {
    "gym": 300,
    "jogging": 300,
@@ -70,6 +73,7 @@
    "light_cardio": "20",
    "racing": "-40"
   },
+  "sport_hidden": [],
   "sport_lookback_minutes": 360,
   "target_schedule": [
    {

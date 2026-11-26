@@ -1,5 +1,4 @@
-"""Pushover: push messages to Philipp's phone (user decision 2026-10-09, research in project files
-analysen/benachrichtigungen.md). Token and user key come from the deployment environment."""
+"""Pushover: push messages to the user's phone. Token and user key come from the deployment environment."""
 from __future__ import annotations
 
 import json

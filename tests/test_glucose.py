@@ -28,6 +28,19 @@ class CurrentGlucoseTests(unittest.TestCase):
         self.assertEqual(self.status(251)["status"], "high")
         self.assertEqual(Decimal(self.status(110)["target_low_mgdl"]), Decimal(100))
 
+    def test_configured_limits_move_low_and_high(self):
+        settings = {**self.settings, "low_limit_mgdl": "80", "high_limit_mgdl": "200"}
+        self.assertEqual(self.status(75, settings=settings)["status"], "low")
+        self.assertEqual(self.status(201, settings=settings)["status"], "high")
+        self.assertEqual(glucose.tone(Decimal(75), self.now, settings), "low")
+        self.assertEqual(glucose.tone(Decimal(75), self.now, self.settings), "outside")
+
+    def test_shown_follows_the_glucose_unit(self):
+        self.assertEqual(glucose.shown(Decimal("180"), {}), "180")
+        self.assertEqual(glucose.shown(Decimal("180"), {"glucose_unit": "mmol"}), "10,0")
+        self.assertEqual(glucose.shown(Decimal("-18"), {"glucose_unit": "mgdl"}, signed=True), "-18")
+        self.assertEqual(glucose.shown(Decimal("18"), {"glucose_unit": "mgdl"}, signed=True), "+18")
+
     def test_freshness_and_missing_target_do_not_claim_in_range(self):
         self.assertEqual(self.status(110, minutes_ago=16)["status"], "stale")
         self.assertEqual(self.status(110, settings={"timezone": "Europe/Berlin",

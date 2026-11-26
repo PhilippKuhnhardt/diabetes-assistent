@@ -1,18 +1,16 @@
-"""Reminder to look at glucose and maybe correct after a meal (user request and approval 2026-11-14).
+"""Reminder to look at glucose and maybe correct after a meal.
 
-Analysis in the project files, analysen/nachspritzen-2026-11-14.md (Nachtrag): Philipp wants to keep an eye on
-glucose less, so a reminder that is about as good as his own judgement is enough. Replayed on 128 main meals
-(21.09.-07.11.) with his own doses moved to the reminder: time in range 80.7 -> 81.4 %, > 180 16.4 -> 15.5 %,
+Goal: keep an eye on glucose less, so a reminder that is about as good as one's own judgement is enough. Replayed on 128 main meals
+(21.09.-07.11.) with the actual doses moved to the reminder: time in range 80.7 -> 81.4 %, > 180 16.4 -> 15.5 %,
 < 70 2.8 -> 3.1 %, about 2 reminders a day. The app deciding the dose alone was worse (76.5 %), so the reminder
-names the dose help's correction as orientation and Philipp decides.
+names the dose help's correction as orientation and the user decides.
 
 From 90 min after a main meal until 7.5 h after it, with no open split plan (the split reminder covers that) and
 no rapid insulin in the last 90 min: glucose at least 160 and the "Wirkt noch"
 end value (glucose - insulin still acting + carbs and surcharge still to come) at least 160. Before 2 h only
-from 180 and rising by 10 per 30 min, or from 200 whatever the trend (user report 2026-11-15: 234 falling from 266
-at 97 min stayed silent; replayed it changes nothing, analysen/nachspritzen-2026-11-14/a9.py). Earlier and lower is
-mostly fast absorption, not more carbs. From 2 h the trend no longer counts (Philipp's choice 2026-11-15, fewer
-conditions; replayed: < 70 3.1 -> 3.5 %, < 54 0.6 -> 0.9 %, time in range 81.4 -> 81.1 %). At most once per 90 min.
+from 180 and rising by 10 per 30 min, or from 200 whatever the trend. Earlier and lower is
+mostly fast absorption, not more carbs. From 2 h the trend no longer counts (fewer conditions; replayed:
+< 70 3.1 -> 3.5 %, < 54 0.6 -> 0.9 %, time in range 81.4 -> 81.1 %). At most once per 90 min.
 """
 from __future__ import annotations
 

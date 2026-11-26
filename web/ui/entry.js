@@ -5,7 +5,8 @@
 // app.js mounts the form, passes the day and settings, and talks to it through `control`
 // (refresh, tick, choose, applyAgent, submit), since the minute tick, "+" and the agent live outside.
 import { html, useRef, useState, useEffect } from "./html.js";
-import { post, toast, num, timeOnly, names, sportNames, localInputTime, toInstant, currentPosition, UNIT } from "./lib.js";
+import { post, toast, num, glNum, timeOnly, names, sportKinds, sportOptions, localInputTime, toInstant, currentPosition, UNIT } from "./lib.js";
+import { glField, toMgdl, mmol } from "./units.js";
 import { t } from "./i18n.js";
 import { SportEffectFields, sportFields, sportValues } from "./sport.js";
 import { DoseHelp, sliderUnits, firstPart } from "./dose.js";
@@ -33,7 +34,7 @@ const doseShown = option => ({ units: option.units, later_units: option.later_un
 const sameDose = (a, b) => Number(a.units) === Number(b.units) &&
   (a.later_units == null ? b.later_units == null : b.later_units != null && Number(a.later_units) === Number(b.later_units));
 
-// Which meal surcharge the dose uses while both are compared (user request 2026-11-19): the static one
+// Which meal surcharge the dose uses while both are compared: the static one
 // (80, +120 with "Fettreich") or the one calculated from the agent's fat and protein. The last choice stays.
 const SURCHARGE_MODE_KEY = "entrySurchargeMode";
 function storedSurchargeMode() {
@@ -47,7 +48,7 @@ function blank(kind = "meal") {
   return {
     kind, at: nowTime(), timeTouched: false, timeOpen: false, noteOpen: false, fingerOpen: false,
     carbs: "", insulin: "", finger: "", notes: "", certainty: 1, certaintyUnset: false, fast: false, fpeLevel: "normal",
-    withBasal: true, basalUnits: "", sportKind: "jogging", duration: "", sportFx: sportFields(null),
+    withBasal: true, basalUnits: "", sportKind: sportKinds[0] || "jogging", duration: "", sportFx: sportFields(null),
     entryAs: null, split: null, closeMeal: false, place: undefined, agent: null,
     position: null, positionAt: 0, positionPending: false, positionError: null,
     preview: null, busy: false, doseChoice: null, slider: null, sliderKey: null, doseNote: "", doseChanged: {},
@@ -110,7 +111,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     const carbs = Number(s.carbs) > 0;
     return {
       day, at, mode: s.kind, carbs: s.carbs, as: s.entryAs || null,
-      finger_mgdl: fingerActive(s) ? s.finger || null : null,
+      finger_mgdl: fingerActive(s) && s.finger ? toMgdl(s.finger) : null,
       split: s.split ?? null, close_meal: Boolean(s.closeMeal),
       // Saving re-checks the shown options with these, so the preview must send the same marks.
       carbs_certainty: carbs ? certaintyValue(s) : null,
@@ -225,7 +226,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
 
   function reset() {
     pending.current = { event: null, basal: {} };
-    // A saved entry changes what still acts: the next suggestions are new, not "changed" (user report 2026-11-15).
+    // A saved entry changes what still acts: the next suggestions are new, not "changed".
     doseSeen.current = null;
     refs.carbs.current?.setCustomValidity("");
     const next = { ...blank(store.current.kind), preview: store.current.preview };
@@ -355,7 +356,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
       reset();
       await props.current.onSaved(result, result.day_view);
       const basal = result.basal;
-      const what = (result.kind === "exercise" ? t("sport.sport") : [result.finger_mgdl != null ? t("entry.bg", { value: num(result.finger_mgdl, 0) }) : "",
+      const what = (result.kind === "exercise" ? t("sport.sport") : [result.finger_mgdl != null ? t("entry.bg", { value: glNum(result.finger_mgdl, 0) }) : "",
         carbs > 0 ? num(carbs, 0) + " g" : "", insulin > 0 ? num(insulin, 2) + " " + UNIT.insulin : ""]
         .filter(Boolean).join(" + ")) + (basal ? " + " + t("entryKind.basal") + " " + num(basal.units, 1) + " " + UNIT.insulin : "");
       const message = t("entry.saved", { what }) +
@@ -404,7 +405,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     set({ carbs: String(carbs), certainty: index < 0 ? 1 : index, certaintyUnset: certainty !== undefined && index < 0,
       fast: Boolean(fast),
       agent: { session_id: session, dish_name: estimate.dish?.name || "", description: estimate.description,
-        // Fat and protein scaled by the portion picked in the chat (user request 2026-11-21).
+        // Fat and protein scaled by the portion picked in the chat.
         fat_g: fat_g ?? null, protein_g: protein_g ?? null, portion: portion ?? 1,
         range: estimate.carbs_low_g + "–" + estimate.carbs_high_g + " g" } });
     requestPosition();
@@ -492,7 +493,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
   const fingerOpen = fingerActive(f) && (f.fingerOpen || Boolean(f.finger) || Boolean(preview?.dose?.finger_offer));
   const timeOpen = f.timeOpen || day !== today;
   const noteOpen = f.noteOpen || Boolean(f.notes);
-  // The manual entry ("KE & IE") shows its fields right away, not only once carbs are typed (user request 2026-11-18).
+  // The manual entry ("KE & IE") shows its fields right away, not only once carbs are typed.
   const quality = meal && (document.getElementById("entry-drawer")?.dataset.quick === "manual" || Number(f.carbs) > 0);
   const selectedPlace = placeId(f);
   const chips = place ? place.options.filter(option => option.quick || option.id === selectedPlace) : [];
@@ -579,7 +580,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
       ref=${refs.basal} value=${f.basalUnits} disabled=${f.kind !== "basal"} required=${f.kind === "basal"}
       onInput=${event => { event.currentTarget.setCustomValidity(""); set({ basalUnits: event.currentTarget.value }); }} /></label>
     <label id="entry-sport-field" hidden=${f.kind !== "exercise"}>${t("entry.sportKind")}
-      <select name="sport_kind" ref=${refs.sport} disabled=${f.kind !== "exercise"} onChange=${event => set({ sportKind: event.currentTarget.value })}>${Object.entries(sportNames).map(([kind, label]) =>
+      <select name="sport_kind" ref=${refs.sport} disabled=${f.kind !== "exercise"} onChange=${event => set({ sportKind: event.currentTarget.value })}>${sportOptions(f.sportKind).map(([kind, label]) =>
         html`<option value=${kind} selected=${f.sportKind === kind}>${label}</option>`)}</select></label>
     <label id="entry-duration-field" hidden=${f.kind !== "exercise"}>${t("window.duration")} <span>${t("entry.minutes")}</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"
       value=${f.duration} disabled=${f.kind !== "exercise"} required=${f.kind === "exercise"} onInput=${event => set({ duration: event.currentTarget.value })} /></label>
@@ -592,7 +593,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
           onChoose=${chooseDayType} hintId="entry-day-type-hint" hint=${dayType.source} /></div>`}
     </section>
     <section id="entry-dose" class="entry-card entry-dose-card" aria-label=${t("entry.dose")} hidden=${!meal}>
-      <label id="entry-finger-field" hidden=${!fingerOpen}>${t("entry.finger")} <span>mg/dL</span><input name="finger_mgdl" type="number" min="20" max="600" step="1" inputmode="numeric"
+      <label id="entry-finger-field" hidden=${!fingerOpen}>${t("entry.finger")} <span>${UNIT.glucose}</span><input name="finger_mgdl" type="number" ...${glField(20, 600)} inputmode=${mmol ? "decimal" : "numeric"}
         ref=${refs.finger} value=${f.finger} disabled=${!fingerActive(f)} onInput=${event => { refs.carbs.current.setCustomValidity(""); set({ finger: event.currentTarget.value }); schedule(); }} /></label>
       ${meal && Number(f.carbs) > 0 && !f.agent && help?.surcharge_levels && html`<${FatLevel} value=${f.fpeLevel} onChange=${fpeLevel => toggle({ fpeLevel })} />`}
       ${choice && html`<${SurchargeChoice} mode=${choice.mode} staticMgdl=${choice.static_mgdl} fat=${choice.static_fat} splitNote

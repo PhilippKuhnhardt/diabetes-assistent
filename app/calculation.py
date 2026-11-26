@@ -9,6 +9,7 @@ from bisect import bisect_left
 from datetime import datetime, timedelta
 from decimal import Decimal, getcontext
 
+from app import insulin
 from app.common import local_zone
 from app.i18n import tr
 
@@ -19,25 +20,15 @@ def dec(value: object) -> Decimal:
     return Decimal(str(value))
 
 
-# Activity curve of a rapid dose (Loop's Fiasp preset; derivation in app/on_board.py).
-INSULIN_PEAK = Decimal(55)
-INSULIN_DURATION = Decimal(360)
-INSULIN_DELAY = Decimal(10)
+# Activity curve of a rapid dose: the active profile of app/insulin.py (APP_INSULIN, default Fiasp).
+INSULIN_PEAK = insulin.ACTIVE.peak_minutes
+INSULIN_DURATION = insulin.ACTIVE.duration_minutes
+INSULIN_DELAY = insulin.ACTIVE.delay_minutes
 
 
 def insulin_remaining(minutes: Decimal) -> Decimal:
     """Share of a rapid dose that has not acted yet, `minutes` after the injection."""
-    t = dec(minutes) - INSULIN_DELAY
-    if t <= 0:
-        return Decimal(1)
-    if t >= INSULIN_DURATION:
-        return Decimal(0)
-    peak, duration = INSULIN_PEAK, INSULIN_DURATION
-    tau = peak * (1 - peak / duration) / (1 - 2 * peak / duration)
-    a = 2 * tau / duration
-    scale = 1 / (1 - a + (1 + a) * (-duration / tau).exp())
-    used = scale * (1 - a) * ((t * t / (tau * duration * (1 - a)) - t / tau - 1) * (-t / tau).exp() + 1)
-    return min(Decimal(1), max(Decimal(0), 1 - used))
+    return insulin.ACTIVE.remaining(minutes)
 
 
 def schedule_value_at(moment: datetime, schedule: list[dict], timezone: str, key: str) -> Decimal:
@@ -300,8 +291,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         })
     # Rapid insulin from before the window still lowers glucose inside it. The dose help subtracts it
     # as "Wirkt noch", so the factor counts the share that acts between start and end (activity curve);
-    # without it the factor of such a meal came out too small and the insulin was deducted twice
-    # (Philipp's approval 2026-11-14, analysen/dosisrechnung-pruefung-2026-11-14.md, 22 % of meals).
+    # without it the factor of such a meal came out too small and the insulin was deducted twice.
     prior_doses = []
     prior_insulin_effect = Decimal(0)
     for treatment in all_treatments:

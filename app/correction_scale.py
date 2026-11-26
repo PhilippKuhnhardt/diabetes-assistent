@@ -1,13 +1,13 @@
-"""A correction without food as a scale by how fast the last main meal rose (user request and approval 2026-11-15).
+"""A correction without food as a scale by how fast the last main meal rose.
 
-Analysis in the project files, analysen/korrektur-skala-2026-11-15.md (21.09.-07.11., 51 of Philipp's corrections and
-74 "BZ prüfen" moments, glucose without his corrections recomputed with the app's KF and insulin curve): after a
+Personal analysis (21.09.-07.11., 51 corrections and
+74 "BZ prüfen" moments, glucose without the corrections recomputed with the app's KF and insulin curve): after a
 flat rise the dose help's correction was too small (median +1.8 IE), after a steep one too large (-0.6 IE); a steep
 rise is fast carbs, not more of them, and falls steeply again. The spread per meal is far larger than that
 effect: over all 122 moments the right correction was in the median 0.96 x the dose help's, with quartiles
-0.55 and 1.45 (user request 2026-11-15: middle = most likely, the ends grounded in what corrections with
+0.55 and 1.45 (middle = most likely, the ends grounded in what corrections with
 little / much need would have needed). So the app shows x0.6 / x1 / x1.4 and only marks the end the rise leans
-to (flat: median 1.45, steep: median 0.85); Philipp picks.
+to (flat: median 1.45, steep: median 0.85); the user picks.
 The rise is the steepest 15-min slope of the smoothed CGM within the first hour after the meal (the analysis'
 tertiles: below 1.0 flat, above about 2.0 steep).
 """
@@ -68,8 +68,7 @@ def scale(result: dict, rise: dict | None) -> dict | None:
     if rise is None or result.get("forecast_mgdl") is None or result.get("correction_units") is None:
         return None
     correction = Decimal(result["correction_units"])
-    # Only when normal suggests an injectable dose: a correction rounding to 0 IE gave three zeros
-    # (user report 2026-11-15, right after a correction).
+    # Only when normal suggests an injectable dose: a correction rounding to 0 IE gave three zeros.
     if correction <= 0 or Decimal(result.get("entry_units") or 0) <= 0:
         return None
     start, isf = Decimal(result["forecast_mgdl"]), Decimal(result["isf_mgdl_per_unit"])
@@ -77,7 +76,7 @@ def scale(result: dict, rise: dict | None) -> dict | None:
            "slope_mgdl_per_min": str(rise["slope_mgdl_per_min"]) if rise["slope_mgdl_per_min"] is not None else None}
     # The low end is at least FAST_MIN_GAP below normal: late corrections are small while the right one still
     # spreads about +-1 IE (3-4 h after the meal only 1 in 5 lay within x0.6..x1.4). The high end gets no such
-    # gap: there it cost lows (late < 70: 38 % at x1.4, 47 % with +1 IE; user decision 2026-11-15).
+    # gap: there it cost lows.
     ends = {"fast": min(correction * FAST_FACTOR, correction - FAST_MIN_GAP), "slow": correction * SLOW_FACTOR}
     for name, value in ends.items():
         units = half_units(max(Decimal(0), value))
@@ -87,13 +86,13 @@ def scale(result: dict, rise: dict | None) -> dict | None:
 
 
 
-# The dose slider (user request 2026-11-15): one scale for every dose, from little to much need, with the
+# The dose slider: one scale for every dose, from little to much need, with the
 # recommendation marked and where glucose likely ends. Lower / cautious options were dropped for it.
 MEAL_LOW_FACTOR, MEAL_HIGH_FACTOR = Decimal("0.75"), Decimal("1.2")
 SLIDER_MIN_SPAN = Decimal("0.5")
 # Where glucose ended about 4 h later, relative to the dose help's expected value, as 10/25/50/75/90 %
 # (mg/dL). Corrections: 122 corrections and "BZ prüfen" moments 21.09.-07.11. at the dose help's dose,
-# by the rise after the meal (analysen/korrektur-skala-2026-11-15.md, Nachtrag 3). Meals: 117 main meals,
+# by the rise after the meal. Meals: 117 main meals,
 # untreated glucose 4 h after the meal minus the expectation from the entries at the meal.
 CORRIDOR_MGDL = {
     "fast": (-65, -41, -18, 31, 90),

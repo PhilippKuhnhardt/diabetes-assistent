@@ -13,6 +13,8 @@ A personal web app for living with type 1 diabetes on multiple daily injections.
 - **Dose help.** Suggestions for a new meal or a correction use the meal factors of recent weeks, subtract what is still acting and show where glucose is likely to land. Large meals can be split into two boluses.
 - **History.** Week by week, each meal with its factor, window and curve, for checking and correcting.
 - **Analysis.** Factor statistics per meal and day type, and a 90-day backtest of the settings.
+- **Exercise.** Jogging, gym, light cardio and racing come built in; own kinds with their own glucose effect and duration are added under More → Profile & model → Sport.
+- **Units.** Glucose in mg/dL or mmol/L, the meal factor as units per 10 g (KE), per 12 g (BE) or grams per unit, set under More → Profile & model. Low and high limits for warnings and charts are settings too.
 - **Reminders.** Optional Pushover notifications for forgotten basal, a due second split bolus and low/high early warnings.
 - **Agents and scripts.** A read-only JSON API (`/api/v1`) and an MCP server (`/mcp`), so an AI assistant can check glucose, ask for a dose suggestion and log entries.
 
@@ -32,7 +34,7 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-The app then listens on <http://127.0.0.1:8765/>. Log in with `APP_PASSWORD`. For access from outside, put a reverse proxy with HTTPS in front of it.
+The app then listens on <http://127.0.0.1:8765/>. Log in with `APP_PASSWORD`. For access from outside, put a reverse proxy with HTTPS in front of it. One instance serves one person; run a separate instance with its own database for anyone else.
 
 The database lives in `APP_DATA_DIR` (default `./data`) as `app.sqlite3` and survives container restarts. It must be writable for `APP_UID`/`APP_GID`. Back it up; a volume is not a backup.
 
@@ -46,6 +48,7 @@ The database lives in `APP_DATA_DIR` (default `./data`) as `app.sqlite3` and sur
 | `NIGHTSCOUT_AUTH_MODE` | `secret` (default, sends the SHA-1 of `API_SECRET`) or `token`. |
 | `APP_LANGUAGE` | `de` (default) or `en`: language of server texts, push messages and the meal agent. |
 | `APP_TIMEZONE` | Home time zone if the Nightscout profile has none (default `Europe/Berlin`). |
+| `APP_INSULIN` | Rapid-insulin action profile from [app/insulin.py](app/insulin.py) (default and only upstream profile: `fiasp`; a fork can add its own there). |
 | `APP_SYNC_MINUTES` | Background sync with Nightscout every N minutes (default `2`, `0` = off). |
 | `APP_BIND_ADDRESS`, `APP_PORT` | Where Compose publishes the app (default `127.0.0.1:8765`). |
 | `APP_DATA_DIR`, `APP_UID`, `APP_GID` | Data directory and the user it belongs to (default `./data`, `1000`). |

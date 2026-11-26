@@ -1,4 +1,4 @@
-"""Time-zone switches while travelling (user request 2026-11-07): from each switch on, the app reads
+"""Time-zone switches while travelling: from each switch on, the app reads
 local clock times in that zone; '' is the home zone (Nightscout profile / APP_TIMEZONE)."""
 from __future__ import annotations
 

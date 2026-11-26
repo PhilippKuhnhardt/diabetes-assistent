@@ -3,8 +3,14 @@
 // bands, events and each meal's window; the chart only places them. Chart units equal CSS pixels at
 // the measured width, so text and touch targets keep their size.
 import { html, useState, useEffect, useRef } from "./html.js";
-import { MINUTE, num, timeOnly, sportNames, UNIT } from "./lib.js";
+import { MINUTE, num, glNum, timeOnly, sportNames, UNIT } from "./lib.js";
 import { t } from "./i18n.js";
+import { prefs } from "./prefs.js";
+import { mmol, MGDL_PER_MMOL } from "./units.js";
+
+// Grid lines every 50 mg/dL, or every 3 mmol/L.
+const GRID_STEP = mmol ? 3 * MGDL_PER_MMOL : 50;
+const gridLabel = g => mmol ? String(Math.round(g / MGDL_PER_MMOL)) : String(g);
 
 export function chartLayout(width) {
   const clamped = Math.max(300, Math.min(900, Math.round(width || 600)));
@@ -12,7 +18,7 @@ export function chartLayout(width) {
     lanes: { insulin: 14, carbs: 34, sport: 46 } };
 }
 
-// Verlauf's meal cards (user request 2026-11-23): the same chart, lower, with its event lanes kept.
+// Verlauf's meal cards: the same chart, lower, with its event lanes kept.
 export function compactLayout(width) {
   const clamped = Math.max(260, Math.min(900, Math.round(width || 600)));
   return { width: clamped, left: 30, right: clamped - 8, plotTop: 50, plotBottom: 150, height: 172, compact: true,
@@ -144,7 +150,7 @@ function Handle({ name, at, scales, layout, interactive, reading, active, snappe
 // One chart. `range` is a meal window (or {start: -Infinity, end: Infinity, mealAt} for the day),
 // `overview` draws the day without a window, `editor` adds the window editor's handles and readings.
 // `sport` lists sessions acting on a meal ({from, until} of their effect): a blue band along the bottom, darker
-// where it lies inside the window, so the share a meal takes is visible (user request 2026-11-23).
+// where it lies inside the window, so the share a meal takes is visible.
 export function GlucoseChart({ layout, range, view, entries, treatments, bands, overview, clipId, editor, sport }) {
   const interactive = Boolean(editor);
   const points = glucosePoints(entries);
@@ -153,7 +159,7 @@ export function GlucoseChart({ layout, range, view, entries, treatments, bands, 
   const height = interactive ? 324 : layout.height;
   const { left, right, plotTop, plotBottom, width } = layout;
   const grid = [];
-  for (let g = Math.ceil(scales.bottom / 50) * 50; g <= scales.top; g += 50) grid.push(g);
+  for (let g = Math.ceil(scales.bottom / GRID_STEP) * GRID_STEP; g <= scales.top; g += GRID_STEP) grid.push(g);
   const hour = 60 * MINUTE;
   const step = [1, 2, 3, 6].map(hours => hours * hour).find(candidate => (view.to - view.from) / candidate * 48 <= right - left) || 6 * hour;
   const ticks = [];
@@ -186,7 +192,7 @@ export function GlucoseChart({ layout, range, view, entries, treatments, bands, 
     <g clip-path=${"url(#" + clip + ")"}>
       ${bandRects}
       ${grid.map(g => html`<line class="grid" x1=${left} x2=${right} y1=${scales.y(g).toFixed(1)} y2=${scales.y(g).toFixed(1)} />`)}
-      ${limit(250, "limit-high")}${limit(70, "limit-low")}
+      ${limit(prefs.highMgdl, "limit-high")}${limit(prefs.lowMgdl, "limit-low")}
       ${!overview && html`<rect class="window-shade" x=${scales.x(range.start).toFixed(1)} y=${plotTop - 6}
         width=${(scales.x(range.end) - scales.x(range.start)).toFixed(1)} height=${plotBottom - plotTop + 6} />`}
       ${!overview && (range.manual || interactive) && (range.autoStart !== range.start || range.autoEnd !== range.end) &&
@@ -208,8 +214,8 @@ export function GlucoseChart({ layout, range, view, entries, treatments, bands, 
     <line class="axis" x1=${left} x2=${right} y1=${plotBottom} y2=${plotBottom} />
     ${ticks.map(t => html`<line class="tick" x1=${scales.x(t).toFixed(1)} x2=${scales.x(t).toFixed(1)} y1=${plotBottom} y2=${plotBottom + 5} />
       <text class="x-label" x=${scales.x(t).toFixed(1)} y=${plotBottom + 19} text-anchor="middle">${timeOnly(t)}</text>`)}
-    ${grid.map(g => html`<text class="y-label" x=${left - 6} y=${(scales.y(g) + 4).toFixed(1)} text-anchor="end">${g}</text>`)}
-    ${!layout.compact && html`<text class="y-unit" x="2" y=${plotTop - 16}>mg/dL</text>`}</svg>`;
+    ${grid.map(g => html`<text class="y-label" x=${left - 6} y=${(scales.y(g) + 4).toFixed(1)} text-anchor="end">${gridLabel(g)}</text>`)}
+    ${!layout.compact && html`<text class="y-unit" x="2" y=${plotTop - 16}>${UNIT.glucose}</text>`}</svg>`;
 }
 
 // The day as one chart: today the last hours up to now, otherwise the whole day.

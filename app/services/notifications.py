@@ -1,11 +1,11 @@
-"""Push reminders over Pushover (user decision 2026-10-09): a forgotten basal and a due second split part;
+"""Push reminders over Pushover: a forgotten basal and a due second split part;
 since 2026-10-11 also early warnings of a low or high within the next hour (app/glucose_alerts.py), and since
 2026-11-14 a reminder to look at glucose and maybe correct after a meal (app/correction_check.py).
 
 The background job checks them after each sync round; each reminder is sent once (its key is stored)
 and only after a successful Nightscout sync, so a dose already given but not yet mirrored cannot
 trigger a false reminder. A low or high warning repeats at most once per WARNING_REPEAT.
-Each kind has its own Pushover priority (-2 to 2, user request 2026-10-11).
+Each kind has its own Pushover priority.
 """
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from app import calculation, correction_check, forecast, glucose_alerts, on_board, split
+from app import glucose as cgm
 from app.common import local_zone, parse_instant, unit_text
 from app.ingestion import pushover
 from app.services import day_view, dose_help, factors
@@ -35,7 +36,7 @@ REPEAT = {"low": WARNING_REPEAT, "high": WARNING_REPEAT, "check": correction_che
 PRIORITY_LABELS = {-2: tr("Ganz leise (nur in der Pushover-App)"), -1: tr("Leise (ohne Ton)"), 0: tr("Normal"),
                    1: tr("Hoch (auch in Ruhezeiten)"), 2: tr("Notfall (wiederholt bis bestätigt)")}
 PRIORITIES = {kind: pushover.PRIORITY for kind in KINDS}
-# Minutes without a warning: low after a carb entry, high after rapid insulin (Philipp 2026-11-22).
+# Minutes without a warning: low after a carb entry, high after rapid insulin.
 PAUSES = {"low": glucose_alerts.LOW_PAUSE_MINUTES, "high": glucose_alerts.HIGH_PAUSE_MINUTES}
 MAX_PAUSE_MINUTES = 180
 
@@ -60,14 +61,14 @@ def due_reminders(now: datetime, settings: dict, treatments: list[dict], basal_t
     breakfast_end = int(settings["breakfast_end_minute"])
     if enabled.get("basal") and local.hour * 60 + local.minute >= breakfast_end and not basal_today:
         usual = calculation.dec(settings.get("basal_default_units", config.DEFAULT_BASAL_UNITS))
-        # Only the facts (user request 2026-10-11): Philipp knows the app, the title says what is due.
+        # Only the facts: The user knows the app, the title says what is due.
         message = tr("Üblich {units} IE", units=_units(usual)) if usual > 0 else tr("Heute noch kein Basal")
         reminders.append({"key": f"basal:{local.date().isoformat()}", "kind": "basal",
                           "title": LABELS["basal"], "message": message})
     plan = split.open_plan(treatments, now) if enabled.get("split") else None
     state = split.timing(plan, entries or [], settings, now)["state"] if plan else None
     if state in ("early", "due"):
-        # The amount comes from the current forecast (user approval 2026-10-22), the plan stays as orientation.
+        # The amount comes from the current forecast, the plan stays as orientation.
         units = second_part() if second_part else None
         meal = tr("Mahlzeit um {time}", time=_clock(plan["meal_at"], zone))
         if units is None:
@@ -95,18 +96,20 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
         return []
     zone = local_zone(settings["timezone"])
     reminders = []
+    low_limit, high_limit = cgm.limits(settings)
     for warning in glucose_alerts.warnings(entries, found, now, settings["timezone"],
-                                           low_pause_minutes=pauses["low"], high_pause_minutes=pauses["high"]):
+                                           low_pause_minutes=pauses["low"], high_pause_minutes=pauses["high"],
+                                           low_mgdl=low_limit, high_mgdl=high_limit):
         if not enabled.get(warning["kind"]):
             continue
         minutes = max(0, round((warning["at"] - now).total_seconds() / 60))
         if warning["kind"] == "low":
-            crossing, extreme = tr("unter {mgdl}", mgdl=glucose_alerts.LOW_MGDL), tr("Tiefstwert")
+            crossing, extreme = tr("unter {mgdl}", mgdl=cgm.shown(low_limit, settings)), tr("Tiefstwert")
         else:
-            crossing, extreme = tr("über {mgdl}", mgdl=glucose_alerts.HIGH_MGDL), tr("Höchstwert")
+            crossing, extreme = tr("über {mgdl}", mgdl=cgm.shown(high_limit, settings)), tr("Höchstwert")
         message = tr("BZ {glucose}, {crossing} um {time} (in {minutes} min), {extreme} {mgdl}",
-                     glucose=f"{warning['glucose_mgdl']:.0f}", crossing=crossing, time=_clock(warning["at"], zone),
-                     minutes=minutes, extreme=extreme, mgdl=f"{warning['mgdl']:.0f}")
+                     glucose=cgm.shown(warning['glucose_mgdl'], settings), crossing=crossing, time=_clock(warning["at"], zone),
+                     minutes=minutes, extreme=extreme, mgdl=cgm.shown(warning['mgdl'], settings))
         reminders.append({"key": f"{warning['kind']}:{now.astimezone(timezone.utc).isoformat()}",
                           "kind": warning["kind"], "title": LABELS[warning["kind"]], "message": message})
     return reminders
@@ -138,8 +141,7 @@ TEMPO_LEAN = {"fast": tr("wenig"), "normal": tr("normal"), "slow": tr("viel")}
 def correction_reminder(now: datetime, settings: dict, treatments: list[dict], entries: list[dict],
                         enabled: dict[str, bool], correction: Callable[[], dict | None] | None = None,
                         found: dict | None = None) -> list[dict]:
-    """The tr("BZ prüfen") reminder when due (app/correction_check.py), with the dose help's correction
-    (user request 2026-11-14: name the suggested correction, Philipp judges the situation)."""
+    """The tr("BZ prüfen") reminder when due (app/correction_check.py), with the dose help's correction."""
     if not enabled.get("check"):
         return []
     found = found if found is not None else _acting(now, settings, treatments)
@@ -151,15 +153,15 @@ def correction_reminder(now: datetime, settings: dict, treatments: list[dict], e
     zone = local_zone(settings["timezone"])
     rise = hit["rise_mgdl"]
     message = tr("BZ {glucose} ({rise} in 30 min), Prognose Ende {end}, Mahlzeit um {time}",
-                 glucose=f"{hit['glucose_mgdl']:.0f}", rise=f"{'+' if rise >= 0 else ''}{rise:.0f}",
-                 end=f"{hit['end_mgdl']:.0f}", time=_clock(hit["meal_at"], zone))
+                 glucose=cgm.shown(hit['glucose_mgdl'], settings), rise=cgm.shown(rise, settings, signed=True),
+                 end=cgm.shown(hit['end_mgdl'], settings), time=_clock(hit["meal_at"], zone))
     units = correction() if correction else None
     if units:
         normal, cautious = units.get("normal"), units.get("cautious")
         if normal is not None and normal > 0:
             message += tr(". Korrektur {units} IE", units=_units(normal))
             if units.get("fast") is not None and units.get("slow") is not None:
-                # The ends of what was right after recent meals; the meal's rise leans to one (user request 2026-11-15).
+                # The ends of what was right after recent meals; the meal's rise leans to one.
                 message += tr(" (wenig {fast} · viel {slow} IE", fast=_units(units["fast"]), slow=_units(units["slow"]))
                 tempo = units.get("tempo")
                 if tempo:

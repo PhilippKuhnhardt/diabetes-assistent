@@ -232,7 +232,7 @@ def compute_summary(days: int, today: date) -> dict:
         "day_type_ratio": json_safe(day_type_ratio),
         "sport_analysis": sport_analysis.analyze(
             sport_meals, sport_sessions, settings["sport_lookback_minutes"],
-            settings["window_minutes"], episodes.SPORT_NAMES),
+            settings["window_minutes"], episodes.sport_names(config.get_settings()[1])),
         "night": night_overview(night_records, days),
     }
 

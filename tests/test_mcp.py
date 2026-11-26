@@ -160,6 +160,19 @@ class McpTests(unittest.TestCase):
         self.assertTrue(basal["nightscout_synced"])
         sport = self.call("save_entry", kind="exercise", sport_kind="jogging", duration_minutes=30)
         self.assertEqual(sport["kind"], "exercise")
+        # An own kind can be named by its name; an unknown one is refused by the entry rules.
+        from app.services import settings as settings_service
+        from app.store import config
+        _, current = config.get_settings()
+        config.save_settings(settings_service.validate_settings({
+            "sport_custom": {"own_1": "Klettern"},
+            "sport_effects_mgdl": {**current["sport_effects_mgdl"], "own_1": "50"},
+            "sport_durations_minutes": {**current["sport_durations_minutes"], "own_1": 300}}))
+        climbing = self.call("save_entry", kind="exercise", sport_kind="klettern", duration_minutes=45)
+        self.assertIn("[DAS1:own_1]", FakeNightscout.treatments[-1]["notes"])
+        self.assertEqual(climbing["kind"], "exercise")
+        with self.assertRaisesRegex(ValueError, "Sportart"):
+            self.call("save_entry", kind="exercise", sport_kind="Schwimmen", duration_minutes=30)
         with self.assertRaisesRegex(ValueError, "carbs_certainty"):
             self.call("save_entry", carbs_g=20, insulin_units=2, carbs_certainty="ganz sicher")
         with self.assertRaisesRegex(ValueError, "Kohlenhydrate, Insulin"):

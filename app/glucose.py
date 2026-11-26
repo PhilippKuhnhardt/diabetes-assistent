@@ -6,12 +6,34 @@ from decimal import Decimal
 
 from app.common import local_zone
 from app import calculation
+from app.i18n import english
 
 TREND_WINDOW_MINUTES = Decimal(15)
 TREND_FLAT_MGDL = Decimal(10)
 TREND_FAST_MGDL = Decimal(30)
 LOW_MGDL = Decimal(70)
 HIGH_MGDL = Decimal(250)
+
+
+def limits(settings: dict | None) -> tuple[Decimal, Decimal]:
+    """The low and high limit in mg/dL (settings low_limit_mgdl / high_limit_mgdl, default 70 / 250)."""
+    settings = settings or {}
+    return (calculation.dec(settings.get("low_limit_mgdl") or LOW_MGDL),
+            calculation.dec(settings.get("high_limit_mgdl") or HIGH_MGDL))
+
+
+MGDL_PER_MMOL = Decimal("18.0182")
+
+
+def shown(mgdl, settings: dict | None, signed: bool = False) -> str:
+    """A glucose value or change (mg/dL) as push messages show it: whole mg/dL, or mmol/L with one decimal
+    (settings glucose_unit), decimal comma in German."""
+    value = calculation.dec(mgdl)
+    mmol = (settings or {}).get("glucose_unit") == "mmol"
+    text = f"{value / MGDL_PER_MMOL:.1f}" if mmol else f"{value:.0f}"
+    if mmol and not english():
+        text = text.replace(".", ",")
+    return ("+" if signed and value >= 0 else "") + text
 
 
 def target_at(at: datetime, settings: dict) -> dict | None:
@@ -23,13 +45,15 @@ def target_at(at: datetime, settings: dict) -> dict | None:
 
 
 def tone(value, at: datetime, settings: dict) -> str:
-    """Colour class of a CGM value: low < 70, high > 250, else inside or outside the target range."""
+    """Colour class of a CGM value: below the low limit, above the high limit, else inside or outside the
+    target range."""
     if value is None:
         return "none"
     value = calculation.dec(value)
-    if value < LOW_MGDL:
+    low_limit, high_limit = limits(settings)
+    if value < low_limit:
         return "low"
-    if value > HIGH_MGDL:
+    if value > high_limit:
         return "high"
     target = target_at(at, settings)
     if target is None:
@@ -118,9 +142,9 @@ def current_status(entries: list[dict], settings: dict, now: datetime | None = N
     high = calculation.dec(target["high_mgdl"]) if target else None
     if not fresh:
         status = "stale"
-    elif value < Decimal(70):
+    elif value < limits(settings)[0]:
         status = "low"
-    elif value > Decimal(250):
+    elif value > limits(settings)[1]:
         status = "high"
     elif low is None or high is None:
         status = "no_target"

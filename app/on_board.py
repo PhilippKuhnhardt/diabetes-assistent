@@ -1,12 +1,9 @@
 """What still acts on glucose right now: rapid insulin, carbs and the meal surcharge still to come.
 
-Analysis and approval in the project files, analysen/fiasp-wirkkurve.md (2026-10-08).
+Insulin: the active profile's activity curve (app/insulin.py, default Fiasp: peak 55 min after a
+10-min delay, 6 h duration). Remaining effect = Σ rapid IE × still-active share × KF at the dose.
 
-Insulin: exponential activity curve as Loop's Fiasp preset (peak 55 min after a 10-min delay,
-6 h duration); Philipp's data fit it (about 0 % after 30 min, 50 % after 90 min, 75 % after 2 h,
-nearly all after 4 h). Remaining effect = Σ rapid IE × still-active share × KF at the dose.
-
-Simple model (Philipp's approval 2026-11-21, analysen/vereinfachung-2026-11-21.md): carbs are digested,
+Simple model: carbs are digested,
 insulin lowers, glucose is the sum; no rules about meals, snacks or time windows.
 
 Carbs: every carb entry, meal, snack or carbs alone, goes into one stomach STOMACH_DELAY minutes after it is entered.
@@ -21,11 +18,11 @@ app/fpe.py), linearly from the entry over 5 h (6 h fat/protein, calculated: its 
 2–5 h, breakfast 1–4 h, meals grouped by 60 min). A place switched on for the place factor scales the carbs and
 surcharge of its entries.
 
-Sport: each session lowers glucose by its effect (the setting of its kind, or the value Philipp set on the
+Sport: each session lowers glucose by its effect (the setting of its kind, or the value the user set on the
 session in "Tag durchgehen"; negative raises, e.g. racing), linearly from the session's end over its kind's
 duration (setting, default 5 h). After
 gym the glucose fell about 130 mg/dL more than on days without sport by 6 h after the start, mostly 1-5 h after
-the end (10 sessions, analysen/pruefstand-2026-10/gym.md, 2026-10-22). A session entered ahead counts already.
+the end. A session entered ahead counts already.
 
 These are model assumptions for a rough forecast, not physiological facts or dosing advice.
 """
@@ -37,7 +34,7 @@ from decimal import Decimal
 from app import calculation
 from app.calculation import INSULIN_DELAY, INSULIN_DURATION, INSULIN_PEAK, insulin_remaining  # noqa: F401
 
-# Stomach (user request 2026-11-21, analysen/vereinfachung-2026-11-21.md): every carb entry reaches the stomach
+# Stomach: every carb entry reaches the stomach
 # STOMACH_DELAY minutes after it is entered; the stomach passes on at most STOMACH_RATE g/min, less when little is
 # in it: rate = STOMACH_RATE × S / (S + STOMACH_HALF_GRAMS) for S g inside, shared by all entries in it. Alone,
 # 40 g are half absorbed after about 1 h and 90 % after 2.4 h, 120 g after 1.7 h and 3.6 h; a second meal
@@ -57,7 +54,7 @@ SPORT_AHEAD = timedelta(hours=6)
 FORECAST_SPREAD_MGDL = Decimal(60)
 # Likely range of the expected value (8 of 10 cases, P10..P90 of the miss), by how much still acts in
 # total (insulin + carbs + surcharge, mg/dL): (from, below expected, above expected). Estimated offline
-# from 23 days, analysis in the project files analysen/fruehprognose.md (2026-10-11).
+# from 23 days of the author's data.
 FORECAST_BAND = ((Decimal(150), Decimal(75), Decimal(90)),
                  (Decimal(40), Decimal(50), Decimal(60)),
                  (Decimal(0), Decimal(30), Decimal(30)))
@@ -146,7 +143,7 @@ def sport_remaining(minutes_after_end: Decimal, duration: Decimal = SPORT_MINUTE
 
 
 def sport_minutes(item: dict, settings: dict, overrides: dict | None = None) -> Decimal:
-    """Minutes after its end over which a session acts: Philipp's value for this session, else the
+    """Minutes after its end over which a session acts: the user's value for this session, else the
     setting of its kind."""
     if overrides and item.get("id") in overrides:
         return Decimal(int(overrides[item["id"]]))
@@ -154,7 +151,7 @@ def sport_minutes(item: dict, settings: dict, overrides: dict | None = None) -> 
 
 
 def sport_effect(item: dict, settings: dict, overrides: dict | None = None) -> Decimal:
-    """A session's glucose drop in mg/dL: Philipp's value for this session, else the setting of its kind."""
+    """A session's glucose drop in mg/dL: the user's value for this session, else the setting of its kind."""
     if overrides and item.get("id") in overrides:
         return calculation.dec(overrides[item["id"]])
     return calculation.dec(settings.get("sport_effects_mgdl", {}).get(item.get("sport_type"), 0))
@@ -181,7 +178,7 @@ def is_main_meal(item: dict) -> bool:
 
 def entry_surcharges(carbs: list[dict], treatments: list[dict], now: datetime, surcharge_mgdl: Decimal, surcharge_share,
                      fat_surcharge_mgdl: Decimal, keep_all: bool, scale=None) -> list[dict]:
-    """The surcharge of each carb entry (user request 2026-11-21, analysen/vereinfachung-2026-11-21.md): the share
+    """The surcharge of each carb entry: the share
     its carbs add to what is still in the stomach, share(in stomach + carbs) − share(in stomach), of the full
     surcharge (the configured one, plus the fat surcharge with the entry's fat/protein mark, or the calculated
     fat/protein surcharge the entry was dosed with, app/fpe.py). So a bite, starter, main and dessert in one entry
@@ -211,7 +208,7 @@ def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, 
     """The doses, carb entries, surcharges and sport sessions that may still act at `now`, with their full
     effect in mg/dL. carb_factor(at) gives the IE/KE that values a carb entry made at `at`. keep_all keeps
     everything up to `now` however old, for a whole-day timeline. sport_overrides maps a session's id to
-    the drop Philipp set for it, sport_minutes_overrides its effect duration. A fat/protein main meal carries fat_surcharge_mgdl more surcharge;
+    the drop the user set for it, sport_minutes_overrides its effect duration. A fat/protein main meal carries fat_surcharge_mgdl more surcharge;
     scale(item) gives the place factor of an entry (None = 1) for its carbs and surcharge."""
     zone = settings["timezone"]
     isf = lambda at: calculation.isf_at(at, settings.get("isf_schedule", []), zone)

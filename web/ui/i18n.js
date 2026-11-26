@@ -5,6 +5,7 @@
 // so module-level labels (meal names, sport kinds) can be built once.
 import de from "../i18n/de.js";
 import en from "../i18n/en.js";
+import { GLUCOSE_UNIT } from "./units.js";
 
 const DICTIONARIES = { de, en };
 export const DEFAULT_LANGUAGE = "de";
@@ -53,7 +54,8 @@ function entry(key, params) {
   if (value == null) return key;
   // Plural forms: { one, other } chosen by params.count.
   if (typeof value === "object") value = value[plurals.select(Number(params?.count ?? 0))] ?? value.other;
-  return String(value);
+  // Texts name the glucose unit as mg/dL; with mmol/L the callers pass converted numbers (web/ui/units.js).
+  return String(value).replaceAll("mg/dL", GLUCOSE_UNIT);
 }
 
 // The text of a key with {name} placeholders filled in.

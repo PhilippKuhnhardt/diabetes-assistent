@@ -26,7 +26,6 @@ from app.store import config, places as place_store
 from app.i18n import tr
 
 CERTAINTIES = list(episodes.CERTAINTIES)
-SPORT_KINDS = list(episodes.SPORT_LABELS)
 READ_TABLES = ["meals", "window-events", "entries", "treatments", "basal", "meal-records", "data", "profile"]
 # The dose fields a conversation needs; the rest of dose_help's answer is intermediate values.
 DOSE_KEYS = (
@@ -54,7 +53,7 @@ class Args(BaseModel):
 
 
 AT_TEXT = (tr("Zeitpunkt ISO-8601 mit Zeitzone. Weglassen = jetzt (Standard). "
-           "Nur setzen, wenn Philipp ausdrücklich eine andere Zeit nennt."))
+           "Nur setzen, wenn der Nutzer ausdrücklich eine andere Zeit nennt."))
 DAY_TEXT = tr("JJJJ-MM-TT, Standard heute.")
 
 
@@ -91,14 +90,14 @@ class EntryArgs(Args):
         "und protein_g berechnet (dann Split: KH jetzt, Zuschlag später). Weglassen = static."))] = None
     place: Annotated[str | None, Field(description=
         tr("Ort-Chip, an dem gegessen wurde (z. B. Kantine, Restaurant), nur bei KH. Die Vorschau listet die vorhandenen "
-        "Orte in places; weglassen, wenn Philipp keinen nennt."))] = None
+        "Orte in places; weglassen, wenn der Nutzer keinen nennt."))] = None
 
 
 class SaveEntryArgs(EntryArgs):
     kind: Annotated[Literal["meal", "exercise"] | None, Field(description=
         tr("meal = Essen und/oder Insulin (Standard), exercise = Sport."))] = None
     insulin_units: Annotated[Decimal | None, Field(ge=0, le=100, description=
-        tr("Tatsächlich gespritzte schnelle IE (Fiasp)."))] = None
+        tr("Tatsächlich gespritzte schnelle IE."))] = None
     dose_variant: Annotated[Literal[entry.DOSE_VARIANTS] | None, Field(description=
         tr("Welcher Vorschlag gewählt wurde (bestimmt beim Split den 2. Teil)."))] = None
     with_basal: Annotated[bool | None, Field(description=
@@ -107,11 +106,13 @@ class SaveEntryArgs(EntryArgs):
         tr("Gericht aus dem Katalog (list_dishes), z. B. Porridge, nur bei KH. Ein vorhandenes Gericht mit genau seinem "
         "Namen nennen, damit sein Verlauf zusammenbleibt; ein neuer Name legt ein neues Gericht an."))] = None
     description: Annotated[str | None, Field(description=
-        tr("Was gegessen wurde, in Philipps Worten (Bestandteile, Mengen), nur bei KH."))] = None
-    sport_kind: Annotated[Literal[tuple(SPORT_KINDS)] | None, Field(description=tr("Nur für kind=exercise."))] = None
+        tr("Was gegessen wurde, in den Worten des Nutzers (Bestandteile, Mengen), nur bei KH."))] = None
+    sport_kind: Annotated[str | None, Field(max_length=40, description=tr(
+        "Nur für kind=exercise: jogging, gym, light_cardio, racing oder eine eigene Sportart aus den Einstellungen "
+        "(Schlüssel oder Name)."))] = None
     duration_minutes: Annotated[int | None, Field(ge=1, le=1440, description=tr("Nur für kind=exercise."))] = None
     sport_change_mgdl: Annotated[Decimal | None, Field(ge=-500, le=500, description=
-        tr("Nur für kind=exercise, wenn Philipp einen eigenen Einfluss nennt: BZ-Änderung in mg/dL, −70 senkt, +40 hebt. "
+        tr("Nur für kind=exercise, wenn der Nutzer einen eigenen Einfluss nennt: BZ-Änderung in mg/dL, −70 senkt, +40 hebt. "
         "Weglassen = Standard der Sportart. Wirkt automatisch über die Wirkdauer der Sportart nach dem Ende."))] = None
     notes: Annotated[str | None, Field(description=tr("Notiz, z. B. was gegessen wurde."),
                                        json_schema_extra={"maxLength": 500})] = None
@@ -335,7 +336,7 @@ def _place_id(args: EntryArgs) -> int | None:
     found = next((place for place in options if place["name"].casefold() == name.casefold()), None)
     if found is None:
         raise ToolError(tr("Unbekannter Ort. Vorhandene Orte: ") + (", ".join(place["name"] for place in options)
-                                                                 or tr("keine, Philipp legt sie in den Einstellungen an")))
+                                                                 or tr("keine, der Nutzer legt sie in den Einstellungen an")))
     return found["id"]
 
 
@@ -375,6 +376,10 @@ def save_entry(args: SaveEntryArgs) -> dict:
         sport_kind, minutes, change = args.sport_kind, args.duration_minutes, args.sport_change_mgdl
         if sport_kind is None or minutes is None:
             raise ToolError(tr("Sport braucht sport_kind und duration_minutes (ganze Minuten)"))
+        _, settings = config.get_settings()
+        names = episodes.sport_names(settings)
+        sport_kind = sport_kind if sport_kind in names else next(
+            (key for key, name in names.items() if name.casefold() == sport_kind.strip().casefold()), sport_kind)
         payload.update({"sport_kind": sport_kind, "duration_minutes": minutes,
                         "sport_effect_mgdl": str(change) if change is not None else None})
     saved = entry.save(payload)
@@ -488,7 +493,7 @@ TOOLS = [
         "name": "save_entry",
         "title": tr("Eintrag speichern"),
         "description": tr("Speichert Mahlzeit, Snack, Korrektur oder Sport in Nightscout, genau wie das "
-                       "Eintragsformular. Nur aufrufen, wenn Philipp die Werte ausdrücklich bestätigt hat "
+                       "Eintragsformular. Nur aufrufen, wenn der Nutzer die Werte ausdrücklich bestätigt hat "
                        "(gegessene KH, tatsächlich gespritzte IE). Bei KH immer KH-Sicherheit und fett-/"
                        "eiweißreich mitgeben (erfragen, falls nicht genannt). Bei Split insulin_units = jetzt "
                        "gespritzter Teil, der Rest wird als geplanter 2. Teil vermerkt."),
@@ -499,8 +504,8 @@ TOOLS = [
     {
         "name": "save_basal",
         "title": tr("Basal speichern"),
-        "description": tr("Speichert eine Basal-Injektion (lokal und als Notiz in Nightscout). Nur auf Philipps "
-                       "ausdrückliche Angabe."),
+        "description": tr("Speichert eine Basal-Injektion (lokal und als Notiz in Nightscout). Nur auf "
+                       "ausdrückliche Angabe des Nutzers."),
         "annotations": {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": True,
                         "openWorldHint": False},
         **_bind(SaveBasalArgs, save_basal),
