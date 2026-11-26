@@ -16,7 +16,7 @@ from pathlib import Path
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-from app import auth, dosing, episodes, forecast, on_board
+from app import auth, dosing, episodes, forecast, fpe, on_board
 from app.common import local_day_range, parse_instant, unit_text
 from app.analysis.night import night_analysis
 from app.services import day_view
@@ -2204,6 +2204,57 @@ class IntegrationTests(unittest.TestCase):
         note = FakeNightscout.treatments[-1]["notes"]
         self.assertIn(episodes.surcharge_tag("105", 337), note)
         self.assertEqual(episodes.surcharge_plan(note), {"mgdl": "105", "minutes": 337})
+
+    def test_manual_entry_sets_fat_protein_level_as_fpe(self):
+        # Philipp 2026-11-26: the manual carb entry offers Nichts / Normal / Fett instead of the fat mark, as FPE.
+        self.request("/api/settings")
+        self.request("/api/settings", method="POST", body={"auto_method": "surcharge", "split_min_units": 1})
+        now = datetime.now(timezone.utc)
+        today = now.astimezone(ZoneInfo("Europe/Berlin")).date().isoformat()
+        current_day = {
+            "day": today, "entries": [{"at": (now - timedelta(minutes=2)).isoformat(), "sgv": 120}],
+            "treatments": [], "basal": [], "day_type": "work", "day_type_source": "weekday", "meals": [],
+        }
+        entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "60", "as": "meal"}
+        auto = {"units_per_ke": Decimal("0.5"), "count": 6}
+        units = {}
+        with fake_days(return_value=current_day), patch.object(forecast, "predict_method", return_value=auto):
+            for level in ("none", "normal", "fat"):
+                dose = self.request("/api/entry/preview", method="POST", body={**entry, "fpe_level": level})["dose"]
+                self.assertTrue(dose["surcharge_levels"])
+                self.assertFalse(dose["surcharge_choice"])
+                units[level] = Decimal(dose["auto_surcharge_units"])
+            self.assertEqual(units["none"], 0)
+            self.assertLess(units["normal"], units["fat"])
+            # Normal is the former static surcharge of 80 mg/dL (4 FPE × 20).
+            self.assertAlmostEqual(units["normal"] * Decimal(dose["isf_mgdl_per_unit"]),
+                                   80 * forecast.surcharge_share(Decimal(60)), places=6)
+            fat = self.request("/api/entry/preview", method="POST", body={**entry, "fpe_level": "fat"})["dose"]
+            normal = fat["options"][0]
+            self.request("/api/entry", method="POST", body={**entry, "fpe_level": "fat", "insulin": normal["units"],
+                                                           "dose_variant": "normal"})
+        note = FakeNightscout.treatments[-1]["notes"]
+        self.assertEqual(episodes.surcharge_plan(note), {"mgdl": "200", "minutes": 480})
+        self.assertNotIn("[DAQ:fat]", note)
+        self.assertEqual(fpe.level_of({"mgdl": "200", "minutes": 480}, False), "fat")
+        self.assertEqual(fpe.level_of(None, True), "fat")
+        self.assertEqual(fpe.level_of(None, False), "normal")
+
+    def test_meal_card_changes_the_fat_protein_level_of_a_manual_entry(self):
+        self.request("/api/settings")
+        self.request("/api/settings", method="POST", body={"auto_method": "surcharge"})
+        self.request("/api/treatment", method="POST", body={"kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4"})
+        day = self.request("/api/day?date=2026-09-23")
+        meal = next(item for item in day["timeline"] if item["kind"] == "meal")
+        self.assertEqual(meal["fpe_level"], "normal")   # no stored surcharge, no fat mark
+        edit = {"id": meal["id"], "original_day": "2026-09-23", "original_kind": "meal", "at": MEAL_AT,
+                "carbs": 40, "insulin": 4}
+        result = self.request("/api/entry/edit", method="POST", body={**edit, "fpe_level": "none"})
+        saved = next(item for item in result["day_view"]["timeline"] if item["id"] == meal["id"])
+        self.assertEqual((saved["fpe_level"], saved["surcharge"]), ("none", {"mgdl": "0", "minutes": 180}))
+        # An edit without a level keeps it.
+        kept = self.request("/api/entry/edit", method="POST", body=edit)
+        self.assertEqual(next(item for item in kept["day_view"]["timeline"] if item["id"] == meal["id"])["fpe_level"], "none")
 
     def test_meal_card_switches_a_saved_meal_between_static_and_calculated_surcharge(self):
         # Philipp 2026-11-19: choose the surcharge on the meal itself; the estimate comes from the linked agent session.
