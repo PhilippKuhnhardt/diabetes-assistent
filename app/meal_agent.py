@@ -84,7 +84,7 @@ nächsten Mal wieder auffindbar sind: Produkt und Marke im item-Namen, im amount
 die Packungsangabe (z. B. "2 Stück à 23 g, 54 g KH/100 g"), auch in der description.
 - Isst Philipp etwas, das er schon einmal angegeben hat (gleiches Produkt, "wie neulich", "die Waffel von \
 eben"), suche es mit search_meals: jeder Treffer zeigt unter agent die damaligen items und Philipps eigene \
-Worte (philipp_said), etwa Nährwerte je 100 g und Gewicht je Stück. Rechne damit statt neu zu schätzen. Ein \
+Worte (user_said), etwa Nährwerte je 100 g und Gewicht je Stück. Rechne damit statt neu zu schätzen. Ein \
 Treffer zeigt carbs_g für den ganzen Eintrag, oft mit anderem Essen zusammen; nimm den Anteil des Produkts aus \
 den items. Was schon in einem früheren Eintrag gezählt ist, zählt nicht noch einmal.
 - In späteren Nachrichten korrigiert oder ergänzt Philipp die Mahlzeit, auch nachträglich ("noch ein zweiter \
@@ -121,7 +121,7 @@ TOOLS = [
     {"name": "search_meals",
      "description": "Frühere Kohlenhydrat-Einträge durchsuchen, neueste zuerst (höchstens 40). Je Eintrag: Tag, "
                     "Uhrzeit, Mahlzeitenart, Gericht, Beschreibung, KH, Ort, KH-Sicherheit, agent (die damaligen items "
-                    "mit Menge und KH und philipp_said, Philipps eigene Worte zur Einschätzung, etwa Nährwerte und "
+                    "mit Menge und KH und user_said, Philipps eigene Worte zur Einschätzung, etwa Nährwerte und "
                     "Gewichte) und meal_outcome der Hauptmahlzeit, zu der er gehört (factor, reference_factor, ratio, carbs_g und rapid_units "
                     "der ganzen Mahlzeit, BZ g0_mgdl vorher und g_end_mgdl nachher, delta_mgdl).",
      "parameters": {"type": "object", "properties": {
