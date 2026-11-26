@@ -17,7 +17,7 @@ from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 from app import auth, dosing, episodes, forecast, on_board
-from app.common import parse_instant, unit_text
+from app.common import local_day_range, parse_instant, unit_text
 from app.analysis.night import night_analysis
 from app.services import day_view
 from app.ingestion import nightscout
@@ -34,9 +34,20 @@ def fake_days(**day_payload):
     fingerprints, so the fakes get their own fingerprint (still following local marks)."""
     token = uuid.uuid4().hex
     real = day_view.day_fingerprint
+    if isinstance(day_payload.get("return_value"), dict):
+        # Like the real mirror, a day holds only the readings and treatments inside its own range
+        # (local midnight − 10 h until 13:00 the next day), so "now" must join days to look back.
+        payload = day_payload.pop("return_value")
+        day_payload["side_effect"] = lambda day, *args, **kwargs: _within_day(payload, day)
     with patch("app.services.day_view.day_payload", **day_payload) as mock, \
             patch("app.services.day_view.day_fingerprint", side_effect=lambda day: token + real(day)):
         yield mock
+
+
+def _within_day(payload: dict, day: str) -> dict:
+    start, end = local_day_range(day, "Europe/Berlin")
+    inside = lambda rows: [row for row in rows if start <= parse_instant(row["at"]) < end]
+    return {**payload, **{key: inside(payload[key]) for key in ("entries", "treatments") if key in payload}}
 
 
 def then_empty(payloads):
@@ -1338,6 +1349,31 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(night["delta_mgdl"], -40)
         self.assertEqual(night["minimum_glucose"], 95)
 
+    def test_night_ends_at_a_morning_dose_and_reports_fall_rise_and_carbs(self):
+        # A correction on waking (within 2 h before breakfast) ends the night instead of voiding it.
+        dinner = datetime(2026, 9, 22, 18, tzinfo=timezone.utc)
+        waking = datetime(2026, 9, 23, 5, tzinfo=timezone.utc)
+        breakfast = datetime(2026, 9, 23, 6, tzinfo=timezone.utc)
+        treatments = [
+            {"at": dinner, "insulin": 4, "role": "meal"},
+            {"at": datetime(2026, 9, 23, 1, tzinfo=timezone.utc), "carbs": 12},
+            {"at": waking, "insulin": 1, "role": "correction"},
+            {"id": "breakfast", "at": breakfast, "insulin": 3, "role": "meal", "carbs": 50, "eventType": "Meal Bolus", "notes": ""},
+        ]
+        entries = [
+            {"at": dinner + timedelta(hours=3), "sgv": 140},
+            {"at": datetime(2026, 9, 23, 2, tzinfo=timezone.utc), "sgv": 90},
+            {"at": waking, "sgv": 150},
+        ]
+        meals = [{"meal": "dinner", "at": dinner}]
+        settings = {"timezone": "Europe/Berlin", "window_minutes": 180}
+        night = night_analysis("2026-09-22", treatments, entries, meals, settings)
+        self.assertEqual(night["morning_dose_at"], waking)
+        self.assertEqual(night["end"], waking)
+        self.assertEqual(night["drop_mgdl"], -50)
+        self.assertEqual(night["rise_mgdl"], 60)
+        self.assertEqual(night["carbs_g"], 12)
+
     def test_day_types_are_off_by_default_and_breakfast_is_one_meal_then(self):
         # Work/free days became optional (2026-11-26): a new installation has them off.
         self.assertFalse(config.default_settings()["day_types"])
@@ -2041,6 +2077,41 @@ class IntegrationTests(unittest.TestCase):
                 "dose_variant": "normal"})
         self.assertEqual(Decimal(str(FakeNightscout.treatments[-1]["insulin"])), Decimal(normal["units"]))
 
+    def test_now_reads_last_evening_and_a_long_sport_effect_just_after_midnight(self):
+        # 00:30 in Berlin: today's stored day starts at 14:00 yesterday, so the dose help, "Wirkt noch" and the
+        # reminders join the days they reach back to instead of reading only today's calendar day.
+        self.request("/api/settings")
+        now = datetime(2026, 11, 27, 0, 30, tzinfo=ZoneInfo("Europe/Berlin")).astimezone(timezone.utc)
+        at = lambda hours: (now - timedelta(hours=hours)).isoformat()
+        payload = {
+            "meals": [], "entries": [{"at": at(0.05), "sgv": 120}, {"at": at(13), "sgv": 140}],
+            "treatments": [
+                {"id": "too-old", "at": at(40), "eventType": "Correction Bolus", "carbs": 0, "insulin": "1"},
+                {"id": "sport", "at": at(14), "eventType": "Exercise", "carbs": 0, "insulin": 0, "duration": 60,
+                 "sport_type": "gym", "notes": ""},
+                {"id": "dinner", "at": at(1.8), "eventType": "Meal Bolus", "role": "meal", "carbs": "100",
+                 "insulin": "4", "split": {"units": "3", "minutes": 120}},
+            ]}
+        with fake_days(return_value=payload) as days:
+            recent = day_view.recent(now)
+        self.assertEqual({call.args[0] for call in days.call_args_list}, {"2026-11-25", "2026-11-26", "2026-11-27"})
+        self.assertEqual([row["id"] for row in recent["treatments"]], ["sport", "dinner"])
+        self.assertEqual([row["sgv"] for row in recent["entries"]], [140, 120])
+        # Today's day alone holds neither the sport session nor the reading of 13 h ago.
+        self.assertEqual([row["id"] for row in _within_day(payload, "2026-11-27")["treatments"]], ["dinner"])
+
+    def test_now_takes_each_treatment_from_its_own_day(self):
+        # A treatment inside two stored days keeps the grouping of its own local day.
+        self.request("/api/settings")
+        now = datetime(2026, 11, 27, 0, 30, tzinfo=ZoneInfo("Europe/Berlin")).astimezone(timezone.utc)
+        snack = {"id": "snack", "at": (now - timedelta(hours=3)).isoformat(), "eventType": "Snack Bolus",
+                 "carbs": "20", "insulin": "1"}
+        days = {"2026-11-26": {"entries": [], "treatments": [{**snack, "role": "snack"}]},
+                "2026-11-27": {"entries": [], "treatments": [{**snack, "role": "meal"}]}}
+        with fake_days(side_effect=lambda day, **kwargs: days.get(day, {"entries": [], "treatments": []})):
+            recent = day_view.recent(now)
+        self.assertEqual([row["role"] for row in recent["treatments"]], ["snack"])
+
     def test_large_meal_is_split_and_the_second_part_is_offered_later(self):
         self.request("/api/settings")
         # 100 g need 10 IE before noon but 5 IE after it (test profile I:C 10 / 20 g): keep the split
@@ -2083,9 +2154,12 @@ class IntegrationTests(unittest.TestCase):
         note = FakeNightscout.treatments[-1]["notes"]
         self.assertIn(episodes.split_tag(unit_text(later), 120), note)
 
+        # A first part below the meal's need at any clock time: the test profile's I:C changes at noon and
+        # midnight, so the first part dosed "now" could exceed a meal of last evening just after midnight.
         meal_at = now - timedelta(minutes=110)
+        meal_first = Decimal(2)
         current_day["treatments"] = [{"at": meal_at.isoformat(), "role": "meal", "eventType": "Meal Bolus",
-                                      "carbs": "100", "insulin": str(first), "split": episodes.split_plan(note)}]
+                                      "carbs": "100", "insulin": str(meal_first), "split": episodes.split_plan(note)}]
         with fake_days(return_value=current_day):
             dose = self.request("/api/entry/preview", method="POST", body={**entry, "carbs": "0"})["dose"]
         self.assertEqual(dose["options"][0]["variant"], "split")

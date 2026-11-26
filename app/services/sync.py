@@ -1,7 +1,7 @@
-"""Endpoints that talk to Nightscout directly: manual sync, profile sync, connection test, current glucose."""
+"""Endpoints that talk to Nightscout directly: profile sync, connection test, current glucose."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from app import episodes, glucose
 from app.common import local_day_range, local_zone, parse_instant
@@ -9,24 +9,6 @@ from app.ingestion import nightscout, sync as ingestion_sync
 from app.store import config
 from app.i18n import tr
 
-
-
-def sync_days(payload: dict) -> dict:
-    if not nightscout.is_configured():
-        raise ValueError(tr("Nightscout-Zugang in Umgebungsvariablen fehlt"))
-    days = int(payload.get("days", 14))
-    if days not in (1, 3, 7, 14, 30):
-        raise ValueError(tr("Ungültiger Zeitraum"))
-    profile_sync_error = None
-    try:
-        ingestion_sync.sync_profile_cache(force=True)
-    except nightscout.NightscoutError as error:
-        profile_sync_error = str(error)
-    _, settings = config.get_settings()
-    today = datetime.now(local_zone(settings["timezone"])).date()
-    synced, errors = ingestion_sync.mirror_days(
-        [(today - timedelta(days=offset)).isoformat() for offset in range(days)], settings["timezone"])
-    return {"synced": synced, "errors": errors, "profile_sync_error": profile_sync_error}
 
 
 def sync_profile(payload: dict) -> dict:
