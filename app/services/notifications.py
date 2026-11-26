@@ -178,10 +178,10 @@ def correction_reminder(now: datetime, settings: dict, treatments: list[dict], e
 def _today_inputs(now: datetime, settings: dict) -> tuple[list[dict], list[dict], list[dict]]:
     zone = local_zone(settings["timezone"])
     today = now.astimezone(zone).date()
-    # Today's day reaches back to yesterday afternoon, far enough for any open split plan.
-    payload = day_view.day_payload(today.isoformat(), refresh=False)
-    treatments = [{**row, "at": parse_instant(row["at"])} for row in payload["treatments"]]
-    entries = [{"at": parse_instant(row["at"]), "sgv": row["sgv"]} for row in payload["entries"]]
+    # The same rolling span as the dose help, so warnings and reminders see what still acts after midnight.
+    recent = day_view.recent(now)
+    treatments = [{**row, "at": parse_instant(row["at"])} for row in recent["treatments"]]
+    entries = [{"at": parse_instant(row["at"]), "sgv": row["sgv"]} for row in recent["entries"]]
     start = datetime.combine(today, time.min, tzinfo=zone)
     basal_today = basal_doses.basal_doses_between(start, start + timedelta(days=1))
     return treatments, basal_today, entries

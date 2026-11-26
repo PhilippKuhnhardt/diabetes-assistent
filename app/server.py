@@ -81,7 +81,6 @@ POST_ROUTES = {
     "/api/analysis/window/preview": window_editor.preview,
     "/api/analysis/day-type": annotations.set_day_type,
     "/api/analysis/exclusion": annotations.set_exclusion,
-    "/api/sync": sync.sync_days,
     "/api/profile/sync": sync.sync_profile,
     "/api/profile/ic": lambda payload: settings.save_profile_schedule("/api/profile/ic", payload),
     "/api/profile/isf": lambda payload: settings.save_profile_schedule("/api/profile/isf", payload),

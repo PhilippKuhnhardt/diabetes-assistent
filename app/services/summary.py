@@ -10,7 +10,7 @@ from app import calculation, episodes, forecast, sport_analysis
 from app.common import MEALS, json_safe, local_zone
 from app.ingestion import nightscout, sync
 from app.services import day_view, factors
-from app.store import config, marks, results
+from app.store import config, marks, mirror, results
 from app.analysis.stats import median, quartile, strong_outlier_flags
 from app.i18n import tr
 
@@ -20,13 +20,24 @@ def summary(params: dict) -> dict:
     if days not in (1, 3, 7, 14, 30):
         raise ValueError(tr("Ungültiger Zeitraum"))
     profile_sync_error = None
+    sync_errors = []
+    _, settings = config.get_settings()
+    today = datetime.now(local_zone(settings["timezone"])).date()
     if nightscout.is_configured():
         try:
             sync.sync_profile_cache()
         except nightscout.NightscoutError as error:
             profile_sync_error = str(error)
-    _, settings = config.get_settings()
-    today = datetime.now(local_zone(settings["timezone"])).date()
+        # The page loads its period by itself (user request 2026-11-26, replacing "Zeitraum aus Nightscout
+        # laden"): the background job keeps yesterday and today current, and every day the analysis reads
+        # that was never mirrored is fetched once here.
+        missing = mirror.never_synced([(today - timedelta(days=offset)).isoformat()
+                                       for offset in range(history_days(days) + 1)])
+        if missing:
+            _, sync_errors = sync.mirror_days(missing, settings["timezone"])
+            memo = getattr(day_view._pass, "memo", None)
+            if memo is not None:
+                memo.clear()  # inside a background round the memo holds these days as they were before
     # Stored per period while today, the exclusions and every day it reads are unchanged.
     fingerprint = hashlib.sha256(json.dumps([
         day_view.CODE_VERSION, today.isoformat(), sorted(marks.analysis_exclusions()),
@@ -38,6 +49,7 @@ def summary(params: dict) -> dict:
         result = json_safe(compute_summary(days, today))
         results.save_summary_result(str(days), fingerprint, result)
     result["profile_sync_error"] = profile_sync_error
+    result["sync_error_days"] = [item["day"] for item in sync_errors]
     return result
 
 
@@ -59,34 +71,13 @@ def compute_summary(days: int, today: date) -> dict:
                      "calculations": [], "multi_carb_count": 0, "shortened_count": 0}
               for name in MEALS}
     night_records = []
-    night_start_values = []
-    night_end_values = []
-    night_minimum_values = []
-    night_delta_values = []
     sport_meals = []
     sport_sessions = []
     loaded_days = {}
     for offset in range(days):
         day = (today - timedelta(days=offset)).isoformat()
         payload = loaded_days[day] = day_view.day_payload(day, refresh=False)
-        night = payload.get("night") or {}
-        night_item = {
-            "day": day, "start": night.get("start"), "end": night.get("end"),
-            "dinner_at": night.get("dinner_at"), "breakfast_at": night.get("breakfast_at"),
-            "last_injection_at": night.get("last_injection_at"),
-            "delta_mgdl": night.get("delta_mgdl"),
-            "start_glucose": night.get("start_glucose"),
-            "end_glucose": night.get("end_glucose"),
-            "minimum_glucose": night.get("minimum_glucose"),
-            "minimum_at": night.get("minimum_at"), "reason": night.get("reason"),
-        }
-        night_records.append(night_item)
-        if all(night_item[key] is not None for key in
-               ("start_glucose", "end_glucose", "minimum_glucose")):
-            night_start_values.append(Decimal(night_item["start_glucose"]))
-            night_end_values.append(Decimal(night_item["end_glucose"]))
-            night_minimum_values.append(Decimal(night_item["minimum_glucose"]))
-            night_delta_values.append(Decimal(night_item["delta_mgdl"]))
+        night_records.append(night_record(day, payload))
         day_type, _ = marks.day_type_for(day, day_types, vacations)
         sport_sessions.extend(
             {"id": item["id"], "at": item["at"], "duration_minutes": item["duration_minutes"],
@@ -159,6 +150,10 @@ def compute_summary(days: int, today: date) -> dict:
             for item, flag in zip(comparison, flags):
                 item["strong_outlier"] = flag
         group["strong_outlier_count"] = sum(item["strong_outlier"] for item in comparable)
+        # How far the meals ended from what the factor expected (what "Werte" is for, user request 2026-11-26).
+        misses = sorted(abs(Decimal(item["deviation_mgdl"])) for item in comparable
+                        if item["deviation_mgdl"] is not None and not item["excluded"])
+        group["median_abs_deviation_mgdl"] = str(median(misses)) if misses else None
         values = sorted(group.pop("values"))
         ns_values = sorted(group.pop("nightscout_values"))
         group["median_units_per_ke"] = str(median(values)) if values else None
@@ -238,15 +233,38 @@ def compute_summary(days: int, today: date) -> dict:
         "sport_analysis": sport_analysis.analyze(
             sport_meals, sport_sessions, settings["sport_lookback_minutes"],
             settings["window_minutes"], episodes.SPORT_NAMES),
-        "night": {
-            "count": len(night_start_values),
-            "unavailable_count": days - len(night_start_values),
-            "median_start_glucose": str(median(sorted(night_start_values))) if night_start_values else None,
-            "median_end_glucose": str(median(sorted(night_end_values))) if night_end_values else None,
-            "median_minimum_glucose": str(median(sorted(night_minimum_values))) if night_minimum_values else None,
-            "median_delta_mgdl": str(median(sorted(night_delta_values))) if night_delta_values else None,
-            "nights": night_records,
-        },
+        "night": night_overview(night_records, days),
+    }
+
+
+def night_record(day: str, payload: dict) -> dict:
+    """One night of the night overview: the day's night analysis plus the basal injected that day."""
+    night = payload.get("night") or {}
+    keys = ("start", "end", "dinner_at", "breakfast_at", "last_injection_at", "morning_dose_at", "delta_mgdl",
+            "start_glucose", "end_glucose", "minimum_glucose", "minimum_at", "drop_mgdl", "rise_mgdl", "carbs_g", "reason")
+    basal = sum((Decimal(str(dose["units"])) for dose in payload.get("basal") or []), Decimal(0))
+    return {"day": day, **{key: night.get(key) for key in keys},
+            "basal_units": str(basal) if payload.get("basal") else None}
+
+
+def night_overview(records: list[dict], days: int) -> dict:
+    """How the nights went (user request 2026-11-26: does the basal hold?): medians of the fall from the
+    night start to its lowest value and of the rise from there to the morning, over complete nights
+    without carbs eaten in them (a hypo snack hides how far glucose would have fallen)."""
+    complete = [item for item in records if item["minimum_glucose"] is not None and item["start_glucose"] is not None]
+    clean = [item for item in complete if not Decimal(str(item["carbs_g"] or 0))]
+
+    def middle(key):
+        values = sorted(Decimal(str(item[key])) for item in clean if item[key] is not None)
+        return str(median(values)) if values else None
+
+    return {
+        "count": len(clean), "with_carbs_count": len(complete) - len(clean),
+        "unavailable_count": days - len(complete),
+        "median_start_glucose": middle("start_glucose"), "median_end_glucose": middle("end_glucose"),
+        "median_minimum_glucose": middle("minimum_glucose"), "median_delta_mgdl": middle("delta_mgdl"),
+        "median_drop_mgdl": middle("drop_mgdl"), "median_rise_mgdl": middle("rise_mgdl"),
+        "nights": records,
     }
 
 

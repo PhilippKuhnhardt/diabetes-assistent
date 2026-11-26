@@ -58,6 +58,42 @@ def day_payload(day: str, refresh: bool = True) -> dict:
     return payload
 
 
+# How far back "now" reads: longer than every rest that still acts (rapid insulin 6 h, carbs 12 h, a
+# calculated surcharge 8 h, an open split part 3 h past due, a sport session's effect up to 24 h after its end).
+RECENT_LOOKBACK = timedelta(hours=36)
+
+
+def recent(now: datetime, refresh: bool = False) -> dict:
+    """CGM readings and treatments from now − RECENT_LOOKBACK on, for everything computed "now" (dose help,
+    "Wirkt noch", reminders and warnings). A calendar day would lose last evening's insulin, carbs, split plan
+    and sport just after midnight, so this joins the stored days the span touches. Each treatment comes from
+    its own local day's payload, where it was grouped with the rest of that day; the newest day's payload
+    stands in for one it does not hold. With refresh today is first mirrored from Nightscout."""
+    timezone_name = config.get_settings()[1]["timezone"]
+    zone = local_zone(timezone_name)
+    today = now.astimezone(zone).date()
+    first = (now - RECENT_LOOKBACK).astimezone(zone).date()
+    days = [(first + timedelta(days=offset)).isoformat() for offset in range((today - first).days + 1)]
+    payloads = {day: day_payload(day, refresh=refresh and day == today.isoformat()) for day in days}
+    since = now - RECENT_LOOKBACK
+    entries, treatments = {}, {}
+    for day in days:  # oldest first: a later day's copy of a reading or treatment replaces it ...
+        for row in payloads[day].get("entries", []):
+            if parse_instant(row["at"]) >= since:
+                entries[row["at"]] = row
+        for row in payloads[day].get("treatments", []):
+            at = parse_instant(row["at"])
+            if at < since:
+                continue
+            key = row.get("id") or (row["at"], row.get("eventType"), row.get("carbs"), row.get("insulin"))
+            own_day = at.astimezone(zone).date().isoformat()
+            if key not in treatments or day == own_day or treatments[key][0] != own_day:
+                treatments[key] = (day, row)  # ... unless the copy came from the treatment's own day
+    return {"entries": sorted(entries.values(), key=lambda row: parse_instant(row["at"])),
+            "treatments": sorted((row for _, row in treatments.values()), key=lambda row: parse_instant(row["at"])),
+            "today": payloads[today.isoformat()]}
+
+
 def mirror_current(day: str) -> bool:
     """Whether a request can read the day from the local copy instead of asking Nightscout first:
     mirrored by this process after its last write to Nightscout and within one background round

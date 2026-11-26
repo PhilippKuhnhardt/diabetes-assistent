@@ -116,7 +116,10 @@ th { color: var(--muted); font-weight: 600; text-align: left; }
 td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .empty { border: 1px dashed light-dark(#bdcdc2, #3e4b42); color: var(--muted); border-radius: 13px; padding: 36px; text-align: center; font-size: 14px; }
 .empty strong { color: var(--ink); }
-.analysis-controls { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 25px; }
+.analysis-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 25px; }
+.period-switch { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.period-switch button[role="tab"] { white-space: nowrap; }
+.analysis-controls .hint:empty { display: none; }
 .analysis-controls label { margin: 0; min-width: 150px; }
 .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .summary-card { padding: 23px; }
@@ -174,6 +177,20 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .summary-primary strong { margin-top: 2px; }
 
 .analysis-list { margin-top: 20px; }
+.day-type-tag { margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: var(--green-light); color: var(--green-dark); font-size: 11px; font-weight: 650; }
+.section-note { margin: 12px 0 0; font-size: 12px; line-height: 1.5; }
+.analysis-fold { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+.analysis-fold > summary { cursor: pointer; color: var(--green-dark); font-size: 13px; font-weight: 650; padding: 4px 0; }
+.analysis-fold[open] > summary { margin-bottom: 8px; }
+.night-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.night-cards .summary-card, .sport-kinds .summary-card { padding: 16px 18px; }
+.night-cards .summary-card > span { color: var(--muted); font-size: 12px; font-weight: 650; }
+.night-cards .summary-card strong { margin-top: 6px; font-size: 24px; }
+.night-cards .summary-card p { margin: 4px 0 0; }
+.sport-facts .glucose-change { font-size: 14px; }
+.night-missing { margin: 0; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.night-missing b { color: var(--ink); font-weight: 600; }
+@media (max-width: 650px) { .night-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
 .analysis-table { min-width: 900px; }
 .analysis-table.compact { min-width: 520px; }
 .derivation-note { margin: 14px 0 6px; }
@@ -847,6 +864,14 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
   .analysis-table td:not([data-label]) { align-self: end; justify-self: end; }
   .analysis-table td[colspan] { grid-column: 1 / -1; justify-self: stretch; }
   .analysis-table.matrix tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Lookback and half-life head the card; the cells below wrap instead of running out of it. */
+  .analysis-table.matrix td:nth-child(-n+2) { grid-column: 1 / -1; }
+  .analysis-table.matrix td:first-child { font-size: 14.5px; font-weight: 650; }
+  .analysis-table.matrix td:first-child::before { display: none; }
+  .analysis-table.matrix td:nth-child(2)::before { display: inline; margin-right: 6px; }
+  .matrix-cell .range-nums, .matrix-cell .range-glucose { white-space: normal; }
+  .matrix-cell .range-glucose { font-size: 11.5px; }
+  .period-switch button[role="tab"] { padding: 7px 11px; }
   .analysis-table:not(.matrix) td:first-child { grid-column: 1 / -1; font-size: 14.5px; font-weight: 650; }
   .analysis-table:not(.matrix) td:first-child::before { display: none; }
   .analysis-table td:empty { display: none; }
