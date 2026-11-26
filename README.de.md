@@ -2,7 +2,7 @@
 
 [English summary](README.md)
 
-Private, deutschsprachige Web-App für FreeStyle Libre 3 Plus über Nightscout und manuell erfasstes Fiasp. Nightscout ist die maßgebliche Quelle für CGM, Kohlenhydrate, Injektionen, Sport und das aktuelle Profil. SQLite spiegelt diese Daten und speichert lokale Analyseentscheidungen sowie versionierte Einstellungen. Berechnete Faktoren werden nie nach Nightscout geschrieben. Die Formeln und Annahmen stehen in [Rechenwege](docs/rechenwege.md).
+Private Web-App (Oberfläche deutsch oder englisch, nach Browsersprache oder unter Mehr → Sprache) für FreeStyle Libre 3 Plus über Nightscout und manuell erfasstes Fiasp. Nightscout ist die maßgebliche Quelle für CGM, Kohlenhydrate, Injektionen, Sport und das aktuelle Profil. SQLite spiegelt diese Daten und speichert lokale Analyseentscheidungen sowie versionierte Einstellungen. Berechnete Faktoren werden nie nach Nightscout geschrieben. Die Formeln und Annahmen stehen in [Rechenwege](docs/rechenwege.md).
 
 > **Haftungsausschluss: kein Medizinprodukt, keine Therapieempfehlung.** Dies ist ein privates Hobbyprojekt, gebaut um die Daten, Einstellungen und Gewohnheiten einer Person. Die App ist kein Medizinprodukt, weder zertifiziert noch klinisch geprüft, und nichts, was sie anzeigt, ist eine Therapieempfehlung. Ihre Berechnungen beruhen auf vereinfachenden Modellannahmen und können falsch sein. Keine Insulindosis allein danach festlegen; Änderungen der Therapie mit dem Diabetes-Team besprechen. Die Nutzung erfolgt vollständig auf eigene Verantwortung; die Autoren haften nicht für Schäden aus der Nutzung (siehe auch Abschnitte 15 und 16 der Lizenz).
 

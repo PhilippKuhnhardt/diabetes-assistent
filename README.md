@@ -4,7 +4,7 @@
 
 A personal web app for living with type 1 diabetes on multiple daily injections. It reads CGM data (FreeStyle Libre 3 Plus) and manually injected rapid insulin (Fiasp) from [Nightscout](https://nightscout.github.io/), works out how much insulin each meal actually needed, and uses that history to suggest doses. The goal is less mental load: one place to log, review and dose, instead of doing the arithmetic in your head.
 
-The user interface and most of the documentation are in German, because the app was built for one German-speaking user. The code, comments and commit history are in English.
+The user interface speaks German and English (it follows the browser, with a switch in the settings); messages from the server and the meal agent are still German. Most of the documentation is in German, because the app was built for one German-speaking user. The code, comments and commit history are in English.
 
 > **Disclaimer: not a medical device, not medical advice.** This is a private hobby project built around one person's data, settings and habits. It is not a medical device, it is not certified or clinically validated, and nothing it shows is a therapy recommendation. Its calculations rest on simplifying model assumptions and can be wrong. Never base an insulin dose on it alone; discuss any change to your therapy with your diabetes care team. You use it entirely at your own risk; the authors accept no liability for any harm arising from its use (see also sections 15 and 16 of the license).
 

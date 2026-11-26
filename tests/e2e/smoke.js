@@ -84,6 +84,17 @@ async function run(browser, name, options) {
     check(await page.isVisible(".settings-save"), `${name}: save button on a model page`);
     await page.click("#settings-back");
     check(await page.isVisible("#settings-index"), `${name}: back to the settings list`);
+    // "Darstellung": dark holds over a reload, "System" removes the choice again.
+    await page.click("[data-settings-open=theme]");
+    await page.click(".theme-switch button >> text=Dunkel");
+    await page.reload();
+    await page.waitForSelector(".appnav-item.active");
+    check(await page.evaluate(() => document.documentElement.dataset.theme) === "dark", `${name}: dark theme kept after reload`);
+    await page.click("[data-nav=settings]");
+    await page.click("[data-settings-open=theme]");
+    await page.click(".theme-switch button >> text=System");
+    check(await page.evaluate(() => !document.documentElement.dataset.theme), `${name}: System follows the device`);
+    await page.click("#settings-back");
   } else {
     check(await page.isVisible("[name=dose_target_mgdl]"), `${name}: all settings on one page`);
     await settings(page, name);
@@ -433,11 +444,40 @@ async function addFromHistory(page, name, compact) {
   }
 }
 
+// English (i18n 2026-11-26): an English browser gets the English page; the switch in the settings
+// overrides the browser and "Automatisch" follows it again.
+async function english(browser) {
+  const context = await browser.newContext({ viewport: { width: 1360, height: 900 }, timezoneId: "Europe/Berlin", locale: "en-GB" });
+  const page = await context.newPage();
+  page.on("pageerror", error => check(false, `english: page error ${error.message}`));
+  await page.goto(BASE + "/login");
+  check(await page.textContent("h1") === "Log in", "english: login page in English");
+  await page.goto(BASE + "/?view=settings");
+  await page.waitForSelector("#language-select");
+  check(await page.evaluate(() => document.documentElement.lang) === "en", "english: page language en");
+  check(await page.textContent("[data-nav=today] span") === "Today", "english: navigation in English");
+  check(await page.textContent(".settings-save button[type=submit]") === "Save settings", "english: settings in English");
+  check(!(await page.textContent("body")).includes("Einstellungen speichern"), "english: no German settings text");
+  await Promise.all([page.waitForNavigation(), page.selectOption("#language-select", "de")]);
+  await page.waitForSelector("#language-select");
+  check(await page.textContent("[data-nav=today] span") === "Heute", "english: switch to Deutsch overrides the browser");
+  await Promise.all([page.waitForNavigation(), page.selectOption("#language-select", "")]);
+  await page.waitForSelector("#language-select");
+  check(await page.textContent("[data-nav=today] span") === "Today", "english: automatic follows the browser again");
+  await page.goto(BASE + "/?view=diary");
+  await page.waitForSelector("#record-count:not(:empty)", { state: "attached" });
+  await page.click("#nav-add");
+  await page.waitForSelector("#add-dialog[open] .choice");
+  check(await page.textContent("#add-dialog h2") === "Add entry", "english: \"+\" in English");
+  await context.close();
+}
+
 (async () => {
   const browser = await chromium.launch();
   try {
     await run(browser, "phone", devices["iPhone 13"]);
     await run(browser, "desktop", { viewport: { width: 1360, height: 900 } });
+    await english(browser);
   } finally {
     await browser.close();
   }

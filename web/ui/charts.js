@@ -3,7 +3,8 @@
 // bands, events and each meal's window; the chart only places them. Chart units equal CSS pixels at
 // the measured width, so text and touch targets keep their size.
 import { html, useState, useEffect, useRef } from "./html.js";
-import { MINUTE, num, timeOnly, sportNames } from "./lib.js";
+import { MINUTE, num, timeOnly, sportNames, UNIT } from "./lib.js";
+import { t } from "./i18n.js";
 
 export function chartLayout(width) {
   const clamped = Math.max(300, Math.min(900, Math.round(width || 600)));
@@ -52,13 +53,13 @@ export function mealWindow(meal) {
 
 export function chartEvents(treatments) {
   return treatments.flatMap(item => {
-    const t = new Date(item.at).getTime();
+    const at = new Date(item.at).getTime();
     if (item.eventType === "Exercise") {
-      return [{ kind: "sport", t, end: t + Number(item.duration || 0) * MINUTE, label: sportNames[item.sport_type] || "Sport" }];
+      return [{ kind: "sport", t: at, end: at + Number(item.duration || 0) * MINUTE, label: sportNames[item.sport_type] || t("sport.sport") }];
     }
     const result = [];
-    if (Number(item.insulin) > 0) result.push({ kind: "insulin", id: item.id, t, amount: Number(item.insulin), rapid: Boolean(item.rapid) });
-    if (Number(item.carbs) > 0) result.push({ kind: "carbs", id: item.id, t, amount: Number(item.carbs) });
+    if (Number(item.insulin) > 0) result.push({ kind: "insulin", id: item.id, t: at, amount: Number(item.insulin), rapid: Boolean(item.rapid) });
+    if (Number(item.carbs) > 0) result.push({ kind: "carbs", id: item.id, t: at, amount: Number(item.carbs) });
     return result;
   });
 }
@@ -113,7 +114,7 @@ function EventLanes({ events, scales, view, range, layout }) {
         <text x=${(x + 4).toFixed(1)} y=${top + 11}>${event.label}</text></g>`;
     }
     const y = layout.lanes[event.kind];
-    const label = event.kind === "insulin" ? num(event.amount, 1) + " IE" : num(event.amount, 0) + " g";
+    const label = event.kind === "insulin" ? num(event.amount, 1) + " " + UNIT.insulin : num(event.amount, 0) + " g";
     // Labels near the right edge flip left; a label that would overlap its lane neighbour is left out.
     const labelWidth = label.length * 6;
     const flip = x + 10 + labelWidth > layout.right;
@@ -127,13 +128,13 @@ function EventLanes({ events, scales, view, range, layout }) {
   });
 }
 
-function Handle({ name, t, scales, layout, interactive, reading, active, snapped }) {
+function Handle({ name, at, scales, layout, interactive, reading, active, snapped }) {
   const value = reading?.value != null ? Number(reading.value) : null;
   const dotY = value == null ? layout.plotBottom : scales.y(value);
-  const label = name === "start" ? "Beginn" : "Ende";
+  const label = name === "start" ? t("window.startHandle") : t("window.endHandle");
   return html`<g class=${"window-handle" + (active ? " is-active" : "") + (snapped ? " is-snapped" : "")} data-handle=${name}
-    transform=${"translate(" + scales.x(t).toFixed(1) + " 0)"} tabindex=${interactive ? "0" : null} role=${interactive ? "slider" : null}
-    aria-label=${interactive ? label + " des Zeitraums" : null} aria-valuetext=${interactive ? timeOnly(t) + " Uhr" : null}>
+    transform=${"translate(" + scales.x(at).toFixed(1) + " 0)"} tabindex=${interactive ? "0" : null} role=${interactive ? "slider" : null}
+    aria-label=${interactive ? label : null} aria-valuetext=${interactive ? t("common.clock", { time: timeOnly(at) }) : null}>
     <line class="handle-line" x1="0" y1=${layout.plotTop - 6} x2="0" y2=${interactive ? 290 : layout.plotBottom} />
     <circle class="handle-dot" data-tone=${reading?.tone || "none"} cx="0" cy=${dotY.toFixed(1)} r=${interactive ? 7 : 4.5} hidden=${value == null} />
     ${interactive && html`<rect class="handle-hit" x="-24" y="62" width="48" height="262" />
@@ -175,8 +176,8 @@ export function GlucoseChart({ layout, range, view, entries, treatments, bands, 
       width=${(scales.x(to) - scales.x(from)).toFixed(1)} height=${(scales.y(low) - scales.y(high)).toFixed(1)} />`;
   });
   const label = overview
-    ? "Glukoseverlauf mit Ereignissen von " + timeOnly(view.from) + " bis " + timeOnly(view.to) + " Uhr"
-    : "Glukoseverlauf mit Auswertungszeitraum " + timeOnly(range.start) + " bis " + timeOnly(range.end) + " Uhr";
+    ? t("chart.overviewLabel", { from: timeOnly(view.from), to: timeOnly(view.to) })
+    : t("chart.windowLabel", { from: timeOnly(range.start), to: timeOnly(range.end) });
   const clip = clipId || (overview ? "overview-clip" : interactive ? "editor-clip" : "chart-clip-" + range.mealAt);
   const reading = name => editor ? editor.reading(range[name]) : name === "start" ? range.startGlucose : range.endGlucose;
   return html`<svg class=${"window-chart-svg" + (interactive ? " is-interactive" : "")} viewBox=${"0 0 " + width + " " + height} role="img" aria-label=${label}>
@@ -201,7 +202,7 @@ export function GlucoseChart({ layout, range, view, entries, treatments, bands, 
       ${segments.filter(item => item.length > 1).map(item => html`<polyline class="curve" points=${item.join(" ")} />`)}
       ${overview
         ? last && html`<circle class="handle-dot" data-tone=${last.tone || "none"} cx=${scales.x(last.t).toFixed(1)} cy=${scales.y(last.g).toFixed(1)} r="4.5" />`
-        : ["start", "end"].map(name => html`<${Handle} name=${name} t=${range[name]} scales=${scales} layout=${layout} interactive=${interactive}
+        : ["start", "end"].map(name => html`<${Handle} name=${name} at=${range[name]} scales=${scales} layout=${layout} interactive=${interactive}
             reading=${reading(name)} active=${editor?.active === name} snapped=${Boolean(editor?.snapped[name])} />`)}
     </g>
     <line class="axis" x1=${left} x2=${right} y1=${plotBottom} y2=${plotBottom} />

@@ -1,4 +1,6 @@
 // Photos and voice notes for the meal agent, kept apart from the components that show them.
+import { t } from "./i18n.js";
+
 export const PHOTO_SIDE = 1568;
 export const RECORD_SECONDS = 120;
 
@@ -6,10 +8,10 @@ export const RECORD_SECONDS = 120;
 export function photoDataURL(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Foto konnte nicht gelesen werden"));
+    reader.onerror = () => reject(new Error(t("chat.photoUnreadable")));
     reader.onload = () => {
       const image = new Image();
-      image.onerror = () => reject(new Error("Foto konnte nicht gelesen werden"));
+      image.onerror = () => reject(new Error(t("chat.photoUnreadable")));
       image.onload = () => {
         const scale = Math.min(1, PHOTO_SIDE / Math.max(image.naturalWidth, image.naturalHeight));
         const canvas = document.createElement("canvas");
