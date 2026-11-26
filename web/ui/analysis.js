@@ -1,10 +1,10 @@
-// "Analyse": evaluates several days and is read-only except exclusion and day type (page roles,
-// AGENTS.md). Three sub-pages: Werte (the chosen period), Automatik (how the Automatik would have done,
+// "Analyse": evaluates several days and is read-only (page roles, AGENTS.md; exclusion and day type
+// moved to "Verlauf" 2026-11-26). Three sub-pages: Werte (the chosen period), Automatik (how the Automatik would have done,
 // with "Übernehmen" for a settings change the server attaches) and Gerichte (the dish catalogue).
 // The summary comes from /api/summary; every number, verdict and best cell is the server's.
 import { html, useState, useEffect, useRef } from "./html.js";
-import { api, post, toast, num, factorNum, signedChange, sportChange, timeOnly, signedPercent, dayDate, names,
-  UNIT, Icon, GlucoseChange, ExcludeButton } from "./lib.js";
+import { api, post, toast, num, factorNum, signedChange, timeOnly, signedPercent, dayDate, names,
+  UNIT, Icon, GlucoseChange } from "./lib.js";
 import { t, locale } from "./i18n.js";
 
 const TABS = [["werte", t("analysis.tabs.werte")], ["automatik", t("analysis.tabs.automatik")], ["gerichte", t("analysis.tabs.gerichte")]];
@@ -18,11 +18,15 @@ const Table = ({ head, children, compact }) => html`<div class="table-wrap"><tab
   <thead><tr>${head}</tr></thead><tbody>${children}</tbody></table></div>`;
 
 // ---- Werte ----
+// What the factors did in the chosen period, read only (user request 2026-11-26): exclusion and day type
+// are set in "Verlauf"; here the question is how far each meal ended from what its factor expected.
 const span = (low, high) => low == null ? "—" : Number(low) === Number(high) ? factorNum(low) : factorNum(low) + "–" + factorNum(high);
 const Fact = ({ label, value, strong }) => html`<div class=${strong ? "key" : null}><dt>${label}</dt><dd>${value}</dd></div>`;
 const suggestion = s => s.auto_units_per_ke != null ? factorNum(s.auto_units_per_ke) + (s.surcharge ? " + " + t("analysis.surcharge") : "") : "—";
 const suggestionNote = s => t("analysis.suggestionFrom", { count: s.count, days: s.days });
 const Factor = ({ value }) => value == null ? "—" : html`${factorNum(value)} <small>${UNIT.factor}</small>`;
+const whole = value => value == null ? null : Math.round(Number(value));
+const miss = value => value == null ? "—" : "±" + num(value, 0) + " mg/dL";
 
 function SummaryCards({ groups }) {
   return ["breakfast", "lunch", "dinner"].map(kind => {
@@ -33,6 +37,7 @@ function SummaryCards({ groups }) {
       <div class="summary-primary"><span>${t("analysis.median")}</span><strong><${Factor} value=${row.count > 0 ? row.median_units_per_ke : null} /></strong></div>
       <dl class="factor-facts">
         ${!breakfast && html`<${Fact} label=${t("analysis.suggestion")} value=${suggestion(row.suggestion)} strong />`}
+        <${Fact} label=${t("analysis.typicalMiss")} value=${miss(row.median_abs_deviation_mgdl)} />
         <${Fact} label=${t("analysis.current")} value=${current} />
         ${row.q1_units_per_ke != null && html`<${Fact} label=${t("analysis.middle50")} value=${span(row.q1_units_per_ke, row.q3_units_per_ke)} />`}
       </dl>
@@ -50,24 +55,8 @@ function SummaryCards({ groups }) {
   });
 }
 
-function DayTypeSelect({ day, value, onDone }) {
-  async function change(event) {
-    const select = event.currentTarget;
-    select.disabled = true;
-    try {
-      await post("/api/analysis/day-type", { day, day_type: select.value });
-    } catch (error) {
-      toast(error.message, true);
-    } finally {
-      select.disabled = false;
-      await onDone();
-    }
-  }
-  return html`<label class="day-type-label">${t("analysis.dayLabel")} <select class="day-type" value=${value} onChange=${change}>
-    <option value="work">${t("dayType.work")}</option><option value="free">${t("dayType.free")}</option></select></label>`;
-}
-
-function Calculations({ groups, reload, onOpenMeal }) {
+// One row per meal: factor, carbs and insulin, then expected against measured change and the miss.
+function Calculations({ groups, onOpenMeal }) {
   const rows = ["breakfast", "lunch", "dinner"]
     .flatMap(kind => groups[kind].calculations.map(item => ({ ...item, kind })))
     .sort((a, b) => b.at.localeCompare(a.at));
@@ -77,117 +66,102 @@ function Calculations({ groups, reload, onOpenMeal }) {
     const newDay = item.day !== previousDay;
     previousDay = item.day;
     const excluded = item.units_per_ke != null && item.excluded;
-    const sport = item.sport || {};
-    // Read only here: sport is set on the meal in "Tag durchgehen".
-    const sportApplied = sport.status === "affected" || (sport.status === "auto" && sport.suggested);
     return html`
-      ${newDay && html`<tr class="analysis-day-row"><th colspan="10" scope="colgroup">
-        ${dayDate(item.day, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}${" "}
-        <${DayTypeSelect} day=${item.day} value=${item.day_type} onDone=${reload} /></th></tr>`}
+      ${newDay && html`<tr class="analysis-day-row"><th colspan="8" scope="colgroup">
+        ${dayDate(item.day, { weekday: "long", day: "numeric", month: "long" })}
+        <span class="day-type-tag">${item.day_type === "free" ? t("dayType.free") : t("dayType.work")}</span></th></tr>`}
       <tr class=${(excluded ? "analysis-excluded " : "") + (item.strong_outlier ? "analysis-outlier" : "")}>
-        <td>${names[item.kind]}</td>
+        <td>${names[item.kind]} <small>${timeOnly(item.at)}</small>${excluded && html` <span class="outlier-badge">${t("exclude.excluded")}</span>`}</td>
         <td><b>${item.units_per_ke != null
           ? html`${factorNum(item.units_per_ke)} ${UNIT.factor}${item.strong_outlier && html` <span class="outlier-badge">${t("analysis.outlier")}</span>`}${item.manual_window && html` <span class="manual-badge">${t("analysis.manualWindow")}</span>`}`
           : html`<span class="summary-unavailable">${t("analysis.notCalculable", { reason: item.reason || t("analysis.noFactor") })}</span>`}</b></td>
         <td>${item.carbs_total == null ? "—" : num(item.carbs_total) + " g"}</td>
         <td>${item.rapid_units_in_window == null ? "—" : num(item.rapid_units_in_window) + " " + UNIT.insulin}</td>
-        <td><${GlucoseChange} value=${item.delta_mgdl} /></td>
         <td><${GlucoseChange} value=${item.expected_delta_mgdl} /></td>
+        <td><${GlucoseChange} value=${item.delta_mgdl} /></td>
         <td><${GlucoseChange} value=${item.deviation_mgdl} /></td>
-        <td>${sportApplied ? html`<span class="sport-state is-applied"><${Icon} name="check" />${signedChange(sportChange(sport.effect_mgdl), 0)}${sport.status === "auto" && html` <small>auto</small>`}</span>` : "—"}</td>
-        <td>${item.units_per_ke == null ? "—" : html`<${ExcludeButton} mealId=${item.id} day=${item.day} excluded=${excluded} onDone=${reload} />`}</td>
         <td><button type="button" class="icon-button open-meal-day" aria-label=${t("analysis.openDay")} title=${t("analysis.openDay")}
           onClick=${() => onOpenMeal(item.day, item.id)}><${Icon} name="diary" /></button></td>
       </tr>`;
   });
-  return { rows, node: html`<${Table} head=${html`<th>${t("analysis.col.meal")}</th><th>${t("analysis.col.factor")}</th><th>${t("card.carbs")}</th><th>${t("card.insulin")}</th><th>${t("analysis.col.measured")}</th><th>${t("today.expected")}</th><th>${t("analysis.col.delta")}</th><th>${t("sport.sport")}</th><th>${t("analysis.col.rating")}</th><th></th>`}>${body}<//>` };
+  return { rows, node: html`<${Table} head=${html`<th>${t("analysis.col.meal")}</th><th>${t("analysis.col.factor")}</th><th>${t("card.carbs")}</th><th>${t("card.insulin")}</th><th>${t("today.expected")}</th><th>${t("analysis.col.measured")}</th><th>${t("analysis.col.delta")}</th><th></th>`}>${body}<//>` };
 }
 
+// Per sport kind: what the factors counted for sport against what the meals measured (user request
+// 2026-11-26: easier to read). The sessions with their meals sit folded below.
 function SportAnalysis({ analysis }) {
   const sessions = analysis?.sessions || [];
   const kinds = analysis?.kinds || [];
   const dateTime = value => new Date(value).toLocaleString(locale, {
     weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-  const mealCells = meal => {
-    if (!meal) return html`<td colspan="6"><span class="hint">${t("analysis.sportNoMeal", { minutes: analysis.lookback_minutes })}</span></td>`;
-    return html`<td>${names[meal.meal]}<br /><small>${dateTime(meal.start)}–${timeOnly(meal.end)}</small></td>
-      <td>${meal.factor_without_sport_units_per_ke == null ? "—" : factorNum(meal.factor_without_sport_units_per_ke) + " " + UNIT.factor}${meal.baseline_units_per_ke != null &&
-        html`<br /><small>${t("analysis.comparison", { value: factorNum(meal.baseline_units_per_ke) + " " + UNIT.factor })}</small>`}</td>
-      <td><${GlucoseChange} value=${meal.delta_mgdl} /></td>
-      <td><${GlucoseChange} value=${meal.expected_delta_mgdl} /></td>
-      <td>${meal.effect_mgdl == null
-        ? html`<span class="summary-unavailable">${meal.reason || t("analysis.notCalculableShort")}</span>`
-        : html`<b><${GlucoseChange} value=${meal.effect_mgdl} /></b>${meal.shared && html` <span class="outlier-badge">${t("analysis.severalSessions")}</span>`}${meal.excluded && html` <span class="outlier-badge">${t("exclude.excluded")}</span>`}`}</td>
-      <td>${meal.confirmed_effect_mgdl == null ? "—" : signedChange(-Number(meal.confirmed_effect_mgdl), 0)}</td>`;
-  };
+  const rows = sessions.flatMap(session => session.meals.map(meal => html`<tr>
+    <td>${session.label} <small>${session.end ? dateTime(session.start) + " · " + session.duration_minutes + " min" : ""}</small></td>
+    <td>${names[meal.meal]} <small>${timeOnly(meal.start)}</small></td>
+    <td><${GlucoseChange} value=${whole(meal.applied_mgdl)} /></td>
+    <td>${meal.effect_mgdl == null
+      ? html`<span class="summary-unavailable">${meal.reason || t("analysis.notCalculableShort")}</span>`
+      : html`<b><${GlucoseChange} value=${whole(meal.effect_mgdl)} /></b>${meal.shared && html` <span class="outlier-badge">${t("analysis.severalSessions")}</span>`}${meal.excluded && html` <span class="outlier-badge">${t("exclude.excluded")}</span>`}`}</td></tr>`));
+  const alone = sessions.filter(session => !session.meals.length).length;
   return html`<${Section} title=${t("analysis.sportTitle")} hint=${t("analysis.sessions", { count: sessions.length })}>
-    <div class="summary-grid">${kinds.map(group => html`<div class="summary-card"><span class="meal-type">${group.label}</span>
-      <div class="summary-primary"><span>${t("analysis.sportMedian")}</span><strong><${GlucoseChange} value=${group.median_effect_mgdl} /></strong></div>
-      ${group.effect_count > 1 && html`<p>${t("analysis.spread", { low: signedChange(group.min_effect_mgdl), high: signedChange(group.max_effect_mgdl) })}</p>`}
-      <p>${t("analysis.sessions", { count: group.session_count })} · ${t("analysis.evaluable", { count: group.effect_count, meals: mealsText(group.meal_count) })}</p></div>`)}</div>
-    ${sessions.length
-      ? html`<${Table} head=${html`<th>${t("sport.sport")}</th><th>${t("analysis.col.window")}</th><th>${t("analysis.col.meal")}</th><th>${t("analysis.col.factorNoSport")}</th><th>${t("analysis.col.measured")}</th><th>${t("analysis.col.expectedNoSport")}</th><th>${t("analysis.col.sportEffect")}</th><th>${t("analysis.col.confirmed")}</th>`}>
-        ${sessions.flatMap(session => (session.meals.length ? session.meals : [null]).map(meal => html`<tr>
-          <td><b>${session.label}</b>${session.notes && html`<br /><small>${session.notes}</small>`}</td>
-          <td>${session.end ? html`${dateTime(session.start)}–${timeOnly(session.end)} <small>(${session.duration_minutes} min)</small>` : "—"}</td>
-          ${mealCells(meal)}</tr>`))}<//>`
+    ${sessions.length ? html`<div class="summary-grid sport-kinds">${kinds.map(group => html`<div class="summary-card"><span class="meal-type">${group.label}</span>
+      <dl class="factor-facts sport-facts">
+        <${Fact} label=${t("analysis.sport.measured")} value=${html`<${GlucoseChange} value=${whole(group.median_effect_mgdl)} />`} strong />
+        <${Fact} label=${t("analysis.sport.applied")} value=${html`<${GlucoseChange} value=${whole(group.median_applied_mgdl)} />`} />
+      </dl>
+      <p>${t("analysis.sessions", { count: group.session_count })} · ${t("analysis.evaluable", { count: group.effect_count, meals: mealsText(group.meal_count) })}${group.effect_count > 1
+        ? " · " + t("analysis.spread", { low: signedChange(group.min_effect_mgdl, 0), high: signedChange(group.max_effect_mgdl, 0) }) : ""}</p></div>`)}</div>
+      <p class="hint section-note">${t("analysis.sport.note")}</p>
+      ${rows.length > 0 && html`<details class="analysis-fold"><summary>${t("analysis.sport.details", { count: rows.length })}</summary>
+        <${Table} compact head=${html`<th>${t("sport.sport")}</th><th>${t("analysis.col.meal")}</th><th>${t("analysis.sport.applied")}</th><th>${t("analysis.sport.measured")}</th>`}>${rows}<//>
+        ${alone > 0 && html`<p class="hint">${t("analysis.sport.noMeal", { count: alone, minutes: analysis.lookback_minutes })}</p>`}</details>`}`
       : html`<${Empty}>${t("analysis.noSport")}<//>`}
   <//>`;
 }
 
+// How the nights went (user request 2026-11-26): from three hours after the evening's last rapid dose to
+// breakfast or a morning dose, how far glucose fell without bolus insulin and how much it rose again.
 function NightSummary({ night, loading, failed }) {
-  const metrics = [["start", "median_start_glucose"], ["end", "median_end_glucose"],
-    ["change", "median_delta_mgdl"], ["minimum", "median_minimum_glucose"]];
-  const cell = (value, at) => value == null ? "—" : html`${num(value, 1)} mg/dL${at && html`<small class="night-error">${t("common.clock", { time: timeOnly(at) })}</small>`}`;
-  const cards = loading ? html`<${Empty}>${t("analysis.night.loading")}<//>` : failed ? html`<${Empty}>${t("analysis.night.failed")}<//>`
-    : metrics.map(([label, key]) => html`<div class="summary-card"><span>${t("analysis.night." + label)} · ${t("analysis.median")}</span><strong>${night[key] == null ? "—"
-      : label === "change" ? signedChange(night[key]) : html`${num(night[key], 1)} <small>mg/dL</small>`}</strong></div>`);
-  return html`<${Section} title=${t("analysis.night.title")} hint=${night ? t("analysis.night.count", { count: night.count, total: night.count + night.unavailable_count }) : ""}>
-    <div class="summary-grid">${cards}</div>
-    ${night && !loading && (night.nights.length
-      ? html`<${Table} head=${html`<th>${t("analysis.night.night")}</th><th>${t("analysis.night.start")}</th><th>${t("analysis.night.end")}</th><th>${t("analysis.night.change")}</th><th>${t("analysis.night.minimum")}</th>`}>${night.nights.map(item => html`<tr>
-        <td>${dayDate(item.day, { weekday: "short", day: "numeric", month: "short" })}${item.reason && html`<small class="night-error">${item.reason}</small>`}</td>
-        <td>${cell(item.start_glucose, item.start)}</td><td>${cell(item.end_glucose, item.end)}</td>
-        <td>${signedChange(item.delta_mgdl)}</td><td>${cell(item.minimum_glucose, item.minimum_at)}</td></tr>`)}<//>`
-      : html`<${Empty}>${t("analysis.night.none")}<//>`)}
-  <//>`;
+  const at = value => value ? html`<small>${t("common.clock", { time: timeOnly(value) })}</small>` : "";
+  const value = (mgdl, time) => mgdl == null ? "—" : html`${num(mgdl, 0)} ${at(time)}`;
+  const cards = [["drop", "median_drop_mgdl", true], ["minimum", "median_minimum_glucose"], ["rise", "median_rise_mgdl", true], ["start", "median_start_glucose"]];
+  const nights = night?.nights || [];
+  const complete = nights.filter(item => item.minimum_glucose != null && item.start_glucose != null);
+  const missing = nights.filter(item => !(item.minimum_glucose != null && item.start_glucose != null));
+  const body = loading ? html`<${Empty}>${t("analysis.night.loading")}<//>` : failed ? html`<${Empty}>${t("analysis.night.failed")}<//>` : html`
+    <div class="summary-grid night-cards">${cards.map(([key, field, signed]) => html`<div class="summary-card"><span>${t("analysis.night." + key)}</span>
+      <strong>${night[field] == null ? "—" : signed ? html`<${GlucoseChange} value=${whole(night[field])} />` : html`${num(night[field], 0)} <small>mg/dL</small>`}</strong>
+      <p>${t("analysis.median")}</p></div>`)}</div>
+    <p class="hint section-note">${t("analysis.night.note")}</p>
+    ${complete.length ? html`<${Table} compact head=${html`<th>${t("analysis.night.night")}</th><th>${t("analysis.night.basal")}</th><th>${t("analysis.night.start")}</th><th>${t("analysis.night.minimum")}</th><th>${t("analysis.night.end")}</th><th>${t("analysis.night.dropShort")}</th><th>${t("analysis.night.riseShort")}</th>`}>
+      ${complete.map(item => html`<tr class=${Number(item.carbs_g) > 0 ? "analysis-excluded" : null}>
+        <td>${dayDate(item.day, { weekday: "short", day: "numeric", month: "short" })}${Number(item.carbs_g) > 0 && html` <span class="outlier-badge">${t("analysis.night.carbs", { grams: num(item.carbs_g, 0) })}</span>`}</td>
+        <td>${item.basal_units == null ? "—" : num(item.basal_units, 1) + " " + UNIT.insulin}</td>
+        <td>${value(item.start_glucose, item.start)}</td><td><b>${value(item.minimum_glucose, item.minimum_at)}</b></td>
+        <td>${value(item.end_glucose, item.end)}${item.morning_dose_at && html` <small>${t("analysis.night.morningDose")}</small>`}</td>
+        <td><${GlucoseChange} value=${whole(item.drop_mgdl)} /></td><td><${GlucoseChange} value=${whole(item.rise_mgdl)} /></td></tr>`)}<//>`
+      : html`<${Empty}>${t("analysis.night.none")}<//>`}
+    ${missing.length > 0 && html`<details class="analysis-fold"><summary>${t("analysis.night.missing", { count: missing.length })}</summary>
+      <ul class="night-missing">${missing.map(item => html`<li><b>${dayDate(item.day, { weekday: "short", day: "numeric", month: "short" })}</b> ${item.reason || "—"}</li>`)}</ul></details>`}`;
+  return html`<${Section} title=${t("analysis.night.title")} hint=${night ? t("analysis.night.count", { count: night.count, total: nights.length }) : ""}>${body}<//>`;
 }
 
-function Werte({ days, setDays, summary, reload, onOpenMeal }) {
-  const [progress, setProgress] = useState("");
+function Werte({ days, setDays, summary, onOpenMeal }) {
   const { data, loading, failed } = summary;
-  useEffect(() => {
-    if (data?.profile_sync_error) setProgress(t("analysis.profileNotUpdated", { error: data.profile_sync_error }));
-  }, [data]);
-  async function syncRange(event) {
-    const button = event.currentTarget;
-    button.disabled = true;
-    setProgress(t("analysis.syncing"));
-    try {
-      const result = await post("/api/sync", { days: Number(days) });
-      setProgress(t("analysis.synced", { count: result.synced }) + (result.errors.length ? " · " + t("analysis.errors", { count: result.errors.length }) : "") +
-        (result.profile_sync_error ? " · " + t("analysis.isfError", { error: result.profile_sync_error }) : ""));
-      await reload();
-    } catch (error) {
-      setProgress(error.message);
-    } finally {
-      button.disabled = false;
-    }
-  }
-  const calculations = data && !loading ? Calculations({ groups: data.groups, reload, onOpenMeal }) : null;
+  const notes = [data?.profile_sync_error && t("analysis.profileNotUpdated", { error: data.profile_sync_error }),
+    data?.sync_error_days?.length && t("analysis.notLoaded", { count: data.sync_error_days.length })].filter(Boolean).join(" · ");
+  const calculations = data && !loading ? Calculations({ groups: data.groups, onOpenMeal }) : null;
   return html`<div id="analysis-werte" class="analysis-pane">
     <div class="analysis-controls">
-      <label>${t("analysis.period")} <select id="summary-days" value=${String(days)} onChange=${event => setDays(Number(event.currentTarget.value))}>
-        ${PERIODS.map(([value, label]) => html`<option value=${String(value)}>${label}</option>`)}</select></label>
-      <button id="sync-range" class="primary" type="button" onClick=${syncRange}>${t("analysis.loadRange")}</button>
-      <span id="sync-progress" class="hint">${progress}</span>
+      <div class="segmented period-switch" role="tablist" id="summary-days" aria-label=${t("analysis.period")}>${PERIODS.map(([value, label]) =>
+        html`<button type="button" role="tab" data-days=${String(value)} aria-selected=${String(days === value)} onClick=${() => setDays(value)}>${label}</button>`)}</div>
+      <span id="sync-progress" class="hint" role="status">${loading && data ? t("analysis.loading") : notes}</span>
     </div>
-    <div id="summary" class="summary-grid">${loading ? html`<${Empty}>${t("analysis.loading")}<//>`
+    <div id="summary" class="summary-grid">${loading && !data ? html`<${Empty}>${t("analysis.loading")}<//>`
       : failed ? html`<${Empty}>${t("analysis.failed")}<//>` : data && html`<${SummaryCards} groups=${data.groups} />`}</div>
     <${Section} title=${t("analysis.allCalculations")} hint=${calculations ? mealsText(calculations.rows.length) : ""}>
       <div id="calculations">${calculations?.node}</div><//>
     ${!failed && html`<${SportAnalysis} analysis=${data?.sport_analysis} />`}
-    <${NightSummary} night=${data ? data.night || { count: 0, unavailable_count: Number(days), nights: [] } : null} loading=${loading} failed=${failed} />
+    <${NightSummary} night=${data?.night} loading=${loading && !data} failed=${failed} />
   </div>`;
 }
 
@@ -445,7 +419,7 @@ export function AnalysisView({ tab, onTab, reloadKey, getSettings, onSettings, o
   return html`<div class="page-head"><div><h1>${t("analysis.title")}</h1></div>
       <div class="segmented analysis-tabs" role="tablist" aria-label=${t("nav.analysis")}>${TABS.map(([key, label]) =>
         html`<button type="button" role="tab" data-analysis-tab=${key} aria-selected=${String(tab === key)} onClick=${() => onTab(key)}>${label}</button>`)}</div></div>
-    ${tab === "werte" && html`<${Werte} days=${days} setDays=${setDays} summary=${summary} reload=${load} onOpenMeal=${onOpenMeal} />`}
+    ${tab === "werte" && html`<${Werte} days=${days} setDays=${setDays} summary=${summary} onOpenMeal=${onOpenMeal} />`}
     ${tab === "automatik" && html`<${Automatik} summary=${summary} getSettings=${getSettings} onSettingsChanged=${onSettingsChanged} reload=${load} />`}
     ${tab === "gerichte" && html`<${Dishes} />`}`;
 }

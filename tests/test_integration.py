@@ -1331,6 +1331,31 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(night["delta_mgdl"], -40)
         self.assertEqual(night["minimum_glucose"], 95)
 
+    def test_night_ends_at_a_morning_dose_and_reports_fall_rise_and_carbs(self):
+        # A correction on waking (within 2 h before breakfast) ends the night instead of voiding it.
+        dinner = datetime(2026, 9, 22, 18, tzinfo=timezone.utc)
+        waking = datetime(2026, 9, 23, 5, tzinfo=timezone.utc)
+        breakfast = datetime(2026, 9, 23, 6, tzinfo=timezone.utc)
+        treatments = [
+            {"at": dinner, "insulin": 4, "role": "meal"},
+            {"at": datetime(2026, 9, 23, 1, tzinfo=timezone.utc), "carbs": 12},
+            {"at": waking, "insulin": 1, "role": "correction"},
+            {"id": "breakfast", "at": breakfast, "insulin": 3, "role": "meal", "carbs": 50, "eventType": "Meal Bolus", "notes": ""},
+        ]
+        entries = [
+            {"at": dinner + timedelta(hours=3), "sgv": 140},
+            {"at": datetime(2026, 9, 23, 2, tzinfo=timezone.utc), "sgv": 90},
+            {"at": waking, "sgv": 150},
+        ]
+        meals = [{"meal": "dinner", "at": dinner}]
+        settings = {"timezone": "Europe/Berlin", "window_minutes": 180}
+        night = night_analysis("2026-09-22", treatments, entries, meals, settings)
+        self.assertEqual(night["morning_dose_at"], waking)
+        self.assertEqual(night["end"], waking)
+        self.assertEqual(night["drop_mgdl"], -50)
+        self.assertEqual(night["rise_mgdl"], 60)
+        self.assertEqual(night["carbs_g"], 12)
+
     def test_breakfast_work_free_defaults_and_day_override(self):
         today = datetime.now(ZoneInfo("Europe/Berlin")).date()
         monday = (today - timedelta(days=today.weekday())).isoformat()
