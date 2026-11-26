@@ -1,11 +1,11 @@
-"""Push reminders over Pushover (user decision 2026-10-09): a forgotten basal and a due second split part;
+"""Push reminders over Pushover: a forgotten basal and a due second split part;
 since 2026-10-11 also early warnings of a low or high within the next hour (app/glucose_alerts.py), and since
 2026-11-14 a reminder to look at glucose and maybe correct after a meal (app/correction_check.py).
 
 The background job checks them after each sync round; each reminder is sent once (its key is stored)
 and only after a successful Nightscout sync, so a dose already given but not yet mirrored cannot
 trigger a false reminder. A low or high warning repeats at most once per WARNING_REPEAT.
-Each kind has its own Pushover priority (-2 to 2, user request 2026-10-11).
+Each kind has its own Pushover priority.
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ REPEAT = {"low": WARNING_REPEAT, "high": WARNING_REPEAT, "check": correction_che
 PRIORITY_LABELS = {-2: tr("Ganz leise (nur in der Pushover-App)"), -1: tr("Leise (ohne Ton)"), 0: tr("Normal"),
                    1: tr("Hoch (auch in Ruhezeiten)"), 2: tr("Notfall (wiederholt bis bestätigt)")}
 PRIORITIES = {kind: pushover.PRIORITY for kind in KINDS}
-# Minutes without a warning: low after a carb entry, high after rapid insulin (Philipp 2026-11-22).
+# Minutes without a warning: low after a carb entry, high after rapid insulin.
 PAUSES = {"low": glucose_alerts.LOW_PAUSE_MINUTES, "high": glucose_alerts.HIGH_PAUSE_MINUTES}
 MAX_PAUSE_MINUTES = 180
 
@@ -60,14 +60,14 @@ def due_reminders(now: datetime, settings: dict, treatments: list[dict], basal_t
     breakfast_end = int(settings["breakfast_end_minute"])
     if enabled.get("basal") and local.hour * 60 + local.minute >= breakfast_end and not basal_today:
         usual = calculation.dec(settings.get("basal_default_units", config.DEFAULT_BASAL_UNITS))
-        # Only the facts (user request 2026-10-11): Philipp knows the app, the title says what is due.
+        # Only the facts: The user knows the app, the title says what is due.
         message = tr("Üblich {units} IE", units=_units(usual)) if usual > 0 else tr("Heute noch kein Basal")
         reminders.append({"key": f"basal:{local.date().isoformat()}", "kind": "basal",
                           "title": LABELS["basal"], "message": message})
     plan = split.open_plan(treatments, now) if enabled.get("split") else None
     state = split.timing(plan, entries or [], settings, now)["state"] if plan else None
     if state in ("early", "due"):
-        # The amount comes from the current forecast (user approval 2026-10-22), the plan stays as orientation.
+        # The amount comes from the current forecast, the plan stays as orientation.
         units = second_part() if second_part else None
         meal = tr("Mahlzeit um {time}", time=_clock(plan["meal_at"], zone))
         if units is None:
@@ -139,7 +139,7 @@ def correction_reminder(now: datetime, settings: dict, treatments: list[dict], e
                         enabled: dict[str, bool], correction: Callable[[], dict | None] | None = None,
                         found: dict | None = None) -> list[dict]:
     """The tr("BZ prüfen") reminder when due (app/correction_check.py), with the dose help's correction
-    (user request 2026-11-14: name the suggested correction, Philipp judges the situation)."""
+   ."""
     if not enabled.get("check"):
         return []
     found = found if found is not None else _acting(now, settings, treatments)
@@ -159,7 +159,7 @@ def correction_reminder(now: datetime, settings: dict, treatments: list[dict], e
         if normal is not None and normal > 0:
             message += tr(". Korrektur {units} IE", units=_units(normal))
             if units.get("fast") is not None and units.get("slow") is not None:
-                # The ends of what was right after recent meals; the meal's rise leans to one (user request 2026-11-15).
+                # The ends of what was right after recent meals; the meal's rise leans to one.
                 message += tr(" (wenig {fast} · viel {slow} IE", fast=_units(units["fast"]), slow=_units(units["slow"]))
                 tempo = units.get("tempo")
                 if tempo:

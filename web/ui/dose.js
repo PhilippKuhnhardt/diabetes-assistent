@@ -1,5 +1,5 @@
 // The dose help under the entry form: the server's suggestion (/api/entry/preview `dose`) as option
-// buttons or, for a meal, the dose slider (user request 2026-11-15): one scale from little to much need,
+// buttons or, for a meal, the dose slider: one scale from little to much need,
 // the recommendation flagged, and where glucose likely ends for the chosen dose (the expected value of the
 // normal dose moved by the KF, with the corridor past doses showed around it: dark = every second case,
 // line = 8 of 10). The component only draws; app.js keeps the choice, fills the insulin field and saves.
@@ -25,7 +25,7 @@ export function sliderLanding(slider, units) {
 // The slider's dose: the dragged or typed one, else the recommendation. Own IE may lie outside the
 // slider: unclamped they show as typed, the thumb stops at the end.
 export function sliderUnits(slider, chosen, clamp = true) {
-  // The "0" button beside the slider (user decision 2026-11-25): no insulin, e.g. for a small snack.
+  // The "0" button beside the slider: no insulin, e.g. for a small snack.
   if (chosen?.zero) return 0;
   const lo = Number(slider.min_units), hi = Number(slider.max_units);
   const value = chosen?.units ?? Number(slider.recommended_units);

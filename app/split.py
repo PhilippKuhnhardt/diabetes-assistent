@@ -1,14 +1,13 @@
-"""Split bolus for large main meals (user request 2026-10-08): a share of the dose now, the rest later.
+"""Split bolus for large main meals: a share of the dose now, the rest later.
 
 Fiasp is mostly done after 2 h while a large meal and its fat/protein still raise glucose for hours,
 so the full dose up front means too much insulin early and too little late. The plan is stored with
 the meal entry in Nightscout ([DASP:<IE>@<minutes>]); any later rapid dose without carbs counts as its second
 part, which the dose help suggests from the current forecast (app/on_board.py) next to the planned amount.
 Carbs eaten while it is open (a dessert) get a dose for themselves only: the forecast's rise stays with the second
-part (user request 2026-11-23: the dessert suggested the whole second part at once, which would have caused a low).
+part.
 
-When the second part fits best follows the glucose course (user approval 2026-10-22, analysis in the
-project files analysen/pruefstand-2026-10/split-bolus.md): 60 to 105 min after the meal, glucose from
+When the second part fits best follows the glucose course: 60 to 105 min after the meal, glucose from
 180 mg/dL rising by 15 mg/dL per 15 min or more means the carbs act faster or were more, so it is due
 early; at the planned time, glucose below 110 or falling by more than 5 mg/dL per 15 min means the first
 part still lowers enough, so it waits (checked again every round) until 60 min past the planned time.
@@ -39,7 +38,7 @@ WAIT_AT_MOST = timedelta(minutes=60)
 def offer(carbs: Decimal, snack: bool, settings: dict, fat: bool = False) -> dict | None:
     """Whether the entry form offers (and preselects) a split for this meal: a main meal from split_min_grams,
     or any fat/protein main meal, whose fat surcharge would otherwise be injected at once while it acts
-    over hours (approval 2026-11-14, analysen/zweitpruefung-2026-11-14.md)."""
+    over hours."""
     minimum = int(settings.get("split_min_grams", 80))
     if snack or minimum <= 0 or carbs <= 0 or (carbs < minimum and not fat):
         return None

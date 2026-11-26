@@ -164,7 +164,7 @@ class OnBoardTests(unittest.TestCase):
         self.assertEqual(off["low_blocked"], "off")
 
     def test_low_glucose_uses_the_same_forecast(self):
-        # Philipp's report 2026-10-23: at 68 mg/dL with a hypo snack still acting, 34 g gave 0.5 IE because the
+        # Reported case: at 68 mg/dL with a hypo snack still acting, 34 g gave 0.5 IE because the
         # snack was ignored and the low still corrected in full; no special rule below 70 any more.
         meal = [{"id": "m", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 80,
                  "insulin": 2}]
@@ -178,7 +178,7 @@ class OnBoardTests(unittest.TestCase):
                              Decimal(result["forecast_mgdl"]) - on_board.FORECAST_SPREAD_MGDL))
 
     def test_gym_lowers_the_forecast_over_five_hours_after_it_ends(self):
-        # Philipp's report 2026-10-22: after gym the expected value ignored it and a correction came out too high.
+        # Reported case: after gym the expected value ignored it and a correction came out too high.
         self.settings["sport_effects_mgdl"] = {"gym": "70", "racing": "-40"}
         gym = {"id": "g", "at": self.now - timedelta(minutes=120), "eventType": "Exercise", "duration": 60,
                "sport_type": "gym"}
@@ -189,7 +189,7 @@ class OnBoardTests(unittest.TestCase):
         self.assertEqual(active["lowering_until"], self.now + timedelta(minutes=220))  # less than 5 mg/dL left
         result = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 200}], [gym], self.now, on_board=active)
         self.assertEqual(Decimal(result["forecast_mgdl"]), 144)
-        # Philipp's own value for the session wins; 0 leaves it out.
+        # The user's own value for the session wins; 0 leaves it out.
         found = on_board.sources([gym], self.now, self.settings, lambda at: None, None, None,
                                  sport_overrides={"g": "30"})
         self.assertEqual(on_board.summary(found, self.now)["sport_mgdl"], 24)
@@ -242,7 +242,7 @@ class OnBoardTests(unittest.TestCase):
 
     def test_surcharge_follows_what_is_still_in_the_stomach(self):
         # A second breakfast 155 g 2:39 h after 77 g: about 11 g of the first are still in the stomach, so it
-        # gets the share 166 g add to 11 g (user request 2026-11-21, no grouping by time).
+        # gets the share 166 g add to 11 g.
         first = {"id": "m", "at": self.now - timedelta(hours=2, minutes=39), "eventType": "Meal Bolus", "carbs": 77,
                  "insulin": 4.5}
         second = {"id": "s", "at": self.now, "eventType": "Snack Bolus", "carbs": 155, "insulin": 4,
@@ -373,7 +373,7 @@ class SplitTests(unittest.TestCase):
         self.assertIsNotNone(split.open_plan([meal, first_part], meal_at + timedelta(hours=2)))
         second = {"at": meal_at + timedelta(minutes=125), "insulin": "4", "eventType": "Correction Bolus"}
         self.assertIsNone(split.open_plan([meal, second], meal_at + timedelta(minutes=130)))
-        # A dessert's own dose covers its carbs only; the second part stays open (user report 2026-11-23).
+        # A dessert's own dose covers its carbs only; the second part stays open.
         dessert = {"at": meal_at + timedelta(minutes=40), "carbs": "30", "insulin": "1.5", "eventType": "Meal Bolus"}
         self.assertIsNotNone(split.open_plan([meal, dessert], meal_at + timedelta(minutes=60)))
 

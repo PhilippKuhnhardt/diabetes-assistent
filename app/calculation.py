@@ -301,7 +301,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
     # Rapid insulin from before the window still lowers glucose inside it. The dose help subtracts it
     # as "Wirkt noch", so the factor counts the share that acts between start and end (activity curve);
     # without it the factor of such a meal came out too small and the insulin was deducted twice
-    # (Philipp's approval 2026-11-14, analysen/dosisrechnung-pruefung-2026-11-14.md, 22 % of meals).
+    #.
     prior_doses = []
     prior_insulin_effect = Decimal(0)
     for treatment in all_treatments:

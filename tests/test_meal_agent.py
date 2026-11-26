@@ -258,7 +258,7 @@ class AgentServiceTests(unittest.TestCase):
             self.assertIn("error", json.loads(call_tool("dish_history", {"dish": "x", "days": "viele"})))
             self.assertIn("error", json.loads(call_tool("rm", {})))
             self.assertIn("- Porridge [Frühstück]", messages[0]["text"])
-            self.assertIn("Philipp: Porridge wie immer", messages[0]["text"])
+            self.assertIn("Nutzer: Porridge wie immer", messages[0]["text"])
             self.assertEqual(len(messages[0]["images"]), 1)
             self.assertEqual(first["estimate"]["dish"]["new"], False)
             self.assertEqual(first["estimate"]["lookups"], ["Verlauf: Porridge"])
@@ -268,7 +268,7 @@ class AgentServiceTests(unittest.TestCase):
             self.assertEqual((len(messages[0]["images"]), messages[2]["text"]), (1, "mit 2 Bananen"))
         self.assertEqual(second["session_id"], first["session_id"])
         self.assertEqual(second["turns"], ["Porridge wie immer", "mit 2 Bananen"])
-        # The chat shows the whole conversation: Philipp's words and each answer's carbs (user request 2026-11-18).
+        # The chat shows the whole conversation: the user's words and each answer's carbs.
         self.assertEqual([row["role"] for row in second["conversation"]], ["user", "assistant", "user", "assistant"])
         self.assertEqual(second["conversation"][1]["carbs_g"], 58)
         self.assertEqual(second["conversation"][2]["text"], "mit 2 Bananen")
@@ -281,7 +281,7 @@ class AgentServiceTests(unittest.TestCase):
         linked = agent.records(["11111111-1111-1111-1111-111111111111"])["11111111-1111-1111-1111-111111111111"]
         self.assertEqual((linked["agent_carbs_g"], len(linked["photos"])), (58, 1))
         self.assertEqual((linked["agent_fat_g"], linked["agent_protein_g"]), (4, 8))
-        # The edit dialog continues the linked estimate (user request 2026-11-17: a second plate).
+        # The edit dialog continues the linked estimate.
         earlier = agent.for_entry({"event_id": ["11111111-1111-1111-1111-111111111111"]})["session"]
         self.assertEqual((earlier["session_id"], earlier["turns"], earlier["photos"], earlier["can_continue"]),
                          (first["session_id"], ["Porridge wie immer", "mit 2 Bananen"], 1, True))
@@ -314,8 +314,8 @@ class AgentServiceTests(unittest.TestCase):
         self.assertEqual(third["conversation"][1]["reasoning"], "Laut passt das.")
         self.assertTrue(agent.photo(first["session_id"], "2").startswith(b"\xff\xd8"))
 
-    def test_search_meals_finds_a_product_by_philipps_words_and_shows_the_items(self):
-        # User report 2026-11-25: per-100-g values and the weight per waffle were only in Philipp's words.
+    def test_search_meals_finds_a_product_by_the_users_words_and_shows_the_items(self):
+        # Per-100-g values and the weight per waffle were only in the user's words.
         from app.services import dishes as dish_service
         answer = {"data": ANSWER | {"items": [{"name": "Hähnchenburger", "amount": "70 g", "carbs_g": 32.9, "fat_g": 5, "protein_g": 7},
                                               {"name": "Schokowaffeln", "amount": "2 Stück à 23 g", "carbs_g": 25, "fat_g": 9, "protein_g": 3}]},

@@ -1,7 +1,7 @@
 // The fields a meal has wherever it is entered or changed: the entry form (web/ui/entry.js), a saved
 // meal's card (web/ui/entry-card.js) and the meal chat (web/ui/agent-chat.js). KH-Sicherheit, the
 // Fettreich/Schnell chips and the fat/protein surcharge choice are built once here, so creating and
-// editing a meal cannot drift apart again (Philipp 2026-11-20). What they offer comes from the server;
+// editing a meal cannot drift apart again. What they offer comes from the server;
 // the dose recommendation stays in the entry form on purpose.
 import { html } from "./html.js";
 import { num } from "./lib.js";

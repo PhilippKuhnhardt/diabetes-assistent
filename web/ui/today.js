@@ -54,9 +54,9 @@ function Recent({ treatments }) {
     ? html`<span class="recent-label">${t("today.recent")}</span>${items}` : html`<span class="recent-label">${t("today.recentNone")}</span>`}</div>`;
 }
 
-// Today's meals in short (user request 2026-11-18): time, carbs, insulin and the factor once it is known.
+// Today's meals in short: time, carbs, insulin and the factor once it is known.
 // Each row sums all entries the server grouped under the meal (`meal_id`, as in "Verlauf") and unfolds to
-// them, each tappable to correct it; the meal still running is unfolded (user request 2026-11-20).
+// them, each tappable to correct it; the meal still running is unfolded.
 const sumOf = (items, key) => items.reduce((sum, item) => sum + (Number(item[key]) || 0), 0);
 const amounts = item => [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 1) + " " + UNIT.insulin : "",
   item.kind === "exercise" ? num(item.duration_minutes, 0) + " min" : ""].filter(Boolean);

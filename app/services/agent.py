@@ -175,7 +175,7 @@ def estimate(payload: dict) -> dict:
     encoded = [base64.b64encode(photo).decode() for photo in photos]
     shares = _photo_shares(turns, len(photos))
     messages = [{"role": turn["role"],
-                 "text": (context + "\n\nPhilipp: " + turn["text"]) if index == 0 else turn["text"],
+                 "text": (context + "\n\n" + tr("Nutzer") + ": " + turn["text"]) if index == 0 else turn["text"],
                  "images": encoded[shares[index][0]:shares[index][1]]} for index, turn in enumerate(turns)]
     try:
         answer = llm.run(provider, model, rules.SYSTEM, messages, rules.SCHEMA, rules.TOOLS, _call_tool,
@@ -208,7 +208,7 @@ def _photo_shares(turns: list[dict], total: int) -> list[tuple[int, int]]:
 
 
 def _conversation(messages: list[dict], photos: int = 0) -> list[dict]:
-    """The session as the chat shows it: Philipp's words with the indices of the photos he sent with
+    """The session as the chat shows it: the user's words with the indices of the photos they sent with
     them and, for each answer, its carbs with range and reasoning (the stored answer is the JSON
     replayed to the model; links in older answers are dropped, user report 2026-11-19)."""
     rows = []
@@ -261,7 +261,7 @@ def portion_value(raw) -> float | None:
 
 
 def scaled(estimate: dict | None, portion: float | None = None) -> dict | None:
-    """The estimate's fat and protein for the portion taken over (user request 2026-11-21: Philipp scales the
+    """The estimate's fat and protein for the portion taken over (user request 2026-11-21: The user scales the
     whole portion on a slider, as the agent gets the mix right more often than the amount). `portion` overrides
     the stored one; the carbs come from the entry itself."""
     if not estimate:
@@ -294,13 +294,13 @@ def photo(session_id: str, index: str) -> bytes | None:
 
 def for_entry(params: dict) -> dict:
     """The newest estimate linked to a diary entry, or the one named by `session_id`, so the chat can
-    continue it (user request 2026-11-17: a second plate is told to the agent instead of starting over)."""
+    continue it."""
     event_id = str((params.get("event_id") or [""])[0])
     session_id = str((params.get("session_id") or [""])[0])
     # The chat's slider shows the calculated surcharge for the portion picked before the entry is saved.
     portion = portion_value((params.get("portion") or [None])[0])
-    # An estimate taken over into a form that is not saved yet is continued by its own id (Philipp
-    # 2026-11-19: correcting works the same before and after saving).
+    # An estimate taken over into a form that is not saved yet is continued by its own id (correcting works
+    # the same before and after saving).
     if session_id:
         try:
             session = store.session(str(uuid.UUID(session_id)))
@@ -341,7 +341,7 @@ def records(event_ids: list[str]) -> dict[str, dict]:
             "agent_carbs_high_g": estimate.get("carbs_high_g"),
             "agent_history_adjustment_g": estimate.get("history_adjustment_g"),
             "agent_fat_g": estimate.get("fat_g"), "agent_protein_g": estimate.get("protein_g"),
-            # The portion Philipp took the estimate over with (1 = as estimated); carbs_g of the entry already has it.
+            # The portion the user took the estimate over with (1 = as estimated); carbs_g of the entry already has it.
             "agent_portion": portion_value(estimate.get("portion")) or 1.0,
             "agent_items": estimate.get("items"), "agent_model": session["provider"] + ":" + session["model"],
             "photos": [f"/api/v1/photo?session={session['id']}&n={index}" for index in range(session["photos"])],

@@ -1,10 +1,10 @@
-"""The meal agent's rules (user request 2026-11-16): what it is told, the shape of its answer, and
+"""The meal agent's rules: what it is told, the shape of its answer, and
 how an answer is checked before the entry form shows it.
 
 The agent estimates carbohydrates from photos and a description and names the dish. It never names
 an insulin dose: its carbs fill the entry form, where the dose help calculates as always. A dish's
 catalogue is part of what it is told, and it looks up past meals and dish histories with its tools
-(Philipp 2026-11-16: the model is smart and gets tools rather than rules). A dish that keeps needing
+. A dish that keeps needing
 more insulin than usual is estimated higher next time; that adjustment is named separately
 (`history_adjustment_g`)."""
 from __future__ import annotations
@@ -57,13 +57,13 @@ SCHEMA = {
 }
 
 SYSTEM = pick(
-"""Du bist der Essens-Agent in Philipps Diabetes-Tagebuch (Typ 1, Insulin per Pen). Deine Aufgabe: \
-die Kohlenhydrate (KH) einer Mahlzeit so gut wie möglich einschätzen, aus Fotos, Philipps Beschreibung und \
+"""Du bist der Essens-Agent im Diabetes-Tagebuch des Nutzers (Typ 1, Insulin per Pen). Deine Aufgabe: \
+die Kohlenhydrate (KH) einer Mahlzeit so gut wie möglich einschätzen, aus Fotos, der Beschreibung des Nutzers und \
 allem, was du nachschlagen kannst. Deine Zahl füllt das Eintragsformular; die Insulindosis rechnet danach \
 allein die App. Nenne deshalb nie Insulineinheiten, Faktoren oder Dosisratschläge.
 
 Du entscheidest selbst, wie du vorgehst. Dafür hast du:
-- den Gerichte-Katalog in der ersten Nachricht: Philipps wiederkehrende Gerichte mit Anzahl, üblichen KH und \
+- den Gerichte-Katalog in der ersten Nachricht: die wiederkehrenden Gerichte des Nutzers mit Anzahl, üblichen KH und \
 wie sie sich verhalten haben,
 - search_meals: frühere Mahlzeiten nach Stichworten, Mahlzeitenart, Ort oder Gericht durchsuchen, mit KH, \
 Beschreibung und Ergebnis (Faktor, Verhältnis zum üblichen Faktor, BZ vorher und nachher),
@@ -75,21 +75,21 @@ Was du über die Daten wissen solltest:
 - ratio = Mahlzeitfaktor ÷ üblicher Faktor derselben Mahlzeitenart in den 30 Tagen davor. 1,2 heißt, die \
 Mahlzeit brauchte 20 % mehr Insulin als üblich, sie verhielt sich also wie 20 % mehr KH. Liegt ein Gericht \
 oder eine ähnliche Mahlzeit wiederholt darüber oder darunter, waren ihre KH vermutlich unter- oder \
-überschätzt (Philipps Sicht). Berücksichtige das in carbs_g und trage den Unterschied zu deiner Schätzung \
+überschätzt (Sicht des Nutzers). Berücksichtige das in carbs_g und trage den Unterschied zu deiner Schätzung \
 aus Foto und Beschreibung in history_adjustment_g ein (positiv = erhöht, sonst 0); die items bleiben ohne \
 diese Anpassung. Einzelne Mahlzeiten streuen auch aus anderen Gründen (Sport, Stress, Fett).
 - Ein Gericht fasst Mahlzeiten zusammen, die sich für den Blutzucker ähnlich verhalten; meist entscheidet \
 die Hauptquelle der KH (Reis, Pasta, Brot, Haferflocken), nicht was sonst dabei war. Ähnliche Gerichte und \
 Mahlzeiten taugen als Referenz, auch wenn keine genau passt.
-- Philipps eigene Angaben (gewogen, Packungswerte) gehen vor dem Foto. Halte sie so fest, dass sie beim \
+- Eigene Angaben des Nutzers (gewogen, Packungswerte) gehen vor dem Foto. Halte sie so fest, dass sie beim \
 nächsten Mal wieder auffindbar sind: Produkt und Marke im item-Namen, im amount Stückzahl, Gewicht je Stück und \
 die Packungsangabe (z. B. "2 Stück à 23 g, 54 g KH/100 g"), auch in der description.
-- Isst Philipp etwas, das er schon einmal angegeben hat (gleiches Produkt, "wie neulich", "die Waffel von \
-eben"), suche es mit search_meals: jeder Treffer zeigt unter agent die damaligen items und Philipps eigene \
-Worte (user_said), etwa Nährwerte je 100 g und Gewicht je Stück. Rechne damit statt neu zu schätzen. Ein \
+- Isst der Nutzer etwas, das er schon einmal angegeben hat (gleiches Produkt, "wie neulich", "die Waffel von \
+eben"), suche es mit search_meals: jeder Treffer zeigt unter agent die damaligen items und die eigenen \
+Worte des Nutzers (user_said), etwa Nährwerte je 100 g und Gewicht je Stück. Rechne damit statt neu zu schätzen. Ein \
 Treffer zeigt carbs_g für den ganzen Eintrag, oft mit anderem Essen zusammen; nimm den Anteil des Produkts aus \
 den items. Was schon in einem früheren Eintrag gezählt ist, zählt nicht noch einmal.
-- In späteren Nachrichten korrigiert oder ergänzt Philipp die Mahlzeit, auch nachträglich ("noch ein zweiter \
+- In späteren Nachrichten korrigiert oder ergänzt der Nutzer die Mahlzeit, auch nachträglich ("noch ein zweiter \
 Teller", "die Hälfte liegen lassen"). Deine Antwort beschreibt dann immer die ganze Mahlzeit, wie sie \
 tatsächlich gegessen wurde, mit allen Bestandteilen in items und description. Eine spätere Nachricht kann \
 neue Fotos bringen (etwa vom zweiten Teller); sie gehören zur selben Mahlzeit.
@@ -99,14 +99,14 @@ Deine Antwort ist ein JSON-Objekt mit genau diesen Feldern:
 und protein_g (Eiweiß), alles in Gramm,
 - carbs_g: deine beste Schätzung; carbs_low_g bis carbs_high_g: die ehrliche Spanne,
 - history_adjustment_g: siehe oben,
-- fat_g und protein_g: Fett und Eiweiß der ganzen Mahlzeit in Gramm, eine grobe Schätzung reicht. Philipp \
+- fat_g und protein_g: Fett und Eiweiß der ganzen Mahlzeit in Gramm, eine grobe Schätzung reicht. Der Nutzer \
 sieht sie nicht; sie werden gespeichert, um später die Wirkung von Fett und Eiweiß auf den BZ zu untersuchen,
-- certainty (Philipps Maßstab): weighed = gewogen oder genormt (Packung, feste Portionsangabe); known = alle \
+- certainty (Maßstab des Nutzers): weighed = gewogen oder genormt (Packung, feste Portionsangabe); known = alle \
 relevanten Zutaten sind bekannt, nur das Gewicht ist geschätzt; unsure = unbekannte Zutaten oder sehr unklare \
 Menge,
 - fat_protein: nur bei wirklich fett- oder eiweißreichen Mahlzeiten, die den BZ über Stunden nachhaltig \
 heben, etwa Pizza, Steak, Burger mit Pommes oder Raclette. Eine Suppe oder ein Gericht mit etwas Fleisch oder \
-Öl (z. B. Pho, Curry mit Reis, Pasta mit Soße) ist es nicht (Philipps Maßstab). fast: wirkt schnell (Saft, \
+Öl (z. B. Pho, Curry mit Reis, Pasta mit Soße) ist es nicht (Maßstab des Nutzers). fast: wirkt schnell (Saft, \
 Weißbrot, Süßes ohne Fett),
 - dish_name: das passende Gericht aus dem Katalog mit genau seinem Namen, sonst ein kurzer neuer Name für \
 etwas Wiederkehrendes, sonst leer; dish_category: eine Kategorie (vorhandene nutzen, wo sie passen),
@@ -184,7 +184,7 @@ TOOLS = [
      "description": pick(
          "Frühere Kohlenhydrat-Einträge durchsuchen, neueste zuerst (höchstens 40). Je Eintrag: Tag, "
          "Uhrzeit, Mahlzeitenart, Gericht, Beschreibung, KH, Ort, KH-Sicherheit, agent (die damaligen items "
-         "mit Menge und KH und user_said, Philipps eigene Worte zur Einschätzung, etwa Nährwerte und "
+         "mit Menge und KH und user_said, die eigenen Worte des Nutzers zur Einschätzung, etwa Nährwerte und "
          "Gewichte) und meal_outcome der Hauptmahlzeit, zu der er gehört (factor, reference_factor, ratio, carbs_g und rapid_units "
          "der ganzen Mahlzeit, BZ g0_mgdl vorher und g_end_mgdl nachher, delta_mgdl).",
          "Search earlier carb entries, newest first (at most 40). Per entry: day, time, meal kind, dish, "
@@ -194,7 +194,7 @@ TOOLS = [
          "BG g0_mgdl before and g_end_mgdl after, delta_mgdl)."),
      "parameters": {"type": "object", "properties": {
          "query": {"type": "string", "description": pick(
-             "Stichworte, die alle in Gericht, Beschreibung, items oder Philipps Worten vorkommen müssen, z. B. \"Reis\". Leer = alle.",
+             "Stichworte, die alle in Gericht, Beschreibung, items oder den Worten des Nutzers vorkommen müssen, z. B. \"Reis\". Leer = alle.",
              "Keywords that must all appear in dish, description, items or the user's words, e.g. \"rice\". Empty = all.")},
          "meal": {"type": "string", "enum": MEAL_KINDS, "description": tr("Nur diese Mahlzeitenart.")},
          "place": {"type": "string", "description": tr("Nur dieser Ort (Name wie im Kontext).")},
@@ -232,8 +232,8 @@ def context_text(local_time: str, meal: str | None, place: str | None, catalogue
                  places: list[str] | None = None) -> str:
     return (tr("Zeitpunkt der Mahlzeit: {time}", time=local_time) + (f" ({MEAL_LABELS[meal]})" if meal in MEAL_LABELS else "")
             + "\n" + tr("Ort: {place}", place=place or tr("nicht angegeben"))
-            + ("\n" + tr("Philipps Orte: {places}", places=", ".join(places)) if places else "")
-            + "\n\n" + tr("Philipps Gerichte-Katalog (je Gericht der Verlauf, darunter der letzte Eintrag; mehr über "
+            + ("\n" + tr("Orte des Nutzers: {places}", places=", ".join(places)) if places else "")
+            + "\n\n" + tr("Gerichte-Katalog des Nutzers (je Gericht der Verlauf, darunter der letzte Eintrag; mehr über "
                           "dish_history und search_meals):") + f"\n{catalogue}")
 
 
@@ -262,7 +262,7 @@ _BARE_URL = re.compile(r"\s*\(?https?://[^\s)]+\)?")
 
 
 def plain_text(text) -> str:
-    """The agent's words without links or Markdown links, spaces tidied (user report 2026-11-19)."""
+    """The agent's words without links or Markdown links, spaces tidied."""
     text = _LINK_IN_PARENS.sub("", str(text or ""))
     text = _MARKDOWN_LINK.sub(r"\1", text)
     text = _BARE_URL.sub("", text)

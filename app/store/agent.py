@@ -71,7 +71,7 @@ def link_session(session_id: str, event_id: str) -> None:
 
 
 def set_portion(session_id: str, portion: float) -> None:
-    """The portion Philipp took the estimate over with (1 = as estimated), kept inside its estimate."""
+    """The portion the user took the estimate over with (1 = as estimated), kept inside its estimate."""
     with connect() as db:
         row = db.execute("SELECT estimate FROM agent_sessions WHERE id=?", (session_id,)).fetchone()
         if row is None or not row["estimate"]:

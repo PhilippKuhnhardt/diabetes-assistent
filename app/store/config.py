@@ -12,7 +12,7 @@ from app.store.db import connect
 # (racing adrenaline).
 DEFAULT_SPORT_EFFECTS = {"jogging": 40, "gym": 40, "light_cardio": 20, "racing": -40}
 # Minutes after a session's end over which its effect acts (linearly), per sport type
-# (user request 2026-10-22: configurable once the kinds show different data).
+#.
 DEFAULT_SPORT_DURATIONS = {"jogging": 300, "gym": 300, "light_cardio": 300, "racing": 300}
 
 
@@ -24,7 +24,7 @@ DEFAULT_BASAL_UNITS = "0"
 DEFAULT_SPLIT = {"split_min_grams": 80, "split_min_units": "6.5", "split_first_percent": 60, "split_delay_minutes": 120}
 
 
-# Vacation meals in the Automatik (user request 2026-11-06, app/services/factors.py `history_days`):
+# Vacation meals in the Automatik:
 # "separate" = during a vacation all meals count, outside one vacation days are skipped (default);
 # "vacation_only" = the same, but during a vacation only vacation meals count; "all" = vacation counts like any day.
 AUTO_VACATION_MODES = ("separate", "vacation_only", "all")
@@ -96,7 +96,7 @@ def _with_nightscout_profile(settings: dict) -> dict:
         result["auto_lookback_days"] = 15 if result.get("auto_lookback_days") == 14 else 30
     result.setdefault("auto_half_life_days", "7")
     result.setdefault("auto_surcharge_mgdl", "40")
-    # Fat surcharge approved by Philipp 2026-11-06 (analysen/modell-review-2026-11-06.md); older versions lack it.
+    # Fat surcharge; older versions lack it.
     result.setdefault("auto_fat_surcharge_mgdl", "120")
     result.setdefault("fpe_surcharge_mgdl", "20")
     if result.get("auto_vacation") not in AUTO_VACATION_MODES:

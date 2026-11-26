@@ -26,10 +26,9 @@ def json_safe(value):
 
 
 class TravelZone(tzinfo):
-    """The home zone with the switches Philipp made while travelling (user request 2026-11-07,
-    4 weeks 6 h ahead from 2026-11-08): every instant reads the local clock of the zone in effect
+    """The home zone with the switches the user made while travelling: every instant reads the local clock of the zone in effect
     then, so meal kinds, the correction-factor schedule, warning hours and day boundaries follow
-    the clock where he is. Behaves like a zone with large DST jumps: flying east skips local hours
+    the clock where they are. Behaves like a zone with large DST jumps: flying east skips local hours
     (the travel day is shorter), flying home repeats them (`fold` picks the later instant)."""
 
     def __init__(self, home: str, switches: tuple[tuple[datetime, str], ...]):
@@ -111,7 +110,7 @@ _zones: dict = {}
 
 
 def local_zone(timezone_name: str) -> tzinfo:
-    """The app's local zone: the home zone, or a TravelZone once Philipp switched zones."""
+    """The app's local zone: the home zone, or a TravelZone once the user switched zones."""
     from app.store import timezones  # the store imports this module
 
     switches = timezones.switches()

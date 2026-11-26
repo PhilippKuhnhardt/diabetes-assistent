@@ -11,7 +11,7 @@ from app.i18n import tr
 
 
 def set_sport_session(payload: dict) -> dict:
-    """Philipp's glucose drop for one sport session (reset: back to the setting of its kind)."""
+    """The user's glucose drop for one sport session (reset: back to the setting of its kind)."""
     session_id = payload.get("id")
     day = str(payload.get("day", ""))
     date.fromisoformat(day)
@@ -67,7 +67,7 @@ def set_window(payload: dict) -> dict:
 
 
 def _check_window(day: str, meal_id: str) -> None:
-    """Saving a window in the editor means Philipp looked at it: the meal counts as checked for the
+    """Saving a window in the editor means the user looked at it: the meal counts as checked for the
     window it now has (recalculated here, since a reset gives back the automatic window)."""
     meal = next((row for row in day_view.day_payload(day, refresh=False)["meals"] if row["id"] == meal_id), None)
     if meal and meal.get("window"):
@@ -75,7 +75,7 @@ def _check_window(day: str, meal_id: str) -> None:
 
 
 def set_window_check(payload: dict) -> dict:
-    """"Passt" in Verlauf (user request 2026-11-23): the meal's current window is right. Holds until the
+    """"Passt" in Verlauf: the meal's current window is right. Holds until the
     window changes; `checked: false` takes it back. Only a finished meal can be checked."""
     meal_id = payload.get("meal_id")
     day = str(payload.get("day", ""))
@@ -97,7 +97,7 @@ def set_window_check(payload: dict) -> dict:
 
 
 def set_day_check(payload: dict) -> dict:
-    """"Tag prüfen" in Verlauf (user request 2026-11-24): every finished meal is checked for its current
+    """"Tag prüfen" in Verlauf: every finished meal is checked for its current
     window; `checked: false` takes the day's checks back."""
     day = str(payload.get("day", ""))
     date.fromisoformat(day)

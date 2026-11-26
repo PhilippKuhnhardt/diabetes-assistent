@@ -20,7 +20,7 @@ AUTO_FACTOR_MIN_MEALS = forecast.MIN_MEALS
 def counted_days(today: date, days_back: int, periods: list[dict], mode: str) -> list[tuple[date, date]]:
     """(day, day as the Automatik counts it) from today back over days_back days, newest first.
 
-    Vacation meals (user request 2026-11-06, setting auto_vacation): outside a vacation, modes
+    Vacation meals: outside a vacation, modes
     "separate" and "vacation_only" skip vacation days and move the days before them up by the
     vacation's length, so after coming home the lookback and the half-life reach the meals before
     the vacation as if it had not happened, and new meals take over as usual. During a vacation

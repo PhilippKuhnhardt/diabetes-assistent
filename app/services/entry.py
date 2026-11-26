@@ -16,7 +16,7 @@ from app.i18n import tr
 
 MODES = ("meal", "exercise", "basal")
 # fast / slow: the ends of a correction without food after a recent meal (app/correction_scale.py); they take
-# the cautious option's place there (user request 2026-11-15).
+# the cautious option's place there.
 DOSE_VARIANTS = ("fast", "normal", "slow", "low", "cautious", "carbs")
 # The lower target is offered for corrections and for small carb amounts only: up to this many grams,
 # not marked unsure and not fat-/protein-rich, so no carb uncertainty asks for a cautious estimate.
@@ -140,7 +140,7 @@ def _instant(value):
 
 
 def _closing(context: dict, root: dict | None, result: dict, payload: dict) -> dict:
-    """A snack after a main meal can end that meal instead (user request 2026-11-02): the meal's window
+    """A snack after a main meal can end that meal instead: the meal's window
     then ends at the entry, the same manual window "Tag durchgehen" sets, so the snack and anything
     later no longer count in its factor. A meal whose manual window already ended keeps no snacks."""
     result["close"] = None
@@ -244,7 +244,7 @@ def _split(context: dict, assignment: dict | None, payload: dict) -> dict | None
 
 def _fpe_surcharge(context: dict, assignment: dict | None, payload: dict) -> dict | None:
     """The calculated fat/protein surcharge (app/fpe.py) when the form chose it, else None. Snacks carry it like
-    meals (user request 2026-11-21: the surcharge belongs to each carb entry, app/on_board.py)."""
+    meals."""
     if payload.get("surcharge_mode") != "fpe" or context["mode"] != "meal" or not context["carbs"]:
         return None
     return fpe.estimate(payload, context["settings"])
@@ -297,7 +297,7 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
         # The normal dose is too small to split (e.g. shrunk by a low glucose): all of it now, no chip.
         split = None
     if split and split.get("fpe"):
-        # Calculated surcharge: the carbs (and correction) now, the surcharge later (user request 2026-11-19).
+        # Calculated surcharge: the carbs (and correction) now, the surcharge later.
         chosen = (result.get("surcharge_choice") or {}).get("mode") == "fpe"
         later = split_bolus.dosing.half_units(Decimal(str(result.get("auto_surcharge_units") or 0))) if chosen else None
         full = result.get(prefix + "entry_units")
@@ -332,7 +332,7 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
                 options.append(option)
             continue
         if variant in ("low", "cautious"):
-            # The slider replaces the lower and the cautious target (user request 2026-11-15).
+            # The slider replaces the lower and the cautious target.
             continue
         units = result.get(prefix + keys[variant][0])
         if units is None:
@@ -350,7 +350,7 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
         options.append(option)
     plan = result.get("split_plan")
     if plan and carbs == 0:
-        # The second part is what the current forecast asks for (user approval 2026-10-22); the planned IE
+        # The second part is what the current forecast asks for; the planned IE
         # only stand in without a fresh glucose value.
         forecast_units = result.get("entry_units")
         units = Decimal(str(forecast_units)) if forecast_units is not None else Decimal(plan["units"])

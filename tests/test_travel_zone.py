@@ -1,4 +1,4 @@
-"""Time-zone switches while travelling (user request 2026-11-07: 4 weeks 6 h ahead)."""
+"""Time-zone switches while travelling."""
 import tempfile
 import unittest
 from datetime import date, datetime, time, timedelta, timezone

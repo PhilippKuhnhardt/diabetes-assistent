@@ -2,13 +2,13 @@
 
 [English summary](README.md)
 
-Private Web-App (Oberfläche deutsch oder englisch, nach Browsersprache oder unter Mehr → Sprache) für FreeStyle Libre 3 Plus über Nightscout und manuell erfasstes Fiasp. Nightscout ist die maßgebliche Quelle für CGM, Kohlenhydrate, Injektionen, Sport und das aktuelle Profil. SQLite spiegelt diese Daten und speichert lokale Analyseentscheidungen sowie versionierte Einstellungen. Berechnete Faktoren werden nie nach Nightscout geschrieben. Die Formeln und Annahmen stehen in [Rechenwege](docs/rechenwege.md).
+Private Web-App (Oberfläche deutsch oder englisch, nach Browsersprache oder unter Mehr → Sprache) für CGM-Daten über Nightscout und manuell gespritztes schnelles Insulin (entwickelt mit FreeStyle Libre 3 Plus und Fiasp). Nightscout ist die maßgebliche Quelle für CGM, Kohlenhydrate, Injektionen, Sport und das aktuelle Profil. SQLite spiegelt diese Daten und speichert lokale Analyseentscheidungen sowie versionierte Einstellungen. Berechnete Faktoren werden nie nach Nightscout geschrieben. Die Formeln und Annahmen stehen in [Rechenwege](docs/rechenwege.md).
 
-> **Haftungsausschluss: kein Medizinprodukt, keine Therapieempfehlung.** Dies ist ein privates Hobbyprojekt, gebaut um die Daten, Einstellungen und Gewohnheiten einer Person. Die App ist kein Medizinprodukt, weder zertifiziert noch klinisch geprüft, und nichts, was sie anzeigt, ist eine Therapieempfehlung. Ihre Berechnungen beruhen auf vereinfachenden Modellannahmen und können falsch sein. Keine Insulindosis allein danach festlegen; Änderungen der Therapie mit dem Diabetes-Team besprechen. Die Nutzung erfolgt vollständig auf eigene Verantwortung; die Autoren haften nicht für Schäden aus der Nutzung (siehe auch Abschnitte 15 und 16 der Lizenz).
+> **Haftungsausschluss: kein Medizinprodukt, keine Therapieempfehlung.** Dies ist ein privates Hobbyprojekt, gebaut um die Daten, Einstellungen und Gewohnheiten einer Person. Die App ist kein Medizinprodukt, weder zertifiziert noch klinisch geprüft, und nichts, was sie anzeigt, ist eine Therapieempfehlung. Ihre Berechnungen beruhen auf vereinfachenden Modellannahmen und können falsch sein. Keine Insulindosis allein danach festlegen; Änderungen der Therapie mit dem Diabetes-Team besprechen. Die Nutzung erfolgt vollständig auf eigene Verantwortung; die Autoren haften nicht für Schäden aus der Nutzung (siehe auch Abschnitte 15 und 16 der Lizenz). Betreibe die App nur für dich selbst; wer eine gehostete Instanz anbietet, die für andere Dosen berechnet, wird unter Umständen rechtlich zum Hersteller eines Medizinprodukts.
 
 ## Deployment mit Umgebungsvariablen
 
-Compose liest alle Zugangsdaten direkt aus der Umgebung des Deployment-Prozesses. Es gibt kein `env_file` und keine erforderliche `.env`-Datei.
+Am einfachsten: `cp .env.example .env`, die drei Pflichtwerte eintragen und `docker compose up -d --build`. [.env.example](.env.example) erklärt jede Variable. Alternativ liest Compose alle Zugangsdaten direkt aus der Umgebung des Deployment-Prozesses, dann ohne `.env`-Datei:
 
 | Variable | Bedeutung |
 | --- | --- |
@@ -21,6 +21,8 @@ Compose liest alle Zugangsdaten direkt aus der Umgebung des Deployment-Prozesses
 | `APP_PUBLIC_URL` | Optional: HTTPS-Adresse der App; Pushover-Meldungen verlinken dorthin |
 | `APP_HEARTBEAT_URL` | Optional: HTTPS-Ping-Adresse eines externen Wächters (z. B. Healthchecks.io) |
 | `NIGHTSCOUT_AUTH_MODE` | `secret` (Standard) oder `token` |
+| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OPENROUTER_API_KEY` | Optional: Essens-Agent; einer reicht, ohne Schlüssel ist er aus. Spracheingabe braucht OpenRouter |
+| `MCP_OAUTH_REDIRECTS` | Optional: weitere OAuth-Rücksprungadressen für MCP-Clients außer Claude, kommagetrennt |
 
 Bei `secret` sendet die App den SHA-1-Hash der rohen `API_SECRET` im `api-secret`-Header. Bei `token` wird der rohe Zugangstoken verwendet. Die drei Zugangswerte müssen im Deployment als Umgebungsvariablen gesetzt werden; fehlende Werte stoppen Compose mit einer Fehlermeldung. Gib sie in der Secret-/Environment-Konfiguration deines Hosters an oder exportiere sie in der Shell.
 

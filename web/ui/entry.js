@@ -33,7 +33,7 @@ const doseShown = option => ({ units: option.units, later_units: option.later_un
 const sameDose = (a, b) => Number(a.units) === Number(b.units) &&
   (a.later_units == null ? b.later_units == null : b.later_units != null && Number(a.later_units) === Number(b.later_units));
 
-// Which meal surcharge the dose uses while both are compared (user request 2026-11-19): the static one
+// Which meal surcharge the dose uses while both are compared: the static one
 // (80, +120 with "Fettreich") or the one calculated from the agent's fat and protein. The last choice stays.
 const SURCHARGE_MODE_KEY = "entrySurchargeMode";
 function storedSurchargeMode() {
@@ -223,7 +223,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
 
   function reset() {
     pending.current = { event: null, basal: {} };
-    // A saved entry changes what still acts: the next suggestions are new, not "changed" (user report 2026-11-15).
+    // A saved entry changes what still acts: the next suggestions are new, not "changed".
     doseSeen.current = null;
     refs.carbs.current?.setCustomValidity("");
     const next = { ...blank(store.current.kind), preview: store.current.preview };
@@ -402,7 +402,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     set({ carbs: String(carbs), certainty: index < 0 ? 1 : index, certaintyUnset: certainty !== undefined && index < 0,
       fat: Boolean(fat_protein), fast: Boolean(fast),
       agent: { session_id: session, dish_name: estimate.dish?.name || "", description: estimate.description,
-        // Fat and protein scaled by the portion picked in the chat (user request 2026-11-21).
+        // Fat and protein scaled by the portion picked in the chat.
         fat_g: fat_g ?? null, protein_g: protein_g ?? null, portion: portion ?? 1,
         range: estimate.carbs_low_g + "–" + estimate.carbs_high_g + " g" } });
     requestPosition();
@@ -490,7 +490,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
   const fingerOpen = fingerActive(f) && (f.fingerOpen || Boolean(f.finger) || Boolean(preview?.dose?.finger_offer));
   const timeOpen = f.timeOpen || day !== today;
   const noteOpen = f.noteOpen || Boolean(f.notes);
-  // The manual entry ("KE & IE") shows its fields right away, not only once carbs are typed (user request 2026-11-18).
+  // The manual entry ("KE & IE") shows its fields right away, not only once carbs are typed.
   const quality = meal && (document.getElementById("entry-drawer")?.dataset.quick === "manual" || Number(f.carbs) > 0);
   const selectedPlace = placeId(f);
   const chips = place ? place.options.filter(option => option.quick || option.id === selectedPlace) : [];
