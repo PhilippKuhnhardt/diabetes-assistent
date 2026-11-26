@@ -7,15 +7,16 @@ from app import episodes, glucose
 from app.common import local_day_range, local_zone, parse_instant
 from app.ingestion import nightscout, sync as ingestion_sync
 from app.store import config
+from app.i18n import tr
 
 
 
 def sync_days(payload: dict) -> dict:
     if not nightscout.is_configured():
-        raise ValueError("Nightscout-Zugang in Umgebungsvariablen fehlt")
+        raise ValueError(tr("Nightscout-Zugang in Umgebungsvariablen fehlt"))
     days = int(payload.get("days", 14))
     if days not in (1, 3, 7, 14, 30):
-        raise ValueError("Ungültiger Zeitraum")
+        raise ValueError(tr("Ungültiger Zeitraum"))
     profile_sync_error = None
     try:
         ingestion_sync.sync_profile_cache(force=True)
@@ -36,25 +37,25 @@ def sync_profile(payload: dict) -> dict:
     return {
         "version": version, "settings": settings, "profile": profile,
         "profile_sync_at": profile_sync["synced_at"],
-        "message": ("Nightscout-Profil synchronisiert" if profile else
-                    "Nightscout hat kein Korrekturfaktor-Profil geliefert"),
+        "message": (tr("Nightscout-Profil synchronisiert") if profile else
+                    tr("Nightscout hat kein Korrekturfaktor-Profil geliefert")),
     }
 
 
 def test_connection() -> dict:
     if not nightscout.is_configured():
-        raise ValueError("Nightscout-Zugang in Umgebungsvariablen fehlt")
+        raise ValueError(tr("Nightscout-Zugang in Umgebungsvariablen fehlt"))
     ingestion_sync.sync_profile_cache(force=True)
     _, settings = config.get_settings()
     today = datetime.now(local_zone(settings["timezone"])).date().isoformat()
     start, end = local_day_range(today, settings["timezone"])
     nightscout.fetch_range(start, end)
-    return {"message": "Nightscout-Verbindung und aktuelles Profil erfolgreich geprüft"}
+    return {"message": tr("Nightscout-Verbindung und aktuelles Profil erfolgreich geprüft")}
 
 
 def current_glucose() -> dict:
     if not nightscout.is_configured():
-        raise ValueError("Nightscout-Zugang in Umgebungsvariablen fehlt")
+        raise ValueError(tr("Nightscout-Zugang in Umgebungsvariablen fehlt"))
     profile_current = True
     try:
         ingestion_sync.sync_profile_cache()

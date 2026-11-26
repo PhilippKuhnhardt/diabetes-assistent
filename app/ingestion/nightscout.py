@@ -11,6 +11,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from app.i18n import tr
 
 
 class NightscoutError(Exception):
@@ -35,12 +36,12 @@ def _request(method: str, path: str, query: dict | None = None, body: object | N
     base = os.environ.get("NIGHTSCOUT_URL", "").strip().rstrip("/")
     credential = os.environ.get("NIGHTSCOUT_CREDENTIAL", "").strip()
     if not base or not credential:
-        raise NightscoutError("Nightscout-Zugang in Umgebungsvariablen fehlt")
+        raise NightscoutError(tr("Nightscout-Zugang in Umgebungsvariablen fehlt"))
     parsed = urllib.parse.urlparse(base)
     if parsed.scheme != "https" and parsed.hostname not in ("localhost", "127.0.0.1"):
-        raise NightscoutError("Nightscout muss per HTTPS erreichbar sein")
+        raise NightscoutError(tr("Nightscout muss per HTTPS erreichbar sein"))
     if parsed.username or parsed.password or parsed.query or parsed.fragment:
-        raise NightscoutError("Ungültige Nightscout-URL")
+        raise NightscoutError(tr("Ungültige Nightscout-URL"))
     params = dict(query or {})
     mode = os.environ.get("NIGHTSCOUT_AUTH_MODE", "secret")
     headers = {"Accept": "application/json", "User-Agent": "DiabetesAnalysisPoC/1"}
@@ -49,7 +50,7 @@ def _request(method: str, path: str, query: dict | None = None, body: object | N
     elif mode == "token":
         params["token"] = credential
     else:
-        raise NightscoutError("Unbekannte Nightscout-Anmeldung")
+        raise NightscoutError(tr("Unbekannte Nightscout-Anmeldung"))
     url = base + path
     if params:
         url += "?" + urllib.parse.urlencode(params)
@@ -66,12 +67,12 @@ def _request(method: str, path: str, query: dict | None = None, body: object | N
             return json.loads(raw) if raw else None
     except urllib.error.HTTPError as error:
         if error.code in (401, 403):
-            raise NightscoutError("Nightscout lehnt die Anmeldung ab") from None
-        raise NightscoutError(f"Nightscout antwortet mit HTTP {error.code}") from None
+            raise NightscoutError(tr("Nightscout lehnt die Anmeldung ab")) from None
+        raise NightscoutError(tr("Nightscout antwortet mit HTTP {status}", status=error.code)) from None
     except urllib.error.URLError:
-        raise NightscoutError("Nightscout ist nicht erreichbar") from None
+        raise NightscoutError(tr("Nightscout ist nicht erreichbar")) from None
     except (ValueError, json.JSONDecodeError):
-        raise NightscoutError("Ungültige Antwort von Nightscout") from None
+        raise NightscoutError(tr("Ungültige Antwort von Nightscout")) from None
 
 
 def fetch_recent_glucose(now: datetime) -> list[dict]:
@@ -83,9 +84,9 @@ def fetch_recent_glucose(now: datetime) -> list[dict]:
         "count": 1000,
     })
     if not isinstance(entries, list):
-        raise NightscoutError("Nightscout lieferte unerwartete CGM-Daten")
+        raise NightscoutError(tr("Nightscout lieferte unerwartete CGM-Daten"))
     if len(entries) >= 1000:
-        raise NightscoutError("Zu viele CGM-Werte in der letzten Stunde")
+        raise NightscoutError(tr("Zu viele CGM-Werte in der letzten Stunde"))
     return entries
 
 
@@ -102,7 +103,7 @@ def fetch_range(start: datetime, end: datetime) -> tuple[list[dict], list[dict]]
             "count": 1000,
         })
         if not isinstance(chunk, list):
-            raise NightscoutError("Nightscout lieferte unerwartete CGM-Daten")
+            raise NightscoutError(tr("Nightscout lieferte unerwartete CGM-Daten"))
         if len(chunk) >= 1000:
             raise NightscoutError("Zu viele CGM-Werte in einem 8-Stunden-Abschnitt")
         entries.extend(chunk)
@@ -113,9 +114,9 @@ def fetch_range(start: datetime, end: datetime) -> tuple[list[dict], list[dict]]
         "count": 1000,
     })
     if not isinstance(entries, list) or not isinstance(treatments, list):
-        raise NightscoutError("Nightscout lieferte unerwartete Daten")
+        raise NightscoutError(tr("Nightscout lieferte unerwartete Daten"))
     if len(treatments) >= 1000:
-        raise NightscoutError("Zu viele Nightscout-Behandlungen für eine Abfrage")
+        raise NightscoutError(tr("Zu viele Nightscout-Behandlungen für eine Abfrage"))
     return entries, treatments
 
 
@@ -128,7 +129,7 @@ def fetch_current_profile() -> dict | None:
             raise
         records = _request("GET", "/api/v1/profile.json", {"count": 1})
         if not isinstance(records, list):
-            raise NightscoutError("Nightscout lieferte ein ungültiges Profil") from None
+            raise NightscoutError(tr("Nightscout lieferte ein ungültiges Profil")) from None
         record = records[0] if records else None
     if record is None:
         return None
@@ -249,17 +250,17 @@ def fetch_profiles() -> list[dict]:
             "target_schedule": target_schedule,
         }]
     except (AttributeError, KeyError, TypeError, ValueError, InvalidOperation, ZoneInfoNotFoundError):
-        raise NightscoutError("Nightscout lieferte ein ungültiges Profil") from None
+        raise NightscoutError(tr("Nightscout lieferte ein ungültiges Profil")) from None
 
 
 def update_profile_schedule(field: str, values: list[dict], expected_profile_id: str) -> list[dict]:
     """Update one schedule on the current Nightscout profile, preserving other fields."""
     if field not in ("carbratio", "sens"):
-        raise ValueError("Unbekannter Profil-Zeitplan")
+        raise ValueError(tr("Unbekannter Profil-Zeitplan"))
     value_key = "grams_per_unit" if field == "carbratio" else "mgdl_per_unit"
     record = fetch_current_profile()
     if not isinstance(record, dict) or not record.get("_id") or str(record["_id"]) != expected_profile_id:
-        raise NightscoutError("Nightscout-Profil hat sich geändert. Bitte neu synchronisieren")
+        raise NightscoutError(tr("Nightscout-Profil hat sich geändert. Bitte neu synchronisieren"))
     try:
         profile = record["store"][record["defaultProfile"]]
         rows = profile[field]
@@ -288,7 +289,7 @@ def update_profile_schedule(field: str, values: list[dict], expected_profile_id:
         if new_values:
             raise ValueError
     except (KeyError, TypeError, ValueError, InvalidOperation):
-        raise NightscoutError("Ungültiger Profil-Zeitplan") from None
+        raise NightscoutError(tr("Ungültiger Profil-Zeitplan")) from None
     _request("PUT", "/api/v1/profile/", body=record)
     profiles = fetch_profiles()
     actual = profiles[0]["ic_schedule" if field == "carbratio" else "isf_schedule"] if profiles else []
@@ -297,7 +298,7 @@ def update_profile_schedule(field: str, values: list[dict], expected_profile_id:
         requested.get(item["start_minute"]) is None or
         abs(requested[item["start_minute"]] - Decimal(item[value_key])) > Decimal("0.001") for item in actual
     ):
-        raise NightscoutError("Nightscout hat den Profil-Zeitplan nicht bestätigt")
+        raise NightscoutError(tr("Nightscout hat den Profil-Zeitplan nicht bestätigt"))
     return profiles
 
 def write_treatment(record: dict) -> None:
@@ -316,7 +317,7 @@ def write_treatment(record: dict) -> None:
             item.get("identifier") == identifier or f"[DAE:{identifier}]" in str(item.get("notes") or "")
             for item in found
         ):
-            raise NightscoutError("Nightscout hat den Eintrag nicht bestätigt")
+            raise NightscoutError(tr("Nightscout hat den Eintrag nicht bestätigt"))
 
 
 def delete_treatment(record_id: str) -> None:
@@ -327,5 +328,5 @@ def delete_treatment(record_id: str) -> None:
 def update_treatment(record_id: str, record: dict) -> None:
     """Update a Nightscout v1 treatment by its authoritative ID."""
     if not record_id or record.get("_id") != record_id:
-        raise NightscoutError("Eintrag-ID stimmt nicht überein")
+        raise NightscoutError(tr("Eintrag-ID stimmt nicht überein"))
     _request("PUT", "/api/v1/treatments", body=record)

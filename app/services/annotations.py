@@ -7,6 +7,7 @@ from app import calculation
 from app.common import parse_instant
 from app.services import day_view, settings as settings_service
 from app.store import marks
+from app.i18n import tr
 
 
 def set_sport_session(payload: dict) -> dict:
@@ -15,10 +16,10 @@ def set_sport_session(payload: dict) -> dict:
     day = str(payload.get("day", ""))
     date.fromisoformat(day)
     if not isinstance(session_id, str) or not 0 < len(session_id) <= 200:
-        raise ValueError("Ungültige Sporteinheit")
+        raise ValueError(tr("Ungültige Sporteinheit"))
     if session_id not in {item["id"] for item in day_view.day_payload(day, refresh=False)["timeline"]
                           if item["kind"] == "exercise"}:
-        raise ValueError("Sporteinheit nicht gefunden")
+        raise ValueError(tr("Sporteinheit nicht gefunden"))
     # The effect duration is optional: "minutes" set (a number) or reset (null) it, absent leaves it.
     if "minutes" in payload:
         minutes = payload["minutes"]
@@ -26,9 +27,9 @@ def set_sport_session(payload: dict) -> dict:
             try:
                 minutes = int(minutes)
             except (TypeError, ValueError):
-                raise ValueError("Ungültige Wirkdauer") from None
+                raise ValueError(tr("Ungültige Wirkdauer")) from None
             if not 30 <= minutes <= 1440:
-                raise ValueError("Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen")
+                raise ValueError(tr("Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen"))
         marks.set_sport_session_minutes(session_id, minutes)
     if payload.get("reset"):
         marks.set_sport_session_effect(session_id, None)
@@ -37,7 +38,7 @@ def set_sport_session(payload: dict) -> dict:
         return {"id": session_id, "minutes": payload["minutes"]}
     effect = calculation.dec(payload.get("effect_mgdl", 0))
     if not effect.is_finite() or not -500 <= effect <= 500:
-        raise ValueError("Ungültiger Sporteffekt")
+        raise ValueError(tr("Ungültiger Sporteffekt"))
     marks.set_sport_session_effect(session_id, str(effect))
     return {"id": session_id, "effect_mgdl": str(effect)}
 
@@ -47,10 +48,10 @@ def set_window(payload: dict) -> dict:
     day = str(payload.get("day", ""))
     date.fromisoformat(day)
     if not isinstance(meal_id, str) or not 0 < len(meal_id) <= 200:
-        raise ValueError("Ungültige Mahlzeit")
+        raise ValueError(tr("Ungültige Mahlzeit"))
     meal = next((row for row in day_view.day_payload(day, refresh=False)["meals"] if row["id"] == meal_id), None)
     if meal is None:
-        raise ValueError("Mahlzeit nicht gefunden")
+        raise ValueError(tr("Mahlzeit nicht gefunden"))
     if payload.get("reset"):
         marks.set_analysis_window(meal_id, None, None)
         _check_window(day, meal_id)
@@ -81,13 +82,13 @@ def set_window_check(payload: dict) -> dict:
     date.fromisoformat(day)
     checked = payload.get("checked")
     if not isinstance(meal_id, str) or not 0 < len(meal_id) <= 200 or not isinstance(checked, bool):
-        raise ValueError("Ungültige Prüfung")
+        raise ValueError(tr("Ungültige Prüfung"))
     current = day_view.with_checks(day_view.day_payload(day, refresh=False))
     meal = next((row for row in current["meals"] if row["id"] == meal_id), None)
     if meal is None:
-        raise ValueError("Mahlzeit nicht gefunden")
+        raise ValueError(tr("Mahlzeit nicht gefunden"))
     if checked and not meal["review"]["checkable"]:
-        raise ValueError("Die Mahlzeit läuft noch; prüfen geht nach dem Ende des Zeitraums.")
+        raise ValueError(tr("Die Mahlzeit läuft noch; prüfen geht nach dem Ende des Zeitraums."))
     if checked:
         marks.set_window_check(meal_id, str(meal["window"]["start"]), str(meal["window"]["end"]))
     else:
@@ -102,10 +103,10 @@ def set_day_check(payload: dict) -> dict:
     date.fromisoformat(day)
     checked = payload.get("checked")
     if not isinstance(checked, bool):
-        raise ValueError("Ungültige Prüfung")
+        raise ValueError(tr("Ungültige Prüfung"))
     current = day_view.with_checks(day_view.day_payload(day, refresh=False))
     if checked and not current["review"]["checkable"]:
-        raise ValueError("Eine Mahlzeit läuft noch; den Tag prüfen geht nach dem Ende ihres Zeitraums.")
+        raise ValueError(tr("Eine Mahlzeit läuft noch; den Tag prüfen geht nach dem Ende ihres Zeitraums."))
     for meal in current["meals"]:
         if checked and meal.get("window"):
             marks.set_window_check(meal["id"], str(meal["window"]["start"]), str(meal["window"]["end"]))
@@ -118,7 +119,7 @@ def set_day_type(payload: dict) -> dict:
     day = payload.get("day")
     day_type = payload.get("day_type")
     if not isinstance(day, str) or not isinstance(day_type, str) or day_type not in ("work", "free"):
-        raise ValueError("Ungültige Tageskennzeichnung")
+        raise ValueError(tr("Ungültige Tageskennzeichnung"))
     date.fromisoformat(day)
     marks.set_analysis_day_type(day, day_type)
     return {"day": day, "day_type": day_type}
@@ -128,10 +129,10 @@ def set_exclusion(payload: dict) -> dict:
     meal_id = payload.get("meal_id")
     excluded = payload.get("excluded")
     if not isinstance(meal_id, str) or not 0 < len(meal_id) <= 200 or not isinstance(excluded, bool):
-        raise ValueError("Ungültige Analyse-Auswahl")
+        raise ValueError(tr("Ungültige Analyse-Auswahl"))
     day = str(payload.get("day", ""))
     date.fromisoformat(day)
     if meal_id not in {meal["id"] for meal in day_view.day_payload(day, refresh=False)["meals"]}:
-        raise ValueError("Mahlzeit nicht gefunden")
+        raise ValueError(tr("Mahlzeit nicht gefunden"))
     marks.set_analysis_exclusion(meal_id, excluded)
     return {"meal_id": meal_id, "excluded": excluded}

@@ -544,7 +544,7 @@ export default {
     },
     language: {
       auto: "Automatisch ({language})",
-      hint: "Automatisch folgt der Sprache des Browsers. Die Wahl gilt für dieses Gerät; die Seite lädt dabei neu. Meldungen des Servers und des Essens-Agenten bleiben vorerst deutsch.",
+      hint: "Automatisch folgt der Sprache des Browsers. Die Wahl gilt für dieses Gerät; die Seite lädt dabei neu. Meldungen des Servers, Push-Nachrichten und der Essens-Agent folgen der Server-Einstellung APP_LANGUAGE.",
       label: "Sprache",
     },
     logout: "Abmelden",

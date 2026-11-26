@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal, getcontext
 
 from app.common import local_zone
+from app.i18n import tr
 
 getcontext().prec = 28
 
@@ -44,7 +45,7 @@ def schedule_value_at(moment: datetime, schedule: list[dict], timezone: str, key
     minute = local.hour * 60 + local.minute
     candidates = sorted(schedule, key=lambda row: int(row["start_minute"]))
     if not candidates:
-        raise ValueError("Profil-Zeitplan fehlt")
+        raise ValueError(tr("Profil-Zeitplan fehlt"))
     chosen = candidates[-1]
     for row in candidates:
         if int(row["start_minute"]) <= minute:
@@ -53,7 +54,7 @@ def schedule_value_at(moment: datetime, schedule: list[dict], timezone: str, key
             break
     value = dec(chosen[key])
     if value <= 0:
-        raise ValueError("Profilwert muss positiv sein")
+        raise ValueError(tr("Profilwert muss positiv sein"))
     return value
 
 
@@ -87,11 +88,11 @@ def glucose_interpolator(entries: list[dict], max_gap_minutes: int = 15):
         if index < len(times) and times[index] == moment:
             return {"value": points[index][1], "before": moment, "after": moment}
         if index == 0 or index == len(times):
-            raise ValueError("CGM-Werte um den Messzeitpunkt fehlen")
+            raise ValueError(tr("CGM-Werte um den Messzeitpunkt fehlen"))
         before, after = points[index - 1], points[index]
         gap = minutes_between(after[0], before[0])
         if gap > max_gap_minutes:
-            raise ValueError("CGM-Lücke am Messzeitpunkt ist zu groß")
+            raise ValueError(tr("CGM-Lücke am Messzeitpunkt ist zu groß"))
         fraction = minutes_between(moment, before[0]) / gap
         value = before[1] + (after[1] - before[1]) * fraction
         return {"value": value, "before": before[0], "after": after[0]}
@@ -227,7 +228,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
     if manual_window:
         start, end = manual_window["start"], manual_window["end"]
         if not meal_at < end or not start < end:
-            raise ValueError("Manueller Zeitraum muss nach dem Mahlzeitbeginn enden")
+            raise ValueError(tr("Manueller Zeitraum muss nach dem Mahlzeitbeginn enden"))
     try:
         g0 = interpolate_glucose(entries, start)
         g0_source = "cgm"
@@ -241,7 +242,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
     delta = g1["value"] - g0["value"]
     carbs = dec(episode["carbs"])
     if carbs <= 0:
-        raise ValueError("Kohlenhydrate müssen positiv sein")
+        raise ValueError(tr("Kohlenhydrate müssen positiv sein"))
     meal_isf = isf_at(meal_at, settings["isf_schedule"], settings["timezone"])
     meal_carb_effect = carbs * meal_isf
     carb_events = [{
@@ -263,14 +264,14 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         kind = "snack" if event_type == "Snack Bolus" else "meal" if event_type == "Meal Bolus" else "other"
         sensitivity = isf_at(at, settings["isf_schedule"], settings["timezone"])
         local_time = at.astimezone(local_zone(settings["timezone"])).strftime("%H:%M")
-        label = "Zwischenmahlzeit" if kind == "snack" else "Weitere Hauptmahlzeit" if kind == "meal" else "Weitere Kohlenhydrate"
+        label = tr("Zwischenmahlzeit") if kind == "snack" else tr("Weitere Hauptmahlzeit") if kind == "meal" else tr("Weitere Kohlenhydrate")
         extra_carbs.append({
             "id": treatment.get("id"), "at": at.isoformat(), "carbs": str(amount),
             "isf": str(sensitivity), "carbs_times_isf": str(amount * sensitivity), "kind": kind,
         })
         if kind == "meal":
             blockers.append({"kind": kind, "at": at.isoformat(), "carbs": str(amount),
-                             "message": f"{label} um {local_time} ({amount} g KH) im Auswertungsfenster"})
+                             "message": tr("{label} um {time} ({carbs} g KH) im Auswertungsfenster", label=label, time=local_time, carbs=amount)})
     effects = []
     insulin_effect = Decimal(0)
     rapid_units_in_window = Decimal(0)
@@ -285,7 +286,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         if not is_rapid_insulin(treatment):
             local_time = at.astimezone(local_zone(settings["timezone"])).strftime("%H:%M")
             blockers.append({"kind": "unknown_insulin", "at": at.isoformat(), "units": str(units),
-                             "message": f"Insulinereignis unbekannten Typs um {local_time} ({units} IE)"})
+                             "message": tr("Insulinereignis unbekannten Typs um {time} ({units} IE)", time=local_time, units=units)})
             continue
         sensitivity = isf_at(at, settings["isf_schedule"], settings["timezone"])
         effect = units * sensitivity
@@ -324,7 +325,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
     insulin_effect += prior_insulin_effect
     sport_effect_mgdl = dec(sport_effect_mgdl)
     if not sport_effect_mgdl.is_finite() or not -500 <= sport_effect_mgdl <= 500:
-        raise ValueError("Ungültiger Sporteffekt")
+        raise ValueError(tr("Ungültiger Sporteffekt"))
     adjusted_delta = delta + sport_effect_mgdl
     denominator = adjusted_delta + insulin_effect
     all_carb_events = carb_events + extra_carbs
@@ -335,7 +336,7 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
     if blockers:
         reason = "; ".join(item["message"] for item in blockers)
     elif denominator <= 0:
-        reason = "Kein positiver endlicher Faktor für diese Eingaben"
+        reason = tr("Kein positiver endlicher Faktor für diese Eingaben")
     else:
         ratio = str(carbs_times_isf_total / denominator)
         factor = str(Decimal(10) * denominator / carbs_times_isf_total)
@@ -364,8 +365,8 @@ def calculate_episode(episode: dict, all_treatments: list[dict], entries: list[d
         "doses": effects, "carb_events": all_carb_events,
         "blockers": blockers,
         "ratio_g_per_unit": ratio, "factor_units_per_ke": factor, "reason": reason,
-        "assumptions": ["alle KH im Fenster wirken bis zum Endpunkt vollständig", "volle IE jeder schnell wirksamen Injektion im Fenster", "frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt", "alle KH im Fenster teilen einen Insulinfaktor", "kein zusätzlicher Hintergrundtrend", "bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung"]
-        + (["manuell gewählter Zeitraum statt automatischem Endpunkt"] if manual_window else [])
-        + (["Beginn bei der Injektion vor dem Essen (Spritz-Ess-Abstand)"] if not manual_window and auto_start < meal_at else [])
-        + (["Startwert blutig gemessen, weil am Beginn kein CGM-Wert vorlag"] if g0_source == "finger" else []),
+        "assumptions": [tr("alle KH im Fenster wirken bis zum Endpunkt vollständig"), tr("volle IE jeder schnell wirksamen Injektion im Fenster"), tr("frühere schnell wirksame Injektionen mit dem Anteil, der im Fenster wirkt"), tr("alle KH im Fenster teilen einen Insulinfaktor"), tr("kein zusätzlicher Hintergrundtrend"), tr("bestätigter Sport- oder Rennsporteffekt (Senkung oder Anstieg) als additive Korrektur der Glukoseänderung")]
+        + ([tr("manuell gewählter Zeitraum statt automatischem Endpunkt")] if manual_window else [])
+        + ([tr("Beginn bei der Injektion vor dem Essen (Spritz-Ess-Abstand)")] if not manual_window and auto_start < meal_at else [])
+        + ([tr("Startwert blutig gemessen, weil am Beginn kein CGM-Wert vorlag")] if g0_source == "finger" else []),
     }

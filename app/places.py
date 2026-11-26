@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 from datetime import datetime, timedelta
+from app.i18n import tr
 
 EARTH_RADIUS_M = 6_371_000
 # Every spot holds positions within this distance of its centre (a canteen, a restaurant).
@@ -22,9 +23,9 @@ NAME_MAX = 40
 STATUS_HINTS = {
     "matched": "per Standort erkannt",
     "away": "an keinem Standort",
-    "unknown": "an keinem Standort, in den Einstellungen einen Ort als Standard für unterwegs festlegen",
-    "inaccurate": "Standort zu ungenau",
-    "offset": "Zeit weicht ab, Standort nicht verwendet",
+    "unknown": tr("an keinem Standort, in den Einstellungen einen Ort als Standard für unterwegs festlegen"),
+    "inaccurate": tr("Standort zu ungenau"),
+    "offset": tr("Zeit weicht ab, Standort nicht verwendet"),
     "none": "ohne Standort",
 }
 
@@ -94,7 +95,7 @@ def suggestion(position: dict | None, at: datetime | None, now: datetime, spots:
 def validate_name(value) -> str:
     name = " ".join(str(value or "").split())[:NAME_MAX]
     if not name:
-        raise ValueError("Bitte einen Namen für den Ort eingeben")
+        raise ValueError(tr("Bitte einen Namen für den Ort eingeben"))
     return name
 
 
@@ -107,5 +108,5 @@ def validate_spot(value: dict) -> dict:
         lat, lon = (parts[0].strip(), parts[1].strip()) if len(parts) == 2 else (None, None)
     position = parse_position({"lat": lat, "lon": lon})
     if position is None:
-        raise ValueError("Ungültige Koordinaten")
+        raise ValueError(tr("Ungültige Koordinaten"))
     return {"lat": position["lat"], "lon": position["lon"]}

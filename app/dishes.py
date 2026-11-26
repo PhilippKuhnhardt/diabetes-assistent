@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from statistics import median
+from app.i18n import tr
 
 NAME_MAX = 60
 CATEGORY_MAX = 40
@@ -24,7 +25,7 @@ TYPICAL_ENTRIES = 5
 def validate_name(value) -> str:
     name = " ".join(str(value or "").split())[:NAME_MAX]
     if not name:
-        raise ValueError("Bitte einen Namen für das Gericht eingeben")
+        raise ValueError(tr("Bitte einen Namen für das Gericht eingeben"))
     return name
 
 
@@ -102,14 +103,16 @@ def outcome(rows: list[dict], typical: float | None) -> dict:
 
 def hint(count: int, typical: float | None, result: dict | None = None) -> str:
     """One line on a dish for the entry form and the catalogue."""
-    parts = [f"{count}× eingetragen" if count else "noch nie eingetragen"]
+    parts = [tr("{count}× eingetragen", count=count) if count else tr("noch nie eingetragen")]
     if typical:
-        parts.append(f"meist {typical:g} g")
+        parts.append(tr("meist {grams} g", grams=f"{typical:g}"))
     if result and result.get("ratio") is not None:
         percent = round((result["ratio"] - 1) * 100)
-        need = "wie üblich" if abs(percent) < 5 else f"{abs(percent)} % {'mehr' if percent > 0 else 'weniger'} Insulin als üblich"
-        text = f"brauchte {need} ({result['valid']} Mahlzeiten)"
+        need = (tr("wie üblich") if abs(percent) < 5
+                else tr("{percent} % mehr Insulin als üblich", percent=abs(percent)) if percent > 0
+                else tr("{percent} % weniger Insulin als üblich", percent=abs(percent)))
+        text = tr("brauchte {need} ({count} Mahlzeiten)", need=need, count=result["valid"])
         if typical and abs(percent) >= 5:
-            text += f", verhielt sich wie {result['effective_low']}–{result['effective_high']} g"
+            text += tr(", verhielt sich wie {low}–{high} g", low=result["effective_low"], high=result["effective_high"])
         parts.append(text)
     return ", ".join(parts)

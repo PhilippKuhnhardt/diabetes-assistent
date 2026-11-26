@@ -21,6 +21,7 @@ import time
 from urllib.parse import urlencode, urlparse
 
 from app import auth
+from app.i18n import LANGUAGE, tr
 
 ACCESS_SECONDS = 3600
 REFRESH_SECONDS = 90 * 24 * 3600
@@ -102,7 +103,7 @@ def register(payload: dict) -> dict:
     """Dynamic client registration: any client may register, but only for the allowed redirects."""
     uris = payload.get("redirect_uris")
     if not isinstance(uris, list) or not uris or not all(isinstance(uri, str) and allowed_redirect(uri) for uri in uris):
-        raise ValueError("redirect_uris nicht erlaubt")
+        raise ValueError(tr("redirect_uris nicht erlaubt"))
     return {"client_id": "mcp-" + secrets.token_hex(12), "client_id_issued_at": int(time.time()),
             "redirect_uris": uris, "client_name": str(payload.get("client_name") or "")[:100],
             "grant_types": ["authorization_code", "refresh_token"], "response_types": ["code"],
@@ -114,49 +115,50 @@ def authorize_request(params: dict) -> dict:
     value = {key: str(params.get(key, [""])[0]) for key in
              ("response_type", "client_id", "redirect_uri", "code_challenge", "code_challenge_method", "state")}
     if not enabled():
-        raise ValueError("MCP ist nicht eingerichtet")
+        raise ValueError(tr("MCP ist nicht eingerichtet"))
     if value["response_type"] != "code" or not value["client_id"]:
-        raise ValueError("Ungültige Anfrage")
+        raise ValueError(tr("Ungültige Anfrage"))
     if not allowed_redirect(value["redirect_uri"]):
-        raise ValueError("Diese Rücksprungadresse ist nicht erlaubt")
+        raise ValueError(tr("Diese Rücksprungadresse ist nicht erlaubt"))
     if not value["code_challenge"] or value["code_challenge_method"] != "S256":
-        raise ValueError("PKCE (S256) fehlt")
+        raise ValueError(tr("PKCE (S256) fehlt"))
     return value
 
 
-ERRORS = {"wrong": "Passwort stimmt nicht.",
-          "wait": "Zu viele falsche Passwörter. Bitte in einer Viertelstunde noch einmal versuchen."}
+ERRORS = {"wrong": tr("Passwort stimmt nicht."),
+          "wait": tr("Zu viele falsche Passwörter. Bitte in einer Viertelstunde noch einmal versuchen.")}
 
 
 def authorize_page(request: dict, error: str | None = None) -> str:
     fields = "".join(f'<input type="hidden" name="{key}" value="{html.escape(value)}">'
                      for key, value in request.items())
     target = html.escape(urlparse(request["redirect_uri"]).netloc)
+    connect = tr("Agent verbinden")
     return f"""<!doctype html>
-<html lang="de">
+<html lang="{LANGUAGE}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Agent verbinden · Tagebuch</title>
+  <title>{connect} · {tr("Tagebuch")}</title>
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="apple-mobile-web-app-title" content="Tagebuch">
+  <meta name="apple-mobile-web-app-title" content="{tr("Tagebuch")}">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="login-page">
   <main class="login-card panel">
-    <div class="login-brand"><img src="/logo.svg" width="48" height="48" alt=""><span>Diabetes-Tagebuch</span></div>
-    <h1>Agent verbinden</h1>
-    <p>Ein Agent über <strong>{target}</strong> möchte deine Werte lesen und Einträge speichern.
-       Mit dem Passwort erlaubst du das.</p>
+    <div class="login-brand"><img src="/logo.svg" width="48" height="48" alt=""><span>{tr("Diabetes-Tagebuch")}</span></div>
+    <h1>{connect}</h1>
+    <p>{tr("Ein Agent über {target} möchte deine Werte lesen und Einträge speichern. Mit dem Passwort erlaubst du das.",
+           target="<strong>" + target + "</strong>")}</p>
     <form action="/oauth/authorize" method="post">
       {fields}
-      <label>Passwort
+      <label>{tr("Passwort")}
         <input name="password" type="password" autocomplete="current-password" required autofocus>
       </label>
       {f'<p class="form-error">{ERRORS[error]}</p>' if error else ''}
-      <button class="primary" type="submit">Verbinden</button>
+      <button class="primary" type="submit">{tr("Verbinden")}</button>
     </form>
   </main>
 </body>

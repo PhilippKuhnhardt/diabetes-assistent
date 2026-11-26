@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime, timezone
 
 from app.store.db import connect
+from app.i18n import tr
 
 
 def _now() -> str:
@@ -20,12 +21,12 @@ def all_dishes() -> list[dict]:
 
 def _check_name(db: sqlite3.Connection, name: str, dish_id: int | None) -> None:
     if db.execute("SELECT 1 FROM dishes WHERE name=? COLLATE NOCASE AND id IS NOT ?", (name, dish_id)).fetchone():
-        raise ValueError("Ein Gericht mit diesem Namen gibt es schon")
+        raise ValueError(tr("Ein Gericht mit diesem Namen gibt es schon"))
 
 
 def _check_dish(db: sqlite3.Connection, dish_id: int) -> None:
     if not db.execute("SELECT 1 FROM dishes WHERE id=?", (dish_id,)).fetchone():
-        raise ValueError("Gericht nicht gefunden")
+        raise ValueError(tr("Gericht nicht gefunden"))
 
 
 def create_dish(name: str, category: str = "") -> int:
@@ -60,7 +61,7 @@ def merge_dish(dish_id: int, into_id: int) -> None:
         _check_dish(db, dish_id)
         _check_dish(db, into_id)
         if dish_id == into_id:
-            raise ValueError("Ein Gericht kann nicht mit sich selbst zusammengelegt werden")
+            raise ValueError(tr("Ein Gericht kann nicht mit sich selbst zusammengelegt werden"))
         db.execute("UPDATE meal_records SET dish_id=?,updated_at=? WHERE dish_id=?", (into_id, _now(), dish_id))
         db.execute("DELETE FROM dishes WHERE id=?", (dish_id,))
 
