@@ -86,7 +86,7 @@ nächsten Mal wieder auffindbar sind: Produkt und Marke im item-Namen, im amount
 die Packungsangabe (z. B. "2 Stück à 23 g, 54 g KH/100 g"), auch in der description.
 - Isst Philipp etwas, das er schon einmal angegeben hat (gleiches Produkt, "wie neulich", "die Waffel von \
 eben"), suche es mit search_meals: jeder Treffer zeigt unter agent die damaligen items und Philipps eigene \
-Worte (philipp_said), etwa Nährwerte je 100 g und Gewicht je Stück. Rechne damit statt neu zu schätzen. Ein \
+Worte (user_said), etwa Nährwerte je 100 g und Gewicht je Stück. Rechne damit statt neu zu schätzen. Ein \
 Treffer zeigt carbs_g für den ganzen Eintrag, oft mit anderem Essen zusammen; nimm den Anteil des Produkts aus \
 den items. Was schon in einem früheren Eintrag gezählt ist, zählt nicht noch einmal.
 - In späteren Nachrichten korrigiert oder ergänzt Philipp die Mahlzeit, auch nachträglich ("noch ein zweiter \
@@ -146,7 +146,7 @@ found again next time: product and brand in the item name, in amount the number 
 the package figure (e.g. "2 pieces of 23 g, 54 g carbs/100 g"), also in the description.
 - If the user eats something they have stated before (same product, "like the other day", "the waffle from \
 earlier"), look it up with search_meals: each hit shows under agent the items back then and the user's own \
-words (philipp_said), such as nutrition per 100 g and weight per piece. Calculate with these instead of estimating anew. A \
+words (user_said), such as nutrition per 100 g and weight per piece. Calculate with these instead of estimating anew. A \
 hit shows carbs_g for the whole entry, often together with other food; take the product's share from \
 the items. What is already counted in an earlier entry does not count again.
 - In later messages the user corrects or adds to the meal, also afterwards ("a second \
@@ -184,12 +184,12 @@ TOOLS = [
      "description": pick(
          "Frühere Kohlenhydrat-Einträge durchsuchen, neueste zuerst (höchstens 40). Je Eintrag: Tag, "
          "Uhrzeit, Mahlzeitenart, Gericht, Beschreibung, KH, Ort, KH-Sicherheit, agent (die damaligen items "
-         "mit Menge und KH und philipp_said, Philipps eigene Worte zur Einschätzung, etwa Nährwerte und "
+         "mit Menge und KH und user_said, Philipps eigene Worte zur Einschätzung, etwa Nährwerte und "
          "Gewichte) und meal_outcome der Hauptmahlzeit, zu der er gehört (factor, reference_factor, ratio, carbs_g und rapid_units "
          "der ganzen Mahlzeit, BZ g0_mgdl vorher und g_end_mgdl nachher, delta_mgdl).",
          "Search earlier carb entries, newest first (at most 40). Per entry: day, time, meal kind, dish, "
          "description, carbs, place, carb certainty, agent (the items back then with amount and carbs, and "
-         "philipp_said, the user's own words on the estimate, such as nutrition facts and weights) and meal_outcome "
+         "user_said, the user's own words on the estimate, such as nutrition facts and weights) and meal_outcome "
          "of the main meal it belongs to (factor, reference_factor, ratio, carbs_g and rapid_units of the whole meal, "
          "BG g0_mgdl before and g_end_mgdl after, delta_mgdl)."),
      "parameters": {"type": "object", "properties": {

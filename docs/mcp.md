@@ -41,8 +41,8 @@ Unterschied zum UI: Die Prüfung „angetippter Vorschlag noch aktuell“ (`dose
 ## Einrichten nach dem Merge
 
 1. In Coolify `MCP_API_KEY` setzen (`openssl rand -hex 32`), neu starten.
-2. Claude-App: Einstellungen → Connectoren → Benutzerdefinierten Connector hinzufügen → URL `https://aps.philippkuhnhardt.de/mcp` → Verbinden → App-Passwort eingeben.
-3. Claude Code: `claude mcp add --transport http diabetes https://aps.philippkuhnhardt.de/mcp --header "Authorization: Bearer $MCP_API_KEY"`.
+2. Claude-App: Einstellungen → Connectoren → Benutzerdefinierten Connector hinzufügen → URL `https://deine-domain/mcp` → Verbinden → App-Passwort eingeben.
+3. Claude Code: `claude mcp add --transport http diabetes https://deine-domain/mcp --header "Authorization: Bearer $MCP_API_KEY"`.
 
 ## Später
 

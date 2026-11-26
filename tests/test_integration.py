@@ -1086,7 +1086,7 @@ class IntegrationTests(unittest.TestCase):
                          [(dose_id, "16", True)])
 
     def test_basal_default_is_configurable(self):
-        self.assertEqual(self.request("/api/settings")["settings"]["basal_default_units"], "17")
+        self.assertEqual(self.request("/api/settings")["settings"]["basal_default_units"], "0")
         self.request("/api/settings", method="POST", body={"basal_default_units": "18.5"})
         self.assertEqual(self.request("/api/settings")["settings"]["basal_default_units"], "18.5")
         self.request("/api/settings", method="POST", body={"basal_default_units": "20"})
@@ -1671,6 +1671,7 @@ class IntegrationTests(unittest.TestCase):
         self.request("/api/treatment", method="POST", body={
             "kind": "exercise", "at": "2026-09-23T06:00:00Z", "sport_kind": "gym", "duration_minutes": 30,
         })
+        self.request("/api/settings", method="POST", body={"basal_default_units": "17"})  # Default 0 is off.
         self.request("/api/day?date=2026-09-23")  # The form previews the loaded day.
         entry = {"day": "2026-09-23", "at": "2026-09-23T07:00:00Z", "mode": "meal", "carbs": "40"}
         preview = self.request("/api/entry/preview", method="POST", body=entry)

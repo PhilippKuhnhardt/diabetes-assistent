@@ -71,7 +71,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
   };
 
   const basalDefault = () => {
-    const units = Number(props.current.settings?.basal_default_units ?? 17);
+    const units = Number(props.current.settings?.basal_default_units ?? 0);
     return Number.isFinite(units) && units > 0 ? units : 0;
   };
   const sportDefaults = kind => ({ effect: props.current.settings?.sport_effects_mgdl?.[kind] ?? 0,

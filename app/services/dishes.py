@@ -189,7 +189,7 @@ def _agent_notes(event_ids: list[str]) -> dict[str, dict]:
         said = " | ".join(turn["text"] for turn in session.get("messages") or []
                           if turn.get("role") == "user" and turn.get("text") and turn["text"] not in ("(nur Fotos)", tr("(nur Fotos)")))
         note = {"items": [{key: item.get(key) for key in ("name", "amount", "carbs_g")} for item in estimate.get("items") or []],
-                "philipp_said": said[:SAID_MAX]}
+                "user_said": said[:SAID_MAX]}
         portion = estimate.get("portion")
         if portion not in (None, 1, 1.0):
             note["portion"] = portion
@@ -210,7 +210,7 @@ def lookup_meals(query: str = "", meal: str | None = None, place: str | None = N
     found = []
     for entry in reversed(entries):
         note = notes.get(entry["event_id"]) or {}
-        text = " ".join([entry["dish"] or "", entry["description"], note.get("philipp_said") or "",
+        text = " ".join([entry["dish"] or "", entry["description"], note.get("user_said") or "",
                          *(str(item.get("name") or "") for item in note.get("items") or [])]).casefold()
         if any(word not in text for word in words):
             continue
