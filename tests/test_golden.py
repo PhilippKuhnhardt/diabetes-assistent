@@ -321,7 +321,7 @@ class GoldenMasterTests(unittest.TestCase):
         record["settings_initial_save"] = cls.call("/api/settings", {
             "dose_target_mgdl": "120", "dose_cautious_target_mgdl": "150", "auto_percentile": "37.5",
             "auto_half_life_days": "5", "auto_lookback_days": 15, "window_minutes": 180,
-            "sport_lookback_minutes": 360,
+            "sport_lookback_minutes": 360, "day_types": True,
         })
         cls.at(FIRST_DAY + timedelta(days=20, hours=3))
         record["settings_mid_save"] = cls.call("/api/settings", {"auto_lookback_days": 30, "window_minutes": 170})
