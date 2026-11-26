@@ -250,7 +250,7 @@ function WeekDays({ rows, day, onDay }) {
       aria-label=${label} disabled=${row.future} onClick=${() => onDay(row.day)}>
       <span>${dayDate(row.day, { weekday: "short" }).replace(".", "")}</span><b>${Number(row.day.slice(8))}</b>
       <i class="week-dot" aria-hidden="true"></i>
-      <em>${row.future ? "" : row.day_type === "free" ? t("dayType.free") : t("week.workShort")}</em></button>`;
+      <em>${row.future || !row.day_type ? "" : row.day_type === "free" ? t("dayType.free") : t("week.workShort")}</em></button>`;
   })}</div>`;
 }
 

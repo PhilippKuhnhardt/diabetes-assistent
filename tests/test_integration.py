@@ -175,7 +175,7 @@ class IntegrationTests(unittest.TestCase):
         self.base = f"http://127.0.0.1:{self.app.server_port}"
         self.request("/api/settings", method="POST", body={
             "isf_schedule": [{"start_minute": 0, "mgdl_per_unit": 50}],
-            "peak_minutes": 60, "duration_minutes": 180, "window_minutes": 180,
+            "peak_minutes": 60, "duration_minutes": 180, "window_minutes": 180, "day_types": True,
         })
 
     def tearDown(self):
@@ -277,12 +277,9 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/settings", method="POST", body={"dose_target_mgdl": "141"})
         self.assertEqual(high.exception.code, 400)
         high.exception.close()
-        with self.assertRaises(urllib.error.HTTPError) as above:
-            self.request("/api/settings", method="POST", body={"dose_low_target_mgdl": "116"})
-        self.assertEqual(above.exception.code, 400)
-        above.exception.close()
-        lower = self.request("/api/settings", method="POST", body={"dose_low_target_mgdl": "95"})
-        self.assertEqual(Decimal(lower["settings"]["dose_low_target_mgdl"]), Decimal(95))
+        # The lower target was removed (2026-11-26): the field is ignored and not stored.
+        ignored = self.request("/api/settings", method="POST", body={"dose_low_target_mgdl": "95"})
+        self.assertNotIn("dose_low_target_mgdl", ignored["settings"])
 
     def test_dose_help_suggestion_can_be_written_once_to_nightscout(self):
         self.request("/api/settings")  # Sync the current Nightscout I:C and KF schedules.
@@ -1331,6 +1328,32 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(night["delta_mgdl"], -40)
         self.assertEqual(night["minimum_glucose"], 95)
 
+    def test_day_types_are_off_by_default_and_breakfast_is_one_meal_then(self):
+        # Work/free days became optional (Philipp 2026-11-26): a new installation has them off.
+        self.assertFalse(config.default_settings()["day_types"])
+        self.assertTrue(config._with_nightscout_profile({})["day_types"])   # older stored settings keep them on
+        self.request("/api/settings", method="POST", body={"day_types": False})
+        self.assertIsNone(marks.analysis_day_types())
+        today = datetime.now(ZoneInfo("Europe/Berlin")).date()
+        monday = (today - timedelta(days=today.weekday())).isoformat()
+        saturday = (today - timedelta(days=(today.weekday() - 5) % 7)).isoformat()
+        meal = lambda name, day, factor: {
+            "id": name, "meal": "breakfast", "at": day + "T08:00:00+02:00",
+            "calculation": {"factor_units_per_ke": factor, "ratio_g_per_unit": "10", "carbs_times_isf_total": "500",
+                            "insulin_effect_mgdl": "0", "delta_mgdl": "50",
+                            "carb_events": [{"at": day + "T08:00:00+02:00", "carbs": "10", "isf": "50"}]}}
+        meals_by_day = {monday: [meal("work-breakfast", monday, "1")], saturday: [meal("free-breakfast", saturday, "2")]}
+        with fake_days(side_effect=lambda day, refresh=False: {"meals": meals_by_day.get(day, [])}):
+            summary = self.request("/api/summary?days=7")
+        breakfast = summary["groups"]["breakfast"]
+        self.assertFalse(summary["day_types"])
+        self.assertIsNone(summary["day_type_ratio"])
+        self.assertEqual(breakfast["by_day_type"], {})
+        self.assertIn("suggestion", breakfast)
+        self.assertEqual({item["day_type"] for item in breakfast["calculations"]}, {None})
+        self.assertEqual([item["day_type"] for item in summary["suggestion_derivation"]["examples"]], [None, None, None])
+        self.assertEqual(marks.day_type_for(monday, None, []), (None, "off"))
+
     def test_breakfast_work_free_defaults_and_day_override(self):
         today = datetime.now(ZoneInfo("Europe/Berlin")).date()
         monday = (today - timedelta(days=today.weekday())).isoformat()
@@ -1924,7 +1947,7 @@ class IntegrationTests(unittest.TestCase):
             version = response.headers["X-App-Version"]
         self.assertRegex(version, r"^[0-9a-f]{16}$")
 
-    def test_slider_replaces_lower_and_cautious_and_marks_the_recommendation(self):
+    def test_slider_replaces_cautious_and_marks_the_recommendation(self):
         # User request 2026-11-15: one slider per dose, from little to much need; lower and cautious are gone.
         self.request("/api/settings")
         self.request("/api/settings", method="POST", body={"dose_target_mgdl": "120"})
@@ -1936,7 +1959,7 @@ class IntegrationTests(unittest.TestCase):
         }
         entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "", "as": "meal"}
         variants = lambda dose: [item["variant"] for item in dose["options"]]
-        with fake_days(return_value=current_day), patch.object(dosing, "LOW_TARGET_HOURS", (0, 24)):
+        with fake_days(return_value=current_day):
             correction = self.request("/api/entry/preview", method="POST", body=entry)["dose"]
             self.assertEqual(variants(correction), ["normal"])
             slider, normal = correction["slider"], Decimal(correction["options"][0]["units"])
@@ -1973,7 +1996,7 @@ class IntegrationTests(unittest.TestCase):
             "basal": [], "day_type": "work", "day_type_source": "weekday", "meals": [],
         }
         entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "", "as": "meal"}
-        with fake_days(return_value=current_day), patch.object(dosing, "LOW_TARGET_HOURS", (0, 0)):
+        with fake_days(return_value=current_day):
             dose = self.request("/api/entry/preview", method="POST", body=entry)["dose"]
             options = {item["variant"]: item for item in dose["options"]}
             self.assertEqual([item["variant"] for item in dose["options"]], ["fast", "normal", "slow"])
