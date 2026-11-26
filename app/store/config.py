@@ -37,7 +37,6 @@ def default_settings() -> dict:
         "window_minutes": 180,
         "dose_target_mgdl": 100,
         "dose_cautious_target_mgdl": 140,
-        "dose_low_target_mgdl": 100,
         "auto_percentile": "37.5",
         "auto_lookback_days": 30,
         "auto_half_life_days": "7",
@@ -46,6 +45,7 @@ def default_settings() -> dict:
         "auto_fat_surcharge_mgdl": "120",
         "fpe_surcharge_mgdl": "20",
         "auto_vacation": DEFAULT_AUTO_VACATION,
+        "day_types": False,
         "peak_minutes": 60,
         "duration_minutes": 180,
         "breakfast_end_minute": 660,
@@ -56,6 +56,11 @@ def default_settings() -> dict:
         "basal_default_units": DEFAULT_BASAL_UNITS,
         **DEFAULT_SPLIT,
     }
+
+
+def day_types_enabled(settings: dict) -> bool:
+    """Whether breakfast tells work and free days apart (settings switch "Arbeit / Frei")."""
+    return settings.get("day_types") is True
 
 
 def current_nightscout_profile() -> dict | None:
@@ -86,7 +91,8 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result.setdefault("breakfast_end_minute", 660)
     result.setdefault("dose_target_mgdl", 100)
     result.setdefault("dose_cautious_target_mgdl", 140)
-    result.setdefault("dose_low_target_mgdl", 100)
+    # The lower target was removed (Philipp 2026-11-26).
+    result.pop("dose_low_target_mgdl", None)
     result.setdefault("auto_percentile", "37.5")
     # Older versions stored methods that were removed (day shift, equal weights): back to the percentile.
     if result.get("auto_method") not in ("percentile", "surcharge"):
@@ -102,6 +108,9 @@ def _with_nightscout_profile(settings: dict) -> dict:
     if result.get("auto_vacation") not in AUTO_VACATION_MODES:
         result["auto_vacation"] = DEFAULT_AUTO_VACATION
     result.setdefault("lunch_end_minute", 1020)
+    # Work/free days became optional (Philipp 2026-11-26, off for new installations): a settings version
+    # from before the switch existed used them, so it keeps them on.
+    result.setdefault("day_types", True)
     result.setdefault("basal_default_units", DEFAULT_BASAL_UNITS)
     for key, value in DEFAULT_SPLIT.items():
         result.setdefault(key, value)
