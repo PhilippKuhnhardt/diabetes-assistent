@@ -20,6 +20,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import anthropic
 import openai
+from app.i18n import tr
 
 PROVIDERS = {
     "anthropic": {"label": "Claude (Anthropic)", "key": "ANTHROPIC_API_KEY", "default_model": "claude-opus-5-5"},
@@ -61,8 +62,8 @@ def _client(provider: str):
                          max_retries=2, default_headers={"X-Title": "Diabetes-Tagebuch"})
 
 
-HINTS = {401: "Schlüssel ungültig", 402: "kein Guthaben", 403: "Zugriff verweigert",
-         404: "Modell nicht gefunden", 429: "Limit erreicht, später erneut versuchen"}
+HINTS = {401: tr("Schlüssel ungültig"), 402: tr("kein Guthaben"), 403: tr("Zugriff verweigert"),
+         404: tr("Modell nicht gefunden"), 429: tr("Limit erreicht, später erneut versuchen")}
 
 
 def _guard(call: Callable):
@@ -71,10 +72,10 @@ def _guard(call: Callable):
         return call()
     except (anthropic.APIStatusError, openai.APIStatusError) as error:
         hint = HINTS.get(error.status_code, "")
-        raise LLMError(f"Anbieter lehnt ab ({error.status_code}{', ' + hint if hint else ''}): "
-                       f"{str(getattr(error, 'message', '') or '')[:300]}") from None
+        raise LLMError(tr("Anbieter lehnt ab ({status}): {message}", status=f"{error.status_code}{', ' + hint if hint else ''}",
+                          message=str(getattr(error, "message", "") or "")[:300])) from None
     except (anthropic.APIConnectionError, openai.APIConnectionError) as error:
-        raise LLMError(f"Anbieter nicht erreichbar: {type(error).__name__}") from None
+        raise LLMError(tr("Anbieter nicht erreichbar: {error}", error=type(error).__name__)) from None
 
 
 def parse_json(text: str) -> dict:
@@ -85,13 +86,13 @@ def parse_json(text: str) -> dict:
     except ValueError:
         start, end = text.find("{"), text.rfind("}")
         if start < 0 or end <= start:
-            raise LLMError("Antwort des Modells war kein JSON") from None
+            raise LLMError(tr("Antwort des Modells war kein JSON")) from None
         try:
             value = json.loads(text[start:end + 1])
         except ValueError:
-            raise LLMError("Antwort des Modells war kein JSON") from None
+            raise LLMError(tr("Antwort des Modells war kein JSON")) from None
     if not isinstance(value, dict):
-        raise LLMError("Antwort des Modells war kein JSON-Objekt")
+        raise LLMError(tr("Antwort des Modells war kein JSON-Objekt"))
     return value
 
 
@@ -174,11 +175,11 @@ def _anthropic(model, system, messages, schema, tools, call_tool, web_search) ->
                 results.append({"type": "tool_result", "tool_use_id": block.id, "content": call_tool(block.name, args)})
         conversation.append({"role": "user", "content": results})
     else:
-        raise LLMError("Das Modell hat zu viele Nachschlage-Runden gebraucht")
+        raise LLMError(tr("Das Modell hat zu viele Nachschlage-Runden gebraucht"))
     if response.stop_reason == "refusal":
-        raise LLMError("Das Modell hat die Anfrage abgelehnt")
+        raise LLMError(tr("Das Modell hat die Anfrage abgelehnt"))
     if response.stop_reason == "max_tokens":
-        raise LLMError("Antwort des Modells wurde abgeschnitten")
+        raise LLMError(tr("Antwort des Modells wurde abgeschnitten"))
     text = "".join(block.text for block in response.content if block.type == "text")
     return {"data": parse_json(text), "sources": _sources(found), "usage": usage, "tool_calls": calls}
 
@@ -217,14 +218,14 @@ def _openai(model, system, messages, schema, tools, call_tool, web_search) -> di
             current.append({"type": "function_call_output", "call_id": item.call_id, "output": call_tool(item.name, args)})
         previous = response.id
     else:
-        raise LLMError("Das Modell hat zu viele Nachschlage-Runden gebraucht")
+        raise LLMError(tr("Das Modell hat zu viele Nachschlage-Runden gebraucht"))
     if response.status == "incomplete":
-        raise LLMError("Antwort des Modells wurde abgeschnitten")
+        raise LLMError(tr("Antwort des Modells wurde abgeschnitten"))
     text, found = "", []
     for item in response.output:
         for part in (item.content or []) if item.type == "message" else []:
             if part.type == "refusal":
-                raise LLMError("Das Modell hat die Anfrage abgelehnt")
+                raise LLMError(tr("Das Modell hat die Anfrage abgelehnt"))
             if part.type == "output_text":
                 text += part.text
                 found += [(note.url, note.title) for note in part.annotations or [] if note.type == "url_citation"]
@@ -243,7 +244,7 @@ def _openrouter_message(response):
     if _field(response, "error"):
         raise LLMError("OpenRouter: " + str(_field(response.error, "message", "") or "")[:300])
     if not response.choices:
-        raise LLMError("OpenRouter lieferte keine Antwort")
+        raise LLMError(tr("OpenRouter lieferte keine Antwort"))
     return response.choices[0].message
 
 
@@ -293,9 +294,9 @@ def _openrouter(model, system, messages, schema, tools, call_tool, web_search) -
             calls.append({"name": call.function.name, "args": args})
             conversation.append({"role": "tool", "tool_call_id": call.id, "content": call_tool(call.function.name, args)})
     else:
-        raise LLMError("Das Modell hat zu viele Nachschlage-Runden gebraucht")
+        raise LLMError(tr("Das Modell hat zu viele Nachschlage-Runden gebraucht"))
     if response.choices[0].finish_reason == "length":
-        raise LLMError("Antwort des Modells wurde abgeschnitten")
+        raise LLMError(tr("Antwort des Modells wurde abgeschnitten"))
     text = _field(message, "content")
     if isinstance(text, list):
         text = "".join(_field(part, "text", "") for part in text)
@@ -308,11 +309,11 @@ def run(provider: str, model: str, system: str, messages: list[dict], schema: di
     "images": [base64 JPEG, ...]}], ending with a user message. tools: [{name, description, parameters
     (JSON schema)}]; call_tool(name, args) answers a call with text (JSON) and never raises."""
     if provider not in PROVIDERS:
-        raise LLMError("Unbekannter Anbieter")
+        raise LLMError(tr("Unbekannter Anbieter"))
     if not api_key(provider):
-        raise LLMError(f"{PROVIDERS[provider]['key']} ist in der Bereitstellung nicht gesetzt")
+        raise LLMError(tr("{key} ist in der Bereitstellung nicht gesetzt", key=PROVIDERS[provider]["key"]))
     if not model:
-        raise LLMError("Bitte in den Einstellungen ein Modell wählen")
+        raise LLMError(tr("Bitte in den Einstellungen ein Modell wählen"))
     return {"anthropic": _anthropic, "openai": _openai, "openrouter": _openrouter}[provider](
         model, system, messages, schema, tools or [], call_tool or (lambda name, args: '{"error": "unbekannt"}'),
         web_search)
@@ -321,9 +322,9 @@ def run(provider: str, model: str, system: str, messages: list[dict], schema: di
 def transcribe(model: str, audio_base64: str, audio_format: str, instruction: str) -> dict:
     """Speech to text through OpenRouter with a model that takes audio (user request 2026-11-16)."""
     if not api_key("openrouter"):
-        raise LLMError("OPENROUTER_API_KEY ist in der Bereitstellung nicht gesetzt")
+        raise LLMError(tr("OPENROUTER_API_KEY ist in der Bereitstellung nicht gesetzt"))
     if not model:
-        raise LLMError("Bitte in den Einstellungen ein Modell für die Transkription wählen")
+        raise LLMError(tr("Bitte in den Einstellungen ein Modell für die Transkription wählen"))
     client = _client("openrouter")
     response = _guard(lambda: client.chat.completions.create(
         model=model, max_tokens=2000, extra_body={"usage": {"include": True}},
@@ -340,7 +341,7 @@ def models(provider: str) -> list[dict]:
     """The provider's model list for the settings: [{id, name, image, audio}]; image/audio are None
     where the provider does not say what a model takes."""
     if provider not in PROVIDERS or not api_key(provider):
-        raise LLMError("Anbieter ist nicht eingerichtet")
+        raise LLMError(tr("Anbieter ist nicht eingerichtet"))
     client = _client(provider)
     rows = list(_guard(lambda: client.models.list(**({"limit": 100} if provider == "anthropic" else {}))))
     if provider == "anthropic":

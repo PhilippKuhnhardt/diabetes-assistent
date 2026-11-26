@@ -8,6 +8,7 @@ from app import calculation
 from app.common import local_day_range, local_zone, parse_instant, unit_text
 from app.ingestion import basal_sync, nightscout
 from app.store import basal_doses, config, mirror
+from app.i18n import tr
 
 
 
@@ -16,7 +17,7 @@ def save_basal(payload: dict) -> dict:
     at = parse_instant(str(payload["at"]))
     units = calculation.dec(payload.get("units") or 0)
     if not units.is_finite() or not 0 < units <= 100 or units % Decimal("0.5"):
-        raise ValueError("Basal muss zwischen 0,5 und 100 IE in 0,5er-Schritten liegen")
+        raise ValueError(tr("Basal muss zwischen 0,5 und 100 IE in 0,5er-Schritten liegen"))
     dose_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
     note = str(payload.get("notes") or "").strip()[:500]
     _, settings = config.get_settings()
@@ -30,14 +31,14 @@ def save_basal(payload: dict) -> dict:
         except nightscout.NightscoutError as failure:
             error = str(failure)
     else:
-        error = "Nightscout ist nicht verbunden"
+        error = tr("Nightscout ist nicht verbunden")
     return {"id": dose_id, "day": day, "nightscout_synced": error is None, "nightscout_error": error}
 
 
 def delete_basal(dose_id: str) -> None:
     dose = basal_doses.basal_dose(dose_id)
     if dose is None:
-        raise ValueError("Basal-Eintrag nicht gefunden")
+        raise ValueError(tr("Basal-Eintrag nicht gefunden"))
     if nightscout.is_configured():
         try:
             _, settings = config.get_settings()
@@ -58,6 +59,6 @@ def delete_basal(dose_id: str) -> None:
 def delete_basal_entry(payload: dict) -> dict:
     dose_id = payload.get("id")
     if not isinstance(dose_id, str) or not dose_id or len(dose_id) > 200:
-        raise ValueError("Ungültiger Eintrag")
+        raise ValueError(tr("Ungültiger Eintrag"))
     delete_basal(dose_id)
     return {"id": dose_id}

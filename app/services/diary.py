@@ -10,6 +10,7 @@ from app.common import local_day_range, local_zone, parse_instant, unit_text
 from app.ingestion import nightscout
 from app.services import annotations, basal, day_view, dishes, places
 from app.store import agent as agent_store, config, dishes as dish_store, marks, mirror
+from app.i18n import tr
 
 
 def ensure_not_duplicate(day: str, event_id: str) -> bool:
@@ -32,40 +33,40 @@ def _calculated_surcharge(event_id: str, settings: dict, session_id: str | None 
     session = session or agent_store.sessions_for([event_id]).get(event_id)
     found = fpe.estimate(agent.scaled((session or {}).get("estimate"), agent.portion_value(portion)), settings)
     if found is None:
-        raise ValueError("Ohne Fett/Eiweiß-Schätzung des Agenten gibt es keinen berechneten Zuschlag")
+        raise ValueError(tr("Ohne Fett/Eiweiß-Schätzung des Agenten gibt es keinen berechneten Zuschlag"))
     return fpe.plan(found)
 
 
 def save_diary_treatment(payload: dict) -> dict:
     """Validate a standalone diary event and write it to Nightscout."""
     if not nightscout.is_configured():
-        raise ValueError("Zuerst Nightscout verbinden")
+        raise ValueError(tr("Zuerst Nightscout verbinden"))
     kind = str(payload["kind"])
     if kind not in {"meal", "snack", "carbs", "correction", "exercise"}:
-        raise ValueError("Ungültiger Eintragstyp")
+        raise ValueError(tr("Ungültiger Eintragstyp"))
     at = parse_instant(str(payload["at"]))
     _, settings = config.get_settings()
     day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
     carbs = calculation.dec(payload.get("carbs") or 0)
     units = calculation.dec(payload.get("insulin") or 0)
     if not carbs.is_finite() or not units.is_finite() or not 0 <= carbs <= 500 or not 0 <= units <= 100:
-        raise ValueError("KH oder Insulin außerhalb des erlaubten Bereichs")
+        raise ValueError(tr("KH oder Insulin außerhalb des erlaubten Bereichs"))
     if kind in {"meal", "snack", "carbs"} and carbs <= 0:
-        raise ValueError("Kohlenhydrate müssen positiv sein")
+        raise ValueError(tr("Kohlenhydrate müssen positiv sein"))
     if kind in {"correction", "exercise"} and carbs != 0:
-        raise ValueError("Dieser Eintrag hat keine Kohlenhydrate")
+        raise ValueError(tr("Dieser Eintrag hat keine Kohlenhydrate"))
     if ((kind in {"carbs", "exercise"} and units != 0)
             or (kind == "correction" and units <= 0)):
-        raise ValueError("Ungültige Insulinmenge")
+        raise ValueError(tr("Ungültige Insulinmenge"))
     duration = 0
     sport_kind = None
     if kind == "exercise":
         sport_kind = str(payload.get("sport_kind", ""))
         if sport_kind not in episodes.SPORT_LABELS:
-            raise ValueError("Ungültige Sportart")
+            raise ValueError(tr("Ungültige Sportart"))
         duration = int(payload.get("duration_minutes", 0))
         if not 1 <= duration <= 1440:
-            raise ValueError("Sportdauer muss zwischen 1 und 1440 Minuten liegen")
+            raise ValueError(tr("Sportdauer muss zwischen 1 und 1440 Minuten liegen"))
     note = str(payload.get("notes") or "").strip()[:500]
     record_id = str(payload.get("id") or "")
     existing = None
@@ -76,10 +77,10 @@ def save_diary_treatment(payload: dict) -> dict:
         _, records = nightscout.fetch_range(start, end)
         existing = next((item for item in records if str(item.get("_id")) == record_id), None)
         if existing is None:
-            raise ValueError("Eintrag in Nightscout nicht gefunden")
+            raise ValueError(tr("Eintrag in Nightscout nicht gefunden"))
         if existing.get("eventType") not in {"Meal Bolus", "Snack Bolus", "Carb Correction",
                                               "Correction Bolus", "Bolus", "Exercise"}:
-            raise ValueError("Dieser Eintragstyp kann hier nicht bearbeitet werden")
+            raise ValueError(tr("Dieser Eintragstyp kann hier nicht bearbeitet werden"))
     previous_id = str((existing or {}).get("identifier") or "")
     try:
         previous_id = str(uuid.UUID(previous_id))
@@ -88,7 +89,7 @@ def save_diary_treatment(payload: dict) -> dict:
     event_id = previous_id or str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
     if kind == "exercise":
         event_type = "Exercise"
-        label = episodes.SPORT_LABELS[sport_kind]
+        label = episodes.SPORT_NAMES[sport_kind]
         notes = label + (f" — {note}" if note else "") + f" [DAS1:{sport_kind}] [DAE:{event_id}]"
     else:
         event_type = {"meal": "Meal Bolus", "snack": "Snack Bolus" if units > 0 else "Carb Correction",
@@ -100,7 +101,7 @@ def save_diary_treatment(payload: dict) -> dict:
         if payload.get("carbs_unsure") is True and not certainty:  # older clients
             certainty = "unsure"
         if certainty not in (None, "", *episodes.CERTAINTIES):
-            raise ValueError("Unbekannte KH-Sicherheit")
+            raise ValueError(tr("Unbekannte KH-Sicherheit"))
         # "keep" leaves a mark as the edited entry has it (the Alkohol chip is gone since 2026-11-15, its old
         # marks stay when the meal card saves).
         flags = {flag: (tag in str((existing or {}).get("notes") or "") if payload.get(flag) == "keep"
@@ -113,7 +114,7 @@ def save_diary_treatment(payload: dict) -> dict:
             units_later = calculation.dec(payload["split_units"])
             delay = int(payload.get("split_delay_minutes") or 0)
             if not units_later.is_finite() or not 0 < units_later <= 100 or not 30 <= delay <= 300:
-                raise ValueError("Ungültiger Split-Bolus")
+                raise ValueError(tr("Ungültiger Split-Bolus"))
             split = " " + episodes.split_tag(unit_text(units_later), delay)
         elif kind == "meal" and existing:
             kept = episodes.SPLIT_TAG.search(str(existing.get("notes") or ""))
@@ -131,7 +132,7 @@ def save_diary_treatment(payload: dict) -> dict:
             value = payload["fpe_surcharge"]
             mgdl, minutes = calculation.dec(value["mgdl"]), int(value["minutes"])
             if not mgdl.is_finite() or not 0 <= mgdl <= 200 or not 60 <= minutes <= 600:
-                raise ValueError("Ungültiger Fett/Eiweiß-Zuschlag")
+                raise ValueError(tr("Ungültiger Fett/Eiweiß-Zuschlag"))
             surcharge = " " + episodes.surcharge_tag(unit_text(mgdl.quantize(Decimal(1))), minutes)
         elif eats and existing and "fpe_surcharge" not in payload:
             kept = episodes.SURCHARGE_TAG.search(str(existing.get("notes") or ""))
@@ -170,7 +171,7 @@ def save_diary_treatment(payload: dict) -> dict:
                 or calculation.dec(saved.get("carbs") or 0) != carbs
                 or calculation.dec(saved.get("insulin") or 0) != units
                 or str(saved.get("notes") or "") != notes):
-            raise nightscout.NightscoutError("Nightscout hat die Änderung nicht bestätigt")
+            raise nightscout.NightscoutError(tr("Nightscout hat die Änderung nicht bestätigt"))
         mirror.delete_cached_treatment(record_id)
     elif not ensure_not_duplicate(day, event_id):
         nightscout.write_treatment(record)
@@ -204,11 +205,11 @@ def edit_entry(payload: dict) -> dict:
     lives here and in save_diary_treatment. Returns the entry's day and that day's view."""
     original = str(payload.get("original_kind") or "")
     if original not in EDITABLE_KINDS:
-        raise ValueError("Dieser Eintragstyp kann hier nicht bearbeitet werden")
+        raise ValueError(tr("Dieser Eintragstyp kann hier nicht bearbeitet werden"))
     record_id = payload.get("id")
     old_day = str(payload.get("original_day") or "")
     if not isinstance(record_id, str) or not 0 < len(record_id) <= 200:
-        raise ValueError("Ungültiger Eintrag")
+        raise ValueError(tr("Ungültiger Eintrag"))
     date.fromisoformat(old_day)
     if original == "basal":
         return _replace_basal(record_id, payload)
@@ -216,7 +217,7 @@ def edit_entry(payload: dict) -> dict:
     carbs = Decimal(0) if sport else calculation.dec(payload.get("carbs") or 0)
     units = Decimal(0) if sport else calculation.dec(payload.get("insulin") or 0)
     if not sport and carbs <= 0 and units <= 0:
-        raise ValueError("Bitte Kohlenhydrate, Insulin oder beides eintragen.")
+        raise ValueError(tr("Bitte Kohlenhydrate, Insulin oder beides eintragen."))
     if sport:
         kind = "exercise"
         _edit_sport_session(record_id, old_day, payload)
@@ -240,7 +241,7 @@ def edit_entry(payload: dict) -> dict:
     current = day_view.day_payload(saved["day"])
     row = next((item for item in current["timeline"] if item["id"] == record_id), None)
     if row is None or calculation.dec(row.get("carbs") or 0) != carbs or calculation.dec(row.get("insulin") or 0) != units:
-        raise ValueError("Die Änderung ist in Nightscout noch nicht sichtbar. Bitte Eintrag aktualisieren.")
+        raise ValueError(tr("Die Änderung ist in Nightscout noch nicht sichtbar. Bitte Eintrag aktualisieren."))
     return {"day": saved["day"], "day_view": day_view.with_checks(current)}
 
 
@@ -249,12 +250,12 @@ def _edit_sport_session(record_id: str, day: str, payload: dict) -> None:
     right after it the day's cached copy may not hold the session yet. Only a change is written."""
     duration = payload.get("duration_minutes")
     if not isinstance(duration, (int, float)) or not 1 <= duration <= 1440:
-        raise ValueError("Bitte eine Dauer zwischen 1 und 1440 Minuten eintragen.")
+        raise ValueError(tr("Bitte eine Dauer zwischen 1 und 1440 Minuten eintragen."))
     change, minutes = payload.get("sport_effect_change_mgdl"), payload.get("sport_minutes")
     if change is not None and not (isinstance(change, int) and not isinstance(change, bool) and abs(change) <= 500):
-        raise ValueError("Bitte eine BZ-Wirkung zwischen −500 und +500 mg/dL eintragen.")
+        raise ValueError(tr("Bitte eine BZ-Wirkung zwischen −500 und +500 mg/dL eintragen."))
     if minutes is not None and not (isinstance(minutes, (int, float)) and 30 <= minutes <= 1440):
-        raise ValueError("Die Wirkdauer muss zwischen 0,5 und 24 h liegen.")
+        raise ValueError(tr("Die Wirkdauer muss zwischen 0,5 und 24 h liegen."))
     effects, durations = marks.sport_session_effects(), marks.sport_session_minutes()
     changes = {}
     # The API stores a session's effect as a glucose drop; the card shows the signed change.
@@ -287,9 +288,9 @@ def save_glucose_check(at: datetime, mgdl: Decimal, event_id: str) -> None:
     """Blood glucose measured by hand, as a Nightscout BG Check. It is a start value for the dose
     help only; meal factors and the CGM curve never read it."""
     if not nightscout.is_configured():
-        raise ValueError("Zuerst Nightscout verbinden")
+        raise ValueError(tr("Zuerst Nightscout verbinden"))
     if not mgdl.is_finite() or not 20 <= mgdl <= 600:
-        raise ValueError("Blutzucker muss zwischen 20 und 600 mg/dL liegen")
+        raise ValueError(tr("Blutzucker muss zwischen 20 und 600 mg/dL liegen"))
     _, settings = config.get_settings()
     day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
     if not ensure_not_duplicate(day, event_id):
@@ -302,18 +303,18 @@ def save_glucose_check(at: datetime, mgdl: Decimal, event_id: str) -> None:
 
 def delete_treatment(payload: dict) -> dict:
     if not nightscout.is_configured():
-        raise ValueError("Zuerst Nightscout verbinden")
+        raise ValueError(tr("Zuerst Nightscout verbinden"))
     record_id = payload.get("id")
     day = payload.get("day")
     if not isinstance(record_id, str) or not record_id or len(record_id) > 200 or not isinstance(day, str):
-        raise ValueError("Ungültiger Eintrag")
+        raise ValueError(tr("Ungültiger Eintrag"))
     date.fromisoformat(day)
     _, settings = config.get_settings()
     start, end = local_day_range(day, settings["timezone"])
     _, treatments = nightscout.fetch_range(start, end)
     found = next((item for item in treatments if item.get("_id") == record_id), None)
     if found is None:
-        raise ValueError("Eintrag in Nightscout nicht gefunden")
+        raise ValueError(tr("Eintrag in Nightscout nicht gefunden"))
     nightscout.delete_treatment(record_id)
     if episodes.event_id(found):
         dish_store.delete_record(episodes.event_id(found))

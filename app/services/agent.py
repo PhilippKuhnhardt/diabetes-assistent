@@ -14,11 +14,16 @@ from app.common import local_zone, parse_instant
 from app.ingestion import llm
 from app.services import dishes, factors
 from app.store import agent as store, config, dishes as dish_store, places as place_store
+from app.i18n import pick, tr
 
 DEFAULT_TRANSCRIBE_MODEL = "google/gemini-2.5-flash"
-TRANSCRIBE_INSTRUCTION = ("Transkribiere diese Sprachnotiz wörtlich auf Deutsch. Es geht um eine Mahlzeit "
-                          "(Lebensmittel, Mengen in Gramm, Marken). Gib nur den gesprochenen Text zurück, "
-                          "ohne Anführungszeichen und ohne Kommentar. Ist nichts zu verstehen, gib nichts zurück.")
+TRANSCRIBE_INSTRUCTION = pick(
+    "Transkribiere diese Sprachnotiz wörtlich auf Deutsch. Es geht um eine Mahlzeit "
+    "(Lebensmittel, Mengen in Gramm, Marken). Gib nur den gesprochenen Text zurück, "
+    "ohne Anführungszeichen und ohne Kommentar. Ist nichts zu verstehen, gib nichts zurück.",
+    "Transcribe this voice note word for word, in the language it is spoken in. It is about a meal "
+    "(foods, amounts in grams, brands). Return only the spoken text, without quotation marks and "
+    "without comment. If nothing can be understood, return nothing.")
 MAX_AUDIO_BYTES = 6_000_000
 AUDIO_FORMATS = ("wav", "mp3")
 
@@ -57,7 +62,7 @@ def save_settings(payload: dict) -> dict:
     values = {}
     if "provider" in payload:
         if payload["provider"] not in llm.configured():
-            raise ValueError("Für diesen Anbieter ist kein Schlüssel hinterlegt")
+            raise ValueError(tr("Für diesen Anbieter ist kein Schlüssel hinterlegt"))
         values["provider"] = payload["provider"]
     for name in llm.PROVIDERS:
         if "model_" + name in payload:
@@ -83,16 +88,16 @@ def _photos(raw) -> list[bytes]:
     if raw in (None, ""):
         return []
     if not isinstance(raw, list) or len(raw) > rules.MAX_PHOTOS:
-        raise ValueError(f"Höchstens {rules.MAX_PHOTOS} Fotos")
+        raise ValueError(tr("Höchstens {count} Fotos", count=rules.MAX_PHOTOS))
     photos = []
     for item in raw:
         text = str(item or "")
         try:
             data = base64.b64decode(text.split(",", 1)[1] if text.startswith("data:") else text, validate=True)
         except (binascii.Error, ValueError, IndexError):
-            raise ValueError("Foto konnte nicht gelesen werden") from None
+            raise ValueError(tr("Foto konnte nicht gelesen werden")) from None
         if not data.startswith(b"\xff\xd8") or len(data) > rules.MAX_PHOTO_BYTES:
-            raise ValueError("Foto muss ein JPEG bis 3 MB sein")
+            raise ValueError(tr("Foto muss ein JPEG bis 3 MB sein"))
         photos.append(data)
     return photos
 
@@ -120,12 +125,12 @@ def _call_tool(name: str, args: dict) -> str:
             days = max(1, min(int(args.get("days") or dishes.VIEW_DAYS), dishes.VIEW_MAX_DAYS))
             catalogue = dishes.view({"days": [str(days)]})["dishes"]
             found = next((dish for dish in catalogue if dish["name"].casefold() == wanted), None)
-            result = found if found else {"error": "Unbekanntes Gericht. Vorhandene Gerichte: "
-                                                   + (", ".join(dish["name"] for dish in catalogue) or "keine")}
+            result = found if found else {"error": tr("Unbekanntes Gericht. Vorhandene Gerichte: ")
+                                                   + (", ".join(dish["name"] for dish in catalogue) or tr("keine"))}
         else:
-            result = {"error": f"Unbekanntes Werkzeug {name}"}
+            result = {"error": tr("Unbekanntes Werkzeug {name}", name=name)}
     except (TypeError, ValueError) as error:
-        result = {"error": str(error) or "Ungültige Anfrage"}
+        result = {"error": str(error) or tr("Ungültige Anfrage")}
     return json.dumps(result, ensure_ascii=False, default=str)
 
 
@@ -134,28 +139,28 @@ def estimate(payload: dict) -> dict:
     current = _settings()
     provider = current["provider"]
     if not provider:
-        raise ValueError("Kein Anbieter eingerichtet: ANTHROPIC_API_KEY, OPENAI_API_KEY oder OPENROUTER_API_KEY "
-                         "in der Bereitstellung setzen")
+        raise ValueError(tr("Kein Anbieter eingerichtet: ANTHROPIC_API_KEY, OPENAI_API_KEY oder OPENROUTER_API_KEY "
+                            "in der Bereitstellung setzen"))
     model = current["models"][provider]
     text = str(payload.get("text") or "").strip()[:rules.MAX_TEXT]
     at = parse_instant(str(payload["at"])) if payload.get("at") else datetime.now(timezone.utc)
     session = store.session(str(payload["session_id"])) if payload.get("session_id") else None
     if payload.get("session_id") and session is None:
-        raise ValueError("Einschätzung nicht gefunden")
+        raise ValueError(tr("Einschätzung nicht gefunden"))
     new_photos = _photos(payload.get("photos"))
     if session:
         if not text and not new_photos:
-            raise ValueError("Bitte eine Antwort, Korrektur oder ein Foto schicken")
+            raise ValueError(tr("Bitte eine Antwort, Korrektur oder ein Foto schicken"))
         if len(session["messages"]) >= rules.MAX_TURNS * 2:
-            raise ValueError("Zu viele Rückfragen, bitte neu einschätzen")
+            raise ValueError(tr("Zu viele Rückfragen, bitte neu einschätzen"))
         if session["photos"] + len(new_photos) > rules.MAX_SESSION_PHOTOS:
-            raise ValueError(f"Höchstens {rules.MAX_SESSION_PHOTOS} Fotos je Einschätzung")
+            raise ValueError(tr("Höchstens {count} Fotos je Einschätzung", count=rules.MAX_SESSION_PHOTOS))
         session_id, earlier = session["id"], session["photos"]
         photos = store.load_photos(session_id, earlier) + new_photos
         history = session["messages"]
     else:
         if not text and not new_photos:
-            raise ValueError("Bitte ein Foto aufnehmen oder das Essen beschreiben")
+            raise ValueError(tr("Bitte ein Foto aufnehmen oder das Essen beschreiben"))
         session_id, earlier, photos, history = str(uuid.uuid4()), 0, new_photos, []
     _, settings = config.get_settings()
     zone = local_zone(settings["timezone"])
@@ -166,7 +171,7 @@ def estimate(payload: dict) -> dict:
                                  episodes.meal_kind_at(at, settings)[1], place,
                                  rules.catalogue_text(catalogue, _examples()),
                                  [item["name"] for item in place_store.all_places()])
-    turns = history + [{"role": "user", "text": text or "(nur Fotos)", "photos": len(new_photos)}]
+    turns = history + [{"role": "user", "text": text or tr("(nur Fotos)"), "photos": len(new_photos)}]
     encoded = [base64.b64encode(photo).decode() for photo in photos]
     shares = _photo_shares(turns, len(photos))
     messages = [{"role": turn["role"],
@@ -209,7 +214,7 @@ def _conversation(messages: list[dict], photos: int = 0) -> list[dict]:
     rows = []
     for (start, end), turn in zip(_photo_shares(messages, photos), messages):
         if turn["role"] == "user":
-            rows.append({"role": "user", "text": "" if turn["text"] == "(nur Fotos)" else turn["text"],
+            rows.append({"role": "user", "text": "" if turn["text"] == tr("(nur Fotos)") else turn["text"],
                          "photos": list(range(start, end))})
             continue
         try:
@@ -226,14 +231,14 @@ def transcribe(payload: dict) -> dict:
     """A voice note as text for the description field (always through OpenRouter)."""
     audio_format = payload.get("format")
     if audio_format not in AUDIO_FORMATS:
-        raise ValueError("Unbekanntes Audioformat")
+        raise ValueError(tr("Unbekanntes Audioformat"))
     text = str(payload.get("audio") or "")
     try:
         data = base64.b64decode(text, validate=True)
     except (binascii.Error, ValueError):
-        raise ValueError("Aufnahme konnte nicht gelesen werden") from None
+        raise ValueError(tr("Aufnahme konnte nicht gelesen werden")) from None
     if not data or len(data) > MAX_AUDIO_BYTES:
-        raise ValueError("Aufnahme ist leer oder zu lang")
+        raise ValueError(tr("Aufnahme ist leer oder zu lang"))
     model = _settings()["transcribe_model"]
     try:
         answer = llm.transcribe(model, text, audio_format, TRANSCRIBE_INSTRUCTION)

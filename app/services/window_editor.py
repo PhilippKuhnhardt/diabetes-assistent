@@ -10,6 +10,7 @@ from app import glucose as cgm
 from app.common import parse_instant
 from app.services import day_view, settings as settings_service
 from app.store import config
+from app.i18n import tr
 
 LIMITS = settings_service.MANUAL_WINDOW_LIMITS
 # The editor shows a little more than the handles can reach.
@@ -24,7 +25,7 @@ def _meal(payload: dict) -> tuple[dict, dict, list[dict], list[dict]]:
     current = day_view.day_payload(day, refresh=False)
     meal = next((row for row in current["meals"] if row["id"] == meal_id), None)
     if meal is None:
-        raise ValueError("Mahlzeit nicht gefunden")
+        raise ValueError(tr("Mahlzeit nicht gefunden"))
     entries = [{"at": parse_instant(row["at"]), "sgv": calculation.dec(row["sgv"])} for row in current["entries"]]
     treatments = [{**row, "at": parse_instant(row["at"])} for row in current["treatments"]]
     return meal, current, entries, treatments

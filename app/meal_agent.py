@@ -13,6 +13,7 @@ import json
 import re
 
 from app import dishes
+from app.i18n import pick, tr
 
 MAX_PHOTOS = 4
 # Photos per estimate in all: the first ones plus those added when correcting it ("Nachbessern", user
@@ -25,7 +26,7 @@ MAX_TURNS = 8
 CATALOGUE_DISHES = 60
 DISH_EXAMPLES = 1
 CERTAINTIES = ("weighed", "known", "unsure")
-MEAL_LABELS = {"breakfast": "Frühstück", "lunch": "Mittagessen", "dinner": "Abendessen"}
+MEAL_LABELS = {"breakfast": tr("Frühstück"), "lunch": tr("Mittagessen"), "dinner": tr("Abendessen")}
 
 SCHEMA = {
     "type": "object",
@@ -55,7 +56,8 @@ SCHEMA = {
     "additionalProperties": False,
 }
 
-SYSTEM = """Du bist der Essens-Agent in Philipps Diabetes-Tagebuch (Typ 1, Insulin per Pen). Deine Aufgabe: \
+SYSTEM = pick(
+"""Du bist der Essens-Agent in Philipps Diabetes-Tagebuch (Typ 1, Insulin per Pen). Deine Aufgabe: \
 die Kohlenhydrate (KH) einer Mahlzeit so gut wie möglich einschätzen, aus Fotos, Philipps Beschreibung und \
 allem, was du nachschlagen kannst. Deine Zahl füllt das Eintragsformular; die Insulindosis rechnet danach \
 allein die App. Nenne deshalb nie Insulineinheiten, Faktoren oder Dosisratschläge.
@@ -114,31 +116,102 @@ Mahlzeiten oder Quellen) und was sie unsicher macht; ohne Links, URLs oder Markd
 Quellen der Websuche selbst,
 - question: höchstens eine Rückfrage, wenn die Antwort die KH deutlich ändern würde, sonst leer. Schätze \
 trotzdem immer.
-Kein Text vor oder nach dem JSON."""
+Kein Text vor oder nach dem JSON.""",
+"""You are the meal agent in the user's diabetes diary (type 1, insulin by pen). Your task: \
+estimate the carbohydrates (carbs) of a meal as well as you can, from photos, the user's description and \
+everything you can look up. Your number fills the entry form; the app alone calculates the insulin dose \
+afterwards. So never name insulin units, factors or dosing advice.
+
+You decide how to proceed. For this you have:
+- the dish catalogue in the first message: the user's recurring dishes with count, usual carbs and \
+how they behaved,
+- search_meals: search earlier meals by keywords, meal kind, place or dish, with carbs, \
+description and outcome (factor, ratio to the usual factor, BG before and after),
+- dish_history: all entries and meals of one dish,
+- web search, if available: nutrition facts, products, restaurant and canteen dishes, portion sizes.
+Use them as often as it makes your estimate better.
+
+What you should know about the data:
+- ratio = meal factor ÷ usual factor of the same meal kind in the 30 days before. 1.2 means the \
+meal needed 20 % more insulin than usual, so it behaved like 20 % more carbs. If a dish \
+or a similar meal is repeatedly above or below, its carbs were probably under- or \
+overestimated (the user's view). Take this into account in carbs_g and enter the difference to your estimate \
+from photo and description in history_adjustment_g (positive = raised, otherwise 0); the items stay without \
+this adjustment. Single meals also scatter for other reasons (exercise, stress, fat).
+- A dish groups meals that behave alike for blood glucose; usually the main source \
+of carbs decides (rice, pasta, bread, oats), not what else came with it. Similar dishes and \
+meals serve as a reference even if none matches exactly.
+- The user's own figures (weighed, package values) take precedence over the photo. Record them so that they can be \
+found again next time: product and brand in the item name, in amount the number of pieces, weight per piece and \
+the package figure (e.g. "2 pieces of 23 g, 54 g carbs/100 g"), also in the description.
+- If the user eats something they have stated before (same product, "like the other day", "the waffle from \
+earlier"), look it up with search_meals: each hit shows under agent the items back then and the user's own \
+words (user_said), such as nutrition per 100 g and weight per piece. Calculate with these instead of estimating anew. A \
+hit shows carbs_g for the whole entry, often together with other food; take the product's share from \
+the items. What is already counted in an earlier entry does not count again.
+- In later messages the user corrects or adds to the meal, also afterwards ("a second \
+plate", "left half of it"). Your answer then always describes the whole meal as it \
+was actually eaten, with all components in items and description. A later message can \
+bring new photos (say of the second plate); they belong to the same meal.
+
+Your answer is a JSON object with exactly these fields:
+- items: components with name, amount, carbs_g (available carbs without fibre), fat_g (fat) \
+and protein_g (protein), all in grams,
+- carbs_g: your best estimate; carbs_low_g to carbs_high_g: the honest range,
+- history_adjustment_g: see above,
+- fat_g and protein_g: fat and protein of the whole meal in grams, a rough estimate is enough. The user \
+does not see them; they are stored to study the effect of fat and protein on BG later,
+- certainty (the user's scale): weighed = weighed or standardised (package, fixed portion); known = all \
+relevant ingredients are known, only the weight is estimated; unsure = unknown ingredients or a very unclear \
+amount,
+- fat_protein: only for really fat- or protein-rich meals that raise BG for hours, \
+such as pizza, steak, burger with fries or raclette. A soup or a dish with some meat or \
+oil (e.g. pho, curry with rice, pasta with sauce) is not (the user's scale). fast: acts fast (juice, \
+white bread, sweets without fat),
+- dish_name: the matching dish from the catalogue with exactly its name, otherwise a short new name for \
+something recurring, otherwise empty; dish_category: a category (use existing ones where they fit),
+- description: one or two sentences on what it was, with the main amounts,
+- reasoning: two to four short sentences in English on what the estimate is based on (also which earlier \
+meals or sources) and what makes it uncertain; without links, URLs or Markdown, the app shows the \
+sources of the web search itself,
+- question: at most one follow-up question if the answer would change the carbs considerably, otherwise empty. \
+Estimate anyway, always.
+No text before or after the JSON.""")
 
 MEAL_KINDS = ["breakfast", "lunch", "dinner"]
 TOOLS = [
     {"name": "search_meals",
-     "description": "Frühere Kohlenhydrat-Einträge durchsuchen, neueste zuerst (höchstens 40). Je Eintrag: Tag, "
-                    "Uhrzeit, Mahlzeitenart, Gericht, Beschreibung, KH, Ort, KH-Sicherheit, agent (die damaligen items "
-                    "mit Menge und KH und user_said, Philipps eigene Worte zur Einschätzung, etwa Nährwerte und "
-                    "Gewichte) und meal_outcome der Hauptmahlzeit, zu der er gehört (factor, reference_factor, ratio, carbs_g und rapid_units "
-                    "der ganzen Mahlzeit, BZ g0_mgdl vorher und g_end_mgdl nachher, delta_mgdl).",
+     "description": pick(
+         "Frühere Kohlenhydrat-Einträge durchsuchen, neueste zuerst (höchstens 40). Je Eintrag: Tag, "
+         "Uhrzeit, Mahlzeitenart, Gericht, Beschreibung, KH, Ort, KH-Sicherheit, agent (die damaligen items "
+         "mit Menge und KH und user_said, Philipps eigene Worte zur Einschätzung, etwa Nährwerte und "
+         "Gewichte) und meal_outcome der Hauptmahlzeit, zu der er gehört (factor, reference_factor, ratio, carbs_g und rapid_units "
+         "der ganzen Mahlzeit, BZ g0_mgdl vorher und g_end_mgdl nachher, delta_mgdl).",
+         "Search earlier carb entries, newest first (at most 40). Per entry: day, time, meal kind, dish, "
+         "description, carbs, place, carb certainty, agent (the items back then with amount and carbs, and "
+         "user_said, the user's own words on the estimate, such as nutrition facts and weights) and meal_outcome "
+         "of the main meal it belongs to (factor, reference_factor, ratio, carbs_g and rapid_units of the whole meal, "
+         "BG g0_mgdl before and g_end_mgdl after, delta_mgdl)."),
      "parameters": {"type": "object", "properties": {
-         "query": {"type": "string", "description": "Stichworte, die alle in Gericht, Beschreibung, items oder "
-                                                    "Philipps Worten vorkommen müssen, z. B. \"Reis\". Leer = alle."},
-         "meal": {"type": "string", "enum": MEAL_KINDS, "description": "Nur diese Mahlzeitenart."},
-         "place": {"type": "string", "description": "Nur dieser Ort (Name wie im Kontext)."},
-         "dish": {"type": "string", "description": "Nur dieses Gericht (Name aus dem Katalog)."},
-         "days": {"type": "integer", "minimum": 1, "maximum": 730, "description": "Zeitraum in Tagen, Standard 120."},
+         "query": {"type": "string", "description": pick(
+             "Stichworte, die alle in Gericht, Beschreibung, items oder Philipps Worten vorkommen müssen, z. B. \"Reis\". Leer = alle.",
+             "Keywords that must all appear in dish, description, items or the user's words, e.g. \"rice\". Empty = all.")},
+         "meal": {"type": "string", "enum": MEAL_KINDS, "description": tr("Nur diese Mahlzeitenart.")},
+         "place": {"type": "string", "description": tr("Nur dieser Ort (Name wie im Kontext).")},
+         "dish": {"type": "string", "description": tr("Nur dieses Gericht (Name aus dem Katalog).")},
+         "days": {"type": "integer", "minimum": 1, "maximum": 730, "description": tr("Zeitraum in Tagen, Standard 120.")},
      }, "additionalProperties": False}},
     {"name": "dish_history",
-     "description": "Ein Gericht aus dem Katalog im Detail: Kategorie, Anzahl, übliche KH, Ergebnis (ratio mit "
-                    "Spanne, effective_carbs = übliche KH × ratio) und seine letzten Hauptmahlzeiten mit KH, IE, "
-                    "Faktor, ratio, BZ vorher und nachher und Ort.",
+     "description": pick(
+         "Ein Gericht aus dem Katalog im Detail: Kategorie, Anzahl, übliche KH, Ergebnis (ratio mit "
+         "Spanne, effective_carbs = übliche KH × ratio) und seine letzten Hauptmahlzeiten mit KH, IE, "
+         "Faktor, ratio, BZ vorher und nachher und Ort.",
+         "One dish from the catalogue in detail: category, count, usual carbs, outcome (ratio with range, "
+         "effective_carbs = usual carbs × ratio) and its latest main meals with carbs, units, factor, ratio, "
+         "BG before and after, and place."),
      "parameters": {"type": "object", "properties": {
-         "dish": {"type": "string", "description": "Name des Gerichts."},
-         "days": {"type": "integer", "minimum": 1, "maximum": 730, "description": "Zeitraum in Tagen, Standard 120."},
+         "dish": {"type": "string", "description": tr("Name des Gerichts.")},
+         "days": {"type": "integer", "minimum": 1, "maximum": 730, "description": tr("Zeitraum in Tagen, Standard 120.")},
      }, "required": ["dish"], "additionalProperties": False}},
 ]
 
@@ -152,25 +225,25 @@ def catalogue_text(catalogue: list[dict], examples: dict[int, list[dict]]) -> st
             carbs = f"{example['carbs_g']:g} g" if example.get("carbs_g") else "?"
             line += f"\n    · {example['day']}: {carbs}" + (f", {example['description']}" if example.get("description") else "")
         lines.append(line)
-    return "\n".join(lines) if lines else "(noch keine Gerichte)"
+    return "\n".join(lines) if lines else tr("(noch keine Gerichte)")
 
 
 def context_text(local_time: str, meal: str | None, place: str | None, catalogue: str,
                  places: list[str] | None = None) -> str:
-    return (f"Zeitpunkt der Mahlzeit: {local_time}" + (f" ({MEAL_LABELS[meal]})" if meal in MEAL_LABELS else "")
-            + f"\nOrt: {place or 'nicht angegeben'}"
-            + (f"\nPhilipps Orte: {', '.join(places)}" if places else "")
-            + "\n\nPhilipps Gerichte-Katalog (je Gericht der Verlauf, darunter der letzte Eintrag; mehr über "
-            + f"dish_history und search_meals):\n{catalogue}")
+    return (tr("Zeitpunkt der Mahlzeit: {time}", time=local_time) + (f" ({MEAL_LABELS[meal]})" if meal in MEAL_LABELS else "")
+            + "\n" + tr("Ort: {place}", place=place or tr("nicht angegeben"))
+            + ("\n" + tr("Philipps Orte: {places}", places=", ".join(places)) if places else "")
+            + "\n\n" + tr("Philipps Gerichte-Katalog (je Gericht der Verlauf, darunter der letzte Eintrag; mehr über "
+                          "dish_history und search_meals):") + f"\n{catalogue}")
 
 
 def _number(value, low: float = 0, high: float = 500) -> float:
     try:
         number = float(value)
     except (TypeError, ValueError):
-        raise ValueError("Antwort des Modells ist unvollständig") from None
+        raise ValueError(tr("Antwort des Modells ist unvollständig")) from None
     if number != number:
-        raise ValueError("Antwort des Modells ist unvollständig")
+        raise ValueError(tr("Antwort des Modells ist unvollständig"))
     return min(max(number, low), high)
 
 
@@ -236,16 +309,16 @@ def answer_text(estimate: dict) -> str:
 
 
 def lookups(calls: list[dict]) -> list[str]:
-    """What the agent looked up, as short German lines for the page (at most 12)."""
+    """What the agent looked up, as short lines for the page (at most 12)."""
     lines = []
     for call in calls:
         args = call.get("args") or {}
         if call.get("name") == "search_meals":
-            parts = [f"„{args['query']}“" if args.get("query") else "alle Mahlzeiten"]
+            parts = [tr("„{query}“", query=args["query"]) if args.get("query") else tr("alle Mahlzeiten")]
             parts += [MEAL_LABELS.get(args.get("meal"), "")] + [args.get("place") or "", args.get("dish") or ""]
-            lines.append("Frühere Mahlzeiten: " + ", ".join(part for part in parts if part))
+            lines.append(tr("Frühere Mahlzeiten: {parts}", parts=", ".join(part for part in parts if part)))
         elif call.get("name") == "dish_history":
-            lines.append("Verlauf: " + str(args.get("dish") or ""))
+            lines.append(tr("Verlauf: {dish}", dish=str(args.get("dish") or "")))
         elif call.get("name") == "web_search":
-            lines.append("Websuche" + (f": „{args['query']}“" if args.get("query") else ""))
+            lines.append(tr("Websuche: „{query}“", query=args["query"]) if args.get("query") else tr("Websuche"))
     return [line[:120] for line in lines][:12]

@@ -18,6 +18,7 @@ from app.common import local_zone
 from app.ingestion import nightscout, pushover, sync
 from app.services import day_view, notifications, summary
 from app.store import config
+from app.i18n import tr
 
 PERIODS = (14, 30, 7, 3, 1)  # the analysis page's default first
 # What the last precompute saw; while it is unchanged a round only checks the reminders.
@@ -29,16 +30,16 @@ def interval_minutes() -> int:
     try:
         minutes = int(value)
     except ValueError:
-        raise SystemExit("APP_SYNC_MINUTES muss eine ganze Minutenzahl sein") from None
+        raise SystemExit(tr("APP_SYNC_MINUTES muss eine ganze Minutenzahl sein")) from None
     if not 0 <= minutes <= 1440:
-        raise SystemExit("APP_SYNC_MINUTES muss zwischen 0 und 1440 liegen")
+        raise SystemExit(tr("APP_SYNC_MINUTES muss zwischen 0 und 1440 liegen"))
     return minutes
 
 
 def run_once() -> dict:
     """One round: mirror, then precompute. Returns the sync errors of the round."""
     if not nightscout.is_configured():
-        return {"skipped": "Nightscout ist nicht verbunden"}
+        return {"skipped": tr("Nightscout ist nicht verbunden")}
     _, settings = config.get_settings()
     today = datetime.now(local_zone(settings["timezone"])).date()
     errors = {}
@@ -91,11 +92,11 @@ def _loop(minutes: int) -> None:
             result = run_once()
             if result.get("errors"):
                 # Only the days: error texts may carry Nightscout details.
-                print("Hintergrund-Sync mit Fehlern für " + ", ".join(sorted(result["errors"])), flush=True)
+                print(tr("Hintergrund-Sync mit Fehlern für {days}", days=", ".join(sorted(result["errors"]))), flush=True)
             if result.get("notify_error"):
-                print("Benachrichtigung fehlgeschlagen: " + result["notify_error"], flush=True)
+                print(tr("Benachrichtigung fehlgeschlagen: {error}", error=result["notify_error"]), flush=True)
         except Exception as error:  # keep the job alive; the next round retries
-            print(f"Hintergrund-Sync fehlgeschlagen: {type(error).__name__}", flush=True)
+            print(tr("Hintergrund-Sync fehlgeschlagen: {error}", error=type(error).__name__), flush=True)
         time.sleep(max(1.0, minutes * 60 - (time.monotonic() - started)))
 
 

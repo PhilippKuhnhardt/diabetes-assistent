@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from app.common import local_zone
 from app import places as rules
 from app.store import places as store
+from app.i18n import tr
 
 
 def view() -> dict:
@@ -40,14 +41,14 @@ def _id(payload: dict, key: str) -> int:
     try:
         return int(payload[key])
     except (KeyError, TypeError, ValueError):
-        raise ValueError("Ort nicht gefunden") from None
+        raise ValueError(tr("Ort nicht gefunden")) from None
 
 
 def save(payload: dict) -> dict:
     """One change from the place management, then the fresh view."""
     action = payload.get("action")
     if action not in ACTIONS:
-        raise ValueError("Unbekannte Aktion")
+        raise ValueError(tr("Unbekannte Aktion"))
     if action == "create":
         store.create_place(rules.validate_name(payload.get("name")))
     elif action == "rename":
@@ -74,7 +75,7 @@ def place_id(value) -> int | None:
     try:
         return int(value)
     except (TypeError, ValueError):
-        raise ValueError("Ort nicht gefunden") from None
+        raise ValueError(tr("Ort nicht gefunden")) from None
 
 
 def chips(payload: dict, at: datetime | None) -> dict:

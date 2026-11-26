@@ -4,6 +4,7 @@ from __future__ import annotations
 from app.common import local_day_range
 from app.ingestion import basal_sync, nightscout
 from app.store import config, mirror
+from app.i18n import tr
 
 
 # Per local day: the Nightscout write count when it was last mirrored in this process.
@@ -17,7 +18,7 @@ def mirrored_after_writes(day: str) -> bool:
 
 def sync_profile_cache(force: bool = False) -> None:
     if not nightscout.is_configured():
-        raise nightscout.NightscoutError("Nightscout-Zugang in Umgebungsvariablen fehlt")
+        raise nightscout.NightscoutError(tr("Nightscout-Zugang in Umgebungsvariablen fehlt"))
     if not force and not config.profile_sync_due():
         return
     config.mark_profile_sync_attempt()

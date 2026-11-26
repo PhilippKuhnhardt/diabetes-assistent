@@ -9,11 +9,13 @@ import json
 
 from app.common import json_safe
 from app.ingestion import nightscout
+from app.i18n import pick, tr
 from app.services import agent_tools
 
 PROTOCOL_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
-SERVER_INFO = {"name": "diabetes-assistent", "title": "Diabetes-Tagebuch", "version": "1"}
-INSTRUCTIONS = """Diabetes-Tagebuch von Philipp (Typ 1, FreeStyle Libre 3 Plus, Fiasp per Pen).
+SERVER_INFO = {"name": "diabetes-assistent", "title": tr("Diabetes-Tagebuch"), "version": "1"}
+INSTRUCTIONS = pick(
+"""Diabetes-Tagebuch von Philipp (Typ 1, FreeStyle Libre 3 Plus, Fiasp per Pen).
 Begriffe: KH = Kohlenhydrate in Gramm. KE = 10 g KH. IE = Insulineinheiten. BZ = Blutzucker in mg/dL. \
 Faktor = IE pro KE. KF (Korrekturfaktor) = mg/dL, um die 1 IE den BZ senkt. Basal = Langzeitinsulin. \
 Split = Mahlzeitendosis in zwei Teilen, Rest später. Snack = Zwischenmahlzeit, die zu einer Hauptmahlzeit \
@@ -21,7 +23,16 @@ zählt. KH-Sicherheit: weighed = gewogen oder genormt, \
 known = Zutaten bekannt, nur Gewicht geschätzt, unsure = unbekannte Zutaten oder sehr unklare Menge. fat_protein = fett-/ \
 eiweißreich. fast = wirkt schnell (nur erfasst). Optionen: normal = auf Zielwert, carbs = nur KH ohne Korrektur, \
 fast / slow = wenig / viel bei einer Korrektur nach dem Essen. Slider = Spanne von wenig bis viel Bedarf mit Empfehlung \
-und Korridor (wo der BZ nach etwa 4 h meist landet, Abweichung vom erwarteten Wert in mg/dL). Wirkt noch = Insulin und KH, die noch wirken."""
+und Korridor (wo der BZ nach etwa 4 h meist landet, Abweichung vom erwarteten Wert in mg/dL). Wirkt noch = Insulin und KH, die noch wirken.""",
+"""Diabetes diary of one person (type 1, FreeStyle Libre 3 Plus CGM, Fiasp by pen).
+Terms: carbs (KH) = carbohydrates in grams. CU (KE) = 10 g carbs. U (IE) = insulin units. BG (BZ) = blood glucose in mg/dL. \
+Factor = U per CU. CF (KF, correction factor) = mg/dL by which 1 U lowers BG. Basal = long-acting insulin. \
+Split = meal dose in two parts, the rest later. Snack = in-between meal that counts towards a main meal. \
+Carb certainty: weighed = weighed or standardised, \
+known = ingredients known, only the weight estimated, unsure = unknown ingredients or a very unclear amount. fat_protein = rich in \
+fat/protein. fast = acts fast (recorded only). Options: normal = to target, carbs = carbs only without correction, \
+fast / slow = little / much in a correction after eating. Slider = range from little to much need with a recommendation \
+and corridor (where BG usually lands after about 4 h, deviation from the expected value in mg/dL). On board = insulin and carbs still acting.""")
 
 
 class RpcError(Exception):
@@ -33,7 +44,7 @@ class RpcError(Exception):
 def _tool(name: str) -> dict:
     tool = next((item for item in agent_tools.TOOLS if item["name"] == name), None)
     if tool is None:
-        raise RpcError(-32602, f"Unbekanntes Tool: {name}")
+        raise RpcError(-32602, tr("Unbekanntes Tool: {name}", name=name))
     return tool
 
 
@@ -41,12 +52,12 @@ def _call(params: dict) -> dict:
     tool = _tool(str(params.get("name")))
     arguments = params.get("arguments") or {}
     if not isinstance(arguments, dict):
-        raise RpcError(-32602, "arguments muss ein Objekt sein")
+        raise RpcError(-32602, tr("arguments muss ein Objekt sein"))
     try:
         result = json_safe(tool["handler"](arguments))
     except (ValueError, KeyError, nightscout.NightscoutError) as error:
         # Tool errors go back to the agent as a result it can read, not as a protocol error.
-        message = str(error) or "Ungültige Eingabe"
+        message = str(error) or tr("Ungültige Eingabe")
         return {"content": [{"type": "text", "text": message}], "isError": True}
     return {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False)}],
             "structuredContent": result, "isError": False}
@@ -65,20 +76,20 @@ def _dispatch(method: str, params: dict) -> dict:
                           for tool in agent_tools.TOOLS]}
     if method == "tools/call":
         return _call(params)
-    raise RpcError(-32601, f"Unbekannte Methode: {method}")
+    raise RpcError(-32601, tr("Unbekannte Methode: {method}", method=method))
 
 
 def handle(message: object) -> dict | None:
     """Answer one JSON-RPC message; notifications and responses from the client get None (HTTP 202)."""
     if not isinstance(message, dict) or message.get("jsonrpc") != "2.0":
-        return {"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Ungültige Anfrage"}}
+        return {"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": tr("Ungültige Anfrage")}}
     if "method" not in message or "id" not in message:
         return None
     request_id = message["id"]
     params = message.get("params") or {}
     try:
         if not isinstance(params, dict):
-            raise RpcError(-32602, "params muss ein Objekt sein")
+            raise RpcError(-32602, tr("params muss ein Objekt sein"))
         return {"jsonrpc": "2.0", "id": request_id, "result": _dispatch(str(message["method"]), params)}
     except RpcError as error:
         return {"jsonrpc": "2.0", "id": request_id, "error": {"code": error.code, "message": str(error)}}
