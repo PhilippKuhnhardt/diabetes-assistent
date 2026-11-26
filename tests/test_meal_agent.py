@@ -331,7 +331,7 @@ class AgentServiceTests(unittest.TestCase):
             found = dish_service.lookup_meals("belgi")
             self.assertEqual(found["total"], 1)
             row = found["entries"][0]
-            self.assertIn("54 g KH pro 100 g", row["agent"]["philipp_said"])
+            self.assertIn("54 g KH pro 100 g", row["agent"]["user_said"])
             self.assertEqual(row["agent"]["items"][1], {"name": "Schokowaffeln", "amount": "2 Stück à 23 g", "carbs_g": 25})
             self.assertNotIn("event_id", row)
             self.assertEqual(dish_service.lookup_meals("schokowaffeln")["total"], 1)

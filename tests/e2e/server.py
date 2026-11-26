@@ -78,6 +78,9 @@ fake = ThreadingHTTPServer(("127.0.0.1", 8799), NS)
 threading.Thread(target=fake.serve_forever, daemon=True).start()
 os.environ.update({"NIGHTSCOUT_URL": "http://127.0.0.1:8799", "NIGHTSCOUT_AUTH_MODE": "token", "NIGHTSCOUT_CREDENTIAL": "x", "APP_PASSWORD": "", "OPENROUTER_API_KEY": "dummy"})
 db.init()
+# The default basal is 0 (off); the suite checks that the usual dose rides along, so it sets one.
+from app.store import config
+config.save_settings({**config.default_settings(), "basal_default_units": "17"})
 from app.server import Handler
 from app.services import day_view
 # The red dot on "Verlauf" counts from a fixed day in production; here the fake days of the last week count.
