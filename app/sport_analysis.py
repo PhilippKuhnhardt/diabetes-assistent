@@ -117,6 +117,8 @@ def analyze(meals: list[dict], exercises: list[dict], lookback_minutes: int,
             "factor_without_sport_units_per_ke": str(item["factor"]) if item["factor"] is not None else None,
             "baseline_units_per_ke": baseline_text,
             "confirmed_effect_mgdl": sport.get("effect_mgdl") if item["confirmed"] else None,
+            # What the factor counted for sport in this meal (the sessions' shares), as a glucose change.
+            "applied_mgdl": str(-Decimal(sport["effect_mgdl"])) if sport.get("effect_mgdl") is not None else None,
             "shared": len(item["sessions"]) > 1,
             "session_ids": [session["id"] for session in item["sessions"]],
             "reason": reason,
@@ -145,16 +147,20 @@ def analyze(meals: list[dict], exercises: list[dict], lookback_minutes: int,
     for session in rendered_sessions:
         group = by_kind.setdefault(session["kind"] or "", {
             "kind": session["kind"], "label": session["label"], "session_count": 0,
-            "meal_count": 0, "effects": []})
+            "meal_count": 0, "effects": [], "applied": []})
         group["session_count"] += 1
         for meal in session["meals"]:
             group["meal_count"] += 1
             # Shared meals cannot be attributed to one session; excluded meals stay out of medians.
             if meal["effect_mgdl"] is not None and not meal["shared"] and not meal["excluded"]:
                 group["effects"].append(Decimal(meal["effect_mgdl"]))
+                if meal["applied_mgdl"] is not None:
+                    group["applied"].append(Decimal(meal["applied_mgdl"]))
     kinds = []
     for group in by_kind.values():
         effects = group.pop("effects")
+        applied = _median(group.pop("applied"))
+        group["median_applied_mgdl"] = str(applied) if applied is not None else None
         median = _median(effects)
         group["effect_count"] = len(effects)
         group["median_effect_mgdl"] = str(median) if median is not None else None

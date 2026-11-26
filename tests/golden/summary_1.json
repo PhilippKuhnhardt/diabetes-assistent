@@ -160,6 +160,7 @@
    "excluded_count": 0,
    "max_units_per_ke": "1.311581884046440827194085106",
    "mean_units_per_ke": "1.311581884046440827194085106",
+   "median_abs_deviation_mgdl": "42.61017391442710073670978727",
    "median_g_per_unit": "7.624381002540530240656442218",
    "median_units_per_ke": "1.311581884046440827194085106",
    "min_units_per_ke": "1.311581884046440827194085106",
@@ -184,6 +185,7 @@
    "excluded_count": 0,
    "max_units_per_ke": null,
    "mean_units_per_ke": null,
+   "median_abs_deviation_mgdl": null,
    "median_g_per_unit": null,
    "median_units_per_ke": null,
    "min_units_per_ke": null,
@@ -252,6 +254,7 @@
    "excluded_count": 0,
    "max_units_per_ke": null,
    "mean_units_per_ke": null,
+   "median_abs_deviation_mgdl": null,
    "median_g_per_unit": null,
    "median_units_per_ke": null,
    "min_units_per_ke": null,
@@ -284,26 +287,34 @@
  "night": {
   "count": 0,
   "median_delta_mgdl": null,
+  "median_drop_mgdl": null,
   "median_end_glucose": null,
   "median_minimum_glucose": null,
+  "median_rise_mgdl": null,
   "median_start_glucose": null,
   "nights": [
    {
+    "basal_units": "17",
     "breakfast_at": null,
+    "carbs_g": null,
     "day": "2026-10-07",
     "delta_mgdl": null,
     "dinner_at": null,
+    "drop_mgdl": null,
     "end": null,
     "end_glucose": null,
     "last_injection_at": null,
     "minimum_at": null,
     "minimum_glucose": null,
+    "morning_dose_at": null,
     "reason": "Für diesen Tag ist kein Abendessen erfasst.",
+    "rise_mgdl": null,
     "start": null,
     "start_glucose": null
    }
   ],
-  "unavailable_count": 1
+  "unavailable_count": 1,
+  "with_carbs_count": 0
  },
  "profile_sync_error": null,
  "sport_analysis": {
@@ -328,6 +339,7 @@
     "label": "Joggen",
     "max_effect_mgdl": null,
     "meal_count": 2,
+    "median_applied_mgdl": null,
     "median_effect_mgdl": null,
     "min_effect_mgdl": null,
     "session_count": 1
@@ -343,6 +355,7 @@
     "label": "Joggen",
     "meals": [
      {
+      "applied_mgdl": "-5.333333333333333333333333332",
       "baseline_units_per_ke": null,
       "carbs_total": "40",
       "confirmed_effect_mgdl": null,
@@ -364,6 +377,7 @@
       "start": "2026-10-07T06:10:00+00:00"
      },
      {
+      "applied_mgdl": "-22.66666666666666666666666667",
       "baseline_units_per_ke": null,
       "carbs_total": null,
       "confirmed_effect_mgdl": null,
@@ -3486,5 +3500,6 @@
     "weight": "0.015625"
    }
   ]
- }
+ },
+ "sync_error_days": []
 }

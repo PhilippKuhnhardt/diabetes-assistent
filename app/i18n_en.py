@@ -4,7 +4,7 @@ EN = {
     "Für diesen Tag ist kein Abendessen erfasst.": "No dinner is logged for this day.",
     "Für den folgenden Tag ist kein Frühstück erfasst.": "No breakfast is logged for the following day.",
     "Zwischen Abendessen und Frühstück ist keine schnell wirksame Injektion erfasst.": "No rapid-acting injection is logged between dinner and breakfast.",
-    "Das Frühstück beginnt vor dem Nachtstart drei Stunden nach der letzten Injektion.": "Breakfast starts before the night start three hours after the last injection.",
+    "Frühstück oder Morgendosis kommen vor dem Nachtstart drei Stunden nach der letzten Injektion.": "Breakfast or a morning dose comes before the night start three hours after the last injection.",
     "Profil-Zeitplan fehlt": "Profile schedule missing",
     "Profilwert muss positiv sein": "Profile value must be positive",
     "Kohlenhydrate müssen positiv sein": "Carbohydrates must be positive",
