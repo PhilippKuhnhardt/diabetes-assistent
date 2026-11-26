@@ -28,7 +28,8 @@ function SummaryCards({ groups }) {
   return ["breakfast", "lunch", "dinner"].map(kind => {
     const row = groups[kind];
     const current = (row.nightscout_units_per_ke || []).map(value => factorNum(value)).join(" / ") || "—";
-    const breakfast = kind === "breakfast";
+    // Breakfast splits into work and free days only while day types are on (settings).
+    const breakfast = kind === "breakfast" && Boolean(row.by_day_type?.work);
     return html`<div class="summary-card"><span class="meal-type">${names[kind]}</span>
       <div class="summary-primary"><span>${t("analysis.median")}</span><strong><${Factor} value=${row.count > 0 ? row.median_units_per_ke : null} /></strong></div>
       <dl class="factor-facts">
@@ -83,7 +84,7 @@ function Calculations({ groups, reload, onOpenMeal }) {
     return html`
       ${newDay && html`<tr class="analysis-day-row"><th colspan="10" scope="colgroup">
         ${dayDate(item.day, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}${" "}
-        <${DayTypeSelect} day=${item.day} value=${item.day_type} onDone=${reload} /></th></tr>`}
+        ${item.day_type && html`<${DayTypeSelect} day=${item.day} value=${item.day_type} onDone=${reload} />`}</th></tr>`}
       <tr class=${(excluded ? "analysis-excluded " : "") + (item.strong_outlier ? "analysis-outlier" : "")}>
         <td>${names[item.kind]}</td>
         <td><b>${item.units_per_ke != null
@@ -217,7 +218,7 @@ const Delta = ({ value, label }) => html`<span class=${Number(value) < 0 ? "delt
 function Explain({ d }) {
   const surcharge = Number(d.active_surcharge_mgdl);
   const weights = (d.weights || []).map(item => (item.age_days === 1 ? t("analysis.yesterday") : t("analysis.daysAgo", { count: item.age_days })) + " " + num(item.weight, 2)).join(" · ");
-  const exampleName = item => item.meal === "breakfast" ? names.breakfast + " " + (item.day_type === "work" ? t("dayType.work") : t("dayType.free")) : names[item.meal];
+  const exampleName = item => item.meal === "breakfast" && item.day_type ? names.breakfast + " " + (item.day_type === "work" ? t("dayType.work") : t("dayType.free")) : names[item.meal];
   const surchargeNote = surcharge > 0 ? " + " + t("analysis.explain.doseSurcharge", { mgdl: num(surcharge, 0) }) : "";
   return html`<div class="automatik-chips">${[
       [tuningNames.percentile, num(d.percentile, 1) + " %"], [tuningNames.surcharge, surcharge ? num(surcharge, 0) + " mg/dL" : t("analysis.off")],
@@ -364,9 +365,9 @@ function Automatik({ summary, getSettings, onSettingsChanged, reload }) {
       <summary><h2>${t("analysis.allCombinations")}</h2><span class="hint">${d ? t("analysis.matrix.active") + ": " + t("analysis.daysShort", { n: d.lookback_days }) + " · " + t("analysis.tuning.half_life") + " " + t("analysis.daysShort", { n: num(d.half_life_days, 1) }) +
         " · " + num(d.percentile, 1) + " %" + (d.method === "surcharge" ? " + " + t("analysis.surcharge") : "") : ""}</span></summary>
       <div id="suggestion-derivation">${d && html`<${Derivation} d=${d} />`}</div></details>
-    <details class="analysis-list panel analysis-details">
+    ${data?.day_types !== false && html`<details class="analysis-list panel analysis-details">
       <summary><h2>${t("analysis.stress.title")}</h2><span class="hint">${data?.day_type_ratio ? t("analysis.lastDays", { count: data.day_type_ratio.days }) : ""}</span></summary>
-      <div id="day-type-ratio">${data?.day_type_ratio && html`<${DayTypeRatio} d=${data.day_type_ratio} />`}</div></details>
+      <div id="day-type-ratio">${data?.day_type_ratio && html`<${DayTypeRatio} d=${data.day_type_ratio} />`}</div></details>`}
   </div>`;
 }
 

@@ -44,6 +44,13 @@ def counted_days(today: date, days_back: int, periods: list[dict], mode: str) ->
     return result
 
 
+def meal_keys(settings: dict) -> tuple:
+    """The Automatik's factor keys: breakfast per day type while work/free days are on, else one per meal."""
+    breakfast = ((("breakfast", "work"), ("breakfast", "free")) if config.day_types_enabled(settings)
+                 else (("breakfast", None),))
+    return (*breakfast, ("lunch", None), ("dinner", None))
+
+
 def vacation_mode(settings: dict) -> str:
     return settings.get("auto_vacation", config.DEFAULT_AUTO_VACATION)
 
