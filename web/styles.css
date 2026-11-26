@@ -65,9 +65,11 @@ h2 { font-size: 17px; margin: 0 0 18px; letter-spacing: -.02em; }
 label { display: block; font-size: 12px; font-weight: 650; margin-bottom: 16px; }
 label span { color: var(--muted); font-weight: 450; }
 label input, label select { display: block; margin-top: 7px; }
-/* iOS Safari renders native time fields with no height when empty and centres the value. */
-input[type=time] { -webkit-appearance: none; appearance: none; text-align: left; }
-input[type=time]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
+/* iOS Safari renders native date and time fields with their own height (none when empty), a minimum
+   width wider than a half-width grid column and a centred value; this keeps them like any other input. */
+input[type=time], input[type=date], input[type=datetime-local] { -webkit-appearance: none; appearance: none; min-width: 0; text-align: left; }
+input[type=time]::-webkit-date-and-time-value, input[type=date]::-webkit-date-and-time-value,
+input[type=datetime-local]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
 .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .entry-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
 .entry-switch:has(> :nth-child(3)) { grid-template-columns: 1.4fr 1fr 1fr; }
@@ -148,7 +150,7 @@ td, th { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); white-sp
 .toast-action:hover { background: light-dark(#ffffff1f, #18211c1f); }
 @media (max-width: 950px) {
   .diary-grid, .settings-top, .settings-cols { grid-template-columns: minmax(0, 1fr); }
-  .settings-save { grid-template-columns: 1fr 1fr; }
+  .settings-save { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
   .settings-save .primary { grid-column: 1 / -1; }
   .settings-save .hint { grid-column: 1 / -1; text-align: left; }
   .entry-panel { max-width: 620px; }
@@ -956,6 +958,8 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
   #settings-view[data-page] [data-settings-page]:not(.is-current) { display: none; }
   #settings-view[data-page] .settings-heading, #settings-view[data-page] .page-head { display: none; }
   #settings-view[data-page]:not(.page-in-form) .settings-save { display: none; }
+  /* "Abmelden" only on the list of pages, not at the end of every page. */
+  #settings-view[data-page] .logout-row { display: none; }
   #settings-view[data-page] .settings-grid { margin-bottom: 0; }
   #settings-view[data-page] .settings-save { margin-top: 14px; }
   .settings-index-group { margin-bottom: 22px; }
