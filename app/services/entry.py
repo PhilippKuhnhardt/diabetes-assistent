@@ -191,7 +191,7 @@ def _before_breakfast_end(context: dict) -> bool:
 
 def _basal_units(context: dict) -> Decimal:
     """Before breakfast end, while the day has no basal yet, the usual dose rides along."""
-    units = calculation.dec(context["settings"].get("basal_default_units", 17))
+    units = calculation.dec(context["settings"].get("basal_default_units", config.DEFAULT_BASAL_UNITS))
     if (context["mode"] != "meal" or not units.is_finite() or units <= 0 or context["current"]["basal"]
             or not _before_breakfast_end(context)):
         return Decimal(0)

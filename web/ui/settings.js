@@ -387,7 +387,7 @@ function ModelForm({ page, data, onReload }) {
         <${Field} label="Halbwertszeit" unit="Tage"><${NumberInput} name="auto_half_life_days" min="1" max="28" step="0.5" defaultValue=${s.auto_half_life_days} /><//>
         <${Field} label="Urlaub in der Automatik"><${Choice} name="auto_vacation" value=${s.auto_vacation || "separate"} options=${[["separate", "Im Urlaub alle Mahlzeiten, danach ohne Urlaub"],
           ["vacation_only", "Im Urlaub nur Urlaubsmahlzeiten, danach ohne Urlaub"], ["all", "Urlaub zählt wie jeder andere Tag"]]} /><//>
-        <${Field} label="Basal zum Frühstück" unit="IE"><${NumberInput} name="basal_default_units" min="0" max="100" step="0.5" defaultValue=${s.basal_default_units ?? 17} /><//>
+        <${Field} label="Basal zum Frühstück" unit="IE"><${NumberInput} name="basal_default_units" min="0" max="100" step="0.5" defaultValue=${s.basal_default_units ?? 0} /><//>
         <${Field} label="Split-Bolus ab" unit="g KH"><${NumberInput} name="split_min_grams" min="0" max="300" step="5" defaultValue=${s.split_min_grams ?? 80} /><//>
         <${Field} label="Split nur ab" unit="IE"><${NumberInput} name="split_min_units" min="0" max="30" step="0.5" defaultValue=${s.split_min_units ?? 6.5} /><//>
         <${Field} label="Split: Anteil jetzt" unit="%"><${NumberInput} name="split_first_percent" min="30" max="90" step="5" defaultValue=${s.split_first_percent ?? 60} /><//>
