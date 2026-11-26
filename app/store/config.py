@@ -24,6 +24,10 @@ DEFAULT_BASAL_UNITS = "0"
 DEFAULT_SPLIT = {"split_min_grams": 80, "split_min_units": "6.5", "split_first_percent": 60, "split_delay_minutes": 120}
 
 
+# Glucose limits: below low is a low, above high a high (colours, chart lines, early warnings, dose help).
+DEFAULT_LIMITS = {"low_limit_mgdl": "70", "high_limit_mgdl": "250"}
+
+
 # Vacation meals in the Automatik:
 # "separate" = during a vacation all meals count, outside one vacation days are skipped (default);
 # "vacation_only" = the same, but during a vacation only vacation meals count; "all" = vacation counts like any day.
@@ -46,6 +50,8 @@ def default_settings() -> dict:
         "fpe_surcharge_mgdl": "20",
         "auto_vacation": DEFAULT_AUTO_VACATION,
         "day_types": False,
+        "low_limit_mgdl": DEFAULT_LIMITS["low_limit_mgdl"],
+        "high_limit_mgdl": DEFAULT_LIMITS["high_limit_mgdl"],
         "breakfast_end_minute": 660,
         "lunch_end_minute": 1020,
         "sport_lookback_minutes": 360,

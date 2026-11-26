@@ -3910,6 +3910,7 @@
    "dose_cautious_target_mgdl": "150",
    "dose_target_mgdl": "120",
    "fpe_surcharge_mgdl": "20",
+   "high_limit_mgdl": "250",
    "ic_schedule": [
     {
      "grams_per_unit": "6",
@@ -3938,6 +3939,7 @@
      "start_minute": 1140
     }
    ],
+   "low_limit_mgdl": "70",
    "lunch_end_minute": 1020,
    "nightscout_profile": {
     "profile_id": "golden-profile",

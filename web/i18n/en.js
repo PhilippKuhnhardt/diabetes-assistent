@@ -567,6 +567,8 @@ export default {
       fpeSurcharge: "Surcharge per FPU (calculated)",
       gramsCarbs: "g carbs",
       lookback: "Automatic period",
+      lowLimit: "Low limit (warning, red line)",
+      highLimit: "High limit (warning, red line)",
       lunchEnd: "Lunch ends at",
       mealSurcharge: "Meal surcharge",
       method: "Automatic method",

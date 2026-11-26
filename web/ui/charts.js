@@ -5,6 +5,7 @@
 import { html, useState, useEffect, useRef } from "./html.js";
 import { MINUTE, num, timeOnly, sportNames, UNIT } from "./lib.js";
 import { t } from "./i18n.js";
+import { prefs } from "./prefs.js";
 
 export function chartLayout(width) {
   const clamped = Math.max(300, Math.min(900, Math.round(width || 600)));
@@ -186,7 +187,7 @@ export function GlucoseChart({ layout, range, view, entries, treatments, bands, 
     <g clip-path=${"url(#" + clip + ")"}>
       ${bandRects}
       ${grid.map(g => html`<line class="grid" x1=${left} x2=${right} y1=${scales.y(g).toFixed(1)} y2=${scales.y(g).toFixed(1)} />`)}
-      ${limit(250, "limit-high")}${limit(70, "limit-low")}
+      ${limit(prefs.highMgdl, "limit-high")}${limit(prefs.lowMgdl, "limit-low")}
       ${!overview && html`<rect class="window-shade" x=${scales.x(range.start).toFixed(1)} y=${plotTop - 6}
         width=${(scales.x(range.end) - scales.x(range.start)).toFixed(1)} height=${plotBottom - plotTop + 6} />`}
       ${!overview && (range.manual || interactive) && (range.autoStart !== range.start || range.autoEnd !== range.end) &&

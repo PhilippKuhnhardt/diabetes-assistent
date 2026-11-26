@@ -14,6 +14,13 @@ LOW_MGDL = Decimal(70)
 HIGH_MGDL = Decimal(250)
 
 
+def limits(settings: dict | None) -> tuple[Decimal, Decimal]:
+    """The low and high limit in mg/dL (settings low_limit_mgdl / high_limit_mgdl, default 70 / 250)."""
+    settings = settings or {}
+    return (calculation.dec(settings.get("low_limit_mgdl") or LOW_MGDL),
+            calculation.dec(settings.get("high_limit_mgdl") or HIGH_MGDL))
+
+
 def target_at(at: datetime, settings: dict) -> dict | None:
     """The Nightscout target range row in force at the local clock time of `at`."""
     local = at.astimezone(local_zone(settings["timezone"]))
@@ -23,13 +30,15 @@ def target_at(at: datetime, settings: dict) -> dict | None:
 
 
 def tone(value, at: datetime, settings: dict) -> str:
-    """Colour class of a CGM value: low < 70, high > 250, else inside or outside the target range."""
+    """Colour class of a CGM value: below the low limit, above the high limit, else inside or outside the
+    target range."""
     if value is None:
         return "none"
     value = calculation.dec(value)
-    if value < LOW_MGDL:
+    low_limit, high_limit = limits(settings)
+    if value < low_limit:
         return "low"
-    if value > HIGH_MGDL:
+    if value > high_limit:
         return "high"
     target = target_at(at, settings)
     if target is None:
@@ -118,9 +127,9 @@ def current_status(entries: list[dict], settings: dict, now: datetime | None = N
     high = calculation.dec(target["high_mgdl"]) if target else None
     if not fresh:
         status = "stale"
-    elif value < Decimal(70):
+    elif value < limits(settings)[0]:
         status = "low"
-    elif value > Decimal(250):
+    elif value > limits(settings)[1]:
         status = "high"
     elif low is None or high is None:
         status = "no_target"

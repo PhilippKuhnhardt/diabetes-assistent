@@ -226,6 +226,13 @@ class GlucoseAlertTests(unittest.TestCase):
         self.assertEqual(self.kinds(self.entries([116, 110, 104, 98, 92, 86, 80]),
                                     self.found(carbs=[(self.NOW - timedelta(minutes=40), "30")])), [])
 
+    def test_the_low_limit_moves_the_low_warning(self):
+        falling = self.entries([116, 110, 104, 98, 92, 86, 80])
+        self.assertEqual(self.kinds(falling, self.found()), ["low"])
+        # With a low limit of 54 the same fall does not cross it within the warning horizon.
+        self.assertEqual([item["kind"] for item in glucose_alerts.warnings(
+            falling, self.found(), self.NOW, "Europe/Berlin", low_mgdl=Decimal(54))], [])
+
     def test_no_low_warning_right_after_carbs(self):
         falling = self.entries([124, 116, 108, 100, 92, 84, 76])
         just_eaten = self.found(carbs=[(self.NOW - timedelta(minutes=10), "20")])

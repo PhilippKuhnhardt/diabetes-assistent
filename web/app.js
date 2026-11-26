@@ -1,5 +1,6 @@
 // The classic page logic, moving screen by screen into Preact components in web/ui/ (AGENTS.md).
 // Shared helpers and the API call live in web/ui/lib.js.
+import { setPrefs } from "./ui/prefs.js";
 import { html, render } from "./ui/html.js";
 import { entryCard, quickAdd } from "./ui/main.js";
 import { AnalysisView } from "./ui/analysis.js";
@@ -242,6 +243,7 @@ let settingsLoads = 0;
 async function loadSettings() {
   const data = await api("/api/settings");
   state.settings = data.settings;
+  setPrefs(data.settings);
   state.settingsData = data;
   state.travel = data.travel || null;
   settingsLoads += 1;

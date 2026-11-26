@@ -171,6 +171,8 @@ EN = {
     "Speichert eine Basal-Injektion (lokal und als Notiz in Nightscout). Nur auf ausdrückliche Angabe des Nutzers.": "Saves a basal injection (locally and as a note in Nightscout). Only on the user's explicit statement.",
     "Eintrag löschen": "Delete entry",
     "Nutzer": "User",
+    "Grenze für tief muss zwischen 54 und 90 mg/dL liegen": "The low limit must be between 54 and 90 mg/dL",
+    "Grenze für hoch muss zwischen 180 und 400 mg/dL liegen": "The high limit must be between 180 and 400 mg/dL",
     "Löscht einen Eintrag (auch Basal) eines Tages, z. B. einen falsch verstandenen. Nur auf ausdrückliche Bitte und nach Nennung des Eintrags. id und day aus get_day/get_status.": "Deletes an entry (basal too) of a day, e.g. a misunderstood one. Only on explicit request and after naming the entry. id and day from get_day/get_status.",
     "Tag anzeigen": "Show day",
     "Ein Tagebuchtag: alle Einträge (mit id), Mahlzeiten mit Faktor (IE/KE) oder Blockgrund, Tagesart und BZ-Kennzahlen.": "One diary day: all entries (with id), meals with factor (U/CU) or blocking reason, day type and BG metrics.",
