@@ -77,7 +77,7 @@ def day_type_for(day: str, overrides: dict[str, str], periods: list[dict]) -> tu
 
 
 def window_checks() -> dict[str, tuple[str, str]]:
-    """Meal windows Philipp marked as right ("Passt"): meal id -> (start, end) of the window he checked."""
+    """Meal windows the user marked as right ("Passt"): meal id -> (start, end) of the window they checked."""
     with connect() as db:
         rows = db.execute("SELECT meal_id,start_at,end_at FROM window_checks").fetchall()
     return {row["meal_id"]: (row["start_at"], row["end_at"]) for row in rows}

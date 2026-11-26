@@ -190,7 +190,7 @@ def _offset_minutes(name: str, at: datetime) -> int:
 
 
 def travel_state(now: datetime | None = None) -> dict:
-    """Home zone, the zone in effect now and the latest switches (user request 2026-11-07)."""
+    """Home zone, the zone in effect now and the latest switches."""
     now = now or datetime.now(timezone.utc)
     _, current_settings = config.get_settings()
     home = current_settings["timezone"]

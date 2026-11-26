@@ -146,7 +146,7 @@ function Vacation({ page, vacation, today, onVacation }) {
       : t("settings.vacation.weekdays")) + (past.length ? " " + t("settings.vacation.past", { list: past.join(", ") }) : "")}</p><//>`;
 }
 
-// Pause after the trigger, in minutes (Philipp 2026-11-22): low after eating, high after an injection.
+// Pause after the trigger, in minutes: low after eating, high after an injection.
 const NOTIFY_PAUSES = { low: t("settings.notify.pauseLow"), high: t("settings.notify.pauseHigh") };
 const NOTIFY_KINDS = ["basal", "split", "low", "high", "check"].map(kind => [kind, t("settings.notify.kinds." + kind)]);
 
@@ -216,7 +216,7 @@ function Agent({ page, info, onInfo }) {
       tokens: num((row.input_tokens + row.output_tokens) / 1000, 0) }) + (row.cost_usd != null ? ", " + num(row.cost_usd, 2) + " $" : "") + ")").join("; ") : ""}</p><//>`;
 }
 
-// Places: chips with the spots Philipp defines, and the fallback place for anywhere else.
+// Places: chips with the spots the user defines, and the fallback place for anywhere else.
 function Place({ place, act, maxAccuracy }) {
   const [coords, setCoords] = useState("");
   const toggle = (action, key) => event => act({ action, id: place.id, [key]: event.currentTarget.checked });

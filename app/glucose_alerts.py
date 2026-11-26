@@ -1,28 +1,28 @@
 """Early warning of a low (< 70 mg/dL) or high (> 250 mg/dL) soon, daytime only.
 
-Analysis and approval 2026-10-11 (project files, analysen/fruehprognose.md, section 5): the "Wirkt noch"
+Model: the "Wirkt noch"
 model (insulin, carbs and surcharge still to act) plus the model's miss over the last 30 minutes, whose
 rate fades out linearly over 60 minutes. Over 31 days it caught 12 of 12 daytime lows (median 17 min
 ahead) and 11 of 12 highs (median 20 min ahead), about 4 warnings a day, about 1 of them needless.
 Nights are left out: the sensor was unreliable there. No low warning within 30 min after a carb entry. A rough forecast, not dosing advice.
 
-Review 2026-10-22 with 31 days (analysen/alarme-2026-10.md, Philipp's go for the daytime changes): since the
+Review with 31 days: since the
 CGM sends a reading every minute (12.10.) the miss is measured over 15 instead of 30 minutes and fades over
 45 instead of 60, and the low pause follows only carb entries of at least 20 g, so a small carb correction
 eaten because BG falls no longer mutes the warning. Daytime lows caught 16 -> 18 of 19 (median 20 -> 23 min
 ahead), highs 10 -> 11 of 13, warnings 2.9 -> 3.0 a day.
 
-Review 2026-10-29 (analysen/fehlalarme-2026-10-29.md, Philipp: too many false alarms): replayed every 2 min like the
+Review: replayed every 2 min like the
 background job, about 5.3 warnings a day came, about 4.3 of them without a low or high after. A low warning now needs
 the crossing within 45 min, the miss fading over 25 min and BG at least 5 mg/dL lower than 10 min before; a high
 warning needs the crossing within 30 min and BG at least 200. Daytime 21.09.-29.10.: lows caught 23 -> 22 of 24
 (since 12.10. still 10 of 10, median 28 min ahead), highs 12 of 14 (median 18 -> 14 min ahead), warnings
 5.3 -> 3.4 a day, those without an event 4.3 -> 2.5.
 
-Pauses (Philipp 2026-11-22, both set per kind in the notification settings): no high warning for 30 min after rapid
+Pauses: no high warning for 30 min after rapid
 insulin, since a dose just given barely acts yet and the forecast still extrapolates the rise (22.11. 21:00 local,
 4 IE correction at BG 199, warned at 21:02 with a forecast of 256); no low warning for 15 min (before: 30) after any
-carb entry (before: only from 20 g; Philipp dropped that limit, so a small carb correction mutes it too).
+carb entry.
 """
 from __future__ import annotations
 
@@ -49,14 +49,13 @@ DAY_FROM, DAY_TO = 6, 23
 FRESH_MINUTES = 10
 # No low warning this soon after a carb entry: the model lets carbs act at once, real absorption starts
 # later, so right after eating the "faster than expected" fall is mostly that lag (24 of ~100 low
-# warnings came within 45 min after carbs, 2 before a real low; a 30-min pause kept 12 of 12 lows,
-# user report 2026-10-11, analysen/fruehprognose.md section 7). From 2026-10-22 to 2026-11-22 only carb entries
-# of at least 20 g paused it (a 10 g correction on 18.10. 12:17 had muted a warning before a low at 12:31,
-# analysen/alarme-2026-10.md); since 2026-11-22 every carb entry pauses it again, 15 min by default (Philipp),
+# warnings came within 45 min after carbs, 2 before a real low; a 30-min pause kept 12 of 12 lows).
+# From 2026-10-22 to 2026-11-22 only carb entries
+# of at least 20 g paused it (a 10 g correction on 18.10. 12:17 had muted a warning before a low at 12:31); since 2026-11-22 every carb entry pauses it again, 15 min by default,
 # set in the notification settings.
 LOW_PAUSE_MINUTES = 15
-# No high warning this soon after rapid insulin (Philipp 2026-11-22): the dose just given is meant to bring BG
-# down, but barely acts within the warning's 30 min, so the warning would only repeat what he just acted on.
+# No high warning this soon after rapid insulin: the dose just given is meant to bring BG
+# down, but barely acts within the warning's 30 min, so the warning would only repeat what the user just acted on.
 HIGH_PAUSE_MINUTES = 30
 
 

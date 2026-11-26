@@ -15,11 +15,10 @@ linearly up to the full amount at SURCHARGE_FULL_GRAMS so small meals get less. 
 reduced by the surcharge's share, F − 10 × Z × share / Σ[g × KF], before the weighted percentile;
 the dose then adds the surcharge once per main meal (Z × share / KF IE). Snacks get no surcharge.
 A surcharge of 0 is the plain percentile.
-A meal marked fat/protein carries FAT_SURCHARGE_MGDL more (setting auto_fat_surcharge_mgdl, approved by Philipp
-2026-11-06, analysis in the project files analysen/modell-review-2026-11-06.md): fat meals no longer pull up the
+A meal marked fat/protein carries FAT_SURCHARGE_MGDL more (setting auto_fat_surcharge_mgdl): fat meals no longer pull up the
 factor of the others, so non-fat meals (e.g. in the canteen) get less and fat ones more.
 
-Place factor (user request 2026-11-06): for a place switched on for it, the dose of a main meal there is scaled by the
+Place factor: for a place switched on for it, the dose of a main meal there is scaled by the
 weighted median of actual ÷ suggested factor of the main meals eaten there in the last PLACE_LOOKBACK_DAYS
 (at least PLACE_MIN_MEALS, half-life PLACE_HALF_LIFE, clamped to PLACE_SCALE_MIN..PLACE_SCALE_MAX). Each past
 suggestion is recomputed as the Automatik would have given it on that day, without any place factor.

@@ -17,13 +17,13 @@ SPLIT_TAG = re.compile(r"\[DASP:(\d+(?:\.\d+)?)@(\d+)\]")
 SURCHARGE_TAG = re.compile(r"\[DAZ:(\d+(?:\.\d+)?)@(\d+)\]")
 BASAL_MARKER = "[DA2:basal]"
 SNACK_GAP = timedelta(minutes=120)
-# A carb entry below this that would start a main meal defaults to a snack of no meal (user request 2026-10-19);
-# from this size a snack of no meal carries the main-meal surcharge (user report 2026-11-08).
+# A carb entry below this that would start a main meal defaults to a snack of no meal;
+# from this size a snack of no meal carries the main-meal surcharge.
 SMALL_SNACK_GRAMS = Decimal(20)
 SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio|racing)\]")
 # Data-quality marks on carb entries: how certain the carbs are (weighed, known dish or FDDB
 # estimate, no serious estimate) and the meal factors: fat-/protein-rich, alcohol, fast-acting
-# ("Schnell", user request 2026-11-14). Alcohol and fast are recorded only.
+#. Alcohol and fast are recorded only.
 QUALITY_TAG = re.compile(r"\[DAQ:(weighed|known|unsure|fat|alcohol|fast)\]")
 QUALITY_MARKERS = {"fat_protein": "[DAQ:fat]", "alcohol": "[DAQ:alcohol]", "fast": "[DAQ:fast]"}
 # Most to least certain; a meal takes the least certain level of its marked carb entries.
@@ -32,7 +32,7 @@ CERTAINTY_TAG = re.compile(r"\[DAQ:(weighed|known|unsure)\]")
 DAE_TAG = re.compile(r"\[DAE:([a-f0-9-]{36})\]")
 # Since 2026-10-26 the LibreLinkUp uploader also sends LibreLinkUp's smoothed history: about every 5 min a
 # second reading 1-9 s after a live one, without a trend arrow, uploaded ~17 min later and up to 22 mg/dL off
-# (≈ the live readings' centred 10-min mean; review 2026-11-01, project files reviews/2026-11-01.md). Such a
+#. Such a
 # reading next to a live one is dropped; on its own (live reading missing) it still fills the gap.
 HISTORY_SECONDS = 10
 

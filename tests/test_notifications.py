@@ -217,7 +217,7 @@ class GlucoseAlertTests(unittest.TestCase):
         self.assertLessEqual(warning["at"], self.NOW + timedelta(minutes=glucose_alerts.LOW_WITHIN_MINUTES))
         self.assertLess(warning["mgdl"], 70)
         self.assertEqual(self.kinds(falling, self.found()), [])
-        # The model alone expects a fall, BG is still flat: no warning yet (mostly false alarms, review 2026-10-29).
+        # The model alone expects a fall, BG is still flat: no warning yet.
         self.assertEqual(self.kinds(self.entries([106] * 7), found), [])
 
     def test_falling_faster_than_the_model_warns_of_a_low(self):
@@ -230,13 +230,13 @@ class GlucoseAlertTests(unittest.TestCase):
         falling = self.entries([124, 116, 108, 100, 92, 84, 76])
         just_eaten = self.found(carbs=[(self.NOW - timedelta(minutes=10), "20")])
         self.assertEqual(self.kinds(falling, just_eaten), [])
-        # Any carb entry pauses it, also a small one (Philipp 2026-11-22: no 20 g limit).
+        # Any carb entry pauses it, also a small one.
         self.assertEqual(self.kinds(falling, self.found(carbs=[(self.NOW - timedelta(minutes=10), "5")])), [])
 
     def test_low_pause_after_carbs_is_set_in_minutes(self):
         falling = self.entries([124, 116, 108, 100, 92, 84, 76])
         eaten = self.found(carbs=[(self.NOW - timedelta(minutes=20), "20")])
-        # Default 15 min (Philipp 2026-11-22): 20 min after eating the warning is back.
+        # Default 15 min: 20 min after eating the warning is back.
         self.assertEqual(self.kinds(falling, eaten), ["low"])
         warned = glucose_alerts.warnings(falling, eaten, self.NOW, "Europe/Berlin", low_pause_minutes=30)
         self.assertEqual(warned, [])
@@ -272,7 +272,7 @@ class GlucoseAlertTests(unittest.TestCase):
 
 
 class CorrectionCheckTests(unittest.TestCase):
-    """'BZ prüfen' after a meal (analysen/nachspritzen-2026-11-14.md)."""
+    """'BZ prüfen' after a meal."""
     MEAL = datetime(2026, 11, 14, 11, 0, tzinfo=timezone.utc)
     MEAL_ROW = {"at": MEAL, "role": "meal", "carbs": "80", "insulin": "6", "eventType": "Meal Bolus"}
 

@@ -170,7 +170,7 @@ def _notification_priority(db: sqlite3.Connection) -> None:
 
 
 def _notification_pause(db: sqlite3.Connection) -> None:
-    """Minutes a low/high warning stays quiet after carbs/insulin (NULL = the kind's default; Philipp 2026-11-22)."""
+    """Minutes a low/high warning stays quiet after carbs/insulin."""
     columns = {row[1] for row in db.execute("PRAGMA table_info(notification_settings)")}
     if "pause_minutes" not in columns:
         db.execute("ALTER TABLE notification_settings ADD COLUMN pause_minutes INTEGER")
@@ -213,7 +213,7 @@ def _inbox_seen(db: sqlite3.Connection) -> None:
 
 
 def _sport_sessions(db: sqlite3.Connection) -> None:
-    """Philipp's own glucose drop for one sport session (Nightscout id), instead of its kind's setting."""
+    """The user's own glucose drop for one sport session (Nightscout id), instead of its kind's setting."""
     db.execute("""CREATE TABLE IF NOT EXISTS sport_session_effects (
         session_id TEXT PRIMARY KEY,
         effect_mgdl TEXT NOT NULL
@@ -221,7 +221,7 @@ def _sport_sessions(db: sqlite3.Connection) -> None:
 
 
 def _sport_session_minutes(db: sqlite3.Connection) -> None:
-    """How long one sport session acts after its end (user request 2026-11-18: effect duration per session),
+    """How long one sport session acts after its end,
     instead of its kind's setting."""
     db.execute("""CREATE TABLE IF NOT EXISTS sport_session_minutes (
         session_id TEXT PRIMARY KEY,
@@ -230,7 +230,7 @@ def _sport_session_minutes(db: sqlite3.Connection) -> None:
 
 
 def _places_without_positions(db: sqlite3.Connection) -> None:
-    """Places are only the spots Philipp defines (user request 2026-10-29): one place can be the
+    """Places are only the spots the user defines: one place can be the
     fallback for positions in no spot, and entries no longer keep their position. A place named
     Auswärts becomes that fallback."""
     db.execute("ALTER TABLE places ADD COLUMN fallback INTEGER NOT NULL DEFAULT 0")
@@ -241,14 +241,12 @@ def _places_without_positions(db: sqlite3.Connection) -> None:
 
 
 def _place_factor(db: sqlite3.Connection) -> None:
-    """A place can scale the dose of its main meals by its own factor (user request 2026-11-06), starting
-    with the canteen: a place named Kantine is switched on."""
+    """A place can scale the dose of its main meals by its own factor (off until switched on in the settings)."""
     db.execute("ALTER TABLE places ADD COLUMN adjust INTEGER NOT NULL DEFAULT 0")
-    db.execute("UPDATE places SET adjust=1 WHERE name='Kantine' COLLATE NOCASE")
 
 
 def _timezone_periods(db: sqlite3.Connection) -> None:
-    """Time-zone switches while travelling (user request 2026-11-07, app/store/timezones.py)."""
+    """Time-zone switches while travelling."""
     db.execute("""CREATE TABLE IF NOT EXISTS timezone_periods (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         start_at TEXT NOT NULL,
@@ -260,7 +258,7 @@ def _timezone_periods(db: sqlite3.Connection) -> None:
 def _prior_insulin_percentile(db: sqlite3.Connection) -> None:
     """The meal factor now counts earlier rapid insulin that acts inside the window (app/calculation.py), so
     the factors of such meals rise. With the percentile at 40 % the dose would rise on average; 35 % keeps
-    it level (Philipp's approval 2026-11-14, analysen/dosisrechnung-pruefung-2026-11-14.md). Only a
+    it level. Only a
     percentile of exactly 40 is changed, as a new settings version from now on."""
     row = db.execute("SELECT payload FROM settings_versions ORDER BY id DESC LIMIT 1").fetchone()
     if not row:
@@ -279,7 +277,7 @@ def _prior_insulin_percentile(db: sqlite3.Connection) -> None:
 
 def _dishes(db: sqlite3.Connection) -> None:
     """The dish catalogue and what was eaten per diary carb entry (by its event id): its dish and
-    description; local only (user request 2026-11-16, meal agent)."""
+    description; local only."""
     db.execute("""CREATE TABLE IF NOT EXISTS dishes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -301,7 +299,7 @@ def _dishes(db: sqlite3.Connection) -> None:
 
 def _agent(db: sqlite3.Connection) -> None:
     """The meal agent: which provider and model it uses, and each estimate's conversation, result and
-    token use; its photos lie as files beside the database (user request 2026-11-16)."""
+    token use; its photos lie as files beside the database."""
     db.execute("CREATE TABLE IF NOT EXISTS agent_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
     db.execute("""CREATE TABLE IF NOT EXISTS agent_sessions (
         id TEXT PRIMARY KEY,
@@ -343,7 +341,7 @@ def _browser_sessions(db: sqlite3.Connection) -> None:
 
 
 def _split_min_units(db: sqlite3.Connection) -> None:
-    """A split is only offered from a full dose of 6.5 IE instead of 5 IE (Philipp's request 2026-11-17).
+    """A split is only offered from a full dose of 6.5 IE instead of 5 IE.
     Only the former default of exactly 5 IE is changed, as a new settings version from now on."""
     row = db.execute("SELECT payload FROM settings_versions ORDER BY id DESC LIMIT 1").fetchone()
     if not row:
@@ -361,12 +359,12 @@ def _split_min_units(db: sqlite3.Connection) -> None:
 
 
 def _drop_day_effects(db: sqlite3.Connection) -> None:
-    # The "Wirkungen über den Tag" card was removed (user request 2026-11-23); its stored days go with it.
+    # The "Wirkungen über den Tag" card was removed; its stored days go with it.
     db.execute("DELETE FROM summary_results WHERE key LIKE 'effects:%'")
 
 
 def _window_checks(db: sqlite3.Connection) -> None:
-    """"Passt" in Verlauf (user request 2026-11-23): Philipp checked a meal's counted window. The window it was
+    """"Passt" in Verlauf: The user checked a meal's counted window. The window it was
     checked for is kept, so the check lapses by itself once the window changes."""
     db.execute("""CREATE TABLE IF NOT EXISTS window_checks (
         meal_id TEXT PRIMARY KEY,
@@ -377,7 +375,7 @@ def _window_checks(db: sqlite3.Connection) -> None:
 
 
 def _entry_checks(db: sqlite3.Connection) -> None:
-    """Verlauf's day check (user request 2026-11-24): Philipp checked an entry that belongs to no meal card
+    """Verlauf's day check: The user checked an entry that belongs to no meal card
     (a sport session, a correction, basal, a blood glucose reading) by its id."""
     db.execute("""CREATE TABLE IF NOT EXISTS entry_checks (
         entry_id TEXT PRIMARY KEY,
@@ -386,7 +384,7 @@ def _entry_checks(db: sqlite3.Connection) -> None:
 
 
 def _drop_entry_checks(db: sqlite3.Connection) -> None:
-    # Only main meals need a check (Philipp 2026-11-25: reviewing is about the factor); entries go unchecked.
+    # Only main meals need a check; entries go unchecked.
     db.execute("DROP TABLE IF EXISTS entry_checks")
 
 

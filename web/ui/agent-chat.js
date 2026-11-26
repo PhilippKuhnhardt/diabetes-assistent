@@ -1,5 +1,5 @@
 // The meal agent as a chat (concept 2026-11-18): photos and words in, the agent's answers as bubbles,
-// and at the end Philipp scales the agent's portion on a slider (carbs, fat and protein alike), sets how sure
+// and at the end the user scales the agent's portion on a slider (carbs, fat and protein alike), sets how sure
 // they are, fat-rich and fast, and takes that value over. Nothing is saved here: "übernehmen" only
 // fills the form the chat was opened from, and the dose help calculates as always.
 import { html, useState, useEffect, useRef } from "./html.js";
@@ -21,7 +21,7 @@ const Icon = ({ name }) => {
     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d=${paths[name]} /></svg>`;
 };
 
-// The portion to take over (user request 2026-11-21): the agent's carbs, fat and protein with their kcal, and
+// The portion to take over: the agent's carbs, fat and protein with their kcal, and
 // a slider that scales all of them alike ("it was 0.8× the portion"), since the agent gets the mix right more
 // often than the amount. It snaps to 1×; the agent's carb range shows as a hint.
 export const portionValues = (estimate, portion) => {
@@ -101,7 +101,7 @@ function Bubbles({ conversation, estimate, busy, session }) {
   </div>`;
 }
 
-// One chat per opening, the same wherever it opens (Philipp 2026-11-19: correcting a saved meal and the
+// One chat per opening, the same wherever it opens (correcting a saved meal and the
 // first estimate must not differ). With `sessionId` (an estimate already taken over) or `eventId` (a
 // saved meal's card) the earlier estimate continues.
 export function MealChat({ info, eventId, sessionId, initialText, previousCarbs, context, onApply, onClose }) {
@@ -178,7 +178,7 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
     } catch (error) { toast(error.message, true); }
   }
 
-  // A message shows up in the chat at once (user request 2026-11-19) and stays there marked as
+  // A message shows up in the chat at once and stays there marked as
   // pending until the answer comes; a failed send puts the words and photos back into the field.
   async function send() {
     if (busy) return;

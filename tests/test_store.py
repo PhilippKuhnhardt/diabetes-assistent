@@ -69,20 +69,20 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual(places, [("Kantine", 0), ("auswärts", 1)])
         self.assertEqual(locations, [("a", None, None, None, 1)])
 
-    def test_the_canteen_gets_the_place_factor(self):
+    def test_the_place_factor_starts_switched_off(self):
         connection = sqlite3.connect(db.DB_PATH)
         connection.row_factory = sqlite3.Row
         before = db.MIGRATIONS.index(db._place_factor)
         for migration in db.MIGRATIONS[:before]:
             migration(connection)
         connection.execute(f"PRAGMA user_version={before}")
-        connection.executescript("INSERT INTO places(id,name,created_at) VALUES(1,'kantine','x'),(2,'Büro','x');")
+        connection.executescript("INSERT INTO places(id,name,created_at) VALUES(1,'Canteen','x'),(2,'Office','x');")
         connection.commit()
         connection.close()
         db.init()
         with db.connect() as connection:
             places = [tuple(row) for row in connection.execute("SELECT name,adjust FROM places ORDER BY id")]
-        self.assertEqual(places, [("kantine", 1), ("Büro", 0)])
+        self.assertEqual(places, [("Canteen", 0), ("Office", 0)])
 
 
     def test_a_split_limit_of_5_ie_rises_to_6_5(self):

@@ -12,7 +12,7 @@ export function chartLayout(width) {
     lanes: { insulin: 14, carbs: 34, sport: 46 } };
 }
 
-// Verlauf's meal cards (user request 2026-11-23): the same chart, lower, with its event lanes kept.
+// Verlauf's meal cards: the same chart, lower, with its event lanes kept.
 export function compactLayout(width) {
   const clamped = Math.max(260, Math.min(900, Math.round(width || 600)));
   return { width: clamped, left: 30, right: clamped - 8, plotTop: 50, plotBottom: 150, height: 172, compact: true,
@@ -144,7 +144,7 @@ function Handle({ name, at, scales, layout, interactive, reading, active, snappe
 // One chart. `range` is a meal window (or {start: -Infinity, end: Infinity, mealAt} for the day),
 // `overview` draws the day without a window, `editor` adds the window editor's handles and readings.
 // `sport` lists sessions acting on a meal ({from, until} of their effect): a blue band along the bottom, darker
-// where it lies inside the window, so the share a meal takes is visible (user request 2026-11-23).
+// where it lies inside the window, so the share a meal takes is visible.
 export function GlucoseChart({ layout, range, view, entries, treatments, bands, overview, clipId, editor, sport }) {
   const interactive = Boolean(editor);
   const points = glucosePoints(entries);

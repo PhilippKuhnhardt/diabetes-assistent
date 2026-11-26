@@ -165,7 +165,7 @@ def record(event_id: str, at: datetime, payload: dict, carbs) -> dict | None:
     return next(({"id": dish["id"], "name": dish["name"]} for dish in store.all_dishes() if dish["id"] == chosen), None)
 
 
-# The agent's lookups (user request 2026-11-16: the model gets tools to decide well rather than rules).
+# The agent's lookups.
 SEARCH_ROWS = 40
 
 
@@ -180,7 +180,7 @@ SAID_MAX = 600
 
 
 def _agent_notes(event_ids: list[str]) -> dict[str, dict]:
-    """What the meal agent knew about each entry: its items (name, amount, carbs) and Philipp's own words in
+    """What the meal agent knew about each entry: its items (name, amount, carbs) and the user's own words in
     that estimate (user report 2026-11-25: package values per 100 g and the weight per piece were only in his
     words, so a later estimate of the same waffle could not find them)."""
     notes = {}
@@ -200,7 +200,7 @@ def _agent_notes(event_ids: list[str]) -> dict[str, dict]:
 def lookup_meals(query: str = "", meal: str | None = None, place: str | None = None, dish: str | None = None,
                  days: int = VIEW_DAYS) -> dict:
     """Past carb entries, newest first, filtered by words (all must appear in dish, description, the agent's
-    items or Philipp's words to it), meal kind, place and dish, each with the outcome of the main meal it
+    items or the user's words to it), meal kind, place and dish, each with the outcome of the main meal it
     belongs to and what the agent knew about it."""
     days = max(1, min(int(days or VIEW_DAYS), VIEW_MAX_DAYS))
     meals, entries = _rows(days)

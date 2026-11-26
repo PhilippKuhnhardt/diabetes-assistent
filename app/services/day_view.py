@@ -321,7 +321,7 @@ def compute_day(day: str) -> dict:
             item.update(sport_shares(item, rendered))
     periods = marks.vacation_periods()
     day_type, day_type_source = marks.day_type_for(day, marks.analysis_day_types(), periods)
-    # Vacation mark (user request 2026-11-06): every meal of a vacation day carries it, independent
+    # Vacation mark: every meal of a vacation day carries it, independent
     # of a manual day type; the Automatik skips these days after the vacation (factors.counted_days).
     vacation = marks.in_vacation(day, periods)
     for meal in rendered:
@@ -357,7 +357,7 @@ def compute_day(day: str) -> dict:
 
 
 def sport_session(item: dict, settings: dict, session_effects: dict, session_minutes: dict) -> dict:
-    """A session's glucose drop and effect duration as they count, and whether Philipp set them himself."""
+    """A session's glucose drop and effect duration as they count, and whether the user set them themselves."""
     return {"sport_effect_mgdl": str(on_board.sport_effect(item, settings, session_effects)),
             "sport_effect_default_mgdl": str(on_board.sport_effect(item, settings)),
             "sport_effect_custom": item["id"] in session_effects,
@@ -383,16 +383,15 @@ def sport_shares(item: dict, meals: list[dict]) -> dict:
             "sport_effect_until": until if total else None}
 
 
-# Philipp reviews every entry from this day on (user request 2026-11-24: no backlog for the months before);
+# Entries are reviewed from this day on;
 # the red dot on "Verlauf" counts finished days from here up to yesterday.
 REVIEW_SINCE = "2026-11-24"
 
 
 def with_checks(payload: dict, now: datetime | None = None) -> dict:
-    """The day with Philipp's checks laid over it at request time, so a check never recalculates a stored
-    day: "Passt" on a meal (user request 2026-11-23) holds only for the window it was given for, and only
-    a finished meal can be checked. Only main meals need a check: reviewing is about the factor (Philipp
-    2026-11-25), so snacks, sport and other entries outside the meal cards never do. The day is done once
+    """The day with the user's checks laid over it at request time, so a check never recalculates a stored
+    day: "Passt" on a meal holds only for the window it was given for, and only
+    a finished meal can be checked. Only main meals need a check: reviewing is about the factor, so snacks, sport and other entries outside the meal cards never do. The day is done once
     every meal is checked or excluded."""
     now = now or datetime.now(timezone.utc)
     checks = marks.window_checks()
@@ -419,7 +418,7 @@ def with_checks(payload: dict, now: datetime | None = None) -> dict:
 
 
 def week_view(params: dict) -> dict:
-    """Verlauf's week strip (user request 2026-11-23): Monday to Sunday of the week holding `date`, each day
+    """Verlauf's week strip: Monday to Sunday of the week holding `date`, each day
     with its day type, open tasks and whether everything on it is checked. Days after today are only
     named; they are not calculated."""
     day = date.fromisoformat((params.get("date") or [""])[0])
@@ -445,7 +444,7 @@ def _checked_day(day: str) -> dict:
 
 
 def pending_review(params: dict | None = None) -> dict:
-    """The red dot on "Verlauf" (user request 2026-11-24): finished days (before today) since REVIEW_SINCE
+    """The red dot on "Verlauf": finished days (before today) since REVIEW_SINCE
     with something not yet checked, oldest first, so a tap can open the first of them."""
     _, settings = config.get_settings()
     today = datetime.now(timezone.utc).astimezone(local_zone(settings["timezone"])).date()

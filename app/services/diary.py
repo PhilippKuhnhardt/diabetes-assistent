@@ -123,7 +123,7 @@ def save_diary_treatment(payload: dict) -> dict:
         # The surcharge belongs to each carb entry (app/on_board.py), so any of them can carry the calculated one.
         eats = carbs > 0
         if eats and "fpe_surcharge" not in payload and payload.get("surcharge_mode") in fpe.MODES:
-            # The card switches a saved entry (meal or snack alike, user request 2026-11-21) between the static and the calculated surcharge; the
+            # The card switches a saved entry between the static and the calculated surcharge; the
             # calculated one comes from the agent's estimate linked to the entry (app/fpe.py).
             payload = {**payload, "fpe_surcharge": _calculated_surcharge(event_id, settings, payload.get("agent_session"),
                                                                 payload.get("portion"))

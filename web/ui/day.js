@@ -46,7 +46,7 @@ async function act(event, action) {
   finally { button.disabled = false; }
 }
 
-// ---- Verlauf (user request 2026-11-23, design B): a week strip to pick the day, then the day's meals as
+// ---- Verlauf: a week strip to pick the day, then the day's meals as
 // cards with their curve and counted window ("Passt" checks it, "Zeitraum anpassen" opens the editor),
 // sport sessions as cards of their own between them.
 
@@ -254,7 +254,7 @@ function WeekDays({ rows, day, onDay }) {
   })}</div>`;
 }
 
-// The weeks as one row that follows the finger and snaps to a week (user request 2026-11-23): the shown week
+// The weeks as one row that follows the finger and snaps to a week: the shown week
 // sits between the week before and after (none after the current week), each drawn from /api/days/week; when
 // the row comes to rest on a neighbour, that week is shown and the row is re-centred on it.
 function WeekStrip({ day, today, data, onDay }) {

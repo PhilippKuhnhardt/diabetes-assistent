@@ -338,7 +338,7 @@ class TuningTests(unittest.TestCase):
 
 
 class VacationTests(unittest.TestCase):
-    """Vacation meals in the Automatik (user request 2026-11-06, factors.counted_days)."""
+    """Vacation meals in the Automatik."""
 
     PERIODS = [{"start_day": "2026-11-08", "end_day": "2026-12-05"}]
 

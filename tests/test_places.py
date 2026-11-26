@@ -50,7 +50,7 @@ class PlaceRuleTests(unittest.TestCase):
         away = places.suggestion(position(49.2, 8.4), NOW, NOW, [CANTEEN], fallback_id=7)
         self.assertEqual((away["status"], away["place_id"]), ("away", 7))
         self.assertEqual(places.suggestion(position(49.0, 8.4), NOW, NOW, [CANTEEN], fallback_id=7)["place_id"], 1)
-        # Only a precise, fresh position says Philipp is elsewhere.
+        # Only a precise, fresh position says the user is elsewhere.
         coarse = places.suggestion(position(49.2, 8.4, accuracy=900), NOW, NOW, [CANTEEN], fallback_id=7)
         self.assertEqual((coarse["status"], coarse["place_id"]), ("inaccurate", None))
         self.assertEqual(places.suggestion(None, NOW, NOW, [CANTEEN], fallback_id=7)["place_id"], None)

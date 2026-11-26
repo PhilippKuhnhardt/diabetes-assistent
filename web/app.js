@@ -104,7 +104,7 @@ function validDay(value) {
 }
 
 // The URL carries only the view, never a day: an old link or a reloaded tab must not open an old day
-// by accident (user request 2026-10-16). A chosen day lives in this page only; a reload, a new visit or
+// by accident. A chosen day lives in this page only; a reload, a new visit or
 // DAY_HOLD_MS without touching the page brings back today.
 const DAY_HOLD_MS = 30 * 60000;
 
@@ -201,7 +201,7 @@ function changeDay(day, options = {}) {
 
 // An entry is always "now" unless the time was changed on purpose. That manual time ends with the
 // next saved entry, a view or day change, or after 10 minutes without touching the form.
-// The zone the app calculates with right now (home or the latest travel switch, user request 2026-11-07).
+// The zone the app calculates with right now.
 function appZone() {
   return state.travel?.current || state.settings?.timezone || "Europe/Berlin";
 }
@@ -352,7 +352,7 @@ async function loadDay({ refresh = false } = {}) {
   }
 }
 
-// The red dot on "Verlauf" (user request 2026-11-24): finished days (from the server's start date up to
+// The red dot on "Verlauf": finished days (from the server's start date up to
 // yesterday) with an entry not yet checked, oldest first; a tap on "Verlauf" opens the first of them.
 let reviewPending = [];
 
@@ -567,7 +567,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("focus", loadCurrentGlucose);
 });
 
-// ---- Meal agent (user request 2026-11-16): photos and a description in, carbs and a dish out. ----
+// ---- Meal agent: photos and a description in, carbs and a dish out. ----
 // The agent only fills the form; the dose help calculates as always. One chat serves the entry form
 // and the edit dialog ("Tag durchgehen", where it continues an earlier estimate: "Nachbessern").
 const agent = { info: null };
@@ -685,7 +685,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateNav();
 });
 
-// Tables become cards on phones (concept 2026-11-18, user report: tables are bad on mobile): every
+// Tables become cards on phones: every
 // cell carries its column's name, which the phone layout shows above the value (styles.css).
 function labelTables(root) {
   // Preact adds rows to a table that is already on the page, so a row counts for its table too.

@@ -15,7 +15,7 @@ from app.services import agent_tools
 PROTOCOL_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 SERVER_INFO = {"name": "diabetes-assistent", "title": tr("Diabetes-Tagebuch"), "version": "1"}
 INSTRUCTIONS = pick(
-"""Diabetes-Tagebuch von Philipp (Typ 1, FreeStyle Libre 3 Plus, Fiasp per Pen).
+"""Diabetes-Tagebuch (Typ 1, CGM-Werte aus Nightscout, schnell wirkendes Insulin per Pen).
 Begriffe: KH = Kohlenhydrate in Gramm. KE = 10 g KH. IE = Insulineinheiten. BZ = Blutzucker in mg/dL. \
 Faktor = IE pro KE. KF (Korrekturfaktor) = mg/dL, um die 1 IE den BZ senkt. Basal = Langzeitinsulin. \
 Split = Mahlzeitendosis in zwei Teilen, Rest später. Snack = Zwischenmahlzeit, die zu einer Hauptmahlzeit \
@@ -24,7 +24,7 @@ known = Zutaten bekannt, nur Gewicht geschätzt, unsure = unbekannte Zutaten ode
 eiweißreich. fast = wirkt schnell (nur erfasst). Optionen: normal = auf Zielwert, carbs = nur KH ohne Korrektur, \
 fast / slow = wenig / viel bei einer Korrektur nach dem Essen. Slider = Spanne von wenig bis viel Bedarf mit Empfehlung \
 und Korridor (wo der BZ nach etwa 4 h meist landet, Abweichung vom erwarteten Wert in mg/dL). Wirkt noch = Insulin und KH, die noch wirken.""",
-"""Diabetes diary of one person (type 1, FreeStyle Libre 3 Plus CGM, Fiasp by pen).
+"""Diabetes diary of one person (type 1, CGM readings from Nightscout, rapid-acting insulin by pen).
 Terms: carbs (KH) = carbohydrates in grams. CU (KE) = 10 g carbs. U (IE) = insulin units. BG (BZ) = blood glucose in mg/dL. \
 Factor = U per CU. CF (KF, correction factor) = mg/dL by which 1 U lowers BG. Basal = long-acting insulin. \
 Split = meal dose in two parts, the rest later. Snack = in-between meal that counts towards a main meal. \

@@ -470,7 +470,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 .dose-option strong small { font-size: 12px; font-weight: 650; }
 .dose-option .dose-expected { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .help-result .dose-option[aria-pressed="true"] { border-color: var(--green); background: var(--green-light); box-shadow: inset 0 0 0 1px var(--green); }
-/* Dose slider (user request 2026-11-15): dose, where glucose likely ends, recommendation. */
+/* Dose slider: dose, where glucose likely ends, recommendation. */
 .ds { margin-top: 8px; }
 .ds-read { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 2px 0 12px; }
 .ds-dose strong { display: block; font-size: 40px; line-height: 1; color: var(--green-dark); font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
@@ -863,7 +863,7 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .appnav-item, .appnav button.appnav-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--muted); font-size: 11px; font-weight: 650; text-decoration: none; }
 .appnav .ui-icon { width: 24px; height: 24px; }
 .appnav-item.active { color: var(--green-dark); }
-/* Red dot on "Verlauf" while a finished day has unchecked entries (user request 2026-11-24). */
+/* Red dot on "Verlauf" while a finished day has unchecked entries. */
 .appnav-item { position: relative; }
 .appnav-item.has-pending::after { content: ""; position: absolute; top: 9px; left: calc(50% + 8px); width: 9px; height: 9px; border-radius: 50%; background: light-dark(#d64545, #e2504f); box-shadow: 0 0 0 2px var(--surface); }
 .appnav-item.active .ui-icon { stroke-width: 2.4; }
@@ -968,7 +968,7 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .chat-input label.round-button, .chat-input button.round-button { margin: 0; width: 44px; height: 44px; min-height: 0; padding: 0; border-radius: 50%; }
 .chat-input textarea { min-height: 44px; }
 
-/* One header on every page (user request 2026-11-18): on phones the top bar is a single line with the
+/* One header on every page: on phones the top bar is a single line with the
    logo and the glucose; the entry sheet and the meal chat open below it, so the value stays in sight. */
 @media (max-width: 650px) {
   .topbar { flex-wrap: nowrap; min-height: 0; gap: 8px; padding: calc(8px + env(safe-area-inset-top, 0px)) 0 8px; }
@@ -981,7 +981,7 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
   .topbar-actions { flex-direction: row; flex: none; }
   .glucose-main span { font-size: 12px; }
   /* The meal chat covers the whole screen with one head that shows the glucose itself, the same from the
-     entry form and from a saved meal's card (Philipp 2026-11-19: no second head or close button above it). */
+     entry form and from a saved meal's card. */
   #agent-dialog { top: 0; height: 100dvh; margin: 0; padding-top: env(safe-area-inset-top, 0px); }
 }
 @media (max-width: 950px) {
@@ -1002,7 +1002,7 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .meal-today span { grid-column: 2 / 4; grid-row: 2; min-width: 0; color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
 .meal-today small { grid-column: 3; grid-row: 1; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .meals-today button.meal-today:hover, .meals-today button.meal-today-entry:hover:not(:disabled) { background: var(--canvas); }
-/* A meal unfolds to its single entries (user request 2026-11-20); each opens its card to correct it. */
+/* A meal unfolds to its single entries; each opens its card to correct it. */
 .meal-today-toggle { grid-column: 4; grid-row: 1 / 3; align-self: center; color: var(--muted); font-style: normal; font-size: 18px; line-height: 1; transition: transform .15s; }
 .meal-today[aria-expanded="true"] .meal-today-toggle { transform: rotate(90deg); }
 .meals-today ul.meal-today-entries { margin: 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: var(--canvas); }
@@ -1019,11 +1019,11 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .entry-active { display: none; }
 @media (max-width: 950px) { .entry-active { display: block; margin-bottom: 12px; } .entry-active:empty { display: none; } }
 
-/* "+" is a 2 × 2 grid of four tiles (user request 2026-11-18); Essen keeps its green. */
+/* "+" is a 2 × 2 grid of four tiles; Essen keeps its green. */
 .choices button.choice.main { grid-column: auto; min-height: 96px; }
 .choices button.choice { min-height: 96px; }
 
-/* Meal chat, calmer (user report 2026-11-19): photos sit in the message they came with and a sent
+/* Meal chat, calmer: photos sit in the message they came with and a sent
    message shows at once; older answers show only their grams. */
 .chat-turn { align-self: flex-end; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: 88%; }
 .chat-turn .bubble.me { max-width: 100%; }
@@ -1041,7 +1041,7 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 }
 .chat-pick { display: flex; flex-direction: column; gap: 10px; }
 
-/* ---- Verlauf (user request 2026-11-23, design B): week strip, meal cards with their curve, sport cards.
+/* ---- Verlauf: week strip, meal cards with their curve, sport cards.
    The same quiet cards, chips and rows as "Heute"; sport keeps the chart's violet. ---- */
 .history { --sport: light-dark(#6a4bb3, #ac90ff); --sport-light: light-dark(#f1edfa, #2a282f); --sport-line: light-dark(#d4c8ee, #453d54); }
 .history-head { margin-bottom: 10px; align-items: center; }
@@ -1083,7 +1083,7 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .history-meal.needs-check { border-color: light-dark(#e0c27a, #5c4608); box-shadow: inset 3px 0 0 light-dark(#d9a441, #79560b); }
 .history-meal-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: baseline; }
 .history-meal-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
-/* Fett/Schnell sit centred on the title line right after the time, not on the text baseline (Philipp 2026-11-23). */
+/* Fett/Schnell sit centred on the title line right after the time, not on the text baseline. */
 .history-meal-title .factor-icons { align-self: center; margin: 0; }
 .history-meal-title .meal-type { font-size: 15px; letter-spacing: -.01em; text-transform: none; color: var(--ink); }
 .history-meal-title time { color: var(--muted); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
@@ -1091,7 +1091,7 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .history-factor small { font-size: 10.5px; font-weight: 650; }
 .history-factor.is-missing { color: var(--amber); }
 .history-meal.is-excluded .history-factor { color: var(--muted); text-decoration: line-through; }
-/* Dish names and descriptions can be long (Philipp 2026-11-23): two lines at most, the entry list shows them in full. */
+/* Dish names and descriptions can be long: two lines at most, the entry list shows them in full. */
 .history-meal-name { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.35; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .history-meal-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
@@ -1104,7 +1104,7 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .history-task { margin: 0; padding: 6px 10px; border-radius: 9px; background: var(--amber-light); color: var(--amber); font-size: 12px; overflow-wrap: anywhere; }
 .history-chart { margin: 0; }
 .history-chart .meal-chart-plot { margin: 0 -4px; }
-/* One row on every phone (Philipp 2026-11-23: a wrapped "Einträge" looked unaligned); narrow screens say only "Zeitraum". */
+/* One row on every phone; narrow screens say only "Zeitraum". */
 .history-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 @media (max-width: 480px) { .history-actions .wide-only { display: none; } }
 .history .history-actions button { min-height: 36px; padding: 6px 8px; font-size: 13px; white-space: nowrap; min-width: 0; justify-content: center; }
@@ -1158,7 +1158,7 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .sport-shares .hint { margin: 0; }
 #entry-sport-effect-field { margin-bottom: 16px; }
 
-/* "Zeitraum anpassen" in the app's light look (Philipp 2026-11-23: the editor works well, it only has to
+/* "Zeitraum anpassen" in the app's light look (it only has to
    match): same events on the time axis, same snapping, the chart on the light plot of the meal cards. */
 .window-readout { border-radius: 12px; background: var(--canvas); color: var(--ink); border: 1px solid var(--line); }
 .window-readout[data-tone="in-range"] { background: var(--green-light); border-color: light-dark(#b9d8c5, #34473c); color: var(--green-dark); }
@@ -1181,7 +1181,7 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .window-chart .window-handle.is-snapped .handle-line { stroke: light-dark(#d9a441, #79560b); }
 .window-nudge button { border-radius: 999px !important; }
 
-/* "Tag als geprüft markieren" at the end of a day (user request 2026-11-24). */
+/* "Tag als geprüft markieren" at the end of a day. */
 .history button.check-day { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 14px 0 0; }
 
 /* "Darstellung" in settings (web/ui/theme.js): three equal choices. */

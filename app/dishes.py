@@ -1,6 +1,6 @@
-"""Dishes: what a meal was, so recurring meals can be traced over time (user request 2026-11-16).
+"""Dishes: what a meal was, so recurring meals can be traced over time.
 
-A diary carb entry can name one dish from Philipp's catalogue (Porridge, Kantine Pasta). A dish only
+A diary carb entry can name one dish from the user's catalogue (e.g. Porridge, Canteen pasta). A dish only
 labels entries; it changes no dose. Its history shows how the dish turned out: the meal factor of
 its main meals against the usual factor of that meal kind at the time (`ratio`; 1.2 = the meal
 needed 20 % more insulin than usual, so it behaved like 20 % more carbs)."""
