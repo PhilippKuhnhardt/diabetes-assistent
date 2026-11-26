@@ -82,8 +82,17 @@ async function run(browser, name, options) {
     await page.click("[data-settings-open] >> text=Spritzhilfe");
     check(await page.isVisible("[name=dose_target_mgdl]"), `${name}: settings page Spritzhilfe`);
     check(await page.isVisible(".settings-save"), `${name}: save button on a model page`);
+    // "Gültig ab" and "Uhrzeit" sit side by side without overlapping (iPhone report 2026-11-26).
+    check(await page.evaluate(() => {
+      const [date, time] = ["effective_date", "effective_time"].map(field => document.querySelector(`[name=${field}]`).getBoundingClientRect());
+      return date.right <= time.left && Math.abs(date.top - time.top) < 1 && Math.abs(date.height - time.height) < 1;
+    }), `${name}: Gültig ab and Uhrzeit side by side`);
+    // "Abmelden" only on the list of pages (the test server has no login, so the form is unhidden here).
+    await page.evaluate(() => document.querySelector("#logout-form").removeAttribute("hidden"));
+    check(!(await page.isVisible("#logout-form")), `${name}: no Abmelden on a settings page`);
     await page.click("#settings-back");
     check(await page.isVisible("#settings-index"), `${name}: back to the settings list`);
+    check(await page.isVisible("#logout-form"), `${name}: Abmelden on the settings list`);
     // "Darstellung": dark holds over a reload, "System" removes the choice again.
     await page.click("[data-settings-open=theme]");
     await page.click(".theme-switch button >> text=Dunkel");
