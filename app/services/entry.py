@@ -17,10 +17,7 @@ from app.i18n import tr
 MODES = ("meal", "exercise", "basal")
 # fast / slow: the ends of a correction without food after a recent meal (app/correction_scale.py); they take
 # the cautious option's place there.
-DOSE_VARIANTS = ("fast", "normal", "slow", "low", "cautious", "carbs")
-# The lower target is offered for corrections and for small carb amounts only: up to this many grams,
-# not marked unsure and not fat-/protein-rich, so no carb uncertainty asks for a cautious estimate.
-LOW_TARGET_MAX_GRAMS = Decimal(30)
+DOSE_VARIANTS = ("fast", "normal", "slow", "cautious", "carbs")
 SMALL_SNACK_GRAMS = episodes.SMALL_SNACK_GRAMS
 # The planned second part of a split bolus, offered as its own option while it is open.
 SPLIT_VARIANT = "split"
@@ -29,7 +26,7 @@ SPLIT_VARIANT = "split"
 # so they never match between showing and saving, while the rounded doses only change for a real reason.
 DOSE_CHECK_KEYS = (
     "carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl",
-    "low_target_mgdl", "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "auto_units_per_ke",
+    "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "auto_units_per_ke",
     "recent_rapid_doses")
 DOSE_CHANGED = tr("Empfehlung neu berechnet. Bitte den neuen Wert prüfen und neu antippen.")
 
@@ -250,22 +247,6 @@ def _fpe_surcharge(context: dict, assignment: dict | None, payload: dict) -> dic
     return fpe.estimate(payload, context["settings"])
 
 
-def _low_blocked(carbs: Decimal, payload: dict, result: dict, split: dict | None) -> str | None:
-    """Why the lower target is not offered; None when it is. Glucose reasons come from dosing.suggest."""
-    if result.get("low_blocked"):
-        return result["low_blocked"]
-    if carbs > 0 and payload.get("fat_protein") is True:
-        return "fat"
-    if carbs > 0 and payload.get("carbs_certainty") == "unsure":
-        return "unsure"
-    if carbs > LOW_TARGET_MAX_GRAMS:
-        return "carbs"
-    if result.get("split_plan") or (split and split["active"]):
-        # The planned second part is not in the forecast.
-        return "split"
-    return None
-
-
 def _place_choice(context: dict, payload: dict) -> int | None:
     """The place the entry will be saved with: the chosen chip ("none" = no place), else the one the
     position suggests, as the form preselects it."""
@@ -311,12 +292,8 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
             share = (100 * (Decimal(str(full)) - later) / Decimal(str(full))) if full and Decimal(str(full)) > 0 else 100
             split = {**split, "later_units": str(later), "first_percent": int(round(max(0, min(100, share))))}
     keys = {"normal": ("entry_units", "expected_glucose_mgdl"),
-            "low": ("low_entry_units", "low_expected_glucose_mgdl"),
             "cautious": ("cautious_entry_units", "cautious_expected_glucose_mgdl"),
             "carbs": ("carbs_entry_units", "carbs_expected_glucose_mgdl")}
-    low_blocked = _low_blocked(carbs, payload, result, split)
-    if low_blocked is None and result.get(prefix + "low_entry_units") == result.get(prefix + "entry_units"):
-        low_blocked = "same"
     scale = result.get("correction_scale") if carbs == 0 else None
     if scale:
         keys.update({name: (scale[name + "_entry_units"], scale[name + "_expected_glucose_mgdl"]) for name in ("fast", "slow")})
@@ -331,8 +308,8 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
                 option["suggested"] = scale["tempo"] == variant
                 options.append(option)
             continue
-        if variant in ("low", "cautious"):
-            # The slider replaces the lower and the cautious target.
+        if variant == "cautious":
+            # The slider replaces the cautious target.
             continue
         units = result.get(prefix + keys[variant][0])
         if units is None:
@@ -364,7 +341,7 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
     # Without a fresh CGM value the form offers its field for blood glucose measured by hand.
     finger_offer = not result.get("glucose_fresh") or result.get("glucose_source") == "finger"
     return {**result, "options": options, "check": _dose_check(result, options), "finger_offer": finger_offer,
-            "low_blocked": low_blocked, "low_note": None, "split": split,
+            "split": split,
             "slider": _slider(result, options, carbs, scale, split)}
 
 

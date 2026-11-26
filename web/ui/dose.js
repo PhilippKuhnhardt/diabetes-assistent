@@ -14,7 +14,7 @@ const landColor = value => value < 70 ? "#d9534f" : value < 90 ? "#eb9b8f" : val
 export const halfUnits = value => Math.round(value * 2) / 2;
 
 // fast / slow: ends of a correction after a meal; the one the rise leans to is marked by colour only.
-const doseLabels = Object.fromEntries(["split", "fast", "normal", "slow", "low", "cautious", "carbs"].map(key => [key, t("dose.variants." + key)]));
+const doseLabels = Object.fromEntries(["split", "fast", "normal", "slow", "cautious", "carbs"].map(key => [key, t("dose.variants." + key)]));
 
 export function sliderLanding(slider, units) {
   if (slider.expected_mgdl == null || slider.isf_mgdl_per_unit == null) return null;
@@ -112,6 +112,5 @@ export function DoseHelp({ help, note, changed = {}, choice, chosen, onChoose, o
     ${withCarbs && help.split_plan && html`<p class="dose-factor">${t("dose.openPart", { units: num(help.split_plan.units, 1), unit: UNIT.insulin, time: timeOnly(help.split_plan.due_at) })}</p>`}
     ${Number(help.activity_change_mgdl) !== 0 && help.activity_units != null && html`<p class="dose-factor">${t("sport.sport")} <strong>${signedChange(help.activity_change_mgdl, 0)}</strong> · ${(Number(help.activity_units) > 0 ? "+" : "") + num(help.activity_units, 2)} ${UNIT.insulin}</p>`}
     ${board && (board.lowering_until || board.raising_until) && html`<p class="dose-factor">${tx("dose.onBoard", { value: html`<strong>−${num(board.lowering_mgdl, 0)} / +${num(board.raising_mgdl, 0)} mg/dL</strong>` })}</p>`}
-    ${help.low_note && html`<p class="dose-factor">${t("dose.lowWithheld", { target: num(help.low_target_mgdl, 0), note: help.low_note })}</p>`}
     ${help.reason && html`<p class="hint">${help.reason}</p>`}`;
 }

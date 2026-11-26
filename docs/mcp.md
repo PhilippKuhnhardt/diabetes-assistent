@@ -14,7 +14,7 @@ Goal: the user talks to an agent (the Claude app, also by voice, or Claude Code)
 | Tool | Purpose | Writes? |
 | --- | --- | --- |
 | `get_status` | Current CGM value with trend, "Wirkt noch" (insulin, carbs, surcharge, expected value), open second split part, correction suggestion without food, basal today, all of today's entries and meal factors | no |
-| `preview_entry` | What the form shows for these carbs: snack or main meal, basal missing, day type, split, options normal / lower (only without carb uncertainty) / cautious / carbs only with factor, with split the part now + the second part with its time | no |
+| `preview_entry` | What the form shows for these carbs: snack or main meal, basal missing, day type, split, options normal / cautious / carbs only with factor, with split the part now + the second part with its time | no |
 | `save_entry` | Save a meal, snack, correction or sport, with carb certainty (`weighed`/`known`/`unsure`), fat/protein-rich, the chosen option, split and basal, for carbs optionally a dish (`dish`) and description (`description`); sport with type, duration and optionally its own effect (`sport_change_mgdl`, else the sport type's default) | yes |
 | `save_basal` | Basal injection of any amount | yes |
 | `delete_entry` | Delete a misunderstood entry (only when explicitly asked) | yes |
