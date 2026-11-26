@@ -6,6 +6,7 @@ import { html, useState, useEffect, useRef } from "./html.js";
 import { photoDataURL, canRecord, startRecording, recordingToWav } from "./media.js";
 import { GlucoseBadge } from "./glucose.js";
 import { api, toast, num } from "./lib.js";
+import { t } from "./i18n.js";
 import { CERTAINTY_LEVELS, CertaintySlider, FactorChips } from "./meal-fields.js";
 
 
@@ -38,15 +39,15 @@ export function PortionPick({ estimate, portion, previous, onChange, children })
   const at = value => ((value - low) / (high - low) * 100).toFixed(1) + "%";
   const snap = value => Math.abs(value - 1) <= 0.03 ? 1 : Math.round(value * 20) / 20;
   const factor = value => num(value, 2) + "×";
-  const note = [portion === 1 ? "Schätzung" : factor(portion) + " der Schätzung",
-    estimate.carbs_low_g != null ? "KH " + estimate.carbs_low_g + "–" + estimate.carbs_high_g + " g" : "",
-    previous != null && previous !== "" && Number(previous) !== values.carbs ? "vorher " + num(previous, 1) + " g" : ""].filter(Boolean);
+  const note = [portion === 1 ? t("chat.estimate") : t("chat.ofEstimate", { factor: factor(portion) }),
+    estimate.carbs_low_g != null ? t("chat.carbRange", { low: estimate.carbs_low_g, high: estimate.carbs_high_g }) : "",
+    previous != null && previous !== "" && Number(previous) !== values.carbs ? t("chat.before", { grams: num(previous, 1) }) : ""].filter(Boolean);
   return html`<div class="carb-pick">
     <div class="carb-pick-value"><strong>${values.carbs} g</strong><span class="carb-note">${note.join(" · ")}</span>${children}</div>
-    <p class="portion-values">${[values.fat != null ? values.fat + " g Fett" : "", values.protein != null ? values.protein + " g Eiweiß" : "",
+    <p class="portion-values">${[values.fat != null ? t("chat.fat", { grams: values.fat }) : "", values.protein != null ? t("chat.protein", { grams: values.protein }) : "",
       values.kcal != null ? values.kcal + " kcal" : ""].filter(Boolean).join(" · ")}</p>
     <div class="carb-range">
-      <input type="range" min=${low} max=${high} step="0.05" value=${portion} aria-label="Portion"
+      <input type="range" min=${low} max=${high} step="0.05" value=${portion} aria-label=${t("chat.portion")}
         style=${{ "--fill": at(portion) }} onInput=${event => onChange(snap(Number(event.currentTarget.value)))} />
       ${[[low, "start"], [1, "mid"], [high, "end"]].map(([value, align]) => html`<button type="button" class=${"carb-tick " + align}
         style=${align === "mid" ? { left: at(value) } : null} onClick=${() => onChange(value)}>
@@ -58,18 +59,17 @@ export function PortionPick({ estimate, portion, previous, onChange, children })
 function EstimateDetails({ estimate }) {
   const extra = estimate.items.length + (estimate.lookups?.length || 0) + (estimate.sources?.length || 0);
   return html`
-    ${estimate.dish && html`<p class="chat-dish">Gericht: <strong>${estimate.dish.name}</strong>
-      ${estimate.dish.new && html` <span class="outlier-badge">neu</span>`}
+    ${estimate.dish && html`<p class="chat-dish">${t("common.dish")}: <strong>${estimate.dish.name}</strong>
+      ${estimate.dish.new && html` <span class="outlier-badge">${t("chat.new")}</span>`}
       ${estimate.dish.hint && html`<br /><small>${estimate.dish.hint}</small>`}</p>`}
-    ${estimate.history_adjustment_g ? html`<p class="chat-note">Darin ${estimate.history_adjustment_g > 0 ? "+" : "−"}${Math.abs(estimate.history_adjustment_g)} g
-      aus dem Verlauf des Gerichts.</p>` : null}
+    ${estimate.history_adjustment_g ? html`<p class="chat-note">${t("chat.historyAdjustment", { grams: (estimate.history_adjustment_g > 0 ? "+" : "−") + Math.abs(estimate.history_adjustment_g) })}</p>` : null}
     ${extra > 0 && html`<details>
-      <summary>${[estimate.items.length ? estimate.items.length + " Posten" : "",
-        estimate.lookups?.length ? estimate.lookups.length + " nachgeschlagen" : ""].filter(Boolean).join(" · ") || "Quellen"}</summary>
+      <summary>${[estimate.items.length ? t("chat.items", { count: estimate.items.length }) : "",
+        estimate.lookups?.length ? t("chat.lookups", { count: estimate.lookups.length }) : ""].filter(Boolean).join(" · ") || t("chat.sources")}</summary>
       ${estimate.items.length > 0 && html`<ul class="chat-items">${estimate.items.map(item => html`
         <li><span>${item.name}${item.amount && html` <small>${item.amount}</small>`}</span><b>${num(Math.round(item.carbs_g), 1)} g</b></li>`)}</ul>`}
       ${estimate.lookups?.length > 0 && html`<ul class="chat-lookups">${estimate.lookups.map(line => html`<li>${line}</li>`)}</ul>`}
-      ${estimate.sources?.length > 0 && html`<p class="chat-note">Quellen: ${estimate.sources.map((source, index) => html`${index ? ", " : ""}<a
+      ${estimate.sources?.length > 0 && html`<p class="chat-note">${t("chat.sources")}: ${estimate.sources.map((source, index) => html`${index ? ", " : ""}<a
         href=${source.url} target="_blank" rel="noopener noreferrer">${source.title || new URL(source.url).hostname}</a>`)}</p>`}
     </details>`}`;
 }
@@ -81,11 +81,11 @@ const photoSrc = (session, photo) => typeof photo === "string" ? photo
 function Bubbles({ conversation, estimate, busy, session }) {
   const lastAnswer = conversation.map(row => row.role).lastIndexOf("assistant");
   return html`<div class="chat-bubbles" aria-live="polite">
-    ${!conversation.length && !busy && html`<p class="chat-empty">Foto, Sprache oder Text, z. B. „Porridge wie immer, dazu eine Banane“.</p>`}
+    ${!conversation.length && !busy && html`<p class="chat-empty">${t("chat.empty")}</p>`}
     ${conversation.map((row, index) => row.role === "user"
       ? html`<div class=${"chat-turn me" + (row.pending ? " pending" : "")}>
           ${row.photos?.length > 0 && html`<div class="chat-turn-photos">${row.photos.map((photo, n) => html`
-            <img key=${n} src=${photoSrc(session, photo)} alt=${"Foto " + (n + 1)} />`)}</div>`}
+            <img key=${n} src=${photoSrc(session, photo)} alt=${t("chat.photo", { n: n + 1 })} />`)}</div>`}
           ${row.text && html`<div class="bubble me">${row.text}</div>`}
         </div>`
       : index === lastAnswer
@@ -97,7 +97,7 @@ function Bubbles({ conversation, estimate, busy, session }) {
           </div>`
         : html`<div class="bubble ai earlier"><b>${row.carbs_g} g</b>${row.carbs_low_g != null
             && html`<span class="muted"> · ${row.carbs_low_g}–${row.carbs_high_g} g</span>`}</div>`)}
-    ${busy && html`<div class="chat-typing">Schätzt …</div>`}
+    ${busy && html`<div class="chat-typing">${t("chat.estimating")}</div>`}
   </div>`;
 }
 
@@ -185,7 +185,7 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
     const words = text.trim();
     const sending = photos;
     if (!words && !sending.length) {
-      toast(followUp ? "Bitte eine Antwort, Korrektur oder ein Foto schicken" : "Bitte ein Foto aufnehmen oder das Essen beschreiben", true);
+      toast(followUp ? t("chat.needFollowUp") : t("chat.needInput"), true);
       return;
     }
     const { at, placeId } = context();
@@ -216,21 +216,21 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
       const handle = await startRecording(async blob => {
         setRecording(null);
         if (!blob) { setVoiceStatus(""); return; }
-        setVoiceStatus("Wird transkribiert …");
+        setVoiceStatus(t("chat.transcribing"));
         try {
           const data = await api("/api/agent/transcribe", { method: "POST",
             body: JSON.stringify({ audio: await recordingToWav(blob), format: "wav" }) });
           setText(current => (current.trim() ? current.trim() + " " : "") + data.text);
-          setVoiceStatus(data.text ? "" : "Nichts verstanden");
+          setVoiceStatus(data.text ? "" : t("chat.notUnderstood"));
           field.current?.focus();
         } catch (error) {
           setVoiceStatus("");
-          toast(error.message || "Aufnahme konnte nicht verarbeitet werden", true);
+          toast(error.message || t("chat.recordingFailed"), true);
         }
       });
       setRecording(handle);
-      setVoiceStatus("Aufnahme läuft …");
-    } catch (_) { toast("Mikrofon nicht freigegeben", true); }
+      setVoiceStatus(t("chat.recording"));
+    } catch (_) { toast(t("chat.micDenied"), true); }
   }
 
   const picked = estimate && portion != null ? portionValues(estimate, portion) : null;
@@ -240,7 +240,7 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
   }
 
   const voice = info?.transcribe_available && canRecord();
-  const placeholder = followUp ? "Ergänzen oder korrigieren" : "Was und wie viel?";
+  const placeholder = followUp ? t("chat.placeholderFollowUp") : t("chat.placeholder");
   const ready = Boolean(text.trim() || photos.length);
   const onKey = event => {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); send(); }
@@ -248,11 +248,11 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
 
   return html`<div class="meal-chat">
     <div class="section-head chat-head">
-      <div class="chat-title"><h2 id="agent-dialog-title">Essen</h2><${GlucoseBadge} /></div>
-      <button type="button" class="quiet chat-close" aria-label="Schließen" onClick=${onClose}>×</button>
+      <div class="chat-title"><h2 id="agent-dialog-title">${t("entry.food")}</h2><${GlucoseBadge} /></div>
+      <button type="button" class="quiet chat-close" aria-label=${t("common.close")} onClick=${onClose}>×</button>
     </div>
     <div class="chat-body" ref=${scroller}>
-      ${loading ? html`<p class="chat-typing">Lädt …</p>`
+      ${loading ? html`<p class="chat-typing">${t("common.loading")}</p>`
         : html`<${Bubbles} conversation=${conversation} estimate=${estimate} busy=${busy} session=${session} />`}
     </div>
     <div class="chat-foot">
@@ -264,27 +264,27 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
         <//>
         <${CertaintySlider} level=${level} onChange=${setLevel} />
       </div>`}
-      ${photos.length > 0 && html`<div class="chat-photos" aria-label="Fotos für die nächste Nachricht">
+      ${photos.length > 0 && html`<div class="chat-photos" aria-label=${t("chat.nextPhotos")}>
         ${photos.map((photo, index) => html`<figure key=${photo.slice(-24) + index}>
-          <img src=${photo} alt=${"Neues Foto " + (index + 1)} />
-          <button type="button" class="quiet" aria-label=${"Foto " + (index + 1) + " entfernen"}
+          <img src=${photo} alt=${t("chat.newPhoto", { n: index + 1 })} />
+          <button type="button" class="quiet" aria-label=${t("chat.removePhoto", { n: index + 1 })}
             onClick=${() => setPhotos(photos.filter((_, other) => other !== index))}>×</button>
         </figure>`)}
       </div>`}
       <div class="chat-input">
-        ${photoRoom > 0 && html`<label class="round-button" aria-label="Foto hinzufügen" title="Foto">
+        ${photoRoom > 0 && html`<label class="round-button" aria-label=${t("chat.addPhoto")} title=${t("chat.photoTitle")}>
           <${Icon} name="camera" /><input type="file" accept="image/*" multiple hidden onChange=${addPhotos} /></label>`}
-        <textarea ref=${field} rows="1" maxlength="2000" placeholder=${placeholder} aria-label=${followUp ? "Antwort oder Korrektur" : "Beschreibung"}
+        <textarea ref=${field} rows="1" maxlength="2000" placeholder=${placeholder} aria-label=${followUp ? t("chat.answerLabel") : t("card.description")}
           value=${text} onInput=${event => setText(event.currentTarget.value)} onKeyDown=${onKey}></textarea>
         ${estimate && ready
-          ? html`<button type="button" class="round-button send" aria-label="Senden" disabled=${busy} onClick=${send}><${Icon} name="send" /></button>`
-          : voice && html`<button type="button" class="round-button" aria-label=${recording ? "Aufnahme beenden" : "Sprechen"}
+          ? html`<button type="button" class="round-button send" aria-label=${t("chat.send")} disabled=${busy} onClick=${send}><${Icon} name="send" /></button>`
+          : voice && html`<button type="button" class="round-button" aria-label=${recording ? t("chat.stopRecording") : t("chat.speak")}
               aria-pressed=${recording ? "true" : "false"} onClick=${toggleVoice}><${Icon} name=${recording ? "stop" : "mic"} /></button>`}
       </div>
       ${voiceStatus && html`<p class="hint chat-voice" role="status">${voiceStatus}</p>`}
       ${estimate
-        ? html`<button type="button" class="primary chat-apply" disabled=${busy} onClick=${apply}>${picked?.carbs} g übernehmen</button>`
-        : html`<button type="button" class="primary chat-apply" disabled=${busy || loading} onClick=${send}>${busy ? "Schätzt …" : "Einschätzen"}</button>`}
+        ? html`<button type="button" class="primary chat-apply" disabled=${busy} onClick=${apply}>${t("chat.apply", { grams: picked?.carbs })}</button>`
+        : html`<button type="button" class="primary chat-apply" disabled=${busy || loading} onClick=${send}>${busy ? t("chat.estimating") : t("chat.estimateButton")}</button>`}
     </div>
   </div>`;
 }
