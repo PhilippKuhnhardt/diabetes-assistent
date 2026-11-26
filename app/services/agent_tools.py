@@ -31,7 +31,7 @@ READ_TABLES = ["meals", "window-events", "entries", "treatments", "basal", "meal
 # The dose fields a conversation needs; the rest of dose_help's answer is intermediate values.
 DOSE_KEYS = (
     "message", "reason", "options", "carbs_g", "glucose_mgdl", "glucose_at", "glucose_fresh", "glucose_source",
-    "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl", "low_target_mgdl", "low_note", "forecast_mgdl", "cautious_forecast_mgdl",
+    "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl", "forecast_mgdl", "cautious_forecast_mgdl",
     "recent_rapid_doses", "auto_meal", "auto_method", "auto_factor_count",
     "auto_factor_min_meals", "auto_surcharge_units", "surcharge_choice", "day_type", "day_type_source", "split_plan", "slider")
 
@@ -317,7 +317,7 @@ def _form(args: EntryArgs, at: datetime) -> dict:
         "mode": "meal", "carbs": str(carbs), "as": "meal" if args.own_main_meal else None, "split": args.split,
         "close_meal": args.close_meal is True,
         "finger_mgdl": args.finger_mgdl,
-        # Certainty and fat decide whether the lower target is offered, so the preview needs them too.
+        # Certainty and fat are part of the preview like in the entry form.
         "carbs_certainty": args.carbs_certainty if carbs > 0 else None,
         "fat_protein": carbs > 0 and args.fat_protein is True,
         "fast": carbs > 0 and args.fast is True,

@@ -24,7 +24,12 @@ def set_analysis_exclusion(meal_id: str, excluded: bool) -> None:
             db.execute("DELETE FROM analysis_exclusions WHERE meal_id=?", (meal_id,))
 
 
-def analysis_day_types() -> dict[str, str]:
+def analysis_day_types() -> dict[str, str] | None:
+    """Manual day types by day, or None while work/free days are off (setting `day_types`, Philipp
+    2026-11-26: optional for open source, off by default); day_type_for then gives no day type."""
+    from app.store import config
+    if not config.day_types_enabled(config.get_settings()[1]):
+        return None
     with connect() as db:
         rows = db.execute("SELECT day, day_type FROM analysis_day_types").fetchall()
     return {row["day"]: row["day_type"] for row in rows}
@@ -67,8 +72,11 @@ def set_vacation(active: bool, today: str) -> None:
                 db.execute("UPDATE vacation_periods SET end_day=? WHERE id=?", (yesterday, open_row["id"]))
 
 
-def day_type_for(day: str, overrides: dict[str, str], periods: list[dict]) -> tuple[str, str]:
-    """Return (day_type, source): a manual choice wins, then vacation, then Mon–Fri work."""
+def day_type_for(day: str, overrides: dict[str, str] | None, periods: list[dict]) -> tuple[str | None, str]:
+    """Return (day_type, source): a manual choice wins, then vacation, then Mon–Fri work.
+    Without overrides (day types off, analysis_day_types) every day is (None, "off")."""
+    if overrides is None:
+        return None, "off"
     if day in overrides:
         return overrides[day], "manual"
     if in_vacation(day, periods):
