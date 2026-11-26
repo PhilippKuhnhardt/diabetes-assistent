@@ -549,6 +549,8 @@ export default {
     model: {
       basal: "Basal zum Frühstück",
       breakfastEnd: "Frühstück endet um",
+      dayTypes: "Frühstück nach Arbeit und frei trennen",
+      dayTypesHint: "Eigener Frühstücksfaktor für Arbeitstage und freie Tage (Mo–Fr Arbeit, Urlaub frei, je Tag änderbar).",
       cautiousTarget: "Vorsichtiger Zielwert",
       clock: "Uhrzeit",
       daysUnit: "Tage",

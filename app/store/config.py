@@ -45,6 +45,7 @@ def default_settings() -> dict:
         "auto_fat_surcharge_mgdl": "120",
         "fpe_surcharge_mgdl": "20",
         "auto_vacation": DEFAULT_AUTO_VACATION,
+        "day_types": False,
         "peak_minutes": 60,
         "duration_minutes": 180,
         "breakfast_end_minute": 660,
@@ -55,6 +56,11 @@ def default_settings() -> dict:
         "basal_default_units": DEFAULT_BASAL_UNITS,
         **DEFAULT_SPLIT,
     }
+
+
+def day_types_enabled(settings: dict) -> bool:
+    """Whether breakfast tells work and free days apart (settings switch "Arbeit / Frei")."""
+    return settings.get("day_types") is True
 
 
 def current_nightscout_profile() -> dict | None:
@@ -102,6 +108,9 @@ def _with_nightscout_profile(settings: dict) -> dict:
     if result.get("auto_vacation") not in AUTO_VACATION_MODES:
         result["auto_vacation"] = DEFAULT_AUTO_VACATION
     result.setdefault("lunch_end_minute", 1020)
+    # Work/free days became optional (Philipp 2026-11-26, off for new installations): a settings version
+    # from before the switch existed used them, so it keeps them on.
+    result.setdefault("day_types", True)
     result.setdefault("basal_default_units", DEFAULT_BASAL_UNITS)
     for key, value in DEFAULT_SPLIT.items():
         result.setdefault(key, value)

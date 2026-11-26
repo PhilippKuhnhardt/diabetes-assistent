@@ -558,6 +558,8 @@ export default {
     model: {
       basal: "Basal at breakfast",
       breakfastEnd: "Breakfast ends at",
+      dayTypes: "Separate breakfast for work and days off",
+      dayTypesHint: "Own breakfast factor for work days and days off (Mon–Fri work, vacation off, changeable per day).",
       cautiousTarget: "Cautious target",
       clock: "Time",
       daysUnit: "days",
