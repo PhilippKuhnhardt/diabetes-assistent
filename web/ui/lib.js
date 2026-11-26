@@ -3,6 +3,7 @@
 // button). Components only draw what the server sends (AGENTS.md: "web/ only draws"); no domain rule lives here.
 import { html } from "./html.js";
 import { t, locale } from "./i18n.js";
+import { units, mmol, glValue, GLUCOSE_UNIT, factorValue, gramsPerIe } from "./units.js";
 
 export const MINUTE = 60000;
 export const names = { breakfast: t("meal.breakfast"), lunch: t("meal.lunch"), dinner: t("meal.dinner") };
@@ -12,8 +13,12 @@ export const MEAL_FACTORS = { alcohol: t("factor.alcohol"), fat_protein: t("fact
 export const sportKinds = ["jogging", "gym", "light_cardio", "racing"];
 export const sportNames = Object.fromEntries(sportKinds.map(kind => [kind, t("sport.kinds." + kind)]));
 // When the second part of a split dose is due, as the dose help and "Wirkt noch" word it.
-// Units as the page's language writes them: IE/U, KE/CU (10 g carbohydrate) and the factor IE/KE.
-export const UNIT = { insulin: t("unit.insulin"), carbUnit: t("unit.carbUnit"), factor: t("unit.factor") };
+// Units as the page's language writes them: IE/U, the carb unit (KE/CU 10 g, BE 12 g or grams), the factor in
+// the chosen form (IE/KE, IE/BE or g/IE, web/ui/units.js) and the glucose unit.
+const CARB_UNIT_KEY = { ke: "carbUnit", be: "carbUnitBe", g: "carbUnitG" };
+const FACTOR_KEY = { ke: "factor", be: "factorBe", g: "factorG" };
+export const UNIT = { insulin: t("unit.insulin"), carbUnit: t("unit." + CARB_UNIT_KEY[units.carbs]),
+  factor: t("unit." + FACTOR_KEY[units.carbs]), glucose: GLUCOSE_UNIT };
 export const SPLIT_TIMING = { early: t("split.early"), due: t("split.due"), wait: t("split.wait"), later: "" };
 
 // ---- API ----
@@ -64,8 +69,15 @@ export function toast(message, error = false, action = null) {
 
 // ---- Numbers and times ----
 export const num = (value, digits = 2) => Number(value).toLocaleString(locale, { maximumFractionDigits: digits, minimumFractionDigits: 0 });
-export const factorNum = value => Number(value).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 });
-export const signedChange = (value, digits = 1) => value == null ? "—" : (Number(value) > 0 ? "+" : "") + num(value, digits) + " mg/dL";
+// A glucose value or change from the server (mg/dL) in the display unit: number text, with unit, signed.
+export const glNum = (mgdl, digits = 0) => mgdl == null || mgdl === "" || !Number.isFinite(Number(mgdl)) ? "—"
+  : glValue(mgdl).toLocaleString(locale, mmol ? { minimumFractionDigits: 1, maximumFractionDigits: 1 } : { maximumFractionDigits: digits });
+export const gl = (mgdl, digits = 0) => glNum(mgdl, digits) + " " + GLUCOSE_UNIT;
+// A meal factor from the server (IE per KE) in the chosen form.
+export const factorNum = value => factorValue(value).toLocaleString(locale, gramsPerIe
+  ? { minimumFractionDigits: 0, maximumFractionDigits: 1 } : { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+// A glucose change in mg/dL from the server, signed and in the display unit.
+export const signedChange = (value, digits = 1) => value == null ? "—" : (Number(value) > 0 ? "+" : "") + glNum(value, digits) + " " + GLUCOSE_UNIT;
 // The API stores a sport effect as glucose drop; the UI shows the signed glucose change.
 export const sportChange = effect => -Number(effect || 0);
 export const timeOnly = value => new Date(value).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });

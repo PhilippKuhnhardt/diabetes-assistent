@@ -11,8 +11,7 @@ from app.store.db import connect
 # Suggested glucose drop per sport type in mg/dL; negative values raise glucose
 # (racing adrenaline).
 DEFAULT_SPORT_EFFECTS = {"jogging": 40, "gym": 40, "light_cardio": 20, "racing": -40}
-# Minutes after a session's end over which its effect acts (linearly), per sport type
-#.
+# Minutes after a session's end over which its effect acts (linearly), per sport type.
 DEFAULT_SPORT_DURATIONS = {"jogging": 300, "gym": 300, "light_cardio": 300, "racing": 300}
 
 
@@ -22,6 +21,12 @@ DEFAULT_BASAL_UNITS = "0"
 
 # Split bolus for large main meals: from this many grams, this share now, the rest this many minutes later.
 DEFAULT_SPLIT = {"split_min_grams": 80, "split_min_units": "6.5", "split_first_percent": 60, "split_delay_minutes": 120}
+
+
+# Display units (web/ui/units.js; push messages): glucose in mg/dL or mmol/L, the meal factor as IE per KE
+# (10 g), IE per BE (12 g) or g per IE. Everything is stored and calculated in mg/dL and IE per KE.
+GLUCOSE_UNITS = ("mgdl", "mmol")
+CARB_UNITS = ("ke", "be", "g")
 
 
 # Glucose limits: below low is a low, above high a high (colours, chart lines, early warnings, dose help).
@@ -50,6 +55,8 @@ def default_settings() -> dict:
         "fpe_surcharge_mgdl": "20",
         "auto_vacation": DEFAULT_AUTO_VACATION,
         "day_types": False,
+        "glucose_unit": "mgdl",
+        "carb_unit": "ke",
         "low_limit_mgdl": DEFAULT_LIMITS["low_limit_mgdl"],
         "high_limit_mgdl": DEFAULT_LIMITS["high_limit_mgdl"],
         "breakfast_end_minute": 660,

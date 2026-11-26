@@ -5,7 +5,7 @@
 // (standard, own value, none) and effect duration; basal its units. Saving and deleting stay in
 // app.js (onSave, onDelete), which knows the day and redraws it.
 import { html, useState, useEffect } from "./html.js";
-import { api, toast, num, sportNames, UNIT } from "./lib.js";
+import { api, toast, num, factorNum, sportNames, UNIT } from "./lib.js";
 import { t } from "./i18n.js";
 import { mealChat } from "./main.js";
 import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, SurchargeChoice } from "./meal-fields.js";
@@ -137,7 +137,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
           ${eats && html`<${Meter} level=${v.level} onClick=${event => { event.preventDefault(); setShowCertainty(!showCertainty); }} />`}</label>
         <label class="tile"><small>${t("card.insulin")}</small><span class="tile-value"><input inputmode="decimal" aria-label=${t("dose.insulinIn", { unit: UNIT.insulin })}
           value=${v.insulin} placeholder="0" onInput=${event => set({ insulin: event.currentTarget.value })} /><small>${UNIT.insulin}</small></span></label>
-        ${kind === "meal" && html`<div class="tile"><small>${t("card.factor")}</small><span class="tile-value"><b>${factor == null ? "–" : fmt(factor, 2)}</b>
+        ${kind === "meal" && html`<div class="tile"><small>${t("card.factor")}</small><span class="tile-value"><b>${factor == null ? "–" : factorNum(factor)}</b>
           <small>${UNIT.factor}</small></span></div>`}
       </div>
       ${eats && showCertainty && html`<div class="card-certainty"><${CertaintySlider} level=${v.level ?? 1} onChange=${level => set({ level })} /></div>`}`}

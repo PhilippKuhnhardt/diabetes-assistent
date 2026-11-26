@@ -2,14 +2,14 @@
 // { one, other } a plural chosen by count.
 export default {
   analysis: {
-    above160: "above 160",
+    above160: "above {value}",
     active: "active",
     allCalculations: "All calculations",
     allCombinations: "All combinations",
     alternatives: "Current and alternatives",
     applied: "Automatic setting applied",
     apply: "Apply",
-    below80: "below 80",
+    below80: "below {value}",
     calculating: "Calculating …",
     col: {
       carbPart: "Carb part",
@@ -567,6 +567,9 @@ export default {
       fpeSurcharge: "Surcharge per FPU (calculated)",
       gramsCarbs: "g carbs",
       lookback: "Automatic period",
+      glucoseUnit: "Blood glucose in",
+      carbUnit: "Insulin factor as",
+      carbUnits: { ke: "U per CU (10 g)", be: "U per BU (12 g)", g: "g carbs per U" },
       lowLimit: "Low limit (warning, red line)",
       highLimit: "High limit (warning, red line)",
       lunchEnd: "Lunch ends at",
@@ -663,8 +666,7 @@ export default {
     saved: "Settings saved",
     schedule: {
       from: "From",
-      icLabel: "Insulin factor from {time} in {unit} per {carbUnit}",
-      icUnit: "{unit} per {carbUnit}",
+      icLabel: "Insulin factor from {time} in {factor}",
       isfLabel: "Correction factor from {time} in mg/dL per {unit}",
       isfUnit: "mg/dL per {unit}",
       noIc: "No I:C schedule available from Nightscout.",
@@ -785,7 +787,11 @@ export default {
   },
   unit: {
     carbUnit: "CU",
+    carbUnitBe: "BU",
+    carbUnitG: "g carbs",
     factor: "U/CU",
+    factorBe: "U/BU",
+    factorG: "g/U",
     insulin: "U",
   },
   week: {

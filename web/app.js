@@ -9,7 +9,8 @@ import { Overview, ActiveCard } from "./ui/today.js";
 import { EntryForm, deleteBasal } from "./ui/entry.js";
 import { glucosePoints } from "./ui/charts.js";
 import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
-import { sportNames, api, post, appUpdateWaiting, toast, num, timeOnly, toInstant, trendSymbol, UNIT } from "./ui/lib.js";
+import { sportNames, api, post, appUpdateWaiting, toast, num, gl, glNum, timeOnly, toInstant, trendSymbol, UNIT } from "./ui/lib.js";
+import { syncUnits } from "./ui/units.js";
 import { t, locale, translateDocument } from "./ui/i18n.js";
 
 // The static texts of index.html follow the language before anything renders.
@@ -53,11 +54,11 @@ function loadCurrentGlucose() {
       const status = glucoseStatuses.has(data.status) ? data.status : "unavailable";
       widget.dataset.status = status;
       $("#glucose-value").textContent = data.glucose_mgdl == null
-        ? "—" : num(data.glucose_mgdl, 1) + " mg/dL";
+        ? "—" : gl(data.glucose_mgdl, 1);
       const delta = data.trend_delta_mgdl;
       $("#glucose-trend").textContent = data.fresh && delta != null
-        ? trendSymbol(data.trend_direction) + " " + (Number(delta) > 0 ? "+" : "") + num(delta, 0) +
-          " mg/dL / " + num(data.trend_minutes, 0) + " min"
+        ? trendSymbol(data.trend_direction) + " " + (Number(delta) > 0 ? "+" : "") + glNum(delta, 0) +
+          " " + UNIT.glucose + " / " + num(data.trend_minutes, 0) + " min"
         : data.status === "stale" ? t("glucose.trendStale") : t("glucose.trendUnavailable");
       const meta = status === "stale"
         ? t("glucose.stale") + (data.glucose_at ? " · " + t("common.clock", { time: timeOnly(data.glucose_at) }) : "")
@@ -244,6 +245,7 @@ async function loadSettings() {
   const data = await api("/api/settings");
   state.settings = data.settings;
   setPrefs(data.settings);
+  syncUnits(data.settings);
   state.settingsData = data;
   state.travel = data.travel || null;
   settingsLoads += 1;

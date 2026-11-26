@@ -2,14 +2,14 @@
 // { one, other } a plural chosen by count.
 export default {
   analysis: {
-    above160: "über 160",
+    above160: "über {value}",
     active: "aktiv",
     allCalculations: "Alle Kalkulationen",
     allCombinations: "Alle Kombinationen",
     alternatives: "Aktuell und Alternativen",
     applied: "Automatik-Einstellung übernommen",
     apply: "Übernehmen",
-    below80: "unter 80",
+    below80: "unter {value}",
     calculating: "Wird berechnet …",
     col: {
       carbPart: "KH-Teil",
@@ -558,6 +558,9 @@ export default {
       fpeSurcharge: "Zuschlag je FPE (berechnet)",
       gramsCarbs: "g KH",
       lookback: "Automatik-Zeitraum",
+      glucoseUnit: "Blutzucker in",
+      carbUnit: "Insulinfaktor als",
+      carbUnits: { ke: "IE je KE (10 g)", be: "IE je BE (12 g)", g: "g KH je IE" },
       lowLimit: "Grenze tief (Warnung, rote Linie)",
       highLimit: "Grenze hoch (Warnung, rote Linie)",
       lunchEnd: "Mittagessen endet um",
@@ -654,8 +657,7 @@ export default {
     saved: "Einstellungen gespeichert",
     schedule: {
       from: "Ab",
-      icLabel: "Insulinfaktor ab {time} in {unit} je {carbUnit}",
-      icUnit: "{unit} je {carbUnit}",
+      icLabel: "Insulinfaktor ab {time} in {factor}",
       isfLabel: "Korrekturfaktor ab {time} in mg/dL je {unit}",
       isfUnit: "mg/dL je {unit}",
       noIc: "Kein I:C-Zeitplan aus Nightscout verfügbar.",
@@ -776,7 +778,11 @@ export default {
   },
   unit: {
     carbUnit: "KE",
+    carbUnitBe: "BE",
+    carbUnitG: "g KH",
     factor: "IE/KE",
+    factorBe: "IE/BE",
+    factorG: "g/IE",
     insulin: "IE",
   },
   week: {
