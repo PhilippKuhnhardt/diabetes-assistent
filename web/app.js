@@ -331,7 +331,12 @@ function historyDay(day) {
 }
 
 // The server reads its local copy, which the background sync keeps current.
+// Only the latest request is shown: a quick change of day (a swipe through the weeks and back) can have an
+// earlier day's answer arrive last, which would otherwise show that day under the chosen one.
+let dayRequest = 0;
+
 async function loadDay() {
+  const request = ++dayRequest;
   state.dayLoadedAt = Date.now();
   // Another day shows "loading"; reloading the same day keeps the list (and what is unfolded) in place.
   if (state.dayData?.day !== state.day) {
@@ -339,10 +344,13 @@ async function loadDay() {
     renderReview();
   }
   try {
-    renderDay(await api("/api/day?date=" + encodeURIComponent(state.day)));
+    const data = await api("/api/day?date=" + encodeURIComponent(state.day));
+    if (request !== dayRequest) return;
+    renderDay(data);
     loadReviewPending();
     await updatePreview();
   } catch (error) {
+    if (request !== dayRequest) return;
     state.dayStatus = "error";
     renderReview();
     toast(error.message, true);
