@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
-from app import calculation, episodes, fpe, on_board
+from app import calculation, episodes, fpe, insulin, on_board
 from app import glucose as cgm
 from app.common import json_safe, local_day_range, local_zone, parse_instant, zone_name_at
 from app.ingestion import nightscout, sync
@@ -23,7 +23,8 @@ from app.i18n import tr
 # Any change to the app's code or its language (APP_LANGUAGE: stored days hold texts) recalculates stored
 # days once, so a stored result never outlives the code that produced it.
 CODE_VERSION = hashlib.sha256(b"".join(
-    path.read_bytes() for path in sorted(Path(__file__).resolve().parents[1].rglob("*.py"))) + i18n.LANGUAGE.encode()).hexdigest()
+    path.read_bytes() for path in sorted(Path(__file__).resolve().parents[1].rglob("*.py"))) + i18n.LANGUAGE.encode()
+    + insulin.ACTIVE.key.encode()).hexdigest()
 
 
 def day_payload(day: str, refresh: bool = True) -> dict:
@@ -263,6 +264,9 @@ def compute_day(day: str) -> dict:
     meal_sources = {meal["source_id"] for meal in meals}
     episode_ids = {meal["id"] for meal in meals if not meal["imported"]}
     zone = local_zone(settings["timezone"])
+    # Sport kind names come from the current settings, not the day's version: a kind added or renamed today
+    # names older sessions too (every settings save is part of the day fingerprint).
+    current_settings = config.get_settings()[1]
     other_events = []
     exercises = []
     for item in treatments:
@@ -275,13 +279,13 @@ def compute_day(day: str) -> dict:
         if item["eventType"] == "Exercise":
             kind = item.get("sport_type")
             note = episodes.EVENT_TAG.sub("", episodes.SPORT_TAG.sub("", item["notes"])).strip()
-            for label in episodes.NOTE_LABELS:
+            for label in episodes.note_labels(current_settings):
                 if note == label or note.startswith((label + " —", label + " |")):
                     note = note[len(label):].lstrip(" —|")
                     break
             exercises.append({
                 "id": item["id"], "at": item["at"],
-                "kind": kind, "label": episodes.SPORT_NAMES.get(kind, tr("Sportart unbekannt")),
+                "kind": kind, "label": episodes.sport_names(current_settings).get(kind, tr("Sportart unbekannt")),
                 "duration_minutes": item["duration"], "notes": note,
                 **sport_session(item, settings, session_effects, session_minutes),
             })
@@ -319,7 +323,7 @@ def compute_day(day: str) -> dict:
             kind = "other"
         note = episodes.QUALITY_TAG.sub("", episodes.EVENT_TAG.sub("", episodes.SPORT_TAG.sub("",
                episodes.TAG.sub("", item["notes"])))).replace("[DA2:snack]", "").strip()
-        for label in episodes.NOTE_LABELS:
+        for label in episodes.note_labels(current_settings):
             if kind == "exercise" and (note == label or note.startswith(label + " — ")):
                 note = note[len(label):].lstrip(" —")
                 break
@@ -359,7 +363,7 @@ def compute_day(day: str) -> dict:
             item.update(sport_shares(item, rendered))
     periods = marks.vacation_periods()
     day_type, day_type_source = marks.day_type_for(day, marks.analysis_day_types(), periods)
-    # Vacation mark (user request 2026-11-06): every meal of a vacation day carries it, independent
+    # Vacation mark: every meal of a vacation day carries it, independent
     # of a manual day type; the Automatik skips these days after the vacation (factors.counted_days).
     vacation = marks.in_vacation(day, periods)
     for meal in rendered:
@@ -395,7 +399,7 @@ def compute_day(day: str) -> dict:
 
 
 def sport_session(item: dict, settings: dict, session_effects: dict, session_minutes: dict) -> dict:
-    """A session's glucose drop and effect duration as they count, and whether Philipp set them himself."""
+    """A session's glucose drop and effect duration as they count, and whether the user set them themselves."""
     return {"sport_effect_mgdl": str(on_board.sport_effect(item, settings, session_effects)),
             "sport_effect_default_mgdl": str(on_board.sport_effect(item, settings)),
             "sport_effect_custom": item["id"] in session_effects,
@@ -421,16 +425,15 @@ def sport_shares(item: dict, meals: list[dict]) -> dict:
             "sport_effect_until": until if total else None}
 
 
-# Philipp reviews every entry from this day on (user request 2026-11-24: no backlog for the months before);
+# Entries are reviewed from this day on;
 # the red dot on "Verlauf" counts finished days from here up to yesterday.
 REVIEW_SINCE = "2026-11-24"
 
 
 def with_checks(payload: dict, now: datetime | None = None) -> dict:
-    """The day with Philipp's checks laid over it at request time, so a check never recalculates a stored
-    day: "Passt" on a meal (user request 2026-11-23) holds only for the window it was given for, and only
-    a finished meal can be checked. Only main meals need a check: reviewing is about the factor (Philipp
-    2026-11-25), so snacks, sport and other entries outside the meal cards never do. The day is done once
+    """The day with the user's checks laid over it at request time, so a check never recalculates a stored
+    day: "Passt" on a meal holds only for the window it was given for, and only
+    a finished meal can be checked. Only main meals need a check: reviewing is about the factor, so snacks, sport and other entries outside the meal cards never do. The day is done once
     every meal is checked or excluded."""
     now = now or datetime.now(timezone.utc)
     checks = marks.window_checks()
@@ -457,7 +460,7 @@ def with_checks(payload: dict, now: datetime | None = None) -> dict:
 
 
 def week_view(params: dict) -> dict:
-    """Verlauf's week strip (user request 2026-11-23): Monday to Sunday of the week holding `date`, each day
+    """Verlauf's week strip: Monday to Sunday of the week holding `date`, each day
     with its day type, open tasks and whether everything on it is checked. Days after today are only
     named; they are not calculated."""
     day = date.fromisoformat((params.get("date") or [""])[0])
@@ -483,7 +486,7 @@ def _checked_day(day: str) -> dict:
 
 
 def pending_review(params: dict | None = None) -> dict:
-    """The red dot on "Verlauf" (user request 2026-11-24): finished days (before today) since REVIEW_SINCE
+    """The red dot on "Verlauf": finished days (before today) since REVIEW_SINCE
     with something not yet checked, oldest first, so a tap can open the first of them."""
     _, settings = config.get_settings()
     today = datetime.now(timezone.utc).astimezone(local_zone(settings["timezone"])).date()

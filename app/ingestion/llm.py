@@ -1,12 +1,12 @@
-"""LLM providers for the meal agent (user request 2026-11-16): Claude (Anthropic), ChatGPT (OpenAI)
+"""LLM providers for the meal agent: Claude (Anthropic), ChatGPT (OpenAI)
 and OpenRouter, so credits of any of them can be used. Keys come from the deployment environment
 (ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY) and never reach the page or a log.
 
 The calls go through the vendors' SDKs (`anthropic`, `openai`; OpenRouter speaks the OpenAI chat
 API). Every provider runs the same agent loop: the model gets the conversation (text and JPEG
 photos), the app's lookup tools and, if allowed, the provider's own web search; it may call tools as
-often as it finds useful (up to MAX_TOOL_ROUNDS), and its final answer is a JSON object. Philipp's
-philosophy (2026-11-16): the model is smart, so it gets tools to decide well rather than rules.
+often as it finds useful (up to MAX_TOOL_ROUNDS), and its final answer is a JSON object. Design
+idea: the model is smart, so it gets tools to decide well rather than rules.
 
 `run` returns {"data": parsed JSON, "sources": [{url, title}], "usage": {input_tokens, output_tokens,
 cost_usd}, "tool_calls": [{name, args}]}."""
@@ -320,7 +320,7 @@ def run(provider: str, model: str, system: str, messages: list[dict], schema: di
 
 
 def transcribe(model: str, audio_base64: str, audio_format: str, instruction: str) -> dict:
-    """Speech to text through OpenRouter with a model that takes audio (user request 2026-11-16)."""
+    """Speech to text through OpenRouter with a model that takes audio."""
     if not api_key("openrouter"):
         raise LLMError(tr("OPENROUTER_API_KEY ist in der Bereitstellung nicht gesetzt"))
     if not model:

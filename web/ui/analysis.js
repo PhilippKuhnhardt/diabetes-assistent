@@ -3,9 +3,10 @@
 // with "Übernehmen" for a settings change the server attaches) and Gerichte (the dish catalogue).
 // The summary comes from /api/summary; every number, verdict and best cell is the server's.
 import { html, useState, useEffect, useRef } from "./html.js";
-import { api, post, toast, num, factorNum, signedChange, timeOnly, signedPercent, dayDate, names,
+import { api, post, toast, num, gl, glNum, factorNum, signedChange, timeOnly, signedPercent, dayDate, names,
   UNIT, Icon, GlucoseChange } from "./lib.js";
 import { t, locale } from "./i18n.js";
+import { gramsPerIe, carbUnitGrams } from "./units.js";
 
 const TABS = [["werte", t("analysis.tabs.werte")], ["automatik", t("analysis.tabs.automatik")], ["gerichte", t("analysis.tabs.gerichte")]];
 const PERIODS = [1, 3, 7, 14, 30].map(count => [count, t("common.days", { count })]);
@@ -20,13 +21,15 @@ const Table = ({ head, children, compact }) => html`<div class="table-wrap"><tab
 // ---- Werte ----
 // What the factors did in the chosen period, read only (user request 2026-11-26): exclusion and day type
 // are set in "Verlauf"; here the question is how far each meal ended from what its factor expected.
-const span = (low, high) => low == null ? "—" : Number(low) === Number(high) ? factorNum(low) : factorNum(low) + "–" + factorNum(high);
+// A factor range; with g/IE the larger IE/KE is the smaller number, so the ends swap.
+const span = (low, high) => low == null ? "—" : Number(low) === Number(high) ? factorNum(low)
+  : gramsPerIe ? factorNum(high) + "–" + factorNum(low) : factorNum(low) + "–" + factorNum(high);
 const Fact = ({ label, value, strong }) => html`<div class=${strong ? "key" : null}><dt>${label}</dt><dd>${value}</dd></div>`;
 const suggestion = s => s.auto_units_per_ke != null ? factorNum(s.auto_units_per_ke) + (s.surcharge ? " + " + t("analysis.surcharge") : "") : "—";
 const suggestionNote = s => t("analysis.suggestionFrom", { count: s.count, days: s.days });
 const Factor = ({ value }) => value == null ? "—" : html`${factorNum(value)} <small>${UNIT.factor}</small>`;
 const whole = value => value == null ? null : Math.round(Number(value));
-const miss = value => value == null ? "—" : "±" + num(value, 0) + " mg/dL";
+const miss = value => value == null ? "—" : "±" + gl(value, 0);
 
 function SummaryCards({ groups }) {
   return ["breakfast", "lunch", "dinner"].map(kind => {
@@ -123,14 +126,14 @@ function SportAnalysis({ analysis }) {
 // breakfast or a morning dose, how far glucose fell without bolus insulin and how much it rose again.
 function NightSummary({ night, loading, failed }) {
   const at = value => value ? html`<small>${t("common.clock", { time: timeOnly(value) })}</small>` : "";
-  const value = (mgdl, time) => mgdl == null ? "—" : html`${num(mgdl, 0)} ${at(time)}`;
+  const value = (mgdl, time) => mgdl == null ? "—" : html`${glNum(mgdl, 0)} ${at(time)}`;
   const cards = [["drop", "median_drop_mgdl", true], ["minimum", "median_minimum_glucose"], ["rise", "median_rise_mgdl", true], ["start", "median_start_glucose"]];
   const nights = night?.nights || [];
   const complete = nights.filter(item => item.minimum_glucose != null && item.start_glucose != null);
   const missing = nights.filter(item => !(item.minimum_glucose != null && item.start_glucose != null));
   const body = loading ? html`<${Empty}>${t("analysis.night.loading")}<//>` : failed ? html`<${Empty}>${t("analysis.night.failed")}<//>` : html`
     <div class="summary-grid night-cards">${cards.map(([key, field, signed]) => html`<div class="summary-card"><span>${t("analysis.night." + key)}</span>
-      <strong>${night[field] == null ? "—" : signed ? html`<${GlucoseChange} value=${whole(night[field])} />` : html`${num(night[field], 0)} <small>mg/dL</small>`}</strong>
+      <strong>${night[field] == null ? "—" : signed ? html`<${GlucoseChange} value=${whole(night[field])} />` : html`${glNum(night[field], 0)} <small>${UNIT.glucose}</small>`}</strong>
       <p>${t("analysis.median")}</p></div>`)}</div>
     <p class="hint section-note">${t("analysis.night.note")}</p>
     ${complete.length ? html`<${Table} compact head=${html`<th>${t("analysis.night.night")}</th><th>${t("analysis.night.basal")}</th><th>${t("analysis.night.start")}</th><th>${t("analysis.night.minimum")}</th><th>${t("analysis.night.end")}</th><th>${t("analysis.night.dropShort")}</th><th>${t("analysis.night.riseShort")}</th>`}>
@@ -168,12 +171,12 @@ function Werte({ days, setDays, summary, onOpenMeal }) {
 
 // ---- Automatik ----
 const tuningLabel = (key, value) => key === "percentile" ? num(value, 1) + " %"
-  : key === "surcharge" ? (Number(value) ? num(value, 0) + " mg/dL" : t("analysis.off"))
+  : key === "surcharge" ? (Number(value) ? gl(value, 0) : t("analysis.off"))
   : key === "half_life" ? t("common.daysN", { count: Number(value), n: num(value, 1) })
   : t("common.daysN", { count: Number(value), n: num(value, 0) });
 const tuningNames = Object.fromEntries(["percentile", "surcharge", "half_life", "lookback"].map(key => [key, t("analysis.tuning." + key)]));
 const tuningHints = Object.fromEntries(["percentile", "surcharge", "half_life", "lookback"].map(key => [key, t("analysis.tuningHints." + key)]));
-const strategyText = o => num(o.percentile, 1) + " % · " + (Number(o.surcharge_mgdl) ? t("analysis.surcharge") + " " + num(o.surcharge_mgdl, 0) + " mg/dL" : t("analysis.noSurcharge")) +
+const strategyText = o => num(o.percentile, 1) + " % · " + (Number(o.surcharge_mgdl) ? t("analysis.surcharge") + " " + gl(o.surcharge_mgdl, 0) : t("analysis.noSurcharge")) +
   " · " + t("analysis.tuning.half_life") + " " + t("analysis.daysShort", { n: num(o.half_life_days, 1) }) + " · " + t("common.days", { count: o.lookback_days });
 
 function RangeBar({ below, inRange, above }) {
@@ -185,7 +188,7 @@ function RangeBar({ below, inRange, above }) {
     <rect class="range-high" x=${(Number(pct(below)) + Number(pct(inRange))).toFixed(2)} width=${pct(above)} height="8" /></svg>`;
 }
 const RangeCounts = ({ o }) => html`<span class="range-nums"><span class="range-low">${o.below}</span> · <b class="range-ok">${o.in_range}</b> · <span class="range-high">${o.above}</span>${o.median_glucose != null &&
-  html`<small class="range-median">${t("analysis.median")} ${num(o.median_glucose, 0)} mg/dL</small>`}</span>`;
+  html`<small class="range-median">${t("analysis.median")} ${gl(o.median_glucose, 0)}</small>`}</span>`;
 const Delta = ({ value, label }) => html`<span class=${Number(value) < 0 ? "delta-good" : Number(value) > 0 ? "delta-bad" : ""}>
   ${(Number(value) > 0 ? "+" : Number(value) < 0 ? "−" : "±") + Math.abs(Number(value)) + " " + label}</span>`;
 
@@ -193,14 +196,14 @@ function Explain({ d }) {
   const surcharge = Number(d.active_surcharge_mgdl);
   const weights = (d.weights || []).map(item => (item.age_days === 1 ? t("analysis.yesterday") : t("analysis.daysAgo", { count: item.age_days })) + " " + num(item.weight, 2)).join(" · ");
   const exampleName = item => item.meal === "breakfast" && item.day_type ? names.breakfast + " " + (item.day_type === "work" ? t("dayType.work") : t("dayType.free")) : names[item.meal];
-  const surchargeNote = surcharge > 0 ? " + " + t("analysis.explain.doseSurcharge", { mgdl: num(surcharge, 0) }) : "";
+  const surchargeNote = surcharge > 0 ? " + " + t("analysis.explain.doseSurcharge", { mgdl: glNum(surcharge, 0) }) : "";
   return html`<div class="automatik-chips">${[
-      [tuningNames.percentile, num(d.percentile, 1) + " %"], [tuningNames.surcharge, surcharge ? num(surcharge, 0) + " mg/dL" : t("analysis.off")],
+      [tuningNames.percentile, num(d.percentile, 1) + " %"], [tuningNames.surcharge, surcharge ? gl(surcharge, 0) : t("analysis.off")],
       [tuningNames.half_life, t("common.daysN", { count: Number(d.half_life_days), n: num(d.half_life_days, 1) })], [tuningNames.lookback, t("common.days", { count: d.lookback_days })]]
       .map(([label, value]) => html`<span class="chip">${label} <b>${value}</b></span>`)}</div>
     <ol class="automatik-steps">
       <li>${t("analysis.explain.meals", { days: d.lookback_days, weights })}</li>
-      ${surcharge > 0 && html`<li>${t("analysis.explain.subtract", { mgdl: num(surcharge, 0), factor: UNIT.factor })}</li>`}
+      ${surcharge > 0 && html`<li>${t("analysis.explain.subtract", { mgdl: glNum(surcharge, 0), factor: UNIT.factor })}</li>`}
       <li>${t("analysis.explain.percentile", { percentile: num(d.percentile, 1) })}</li>
       <li>${t("analysis.explain.dose", { surcharge: surchargeNote })}</li></ol>
     <p class="hint">${t("analysis.explain.example")}</p>
@@ -208,8 +211,9 @@ function Explain({ d }) {
       ${d.examples.map(item => item.units_per_ke == null
         ? html`<tr><td>${exampleName(item)}</td><td>${item.count}</td><td colspan="5" class="hint">${t("analysis.tooFew", { min: item.min_meals })}</td></tr>`
         : html`<tr><td>${exampleName(item)}</td><td>${item.count}</td><td><b>${factorNum(item.units_per_ke)}</b> ${UNIT.factor}</td>
-          <td>${num(item.carbs_g, 0)} g · ${t("analysis.isf")} ${num(item.isf, 0)}</td>
-          <td>${num(Number(item.carbs_g) / 10, 1)} ${UNIT.carbUnit} × ${factorNum(item.units_per_ke)} = ${num(item.carb_units, 1)} ${UNIT.insulin}</td>
+          <td>${num(item.carbs_g, 0)} g · ${t("analysis.isf")} ${glNum(item.isf, 0)}</td>
+          <td>${gramsPerIe ? num(item.carbs_g, 0) + " g ÷ " + factorNum(item.units_per_ke)
+            : num(Number(item.carbs_g) / carbUnitGrams, 1) + " " + UNIT.carbUnit + " × " + factorNum(item.units_per_ke)} = ${num(item.carb_units, 1)} ${UNIT.insulin}</td>
           <td>${surcharge ? "+ " + num(item.surcharge_units, 1) + " " + UNIT.insulin : "—"}</td><td><b>${num(item.total_units, 1)} ${UNIT.insulin}</b></td></tr>`)}<//>`;
 }
 
@@ -224,7 +228,7 @@ function Tradeoffs({ trade, apply }) {
     <div class="tradeoff-head"><b>${isCurrent ? t("analysis.current") : o.changes.map(key => tuningNames[key] + " " + tuningLabel(key, value(o, key))).join(" · ")}</b>
       <small>${strategyText(o)}</small>
       ${!isCurrent && html`<span class="tradeoff-delta"><${Delta} value=${o.delta_below} label=${t("analysis.tooLow")} /> · <${Delta} value=${o.delta_above} label=${t("analysis.tooHigh")} />${o.delta_median_glucose != null &&
-        " · " + t("analysis.median") + " " + (Number(o.delta_median_glucose) >= 0 ? "+" : "−") + num(Math.abs(Number(o.delta_median_glucose)), 0) + " mg/dL"}</span>`}</div>
+        " · " + t("analysis.median") + " " + (Number(o.delta_median_glucose) >= 0 ? "+" : "−") + gl(Math.abs(Number(o.delta_median_glucose)), 0)}</span>`}</div>
     <${RangeBar} below=${o.below} inRange=${o.in_range} above=${o.above} /><${RangeCounts} o=${o} />
     ${isCurrent ? html`<span class="hint">${t("analysis.set")}</span>` : html`<button type="button" class="quiet apply-button" onClick=${event => apply(event, o.apply)}>${t("analysis.apply")}</button>`}</li>`;
   return html`<div class="tradeoff-layout">
@@ -232,8 +236,8 @@ function Tradeoffs({ trade, apply }) {
       ${ticks(maxX, v => html`<text x=${x(v)} y=${H - B + 16} text-anchor="middle">${v}</text>`)}
       ${ticks(maxY, v => html`<text x=${L - 8} y=${y(v) + 4} text-anchor="end">${v}</text>`)}
       <line class="axis" x1=${L} y1=${H - B} x2=${W - 6} y2=${H - B} /><line class="axis" x1=${L} y1=${H - B} x2=${L} y2="6" />
-      <text class="axis-label" x=${W - 6} y=${H - 2} text-anchor="end">${t("analysis.below80")} →</text>
-      <text class="axis-label" x=${L + 4} y="12">${t("analysis.above160")} ↑</text>
+      <text class="axis-label" x=${W - 6} y=${H - 2} text-anchor="end">${t("analysis.below80", { value: glNum(80) })} →</text>
+      <text class="axis-label" x=${L + 4} y="12">${t("analysis.above160", { value: glNum(160) })} ↑</text>
       ${points.map(p => html`<circle class="cloud" cx=${x(p.below)} cy=${y(p.above)} r="3" />`)}
       <polyline class="line" points=${trade.line.map(o => x(o.below) + "," + y(o.above)).join(" ")} />
       ${trade.line.map(o => html`<circle class="on-line" cx=${x(o.below)} cy=${y(o.above)} r="4.5" />`)}
@@ -253,7 +257,7 @@ function Tuning({ d, apply }) {
         <span class="tuning-label">${tuningLabel(row.key, o.value)}${o.active && html` <small>${t("analysis.active")}</small>`}</span>
         <${RangeBar} below=${o.below} inRange=${o.in_range} above=${o.above} /><${RangeCounts} o=${o} />
         ${o.active ? html`<span></span>` : html`<button type="button" class="quiet apply-button" onClick=${event => apply(event, o.apply)}>${t("analysis.apply")}</button>`}</li>`)}</ul></details>`)}
-    <p class="hint range-legend"><span class="range-low">■ ${t("analysis.below80")}</span> <span class="range-ok">■ 80–160</span> <span class="range-high">■ ${t("analysis.above160")}</span> · ${t("analysis.tuningLegend", { target: num(d.dose_target_mgdl, 0), noise: num(d.tuning[0].noise_meals, 1) })}</p>`;
+    <p class="hint range-legend"><span class="range-low">■ ${t("analysis.below80", { value: glNum(80) })}</span> <span class="range-ok">■ ${glNum(80)}–${glNum(160)}</span> <span class="range-high">■ ${t("analysis.above160", { value: glNum(160) })}</span> · ${t("analysis.tuningLegend", { target: glNum(d.dose_target_mgdl, 0), noise: num(d.tuning[0].noise_meals, 1) })}</p>`;
 }
 
 // Backtest matrix: where the endpoint glucose would have landed with each lookback, weighting
@@ -276,19 +280,19 @@ function Derivation({ d }) {
         <rect class="range-low" x="0" width=${below.toFixed(2)} height="8" /><rect class="range-ok" x=${below.toFixed(2)} width=${inRange.toFixed(2)} height="8" />
         <rect class="range-high" x=${(below + inRange).toFixed(2)} width=${above.toFixed(2)} height="8" /></svg>
       <span class="range-nums"><span class="range-low">${num(below, 0)}</span> · <b class="range-ok">${num(inRange, 0)} %</b> · <span class="range-high">${num(above, 0)}</span></span>
-      ${cell.stats.mean_glucose != null && html`<span class="range-glucose">Ø ${num(cell.stats.mean_glucose, 0)} · ${t("analysis.median")} ${num(cell.stats.median_glucose, 0)} mg/dL</span>`}
+      ${cell.stats.mean_glucose != null && html`<span class="range-glucose">Ø ${glNum(cell.stats.mean_glucose, 0)} · ${t("analysis.median")} ${gl(cell.stats.median_glucose, 0)}</span>`}
       <small>${notes.filter(Boolean).join(" · ")}</small></td>`;
   };
   return html`<p class="hint derivation-note range-legend"><span class="range-low">■ ${"<"} ${num(low, 0)}</span> <span class="range-ok">■ ${num(low, 0)}–${num(high, 0)}</span> <span class="range-high">■ ${">"} ${num(high, 0)}</span> · ${t("analysis.matrix.legend", { low: num(low, 0) })}</p>
     <div class="table-wrap"><table class="analysis-table compact matrix"><thead><tr><th>${t("analysis.tuning.lookback")}</th><th>${t("analysis.tuning.half_life")}</th>
-      ${percentiles.map(value => html`<th>${value === "surcharge" ? html`${num(d.percentile, 1)} % + ${t("analysis.surcharge")} <small>${t("analysis.matrix.perMeal", { mgdl: num(d.surcharge_mgdl, 0) })}</small>`
+      ${percentiles.map(value => html`<th>${value === "surcharge" ? html`${num(d.percentile, 1)} % + ${t("analysis.surcharge")} <small>${t("analysis.matrix.perMeal", { mgdl: glNum(d.surcharge_mgdl, 0) })}</small>`
         : html`${num(value, 1)} %${Number(value) === 50 && html` <small>${t("analysis.median")}</small>`}`}</th>`)}</tr></thead>
       <tbody>${variants.map((variant, index) => {
         const first = index === 0 || variants[index - 1].lookback_days !== variant.lookback_days;
         return html`<tr class=${first ? "matrix-group" : null}><td>${first ? t("common.days", { count: variant.lookback_days }) : ""}</td><td>${strength(variant.half_life_days)}</td>
           ${variant.cells.map(cell => html`<${Cell} variant=${variant} cell=${cell} />`)}</tr>`;
       })}</tbody></table></div>
-    <p class="hint derivation-note">${t("analysis.matrix.note", { meals: mealsText(total), days: d.backtest_days, mgdl: num(d.surcharge_mgdl, 0), grams: num(d.surcharge_full_grams, 0) })}</p>`;
+    <p class="hint derivation-note">${t("analysis.matrix.note", { meals: mealsText(total), days: d.backtest_days, mgdl: glNum(d.surcharge_mgdl, 0), grams: num(d.surcharge_full_grams, 0) })}</p>`;
 }
 
 // Information only: how much more insulin per KE breakfast needs on work days than on free days.
@@ -356,14 +360,14 @@ function Dish({ dish, all, open, onToggle, act }) {
     <summary><strong>${dish.name}</strong>${dish.category && html` <span class="place-badge">${dish.category}</span>`}${dish.archived && html` <span class="outlier-badge">${t("dishes.archived")}</span>`}
       <span class="hint dish-hint">${dish.hint}</span></summary>
     ${outcome.meals > 0 && html`<p class="hint">${t("dishes.outcome", { meals: outcome.meals, valid: outcome.valid })}${outcome.delta_mgdl != null &&
-      " · " + t("dishes.medianChange", { value: signedChange(outcome.delta_mgdl, 0) })}${outcome.end_mgdl != null && " · " + t("dishes.medianEnd", { value: outcome.end_mgdl })}</p>`}
+      " · " + t("dishes.medianChange", { value: signedChange(outcome.delta_mgdl, 0) })}${outcome.end_mgdl != null && " · " + t("dishes.medianEnd", { value: glNum(outcome.end_mgdl, 0) })}</p>`}
     ${dish.history.length
       ? html`<${Table} compact head=${html`<th>${t("analysis.col.meal")}</th><th>${t("card.carbs")}</th><th>${t("card.insulin")}</th><th>${t("card.factor")}</th><th>${t("dishes.vsUsual")}</th><th>${t("dishes.bg")}</th><th>${t("common.place")}</th>`}>
         ${dish.history.map(row => html`<tr><td>${dayDate(row.day, { day: "numeric", month: "numeric" })} ${MEAL_NAMES[row.meal] || ""}</td>
           <td>${row.carbs_g != null ? num(row.carbs_g, 0) + " g" : "—"}</td><td>${row.rapid_units != null ? num(row.rapid_units) + " " + UNIT.insulin : "—"}</td>
-          <td>${row.factor != null ? num(row.factor, 2) : row.excluded ? t("history.excluded") : t("dishes.noFactor")}</td>
+          <td>${row.factor != null ? factorNum(row.factor) : row.excluded ? t("history.excluded") : t("dishes.noFactor")}</td>
           <td>${row.ratio != null ? signedPercent(row.ratio) : "—"}</td>
-          <td>${row.g0_mgdl != null && row.g_end_mgdl != null ? num(row.g0_mgdl, 0) + " → " + num(row.g_end_mgdl, 0) : "—"}</td><td>${row.place || ""}</td></tr>`)}<//>`
+          <td>${row.g0_mgdl != null && row.g_end_mgdl != null ? glNum(row.g0_mgdl, 0) + " → " + glNum(row.g_end_mgdl, 0) : "—"}</td><td>${row.place || ""}</td></tr>`)}<//>`
       : html`<p class="hint">${t("dishes.noMeals")}</p>`}
     <div class="dish-edit">
       <input type="text" class="dish-name" maxlength="60" value=${dish.name} aria-label=${t("dishes.name")}

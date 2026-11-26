@@ -25,7 +25,7 @@ def set_analysis_exclusion(meal_id: str, excluded: bool) -> None:
 
 
 def analysis_day_types() -> dict[str, str] | None:
-    """Manual day types by day, or None while work/free days are off (setting `day_types`, Philipp
+    """Manual day types by day, or None while work/free days are off (setting `day_types`,
     2026-11-26: optional for open source, off by default); day_type_for then gives no day type."""
     from app.store import config
     if not config.day_types_enabled(config.get_settings()[1]):
@@ -85,7 +85,7 @@ def day_type_for(day: str, overrides: dict[str, str] | None, periods: list[dict]
 
 
 def window_checks() -> dict[str, tuple[str, str]]:
-    """Meal windows Philipp marked as right ("Passt"): meal id -> (start, end) of the window he checked."""
+    """Meal windows the user marked as right ("Passt"): meal id -> (start, end) of the window they checked."""
     with connect() as db:
         rows = db.execute("SELECT meal_id,start_at,end_at FROM window_checks").fetchall()
     return {row["meal_id"]: (row["start_at"], row["end_at"]) for row in rows}

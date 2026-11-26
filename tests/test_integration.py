@@ -479,7 +479,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(meal["review"]["open"], [])
         session = next(item for item in before["timeline"] if item["kind"] == "exercise")
         self.assertEqual((Decimal(session["sport_effect_mgdl"]), session["sport_effect_custom"]), (Decimal(40), False))
-        # Philipp sets the session's own effect in "Tag durchgehen"; the meal follows.
+        # The user sets the session's own effect in "Tag durchgehen"; the meal follows.
         self.request("/api/analysis/sport-session", method="POST", body={
             "id": session["id"], "day": "2026-09-23", "effect_mgdl": "100"})
         after = self.request("/api/day?date=2026-09-23")
@@ -490,7 +490,7 @@ class IntegrationTests(unittest.TestCase):
             "id": session["id"], "day": "2026-09-23", "reset": True})
         self.assertEqual(Decimal(self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]["sport_effect_mgdl"]),
                          Decimal(24))
-        # Its own effect duration (user request 2026-11-18): over 10 h the window holds 3 of 10 h, so 12 mg/dL.
+        # Its own effect duration: over 10 h the window holds 3 of 10 h, so 12 mg/dL.
         self.request("/api/analysis/sport-session", method="POST", body={
             "id": session["id"], "day": "2026-09-23", "minutes": 600})
         after = self.request("/api/day?date=2026-09-23")
@@ -505,7 +505,7 @@ class IntegrationTests(unittest.TestCase):
             "id": session["id"], "day": "2026-09-23", "minutes": None})
         self.assertEqual(Decimal(self.request("/api/day?date=2026-09-23")["meals"][0]["calculation"]["sport_effect_mgdl"]),
                          Decimal(24))
-        # The session shows where its effect lands (user request 2026-11-23): 24 in the meal, the rest outside.
+        # The session shows where its effect lands: 24 in the meal, the rest outside.
         after = self.request("/api/day?date=2026-09-23")
         session = next(item for item in after["timeline"] if item["kind"] == "exercise")
         self.assertEqual([(share["meal_id"], Decimal(share["effect_mgdl"])) for share in session["sport_shares"]],
@@ -599,6 +599,36 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/settings", method="POST", body={
                 "sport_durations_minutes": {**settings["sport_durations_minutes"], "gym": 10}})
 
+    def test_own_sport_kind_is_recorded_named_and_can_be_hidden(self):
+        settings = self.request("/api/settings")["settings"]
+        effects = {**settings["sport_effects_mgdl"], "own_1": "60"}
+        durations = {**settings["sport_durations_minutes"], "own_1": 240}
+        self.request("/api/settings", method="POST", body={
+            "sport_custom": {"own_1": "  Klettern "}, "sport_effects_mgdl": effects,
+            "sport_durations_minutes": durations, "sport_hidden": ["racing"],
+            "effective_at": "2026-09-01T00:00:00Z"})
+        settings = self.request("/api/settings")["settings"]
+        self.assertEqual((settings["sport_custom"], settings["sport_hidden"]), ({"own_1": "Klettern"}, ["racing"]))
+        self.request("/api/treatment", method="POST", body={
+            "kind": "meal", "at": "2026-09-23T10:00:00Z", "carbs": "40", "insulin": "4"})
+        self.request("/api/treatment", method="POST", body={
+            "kind": "exercise", "at": "2026-09-23T08:00:00Z", "sport_kind": "own_1", "duration_minutes": 60,
+            "notes": "Halle"})
+        day = self.request("/api/day?date=2026-09-23")
+        session = next(item for item in day["timeline"] if item["kind"] == "exercise")
+        self.assertEqual((session["sport_kind"], session["notes"]), ("own_1", "Halle"))
+        # Ends 09:00 and acts linearly over its own 4 h; the window from 10:00 holds 3 of them: 60 × 3/4.
+        self.assertEqual(Decimal(day["meals"][0]["calculation"]["sport_effect_mgdl"]), Decimal(45))
+        # A hidden kind is still a valid kind for recorded and new sessions.
+        self.request("/api/treatment", method="POST", body={
+            "kind": "exercise", "at": "2026-09-23T15:00:00Z", "sport_kind": "racing", "duration_minutes": 30})
+        for change in ({"sport_custom": {"own_1": "Joggen"}},
+                       {"sport_custom": {"gym": "Kraft"}},
+                       {"sport_custom": {}},
+                       {"sport_hidden": ["swimming"]}):
+            with self.subTest(change=change), self.assertRaises(urllib.error.HTTPError):
+                self.request("/api/settings", method="POST", body=change)
+
     def test_invalid_settings_name_the_field_in_german(self):
         from app.services import settings as settings_service
         _, current = config.get_settings()
@@ -606,7 +636,9 @@ class IntegrationTests(unittest.TestCase):
                 ({"dose_target_mgdl": 150}, "Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen"),
                 ({"dose_target_mgdl": "viel"}, "Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen"),
                 ({"timezone": "Mars/Olympus"}, "Unbekannte Zeitzone"),
-                ({"peak_minutes": 500, "duration_minutes": 400}, "Ungültige Zeitparameter"),
+                ({"low_limit_mgdl": 40}, "Grenze für tief muss zwischen 54 und 90 mg/dL liegen"),
+                ({"glucose_unit": "mg"}, "Unbekannte Blutzucker-Einheit"),
+                ({"carb_unit": "kg"}, "Unbekannte Einheit für den Insulinfaktor"),
                 ({"window_minutes": 90.5}, "Ungültige Zeitparameter"),
                 ({"auto_lookback_days": 14}, "Zeitraum der Automatik muss 8, 15 oder 30 Tage sein"),
                 ({"basal_default_units": "10.3"}, "Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen"),
@@ -625,6 +657,14 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], new)
         self.request("/api/settings", method="POST", body={"auto_lookback_days": 8})
         self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], 8)
+
+    def test_display_units_are_saved_and_change_no_stored_value(self):
+        before = self.request("/api/settings")["settings"]
+        self.assertEqual((before["glucose_unit"], before["carb_unit"]), ("mgdl", "ke"))
+        self.request("/api/settings", method="POST", body={"glucose_unit": "mmol", "carb_unit": "g"})
+        after = self.request("/api/settings")["settings"]
+        self.assertEqual((after["glucose_unit"], after["carb_unit"]), ("mmol", "g"))
+        self.assertEqual(after["dose_target_mgdl"], before["dose_target_mgdl"])
 
     def test_manual_meal_window_is_persisted_validated_and_resettable(self):
         self.request("/api/treatment", method="POST", body={
@@ -669,7 +709,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(marks.analysis_windows(), {})
 
     def test_window_check_holds_for_the_checked_window_only(self):
-        """"Passt" in Verlauf (user request 2026-11-23): a finished meal's window is checked without
+        """"Passt" in Verlauf: a finished meal's window is checked without
         recalculating the day; a new window takes the check back, saving one in the editor checks it."""
         from app.services import day_view
         self.request("/api/treatment", method="POST", body={"kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4"})
@@ -694,9 +734,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertFalse(self.request("/api/day?date=2026-09-23")["meals"][0]["review"]["checked"])
 
     def test_day_check_covers_the_meals_and_feeds_the_red_dot(self):
-        """Verlauf's day check (user request 2026-11-24): "Tag prüfen" checks every meal, and the red dot lists
-        finished days since REVIEW_SINCE that are not. Only main meals need a check (Philipp 2026-11-25:
-        reviewing is about the factor), so an entry outside the meals never holds a day open."""
+        """Verlauf's day check: "Tag prüfen" checks every meal, and the red dot lists
+        finished days since REVIEW_SINCE that are not. Only main meals need a check (reviewing
+        is about the factor), so an entry outside the meals never holds a day open."""
         from app.services import day_view
         self.request("/api/treatment", method="POST", body={"kind": "meal", "at": MEAL_AT, "carbs": "40", "insulin": "4"})
         self.request("/api/treatment", method="POST", body={"kind": "correction", "at": "2026-09-23T20:00:00Z", "insulin": "1"})
@@ -915,7 +955,7 @@ class IntegrationTests(unittest.TestCase):
         isf = Decimal(meal["isf_mgdl_per_unit"])
         expected = Decimal(20) / isf
         self.assertEqual(Decimal(meal["auto_surcharge_units"]), expected)
-        # Saved as snack or not, an entry into an empty stomach carries its full share (user request 2026-11-21).
+        # Saved as snack or not, an entry into an empty stomach carries its full share.
         self.assertEqual(Decimal(ask([], {"carbs": "20", "snack": True})["auto_surcharge_units"]), expected)
         # 30 min after 20, 30 or 40 g, another 20 g get the share they add to what is still in the stomach.
         for grams in (20, 30, 40):
@@ -1365,7 +1405,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(night["carbs_g"], 12)
 
     def test_day_types_are_off_by_default_and_breakfast_is_one_meal_then(self):
-        # Work/free days became optional (Philipp 2026-11-26): a new installation has them off.
+        # Work/free days became optional (2026-11-26): a new installation has them off.
         self.assertFalse(config.default_settings()["day_types"])
         self.assertTrue(config._with_nightscout_profile({})["day_types"])   # older stored settings keep them on
         self.request("/api/settings", method="POST", body={"day_types": False})
@@ -2159,7 +2199,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(Decimal(dose["options"][0]["planned_units"]), later)
         self.assertEqual(dose["split_plan"]["state"], "later")
         self.assertEqual(dose["split_plan"]["due_at"], (meal_at + timedelta(minutes=120)).isoformat())
-        # A dessert while the second part is open (user report 2026-11-23): its dose covers its carbs only,
+        # A dessert while the second part is open: its dose covers its carbs only,
         # never the forecast's rise the second part is planned for.
         with fake_days(return_value=current_day):
             dessert = self.request("/api/entry/preview", method="POST", body={**entry, "carbs": "30"})["dose"]
@@ -2171,7 +2211,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(dessert["split_plan"]["state"], "later")
 
     def test_calculated_fat_protein_surcharge_can_be_chosen_and_splits_carbs_now_surcharge_later(self):
-        # Transition phase (user request 2026-11-19): static surcharge or one calculated from the agent's estimate.
+        # Transition phase: static surcharge or one calculated from the agent's estimate.
         self.request("/api/settings")
         self.request("/api/settings", method="POST", body={"auto_method": "surcharge", "split_min_units": 1})
         now = datetime.now(timezone.utc)
@@ -2206,7 +2246,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(episodes.surcharge_plan(note), {"mgdl": "105", "minutes": 337})
 
     def test_manual_entry_sets_fat_protein_level_as_fpe(self):
-        # Philipp 2026-11-26: the manual carb entry offers Nichts / Normal / Fett instead of the fat mark, as FPE.
+        # 2026-11-26: the manual carb entry offers Nichts / Normal / Fett instead of the fat mark, as FPE.
         self.request("/api/settings")
         self.request("/api/settings", method="POST", body={"auto_method": "surcharge", "split_min_units": 1})
         now = datetime.now(timezone.utc)
@@ -2257,7 +2297,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(next(item for item in kept["day_view"]["timeline"] if item["id"] == meal["id"])["fpe_level"], "none")
 
     def test_meal_card_switches_a_saved_meal_between_static_and_calculated_surcharge(self):
-        # Philipp 2026-11-19: choose the surcharge on the meal itself; the estimate comes from the linked agent session.
+        # Choose the surcharge on the meal itself; the estimate comes from the linked agent session.
         from app.store import agent as agent_store
         self.request("/api/settings")
         self.request("/api/settings", method="POST", body={"auto_method": "surcharge"})

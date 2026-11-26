@@ -3,7 +3,7 @@
 import { html } from "./html.js";
 import { t } from "./i18n.js";
 
-// Four tiles (user request 2026-11-18): the agent, one full manual entry for carbs and insulin (also a
+// Four tiles: the agent, one full manual entry for carbs and insulin (also a
 // correction alone), sport and basal.
 const CHOICES = [
   { key: "meal", title: "✦ " + t("quick.meal"), main: true },

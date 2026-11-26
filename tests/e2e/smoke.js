@@ -46,7 +46,7 @@ async function run(browser, name, options) {
   // A long meal row must not widen the page (iPhone report 2026-11-18).
   await page.evaluate(() => { document.querySelector(".meal-today span").textContent = "128 g · 11 IE · + 1 Snack · Abendessen lang"; });
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${name}: Heute fits the screen width`);
-  // A meal row unfolds to its single entries; each opens its card (user request 2026-11-20).
+  // A meal row unfolds to its single entries; each opens its card.
   const head = page.locator(".meal-today").first();
   if (await head.getAttribute("aria-expanded") !== "true") await head.click();
   check(await page.isVisible(".meal-today-entry >> nth=0"), `${name}: a meal of Heute unfolds to its entries`);
@@ -204,7 +204,7 @@ async function editMeal(page, name) {
 
 const toastSays = (page, text) => page.waitForFunction(wanted => document.querySelector("#toast")?.textContent.includes(wanted), text);
 
-// The red dot on "Verlauf" (user request 2026-11-24): a finished day with unchecked entries shows it, a tap
+// The red dot on "Verlauf": a finished day with unchecked entries shows it, a tap
 // on "Verlauf" opens that day and "Tag als geprüft markieren" checks its meals at once.
 async function reviewDay(page, name) {
   await page.click("[data-nav=today]");

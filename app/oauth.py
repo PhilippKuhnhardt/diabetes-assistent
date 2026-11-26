@@ -1,7 +1,7 @@
 """OAuth 2.1 sign-in for the MCP endpoint, so the Claude apps can connect as a custom connector.
 
 The Claude apps only connect to remote MCP servers through OAuth: they register themselves, send
-Philipp to /oauth/authorize, where the app password confirms the connection, and then use short-lived
+The user to /oauth/authorize, where the app password confirms the connection, and then use short-lived
 access tokens. Tokens are signed with a key derived from MCP_API_KEY and stored nowhere, so changing
 MCP_API_KEY revokes every connection. Without MCP_API_KEY all of this is off.
 Redirects go only to Claude's callback and to loopback addresses (Claude Code), never to an address a

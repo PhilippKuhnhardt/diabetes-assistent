@@ -11,8 +11,7 @@ from app.store.db import connect
 # Suggested glucose drop per sport type in mg/dL; negative values raise glucose
 # (racing adrenaline).
 DEFAULT_SPORT_EFFECTS = {"jogging": 40, "gym": 40, "light_cardio": 20, "racing": -40}
-# Minutes after a session's end over which its effect acts (linearly), per sport type
-# (user request 2026-10-22: configurable once the kinds show different data).
+# Minutes after a session's end over which its effect acts (linearly), per sport type.
 DEFAULT_SPORT_DURATIONS = {"jogging": 300, "gym": 300, "light_cardio": 300, "racing": 300}
 
 
@@ -24,7 +23,17 @@ DEFAULT_BASAL_UNITS = "0"
 DEFAULT_SPLIT = {"split_min_grams": 80, "split_min_units": "6.5", "split_first_percent": 60, "split_delay_minutes": 120}
 
 
-# Vacation meals in the Automatik (user request 2026-11-06, app/services/factors.py `history_days`):
+# Display units (web/ui/units.js; push messages): glucose in mg/dL or mmol/L, the meal factor as IE per KE
+# (10 g), IE per BE (12 g) or g per IE. Everything is stored and calculated in mg/dL and IE per KE.
+GLUCOSE_UNITS = ("mgdl", "mmol")
+CARB_UNITS = ("ke", "be", "g")
+
+
+# Glucose limits: below low is a low, above high a high (colours, chart lines, early warnings, dose help).
+DEFAULT_LIMITS = {"low_limit_mgdl": "70", "high_limit_mgdl": "250"}
+
+
+# Vacation meals in the Automatik:
 # "separate" = during a vacation all meals count, outside one vacation days are skipped (default);
 # "vacation_only" = the same, but during a vacation only vacation meals count; "all" = vacation counts like any day.
 AUTO_VACATION_MODES = ("separate", "vacation_only", "all")
@@ -46,13 +55,17 @@ def default_settings() -> dict:
         "fpe_surcharge_mgdl": "20",
         "auto_vacation": DEFAULT_AUTO_VACATION,
         "day_types": False,
-        "peak_minutes": 60,
-        "duration_minutes": 180,
+        "glucose_unit": "mgdl",
+        "carb_unit": "ke",
+        "low_limit_mgdl": DEFAULT_LIMITS["low_limit_mgdl"],
+        "high_limit_mgdl": DEFAULT_LIMITS["high_limit_mgdl"],
         "breakfast_end_minute": 660,
         "lunch_end_minute": 1020,
         "sport_lookback_minutes": 360,
         "sport_effects_mgdl": dict(DEFAULT_SPORT_EFFECTS),
         "sport_durations_minutes": dict(DEFAULT_SPORT_DURATIONS),
+        "sport_custom": {},
+        "sport_hidden": [],
         "basal_default_units": DEFAULT_BASAL_UNITS,
         **DEFAULT_SPLIT,
     }
@@ -91,7 +104,7 @@ def _with_nightscout_profile(settings: dict) -> dict:
     result.setdefault("breakfast_end_minute", 660)
     result.setdefault("dose_target_mgdl", 100)
     result.setdefault("dose_cautious_target_mgdl", 140)
-    # The lower target was removed (Philipp 2026-11-26).
+    # The lower target was removed (2026-11-26).
     result.pop("dose_low_target_mgdl", None)
     result.setdefault("auto_percentile", "37.5")
     # Older versions stored methods that were removed (day shift, equal weights): back to the percentile.
@@ -102,13 +115,13 @@ def _with_nightscout_profile(settings: dict) -> dict:
         result["auto_lookback_days"] = 15 if result.get("auto_lookback_days") == 14 else 30
     result.setdefault("auto_half_life_days", "7")
     result.setdefault("auto_surcharge_mgdl", "40")
-    # Fat surcharge approved by Philipp 2026-11-06 (analysen/modell-review-2026-11-06.md); older versions lack it.
+    # Fat surcharge; older versions lack it.
     result.setdefault("auto_fat_surcharge_mgdl", "120")
     result.setdefault("fpe_surcharge_mgdl", "20")
     if result.get("auto_vacation") not in AUTO_VACATION_MODES:
         result["auto_vacation"] = DEFAULT_AUTO_VACATION
     result.setdefault("lunch_end_minute", 1020)
-    # Work/free days became optional (Philipp 2026-11-26, off for new installations): a settings version
+    # Work/free days became optional (2026-11-26, off for new installations): a settings version
     # from before the switch existed used them, so it keeps them on.
     result.setdefault("day_types", True)
     result.setdefault("basal_default_units", DEFAULT_BASAL_UNITS)
@@ -118,6 +131,8 @@ def _with_nightscout_profile(settings: dict) -> dict:
     # Older settings versions predate newer sport types such as racing.
     result["sport_effects_mgdl"] = {**DEFAULT_SPORT_EFFECTS, **result.get("sport_effects_mgdl", {})}
     result["sport_durations_minutes"] = {**DEFAULT_SPORT_DURATIONS, **result.get("sport_durations_minutes", {})}
+    result.setdefault("sport_custom", {})
+    result.setdefault("sport_hidden", [])
     result["nightscout_profile"] = ({
         "start_at": profile["start_at"], "profile_id": profile["profile_id"],
         "profile_name": profile["profile_name"], "timezone": profile["timezone"],

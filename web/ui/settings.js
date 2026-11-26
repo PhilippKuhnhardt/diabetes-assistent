@@ -2,10 +2,11 @@
 // one page at a time (app.js keeps which page is open and marks #settings-view for the CSS).
 // Every value comes from /api/settings and its neighbours; saving sends it back and the server checks it.
 import { html, useState, useEffect, useRef } from "./html.js";
-import { api, post, toast, busy, num, signedPercent, sportKinds, sportChange, minuteClock, clockMinute, toInstant, localInputTime,
+import { api, post, toast, busy, num, gl, glNum, signedPercent, BUILTIN_SPORT_KINDS, sportChange, minuteClock, clockMinute, toInstant, localInputTime,
   pickerMinimum, currentPosition, MINUTE, UNIT } from "./lib.js";
 import { t, locale, lang, LANGUAGES, storedLanguage, setLanguage } from "./i18n.js";
 import { ThemePanel } from "./theme.js";
+import { glField, glInput, toMgdl, glValue, mmol, factorValue, factorToUnitsPerKe, gramsPerIe, MGDL_PER_MMOL } from "./units.js";
 
 // The pages in the order they appear; `form` pages belong to the model form and its save button.
 const page = id => [id, t("settings.pages." + id)];
@@ -146,7 +147,7 @@ function Vacation({ page, vacation, today, onVacation }) {
       : t("settings.vacation.weekdays")) + (past.length ? " " + t("settings.vacation.past", { list: past.join(", ") }) : "")}</p><//>`;
 }
 
-// Pause after the trigger, in minutes (Philipp 2026-11-22): low after eating, high after an injection.
+// Pause after the trigger, in minutes: low after eating, high after an injection.
 const NOTIFY_PAUSES = { low: t("settings.notify.pauseLow"), high: t("settings.notify.pauseHigh") };
 const NOTIFY_KINDS = ["basal", "split", "low", "high", "check"].map(kind => [kind, t("settings.notify.kinds." + kind)]);
 
@@ -216,7 +217,7 @@ function Agent({ page, info, onInfo }) {
       tokens: num((row.input_tokens + row.output_tokens) / 1000, 0) }) + (row.cost_usd != null ? ", " + num(row.cost_usd, 2) + " $" : "") + ")").join("; ") : ""}</p><//>`;
 }
 
-// Places: chips with the spots Philipp defines, and the fallback place for anywhere else.
+// Places: chips with the spots the user defines, and the fallback place for anywhere else.
 function Place({ place, act, maxAccuracy }) {
   const [coords, setCoords] = useState("");
   const toggle = (action, key) => event => act({ action, id: place.id, [key]: event.currentTarget.checked });
@@ -302,9 +303,9 @@ function Schedule({ id, page, title, unit, rows, kind, profileId, onReload, onSa
       const result = await post("/api/profile/" + kind, { profile_id: profileId,
         [isIc ? "ic_schedule" : "isf_schedule"]: inputs.map(input => {
           const start_minute = Number(input.dataset.startMinute);
-          if (!isIc) return { start_minute, mgdl_per_unit: input.value };
-          return Number(input.value) === Number(input.dataset.originalDisplay)
-            ? { start_minute, grams_per_unit: input.dataset.gramsPerUnit } : { start_minute, units_per_ke: input.value };
+          if (!isIc) return { start_minute, mgdl_per_unit: glucoseValue(input) };
+          if (Number(input.value) === Number(input.dataset.originalDisplay)) return { start_minute, grams_per_unit: input.dataset.gramsPerUnit };
+          return gramsPerIe ? { start_minute, grams_per_unit: input.value } : { start_minute, units_per_ke: String(factorToUnitsPerKe(input.value)) };
         }) });
       await onReload({ day: false });
       onSaved();
@@ -327,11 +328,11 @@ function Schedule({ id, page, title, unit, rows, kind, profileId, onReload, onSa
           const start = Number(row.start_minute);
           const time = minuteClock(start);
           if (!isIc) return html`<label class="ic-row"><span>${time}</span><input type="number" min="0.001" max="1000" step="any" required
-            data-start-minute=${start} defaultValue=${row.mgdl_per_unit} aria-label=${t("settings.schedule.isfLabel", { time, unit: UNIT.insulin })} /></label>`;
-          const display = Number((10 / Number(row.grams_per_unit)).toFixed(2));
+            data-start-minute=${start} data-mgdl=${row.mgdl_per_unit} defaultValue=${glInput(row.mgdl_per_unit)} aria-label=${t("settings.schedule.isfLabel", { time, unit: UNIT.insulin })} /></label>`;
+          const display = Number(factorValue(10 / Number(row.grams_per_unit)).toFixed(gramsPerIe ? 1 : 2));
           return html`<label class="ic-row"><span>${time}</span><input type="number" min=${pickerMinimum(display, 0.1, true)} max="1000" step="0.1" required
             data-start-minute=${start} data-grams-per-unit=${row.grams_per_unit} data-original-display=${display} defaultValue=${display}
-            aria-label=${t("settings.schedule.icLabel", { time, unit: UNIT.insulin, carbUnit: UNIT.carbUnit })}
+            aria-label=${t("settings.schedule.icLabel", { time, factor: UNIT.factor })}
             onInput=${event => { const input = event.currentTarget, value = Number(input.value);
               input.min = String(input.value && Number.isFinite(value) ? pickerMinimum(value, 0.1, true) : 0.1); }} /></label>`;
         })}</div>`
@@ -341,30 +342,62 @@ function Schedule({ id, page, title, unit, rows, kind, profileId, onReload, onSa
 }
 
 // ---- Modell ----
-const SPORT_LABELS = Object.fromEntries(sportKinds.map(kind => [kind, t("settings.sportShort." + kind)]));
+const SPORT_LABELS = Object.fromEntries(BUILTIN_SPORT_KINDS.map(kind => [kind, t("settings.sportShort." + kind)]));
+// A new own kind gets the next free key own_1, own_2, …; the key never changes, the name can.
+const nextSportKey = taken => { let n = 1; while (taken.includes("own_" + n)) n += 1; return "own_" + n; };
+
+// One sport kind: built-in kinds show their name, own kinds an editable one; every kind can be hidden from the
+// entry form (never deleted, so recorded sessions keep their name and effect). An unsaved new kind can be dropped.
+function SportKindFields({ kind, name, own, effect, minutes, shown, onDrop }) {
+  return html`<div class="sport-kind">
+    <div class="sport-kind-head">${own
+      ? html`<input name=${"sport_name_" + kind} required maxlength="40" aria-label=${t("settings.model.sportName")}
+          placeholder=${t("settings.model.sportName")} defaultValue=${name} />`
+      : html`<strong>${name}</strong>`}
+      <label class="check-label"><input type="checkbox" name=${"sport_show_" + kind} defaultChecked=${shown} /> ${t("settings.model.sportShown")}</label>
+      ${onDrop && html`<button type="button" class="quiet" onClick=${onDrop}>${t("settings.model.sportDrop")}</button>`}</div>
+    <div class="field-pair">
+      <${Field} label=${t("settings.model.sportEffect")} unit=${UNIT.glucose}><${GlucoseInput} name=${"sport_" + kind} min=${-500} max=${500} step=${1}
+        defaultValue=${effect} /><//>
+      <${Field} label=${t("sport.durationTitle")} unit="min"><${NumberInput} name=${"sport_minutes_" + kind} min="30" max="1440" step="1"
+        defaultValue=${minutes} /><//></div></div>`;
+}
 const Field = ({ label, unit, children }) => html`<label>${label}${unit && html` <span>${unit}</span>`}${children}</label>`;
 const NumberInput = props => html`<input type="number" required ...${props} />`;
+// A glucose setting (stored in mg/dL) in the display unit. An unchanged field sends its stored value back, so
+// rounding to mmol/L never moves a setting nobody touched.
+const GlucoseInput = ({ name, min, max, step, defaultValue }) => html`<${NumberInput} name=${name} ...${glField(min, max, step)}
+  defaultValue=${glInput(defaultValue)} data-mgdl=${defaultValue ?? ""} />`;
+const glucoseValue = input => input.value !== "" && input.dataset.mgdl !== "" && Number(input.value) === Number(glInput(input.dataset.mgdl))
+  ? input.dataset.mgdl : String(toMgdl(input.value));
 // An uncontrolled select that starts at the stored value (the form is reset by remounting it).
 const Choice = ({ name, value, options }) => html`<select name=${name}>${options.map(([key, label]) =>
   html`<option value=${key} selected=${key === value}>${label}</option>`)}</select>`;
 
 function ModelForm({ page, data, onReload }) {
   const s = data.settings;
+  const ownKinds = Object.keys(s.sport_custom || {});
+  const [added, setAdded] = useState([]);
+  const allKinds = [...BUILTIN_SPORT_KINDS, ...ownKinds, ...added];
   async function submit(event) {
     event.preventDefault();
     const f = event.currentTarget.elements;
     try {
       const payload = {
         window_minutes: Number(f.window_minutes.value),
-        dose_target_mgdl: f.dose_target_mgdl.value,
-        dose_cautious_target_mgdl: f.dose_cautious_target_mgdl.value,
+        glucose_unit: f.glucose_unit.value,
+        carb_unit: f.carb_unit.value,
+        dose_target_mgdl: glucoseValue(f.dose_target_mgdl),
+        dose_cautious_target_mgdl: glucoseValue(f.dose_cautious_target_mgdl),
+        low_limit_mgdl: glucoseValue(f.low_limit_mgdl),
+        high_limit_mgdl: glucoseValue(f.high_limit_mgdl),
         auto_method: f.auto_method.value,
         auto_percentile: f.auto_percentile.value,
         auto_lookback_days: Number(f.auto_lookback_days.value),
         auto_half_life_days: f.auto_half_life_days.value,
-        auto_surcharge_mgdl: f.auto_surcharge_mgdl.value,
-        auto_fat_surcharge_mgdl: f.auto_fat_surcharge_mgdl.value,
-        fpe_surcharge_mgdl: f.fpe_surcharge_mgdl.value,
+        auto_surcharge_mgdl: glucoseValue(f.auto_surcharge_mgdl),
+        auto_fat_surcharge_mgdl: glucoseValue(f.auto_fat_surcharge_mgdl),
+        fpe_surcharge_mgdl: glucoseValue(f.fpe_surcharge_mgdl),
         auto_vacation: f.auto_vacation.value,
         day_types: f.day_types.checked,
         basal_default_units: f.basal_default_units.value,
@@ -375,12 +408,15 @@ function ModelForm({ page, data, onReload }) {
         breakfast_end_minute: clockMinute(f.breakfast_end.value),
         lunch_end_minute: clockMinute(f.lunch_end.value),
         sport_lookback_minutes: Number(f.sport_lookback_minutes.value),
-        sport_effects_mgdl: Object.fromEntries(sportKinds.map(kind => [kind, sportChange(f["sport_" + kind].value)])),
-        sport_durations_minutes: Object.fromEntries(sportKinds.map(kind => [kind, Number(f["sport_minutes_" + kind].value)])),
+        sport_effects_mgdl: Object.fromEntries(allKinds.map(kind => [kind, sportChange(glucoseValue(f["sport_" + kind]))])),
+        sport_durations_minutes: Object.fromEntries(allKinds.map(kind => [kind, Number(f["sport_minutes_" + kind].value)])),
+        sport_custom: Object.fromEntries([...ownKinds, ...added].map(kind => [kind, f["sport_name_" + kind].value.trim()])),
+        sport_hidden: allKinds.filter(kind => !f["sport_show_" + kind].checked),
         effective_at: f.effective_date.value ? toInstant(f.effective_date.value, f.effective_time.value || "00:00") : null,
       };
       await post("/api/settings", payload);
       toast(t("settings.saved"));
+      setAdded([]);
       await onReload({ day: true });
     } catch (error) {
       toast(error.message, true);
@@ -389,12 +425,16 @@ function ModelForm({ page, data, onReload }) {
   return html`<form id="settings-form" onSubmit=${submit}>
     <div class="settings-grid settings-cols">
       <${Panel} id="dose" page=${page} title=${t("settings.pages.dose")}>
-        <${Field} label=${t("settings.model.target")} unit="mg/dL"><${NumberInput} name="dose_target_mgdl" min="60" max="140" step="1" defaultValue=${s.dose_target_mgdl} /><//>
-        <${Field} label=${t("settings.model.cautiousTarget")} unit="mg/dL"><${NumberInput} name="dose_cautious_target_mgdl" min="60" max="250" step="1" defaultValue=${s.dose_cautious_target_mgdl} /><//>
+        <${Field} label=${t("settings.model.glucoseUnit")}><${Choice} name="glucose_unit" value=${s.glucose_unit || "mgdl"} options=${[["mgdl", "mg/dL"], ["mmol", "mmol/L"]]} /><//>
+        <${Field} label=${t("settings.model.carbUnit")}><${Choice} name="carb_unit" value=${s.carb_unit || "ke"} options=${["ke", "be", "g"].map(key => [key, t("settings.model.carbUnits." + key)])} /><//>
+        <${Field} label=${t("settings.model.target")} unit=${UNIT.glucose}><${GlucoseInput} name="dose_target_mgdl" min=${60} max=${140} step=${1} defaultValue=${s.dose_target_mgdl} /><//>
+        <${Field} label=${t("settings.model.cautiousTarget")} unit=${UNIT.glucose}><${GlucoseInput} name="dose_cautious_target_mgdl" min=${60} max=${250} step=${1} defaultValue=${s.dose_cautious_target_mgdl} /><//>
+        <${Field} label=${t("settings.model.lowLimit")} unit=${UNIT.glucose}><${GlucoseInput} name="low_limit_mgdl" min=${54} max=${90} step=${1} defaultValue=${s.low_limit_mgdl ?? 70} /><//>
+        <${Field} label=${t("settings.model.highLimit")} unit=${UNIT.glucose}><${GlucoseInput} name="high_limit_mgdl" min=${180} max=${400} step=${1} defaultValue=${s.high_limit_mgdl ?? 250} /><//>
         <${Field} label=${t("settings.model.method")}><${Choice} name="auto_method" value=${s.auto_method || "percentile"} options=${[["percentile", t("analysis.tuning.percentile")], ["surcharge", t("settings.model.methodSurcharge")]]} /><//>
-        <${Field} label=${t("settings.model.mealSurcharge")} unit="mg/dL"><${NumberInput} name="auto_surcharge_mgdl" min="5" max="150" step="5" defaultValue=${s.auto_surcharge_mgdl ?? 40} /><//>
-        <${Field} label=${t("settings.model.fatSurcharge")} unit="mg/dL"><${NumberInput} name="auto_fat_surcharge_mgdl" min="0" max="200" step="10" defaultValue=${s.auto_fat_surcharge_mgdl ?? 120} /><//>
-        <${Field} label=${t("settings.model.fpeSurcharge")} unit="mg/dL"><${NumberInput} name="fpe_surcharge_mgdl" min="5" max="60" step="1" defaultValue=${s.fpe_surcharge_mgdl ?? 20} /><//>
+        <${Field} label=${t("settings.model.mealSurcharge")} unit=${UNIT.glucose}><${GlucoseInput} name="auto_surcharge_mgdl" min=${5} max=${150} step=${5} defaultValue=${s.auto_surcharge_mgdl ?? 40} /><//>
+        <${Field} label=${t("settings.model.fatSurcharge")} unit=${UNIT.glucose}><${GlucoseInput} name="auto_fat_surcharge_mgdl" min=${0} max=${200} step=${10} defaultValue=${s.auto_fat_surcharge_mgdl ?? 120} /><//>
+        <${Field} label=${t("settings.model.fpeSurcharge")} unit=${UNIT.glucose}><${GlucoseInput} name="fpe_surcharge_mgdl" min=${5} max=${60} step=${1} defaultValue=${s.fpe_surcharge_mgdl ?? 20} /><//>
         <${Field} label=${t("settings.model.percentile")} unit="%"><${NumberInput} name="auto_percentile" min="25" max="50" step="0.5" defaultValue=${s.auto_percentile} /><//>
         <${Field} label=${t("settings.model.lookback")}><${Choice} name="auto_lookback_days" value=${String(s.auto_lookback_days)} options=${[8, 15, 30].map(days => [String(days), t("common.days", { count: days })])} /><//>
         <${Field} label=${t("analysis.tuning.half_life")} unit=${t("settings.model.daysUnit")}><${NumberInput} name="auto_half_life_days" min="1" max="28" step="0.5" defaultValue=${s.auto_half_life_days} /><//>
@@ -413,11 +453,11 @@ function ModelForm({ page, data, onReload }) {
         <p class="hint">${t("settings.model.dayTypesHint")}</p>
       <//>
       <${Panel} id="sport" page=${page} title=${t("settings.pages.sport")} unit=${t("settings.model.sportUnit")}>
-        <div class="field-pair">${sportKinds.map(kind => html`<${Field} label=${SPORT_LABELS[kind]}><${NumberInput} name=${"sport_" + kind} min="-500" max="500" step="1"
-          defaultValue=${sportChange(s.sport_effects_mgdl[kind])} /><//>`)}</div>
-        <h3 class="settings-subhead">${t("sport.durationTitle")} <span class="unit">min</span></h3>
-        <div class="field-pair">${sportKinds.map(kind => html`<${Field} label=${SPORT_LABELS[kind]}><${NumberInput} name=${"sport_minutes_" + kind} min="30" max="1440" step="1"
-          defaultValue=${s.sport_durations_minutes?.[kind] ?? 300} /><//>`)}</div>
+        ${allKinds.map(kind => html`<${SportKindFields} key=${kind} kind=${kind} own=${!BUILTIN_SPORT_KINDS.includes(kind)}
+          name=${SPORT_LABELS[kind] ?? s.sport_custom?.[kind] ?? ""} shown=${!(s.sport_hidden || []).includes(kind)}
+          effect=${sportChange(s.sport_effects_mgdl[kind] ?? 40)} minutes=${s.sport_durations_minutes?.[kind] ?? 300}
+          onDrop=${added.includes(kind) ? () => setAdded(added.filter(item => item !== kind)) : null} />`)}
+        <button type="button" class="quiet sport-add" onClick=${() => setAdded([...added, nextSportKey(allKinds)])}>${t("settings.model.sportAdd")}</button>
         <${Field} label=${t("settings.model.sportLookback")} unit=${t("settings.model.minutesAfter")}><${NumberInput} name="sport_lookback_minutes" min="0" max="1440" step="1" defaultValue=${s.sport_lookback_minutes} /><//>
       <//>
     </div>
@@ -452,11 +492,11 @@ export function SettingsView({ data, loadCount, page, onPage, today, agentInfo, 
     <div class="settings-grid settings-cols" key=${"profile-" + loadCount}>
       <${Schedule} id="isf" kind="isf" page=${page} title=${t("settings.pages.isf")} unit=${t("settings.schedule.isfUnit", { unit: UNIT.insulin })} rows=${settings.isf_schedule || []}
         profileId=${settings.nightscout_profile?.profile_id} onReload=${onReload} onSaved=${onProfileSaved} />
-      <${Schedule} id="ic" kind="ic" page=${page} title=${t("settings.pages.ic")} unit=${t("settings.schedule.icUnit", { unit: UNIT.insulin, carbUnit: UNIT.carbUnit })} rows=${settings.ic_schedule || []}
+      <${Schedule} id="ic" kind="ic" page=${page} title=${t("settings.pages.ic")} unit=${UNIT.factor} rows=${settings.ic_schedule || []}
         profileId=${settings.nightscout_profile?.profile_id} onReload=${onReload} onSaved=${onProfileSaved} />
       <${Panel} id="target" page=${page} title=${t("settings.pages.target")}><div id="target-rows">${(settings.target_schedule || []).length
         ? html`<div class="isf-table"><div class="isf-table-head"><span>${t("settings.schedule.from")}</span><span>${t("settings.pages.target")}</span></div>${settings.target_schedule.map(row =>
-          html`<div class="isf-readonly-row"><span>${minuteClock(Number(row.start_minute))}</span><strong>${num(row.low_mgdl, 0)}–${num(row.high_mgdl, 0)} mg/dL</strong></div>`)}</div>`
+          html`<div class="isf-readonly-row"><span>${minuteClock(Number(row.start_minute))}</span><strong>${glNum(row.low_mgdl, 0)}–${gl(row.high_mgdl, 0)}</strong></div>`)}</div>`
         : html`<p class="hint">${t("settings.schedule.noTarget")}</p>`}</div><//>
     </div>
     <h2 class="settings-heading">${t("settings.groups.model")}</h2>

@@ -1,10 +1,10 @@
 // The fields a meal has wherever it is entered or changed: the entry form (web/ui/entry.js), a saved
 // meal's card (web/ui/entry-card.js) and the meal chat (web/ui/agent-chat.js). KH-Sicherheit, the
 // Fettreich/Schnell chips and the fat/protein surcharge choice are built once here, so creating and
-// editing a meal cannot drift apart again (Philipp 2026-11-20). What they offer comes from the server;
+// editing a meal cannot drift apart again. What they offer comes from the server;
 // the dose recommendation stays in the entry form on purpose.
 import { html } from "./html.js";
-import { num } from "./lib.js";
+import { num, glNum, gl } from "./lib.js";
 import { t } from "./i18n.js";
 
 // KH-Sicherheit is a three-stop slider (unsure, roughly known, weighed) that starts in the middle.
@@ -28,7 +28,7 @@ const FactorChip = ({ name, label, title, checked, onChange }) => html`
   </label>`;
 
 // Schnell; the caller places it (inside its own chip row). The Fettreich chip was replaced by the fat/protein
-// level (FatLevel) and the agent's estimate (Philipp 2026-11-26); old fat marks are still read and kept.
+// level (FatLevel) and the agent's estimate (2026-11-26); old fat marks are still read and kept.
 export const FactorChips = ({ fast, onFast }) => html`
   <${FactorChip} name="fast" label=${t("factor.fast")} title=${t("factor.fastTitle")} checked=${fast} onChange=${onFast} />`;
 
@@ -56,8 +56,8 @@ export function SurchargeChoice({ mode, calculated, staticMgdl, fat, splitNote, 
     <div class="card-group-head"><b>${t("surcharge.title")}</b>
       <small>${t("surcharge.detail", { fat: num(calculated.fat_g, 0), protein: num(calculated.protein_g, 0), fpe: num(calculated.fpe, 1), hours: num(calculated.minutes / 60, 1) })}</small></div>
     <${Segments} label=${t("surcharge.label")} value=${mode} data="surcharge-mode" onChange=${onChange}
-      options=${[["static", t("surcharge.static") + (staticMgdl != null ? " " + num(staticMgdl, 0) + " mg/dL" : "") + (fat ? " " + t("surcharge.fatRich") : "")],
-                 ["fpe", t("surcharge.calculated", { mgdl: num(calculated.mgdl, 0) })]]} />
+      options=${[["static", t("surcharge.static") + (staticMgdl != null ? " " + gl(staticMgdl, 0) : "") + (fat ? " " + t("surcharge.fatRich") : "")],
+                 ["fpe", t("surcharge.calculated", { mgdl: glNum(calculated.mgdl, 0) })]]} />
     ${splitNote && mode === "fpe" && html`<small class="hint">${t("surcharge.splitNote")}</small>`}
   </div>`;
 }

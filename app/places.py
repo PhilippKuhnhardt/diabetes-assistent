@@ -1,9 +1,9 @@
-"""Where a meal was eaten: matching a browser position to the spots Philipp defined for his places.
+"""Where a meal was eaten: matching a browser position to the spots the user defined for their places.
 
 A place is a chip (Büro, Zuhause, Kantine); it has any number of spots, each a centre with a fixed
 radius. One place can be the fallback (Auswärts): it is preselected when a precise position lies
-in no spot. Positions only pick the chip and are never stored (user request 2026-10-29); a place
-only labels entries, it changes no calculation until Philipp approves a use."""
+in no spot. Positions only pick the chip and are never stored; a place
+only labels entries, it changes no calculation until the user approves a use."""
 from __future__ import annotations
 
 import math

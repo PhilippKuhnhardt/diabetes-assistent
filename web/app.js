@@ -1,5 +1,6 @@
 // The classic page logic, moving screen by screen into Preact components in web/ui/ (AGENTS.md).
 // Shared helpers and the API call live in web/ui/lib.js.
+import { setPrefs } from "./ui/prefs.js";
 import { html, render } from "./ui/html.js";
 import { entryCard, quickAdd } from "./ui/main.js";
 import { AnalysisView } from "./ui/analysis.js";
@@ -8,7 +9,8 @@ import { Overview, ActiveCard } from "./ui/today.js";
 import { EntryForm, deleteBasal } from "./ui/entry.js";
 import { glucosePoints } from "./ui/charts.js";
 import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
-import { sportNames, api, post, appUpdateWaiting, toast, num, timeOnly, toInstant, trendSymbol, UNIT } from "./ui/lib.js";
+import { sportNames, api, post, appUpdateWaiting, toast, num, gl, glNum, timeOnly, toInstant, trendSymbol, UNIT } from "./ui/lib.js";
+import { syncUnits } from "./ui/units.js";
 import { t, locale, translateDocument } from "./ui/i18n.js";
 
 // The static texts of index.html follow the language before anything renders.
@@ -52,11 +54,11 @@ function loadCurrentGlucose() {
       const status = glucoseStatuses.has(data.status) ? data.status : "unavailable";
       widget.dataset.status = status;
       $("#glucose-value").textContent = data.glucose_mgdl == null
-        ? "—" : num(data.glucose_mgdl, 1) + " mg/dL";
+        ? "—" : gl(data.glucose_mgdl, 1);
       const delta = data.trend_delta_mgdl;
       $("#glucose-trend").textContent = data.fresh && delta != null
-        ? trendSymbol(data.trend_direction) + " " + (Number(delta) > 0 ? "+" : "") + num(delta, 0) +
-          " mg/dL / " + num(data.trend_minutes, 0) + " min"
+        ? trendSymbol(data.trend_direction) + " " + (Number(delta) > 0 ? "+" : "") + glNum(delta, 0) +
+          " " + UNIT.glucose + " / " + num(data.trend_minutes, 0) + " min"
         : data.status === "stale" ? t("glucose.trendStale") : t("glucose.trendUnavailable");
       const meta = status === "stale"
         ? t("glucose.stale") + (data.glucose_at ? " · " + t("common.clock", { time: timeOnly(data.glucose_at) }) : "")
@@ -104,7 +106,7 @@ function validDay(value) {
 }
 
 // The URL carries only the view, never a day: an old link or a reloaded tab must not open an old day
-// by accident (user request 2026-10-16). A chosen day lives in this page only; a reload, a new visit or
+// by accident. A chosen day lives in this page only; a reload, a new visit or
 // DAY_HOLD_MS without touching the page brings back today.
 const DAY_HOLD_MS = 30 * 60000;
 
@@ -199,7 +201,7 @@ function changeDay(day, options = {}) {
 
 // An entry is always "now" unless the time was changed on purpose. That manual time ends with the
 // next saved entry, a view or day change, or after 10 minutes without touching the form.
-// The zone the app calculates with right now (home or the latest travel switch, user request 2026-11-07).
+// The zone the app calculates with right now.
 function appZone() {
   return state.travel?.current || state.settings?.timezone || "Europe/Berlin";
 }
@@ -240,6 +242,8 @@ let settingsLoads = 0;
 async function loadSettings() {
   const data = await api("/api/settings");
   state.settings = data.settings;
+  setPrefs(data.settings);
+  syncUnits(data.settings);
   state.settingsData = data;
   state.travel = data.travel || null;
   settingsLoads += 1;
@@ -357,7 +361,7 @@ async function loadDay() {
   }
 }
 
-// The red dot on "Verlauf" (user request 2026-11-24): finished days (from the server's start date up to
+// The red dot on "Verlauf": finished days (from the server's start date up to
 // yesterday) with an entry not yet checked, oldest first; a tap on "Verlauf" opens the first of them.
 let reviewPending = [];
 
@@ -565,7 +569,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("focus", loadCurrentGlucose);
 });
 
-// ---- Meal agent (user request 2026-11-16): photos and a description in, carbs and a dish out. ----
+// ---- Meal agent: photos and a description in, carbs and a dish out. ----
 // The agent only fills the form; the dose help calculates as always. One chat serves the entry form
 // and the edit dialog ("Tag durchgehen", where it continues an earlier estimate: "Nachbessern").
 const agent = { info: null };
@@ -683,7 +687,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateNav();
 });
 
-// Tables become cards on phones (concept 2026-11-18, user report: tables are bad on mobile): every
+// Tables become cards on phones: every
 // cell carries its column's name, which the phone layout shows above the value (styles.css).
 function labelTables(root) {
   // Preact adds rows to a table that is already on the page, so a row counts for its table too.

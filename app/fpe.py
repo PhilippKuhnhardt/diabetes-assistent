@@ -1,13 +1,13 @@
-"""Calculated meal surcharge from the estimated fat and protein (user request 2026-11-19, transition phase).
+"""Calculated meal surcharge from the estimated fat and protein.
 
 The meal agent estimates a meal's fat and protein in grams. 100 kcal from them (one fat-protein unit, FPE:
 9 kcal per gram fat, 4 per gram protein) raise glucose by a configured amount (setting fpe_surcharge_mgdl,
-default 20 mg/dL, roughly the Warsaw rule with Philipp's own carb factor), capped at the static surcharge of
+default 20 mg/dL, roughly the Warsaw rule with a typical carb factor), capped at the static surcharge of
 a fat/protein meal (80 + 120 mg/dL). The more FPE, the longer it acts: from the meal start until
-3 h + 30 min per FPE, at most 8 h. Analysis: project files analysen/fett-eiweiss-2026-11-19.md (5 meals,
-a first trend only).
+3 h + 30 min per FPE, at most 8 h. Calibrated on 5 meals,
+a first trend only.
 
-For now Philipp picks per meal whether the dose uses this or the static surcharge (80, +120 with the
+For now the user picks per meal whether the dose uses this or the static surcharge (80, +120 with the
 fat/protein mark); a meal saved with the calculated one carries [DAZ:<mg/dL>@<minutes>] in its note, so
 "Wirkt noch", the second split part and the Automatik's factor history use the same surcharge.
 With it the split is "carbs now, surcharge later": the second part is the surcharge's IE.
@@ -21,7 +21,7 @@ MAX_MGDL = Decimal(200)
 BASE_MINUTES, MINUTES_PER_FPE, MAX_MINUTES = Decimal(180), Decimal(30), Decimal(480)
 # Static and calculated surcharge, as the entry form sends the choice.
 MODES = ("static", "fpe")
-# Fat/protein levels for an entry without the agent's estimate (Philipp 2026-11-26: the manual carb entry
+# Fat/protein levels for an entry without the agent's estimate (2026-11-26: the manual carb entry
 # offers Nichts / Normal / Fett instead of the fat mark, computed as FPE). Normal (4 FPE = 80 mg/dL at
 # 20 per FPE, over 5 h) and Fett (10 FPE = 200 mg/dL) give the former static surcharge without and with
 # the fat mark; Nichts gives none.

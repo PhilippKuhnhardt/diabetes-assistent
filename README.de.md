@@ -13,6 +13,8 @@ Eine private Web-App für Typ-1-Diabetes mit Pen. Sie liest CGM-Werte (FreeStyle
 - **Spritzhilfe.** Vorschläge für eine Mahlzeit oder Korrektur aus den Mahlzeitfaktoren der letzten Wochen, abzüglich dessen, was noch wirkt, mit dem Bereich, in dem der BZ meist landet. Große Mahlzeiten lassen sich splitten.
 - **Verlauf.** Wochenweise jede Mahlzeit mit Faktor, Zeitraum und Kurve; hier wird geprüft und korrigiert.
 - **Analyse.** Faktoren je Mahlzeit und Tagesart sowie ein Rückblick über 90 Tage, wie die Einstellungen gewirkt hätten.
+- **Sport.** Joggen, Gym, leichtes Cardio und Rennsport sind eingebaut; eigene Sportarten mit eigener BZ-Wirkung und Wirkdauer kommen unter Mehr → Profil & Modell → Sport dazu.
+- **Einheiten.** BZ in mg/dL oder mmol/L, der Faktor als IE je KE (10 g), IE je BE (12 g) oder g KH je IE, unter Mehr → Profil & Modell. Auch die Grenzen für tief und hoch (Warnungen, Kurven) sind Einstellungen.
 - **Erinnerungen.** Optional per Pushover: Basal vergessen, 2. Split-Teil fällig, Frühwarnung vor Tief oder Hoch.
 - **Agenten und Skripte.** Eine Lese-API (`/api/v1`) und ein MCP-Server (`/mcp`), über den ein Assistent wie Claude BZ abfragen, eine Empfehlung holen und eintragen kann.
 
@@ -32,7 +34,7 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Die App läuft dann unter <http://127.0.0.1:8765/>; angemeldet wird mit `APP_PASSWORD` (die Sitzung hält ein Jahr, **Abmelden** beendet sie). Für Zugriff von außen gehört ein Reverse Proxy mit HTTPS davor.
+Die App läuft dann unter <http://127.0.0.1:8765/>; angemeldet wird mit `APP_PASSWORD` (die Sitzung hält ein Jahr, **Abmelden** beendet sie). Für Zugriff von außen gehört ein Reverse Proxy mit HTTPS davor. Eine Instanz ist für eine Person; jede weitere Person bekommt eine eigene Instanz mit eigener Datenbank.
 
 Die Datenbank liegt als `app.sqlite3` in `APP_DATA_DIR` (Standard `./data`) und bleibt über Neustarts erhalten. Das Verzeichnis muss für `APP_UID`/`APP_GID` beschreibbar sein. Es braucht ein eigenes Backup.
 
@@ -46,6 +48,7 @@ Die Datenbank liegt als `app.sqlite3` in `APP_DATA_DIR` (Standard `./data`) und 
 | `NIGHTSCOUT_AUTH_MODE` | `secret` (Standard, sendet den SHA-1-Hash der `API_SECRET`) oder `token`. |
 | `APP_LANGUAGE` | `de` (Standard) oder `en`: Sprache von Server-Texten, Push-Nachrichten und Essens-Agent. |
 | `APP_TIMEZONE` | Heimat-Zeitzone, falls das Nightscout-Profil keine hat (Standard `Europe/Berlin`). |
+| `APP_INSULIN` | Wirkprofil des schnellen Insulins aus [app/insulin.py](app/insulin.py) (Standard und einziges Profil hier: `fiasp`; ein Fork kann dort eigene ergänzen). |
 | `APP_SYNC_MINUTES` | Abgleich mit Nightscout alle N Minuten (Standard `2`, `0` = aus). |
 | `APP_BIND_ADDRESS`, `APP_PORT` | Wo Compose die App bereitstellt (Standard `127.0.0.1:8765`). |
 | `APP_DATA_DIR`, `APP_UID`, `APP_GID` | Datenverzeichnis und sein Benutzer (Standard `./data`, `1000`). |

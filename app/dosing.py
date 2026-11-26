@@ -35,7 +35,7 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     user request 2026-10-23).
     finger holds blood glucose measured by hand ({"at", "mgdl"}); a measurement newer than the latest
     CGM value is the start glucose instead (same 15-minute freshness, no trend).
-    hold_rise (carbs while a split bolus' second part is open, user request 2026-11-23): the forecast's rise above
+    hold_rise: the forecast's rise above
     a target belongs to that second part, which follows later from the forecast (app/split.py), so the options
     only correct downwards; their expected values then assume that second part."""
     now = now or datetime.now(timezone.utc)
@@ -106,7 +106,7 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
         guarded = latest[1] + activity - max(Decimal(0), lowering - raising)
         full = latest[1] + activity - lowering + raising
         # Cautious starts from the lower edge of the forecast's typical miss. Below 70 mg/dL the same
-        # forecast applies (the former guard there doubled the low, user request 2026-10-23).
+        # forecast applies.
         cautious_start = max(guarded, full - FORECAST_SPREAD_MGDL)
         start = full
         # The rise the open second part covers is left to it: injected now with the new carbs, it would act long

@@ -51,7 +51,7 @@ def dose_help(payload: dict) -> dict:
                                          local_now.date(), auto_percentile, half_life, lookback, method,
                                          surcharge_mgdl, fat_mgdl)
     auto_value = prediction["units_per_ke"]
-    # Place factor (user request 2026-11-06): an entry at a place switched on for it scales the factor
+    # Place factor: an entry at a place switched on for it scales the factor
     # and the surcharge by what meals there needed compared with the Automatik.
     scales = factors.place_scales(current_settings, local_now.date(), overrides, periods)
     place = scales.get(payload.get("place_id")) if payload.get("place_id") is not None else None
@@ -68,15 +68,15 @@ def dose_help(payload: dict) -> dict:
             scale=factors.entry_scale(scales)), now)
     except ValueError:
         active = None
-    # The surcharge follows the stomach (user request 2026-11-21, app/on_board.py): this entry gets the share its
+    # The surcharge follows the stomach: this entry gets the share its
     # carbs add to what is still in the stomach, exactly what "Wirkt noch" counts once it is saved.
     surcharge = method == forecast.SURCHARGE and auto_value is not None
     before = on_board.stomach_grams(treatments, now)
     added_share = lambda grams: forecast.surcharge_share(before + grams) - forecast.surcharge_share(before)
     meal_surcharge = factors.meal_surcharge_mgdl(current_settings, payload.get("fat_protein") is True)
-    # Transition phase (user request 2026-11-19): with the agent's fat and protein estimate the form offers
-    # the calculated surcharge next to the static one, and Philipp picks which one the dose uses (app/fpe.py).
-    # It belongs to the entry, whatever came before (user request 2026-11-21).
+    # Transition phase: with the agent's fat and protein estimate the form offers
+    # the calculated surcharge next to the static one, and the user picks which one the dose uses (app/fpe.py).
+    # It belongs to the entry, whatever came before.
     calculated = (fpe.estimate(payload, current_settings)
                   if surcharge and meal_surcharge is not None else None)
     use_fpe = fpe.chosen(calculated, payload)
