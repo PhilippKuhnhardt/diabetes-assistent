@@ -78,7 +78,7 @@ def dose_help(payload: dict) -> dict:
     # It belongs to the entry, whatever came before (user request 2026-11-21).
     calculated = (fpe.estimate(payload, current_settings)
                   if surcharge and meal_surcharge is not None else None)
-    use_fpe = calculated is not None and payload.get("surcharge_mode") == "fpe"
+    use_fpe = fpe.chosen(calculated, payload)
     if use_fpe:
         meal_surcharge = calculated["mgdl"]
     plan = split.open_plan(treatments, now)
@@ -103,7 +103,9 @@ def dose_help(payload: dict) -> dict:
         "auto_meal": meal_kind, "auto_factor_count": prediction["count"], "auto_method": method,
         "auto_fat_surcharge_mgdl": (str(fat_mgdl) if surcharge and payload.get("fat_protein") is True and not use_fpe
                                     else None),
-        "surcharge_choice": calculated and {
+        # The level switch (Nichts / Normal / Fett) of an entry without the agent's estimate needs the surcharge method.
+        "surcharge_levels": surcharge and meal_surcharge is not None,
+        "surcharge_choice": calculated and calculated["level"] is None and {
             "mode": "fpe" if use_fpe else "static",
             "static_mgdl": str(factors.meal_surcharge_mgdl(current_settings, payload.get("fat_protein") is True)),
             "static_fat": payload.get("fat_protein") is True,

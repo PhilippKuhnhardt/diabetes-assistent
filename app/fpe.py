@@ -21,6 +21,12 @@ MAX_MGDL = Decimal(200)
 BASE_MINUTES, MINUTES_PER_FPE, MAX_MINUTES = Decimal(180), Decimal(30), Decimal(480)
 # Static and calculated surcharge, as the entry form sends the choice.
 MODES = ("static", "fpe")
+# Fat/protein levels for an entry without the agent's estimate (Philipp 2026-11-26: the manual carb entry
+# offers Nichts / Normal / Fett instead of the fat mark, computed as FPE). Normal (4 FPE = 80 mg/dL at
+# 20 per FPE, over 5 h) and Fett (10 FPE = 200 mg/dL) give the former static surcharge without and with
+# the fat mark; Nichts gives none.
+LEVELS = {"none": Decimal(0), "normal": Decimal(4), "fat": Decimal(10)}
+DEFAULT_LEVEL = "normal"
 # With the calculated surcharge a split is offered once the later part (the surcharge) reaches this.
 SPLIT_LATER_MIN_UNITS = Decimal(2)
 
@@ -52,16 +58,37 @@ def per_fpe_mgdl(settings: dict) -> Decimal:
 
 
 def estimate(values: dict | None, settings: dict) -> dict | None:
-    """The calculated surcharge for fat_g and protein_g (an entry payload or the agent's estimate): FPE, mg/dL
-    and minutes. None without both values, or while the Automatik does not use the surcharge method, since
-    only that one has a meal surcharge to replace. Every caller (dose help, entry form, meal card, agent
-    session) reads it here."""
+    """The calculated surcharge for fat_g and protein_g (an entry payload or the agent's estimate), else for the
+    payload's fpe_level (LEVELS): FPE, mg/dL, minutes and the level (None for grams). None without either, or
+    while the Automatik does not use the surcharge method, since only that one has a meal surcharge to replace.
+    Every caller (dose help, entry form, meal card, agent session) reads it here."""
     if settings.get("auto_method") != "surcharge":
         return None
-    fpe = units((values or {}).get("fat_g"), (values or {}).get("protein_g"))
+    values = values or {}
+    fpe, level = units(values.get("fat_g"), values.get("protein_g")), None
+    if fpe is None and values.get("fpe_level") in LEVELS:
+        level = values["fpe_level"]
+        fpe = LEVELS[level]
     if fpe is None:
         return None
-    return {"fpe": fpe, "mgdl": surcharge_mgdl(fpe, per_fpe_mgdl(settings)).quantize(Decimal(1)), "minutes": minutes(fpe)}
+    return {"fpe": fpe, "mgdl": surcharge_mgdl(fpe, per_fpe_mgdl(settings)).quantize(Decimal(1)), "minutes": minutes(fpe),
+            "level": level}
+
+
+def chosen(found: dict | None, payload: dict) -> bool:
+    """Whether the dose and the saved entry use the calculated surcharge: always for a level, for the agent's
+    grams when the form picked it (surcharge_mode "fpe")."""
+    return found is not None and (found["level"] is not None or payload.get("surcharge_mode") == "fpe")
+
+
+def level_of(surcharge: dict | None, fat_mark: bool) -> str:
+    """The level a saved entry shows: from its stored surcharge's duration ([DAZ], unique per level), else
+    from the former fat mark (fat) or the static surcharge (normal)."""
+    if surcharge:
+        for level, value in LEVELS.items():
+            if int(surcharge["minutes"]) == minutes(value):
+                return level
+    return "fat" if fat_mark else DEFAULT_LEVEL
 
 
 def plan(found: dict) -> dict:

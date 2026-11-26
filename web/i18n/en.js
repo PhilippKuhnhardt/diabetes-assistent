@@ -740,6 +740,8 @@ export default {
     detail: "{fat} g fat, {protein} g protein = {fpe} FPU · acts up to {hours} h",
     fatRich: "(high fat)",
     label: "Surcharge for fat and protein",
+    levelTitle: "Fat/protein",
+    levels: { fat: "High", none: "None", normal: "Normal" },
     splitNote: "Split: carbs now, surcharge later",
     static: "Fixed",
     title: "Fat/protein surcharge",
