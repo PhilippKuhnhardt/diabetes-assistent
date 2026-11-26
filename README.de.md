@@ -107,7 +107,7 @@ for f in web/app.js web/ui/*.js web/i18n/*.js; do node --check "$f"; done
 
 Aufbau: `app/` enthält alle Fachregeln (Python-Standardbibliothek plus die Pakete aus `requirements.txt`), `web/` zeichnet nur, was der Server liefert (Preact + htm, ohne Build-Schritt). Nightscout ist die maßgebliche Quelle; SQLite spiegelt die Daten und speichert eigene Entscheidungen, Einstellungen und berechnete Tage.
 
-Die Integrationstests laufen gegen einen lokalen Fake-Nightscout-Server. `tests/test_golden.py` vergleicht 40 Tage synthetische Daten mit den Referenzständen in `tests/golden/`; eine gewollte Änderung erzeugt sie mit `GOLDEN_UPDATE=1 python3 -m unittest tests.test_golden` neu. Die CI führt zusätzlich einen Klicktest im Browser aus (`tests/e2e/`). Mehr in [CONTRIBUTING.md](CONTRIBUTING.md) und [AGENTS.md](AGENTS.md).
+Die Integrationstests laufen gegen einen lokalen Fake-Nightscout-Server. `tests/test_golden.py` vergleicht 40 Tage synthetische Daten mit den Referenzständen in `tests/golden/`; eine gewollte Änderung erzeugt sie mit `GOLDEN_UPDATE=1 python3 -m unittest tests.test_golden` neu. Die CI führt zusätzlich einen Klicktest im Browser aus (`tests/e2e/`). Die Projektregeln im Detail stehen in [AGENTS.md](AGENTS.md).
 
 ## Lizenz
 

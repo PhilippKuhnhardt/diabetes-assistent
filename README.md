@@ -70,7 +70,7 @@ python3 -m unittest discover -s tests -v
 for f in web/app.js web/ui/*.js web/i18n/*.js; do node --check "$f"; done
 ```
 
-The integration tests use a local fake Nightscout server, the golden tests 40 days of synthetic data. CI also runs a browser click test (`tests/e2e/`). See [CONTRIBUTING.md](CONTRIBUTING.md) and, for the project's rules in detail, [AGENTS.md](AGENTS.md).
+The integration tests use a local fake Nightscout server, the golden tests 40 days of synthetic data. CI also runs a browser click test (`tests/e2e/`). The project's rules in detail are in [AGENTS.md](AGENTS.md).
 
 ## License
 
