@@ -1,8 +1,7 @@
 """What still acts on glucose right now: rapid insulin, carbs and the meal surcharge still to come.
 
-Insulin: exponential activity curve as Loop's Fiasp preset (peak 55 min after a 10-min delay,
-6 h duration); the author's CGM data fit it (about 0 % after 30 min, 50 % after 90 min, 75 % after 2 h,
-nearly all after 4 h). Remaining effect = Σ rapid IE × still-active share × KF at the dose.
+Insulin: the active profile's activity curve (app/insulin.py, default Fiasp: peak 55 min after a
+10-min delay, 6 h duration). Remaining effect = Σ rapid IE × still-active share × KF at the dose.
 
 Simple model: carbs are digested,
 insulin lowers, glucose is the sum; no rules about meals, snacks or time windows.

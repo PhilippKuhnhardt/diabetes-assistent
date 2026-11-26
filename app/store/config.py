@@ -46,8 +46,6 @@ def default_settings() -> dict:
         "fpe_surcharge_mgdl": "20",
         "auto_vacation": DEFAULT_AUTO_VACATION,
         "day_types": False,
-        "peak_minutes": 60,
-        "duration_minutes": 180,
         "breakfast_end_minute": 660,
         "lunch_end_minute": 1020,
         "sport_lookback_minutes": 360,

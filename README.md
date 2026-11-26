@@ -51,6 +51,7 @@ All configuration comes from environment variables; [.env.example](.env.example)
 | `APP_PASSWORD` | yes | Password for the browser login |
 | `APP_TIMEZONE` | | Home time zone if the Nightscout profile has none (default `Europe/Berlin`) |
 | `APP_LANGUAGE` | | `de` (default) or `en`: server messages, push notifications and the meal agent. The page follows the browser and has its own switch. |
+| `APP_INSULIN` | | Rapid-insulin action profile from [app/insulin.py](app/insulin.py) (default and only upstream profile: `fiasp`) |
 | `APP_SYNC_MINUTES` | | Background sync interval (default 2, `0` = off) |
 | `APP_BIND_ADDRESS`, `APP_PORT` | | Published address and port (default `127.0.0.1:8765`) |
 | `APP_DATA_DIR`, `APP_UID`, `APP_GID` | | Host directory for SQLite and photos (default `./data`), writable for this user and group (default 1000) |
@@ -67,7 +68,7 @@ Back up `APP_DATA_DIR` (the SQLite database with its WAL files and the meal phot
 - Log in with `APP_PASSWORD`, then open the settings and check that the Nightscout profile (carb ratio, correction factor, target) was loaded.
 - Without history, dose suggestions use the carb ratio from the Nightscout profile. Once a few weeks of meals are logged, the app's own meal factors take over.
 - The usual basal dose is 0 (off) until you set it in the settings.
-- Insulin action follows a fixed rapid-insulin curve (Fiasp-like, see [docs/rechenwege.md](docs/rechenwege.md)). Many constants of the forecast model were estimated on one person's data; treat them as a starting point, not as calibrated for you.
+- Insulin action follows the Fiasp curve from [app/insulin.py](app/insulin.py). Upstream ships only this profile; a fork can add another there and select it with `APP_INSULIN`. Many constants of the forecast model were estimated on one person's data; treat them as a starting point, not as calibrated for you.
 
 ### One instance per person
 

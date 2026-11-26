@@ -595,7 +595,6 @@ class IntegrationTests(unittest.TestCase):
                 ({"dose_target_mgdl": 150}, "Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen"),
                 ({"dose_target_mgdl": "viel"}, "Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen"),
                 ({"timezone": "Mars/Olympus"}, "Unbekannte Zeitzone"),
-                ({"peak_minutes": 500, "duration_minutes": 400}, "Ungültige Zeitparameter"),
                 ({"window_minutes": 90.5}, "Ungültige Zeitparameter"),
                 ({"auto_lookback_days": 14}, "Zeitraum der Automatik muss 8, 15 oder 30 Tage sein"),
                 ({"basal_default_units": "10.3"}, "Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen"),

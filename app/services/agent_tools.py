@@ -98,7 +98,7 @@ class SaveEntryArgs(EntryArgs):
     kind: Annotated[Literal["meal", "exercise"] | None, Field(description=
         tr("meal = Essen und/oder Insulin (Standard), exercise = Sport."))] = None
     insulin_units: Annotated[Decimal | None, Field(ge=0, le=100, description=
-        tr("Tatsächlich gespritzte schnelle IE (Fiasp)."))] = None
+        tr("Tatsächlich gespritzte schnelle IE."))] = None
     dose_variant: Annotated[Literal[entry.DOSE_VARIANTS] | None, Field(description=
         tr("Welcher Vorschlag gewählt wurde (bestimmt beim Split den 2. Teil)."))] = None
     with_basal: Annotated[bool | None, Field(description=

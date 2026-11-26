@@ -198,7 +198,7 @@ EN = {
     "Zuschlag der Hauptmahlzeit: static = fest (Mahlzeitzuschlag, mit fat_protein plus Fett-Zuschlag), fpe = aus fat_g und protein_g berechnet (dann Split: KH jetzt, Zuschlag später). Weglassen = static.": "Surcharge of the main meal: static = fixed (meal surcharge, with fat_protein plus fat surcharge), fpe = calculated from fat_g and protein_g (then split: carbs now, surcharge later). Leave out = static.",
     "Ort-Chip, an dem gegessen wurde (z. B. Kantine, Restaurant), nur bei KH. Die Vorschau listet die vorhandenen Orte in places; weglassen, wenn der Nutzer keinen nennt.": "Place chip where the food was eaten (e.g. canteen, restaurant), carbs only. The preview lists the existing places in places; leave out if the user names none.",
     "meal = Essen und/oder Insulin (Standard), exercise = Sport.": "meal = food and/or insulin (default), exercise = exercise.",
-    "Tatsächlich gespritzte schnelle IE (Fiasp).": "Rapid-acting units actually injected (Fiasp).",
+    "Tatsächlich gespritzte schnelle IE.": "Rapid-acting units actually injected.",
     "Welcher Vorschlag gewählt wurde (bestimmt beim Split den 2. Teil).": "Which suggestion was chosen (decides the 2nd part of a split).",
     "Den vorgeschlagenen Basal (basal_suggestion_units) mit eintragen.": "Log the suggested basal (basal_suggestion_units) as well.",
     "Gericht aus dem Katalog (list_dishes), z. B. Porridge, nur bei KH. Ein vorhandenes Gericht mit genau seinem Namen nennen, damit sein Verlauf zusammenbleibt; ein neuer Name legt ein neues Gericht an.": "Dish from the catalogue (list_dishes), e.g. porridge, carbs only. Name an existing dish with exactly its name so its history stays together; a new name creates a new dish.",

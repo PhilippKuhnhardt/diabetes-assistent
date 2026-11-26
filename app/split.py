@@ -1,6 +1,6 @@
 """Split bolus for large main meals: a share of the dose now, the rest later.
 
-Fiasp is mostly done after 2 h while a large meal and its fat/protein still raise glucose for hours,
+Rapid insulin is mostly done after 2 h while a large meal and its fat/protein still raise glucose for hours,
 so the full dose up front means too much insulin early and too little late. The plan is stored with
 the meal entry in Nightscout ([DASP:<IE>@<minutes>]); any later rapid dose without carbs counts as its second
 part, which the dose help suggests from the current forecast (app/on_board.py) next to the planned amount.

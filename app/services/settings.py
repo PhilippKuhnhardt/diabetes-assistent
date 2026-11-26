@@ -20,8 +20,7 @@ SPLIT_MESSAGE = tr("Split-Bolus: ab 0–300 g (0 = aus), 30–90 % sofort, Rest 
 # Every field's own message, used for any problem with it (missing, no number, out of range).
 MESSAGES = {
     "timezone": tr("Unbekannte Zeitzone"),
-    "window_minutes": tr("Ungültige Zeitparameter"), "peak_minutes": tr("Ungültige Zeitparameter"),
-    "duration_minutes": tr("Ungültige Zeitparameter"),
+    "window_minutes": tr("Ungültige Zeitparameter"),
     "breakfast_end_minute": tr("Ungültige Mahlzeiten- oder Sportzeiten"),
     "lunch_end_minute": tr("Ungültige Mahlzeiten- oder Sportzeiten"),
     "sport_lookback_minutes": tr("Ungültige Mahlzeiten- oder Sportzeiten"),
@@ -53,8 +52,6 @@ class SettingsInput(BaseModel):
 
     timezone: str
     window_minutes: Annotated[int, Field(ge=60, le=360)]
-    peak_minutes: Annotated[int, Field(ge=20)]
-    duration_minutes: Annotated[int, Field(le=600)]
     breakfast_end_minute: Annotated[int, Field(gt=0)]
     lunch_end_minute: Annotated[int, Field(lt=1440)]
     sport_lookback_minutes: Annotated[int, Field(ge=0, le=1440)]
@@ -105,8 +102,6 @@ class SettingsInput(BaseModel):
 
     @model_validator(mode="after")
     def _between_fields(self):
-        if not self.peak_minutes < self.duration_minutes:
-            raise ValueError(MESSAGES["peak_minutes"])
         if not self.breakfast_end_minute < self.lunch_end_minute:
             raise ValueError(MESSAGES["breakfast_end_minute"])
         if not self.dose_target_mgdl <= self.dose_cautious_target_mgdl:
@@ -128,14 +123,17 @@ def validate_settings(value: dict) -> dict:
         if key in value:
             result[key] = value[key]
     # Nightscout owns the correction-factor schedule; it is not part of local settings.
-    for key in ("isf_schedule", "ic_schedule", "target_schedule", "nightscout_profile"):
+    # peak_minutes / duration_minutes: former settings that no calculation read (the insulin curve is
+    # app/insulin.py); older stored versions still carry them.
+    for key in ("isf_schedule", "ic_schedule", "target_schedule", "nightscout_profile", "peak_minutes",
+                "duration_minutes"):
         result.pop(key, None)
     try:
         checked = SettingsInput.model_validate(result)
     except ValidationError as error:
         raise ValueError(_settings_error(error)) from None
     result.update({
-        **checked.model_dump(include={"timezone", "window_minutes", "peak_minutes", "duration_minutes",
+        **checked.model_dump(include={"timezone", "window_minutes",
                                       "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
                                       "auto_lookback_days", "auto_method", "auto_vacation", "day_types",
                                       *config.DEFAULT_SPLIT}),

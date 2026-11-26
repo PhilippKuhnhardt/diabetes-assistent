@@ -16,7 +16,6 @@
   "day_types": true,
   "dose_cautious_target_mgdl": "150",
   "dose_target_mgdl": "120",
-  "duration_minutes": 180,
   "fpe_surcharge_mgdl": "20",
   "ic_schedule": [
    {
@@ -53,7 +52,6 @@
    "start_at": "2026-01-01T00:00:00Z",
    "timezone": "Europe/Berlin"
   },
-  "peak_minutes": 60,
   "split_delay_minutes": 120,
   "split_first_percent": 60,
   "split_min_grams": 80,
