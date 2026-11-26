@@ -3907,7 +3907,6 @@
    "basal_default_units": "0",
    "breakfast_end_minute": 660,
    "dose_cautious_target_mgdl": "150",
-   "dose_low_target_mgdl": "100",
    "dose_target_mgdl": "120",
    "duration_minutes": 180,
    "fpe_surcharge_mgdl": "20",

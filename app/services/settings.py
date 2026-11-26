@@ -27,7 +27,6 @@ MESSAGES = {
     "sport_lookback_minutes": tr("Ungültige Mahlzeiten- oder Sportzeiten"),
     "dose_target_mgdl": tr("Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen"),
     "dose_cautious_target_mgdl": tr("Vorsichtiger Zielwert muss zwischen dem Zielwert und 250 mg/dL liegen"),
-    "dose_low_target_mgdl": tr("Tieferer Zielwert muss zwischen 60 mg/dL und dem Zielwert liegen (gleich = aus)"),
     "auto_percentile": tr("Perzentil der Automatik muss zwischen 25 und 50 % liegen"),
     "auto_lookback_days": tr("Zeitraum der Automatik muss 8, 15 oder 30 Tage sein"),
     "auto_half_life_days": tr("Halbwertszeit der Automatik muss zwischen 1 und 28 Tagen liegen"),
@@ -60,7 +59,6 @@ class SettingsInput(BaseModel):
     sport_lookback_minutes: Annotated[int, Field(ge=0, le=1440)]
     dose_target_mgdl: Annotated[Decimal, Field(ge=60, le=140)]
     dose_cautious_target_mgdl: Annotated[Decimal, Field(le=250)]
-    dose_low_target_mgdl: Annotated[Decimal, Field(ge=60)] = Decimal(100)
     auto_percentile: Annotated[Decimal, Field(ge=25, le=50)]
     auto_lookback_days: int
     auto_half_life_days: Annotated[Decimal, Field(ge=1, le=28)]
@@ -111,8 +109,6 @@ class SettingsInput(BaseModel):
             raise ValueError(MESSAGES["breakfast_end_minute"])
         if not self.dose_target_mgdl <= self.dose_cautious_target_mgdl:
             raise ValueError(MESSAGES["dose_cautious_target_mgdl"])
-        if not self.dose_low_target_mgdl <= self.dose_target_mgdl:
-            raise ValueError(MESSAGES["dose_low_target_mgdl"])
         return self
 
 
@@ -141,7 +137,7 @@ def validate_settings(value: dict) -> dict:
                                       "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
                                       "auto_lookback_days", "auto_method", "auto_vacation", *config.DEFAULT_SPLIT}),
         **{key: str(getattr(checked, key)) for key in (
-            "dose_target_mgdl", "dose_cautious_target_mgdl", "dose_low_target_mgdl", "auto_percentile",
+            "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile",
             "auto_half_life_days", "auto_surcharge_mgdl", "auto_fat_surcharge_mgdl", "fpe_surcharge_mgdl")},
         "sport_effects_mgdl": {kind: str(amount) for kind, amount in checked.sport_effects_mgdl.items()},
         "sport_durations_minutes": checked.sport_durations_minutes or dict(config.DEFAULT_SPORT_DURATIONS),
