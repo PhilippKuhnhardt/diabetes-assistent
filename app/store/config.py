@@ -17,7 +17,7 @@ DEFAULT_SPORT_DURATIONS = {"jogging": 300, "gym": 300, "light_cardio": 300, "rac
 
 
 # Usual daily basal dose offered with breakfast (IE); configurable in the settings.
-DEFAULT_BASAL_UNITS = "17"
+DEFAULT_BASAL_UNITS = "0"
 
 
 # Split bolus for large main meals: from this many grams, this share now, the rest this many minutes later.

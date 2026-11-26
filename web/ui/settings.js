@@ -400,7 +400,7 @@ function ModelForm({ page, data, onReload }) {
         <${Field} label=${t("settings.model.lookback")}><${Choice} name="auto_lookback_days" value=${String(s.auto_lookback_days)} options=${[8, 15, 30].map(days => [String(days), t("common.days", { count: days })])} /><//>
         <${Field} label=${t("analysis.tuning.half_life")} unit=${t("settings.model.daysUnit")}><${NumberInput} name="auto_half_life_days" min="1" max="28" step="0.5" defaultValue=${s.auto_half_life_days} /><//>
         <${Field} label=${t("settings.model.vacation")}><${Choice} name="auto_vacation" value=${s.auto_vacation || "separate"} options=${["separate", "vacation_only", "all"].map(key => [key, t("settings.model.vacationOptions." + key)])} /><//>
-        <${Field} label=${t("settings.model.basal")} unit=${UNIT.insulin}><${NumberInput} name="basal_default_units" min="0" max="100" step="0.5" defaultValue=${s.basal_default_units ?? 17} /><//>
+        <${Field} label=${t("settings.model.basal")} unit=${UNIT.insulin}><${NumberInput} name="basal_default_units" min="0" max="100" step="0.5" defaultValue=${s.basal_default_units ?? 0} /><//>
         <${Field} label=${t("settings.model.splitFrom")} unit=${t("settings.model.gramsCarbs")}><${NumberInput} name="split_min_grams" min="0" max="300" step="5" defaultValue=${s.split_min_grams ?? 80} /><//>
         <${Field} label=${t("settings.model.splitUnits")} unit=${UNIT.insulin}><${NumberInput} name="split_min_units" min="0" max="30" step="0.5" defaultValue=${s.split_min_units ?? 6.5} /><//>
         <${Field} label=${t("settings.model.splitFirst")} unit="%"><${NumberInput} name="split_first_percent" min="30" max="90" step="5" defaultValue=${s.split_first_percent ?? 60} /><//>
