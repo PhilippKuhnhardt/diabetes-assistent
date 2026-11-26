@@ -7,7 +7,7 @@ Thanks for your interest. This app was built around one person's diabetes therap
 Upstream stays small on purpose:
 
 - **Nightscout is the only data source.** Adapters for other CGM or pump APIs will not be merged; feed your data into Nightscout instead.
-- **Multiple daily injections with one rapid insulin.** The insulin action curve is a profile (see below). Adding curves for other insulins is welcome in forks; upstream keeps the profile it is used with.
+- **Multiple daily injections with one rapid insulin.** The insulin action curve is a profile in `app/insulin.py`, selected with `APP_INSULIN`. Adding curves for other insulins is welcome in forks; upstream keeps the profile it is used with.
 - **One instance per person.** No multi-user or multi-tenant features.
 
 Bug fixes, tests, documentation, translations and things that make the app easier to run for others are very welcome. For larger changes, open an issue first so we can agree on the approach.

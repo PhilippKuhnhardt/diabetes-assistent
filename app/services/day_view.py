@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
-from app import calculation, episodes, on_board
+from app import calculation, episodes, insulin, on_board
 from app import glucose as cgm
 from app.common import json_safe, local_day_range, local_zone, parse_instant, zone_name_at
 from app.ingestion import nightscout, sync
@@ -23,7 +23,8 @@ from app.i18n import tr
 # Any change to the app's code or its language (APP_LANGUAGE: stored days hold texts) recalculates stored
 # days once, so a stored result never outlives the code that produced it.
 CODE_VERSION = hashlib.sha256(b"".join(
-    path.read_bytes() for path in sorted(Path(__file__).resolve().parents[1].rglob("*.py"))) + i18n.LANGUAGE.encode()).hexdigest()
+    path.read_bytes() for path in sorted(Path(__file__).resolve().parents[1].rglob("*.py"))) + i18n.LANGUAGE.encode()
+    + insulin.ACTIVE.key.encode()).hexdigest()
 
 
 def day_payload(day: str, refresh: bool = True) -> dict:

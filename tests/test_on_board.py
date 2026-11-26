@@ -1,4 +1,5 @@
 import unittest
+import unittest.mock
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
@@ -12,6 +13,15 @@ class CurveTests(unittest.TestCase):
         for minutes, share in expected.items():
             with self.subTest(minutes):
                 self.assertAlmostEqual(float(on_board.insulin_remaining(Decimal(minutes))), float(share), places=2)
+
+    def test_another_profile_changes_the_curve_and_unknown_names_are_refused(self):
+        from app import insulin
+        slower = insulin.InsulinProfile("slow", "Slow", Decimal(15), Decimal(75), Decimal(360))
+        self.assertGreater(slower.remaining(Decimal(90)), insulin.PROFILES["fiasp"].remaining(Decimal(90)))
+        self.assertEqual(slower.remaining(Decimal(375)), 0)
+        self.assertEqual(insulin.ACTIVE.key, "fiasp")
+        with unittest.mock.patch.dict("os.environ", {"APP_INSULIN": "nope"}), self.assertRaises(SystemExit):
+            insulin._configured()
 
     def test_stomach_digests_larger_and_consecutive_meals_slower(self):
         at = datetime(2026, 10, 8, 12, tzinfo=timezone.utc)
