@@ -12,34 +12,35 @@ from app import auth, calculation, episodes, forecast, fpe
 from app.common import local_zone, parse_instant, unit_text, zone_name_at
 from app.ingestion import nightscout, sync
 from app.store import config, marks, timezones
+from app.i18n import tr
 
 
 
-SPLIT_MESSAGE = "Split-Bolus: ab 0–300 g (0 = aus), 30–90 % sofort, Rest nach 30–300 min"
+SPLIT_MESSAGE = tr("Split-Bolus: ab 0–300 g (0 = aus), 30–90 % sofort, Rest nach 30–300 min")
 # Every field's own message, used for any problem with it (missing, no number, out of range).
 MESSAGES = {
-    "timezone": "Unbekannte Zeitzone",
-    "window_minutes": "Ungültige Zeitparameter", "peak_minutes": "Ungültige Zeitparameter",
-    "duration_minutes": "Ungültige Zeitparameter",
-    "breakfast_end_minute": "Ungültige Mahlzeiten- oder Sportzeiten",
-    "lunch_end_minute": "Ungültige Mahlzeiten- oder Sportzeiten",
-    "sport_lookback_minutes": "Ungültige Mahlzeiten- oder Sportzeiten",
-    "dose_target_mgdl": "Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen",
-    "dose_cautious_target_mgdl": "Vorsichtiger Zielwert muss zwischen dem Zielwert und 250 mg/dL liegen",
-    "dose_low_target_mgdl": "Tieferer Zielwert muss zwischen 60 mg/dL und dem Zielwert liegen (gleich = aus)",
-    "auto_percentile": "Perzentil der Automatik muss zwischen 25 und 50 % liegen",
-    "auto_lookback_days": "Zeitraum der Automatik muss 8, 15 oder 30 Tage sein",
-    "auto_half_life_days": "Halbwertszeit der Automatik muss zwischen 1 und 28 Tagen liegen",
-    "auto_method": "Unbekannte Methode der Automatik",
-    "auto_surcharge_mgdl": "Mahlzeitzuschlag muss zwischen 5 und 150 mg/dL liegen",
-    "auto_fat_surcharge_mgdl": "Fett-Zuschlag muss zwischen 0 und 200 mg/dL liegen",
-    "fpe_surcharge_mgdl": "Zuschlag je FPE muss zwischen 5 und 60 mg/dL liegen",
-    "auto_vacation": "Unbekannte Urlaubs-Einstellung der Automatik",
-    "basal_default_units": "Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen",
+    "timezone": tr("Unbekannte Zeitzone"),
+    "window_minutes": tr("Ungültige Zeitparameter"), "peak_minutes": tr("Ungültige Zeitparameter"),
+    "duration_minutes": tr("Ungültige Zeitparameter"),
+    "breakfast_end_minute": tr("Ungültige Mahlzeiten- oder Sportzeiten"),
+    "lunch_end_minute": tr("Ungültige Mahlzeiten- oder Sportzeiten"),
+    "sport_lookback_minutes": tr("Ungültige Mahlzeiten- oder Sportzeiten"),
+    "dose_target_mgdl": tr("Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen"),
+    "dose_cautious_target_mgdl": tr("Vorsichtiger Zielwert muss zwischen dem Zielwert und 250 mg/dL liegen"),
+    "dose_low_target_mgdl": tr("Tieferer Zielwert muss zwischen 60 mg/dL und dem Zielwert liegen (gleich = aus)"),
+    "auto_percentile": tr("Perzentil der Automatik muss zwischen 25 und 50 % liegen"),
+    "auto_lookback_days": tr("Zeitraum der Automatik muss 8, 15 oder 30 Tage sein"),
+    "auto_half_life_days": tr("Halbwertszeit der Automatik muss zwischen 1 und 28 Tagen liegen"),
+    "auto_method": tr("Unbekannte Methode der Automatik"),
+    "auto_surcharge_mgdl": tr("Mahlzeitzuschlag muss zwischen 5 und 150 mg/dL liegen"),
+    "auto_fat_surcharge_mgdl": tr("Fett-Zuschlag muss zwischen 0 und 200 mg/dL liegen"),
+    "fpe_surcharge_mgdl": tr("Zuschlag je FPE muss zwischen 5 und 60 mg/dL liegen"),
+    "auto_vacation": tr("Unbekannte Urlaubs-Einstellung der Automatik"),
+    "basal_default_units": tr("Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen"),
     "split_min_grams": SPLIT_MESSAGE, "split_first_percent": SPLIT_MESSAGE, "split_delay_minutes": SPLIT_MESSAGE,
-    "split_min_units": "Split-Bolus: Mindestdosis 0–30 IE in 0,5er-Schritten (0 = immer)",
-    "sport_effects_mgdl": "Ungültiger Sporteffekt",
-    "sport_durations_minutes": "Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen",
+    "split_min_units": tr("Split-Bolus: Mindestdosis 0–30 IE in 0,5er-Schritten (0 = immer)"),
+    "sport_effects_mgdl": tr("Ungültiger Sporteffekt"),
+    "sport_durations_minutes": tr("Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen"),
 }
 
 
@@ -99,7 +100,7 @@ class SettingsInput(BaseModel):
     @classmethod
     def _every_sport(cls, value):
         if value is not None and (not isinstance(value, dict) or set(value) != set(episodes.SPORT_LABELS)):
-            raise ValueError("Ungültige Sportarten")
+            raise ValueError(tr("Ungültige Sportarten"))
         return value
 
     @model_validator(mode="after")
@@ -119,7 +120,7 @@ def _settings_error(error: ValidationError) -> str:
     first = error.errors()[0]
     if first["type"] == "value_error":
         return str(first["ctx"]["error"])
-    return MESSAGES.get(str(first["loc"][0]) if first["loc"] else "", "Ungültige Einstellungen")
+    return MESSAGES.get(str(first["loc"][0]) if first["loc"] else "", tr("Ungültige Einstellungen"))
 
 
 def validate_settings(value: dict) -> dict:
@@ -164,11 +165,11 @@ MANUAL_WINDOW_LIMITS = {
 def validate_manual_window(meal_at: datetime, start: datetime, end: datetime) -> None:
     """A manual window starts within two hours around the meal and ends after it."""
     if not meal_at - MANUAL_WINDOW_LEAD <= start <= meal_at + MANUAL_WINDOW_LAG:
-        raise ValueError("Beginn muss höchstens zwei Stunden vor oder nach dem Mahlzeitbeginn liegen")
+        raise ValueError(tr("Beginn muss höchstens zwei Stunden vor oder nach dem Mahlzeitbeginn liegen"))
     if end < max(start, meal_at) + MANUAL_WINDOW_MIN:
-        raise ValueError("Ende muss mindestens 30 Minuten nach Mahlzeit- und Fensterbeginn liegen")
+        raise ValueError(tr("Ende muss mindestens 30 Minuten nach Mahlzeit- und Fensterbeginn liegen"))
     if end - start > MANUAL_WINDOW_MAX:
-        raise ValueError("Zeitraum darf höchstens zehn Stunden lang sein")
+        raise ValueError(tr("Zeitraum darf höchstens zehn Stunden lang sein"))
 
 
 VACATION_BACKDATE_DAYS = 14
@@ -208,13 +209,13 @@ def set_timezone(payload: dict, now: datetime | None = None) -> dict:
     now = now or datetime.now(timezone.utc)
     if payload.get("undo") is True:
         if not timezones.delete_last():
-            raise ValueError("Es gibt keinen Zeitzonen-Wechsel zum Zurücknehmen")
+            raise ValueError(tr("Es gibt keinen Zeitzonen-Wechsel zum Zurücknehmen"))
         return travel_state(now)
     _, current_settings = config.get_settings()
     home = current_settings["timezone"]
     name = payload.get("zone")
     if not isinstance(name, str):
-        raise ValueError("Ungültige Zeitzone")
+        raise ValueError(tr("Ungültige Zeitzone"))
     name = name.strip()
     if name in ("", home):
         name = ""
@@ -222,20 +223,20 @@ def set_timezone(payload: dict, now: datetime | None = None) -> dict:
         try:
             ZoneInfo(name)
         except (ValueError, KeyError, OSError):
-            raise ValueError("Unbekannte Zeitzone") from None
+            raise ValueError(tr("Unbekannte Zeitzone")) from None
     at = now
     if payload.get("at"):
         try:
             at = parse_instant(str(payload["at"]))
         except ValueError:
-            raise ValueError("Ungültiger Zeitpunkt") from None
+            raise ValueError(tr("Ungültiger Zeitpunkt")) from None
         if not now - timedelta(days=TIMEZONE_BACKDATE_DAYS) <= at <= now + timedelta(minutes=5):
-            raise ValueError(f"Zeitpunkt muss zwischen jetzt und vor {TIMEZONE_BACKDATE_DAYS} Tagen liegen")
+            raise ValueError(tr("Zeitpunkt muss zwischen jetzt und vor {days} Tagen liegen", days=TIMEZONE_BACKDATE_DAYS))
     switches = timezones.switches()
     if switches and at <= switches[-1][0]:
-        raise ValueError("Zeitpunkt muss nach dem letzten Zeitzonen-Wechsel liegen")
+        raise ValueError(tr("Zeitpunkt muss nach dem letzten Zeitzonen-Wechsel liegen"))
     if (switches[-1][1] if switches else "") == name:
-        raise ValueError("Diese Zeitzone gilt bereits")
+        raise ValueError(tr("Diese Zeitzone gilt bereits"))
     timezones.add_switch(at, name)
     return travel_state(now)
 
@@ -267,7 +268,7 @@ def save_settings(payload: dict) -> dict:
 def set_vacation(payload: dict) -> dict:
     active = payload.get("active")
     if not isinstance(active, bool):
-        raise ValueError("Ungültige Urlaubsauswahl")
+        raise ValueError(tr("Ungültige Urlaubsauswahl"))
     _, current_settings = config.get_settings()
     today = datetime.now(local_zone(current_settings["timezone"])).date()
     # A switch made late (on in the evening of the second day, off a day after coming home) can name
@@ -277,9 +278,9 @@ def set_vacation(payload: dict) -> dict:
         try:
             day = date.fromisoformat(str(payload["day"]))
         except ValueError:
-            raise ValueError("Ungültiges Datum") from None
+            raise ValueError(tr("Ungültiges Datum")) from None
         if not today - timedelta(days=VACATION_BACKDATE_DAYS) <= day <= today:
-            raise ValueError(f"Datum muss zwischen heute und vor {VACATION_BACKDATE_DAYS} Tagen liegen")
+            raise ValueError(tr("Datum muss zwischen heute und vor {days} Tagen liegen", days=VACATION_BACKDATE_DAYS))
     marks.set_vacation(active, day.isoformat())
     return vacation_state()
 
@@ -289,14 +290,14 @@ def save_profile_schedule(path: str, payload: dict) -> dict:
     is_ic = path.endswith("/ic")
     schedule = payload.get("ic_schedule" if is_ic else "isf_schedule")
     if not isinstance(profile_id, str) or not profile_id or not isinstance(schedule, list):
-        raise ValueError("Ungültiger Profil-Zeitplan")
+        raise ValueError(tr("Ungültiger Profil-Zeitplan"))
     if is_ic:
         converted = []
         for row in schedule:
             if "units_per_ke" in row:
                 factor = calculation.dec(row["units_per_ke"])
                 if not factor.is_finite() or factor <= 0:
-                    raise ValueError("Insulinfaktor muss positiv sein")
+                    raise ValueError(tr("Insulinfaktor muss positiv sein"))
                 converted.append({"start_minute": row["start_minute"],
                                   "grams_per_unit": str(Decimal(10) / factor)})
             else:
@@ -306,5 +307,5 @@ def save_profile_schedule(path: str, payload: dict) -> dict:
     config.mirror_nightscout_profiles(profiles)
     version, settings = config.get_settings()
     return {"version": version, "settings": settings,
-            "message": ("I:C-Zeitplan" if is_ic else "Korrekturfaktor-Zeitplan") +
-                       " in Nightscout gespeichert"}
+            "message": tr("I:C-Zeitplan in Nightscout gespeichert") if is_ic
+            else tr("Korrekturfaktor-Zeitplan in Nightscout gespeichert")}

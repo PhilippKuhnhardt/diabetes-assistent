@@ -553,7 +553,7 @@ export default {
     },
     language: {
       auto: "Automatic ({language})",
-      hint: "Automatic follows the browser language. The choice applies to this device; the page reloads. Messages from the server and the meal agent stay German for now.",
+      hint: "Automatic follows the browser language. The choice applies to this device; the page reloads. Server messages, push notifications and the meal agent follow the server setting APP_LANGUAGE.",
       label: "Language",
     },
     logout: "Log out",

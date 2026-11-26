@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 from decimal import Decimal, InvalidOperation
 
 from app.common import local_zone
+from app.i18n import tr
 
 TAG = re.compile(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction|snack)\]")
 EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal|basal)|DASP:\d+(?:\.\d+)?@\d+|DAZ:\d+(?:\.\d+)?@\d+)\]")
@@ -69,6 +70,10 @@ def least_certain(levels) -> str | None:
     marked = [level for level in levels if level in CERTAINTIES]
     return max(marked, key=CERTAINTIES.index) if marked else None
 SPORT_LABELS = {"jogging": "Joggen", "gym": "Gym", "light_cardio": "Leichtes Cardio", "racing": "Rennsport"}
+# The same in the configured language (app/i18n.py): shown and written into new notes. Reading a note strips
+# either spelling, since notes written before a language switch keep theirs.
+SPORT_NAMES = {kind: tr(label) for kind, label in SPORT_LABELS.items()}
+NOTE_LABELS = tuple(dict.fromkeys([*SPORT_LABELS.values(), *SPORT_NAMES.values()]))
 
 
 def parse_at(value: dict) -> datetime:
@@ -87,9 +92,9 @@ def treatment_tag(record: dict) -> dict | None:
 
 def tag(episode_id: str, meal: str, role: str) -> str:
     if meal not in ("breakfast", "lunch", "dinner") or role not in ("meal", "meal-dose", "correction", "snack"):
-        raise ValueError("Ungültiger Ereignistyp")
+        raise ValueError(tr("Ungültiger Ereignistyp"))
     if not re.fullmatch(r"[a-f0-9-]{36}", episode_id):
-        raise ValueError("Ungültige Mahlzeit-ID")
+        raise ValueError(tr("Ungültige Mahlzeit-ID"))
     return f"[DA1:{episode_id}:{meal}:{role}]"
 
 

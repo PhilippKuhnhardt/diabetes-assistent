@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from app import dishes as rules
 from app.common import local_zone, parse_instant
 from app.store import agent as agent_store, config, dishes as store, marks, mirror
+from app.i18n import tr
 
 VIEW_DAYS = 120
 VIEW_MAX_DAYS = 730
@@ -80,9 +81,9 @@ def _days(params: dict | None) -> int:
     try:
         days = int(((params or {}).get("days") or [VIEW_DAYS])[0])
     except (TypeError, ValueError):
-        raise ValueError("Ungültiger Zeitraum") from None
+        raise ValueError(tr("Ungültiger Zeitraum")) from None
     if not 1 <= days <= VIEW_MAX_DAYS:
-        raise ValueError("Ungültiger Zeitraum")
+        raise ValueError(tr("Ungültiger Zeitraum"))
     return days
 
 
@@ -116,14 +117,14 @@ def _id(payload: dict, key: str) -> int:
     try:
         return int(payload[key])
     except (KeyError, TypeError, ValueError):
-        raise ValueError("Gericht nicht gefunden") from None
+        raise ValueError(tr("Gericht nicht gefunden")) from None
 
 
 def save(payload: dict) -> dict:
     """One change from the dish catalogue, then the fresh view."""
     action = payload.get("action")
     if action not in ACTIONS:
-        raise ValueError("Unbekannte Aktion")
+        raise ValueError(tr("Unbekannte Aktion"))
     if action == "create":
         store.create_dish(rules.validate_name(payload.get("name")), rules.validate_category(payload.get("category")))
     elif action == "rename":
@@ -151,7 +152,7 @@ def dish_id(payload: dict) -> int | None:
     try:
         return int(value)
     except (TypeError, ValueError):
-        raise ValueError("Gericht nicht gefunden") from None
+        raise ValueError(tr("Gericht nicht gefunden")) from None
 
 
 def record(event_id: str, at: datetime, payload: dict, carbs) -> dict | None:
@@ -186,7 +187,7 @@ def _agent_notes(event_ids: list[str]) -> dict[str, dict]:
     for event_id, session in agent_store.sessions_for([event_id for event_id in event_ids if event_id]).items():
         estimate = session.get("estimate") or {}
         said = " | ".join(turn["text"] for turn in session.get("messages") or []
-                          if turn.get("role") == "user" and turn.get("text") and turn["text"] != "(nur Fotos)")
+                          if turn.get("role") == "user" and turn.get("text") and turn["text"] not in ("(nur Fotos)", tr("(nur Fotos)")))
         note = {"items": [{key: item.get(key) for key in ("name", "amount", "carbs_g")} for item in estimate.get("items") or []],
                 "user_said": said[:SAID_MAX]}
         portion = estimate.get("portion")

@@ -20,19 +20,20 @@ from app.ingestion import pushover
 from app.services import day_view, dose_help, factors
 from app.store import basal_doses, config, marks
 from app.store import notifications as store
+from app.i18n import english, tr
 
 KINDS = {"basal": True, "split": True, "low": True, "high": True, "check": True}
-LABELS = {"basal": "Basal vergessen", "split": "2. Split-Teil fällig", "low": "Tief droht", "high": "Hoch droht",
-          "check": "BZ prüfen"}
+LABELS = {"basal": tr("Basal vergessen"), "split": tr("2. Split-Teil fällig"), "low": tr("Tief droht"), "high": tr("Hoch droht"),
+          "check": tr("BZ prüfen")}
 # A second split part due before its planned time: glucose high and rising fast (app/split.py).
-EARLY_SPLIT_TITLE = "2. Split-Teil jetzt: BZ steigt schnell"
+EARLY_SPLIT_TITLE = tr("2. Split-Teil jetzt: BZ steigt schnell")
 WARNINGS = ("low", "high")
 WARNING_REPEAT = timedelta(minutes=60)
 # How soon each repeating kind may come again.
 REPEAT = {"low": WARNING_REPEAT, "high": WARNING_REPEAT, "check": correction_check.REPEAT}
 # Pushover priorities (https://pushover.net/api#priority); default 1 skips the quiet hours as before.
-PRIORITY_LABELS = {-2: "Ganz leise (nur in der Pushover-App)", -1: "Leise (ohne Ton)", 0: "Normal",
-                   1: "Hoch (auch in Ruhezeiten)", 2: "Notfall (wiederholt bis bestätigt)"}
+PRIORITY_LABELS = {-2: tr("Ganz leise (nur in der Pushover-App)"), -1: tr("Leise (ohne Ton)"), 0: tr("Normal"),
+                   1: tr("Hoch (auch in Ruhezeiten)"), 2: tr("Notfall (wiederholt bis bestätigt)")}
 PRIORITIES = {kind: pushover.PRIORITY for kind in KINDS}
 # Minutes without a warning: low after a carb entry, high after rapid insulin (Philipp 2026-11-22).
 PAUSES = {"low": glucose_alerts.LOW_PAUSE_MINUTES, "high": glucose_alerts.HIGH_PAUSE_MINUTES}
@@ -40,7 +41,8 @@ MAX_PAUSE_MINUTES = 180
 
 
 def _units(value) -> str:
-    return unit_text(calculation.dec(value)).replace(".", ",")
+    text = unit_text(calculation.dec(value))
+    return text if english() else text.replace(".", ",")
 
 
 def _clock(at: datetime, zone: ZoneInfo) -> str:
@@ -59,7 +61,7 @@ def due_reminders(now: datetime, settings: dict, treatments: list[dict], basal_t
     if enabled.get("basal") and local.hour * 60 + local.minute >= breakfast_end and not basal_today:
         usual = calculation.dec(settings.get("basal_default_units", config.DEFAULT_BASAL_UNITS))
         # Only the facts (user request 2026-10-11): Philipp knows the app, the title says what is due.
-        message = f"Üblich {_units(usual)} IE" if usual > 0 else "Heute noch kein Basal"
+        message = tr("Üblich {units} IE", units=_units(usual)) if usual > 0 else tr("Heute noch kein Basal")
         reminders.append({"key": f"basal:{local.date().isoformat()}", "kind": "basal",
                           "title": LABELS["basal"], "message": message})
     plan = split.open_plan(treatments, now) if enabled.get("split") else None
@@ -67,13 +69,13 @@ def due_reminders(now: datetime, settings: dict, treatments: list[dict], basal_t
     if state in ("early", "due"):
         # The amount comes from the current forecast (user approval 2026-10-22), the plan stays as orientation.
         units = second_part() if second_part else None
-        meal = f"Mahlzeit um {_clock(plan['meal_at'], zone)}"
+        meal = tr("Mahlzeit um {time}", time=_clock(plan["meal_at"], zone))
         if units is None:
-            message = f"{_units(plan['units'])} IE zur {meal}"
+            message = tr("{units} IE zur {meal}", units=_units(plan["units"]), meal=meal)
         elif units > 0:
-            message = f"{_units(units)} IE laut Prognose (geplant {_units(plan['units'])}) zur {meal}"
+            message = tr("{units} IE laut Prognose (geplant {planned}) zur {meal}", units=_units(units), planned=_units(plan["units"]), meal=meal)
         else:
-            message = f"Laut Prognose nicht nötig (geplant {_units(plan['units'])}) zur {meal}"
+            message = tr("Laut Prognose nicht nötig (geplant {planned}) zur {meal}", planned=_units(plan["units"]), meal=meal)
         # One reminder per plan: an early one is not repeated at the planned time.
         reminders.append({
             "key": f"split:{plan['meal_at'].astimezone(timezone.utc).isoformat()}", "kind": "split",
@@ -99,11 +101,12 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
             continue
         minutes = max(0, round((warning["at"] - now).total_seconds() / 60))
         if warning["kind"] == "low":
-            crossing, extreme = f"unter {glucose_alerts.LOW_MGDL}", "Tiefstwert"
+            crossing, extreme = tr("unter {mgdl}", mgdl=glucose_alerts.LOW_MGDL), tr("Tiefstwert")
         else:
-            crossing, extreme = f"über {glucose_alerts.HIGH_MGDL}", "Höchstwert"
-        message = (f"BZ {warning['glucose_mgdl']:.0f}, {crossing} um {_clock(warning['at'], zone)} "
-                   f"(in {minutes} min), {extreme} {warning['mgdl']:.0f}")
+            crossing, extreme = tr("über {mgdl}", mgdl=glucose_alerts.HIGH_MGDL), tr("Höchstwert")
+        message = tr("BZ {glucose}, {crossing} um {time} (in {minutes} min), {extreme} {mgdl}",
+                     glucose=f"{warning['glucose_mgdl']:.0f}", crossing=crossing, time=_clock(warning["at"], zone),
+                     minutes=minutes, extreme=extreme, mgdl=f"{warning['mgdl']:.0f}")
         reminders.append({"key": f"{warning['kind']}:{now.astimezone(timezone.utc).isoformat()}",
                           "kind": warning["kind"], "title": LABELS[warning["kind"]], "message": message})
     return reminders
@@ -129,13 +132,13 @@ def _acting(now: datetime, settings: dict, treatments: list[dict]) -> dict | Non
         return None
 
 
-TEMPO_LEAN = {"fast": "wenig", "normal": "normal", "slow": "viel"}
+TEMPO_LEAN = {"fast": tr("wenig"), "normal": tr("normal"), "slow": tr("viel")}
 
 
 def correction_reminder(now: datetime, settings: dict, treatments: list[dict], entries: list[dict],
                         enabled: dict[str, bool], correction: Callable[[], dict | None] | None = None,
                         found: dict | None = None) -> list[dict]:
-    """The "BZ prüfen" reminder when due (app/correction_check.py), with the dose help's correction
+    """The tr("BZ prüfen") reminder when due (app/correction_check.py), with the dose help's correction
     (user request 2026-11-14: name the suggested correction, Philipp judges the situation)."""
     if not enabled.get("check"):
         return []
@@ -147,24 +150,25 @@ def correction_reminder(now: datetime, settings: dict, treatments: list[dict], e
         return []
     zone = local_zone(settings["timezone"])
     rise = hit["rise_mgdl"]
-    message = (f"BZ {hit['glucose_mgdl']:.0f} ({'+' if rise >= 0 else ''}{rise:.0f} in 30 min), "
-               f"Prognose Ende {hit['end_mgdl']:.0f}, Mahlzeit um {_clock(hit['meal_at'], zone)}")
+    message = tr("BZ {glucose} ({rise} in 30 min), Prognose Ende {end}, Mahlzeit um {time}",
+                 glucose=f"{hit['glucose_mgdl']:.0f}", rise=f"{'+' if rise >= 0 else ''}{rise:.0f}",
+                 end=f"{hit['end_mgdl']:.0f}", time=_clock(hit["meal_at"], zone))
     units = correction() if correction else None
     if units:
         normal, cautious = units.get("normal"), units.get("cautious")
         if normal is not None and normal > 0:
-            message += f". Korrektur {_units(normal)} IE"
+            message += tr(". Korrektur {units} IE", units=_units(normal))
             if units.get("fast") is not None and units.get("slow") is not None:
                 # The ends of what was right after recent meals; the meal's rise leans to one (user request 2026-11-15).
-                message += f" (wenig {_units(units['fast'])} · viel {_units(units['slow'])} IE"
+                message += tr(" (wenig {fast} · viel {slow} IE", fast=_units(units["fast"]), slow=_units(units["slow"]))
                 tempo = units.get("tempo")
                 if tempo:
-                    message += f", eher {TEMPO_LEAN[tempo]}"
+                    message += tr(", eher {lean}", lean=TEMPO_LEAN[tempo])
                 message += ")"
             elif cautious is not None and cautious != normal:
-                message += f" (vorsichtig {_units(cautious)} IE)"
+                message += tr(" (vorsichtig {units} IE)", units=_units(cautious))
         elif normal is not None:
-            message += ". Laut Dosishilfe keine Korrektur nötig"
+            message += tr(". Laut Dosishilfe keine Korrektur nötig")
     return [{"key": f"check:{now.astimezone(timezone.utc).isoformat()}", "kind": "check",
              "title": LABELS["check"], "message": message}]
 
@@ -253,30 +257,30 @@ def set_enabled(payload: dict) -> dict:
     high, its pause after carbs or insulin ({kind, pause_minutes})."""
     kind = payload.get("kind")
     if kind not in KINDS:
-        raise ValueError("Ungültige Benachrichtigung")
+        raise ValueError(tr("Ungültige Benachrichtigung"))
     if "pause_minutes" in payload:
         minutes = payload["pause_minutes"]
         if (kind not in PAUSES or isinstance(minutes, bool) or not isinstance(minutes, int)
                 or not 0 <= minutes <= MAX_PAUSE_MINUTES):
-            raise ValueError(f"Pause muss zwischen 0 und {MAX_PAUSE_MINUTES} Minuten liegen")
+            raise ValueError(tr("Pause muss zwischen 0 und {minutes} Minuten liegen", minutes=MAX_PAUSE_MINUTES))
         store.set_pause(kind, minutes, KINDS[kind])
         return view()
     if "priority" in payload:
         priority = payload["priority"]
         if isinstance(priority, bool) or priority not in PRIORITY_LABELS:
-            raise ValueError("Ungültige Stufe")
+            raise ValueError(tr("Ungültige Stufe"))
         store.set_priority(kind, priority, KINDS[kind])
         return view()
     enabled = payload.get("enabled")
     if not isinstance(enabled, bool):
-        raise ValueError("Ungültige Benachrichtigung")
+        raise ValueError(tr("Ungültige Benachrichtigung"))
     store.set_enabled(kind, enabled)
     return view()
 
 
 def send_test(payload: dict) -> dict:
     try:
-        pushover.send("Testmeldung", "Benachrichtigungen vom Diabetes-Assistenten kommen an.")
+        pushover.send(tr("Testmeldung"), tr("Benachrichtigungen vom Diabetes-Assistenten kommen an."))
     except pushover.PushoverError as error:
         raise ValueError(str(error)) from None
-    return {"message": "Testmeldung gesendet"}
+    return {"message": tr("Testmeldung gesendet")}

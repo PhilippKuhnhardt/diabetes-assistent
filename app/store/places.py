@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime, timezone
 
 from app.store.db import connect
+from app.i18n import tr
 
 
 def _now() -> str:
@@ -34,12 +35,12 @@ def place_counts() -> dict[int, int]:
 
 def _check_name(db: sqlite3.Connection, name: str, place_id: int | None) -> None:
     if db.execute("SELECT 1 FROM places WHERE name=? COLLATE NOCASE AND id IS NOT ?", (name, place_id)).fetchone():
-        raise ValueError("Einen Ort mit diesem Namen gibt es schon")
+        raise ValueError(tr("Einen Ort mit diesem Namen gibt es schon"))
 
 
 def _check_place(db: sqlite3.Connection, place_id: int) -> None:
     if not db.execute("SELECT 1 FROM places WHERE id=?", (place_id,)).fetchone():
-        raise ValueError("Ort nicht gefunden")
+        raise ValueError(tr("Ort nicht gefunden"))
 
 
 def create_place(name: str) -> int:

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from decimal import Decimal
+from app.i18n import tr
 
 TEN = Decimal(10)
 
@@ -96,9 +97,9 @@ def analyze(meals: list[dict], exercises: list[dict], lookback_minutes: int,
         expected = effect = None
         reason = None
         if item["factor"] is None:
-            reason = result.get("reason") or "Mahlzeit nicht berechenbar"
+            reason = result.get("reason") or tr("Mahlzeit nicht berechenbar")
         elif baseline_text is None:
-            reason = "Keine Vergleichsmahlzeiten ohne Sport"
+            reason = tr("Keine Vergleichsmahlzeiten ohne Sport")
         else:
             carb_effect = Decimal(result["carbs_times_isf_total"])
             expected = Decimal(baseline_text) * carb_effect / TEN - Decimal(result["insulin_effect_mgdl"])
@@ -125,7 +126,7 @@ def analyze(meals: list[dict], exercises: list[dict], lookback_minutes: int,
     for session in sessions:
         rendered_sessions.append({
             "id": session["id"], "kind": session.get("kind"),
-            "label": labels.get(session.get("kind"), "Sportart unbekannt"),
+            "label": labels.get(session.get("kind"), tr("Sportart unbekannt")),
             "start": session["start"].isoformat(), "end": session["end"].isoformat(),
             "duration_minutes": session["duration_minutes"], "notes": session.get("notes") or "",
             "meals": [influenced[meal_id] for meal_id in session["meal_ids"]],
@@ -134,7 +135,7 @@ def analyze(meals: list[dict], exercises: list[dict], lookback_minutes: int,
     for meal_id, meal in influenced.items():
         if not meal["session_ids"]:
             rendered_sessions.append({
-                "id": None, "kind": None, "label": "Sport ohne Eintrag",
+                "id": None, "kind": None, "label": tr("Sport ohne Eintrag"),
                 "start": meal["start"], "end": None, "duration_minutes": None, "notes": "",
                 "meals": [meal],
             })

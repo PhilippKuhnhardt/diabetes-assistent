@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from app import calculation, episodes
 from app.common import local_day_range, local_zone, unit_text
+from app.i18n import tr
 from app.ingestion import nightscout
 from app.store import basal_doses, config
 
@@ -24,7 +25,7 @@ def basal_record(dose: dict) -> dict:
     Nightscout's IOB nor the meal-factor model counts it as rapid insulin."""
     units = calculation.dec(dose["units"])
     note = str(dose.get("notes") or "").strip()
-    text = f"Basal {unit_text(units)} IE" + (f" — {note}" if note else "")
+    text = tr("Basal {units} IE", units=unit_text(units)) + (f" — {note}" if note else "")
     return {
         "eventType": "Note", "created_at": dose["at"].astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
         "notes": f"{text} {episodes.BASAL_MARKER} [DAE:{dose['id']}]", "basal_units": float(units),

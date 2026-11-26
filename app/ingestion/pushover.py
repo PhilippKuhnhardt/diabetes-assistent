@@ -7,6 +7,7 @@ import os
 import urllib.error
 import urllib.parse
 import urllib.request
+from app.i18n import tr
 
 API_URL = "https://api.pushover.net/1/messages.json"
 # High priority: skips Pushover's quiet hours; the iOS app can play it as a critical alert if enabled there.
@@ -27,14 +28,14 @@ def is_configured() -> bool:
 def send(title: str, message: str, priority: int = PRIORITY) -> None:
     """One message to the configured user; raises PushoverError when Pushover does not accept it."""
     if not is_configured():
-        raise PushoverError("Pushover ist nicht eingerichtet")
+        raise PushoverError(tr("Pushover ist nicht eingerichtet"))
     fields = {"token": os.environ["PUSHOVER_APP_TOKEN"], "user": os.environ["PUSHOVER_USER_KEY"],
               "title": title[:250], "message": message[:1024], "priority": str(priority)}
     if priority == EMERGENCY:
         fields.update({"retry": str(EMERGENCY_RETRY), "expire": str(EMERGENCY_EXPIRE)})
     public_url = os.environ.get("APP_PUBLIC_URL", "").strip()
     if public_url.startswith("https://"):
-        fields.update({"url": public_url, "url_title": "App öffnen"})
+        fields.update({"url": public_url, "url_title": tr("App öffnen")})
     request = urllib.request.Request(API_URL, data=urllib.parse.urlencode(fields).encode(), method="POST")
     try:
         with urllib.request.urlopen(request, timeout=15) as response:
@@ -45,11 +46,11 @@ def send(title: str, message: str, priority: int = PRIORITY) -> None:
             errors = json.loads(error.read() or b"{}").get("errors") or []
         except ValueError:
             errors = []
-        raise PushoverError(f"Pushover lehnt ab ({error.code}): " + "; ".join(map(str, errors))[:300]) from None
+        raise PushoverError(tr("Pushover lehnt ab ({status}): ", status=error.code) + "; ".join(map(str, errors))[:300]) from None
     except (urllib.error.URLError, TimeoutError, ValueError) as error:
-        raise PushoverError(f"Pushover nicht erreichbar: {type(error).__name__}") from None
+        raise PushoverError(tr("Pushover nicht erreichbar: {error}", error=type(error).__name__)) from None
     if answer.get("status") != 1:
-        raise PushoverError("Pushover lehnt ab: " + "; ".join(map(str, answer.get("errors") or []))[:300])
+        raise PushoverError(tr("Pushover lehnt ab: ") + "; ".join(map(str, answer.get("errors") or []))[:300])
 
 
 def heartbeat() -> None:
