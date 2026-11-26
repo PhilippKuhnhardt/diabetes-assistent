@@ -130,7 +130,7 @@ def save_diary_treatment(payload: dict) -> dict:
                        if payload["surcharge_mode"] == "fpe" else None}
         level = payload.get("fpe_level")
         if eats and "fpe_surcharge" not in payload and level in fpe.LEVELS and payload.get("surcharge_mode") is None:
-            # A carb entry without the agent's estimate sets its level on the card (Philipp 2026-11-26).
+            # A carb entry without the agent's estimate sets its level on the card (2026-11-26).
             found = fpe.estimate({"fpe_level": level}, settings)
             if found is not None:
                 payload = {**payload, "fpe_surcharge": fpe.plan(found)}
@@ -241,7 +241,7 @@ def edit_entry(payload: dict) -> dict:
         **({**food, "dish_id": None, "dish_name": str(food["dish_name"] or "").strip()} if carbs > 0 else {}),
         # Only an entry whose agent estimate gives a calculated surcharge offers the choice; without one the saved stays.
         **({"surcharge_mode": payload["surcharge_mode"]} if carbs > 0 and payload.get("surcharge_mode") else {}),
-        # Without an agent estimate the card can change the fat/protein level (Philipp 2026-11-26).
+        # Without an agent estimate the card can change the fat/protein level (2026-11-26).
         **({"fpe_level": payload["fpe_level"]} if carbs > 0 and payload.get("fpe_level") in fpe.LEVELS else {}),
         **({"agent_session": payload["agent_session"], "portion": payload.get("portion")}
            if payload.get("agent_session") else {}),

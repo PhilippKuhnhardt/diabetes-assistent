@@ -21,7 +21,7 @@ MAX_MGDL = Decimal(200)
 BASE_MINUTES, MINUTES_PER_FPE, MAX_MINUTES = Decimal(180), Decimal(30), Decimal(480)
 # Static and calculated surcharge, as the entry form sends the choice.
 MODES = ("static", "fpe")
-# Fat/protein levels for an entry without the agent's estimate (Philipp 2026-11-26: the manual carb entry
+# Fat/protein levels for an entry without the agent's estimate (2026-11-26: the manual carb entry
 # offers Nichts / Normal / Fett instead of the fat mark, computed as FPE). Normal (4 FPE = 80 mg/dL at
 # 20 per FPE, over 5 h) and Fett (10 FPE = 200 mg/dL) give the former static surcharge without and with
 # the fat mark; Nichts gives none.
