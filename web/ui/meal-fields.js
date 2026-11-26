@@ -28,7 +28,7 @@ const FactorChip = ({ name, label, title, checked, onChange }) => html`
   </label>`;
 
 // Schnell; the caller places it (inside its own chip row). The Fettreich chip was replaced by the fat/protein
-// level (FatLevel) and the agent's estimate (Philipp 2026-11-26); old fat marks are still read and kept.
+// level (FatLevel) and the agent's estimate (2026-11-26); old fat marks are still read and kept.
 export const FactorChips = ({ fast, onFast }) => html`
   <${FactorChip} name="fast" label=${t("factor.fast")} title=${t("factor.fastTitle")} checked=${fast} onChange=${onFast} />`;
 
