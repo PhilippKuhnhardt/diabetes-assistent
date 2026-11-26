@@ -358,7 +358,6 @@ function ModelForm({ page, data, onReload }) {
         window_minutes: Number(f.window_minutes.value),
         dose_target_mgdl: f.dose_target_mgdl.value,
         dose_cautious_target_mgdl: f.dose_cautious_target_mgdl.value,
-        dose_low_target_mgdl: f.dose_low_target_mgdl.value,
         auto_method: f.auto_method.value,
         auto_percentile: f.auto_percentile.value,
         auto_lookback_days: Number(f.auto_lookback_days.value),
@@ -367,6 +366,7 @@ function ModelForm({ page, data, onReload }) {
         auto_fat_surcharge_mgdl: f.auto_fat_surcharge_mgdl.value,
         fpe_surcharge_mgdl: f.fpe_surcharge_mgdl.value,
         auto_vacation: f.auto_vacation.value,
+        day_types: f.day_types.checked,
         basal_default_units: f.basal_default_units.value,
         split_min_grams: Number(f.split_min_grams.value),
         split_min_units: Number(f.split_min_units.value),
@@ -391,7 +391,6 @@ function ModelForm({ page, data, onReload }) {
       <${Panel} id="dose" page=${page} title=${t("settings.pages.dose")}>
         <${Field} label=${t("settings.model.target")} unit="mg/dL"><${NumberInput} name="dose_target_mgdl" min="60" max="140" step="1" defaultValue=${s.dose_target_mgdl} /><//>
         <${Field} label=${t("settings.model.cautiousTarget")} unit="mg/dL"><${NumberInput} name="dose_cautious_target_mgdl" min="60" max="250" step="1" defaultValue=${s.dose_cautious_target_mgdl} /><//>
-        <${Field} label=${t("settings.model.lowTarget")} unit="mg/dL"><${NumberInput} name="dose_low_target_mgdl" min="60" max="140" step="1" defaultValue=${s.dose_low_target_mgdl ?? 100} /><//>
         <${Field} label=${t("settings.model.method")}><${Choice} name="auto_method" value=${s.auto_method || "percentile"} options=${[["percentile", t("analysis.tuning.percentile")], ["surcharge", t("settings.model.methodSurcharge")]]} /><//>
         <${Field} label=${t("settings.model.mealSurcharge")} unit="mg/dL"><${NumberInput} name="auto_surcharge_mgdl" min="5" max="150" step="5" defaultValue=${s.auto_surcharge_mgdl ?? 40} /><//>
         <${Field} label=${t("settings.model.fatSurcharge")} unit="mg/dL"><${NumberInput} name="auto_fat_surcharge_mgdl" min="0" max="200" step="10" defaultValue=${s.auto_fat_surcharge_mgdl ?? 120} /><//>
@@ -410,6 +409,8 @@ function ModelForm({ page, data, onReload }) {
         <${Field} label=${t("settings.model.breakfastEnd")} unit="24 h"><input name="breakfast_end" type="time" step="60" required defaultValue=${minuteClock(s.breakfast_end_minute)} /><//>
         <${Field} label=${t("settings.model.lunchEnd")} unit="24 h"><input name="lunch_end" type="time" step="60" required defaultValue=${minuteClock(s.lunch_end_minute)} /><//>
         <${Field} label=${t("settings.model.window")} unit="min"><${NumberInput} name="window_minutes" min="60" max="360" step="1" defaultValue=${s.window_minutes} /><//>
+        <label class="check-label"><input type="checkbox" name="day_types" defaultChecked=${s.day_types === true} /> ${t("settings.model.dayTypes")}</label>
+        <p class="hint">${t("settings.model.dayTypesHint")}</p>
       <//>
       <${Panel} id="sport" page=${page} title=${t("settings.pages.sport")} unit=${t("settings.model.sportUnit")}>
         <div class="field-pair">${sportKinds.map(kind => html`<${Field} label=${SPORT_LABELS[kind]}><${NumberInput} name=${"sport_" + kind} min="-500" max="500" step="1"
