@@ -13,13 +13,14 @@ from app.analysis.stats import median, quartile
 
 def dose_help(payload: dict) -> dict:
     _, current_settings = config.get_settings()
-    today = datetime.now(local_zone(current_settings["timezone"])).date().isoformat()
-    current_day = day_view.day_payload(today, refresh=not day_view.mirror_current(today))
-    entries = [{"at": parse_instant(row["at"]), "sgv": row["sgv"]}
-               for row in current_day["entries"]]
-    treatments = [{"at": parse_instant(row["at"]), **{k: v for k, v in row.items() if k != "at"}}
-                  for row in current_day["treatments"]]
     now = datetime.now(timezone.utc)
+    today = now.astimezone(local_zone(current_settings["timezone"])).date().isoformat()
+    # A rolling span, not the calendar day: just after midnight last evening's doses, carbs and split still act.
+    current = day_view.recent(now, refresh=not day_view.mirror_current(today))
+    entries = [{"at": parse_instant(row["at"]), "sgv": row["sgv"]}
+               for row in current["entries"]]
+    treatments = [{"at": parse_instant(row["at"]), **{k: v for k, v in row.items() if k != "at"}}
+                  for row in current["treatments"]]
     finger = [{"at": row["at"], "mgdl": row["finger_mgdl"]} for row in treatments if row.get("finger_mgdl")]
     if payload.get("finger_mgdl") is not None:
         # A value typed in the entry form counts before it is saved, at the entry's time.
