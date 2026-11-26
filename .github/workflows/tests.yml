@@ -20,7 +20,7 @@ jobs:
       - name: Python unit tests
         run: python -m unittest discover -s tests -v
       - name: Check web/app.js syntax
-        run: node --check web/app.js && for file in web/ui/*.js; do node --check "$file"; done
+        run: node --check web/app.js && for file in web/ui/*.js web/i18n/*.js; do node --check "$file"; done
       - name: Install Playwright
         run: npm install --no-save playwright@1.63.0 && npx playwright install --with-deps chromium
       - name: Click test (navigation, "+", cards, settings)

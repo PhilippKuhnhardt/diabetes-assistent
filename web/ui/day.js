@@ -6,23 +6,25 @@
 // (/api/day) and the week (/api/days/week); actions post and then reload the day.
 import { html, useState, useEffect, useLayoutEffect, useRef, useMemo } from "./html.js";
 import { MINUTE, api, post, toast, num, factorNum, signedChange, sportChange, timeOnly, trendSymbol, names, sportNames,
-  dayDate, Icon, FactorIcons, ExcludeButton } from "./lib.js";
+  dayDate, UNIT, Icon, FactorIcons, ExcludeButton } from "./lib.js";
+import { t } from "./i18n.js";
 import { sportSummary, signedMgdl } from "./sport.js";
 import { MealChart, mealWindow, chartEvents, chartView, chartLayout, windowLimits,
   GlucoseChart, useWidth } from "./charts.js";
 
-const entryLabels = { finger: "BZ blutig", basal: "Basal", meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur / Bolus", exercise: "Sport", other: "Weiterer Eintrag" };
+const entryLabels = Object.fromEntries(["finger", "basal", "meal", "snack", "carbs", "correction", "exercise", "other"]
+  .map(kind => [kind, t("entryKind." + kind)]));
 
 export function entryLabel(item, data) {
-  if (item.kind === "exercise") return sportNames[item.sport_kind] || "Sport";
+  if (item.kind === "exercise") return sportNames[item.sport_kind] || t("sport.sport");
   const meal = item.kind === "meal" ? data.meals.find(row => row.source_id === item.id) : null;
   return meal ? names[meal.meal] : entryLabels[item.kind];
 }
 
 export const dayTypeSources = {
-  weekday: "Standard nach Wochentag",
-  vacation: "Urlaub ist aktiv",
-  manual: "Für diesen Tag manuell gewählt",
+  weekday: t("dayType.sources.weekday"),
+  vacation: t("dayType.sources.vacation"),
+  manual: t("dayType.sources.manual"),
 };
 
 // Local midnight to midnight of the shown day as the server counts it (travel days are shorter or longer).
@@ -60,45 +62,45 @@ function mealName(meal, items) {
 // One entry inside a meal or loose in the day: tap opens its card; a blood glucose reading can only be deleted.
 function EntryRow({ item, data, ctx }) {
   const label = entryLabel(item, data);
-  const amounts = [Number(item.carbs) ? num(item.carbs) + " g" : "", Number(item.insulin) ? num(item.insulin) + " IE" : "",
-    item.kind === "basal" ? num(item.basal_units) + " IE" + (item.nightscout_synced ? "" : " · nur lokal") : "",
+  const amounts = [Number(item.carbs) ? num(item.carbs) + " g" : "", Number(item.insulin) ? num(item.insulin) + " " + UNIT.insulin : "",
+    item.kind === "basal" ? num(item.basal_units) + " " + UNIT.insulin + (item.nightscout_synced ? "" : " · " + t("history.localOnly")) : "",
     item.kind === "finger" && item.glucose_mgdl != null ? num(item.glucose_mgdl, 0) + " mg/dL" : ""].filter(Boolean).join(" + ");
   const detail = item.description || item.notes || "";
   if (item.kind === "finger") {
     const remove = event => {
-      if (!window.confirm("BZ blutig um " + timeOnly(item.at) + " Uhr wirklich aus Nightscout löschen?")) return;
+      if (!window.confirm(t("history.confirmFingerDelete", { time: timeOnly(item.at) }))) return;
       return act(event, async () => {
         await post("/api/treatment/delete", { id: item.id, day: ctx.day });
-        toast("Eintrag aus Nightscout gelöscht");
+        toast(t("common.deletedFromNightscout"));
         await ctx.reload();
       });
     };
     return html`<li class="history-entry"><div class="history-entry-row"><time>${timeOnly(item.at)}</time><b>${label}</b><span>${amounts}</span>
-      <button type="button" class="delete-treatment quiet" aria-label=${"Blutige Messung um " + timeOnly(item.at) + " löschen"} onClick=${remove}>Löschen</button></div></li>`;
+      <button type="button" class="delete-treatment quiet" aria-label=${t("history.deleteFinger", { time: timeOnly(item.at) })} onClick=${remove}>${t("common.delete")}</button></div></li>`;
   }
   const editable = item.kind !== "other";
   return html`<li class="history-entry"><button type="button" class="history-entry-row edit-entry" data-id=${item.id} disabled=${!editable}
-      aria-label=${label + " um " + timeOnly(item.at) + (editable ? " bearbeiten" : "")} onClick=${() => ctx.onEdit(item.id)}>
+      aria-label=${t(editable ? "common.editAt" : "common.itemAt", { label, time: timeOnly(item.at) })} onClick=${() => ctx.onEdit(item.id)}>
     <time>${timeOnly(item.at)}</time><b>${label}<${FactorIcons} marks=${item} /></b><span>${amounts}</span>
     ${detail && html`<small>${detail}</small>`}</button></li>`;
 }
 
 function Calculation({ result }) {
-  if (!result || !result.start) return html`<p class="hint">${result?.reason || "Noch keine Berechnung"}</p>`;
+  if (!result || !result.start) return html`<p class="hint">${result?.reason || t("history.noCalculation")}</p>`;
   const parts = [
-    num(result.carbs_total) + " g KH im Zeitraum",
-    num(result.rapid_units_in_window, 2) + " IE",
+    t("history.carbsInWindow", { grams: num(result.carbs_total) }),
+    num(result.rapid_units_in_window, 2) + " " + UNIT.insulin,
     result.delta_mgdl != null ? "ΔG " + signedChange(result.delta_mgdl, 0) : "",
-    Number(result.sport_effect_mgdl) ? "Sport " + signedChange(sportChange(result.sport_effect_mgdl), 0) : "",
-    Number(result.prior_insulin_effect_mgdl) >= 1 ? "früheres Insulin −" + num(result.prior_insulin_effect_mgdl, 0) + " mg/dL" : "",
+    Number(result.sport_effect_mgdl) ? t("sport.sport") + " " + signedChange(sportChange(result.sport_effect_mgdl), 0) : "",
+    Number(result.prior_insulin_effect_mgdl) >= 1 ? t("history.priorInsulin", { mgdl: num(result.prior_insulin_effect_mgdl, 0) }) : "",
   ].filter(Boolean);
   return html`<p class="history-calc">${parts.join(" · ")}${result.reason && html`<br />${result.reason}`}</p>`;
 }
 
 // A session acting on this meal: its share and where it comes from; a tap opens the session.
 function SportChip({ event, ctx }) {
-  const text = "Sport " + signedMgdl(sportChange(event.effect_mgdl)) + " · " +
-    (sportNames[event.kind] || "Sport") + (event.previous_day ? " vom Vortag" : " " + timeOnly(event.at));
+  const text = t("sport.sport") + " " + signedMgdl(sportChange(event.effect_mgdl)) + " · " +
+    (sportNames[event.kind] || t("sport.sport")) + " " + (event.previous_day ? t("history.previousDay") : timeOnly(event.at));
   const own = ctx.sessions.has(event.id);
   return own ? html`<button type="button" class="chip sport-chip" onClick=${() => ctx.onEdit(event.id)}>${text}</button>`
     : html`<span class="chip sport-chip">${text}</span>`;
@@ -132,25 +134,25 @@ function MealCard({ meal, items, data, ctx }) {
     <div class="history-meal-head">
       <div class="history-meal-title"><b class="meal-type">${names[meal.meal]}</b><time>${timeOnly(meal.at)}</time><${FactorIcons} marks=${meal.quality} /></div>
       <span class=${"history-factor" + (factor == null ? " is-missing" : "")}>${factor != null
-        ? html`${factorNum(factor)} <small>IE/KE</small>` : running ? html`<small>läuft</small>` : "—"}</span>
+        ? html`${factorNum(factor)} <small>${UNIT.factor}</small>` : running ? html`<small>${t("history.running")}</small>` : "—"}</span>
       ${name && html`<p class="history-meal-name" title=${name}>${name}</p>`}
     </div>
     <div class="history-meal-meta">
-      <span>${num(sumOf(entries, "carbs"), 0) + " g KH · " + num(sumOf(entries, "insulin"), 1) + " IE"}</span>
-      <span class="day-meal-window">${timeOnly(range.start) + "–" + timeOnly(range.end) + (range.manual ? " · manuell" : "")}</span>
+      <span>${t("history.mealTotals", { grams: num(sumOf(entries, "carbs"), 0), units: num(sumOf(entries, "insulin"), 1), unit: UNIT.insulin })}</span>
+      <span class="day-meal-window">${timeOnly(range.start) + "–" + timeOnly(range.end) + (range.manual ? " · " + t("history.manual") : "")}</span>
       ${(meal.sport?.events || []).map(event => html`<${SportChip} key=${event.id} event=${event} ctx=${ctx} />`)}
-      ${meal.vacation && html`<span class="history-meal-flag" title="Urlaubstag: zählt nach dem Urlaub nicht in die Automatik">Urlaub</span>`}
-      ${meal.excluded && html`<span class="history-meal-flag">ausgeklammert</span>`}
+      ${meal.vacation && html`<span class="history-meal-flag" title=${t("history.vacationTitle")}>${t("history.vacation")}</span>`}
+      ${meal.excluded && html`<span class="history-meal-flag">${t("history.excluded")}</span>`}
     </div>
-    ${task && html`<p class="history-task">${calc.reason || "Faktor nicht berechenbar"}. Zeitraum anpassen oder mit „Passt“ bestätigen.</p>`}
+    ${task && html`<p class="history-task">${t("history.task", { reason: calc.reason || t("history.noFactor") })}</p>`}
     ${hasCurve ? html`<div class="meal-chart history-chart"><${MealChart} meal=${meal} data=${data} compact /></div>`
-      : html`<p class="hint">Keine CGM-Kurve verfügbar.</p>`}
+      : html`<p class="hint">${t("history.noCurve")}</p>`}
     <div class="history-actions">
       ${review.checkable && html`<button type="button" class=${"window-check" + (review.checked ? " is-checked" : " primary")} aria-pressed=${String(Boolean(review.checked))}
-        disabled=${saving} onClick=${check}>${review.checked ? html`<${Icon} name="check" /> Geprüft` : "Passt"}</button>`}
-      ${hasCurve && html`<button type="button" class="open-window-editor" aria-label="Zeitraum anpassen" onClick=${() => ctx.openEditor(meal)}>Zeitraum<span class="wide-only"> anpassen</span></button>`}
+        disabled=${saving} onClick=${check}>${review.checked ? html`<${Icon} name="check" /> ${t("history.checked")}` : t("history.fits")}</button>`}
+      ${hasCurve && html`<button type="button" class="open-window-editor" aria-label=${t("window.adjust")} onClick=${() => ctx.openEditor(meal)}>${t("window.short")}<span class="wide-only">${t("window.shortRest")}</span></button>`}
       <button type="button" class="history-more-entries" aria-expanded=${String(open)} aria-controls=${listId} onClick=${() => setOpen(!open)}>
-        ${"Einträge (" + entries.length + ")"}</button>
+        ${t("history.entriesCount", { count: entries.length })}</button>
     </div>
     <div id=${listId} class="history-meal-details" hidden=${!open}>
       <ul class="history-entries">${entries.map(item => html`<${EntryRow} key=${item.id} item=${item} data=${data} ctx=${ctx} />`)}</ul>
@@ -165,7 +167,7 @@ function MealCard({ meal, items, data, ctx }) {
 function SportCard({ item, ctx }) {
   const summary = sportSummary(item);
   return html`<button type="button" class="history-sport edit-entry" data-id=${item.id} onClick=${() => ctx.onEdit(item.id)}
-    aria-label=${summary.title + " um " + timeOnly(item.at) + " öffnen"}>
+    aria-label=${t("common.openAt", { label: summary.title, time: timeOnly(item.at) })}>
     <time>${timeOnly(item.at)}</time><b>${summary.title}</b><span class="history-sport-effect">${summary.effect}</span>
     ${summary.parts.length > 0 && html`<span class="history-sport-parts">${summary.parts.map(part =>
       html`<span key=${part.key} class=${part.rest ? "is-rest" : ""}>${part.text}</span>`)}</span>`}</button>`;
@@ -186,7 +188,7 @@ export function mealBlocks(data) {
 
 // One chronological list: meal cards, sport cards and the entries that belong to no meal.
 function DayList({ data, ctx }) {
-  if (!data.timeline.length && !data.meals.length) return html`<div class="empty">Für diesen Tag liegen noch keine Einträge vor.</div>`;
+  if (!data.timeline.length && !data.meals.length) return html`<div class="empty">${t("history.noEntries")}</div>`;
   const { blocks, rest } = mealBlocks(data);
   const sessions = data.timeline.filter(item => item.kind === "exercise");
   const loose = rest.filter(item => item.kind !== "exercise");
@@ -209,7 +211,7 @@ function DayList({ data, ctx }) {
 // Work or free day for the breakfast factor; the entry form asks it before breakfast, Verlauf any time.
 // `data` names the buttons' data attribute (data-<data>=work|free), `hint` the source of the current value.
 export function DayTypeSwitch({ value, onChoose, disabled, label, data, hint, hintId, extra = "" }) {
-  return html`<div class="entry-switch" role="group" aria-label=${label}>${[["work", "Arbeitstag"], ["free", "Freier Tag"]].map(([key, text]) =>
+  return html`<div class="entry-switch" role="group" aria-label=${label}>${[["work", t("dayType.workDay")], ["free", t("dayType.freeDay")]].map(([key, text]) =>
       html`<button type="button" class="day-type-option" ...${{ ["data-" + data]: key }} aria-pressed=${String(value === key)}
         disabled=${disabled} onClick=${() => onChoose(key)}>${text}</button>`)}</div>
     ${hintId && html`<p id=${hintId} class="hint">${(dayTypeSources[hint] || "") + extra}</p>`}`;
@@ -226,8 +228,8 @@ function HistoryDayType({ data, day, reload }) {
     catch (error) { toast(error.message, true); }
     finally { setSaving(false); }
   }
-  const title = (dayTypeSources[data.day_type_source] || "") + (data.vacation && data.day_type_source !== "vacation" ? " · Urlaubstag" : "");
-  return html`<div id="review-day-type" class="history-day-type" role="group" aria-label="Tagesart" title=${title}>${[["work", "Arbeit"], ["free", "Frei"]].map(([key, text]) =>
+  const title = (dayTypeSources[data.day_type_source] || "") + (data.vacation && data.day_type_source !== "vacation" ? " · " + t("dayType.vacationDay") : "");
+  return html`<div id="review-day-type" class="history-day-type" role="group" aria-label=${t("dayType.label")} title=${title}>${[["work", t("dayType.work")], ["free", t("dayType.free")]].map(([key, text]) =>
     html`<button type="button" class="day-type-option" data-review-day-type=${key} aria-pressed=${String(data.day_type === key)}
       disabled=${saving} onClick=${() => choose(key)}>${text}</button>`)}</div>`;
 }
@@ -240,15 +242,15 @@ const weekOf = date => plusDays(date, -((new Date(date + "T12:00:00").getDay() +
 
 function WeekDays({ rows, day, onDay }) {
   if (!rows) return html`<div class="week-days" aria-hidden="true">${Array.from({ length: 7 }, (_, i) => html`<span key=${i} class="week-day is-empty"></span>`)}</div>`;
-  return html`<div class="week-days" role="group" aria-label="Tag wählen">${rows.map(row => {
+  return html`<div class="week-days" role="group" aria-label=${t("week.pickDay")}>${rows.map(row => {
     const state = row.future || !row.meals ? "none" : row.done ? "done" : row.tasks ? "open" : "todo";
     const label = dayDate(row.day, { weekday: "long", day: "numeric", month: "long" }) +
-      ({ done: ", geprüft", open: ", Aufgabe offen", todo: ", noch zu prüfen", none: "" })[state];
+      (state === "none" ? "" : ", " + t("week.states." + state));
     return html`<button type="button" key=${row.day} class="week-day" data-day=${row.day} data-state=${state} aria-current=${row.day === day ? "date" : null}
       aria-label=${label} disabled=${row.future} onClick=${() => onDay(row.day)}>
       <span>${dayDate(row.day, { weekday: "short" }).replace(".", "")}</span><b>${Number(row.day.slice(8))}</b>
       <i class="week-dot" aria-hidden="true"></i>
-      <em>${row.future ? "" : row.day_type === "free" ? "Frei" : "Arb"}</em></button>`;
+      <em>${row.future ? "" : row.day_type === "free" ? t("dayType.free") : t("week.workShort")}</em></button>`;
   })}</div>`;
 }
 
@@ -292,9 +294,9 @@ function WeekStrip({ day, today, data, onDay }) {
     }, 120);
   };
   return html`<div class="week-strip">
-    <div class="week-head"><button type="button" class="quiet week-prev" aria-label="Woche zurück" onClick=${() => shift(-7)}>‹</button>
-      <span>${weeks[current] ? "KW " + weeks[current].week : ""}</span>
-      <button type="button" class="quiet week-next" aria-label="Woche vor" disabled=${atToday} onClick=${() => shift(7)}>›</button></div>
+    <div class="week-head"><button type="button" class="quiet week-prev" aria-label=${t("week.previous")} onClick=${() => shift(-7)}>‹</button>
+      <span>${weeks[current] ? t("week.number", { week: weeks[current].week }) : ""}</span>
+      <button type="button" class="quiet week-next" aria-label=${t("week.next")} disabled=${atToday} onClick=${() => shift(7)}>›</button></div>
     <div class="week-track" ref=${track} onScroll=${onScroll}>${keys.map(key => html`<div key=${key}
       class=${"week-panel" + (key === current ? " is-current" : "")} inert=${key !== current} aria-hidden=${key === current ? null : "true"}>
       <${WeekDays} rows=${weeks[key]?.days} day=${day} onDay=${onDay} /></div>`)}</div></div>`;
@@ -350,11 +352,11 @@ function WindowEditor({ meal, readings, data, day, onClose, onSaved }) {
     ? { min: Math.max(base.mealAt - limits.lead, view.from), max: base.mealAt + limits.lag }
     : { min: minEnd(state.start), max: Math.min(state.start + limits.max, view.to) };
   const snapTargets = () => {
-    const targets = [{ t: base.autoStart, label: "Standardbeginn" }, { t: base.autoEnd, label: "Standardende" }];
+    const targets = [{ t: base.autoStart, label: t("window.defaultStart") }, { t: base.autoEnd, label: t("window.defaultEnd") }];
     for (const event of events) {
-      if (event.kind === "insulin") targets.push({ t: event.t, label: num(event.amount, 1) + " IE" });
-      if (event.kind === "carbs") targets.push({ t: event.t, label: num(event.amount, 0) + " g KH" });
-      if (event.kind === "sport") targets.push({ t: event.t, label: event.label + " Beginn" }, { t: event.end, label: event.label + " Ende" });
+      if (event.kind === "insulin") targets.push({ t: event.t, label: num(event.amount, 1) + " " + UNIT.insulin });
+      if (event.kind === "carbs") targets.push({ t: event.t, label: t("window.carbs", { grams: num(event.amount, 0) }) });
+      if (event.kind === "sport") targets.push({ t: event.t, label: t("window.sportStart", { label: event.label }) }, { t: event.end, label: t("window.sportEnd", { label: event.label }) });
     }
     return targets;
   };
@@ -437,7 +439,7 @@ function WindowEditor({ meal, readings, data, day, onClose, onSaved }) {
   const g0 = readingValue(reading(ed.start)), g1 = readingValue(reading(ed.end));
   async function save(reset = false) {
     if (!reset && !isDefault && (g0 == null || g1 == null)) {
-      toast("An Beginn und Ende wird ein CGM-Wert benötigt.", true);
+      toast(t("window.needsCgm"), true);
       return;
     }
     setSaving(true);
@@ -446,7 +448,7 @@ function WindowEditor({ meal, readings, data, day, onClose, onSaved }) {
         : { meal_id: meal.id, day, start: new Date(ed.start).toISOString(), end: new Date(ed.end).toISOString() };
       await post("/api/analysis/window", body);
       dialog.current.close();
-      toast(body.reset ? "Standardzeitraum wiederhergestellt" : "Zeitraum gespeichert");
+      toast(body.reset ? t("window.resetDone") : t("window.saved"));
       await onSaved();
     } catch (error) {
       toast(error.message, true);
@@ -461,44 +463,44 @@ function WindowEditor({ meal, readings, data, day, onClose, onSaved }) {
   const changed = ed.start !== base.start || ed.end !== base.end;
   const Cell = ({ label, value, detail }) => html`<div><span>${label}</span><strong>${value}</strong>${detail && html`<small>${detail}</small>`}</div>`;
   return html`<dialog id="window-dialog" ref=${dialog} aria-labelledby="window-dialog-title" onClose=${onClose}>
-    <div class="section-head"><div><span id="window-meal-type" class="meal-type">${names[meal.meal] + " · " + timeOnly(meal.at) + " Uhr · " + num(meal.carbs) + " g KH"}</span>
-      <h2 id="window-dialog-title">Zeitraum anpassen</h2></div>
-      <button id="close-window" type="button" class="quiet" aria-label="Schließen" onClick=${() => dialog.current.close()}>×</button></div>
+    <div class="section-head"><div><span id="window-meal-type" class="meal-type">${names[meal.meal] + " · " + t("common.clock", { time: timeOnly(meal.at) }) + " · " + t("window.carbs", { grams: num(meal.carbs) })}</span>
+      <h2 id="window-dialog-title">${t("window.adjust")}</h2></div>
+      <button id="close-window" type="button" class="quiet" aria-label=${t("common.close")} onClick=${() => dialog.current.close()}>×</button></div>
     <div id="window-readout" class="window-readout" data-tone=${active?.tone || "none"} aria-live="polite">
-      <span class="readout-label">${(ed.active === "start" ? "Beginn" : "Ende") + " · " + timeOnly(ed[ed.active]) + " Uhr"}${ed.snapped[ed.active] && " · eingerastet: " + ed.snapped[ed.active].label}</span>
+      <span class="readout-label">${(ed.active === "start" ? t("window.start") : t("window.end")) + " · " + t("common.clock", { time: timeOnly(ed[ed.active]) })}${ed.snapped[ed.active] && " · " + t("window.snapped", { label: ed.snapped[ed.active].label })}</span>
       <span class="readout-value"><strong>${activeValue == null ? "—" : num(activeValue, 0)}</strong><span class="readout-trend">${activeValue == null ? "" : trendSymbol(active.trend)}</span><small>mg/dL</small></span></div>
-    <div class="window-handle-switch" role="group" aria-label="Griff auswählen">${[["start", "Beginn"], ["end", "Ende"]].map(([handle, label]) =>
+    <div class="window-handle-switch" role="group" aria-label=${t("window.pickHandle")}>${[["start", t("window.start")], ["end", t("window.end")]].map(([handle, label]) =>
       html`<button type="button" data-window-handle=${handle} aria-pressed=${String(ed.active === handle)} onClick=${() => setEd(state => ({ ...state, active: handle }))}>${label}</button>`)}</div>
     <div id="window-chart" class=${"window-chart" + (dragging ? " is-dragging" : "")} ref=${node => { chart.current = node; ref.current = node; }}
       onPointerDown=${onPointerDown} onPointerMove=${onPointerMove} onPointerUp=${onPointerUp} onPointerCancel=${onPointerUp} onKeyDown=${onKeyDown}>
       ${measured > 0 && html`<${GlucoseChart} layout=${layout} range=${range} view=${view} entries=${data.entries} treatments=${data.treatments}
         bands=${data.target_bands} editor=${{ reading, active: ed.active, snapped: ed.snapped }} />`}</div>
-    <div class="window-nudge" role="group" aria-label="Ausgewählten Griff verschieben">${[-5, -1, 1, 5].map(minutes =>
+    <div class="window-nudge" role="group" aria-label=${t("window.nudge")}>${[-5, -1, 1, 5].map(minutes =>
       html`<button type="button" data-nudge=${minutes} onClick=${() => nudge(ed.active, minutes)}>${minutes > 0 ? "+" + minutes : "−" + -minutes} min</button>`)}</div>
     <div id="window-summary" class="window-summary" aria-live="polite">
       <div class="window-facts">
-        <${Cell} label="Beginn" value=${timeOnly(ed.start)} detail=${g0 == null ? "kein CGM-Wert" : num(g0, 0) + " mg/dL"} />
-        <${Cell} label=${html`Ende <small>(exkl.)</small>`} value=${timeOnly(ed.end)} detail=${g1 == null ? "kein CGM-Wert" : num(g1, 0) + " mg/dL"} />
+        <${Cell} label=${t("window.start")} value=${timeOnly(ed.start)} detail=${g0 == null ? t("window.noCgm") : num(g0, 0) + " mg/dL"} />
+        <${Cell} label=${html`${t("window.end")} <small>${t("window.exclusive")}</small>`} value=${timeOnly(ed.end)} detail=${g1 == null ? t("window.noCgm") : num(g1, 0) + " mg/dL"} />
         <${Cell} label="ΔG" value=${g0 == null || g1 == null ? "—" : signedChange(g1 - g0, 0)} />
-        <${Cell} label="Dauer" value=${Math.floor(minutes / 60) + " h " + String(minutes % 60).padStart(2, "0") + " min"} />
-        <${Cell} label="KH im Fenster" value=${summary ? num(summary.carbs_g, 0) + " g" : "…"} />
-        <${Cell} label="Schnelles Insulin" value=${summary ? num(summary.rapid_units, 1) + " IE" : "…"} /></div>
-      <p class="window-state">${isDefault ? "Automatischer Standardzeitraum" : "Manueller Zeitraum"}${changed && html` · <b>nicht gespeichert</b>`}${(g0 == null || g1 == null) &&
-        html` · <span class="window-warning">An Beginn und Ende wird ein CGM-Wert benötigt.</span>`}</p></div>
-    <div class="form-actions"><button id="save-window" class="primary" type="button" disabled=${saving} onClick=${() => save()}>Zeitraum speichern</button>
-      <button id="default-window" type="button" class="quiet" onClick=${() => settle({ ...ed, start: base.autoStart, end: base.autoEnd, snapped: {} })}>Standard</button>
-      <button id="cancel-window" type="button" class="quiet" onClick=${() => dialog.current.close()}>Abbrechen</button></div></dialog>`;
+        <${Cell} label=${t("window.duration")} value=${Math.floor(minutes / 60) + " h " + String(minutes % 60).padStart(2, "0") + " min"} />
+        <${Cell} label=${t("window.carbsInWindow")} value=${summary ? num(summary.carbs_g, 0) + " g" : "…"} />
+        <${Cell} label=${t("window.rapidInsulin")} value=${summary ? num(summary.rapid_units, 1) + " " + UNIT.insulin : "…"} /></div>
+      <p class="window-state">${isDefault ? t("window.automatic") : t("window.manual")}${changed && html` · <b>${t("window.unsaved")}</b>`}${(g0 == null || g1 == null) &&
+        html` · <span class="window-warning">${t("window.needsCgm")}</span>`}</p></div>
+    <div class="form-actions"><button id="save-window" class="primary" type="button" disabled=${saving} onClick=${() => save()}>${t("window.save")}</button>
+      <button id="default-window" type="button" class="quiet" onClick=${() => settle({ ...ed, start: base.autoStart, end: base.autoEnd, snapped: {} })}>${t("window.default")}</button>
+      <button id="cancel-window" type="button" class="quiet" onClick=${() => dialog.current.close()}>${t("common.cancel")}</button></div></dialog>`;
 }
 
 // The Verlauf page. `status` is "loading" while the day is fetched, "error" when it failed.
 export function DayReview({ data, day, today, status, reload, onEdit, onAnalysisChanged, onDay, onRefresh }) {
   const [editor, setEditor] = useState(null);
-  const head = html`<div class="section-head history-head"><h2>Verlauf</h2>
-    <button type="button" class="quiet history-refresh" aria-label="Aktualisieren" title="Aktualisieren" onClick=${onRefresh}>↻</button></div>
+  const head = html`<div class="section-head history-head"><h2>${t("nav.history")}</h2>
+    <button type="button" class="quiet history-refresh" aria-label=${t("common.refresh")} title=${t("common.refresh")} onClick=${onRefresh}>↻</button></div>
     <${WeekStrip} day=${day} today=${today} data=${data} onDay=${onDay} />`;
   if (!data || data.day !== day && status !== "ready") return html`<section class="panel history">${head}
     <div id="timeline" class="day-list" aria-live="polite"><span id="record-count" class="hint" hidden></span>
-      <div class="empty">${status === "error" ? "Daten konnten nicht geladen werden." : "Daten werden geladen …"}</div></div></section>`;
+      <div class="empty">${status === "error" ? t("history.loadFailed") : t("history.loading")}</div></div></section>`;
   async function openEditor(meal) {
     try {
       const result = await api("/api/analysis/window-editor?" + new URLSearchParams({ day, meal_id: meal.id }));
@@ -516,20 +518,20 @@ export function DayReview({ data, day, today, status, reload, onEdit, onAnalysis
     <div class="history-day-head">
       <h3>${dayDate(day, { weekday: "short", day: "numeric", month: "numeric" })}</h3>
       ${total > 0 && html`<span id="review-summary" class=${"chip" + (review.done ? " is-ok" : "")}>${review.done
-        ? html`<${Icon} name="check" /> Tag geprüft` : (total - (review.unchecked ?? 0)) + " von " + total + " geprüft"}</span>`}
-      <span id="record-count" class="hint">${data.timeline.length + (data.timeline.length === 1 ? " Eintrag" : " Einträge")}</span>
+        ? html`<${Icon} name="check" /> ${t("history.dayChecked")}` : t("history.checkedOf", { done: total - (review.unchecked ?? 0), total })}</span>`}
+      <span id="record-count" class="hint">${t("common.entries", { count: data.timeline.length })}</span>
       <${HistoryDayType} data=${data} day=${day} reload=${reload} />
     </div>
     ${tasks.length > 0 && html`<ul class="history-tasks">${tasks.map(meal => html`<li key=${meal.id}><a href=${"#meal-" + meal.id}>
-      <b>${names[meal.meal] + " " + timeOnly(meal.at)}</b><span>${meal.calculation?.reason || "Faktor nicht berechenbar"}</span></a></li>`)}</ul>`}
+      <b>${names[meal.meal] + " " + timeOnly(meal.at)}</b><span>${meal.calculation?.reason || t("history.noFactor")}</span></a></li>`)}</ul>`}
     ${(data.meals.flatMap(meal => meal.sport?.events || []).filter(event => event.previous_day)
       .filter((event, index, all) => all.findIndex(other => other.id === event.id) === index)).map(event => html`<p key=${event.id} class="history-previous-sport">
-        ${(sportNames[event.kind] || "Sport") + " vom Vortag, " + timeOnly(event.at) + " Uhr: wirkt noch in diesen Tag"}</p>`)}
+        ${t("history.previousSport", { sport: sportNames[event.kind] || t("sport.sport"), time: timeOnly(event.at) })}</p>`)}
     <div id="timeline" class="day-list history-list" aria-live="polite">${status === "error"
-      ? html`<div class="empty">Daten konnten nicht geladen werden.</div>` : html`<${DayList} data=${data} ctx=${ctx} />`}</div>
+      ? html`<div class="empty">${t("history.loadFailed")}</div>` : html`<${DayList} data=${data} ctx=${ctx} />`}</div>
     ${!review.done && review.unchecked > 0 && review.checkable && html`<button id="check-day" type="button" class="primary check-day"
-      onClick=${event => act(event, async () => { await post("/api/review/day", { day, checked: true }); await reload(); toast("Tag geprüft"); })}>
-      <${Icon} name="check" /> Tag als geprüft markieren</button>`}
+      onClick=${event => act(event, async () => { await post("/api/review/day", { day, checked: true }); await reload(); toast(t("history.dayChecked")); })}>
+      <${Icon} name="check" /> ${t("history.markDay")}</button>`}
     ${editor && html`<${WindowEditor} key=${editor.meal.id} meal=${editor.meal} readings=${editor.readings} data=${data} day=${day}
       onClose=${() => setEditor(null)} onSaved=${async () => { await reload(); onAnalysisChanged(); }} />`}
   </section>`;

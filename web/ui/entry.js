@@ -5,7 +5,8 @@
 // app.js mounts the form, passes the day and settings, and talks to it through `control`
 // (refresh, tick, choose, applyAgent, submit), since the minute tick, "+" and the agent live outside.
 import { html, useRef, useState, useEffect } from "./html.js";
-import { post, toast, num, timeOnly, names, sportNames, localInputTime, toInstant, currentPosition } from "./lib.js";
+import { post, toast, num, timeOnly, names, sportNames, localInputTime, toInstant, currentPosition, UNIT } from "./lib.js";
+import { t } from "./i18n.js";
 import { SportEffectFields, sportFields, sportValues } from "./sport.js";
 import { DoseHelp, sliderUnits, firstPart } from "./dose.js";
 import { DayTypeSwitch } from "./day.js";
@@ -14,8 +15,7 @@ import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, SurchargeChoice } from 
 
 const ENTRY_TIME_HOLD_MS = 10 * 60000;
 const POSITION_MAX_AGE_MS = 2 * 60000;
-const positionHints = { denied: "Standort nicht freigegeben, Ort bitte selbst wählen",
-  failed: "Standort nicht ermittelt, Ort bitte selbst wählen" };
+const positionHints = { denied: t("entry.positionDenied"), failed: t("entry.positionFailed") };
 const nowTime = () => localInputTime(new Date()).slice(11, 16);
 
 // A basal dose with its own event id, kept until it is saved so a retry cannot store it twice.
@@ -171,7 +171,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     clearTimeout(timer.current);
     const id = ++requestId.current;
     const body = previewRequest();
-    if (body.mode === "meal" && !doseHelp() && !store.current.doseNote && body.day === props.current.today) set({ doseNote: "Empfehlung wird berechnet …" });
+    if (body.mode === "meal" && !doseHelp() && !store.current.doseNote && body.day === props.current.today) set({ doseNote: t("entry.calculating") });
     try {
       const data = await post("/api/entry/preview", body);
       if (id !== requestId.current) return null;
@@ -248,7 +248,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
           await refreshPreview();
         }
       }
-      toast("Eintrag aus Nightscout entfernt");
+      toast(t("entry.removed"));
     } catch (error) {
       toast(error.message, true);
     }
@@ -257,7 +257,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
   async function saveBasalEntry(s) {
     const units = Number(s.basalUnits);
     if (!(units > 0 && units <= 100 && Number.isInteger(units * 2))) {
-      refs.basal.current.setCustomValidity("Bitte Basal zwischen 0,5 und 100 IE in 0,5er-Schritten eintragen.");
+      refs.basal.current.setCustomValidity(t("entry.basalInvalid", { low: num(0.5, 1), high: 100, unit: UNIT.insulin }));
       refs.basal.current.reportValidity();
       return;
     }
@@ -273,13 +273,13 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
         try {
           await deleteBasal(result.id);
           if (props.current.day === result.day) await props.current.onReloadDay();
-          toast("Basal entfernt");
+          toast(t("entry.basalRemoved"));
         } catch (error) {
           toast(error.message, true);
         }
       };
-      toast("Basal " + num(units, 1) + " IE " + (result.nightscout_synced ? "gespeichert" : "lokal gespeichert, Nightscout folgt"),
-        !result.nightscout_synced && Boolean(props.current.connected), { label: "Rückgängig", run: undo });
+      toast(t(result.nightscout_synced ? "entry.basalSaved" : "entry.basalSavedLocal", { units: num(units, 1), unit: UNIT.insulin }),
+        !result.nightscout_synced && Boolean(props.current.connected), { label: t("common.undo"), run: undo });
     } catch (error) {
       toast(error.message, true);
     } finally {
@@ -298,7 +298,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     const insulin = mode === "meal" ? Number(s.insulin || 0) : 0;
     const finger = mode === "meal" && fingerActive(s) ? Number(s.finger || 0) : 0;
     if (mode === "meal" && carbs <= 0 && insulin <= 0 && !finger) {
-      refs.carbs.current.setCustomValidity("Bitte Kohlenhydrate, Insulin oder beides eintragen.");
+      refs.carbs.current.setCustomValidity(t("entry.needsValues"));
       refs.carbs.current.reportValidity();
       return;
     }
@@ -353,18 +353,19 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
       reset();
       await props.current.onSaved(result, result.day_view);
       const basal = result.basal;
-      const message = (result.kind === "exercise" ? "Sport" : [result.finger_mgdl != null ? "BZ " + num(result.finger_mgdl, 0) + " mg/dL" : "",
-        carbs > 0 ? num(carbs, 0) + " g" : "", insulin > 0 ? num(insulin, 2) + " IE" : ""]
-        .filter(Boolean).join(" + ")) + (basal ? " + Basal " + num(basal.units, 1) + " IE" : "") + " gespeichert" +
-        (result.split_units ? " · 2. Teil " + num(result.split_units, 1) + " IE vorgemerkt" : "") +
-        (basal && !basal.nightscout_synced ? " · Basal vorerst nur lokal" : "") +
-        (result.basal_error ? " · Basal nicht gespeichert: " + result.basal_error : "");
+      const what = (result.kind === "exercise" ? t("sport.sport") : [result.finger_mgdl != null ? t("entry.bg", { value: num(result.finger_mgdl, 0) }) : "",
+        carbs > 0 ? num(carbs, 0) + " g" : "", insulin > 0 ? num(insulin, 2) + " " + UNIT.insulin : ""]
+        .filter(Boolean).join(" + ")) + (basal ? " + " + t("entryKind.basal") + " " + num(basal.units, 1) + " " + UNIT.insulin : "");
+      const message = t("entry.saved", { what }) +
+        (result.split_units ? " · " + t("entry.splitNoted", { units: num(result.split_units, 1), unit: UNIT.insulin }) : "") +
+        (basal && !basal.nightscout_synced ? " · " + t("entry.basalLocal") : "") +
+        (result.basal_error ? " · " + t("entry.basalError", { error: result.basal_error }) : "");
       const undo = async () => {
         if (basal) await deleteBasal(basal.id).catch(error => toast(error.message, true));
         if (result.id) await undoEntry(result.id, restore);
         else if (basal) await props.current.onReloadDay();
       };
-      toast(message, Boolean(result.basal_error), result.id || basal ? { label: "Rückgängig", run: undo } : null);
+      toast(message, Boolean(result.basal_error), result.id || basal ? { label: t("common.undo"), run: undo } : null);
     } catch (error) {
       toast(error.message, true);
     } finally {
@@ -379,7 +380,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
   function openAgent() {
     const { agentInfo } = props.current;
     if (!agentInfo?.available) {
-      toast("Essens-Agent ist nicht eingerichtet: in den Einstellungen Anbieter und Modell wählen", true);
+      toast(t("entry.agentMissing"), true);
       return;
     }
     props.current.onGlucose();
@@ -495,20 +496,20 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
   const chips = place ? place.options.filter(option => option.quick || option.id === selectedPlace) : [];
   const more = place ? place.options.filter(option => !chips.includes(option)) : [];
   // Only what needs a look gets a line: no places yet, no position, or a position that is no place yet.
-  const placeHint = !place ? "" : !place.options.length ? "Noch keine Orte, in den Einstellungen anlegen"
+  const placeHint = !place ? "" : !place.options.length ? t("entry.noPlaces")
     : f.place !== undefined || f.positionPending || place.status === "matched" ? ""
     : place.status === "none" && f.positionError ? positionHints[f.positionError]
     : place.status === "unknown" ? place.hint : "";
   const submitLabel = (() => {
-    if (f.kind === "exercise") return "Sport in Nightscout speichern";
+    if (f.kind === "exercise") return t("entry.saveSport");
     if (f.kind === "basal") {
       const units = Number(f.basalUnits);
-      return Number.isFinite(units) && units > 0 ? "Basal " + num(units, 1) + " IE speichern" : "Basal speichern";
+      return Number.isFinite(units) && units > 0 ? t("entry.saveThis", { what: t("entryKind.basal") + " " + num(units, 1) + " " + UNIT.insulin }) : t("entry.saveBasal");
     }
-    const parts = [Number(f.carbs) > 0 ? num(f.carbs, 0) + " g" : "", Number(f.insulin) > 0 ? num(f.insulin, 2) + " IE" : ""].filter(Boolean);
+    const parts = [Number(f.carbs) > 0 ? num(f.carbs, 0) + " g" : "", Number(f.insulin) > 0 ? num(f.insulin, 2) + " " + UNIT.insulin : ""].filter(Boolean);
     const basal = entryBasalUnits(f);
-    if (parts.length && basal > 0) parts.push("Basal " + num(basal, 1) + " IE");
-    return parts.length ? parts.join(" + ") + " speichern" : "In Nightscout speichern";
+    if (parts.length && basal > 0) parts.push(t("entryKind.basal") + " " + num(basal, 1) + " " + UNIT.insulin);
+    return parts.length ? t("entry.saveThis", { what: parts.join(" + ") }) : t("entry.saveNightscout");
   })();
   const touch = () => { activityAt.current = Date.now(); };
   const typeCarbs = value => {
@@ -521,7 +522,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
 
   return html`<form id="entry-form" ref=${refs.form} onSubmit=${event => { event.preventDefault(); save(); }}
     onFocusIn=${() => syncTime()} onInputCapture=${touch} onChangeCapture=${touch} onPointerDownCapture=${touch} onKeyDownCapture=${touch}>
-    <div class="entry-switch entry-mode-switch" role="group" aria-label="Eintragsart">${[["meal", "Essen & Insulin"], ["exercise", "Sport"], ["basal", "Basal"]].map(([kind, label]) =>
+    <div class="entry-switch entry-mode-switch" role="group" aria-label=${t("entry.kind")}>${[["meal", t("entry.kinds.meal")], ["exercise", t("entry.kinds.exercise")], ["basal", t("entry.kinds.basal")]].map(([kind, label]) =>
       html`<button type="button" class="entry-mode" data-entry-mode=${kind} aria-pressed=${String(f.kind === kind)} onClick=${event => {
         setKind(kind);
         if (event.isTrusted) control?.onManualKind?.();
@@ -529,32 +530,32 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     <input type="hidden" name="kind" id="entry-kind" value=${f.kind} />
     <div class="entry-chips">
       <button type="button" id="entry-time-chip" class="chip" aria-controls="entry-time-field" aria-expanded=${String(timeOpen)} hidden=${timeOpen}
-        onClick=${() => { set({ timeOpen: true }); setTimeout(() => refs.time.current?.focus()); }}>Zeit: ${(f.timeTouched ? "" : "jetzt · ") + (f.at || "—")}</button>
-      ${assignment && html`<button type="button" id="entry-assign-chip" class="chip" title="Zuordnung umschalten" disabled=${Boolean(assignment.own_meal_taken)}
-        onClick=${() => toggle({ entryAs: assignment.snack ? "meal" : "snack" })}>Zählt als: ${(assignment.snack
-          ? (assignment.meal ? "Snack zu " + names[assignment.meal] + " " + timeOnly(assignment.at) : "Snack ohne Mahlzeit")
-          : "eigenes " + names[assignment.own_meal]) + (assignment.own_meal_taken ? " (" + names[assignment.own_meal] + " heute schon eingetragen)" : " ⇄")}</button>`}
-      ${close && html`<button type="button" id="entry-close-chip" class="chip" title="Vorige Mahlzeit hier abschließen" aria-pressed=${String(Boolean(close.active))}
+        onClick=${() => { set({ timeOpen: true }); setTimeout(() => refs.time.current?.focus()); }}>${t("entry.timeChip", { time: (f.timeTouched ? "" : t("entry.nowPrefix")) + (f.at || "—") })}</button>
+      ${assignment && html`<button type="button" id="entry-assign-chip" class="chip" title=${t("entry.assignTitle")} disabled=${Boolean(assignment.own_meal_taken)}
+        onClick=${() => toggle({ entryAs: assignment.snack ? "meal" : "snack" })}>${t("entry.countsAs", { what: (assignment.snack
+          ? (assignment.meal ? t("entry.snackOf", { meal: names[assignment.meal], time: timeOnly(assignment.at) }) : t("entry.snackAlone"))
+          : t("entry.ownMeal", { meal: names[assignment.own_meal] })) + (assignment.own_meal_taken ? " " + t("entry.mealTaken", { meal: names[assignment.own_meal] }) : " ⇄") })}</button>`}
+      ${close && html`<button type="button" id="entry-close-chip" class="chip" title=${t("entry.closeTitle")} aria-pressed=${String(Boolean(close.active))}
         onClick=${() => toggle({ closeMeal: !close.active })}>${close.active
-          ? names[close.meal] + " " + timeOnly(close.at) + " endet " + timeOnly(close.end) + " ✓"
-          : names[close.meal] + " " + timeOnly(close.at) + " hier abschließen"}</button>`}
-      ${split && html`<button type="button" id="entry-split-chip" class="chip" title="Split-Bolus ein- oder ausschalten" aria-pressed=${String(Boolean(split.active))}
+          ? t("entry.closeActive", { meal: names[close.meal], time: timeOnly(close.at), end: timeOnly(close.end) })
+          : t("entry.closeOffer", { meal: names[close.meal], time: timeOnly(close.at) })}</button>`}
+      ${split && html`<button type="button" id="entry-split-chip" class="chip" title=${t("entry.splitTitle")} aria-pressed=${String(Boolean(split.active))}
         onClick=${() => toggle({ split: !split.active })}>${split.active
-          ? "Split " + split.first_percent + "/" + (100 - split.first_percent) + " · 2. Teil " + timeOnly(split.due_at) : "Ohne Split"}</button>`}
+          ? t("entry.splitOn", { first: split.first_percent, rest: 100 - split.first_percent, time: timeOnly(split.due_at) }) : t("entry.splitOff")}</button>`}
       ${basalOffer > 0 && html`<label id="entry-basal-option" class="chip chip-toggle"><input type="checkbox" name="with_basal" checked=${f.withBasal}
-        onChange=${event => set({ withBasal: event.currentTarget.checked })} /> <span id="entry-basal-hint">+ Basal ${num(basalOffer, 1)} IE</span></label>`}
+        onChange=${event => set({ withBasal: event.currentTarget.checked })} /> <span id="entry-basal-hint">+ ${t("entryKind.basal")} ${num(basalOffer, 1)} ${UNIT.insulin}</span></label>`}
     </div>
-    <label id="entry-time-field" hidden=${!timeOpen}>Zeitpunkt (24 h)<input type="time" name="at" id="entry-time" step="60" required ref=${refs.time}
+    <label id="entry-time-field" hidden=${!timeOpen}>${t("entry.time")}<input type="time" name="at" id="entry-time" step="60" required ref=${refs.time}
       value=${f.at} onInput=${event => { activityAt.current = Date.now(); set({ at: event.currentTarget.value, timeTouched: true }); schedule(0); }} /></label>
-    <section id="entry-meal-fields" class="entry-card" aria-label="Essen" hidden=${!meal}>
-      <p class="entry-card-title">Essen</p>
+    <section id="entry-meal-fields" class="entry-card" aria-label=${t("entry.food")} hidden=${!meal}>
+      <p class="entry-card-title">${t("entry.food")}</p>
       <div class="entry-chips agent-entry">
-        <button type="button" id="entry-agent-open" class="chip agent-chip" onClick=${openAgent}>${f.agent ? "Nachbessern" : "Essen einschätzen"}</button>
-        ${f.agent && html`<span id="entry-agent-summary" class="agent-summary">${(f.agent.dish_name ? "Gericht: " + f.agent.dish_name : "Ohne Gericht") + " · geschätzt " + f.agent.range}</span>
-          <button type="button" id="entry-agent-clear" class="chip quiet-chip" aria-label="Einschätzung verwerfen" onClick=${() => set({ agent: null })}>×</button>`}
+        <button type="button" id="entry-agent-open" class="chip agent-chip" onClick=${openAgent}>${f.agent ? t("entry.refine") : t("entry.estimate")}</button>
+        ${f.agent && html`<span id="entry-agent-summary" class="agent-summary">${(f.agent.dish_name ? t("entry.dishName", { name: f.agent.dish_name }) : t("entry.noDish")) + " · " + t("entry.estimated", { range: f.agent.range })}</span>
+          <button type="button" id="entry-agent-clear" class="chip quiet-chip" aria-label=${t("entry.discardEstimate")} onClick=${() => set({ agent: null })}>×</button>`}
       </div>
       <div class="entry-carbs-row">
-        <label id="entry-carbs-field">Kohlenhydrate <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"
+        <label id="entry-carbs-field">${t("entryKind.carbs")} <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"
           ref=${refs.carbs} value=${f.carbs} disabled=${!meal} onInput=${event => typeCarbs(event.currentTarget.value)} /></label>
         <div id="entry-factors" class="entry-chips entry-factor-chips" hidden=${!quality}>
           <${FactorChips} fat=${f.fat} fast=${f.fast} onFat=${fat => toggle({ fat })} onFast=${fast => set({ fast })} />
@@ -564,47 +565,47 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
         <${CertaintySlider} level=${f.certainty} onChange=${certainty => set({ certainty, certaintyUnset: false })} onCommit=${() => schedule(0)} />
       </div>
       ${place && html`<div id="entry-place" class="entry-place">
-        <div id="entry-place-chips" class="entry-chips" role="group" aria-label="Ort">${chips.map(option =>
+        <div id="entry-place-chips" class="entry-chips" role="group" aria-label=${t("common.place")}>${chips.map(option =>
           html`<button type="button" class="chip place-chip" data-place-id=${option.id} aria-pressed=${String(option.id === selectedPlace)}
             onClick=${() => toggle({ place: selectedPlace === option.id ? "none" : option.id })}>${option.name}</button>`)}
-          ${more.length > 0 && html`<select class="chip place-more" aria-label="Weitere Orte" value=""
+          ${more.length > 0 && html`<select class="chip place-more" aria-label=${t("entry.morePlaces")} value=""
             onChange=${event => { if (event.currentTarget.value) toggle({ place: Number(event.currentTarget.value) }); }}>
-            <option value="">Weitere …</option>${more.map(option => html`<option value=${option.id}>${option.name}</option>`)}</select>`}</div>
-        ${placeHint && html`<p id="entry-place-hint" class="hint">Ort: ${placeHint}</p>`}</div>`}
+            <option value="">${t("entry.more")}</option>${more.map(option => html`<option value=${option.id}>${option.name}</option>`)}</select>`}</div>
+        ${placeHint && html`<p id="entry-place-hint" class="hint">${t("entry.placeHint", { hint: placeHint })}</p>`}</div>`}
     </section>
-    <label id="entry-basal-field" hidden=${f.kind !== "basal"}>Basal <span>IE</span><input name="basal_units" type="number" min="0.5" max="100" step="0.5" inputmode="decimal"
+    <label id="entry-basal-field" hidden=${f.kind !== "basal"}>${t("entryKind.basal")} <span>${UNIT.insulin}</span><input name="basal_units" type="number" min="0.5" max="100" step="0.5" inputmode="decimal"
       ref=${refs.basal} value=${f.basalUnits} disabled=${f.kind !== "basal"} required=${f.kind === "basal"}
       onInput=${event => { event.currentTarget.setCustomValidity(""); set({ basalUnits: event.currentTarget.value }); }} /></label>
-    <label id="entry-sport-field" hidden=${f.kind !== "exercise"}>Sportart
+    <label id="entry-sport-field" hidden=${f.kind !== "exercise"}>${t("entry.sportKind")}
       <select name="sport_kind" ref=${refs.sport} disabled=${f.kind !== "exercise"} onChange=${event => set({ sportKind: event.currentTarget.value })}>${Object.entries(sportNames).map(([kind, label]) =>
         html`<option value=${kind} selected=${f.sportKind === kind}>${label}</option>`)}</select></label>
-    <label id="entry-duration-field" hidden=${f.kind !== "exercise"}>Dauer <span>Minuten</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"
+    <label id="entry-duration-field" hidden=${f.kind !== "exercise"}>${t("window.duration")} <span>${t("entry.minutes")}</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"
       value=${f.duration} disabled=${f.kind !== "exercise"} required=${f.kind === "exercise"} onInput=${event => set({ duration: event.currentTarget.value })} /></label>
     ${f.kind === "exercise" && html`<${SportEffectFields} id="entry-sport-effect-field" fields=${f.sportFx} defaults=${sportDefaults(f.sportKind)}
       onChange=${sportFx => set({ sportFx })} />`}
-    <section id="entry-influences" class="entry-card" aria-label="Einflüsse" hidden=${!dayType}>
-      <p class="entry-card-title">Einflüsse</p>
+    <section id="entry-influences" class="entry-card" aria-label=${t("entry.influences")} hidden=${!dayType}>
+      <p class="entry-card-title">${t("entry.influences")}</p>
       ${dayType && html`<div id="entry-day-type" class="entry-day-type">
-        <${DayTypeSwitch} label="Tagesart für das Frühstück" value=${dayType.value} data="day-type" disabled=${f.dayTypeSaving}
+        <${DayTypeSwitch} label=${t("entry.dayTypeLabel")} value=${dayType.value} data="day-type" disabled=${f.dayTypeSaving}
           onChoose=${chooseDayType} hintId="entry-day-type-hint" hint=${dayType.source} /></div>`}
     </section>
-    <section id="entry-dose" class="entry-card entry-dose-card" aria-label="Dosis" hidden=${!meal}>
-      <label id="entry-finger-field" hidden=${!fingerOpen}>BZ blutig gemessen <span>mg/dL</span><input name="finger_mgdl" type="number" min="20" max="600" step="1" inputmode="numeric"
+    <section id="entry-dose" class="entry-card entry-dose-card" aria-label=${t("entry.dose")} hidden=${!meal}>
+      <label id="entry-finger-field" hidden=${!fingerOpen}>${t("entry.finger")} <span>mg/dL</span><input name="finger_mgdl" type="number" min="20" max="600" step="1" inputmode="numeric"
         ref=${refs.finger} value=${f.finger} disabled=${!fingerActive(f)} onInput=${event => { refs.carbs.current.setCustomValidity(""); set({ finger: event.currentTarget.value }); schedule(); }} /></label>
       ${choice && html`<${SurchargeChoice} mode=${choice.mode} staticMgdl=${choice.static_mgdl} fat=${choice.static_fat} splitNote
         calculated=${{ fpe: choice.fpe, mgdl: choice.fpe_mgdl, minutes: choice.fpe_minutes, fat_g: choice.fat_g, protein_g: choice.protein_g }}
         onChange=${mode => { storeSurchargeMode(mode); toggle({ surchargeMode: mode }); }} />`}
       <div id="dose-result" class="help-result" aria-live="polite" aria-busy=${meal && f.busy ? "true" : null}>
         <${DoseHelp} help=${help} note=${f.doseNote} changed=${f.doseChanged} choice=${f.doseChoice} chosen=${f.slider} onChoose=${chooseDose} onSlide=${slide} onZero=${zeroDose} /></div>
-      <label id="entry-insulin-field">Eigene IE<input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"
+      <label id="entry-insulin-field">${t("entry.ownUnits", { unit: UNIT.insulin })}<input name="insulin" type="number" min="0" max="100" step="0.5" inputmode="decimal"
         ref=${refs.insulin} value=${f.insulin} disabled=${!meal} onInput=${event => typeInsulin(event.currentTarget.value)} /></label>
     </section>
-    <label id="entry-note-field" hidden=${!noteOpen}>Notiz <span>optional</span><input name="notes" type="text" maxlength="500" ref=${refs.notes}
+    <label id="entry-note-field" hidden=${!noteOpen}>${t("common.note")} <span>${t("common.optional")}</span><input name="notes" type="text" maxlength="500" ref=${refs.notes}
       value=${f.notes} onInput=${event => set({ notes: event.currentTarget.value })} /></label>
     <div class="entry-chips"><button type="button" id="entry-finger-chip" class="chip quiet-chip" aria-controls="entry-finger-field" aria-expanded=${String(fingerOpen)}
-      hidden=${!fingerActive(f) || fingerOpen} onClick=${() => { set({ fingerOpen: true }); setTimeout(() => refs.finger.current?.focus()); }}>+ BZ blutig</button><button type="button"
+      hidden=${!fingerActive(f) || fingerOpen} onClick=${() => { set({ fingerOpen: true }); setTimeout(() => refs.finger.current?.focus()); }}>+ ${t("entryKind.finger")}</button><button type="button"
       id="entry-note-chip" class="chip quiet-chip" aria-controls="entry-note-field" aria-expanded=${String(noteOpen)} hidden=${noteOpen}
-      onClick=${() => { set({ noteOpen: true }); setTimeout(() => refs.notes.current?.focus()); }}>+ Notiz</button></div>
+      onClick=${() => { set({ noteOpen: true }); setTimeout(() => refs.notes.current?.focus()); }}>+ ${t("common.note")}</button></div>
     <div class="form-actions entry-actions"><button class="primary" type="submit" id="entry-submit" disabled=${f.saving}>${submitLabel}</button></div>
   </form>`;
 }

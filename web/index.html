@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11261e">
-  <title>Diabetes-Tagebuch</title>
+  <title data-i18n="app.title">Diabetes-Tagebuch</title>
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.webmanifest">
@@ -18,10 +18,10 @@
     <header class="topbar">
       <div class="brand">
         <img class="brand-mark" src="/logo.svg" width="40" height="40" alt="">
-        <strong>Diabetes-Tagebuch</strong>
+        <strong data-i18n="app.title">Diabetes-Tagebuch</strong>
       </div>
-      <div id="current-glucose" class="glucose-widget" data-status="unavailable" role="status" aria-live="polite" aria-label="Aktueller Blutzucker">
-        <div class="glucose-main"><strong id="glucose-value">—</strong><span id="glucose-trend">Trend nicht verfügbar</span></div>
+      <div id="current-glucose" class="glucose-widget" data-status="unavailable" role="status" aria-live="polite" data-i18n-aria-label="glucose.current" aria-label="Aktueller Blutzucker">
+        <div class="glucose-main"><strong id="glucose-value">—</strong><span id="glucose-trend" data-i18n="glucose.trendUnavailable">Trend nicht verfügbar</span></div>
         <small id="glucose-meta" hidden></small>
       </div>
       <div class="topbar-actions"><div id="connection" class="status" hidden></div></div>
@@ -29,23 +29,23 @@
 
     <!-- App navigation (concept 2026-11-18): a tab bar at the bottom on phones and tablets, a rail on the left
          on wide screens. "+" opens the choice of what to enter (web/ui/quick-add.js). -->
-    <nav class="appnav" aria-label="Navigation">
-      <a href="?view=diary" class="appnav-item" data-nav="today"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span>Heute</span></a>
-      <a href="?view=diary" class="appnav-item" data-nav="history"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v15H4z M4 10h16 M9 3v4 M15 3v4"/></svg><span>Verlauf</span></a>
-      <button type="button" class="appnav-add" id="nav-add" aria-label="Eintragen" aria-haspopup="dialog"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14 M5 12h14"/></svg><span>Eintragen</span></button>
-      <a href="?view=analysis" class="appnav-item" data-nav="analysis"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10 M10 20V4 M16 20v-7 M22 20H2"/></svg><span>Analyse</span></a>
-      <a href="?view=settings" class="appnav-item" data-nav="settings"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16 M4 12h16 M4 18h16"/></svg><span>Mehr</span></a>
+    <nav class="appnav" data-i18n-aria-label="nav.label" aria-label="Navigation">
+      <a href="?view=diary" class="appnav-item" data-nav="today"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span data-i18n="nav.today">Heute</span></a>
+      <a href="?view=diary" class="appnav-item" data-nav="history"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v15H4z M4 10h16 M9 3v4 M15 3v4"/></svg><span data-i18n="nav.history">Verlauf</span></a>
+      <button type="button" class="appnav-add" id="nav-add" data-i18n-aria-label="quick.title" aria-label="Eintragen" aria-haspopup="dialog"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14 M5 12h14"/></svg><span data-i18n="quick.title">Eintragen</span></button>
+      <a href="?view=analysis" class="appnav-item" data-nav="analysis"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10 M10 20V4 M16 20v-7 M22 20H2"/></svg><span data-i18n="nav.analysis">Analyse</span></a>
+      <a href="?view=settings" class="appnav-item" data-nav="settings"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16 M4 12h16 M4 18h16"/></svg><span data-i18n="nav.more">Mehr</span></a>
     </nav>
 
     <main>
       <section id="diary-view" class="view">
         <div class="page-head diary-head">
-          <div><h1>Dein Tag</h1></div>
+          <div><h1 data-i18n="nav.yourDay">Dein Tag</h1></div>
           <div class="day-nav">
-            <button type="button" id="prev-day" aria-label="Vorheriger Tag">←</button>
-            <input id="selected-day" type="date" aria-label="Datum">
-            <button type="button" id="next-day" aria-label="Nächster Tag">→</button>
-            <button type="button" id="refresh-day" class="quiet" aria-label="Aktualisieren" title="Aktualisieren"><span aria-hidden="true">↻</span><span class="refresh-label">Aktualisieren</span></button>
+            <button type="button" id="prev-day" data-i18n-aria-label="nav.prevDay" aria-label="Vorheriger Tag">←</button>
+            <input id="selected-day" type="date" data-i18n-aria-label="nav.date" aria-label="Datum">
+            <button type="button" id="next-day" data-i18n-aria-label="nav.nextDay" aria-label="Nächster Tag">→</button>
+            <button type="button" id="refresh-day" class="quiet" data-i18n-aria-label="common.refresh" data-i18n-title="common.refresh" aria-label="Aktualisieren" title="Aktualisieren"><span aria-hidden="true">↻</span><span class="refresh-label" data-i18n="common.refresh">Aktualisieren</span></button>
           </div>
         </div>
         <div id="banner" class="banner" hidden></div>
@@ -57,9 +57,9 @@
             <!-- On phones and tablets the entry is a full-screen sheet opened from "+"; on wide screens it stays here. -->
             <div id="entry-drawer" class="entry-drawer">
             <div class="section-head entry-drawer-head">
-              <button type="button" id="entry-back" class="quiet entry-drawer-nav" aria-label="Zurück zur Auswahl" title="Zurück zur Auswahl">‹</button>
-              <h2 id="entry-title">Eintrag hinzufügen</h2>
-              <button type="button" id="entry-close" class="quiet entry-drawer-nav" aria-label="Schließen">×</button>
+              <button type="button" id="entry-back" class="quiet entry-drawer-nav" data-i18n-aria-label="entry.backToChoice" data-i18n-title="entry.backToChoice" aria-label="Zurück zur Auswahl" title="Zurück zur Auswahl">‹</button>
+              <h2 id="entry-title" data-i18n="entry.addTitle">Eintrag hinzufügen</h2>
+              <button type="button" id="entry-close" class="quiet entry-drawer-nav" data-i18n-aria-label="common.close" aria-label="Schließen">×</button>
             </div>
             <!-- "KE & IE" on phones: what still acts, since the sheet covers "Heute" (app.js renderEntryActive). -->
             <div id="entry-active-host" class="entry-active"></div>
@@ -80,7 +80,7 @@
     </main>
   </div>
   <!-- The choice behind "+" (web/ui/quick-add.js) renders in here. -->
-  <dialog id="add-dialog" class="add-dialog" aria-label="Eintragen"></dialog>
+  <dialog id="add-dialog" class="add-dialog" data-i18n-aria-label="quick.title" aria-label="Eintragen"></dialog>
   <!-- A saved entry as a card (web/ui/entry-card.js) renders in here. -->
   <dialog id="edit-dialog" class="card-dialog" aria-labelledby="edit-dialog-title"></dialog>
   <!-- The meal chat (web/ui/agent-chat.js) renders in here. -->
