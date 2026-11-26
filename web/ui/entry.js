@@ -12,7 +12,7 @@ import { SportEffectFields, sportFields, sportValues } from "./sport.js";
 import { DoseHelp, sliderUnits, firstPart } from "./dose.js";
 import { DayTypeSwitch } from "./day.js";
 import { mealChat } from "./main.js";
-import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, SurchargeChoice } from "./meal-fields.js";
+import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, FatLevel, SurchargeChoice } from "./meal-fields.js";
 
 const ENTRY_TIME_HOLD_MS = 10 * 60000;
 const POSITION_MAX_AGE_MS = 2 * 60000;
@@ -47,7 +47,7 @@ function storeSurchargeMode(mode) {
 function blank(kind = "meal") {
   return {
     kind, at: nowTime(), timeTouched: false, timeOpen: false, noteOpen: false, fingerOpen: false,
-    carbs: "", insulin: "", finger: "", notes: "", certainty: 1, certaintyUnset: false, fat: false, fast: false,
+    carbs: "", insulin: "", finger: "", notes: "", certainty: 1, certaintyUnset: false, fast: false, fpeLevel: "normal",
     withBasal: true, basalUnits: "", sportKind: sportKinds[0] || "jogging", duration: "", sportFx: sportFields(null),
     entryAs: null, split: null, closeMeal: false, place: undefined, agent: null,
     position: null, positionAt: 0, positionPending: false, positionError: null,
@@ -115,7 +115,9 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
       split: s.split ?? null, close_meal: Boolean(s.closeMeal),
       // Saving re-checks the shown options with these, so the preview must send the same marks.
       carbs_certainty: carbs ? certaintyValue(s) : null,
-      fat_protein: carbs && s.fat, fast: carbs && s.fast,
+      fast: carbs && s.fast,
+      // Without the agent's estimate the level (Nichts / Normal / Fett) gives the fat/protein surcharge.
+      fpe_level: carbs && !s.agent ? s.fpeLevel : null,
       // The agent's fat and protein estimate offers the calculated surcharge next to the static one.
       fat_g: carbs && s.agent?.fat_g != null ? s.agent.fat_g : null,
       protein_g: carbs && s.agent?.protein_g != null ? s.agent.protein_g : null,
@@ -320,7 +322,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
       sport_minutes: mode === "exercise" ? sport.minutes : null,
       duration_minutes: s.duration || 0, notes: s.notes,
       carbs_certainty: carbs > 0 ? certaintyValue(s) : null,
-      fat_protein: carbs > 0 && s.fat, fast: carbs > 0 && s.fast,
+      fast: carbs > 0 && s.fast,
       event_id: pending.current.event || crypto.randomUUID(),
       basal_event_id: basalUnits > 0 ? pending.current.basal.id || crypto.randomUUID() : null,
       dose_check: chosen != null && Number(chosen) === insulin ? help.check : null,
@@ -401,7 +403,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
   function applyAgent({ session, estimate, carbs, portion, fat_g, protein_g, certainty, fat_protein, fast }) {
     const index = CERTAINTY_LEVELS.indexOf(certainty);
     set({ carbs: String(carbs), certainty: index < 0 ? 1 : index, certaintyUnset: certainty !== undefined && index < 0,
-      fat: Boolean(fat_protein), fast: Boolean(fast),
+      fast: Boolean(fast),
       agent: { session_id: session, dish_name: estimate.dish?.name || "", description: estimate.description,
         // Fat and protein scaled by the portion picked in the chat.
         fat_g: fat_g ?? null, protein_g: protein_g ?? null, portion: portion ?? 1,
@@ -559,7 +561,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
         <label id="entry-carbs-field">${t("entryKind.carbs")} <span>g</span><input name="carbs" type="number" min="0" max="500" step="1" inputmode="decimal"
           ref=${refs.carbs} value=${f.carbs} disabled=${!meal} onInput=${event => typeCarbs(event.currentTarget.value)} /></label>
         <div id="entry-factors" class="entry-chips entry-factor-chips" hidden=${!quality}>
-          <${FactorChips} fat=${f.fat} fast=${f.fast} onFat=${fat => toggle({ fat })} onFast=${fast => set({ fast })} />
+          <${FactorChips} fast=${f.fast} onFast=${fast => set({ fast })} />
         </div>
       </div>
       <div id="entry-quality" class="entry-chips entry-quality-row" hidden=${!quality}>
@@ -593,6 +595,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     <section id="entry-dose" class="entry-card entry-dose-card" aria-label=${t("entry.dose")} hidden=${!meal}>
       <label id="entry-finger-field" hidden=${!fingerOpen}>${t("entry.finger")} <span>${UNIT.glucose}</span><input name="finger_mgdl" type="number" ...${glField(20, 600)} inputmode=${mmol ? "decimal" : "numeric"}
         ref=${refs.finger} value=${f.finger} disabled=${!fingerActive(f)} onInput=${event => { refs.carbs.current.setCustomValidity(""); set({ finger: event.currentTarget.value }); schedule(); }} /></label>
+      ${meal && Number(f.carbs) > 0 && !f.agent && help?.surcharge_levels && html`<${FatLevel} value=${f.fpeLevel} onChange=${fpeLevel => toggle({ fpeLevel })} />`}
       ${choice && html`<${SurchargeChoice} mode=${choice.mode} staticMgdl=${choice.static_mgdl} fat=${choice.static_fat} splitNote
         calculated=${{ fpe: choice.fpe, mgdl: choice.fpe_mgdl, minutes: choice.fpe_minutes, fat_g: choice.fat_g, protein_g: choice.protein_g }}
         onChange=${mode => { storeSurchargeMode(mode); toggle({ surchargeMode: mode }); }} />`}

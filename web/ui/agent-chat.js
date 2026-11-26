@@ -259,7 +259,7 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
       ${picked && html`<div class="chat-pick">
         <${PortionPick} estimate=${estimate} portion=${portion} previous=${previousCarbs} onChange=${setPortion}>
           <span class="entry-chips">
-            <${FactorChips} fat=${fat} fast=${fast} onFat=${setFat} onFast=${setFast} />
+            <${FactorChips} fast=${fast} onFast=${setFast} />
           </span>
         <//>
         <${CertaintySlider} level=${level} onChange=${setLevel} />

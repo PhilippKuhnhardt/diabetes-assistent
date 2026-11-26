@@ -241,10 +241,11 @@ def _split(context: dict, assignment: dict | None, payload: dict) -> dict | None
 
 def _fpe_surcharge(context: dict, assignment: dict | None, payload: dict) -> dict | None:
     """The calculated fat/protein surcharge (app/fpe.py) when the form chose it, else None. Snacks carry it like
-    meals."""
-    if payload.get("surcharge_mode") != "fpe" or context["mode"] != "meal" or not context["carbs"]:
+    meals (the surcharge belongs to each carb entry, app/on_board.py)."""
+    if context["mode"] != "meal" or not context["carbs"]:
         return None
-    return fpe.estimate(payload, context["settings"])
+    found = fpe.estimate(payload, context["settings"])
+    return found if fpe.chosen(found, payload) else None
 
 
 def _place_choice(context: dict, payload: dict) -> int | None:
@@ -267,7 +268,7 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
     result = dose_help.dose_help({"carbs": str(carbs),
                                   "snack": bool(assignment and assignment["snack"]),
                                   "fat_protein": carbs > 0 and payload.get("fat_protein") is True,
-                                  **({key: payload.get(key) for key in ("fat_g", "protein_g", "surcharge_mode")}
+                                  **({key: payload.get(key) for key in ("fat_g", "protein_g", "surcharge_mode", "fpe_level")}
                                      if carbs > 0 else {}),
                                   "place_id": _place_choice(context, payload) if carbs > 0 else None,
                                   "finger_mgdl": context["finger"], "finger_at": context["at"]})
@@ -279,7 +280,7 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
         split = None
     if split and split.get("fpe"):
         # Calculated surcharge: the carbs (and correction) now, the surcharge later.
-        chosen = (result.get("surcharge_choice") or {}).get("mode") == "fpe"
+        chosen = _fpe_surcharge(context, assignment, payload) is not None
         later = split_bolus.dosing.half_units(Decimal(str(result.get("auto_surcharge_units") or 0))) if chosen else None
         full = result.get(prefix + "entry_units")
         if not chosen:
