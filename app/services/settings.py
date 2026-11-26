@@ -35,6 +35,8 @@ MESSAGES = {
     "fpe_surcharge_mgdl": tr("Zuschlag je FPE muss zwischen 5 und 60 mg/dL liegen"),
     "auto_vacation": tr("Unbekannte Urlaubs-Einstellung der Automatik"),
     "day_types": tr("Arbeit / Frei muss an oder aus sein"),
+    "low_limit_mgdl": tr("Grenze für tief muss zwischen 54 und 90 mg/dL liegen"),
+    "high_limit_mgdl": tr("Grenze für hoch muss zwischen 180 und 400 mg/dL liegen"),
     "basal_default_units": tr("Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen"),
     "split_min_grams": SPLIT_MESSAGE, "split_first_percent": SPLIT_MESSAGE, "split_delay_minutes": SPLIT_MESSAGE,
     "split_min_units": tr("Split-Bolus: Mindestdosis 0–30 IE in 0,5er-Schritten (0 = immer)"),
@@ -66,6 +68,8 @@ class SettingsInput(BaseModel):
     fpe_surcharge_mgdl: Annotated[Decimal, Field(ge=5, le=60)] = fpe.PER_FPE_MGDL
     auto_vacation: Literal[config.AUTO_VACATION_MODES] = config.DEFAULT_AUTO_VACATION
     day_types: StrictBool = False
+    low_limit_mgdl: Annotated[Decimal, Field(ge=54, le=90)] = Decimal(config.DEFAULT_LIMITS["low_limit_mgdl"])
+    high_limit_mgdl: Annotated[Decimal, Field(ge=180, le=400)] = Decimal(config.DEFAULT_LIMITS["high_limit_mgdl"])
     basal_default_units: Annotated[Decimal, Field(ge=0, le=100, multiple_of=Decimal("0.5"))] = \
         Decimal(str(config.DEFAULT_BASAL_UNITS))
     split_min_grams: Annotated[int, Field(ge=0, le=300)] = config.DEFAULT_SPLIT["split_min_grams"]
@@ -139,7 +143,8 @@ def validate_settings(value: dict) -> dict:
                                       *config.DEFAULT_SPLIT}),
         **{key: str(getattr(checked, key)) for key in (
             "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile",
-            "auto_half_life_days", "auto_surcharge_mgdl", "auto_fat_surcharge_mgdl", "fpe_surcharge_mgdl")},
+            "auto_half_life_days", "auto_surcharge_mgdl", "auto_fat_surcharge_mgdl", "fpe_surcharge_mgdl",
+            "low_limit_mgdl", "high_limit_mgdl")},
         "sport_effects_mgdl": {kind: str(amount) for kind, amount in checked.sport_effects_mgdl.items()},
         "sport_durations_minutes": checked.sport_durations_minutes or dict(config.DEFAULT_SPORT_DURATIONS),
         "basal_default_units": unit_text(checked.basal_default_units),

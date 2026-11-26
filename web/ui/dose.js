@@ -6,11 +6,12 @@
 import { html } from "./html.js";
 import { num, signedChange, timeOnly, SPLIT_TIMING, UNIT, Icon } from "./lib.js";
 import { t, tx } from "./i18n.js";
+import { prefs } from "./prefs.js";
 
 const LAND_AXIS = [40, 280];
 const landX = value => Math.max(0, Math.min(100, (value - LAND_AXIS[0]) / (LAND_AXIS[1] - LAND_AXIS[0]) * 100));
 const landClass = value => value < 90 ? "is-low" : value > 160 ? "is-high" : "is-ok";
-const landColor = value => value < 70 ? "#d9534f" : value < 90 ? "#eb9b8f" : value <= 160 ? "#8fcaa6" : value <= 200 ? "#f2cf86" : "#e9b45a";
+const landColor = value => value < prefs.lowMgdl ? "#d9534f" : value < 90 ? "#eb9b8f" : value <= 160 ? "#8fcaa6" : value <= 200 ? "#f2cf86" : "#e9b45a";
 export const halfUnits = value => Math.round(value * 2) / 2;
 
 // fast / slow: ends of a correction after a meal; the one the rise leans to is marked by colour only.
@@ -68,10 +69,10 @@ function DoseSlider({ slider, chosen, onSlide, onZero }) {
       ${land && html`<div class="ds-land"><span>${t("dose.expectedIn4h")}</span><b class=${"ds-pill " + landClass(land[2])}>${land[2]}<small>mg/dL</small></b>
         <small class="ds-iqr">${t("dose.mostly", { low: land[1], high: land[3] })}</small></div>`}</div>
     ${land && html`<div class="ds-cor" aria-hidden="true"><div class="ds-cor-axis">
-      <div class="ds-cor-low" style=${{ width: landX(70) + "%" }}></div><div class="ds-cor-zone" style=${span(90, 160)}></div>
+      <div class="ds-cor-low" style=${{ width: landX(prefs.lowMgdl) + "%" }}></div><div class="ds-cor-zone" style=${span(90, 160)}></div>
       <div class="ds-cor-w" style=${span(land[0], land[4])}></div><div class="ds-cor-iqr" style=${span(land[1], land[3])}></div>
       <div class="ds-cor-med" style=${{ left: landX(land[2]) + "%" }}></div></div>
-      <div class="ds-cor-scale">${[70, 90, 160, 250].map(value => html`<span style=${{ left: landX(value) + "%" }}>${value}</span>`)}</div></div>`}
+      <div class="ds-cor-scale">${[prefs.lowMgdl, 90, 160, prefs.highMgdl].map(value => html`<span style=${{ left: landX(value) + "%" }}>${value}</span>`)}</div></div>`}
     <div class=${"ds-rail" + (zero ? " is-zero" : "")}><button type="button" class="ds-zero" aria-pressed=${String(zero)} aria-label=${t("dose.noInsulin")}
       title=${t("dose.noInsulinTitle", { unit: UNIT.insulin })} onClick=${onZero}>0<small>${UNIT.insulin}</small></button>
       <div class="ds-slide"><div class="ds-flag" style=${{ left: pos(rec) + "%", transform: "translateX(" + flagShift + "%)" }}><b>${t("dose.recommended", { units: num(rec, 1) })}</b></div>

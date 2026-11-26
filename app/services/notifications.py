@@ -15,6 +15,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from app import calculation, correction_check, forecast, glucose_alerts, on_board, split
+from app import glucose as cgm
 from app.common import local_zone, parse_instant, unit_text
 from app.ingestion import pushover
 from app.services import day_view, dose_help, factors
@@ -95,15 +96,17 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
         return []
     zone = local_zone(settings["timezone"])
     reminders = []
+    low_limit, high_limit = cgm.limits(settings)
     for warning in glucose_alerts.warnings(entries, found, now, settings["timezone"],
-                                           low_pause_minutes=pauses["low"], high_pause_minutes=pauses["high"]):
+                                           low_pause_minutes=pauses["low"], high_pause_minutes=pauses["high"],
+                                           low_mgdl=low_limit, high_mgdl=high_limit):
         if not enabled.get(warning["kind"]):
             continue
         minutes = max(0, round((warning["at"] - now).total_seconds() / 60))
         if warning["kind"] == "low":
-            crossing, extreme = tr("unter {mgdl}", mgdl=glucose_alerts.LOW_MGDL), tr("Tiefstwert")
+            crossing, extreme = tr("unter {mgdl}", mgdl=f"{low_limit:.0f}"), tr("Tiefstwert")
         else:
-            crossing, extreme = tr("über {mgdl}", mgdl=glucose_alerts.HIGH_MGDL), tr("Höchstwert")
+            crossing, extreme = tr("über {mgdl}", mgdl=f"{high_limit:.0f}"), tr("Höchstwert")
         message = tr("BZ {glucose}, {crossing} um {time} (in {minutes} min), {extreme} {mgdl}",
                      glucose=f"{warning['glucose_mgdl']:.0f}", crossing=crossing, time=_clock(warning["at"], zone),
                      minutes=minutes, extreme=extreme, mgdl=f"{warning['mgdl']:.0f}")

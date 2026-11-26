@@ -558,6 +558,8 @@ export default {
       fpeSurcharge: "Zuschlag je FPE (berechnet)",
       gramsCarbs: "g KH",
       lookback: "Automatik-Zeitraum",
+      lowLimit: "Grenze tief (Warnung, rote Linie)",
+      highLimit: "Grenze hoch (Warnung, rote Linie)",
       lunchEnd: "Mittagessen endet um",
       mealSurcharge: "Mahlzeitzuschlag",
       method: "Automatik-Methode",
