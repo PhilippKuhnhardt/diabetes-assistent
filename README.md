@@ -4,7 +4,7 @@
 
 A personal web app for living with type 1 diabetes on multiple daily injections. It reads CGM data and manually injected rapid insulin from [Nightscout](https://nightscout.github.io/) (built with a FreeStyle Libre 3 Plus and Fiasp pens), works out how much insulin each meal actually needed, and uses that history to suggest doses. The goal is less mental load: one place to log, review and dose, instead of doing the arithmetic in your head.
 
-The user interface speaks German and English (it follows the browser, with a switch in the settings); messages from the server, push notifications and the meal agent follow `APP_LANGUAGE` (`de` by default, or `en`). Most of the documentation is in German, because the app was built for one German-speaking user. The code and comments are in English.
+The user interface speaks German and English (it follows the browser, with a switch in the settings); messages from the server, push notifications and the meal agent follow `APP_LANGUAGE` (`de` by default, or `en`). Code, comments and documentation are in English; a German version of this README is in [README.de.md](README.de.md).
 
 > **Disclaimer: not a medical device, not medical advice.** This is a private hobby project built around one person's data, settings and habits. It is not a medical device, it is not certified or clinically validated, and nothing it shows is a therapy recommendation. Its calculations rest on simplifying model assumptions and can be wrong. Never base an insulin dose on it alone; discuss any change to your therapy with your diabetes care team. You use it entirely at your own risk; the authors accept no liability for any harm arising from its use (see also sections 15 and 16 of the license). Run it for yourself only; offering a hosted instance that calculates doses for other people may make you the manufacturer of a medical device in the legal sense.
 
@@ -17,7 +17,7 @@ The user interface speaks German and English (it follows the browser, with a swi
 - **Reminders.** Optional Pushover notifications for forgotten basal, a due second split bolus, and low/high early warnings.
 - **Agents and scripts.** A read-only JSON API (`/api/v1`) and an MCP server (`/mcp`) so an AI assistant such as Claude can check glucose, ask for a dose suggestion and log what was eaten and injected.
 
-The formulas, assumptions and their limits are documented in German in [docs/rechenwege.md](docs/rechenwege.md); the MCP setup is in [docs/mcp.md](docs/mcp.md).
+The formulas, assumptions and their limits are documented in [docs/rechenwege.md](docs/rechenwege.md); the MCP setup is in [docs/mcp.md](docs/mcp.md).
 
 ## How it is built
 
