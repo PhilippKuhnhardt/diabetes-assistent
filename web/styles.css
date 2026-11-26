@@ -45,6 +45,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 main { min-height: 70vh; }
 .view { padding: 36px 0 50px; }
 [hidden] { display: none !important; }
+/* Dialogs never fall back to the browser's own Canvas colors (black with a light border in dark mode). */
+dialog { background: var(--surface); color: var(--ink); border-color: var(--line); }
 .page-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
 h1 { margin: 0; font-size: clamp(28px, 3vw, 38px); font-weight: 680; letter-spacing: -.045em; }
 button:not(.tab):not(.primary) { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 9px 13px; font-weight: 600; }
@@ -253,7 +255,7 @@ span.range-high { color: light-dark(#9a6410, #c38a41); font-weight: 650; }
 /* A saved entry as a card (web/ui/entry-card.js): header, scrolling body, save button at the bottom. */
 #edit-dialog { width: min(480px, calc(100vw - 28px)); max-height: min(820px, calc(100vh - 32px)); max-height: min(820px, calc(100dvh - 32px)); overflow: hidden; border: 1px solid var(--line); border-radius: 15px; padding: 0; color: var(--ink); background: var(--canvas); box-shadow: 0 18px 70px light-dark(#10281840, #00000073); }
 #edit-dialog[open] { display: flex; }
-#edit-dialog::backdrop { background: light-dark(#0c2419a8, #000000); }
+#edit-dialog::backdrop { background: light-dark(#0c2419a8, #000000b3); }
 .entry-sheet { display: flex; flex-direction: column; width: 100%; min-height: 0; }
 .card-head { align-items: center; margin: 0; padding: 14px 18px 10px; border-bottom: 1px solid var(--line); background: var(--surface); }
 .card-head h2 { margin: 0; }
@@ -377,7 +379,7 @@ span.range-high { color: light-dark(#9a6410, #c38a41); font-weight: 650; }
 .manual-badge { display: inline-block; margin-left: 7px; padding: 3px 6px; border-radius: 5px; background: light-dark(#ece7f8, #2e2b35); color: light-dark(#5a3f9c, #b9a6fe); font-size: 11px; font-weight: 750; white-space: nowrap; }
 
 #window-dialog { width: min(760px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); overflow-y: auto; border: 1px solid var(--line); border-radius: 15px; padding: 20px; color: var(--ink); box-shadow: 0 18px 70px light-dark(#10281840, #00000073); }
-#window-dialog::backdrop { background: light-dark(#0c2419a8, #000000); }
+#window-dialog::backdrop { background: light-dark(#0c2419a8, #000000b3); }
 #window-dialog .section-head { align-items: start; margin-bottom: 12px; }
 #window-dialog .section-head h2 { margin-top: 4px; }
 #window-dialog .section-head button { font-size: 22px; line-height: 1; padding: 3px 9px; }
@@ -749,7 +751,7 @@ label.chip input { width: 16px; height: 16px; min-height: 16px; margin: 0; accen
 
 /* Meal agent: the chat (web/ui/agent-chat.js) with photos, bubbles and, at the end, the carbs to take over. */
 #agent-dialog { width: min(520px, calc(100vw - 28px)); height: min(760px, calc(100vh - 32px)); height: min(760px, calc(100dvh - 32px)); max-height: none; overflow: hidden; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 15px; padding: 0; color: var(--ink); background: var(--canvas); box-shadow: 0 18px 70px light-dark(#10281840, #00000073); }
-#agent-dialog::backdrop { background: light-dark(#0c2419a8, #000000); }
+#agent-dialog::backdrop { background: light-dark(#0c2419a8, #000000b3); }
 /* The description is the entry's content: room for several lines, growing with the text where the browser can. */
 label textarea { display: block; margin-top: 7px; background: var(--surface); color: var(--ink); border: 1px solid light-dark(#cddbd2, #363e39); border-radius: 8px; padding: 9px 11px; font-weight: 400; line-height: 1.45; }
 .agent-entry { align-items: center; }
@@ -890,8 +892,8 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 }
 
 /* "+": what to enter, as a sheet from the bottom (web/ui/quick-add.js). */
-light-dark(#add, #254647)-dialog { width: min(460px, calc(100vw - 28px)); max-height: calc(100dvh - 32px); border: 1px solid var(--line); border-radius: 18px; padding: 0; color: var(--ink); background: var(--surface); box-shadow: 0 18px 70px light-dark(#10281840, #00000073); }
-light-dark(#add, #254647)-dialog::backdrop { background: light-dark(#0c2419a8, #000000); }
+#add-dialog { width: min(460px, calc(100vw - 28px)); max-height: calc(100dvh - 32px); border: 1px solid var(--line); border-radius: 18px; padding: 0; color: var(--ink); background: var(--surface); box-shadow: 0 18px 70px light-dark(#10281840, #00000073); }
+#add-dialog::backdrop { background: light-dark(#0c2419a8, #000000b3); }
 .quick-add { padding: 8px 18px 18px; }
 .quick-add-head { display: grid; grid-template-columns: 1fr auto; align-items: center; position: relative; padding-top: 12px; margin-bottom: 14px; }
 .quick-add-head h2 { margin: 0; }
@@ -907,7 +909,7 @@ light-dark(#add, #254647)-dialog::backdrop { background: light-dark(#0c2419a8, #
 .choices button.choice:hover { border-color: var(--green); }
 .choices button.choice.main:hover { background: var(--green-dark); }
 @media (max-width: 650px) {
-  light-dark(#add, #254647)-dialog { width: 100vw; max-width: none; margin: auto 0 0; border: 0; border-radius: 18px 18px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  #add-dialog { width: 100vw; max-width: none; margin: auto 0 0; border: 0; border-radius: 18px 18px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
   .grab { display: block; }
 }
 
