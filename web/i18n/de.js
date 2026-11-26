@@ -741,6 +741,8 @@ export default {
     detail: "{fat} g Fett, {protein} g Eiweiß = {fpe} FPE · wirkt bis {hours} h",
     fatRich: "(fettreich)",
     label: "Zuschlag für Fett und Eiweiß",
+    levelTitle: "Fett/Eiweiß",
+    levels: { fat: "Fett", none: "Nichts", normal: "Normal" },
     splitNote: "Split: KH jetzt, Zuschlag später",
     static: "Fest",
     title: "Zuschlag Fett/Eiweiß",
