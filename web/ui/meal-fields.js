@@ -5,16 +5,17 @@
 // the dose recommendation stays in the entry form on purpose.
 import { html } from "./html.js";
 import { num } from "./lib.js";
+import { t } from "./i18n.js";
 
 // KH-Sicherheit is a three-stop slider (unsure, roughly known, weighed) that starts in the middle.
 export const CERTAINTY_LEVELS = ["unsure", "known", "weighed"];
-const CERTAINTY_SLIDER_LABELS = ["KH unsicher", "KH halbwegs", "KH sicher"];
+const CERTAINTY_SLIDER_LABELS = [t("certainty.slider.unsure"), t("certainty.slider.known"), t("certainty.slider.weighed")];
 
 // onChange follows the slider; onCommit (optional) runs once it is let go.
 export function CertaintySlider({ level, onChange, onCommit }) {
   return html`<span class="certainty-slider" data-level=${CERTAINTY_LEVELS[level]}>
     <input type="range" name="certainty_level" min="0" max="2" step="1" value=${level}
-      aria-label="KH-Sicherheit: unsicher, halbwegs sicher, sicher (gewogen oder genormt)"
+      aria-label=${t("certainty.sliderLabel")}
       onInput=${event => onChange(Number(event.currentTarget.value))} onChange=${() => onCommit?.()} />
     <output class="certainty-label">${CERTAINTY_SLIDER_LABELS[level]}</output>
   </span>`;
@@ -28,8 +29,8 @@ const FactorChip = ({ name, label, title, checked, onChange }) => html`
 
 // Fettreich and Schnell; the caller places them (inside its own chip row).
 export const FactorChips = ({ fat, fast, onFat, onFast }) => html`
-  <${FactorChip} name="fat_protein" label="Fettreich" title="Fett- oder eiweißreiche Mahlzeit" checked=${fat} onChange=${onFat} />
-  <${FactorChip} name="fast" label="Schnell" title="Wirkt schnell (z. B. Saft, Weißbrot)" checked=${fast} onChange=${onFast} />`;
+  <${FactorChip} name="fat_protein" label=${t("factor.fat_protein")} title=${t("factor.fatTitle")} checked=${fat} onChange=${onFat} />
+  <${FactorChip} name="fast" label=${t("factor.fast")} title=${t("factor.fastTitle")} checked=${fast} onChange=${onFast} />`;
 
 // A segmented switch: one of a few options, the chosen one pressed. `data` names a data attribute
 // (data-<data>=key) on each button for tests and styles.
@@ -44,12 +45,11 @@ export function Segments({ value, options, onChange, label, data, disabled }) {
 // The entry form adds that a split then gives the carbs now and the surcharge later.
 export function SurchargeChoice({ mode, calculated, staticMgdl, fat, splitNote, onChange }) {
   return html`<div class="card-group meal-surcharge">
-    <div class="card-group-head"><b>Zuschlag Fett/Eiweiß</b>
-      <small>${num(calculated.fat_g, 0)} g Fett, ${num(calculated.protein_g, 0)} g Eiweiß = ${num(calculated.fpe, 1)} FPE
-        · wirkt bis ${num(calculated.minutes / 60, 1)} h</small></div>
-    <${Segments} label="Zuschlag für Fett und Eiweiß" value=${mode} data="surcharge-mode" onChange=${onChange}
-      options=${[["static", "Fest" + (staticMgdl != null ? " " + num(staticMgdl, 0) + " mg/dL" : "") + (fat ? " (fettreich)" : "")],
-                 ["fpe", "Berechnet " + num(calculated.mgdl, 0) + " mg/dL"]]} />
-    ${splitNote && mode === "fpe" && html`<small class="hint">Split: KH jetzt, Zuschlag später</small>`}
+    <div class="card-group-head"><b>${t("surcharge.title")}</b>
+      <small>${t("surcharge.detail", { fat: num(calculated.fat_g, 0), protein: num(calculated.protein_g, 0), fpe: num(calculated.fpe, 1), hours: num(calculated.minutes / 60, 1) })}</small></div>
+    <${Segments} label=${t("surcharge.label")} value=${mode} data="surcharge-mode" onChange=${onChange}
+      options=${[["static", t("surcharge.static") + (staticMgdl != null ? " " + num(staticMgdl, 0) + " mg/dL" : "") + (fat ? " " + t("surcharge.fatRich") : "")],
+                 ["fpe", t("surcharge.calculated", { mgdl: num(calculated.mgdl, 0) })]]} />
+    ${splitNote && mode === "fpe" && html`<small class="hint">${t("surcharge.splitNote")}</small>`}
   </div>`;
 }

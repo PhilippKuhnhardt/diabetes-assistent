@@ -5,19 +5,20 @@
 // (standard, own value, none) and effect duration; basal its units. Saving and deleting stay in
 // app.js (onSave, onDelete), which knows the day and redraws it.
 import { html, useState, useEffect } from "./html.js";
-import { api, toast, num, sportNames } from "./lib.js";
+import { api, toast, num, sportNames, UNIT } from "./lib.js";
+import { t } from "./i18n.js";
 import { mealChat } from "./main.js";
 import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, SurchargeChoice } from "./meal-fields.js";
 import { SportEffectFields, SportShares, sportFields, sportValues } from "./sport.js";
 
-const KIND_TITLES = { meal: "Mahlzeit", snack: "Snack", carbs: "Kohlenhydrate", correction: "Korrektur", exercise: "Sport", basal: "Basal" };
+const KIND_TITLES = Object.fromEntries(["meal", "snack", "carbs", "correction", "exercise", "basal"].map(kind => [kind, t("card.kinds." + kind)]));
 const fmt = (value, digits = 1) => num(value, digits);
 const parse = text => Number(String(text ?? "").replace(",", ".").trim());
 const blank = value => value == null || Number(value) === 0 ? "" : fmt(value);
 
 function Meter({ level, onClick }) {
   return html`<button type="button" class="meter" data-level=${level == null ? "" : CERTAINTY_LEVELS[level]} onClick=${onClick}
-    aria-label=${"KH-Sicherheit ändern: " + (level == null ? "nicht gesetzt" : ["unsicher", "halbwegs", "sicher"][level])}>
+    aria-label=${t("card.certaintyChange", { level: level == null ? t("card.certaintyUnset") : t("card.certaintyLevels." + CERTAINTY_LEVELS[level]) })}>
     ${[0, 1, 2].map(index => html`<i class=${level != null && index <= level ? "on" : ""}></i>`)}</button>`;
 }
 
@@ -53,7 +54,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
   const food = !sport && !basal;
   const carbs = parse(v.carbs) || 0;
   const eats = food && carbs > 0;
-  const title = item.title || KIND_TITLES[kind] || "Eintrag";
+  const title = item.title || KIND_TITLES[kind] || t("card.entry");
 
   // Photos of the agent's estimate head the card.
   useEffect(() => {
@@ -70,7 +71,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
 
   function refine() {
     if (!agentInfo?.available) {
-      toast("Essens-Agent ist nicht eingerichtet: in den Einstellungen Anbieter und Modell wählen", true);
+      toast(t("entry.agentMissing"), true);
       return;
     }
     mealChat.open({
@@ -124,29 +125,29 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
   return html`<form class="entry-sheet" onSubmit=${save}>
     <div class="section-head card-head">
       <div><h2 id="edit-dialog-title">${title}</h2><span class="card-date">${dateLabel}</span></div>
-      <button type="button" class="quiet" aria-label="Schließen" onClick=${onClose}>×</button>
+      <button type="button" class="quiet" aria-label=${t("common.close")} onClick=${onClose}>×</button>
     </div>
     <div class="card-body">
       ${photos.length > 0 && html`<div class=${"card-photos" + (photos.length > 1 ? " many" : "")}>
-        ${photos.map((photo, index) => html`<img src=${photo} alt=${"Foto " + (index + 1)} />`)}</div>`}
+        ${photos.map((photo, index) => html`<img src=${photo} alt=${t("chat.photo", { n: index + 1 })} />`)}</div>`}
 
       ${food && html`<div class=${"card-tiles" + (kind === "meal" ? "" : " two")}>
-        <label class="tile"><small>KH</small><span class="tile-value"><input inputmode="decimal" aria-label="Kohlenhydrate in g"
+        <label class="tile"><small>${t("card.carbs")}</small><span class="tile-value"><input inputmode="decimal" aria-label=${t("card.carbsIn")}
           value=${v.carbs} placeholder="0" onInput=${event => set({ carbs: event.currentTarget.value })} /><small>g</small></span>
           ${eats && html`<${Meter} level=${v.level} onClick=${event => { event.preventDefault(); setShowCertainty(!showCertainty); }} />`}</label>
-        <label class="tile"><small>Insulin</small><span class="tile-value"><input inputmode="decimal" aria-label="Insulin in IE"
-          value=${v.insulin} placeholder="0" onInput=${event => set({ insulin: event.currentTarget.value })} /><small>IE</small></span></label>
-        ${kind === "meal" && html`<div class="tile"><small>Faktor</small><span class="tile-value"><b>${factor == null ? "–" : fmt(factor, 2)}</b>
-          <small>IE/KE</small></span></div>`}
+        <label class="tile"><small>${t("card.insulin")}</small><span class="tile-value"><input inputmode="decimal" aria-label=${t("dose.insulinIn", { unit: UNIT.insulin })}
+          value=${v.insulin} placeholder="0" onInput=${event => set({ insulin: event.currentTarget.value })} /><small>${UNIT.insulin}</small></span></label>
+        ${kind === "meal" && html`<div class="tile"><small>${t("card.factor")}</small><span class="tile-value"><b>${factor == null ? "–" : fmt(factor, 2)}</b>
+          <small>${UNIT.factor}</small></span></div>`}
       </div>
       ${eats && showCertainty && html`<div class="card-certainty"><${CertaintySlider} level=${v.level ?? 1} onChange=${level => set({ level })} /></div>`}`}
 
       ${eats && html`<div class="card-food">
-        <textarea rows="4" maxlength="1000" placeholder="Was gab es?" aria-label="Beschreibung" value=${v.description}
+        <textarea rows="4" maxlength="1000" placeholder=${t("card.whatWasIt")} aria-label=${t("card.description")} value=${v.description}
           onInput=${event => set({ description: event.currentTarget.value })}></textarea>
         <div class="entry-chips">
           <${FactorChips} fat=${v.fat} fast=${v.fast} onFat=${fat => set({ fat })} onFast=${fast => set({ fast })} />
-          <button type="button" class="chip agent-chip card-refine" onClick=${refine}>Nachbessern</button>
+          <button type="button" class="chip agent-chip card-refine" onClick=${refine}>${t("entry.refine")}</button>
         </div>
       </div>`}
 
@@ -154,31 +155,31 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
         staticMgdl=${fpe.static_mgdl?.[v.fat ? "fat" : "plain"]} onChange=${surchargeMode => set({ surchargeMode })} />`}
 
       ${sport && html`<div class="card-list">
-        <${Row} label="Sportart"><select value=${v.sportKind} onChange=${event => set({ sportKind: event.currentTarget.value })}>
+        <${Row} label=${t("entry.sportKind")}><select value=${v.sportKind} onChange=${event => set({ sportKind: event.currentTarget.value })}>
           ${Object.entries(sportNames).map(([key, name]) => html`<option value=${key}>${name}</option>`)}</select><//>
-        <${Row} label="Start"><input type="time" step="60" required value=${v.at} onInput=${event => set({ at: event.currentTarget.value })} /><//>
-        <${Row} label="Dauer"><span class="card-number"><input inputmode="numeric" required value=${v.duration}
-          onInput=${event => set({ duration: event.currentTarget.value })} aria-label="Dauer in Minuten" /><small>min</small></span><//>
+        <${Row} label=${t("card.start")}><input type="time" step="60" required value=${v.at} onInput=${event => set({ at: event.currentTarget.value })} /><//>
+        <${Row} label=${t("window.duration")}><span class="card-number"><input inputmode="numeric" required value=${v.duration}
+          onInput=${event => set({ duration: event.currentTarget.value })} aria-label=${t("card.durationIn")} /><small>min</small></span><//>
       </div>
       <${SportEffectFields} fields=${v.sportFx} defaults=${defaults} onChange=${sportFx => set({ sportFx })} />
       ${item.sport_shares && html`<${SportShares} item=${item} />`}`}
 
-      ${basal && html`<div class="card-tiles one"><label class="tile"><small>Basal</small><span class="tile-value"><input inputmode="decimal"
-        required aria-label="Basal in IE" value=${v.units} onInput=${event => set({ units: event.currentTarget.value })} /><small>IE</small></span></label></div>`}
+      ${basal && html`<div class="card-tiles one"><label class="tile"><small>${t("entryKind.basal")}</small><span class="tile-value"><input inputmode="decimal"
+        required aria-label=${t("card.basalIn", { unit: UNIT.insulin })} value=${v.units} onInput=${event => set({ units: event.currentTarget.value })} /><small>${UNIT.insulin}</small></span></label></div>`}
 
       <div class="card-list">
-        ${!sport && html`<${Row} label="Zeit"><input type="time" step="60" required value=${v.at} onInput=${event => set({ at: event.currentTarget.value })} /><//>`}
-        ${eats && places.length > 0 && html`<${Row} label="Ort"><select value=${v.place} onChange=${event => set({ place: event.currentTarget.value })}>
-          <option value="">Kein Ort</option>${places.map(place => html`<option value=${String(place.id)}>${place.name}</option>`)}</select><//>`}
-        ${eats && html`<${Row} label="Gericht"><input type="text" maxlength="60" list="card-dish-options" autocomplete="off" placeholder="ohne"
+        ${!sport && html`<${Row} label=${t("card.time")}><input type="time" step="60" required value=${v.at} onInput=${event => set({ at: event.currentTarget.value })} /><//>`}
+        ${eats && places.length > 0 && html`<${Row} label=${t("common.place")}><select value=${v.place} onChange=${event => set({ place: event.currentTarget.value })}>
+          <option value="">${t("card.noPlace")}</option>${places.map(place => html`<option value=${String(place.id)}>${place.name}</option>`)}</select><//>`}
+        ${eats && html`<${Row} label=${t("common.dish")}><input type="text" maxlength="60" list="card-dish-options" autocomplete="off" placeholder=${t("card.none")}
           value=${v.dish} onInput=${event => set({ dish: event.currentTarget.value })} />
           <datalist id="card-dish-options">${dishes.map(dish => html`<option value=${dish.name}></option>`)}</datalist><//>`}
-        <${Row} label="Notiz"><input type="text" maxlength="500" placeholder="optional" value=${v.notes}
+        <${Row} label=${t("common.note")}><input type="text" maxlength="500" placeholder=${t("common.optional")} value=${v.notes}
           onInput=${event => set({ notes: event.currentTarget.value })} /><//>
       </div>
       <button type="button" class=${"card-delete" + (armed ? " armed" : "")} disabled=${busy} onClick=${remove}>
-        ${armed ? "Wirklich löschen?" : "Eintrag löschen"}</button>
+        ${armed ? t("common.reallyDelete") : t("card.delete")}</button>
     </div>
-    <div class="card-foot"><button class="primary" type="submit" disabled=${busy}>${busy ? "Speichert …" : "Speichern"}</button></div>
+    <div class="card-foot"><button class="primary" type="submit" disabled=${busy}>${busy ? t("common.saving") : t("common.save")}</button></div>
   </form>`;
 }

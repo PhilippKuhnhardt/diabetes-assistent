@@ -8,7 +8,11 @@ import { Overview, ActiveCard } from "./ui/today.js";
 import { EntryForm, deleteBasal } from "./ui/entry.js";
 import { glucosePoints } from "./ui/charts.js";
 import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
-import { sportNames, api, post, appUpdateWaiting, toast, num, timeOnly, toInstant, trendSymbol } from "./ui/lib.js";
+import { sportNames, api, post, appUpdateWaiting, toast, num, timeOnly, toInstant, trendSymbol, UNIT } from "./ui/lib.js";
+import { t, locale, translateDocument } from "./ui/i18n.js";
+
+// The static texts of index.html follow the language before anything renders.
+translateDocument();
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -31,7 +35,7 @@ function reloadForUpdate() {
   }
   if (!state.updateOffered) {
     state.updateOffered = true;
-    toast("Neue App-Version verfügbar", false, { label: "Neu laden", run: () => window.location.reload() });
+    toast(t("app.updateAvailable"), false, { label: t("app.reload"), run: () => window.location.reload() });
   }
   return false;
 }
@@ -53,18 +57,18 @@ function loadCurrentGlucose() {
       $("#glucose-trend").textContent = data.fresh && delta != null
         ? trendSymbol(data.trend_direction) + " " + (Number(delta) > 0 ? "+" : "") + num(delta, 0) +
           " mg/dL / " + num(data.trend_minutes, 0) + " min"
-        : data.status === "stale" ? "Trend veraltet" : "Trend nicht verfügbar";
+        : data.status === "stale" ? t("glucose.trendStale") : t("glucose.trendUnavailable");
       const meta = status === "stale"
-        ? "Messwert veraltet" + (data.glucose_at ? " · " + timeOnly(data.glucose_at) + " Uhr" : "")
-        : data.glucose_mgdl == null ? "Kein aktueller Messwert" : "";
+        ? t("glucose.stale") + (data.glucose_at ? " · " + t("common.clock", { time: timeOnly(data.glucose_at) }) : "")
+        : data.glucose_mgdl == null ? t("glucose.noValue") : "";
       $("#glucose-meta").textContent = meta;
       $("#glucose-meta").hidden = !meta;
       if (data.glucose_at) catchUpDay(new Date(data.glucose_at).getTime());
     } catch (error) {
       widget.dataset.status = "unavailable";
       $("#glucose-value").textContent = "—";
-      $("#glucose-trend").textContent = "Trend nicht verfügbar";
-      $("#glucose-meta").textContent = "CGM derzeit nicht verfügbar";
+      $("#glucose-trend").textContent = t("glucose.trendUnavailable");
+      $("#glucose-meta").textContent = t("glucose.cgmUnavailable");
       $("#glucose-meta").hidden = false;
     }
     publishGlucose();
@@ -210,10 +214,9 @@ function renderTimezone() {
   banner.hidden = !differs;
   if (!differs) return;
   const device = deviceZone();
-  banner.innerHTML = "Dein Gerät zeigt " + escapeHTML(zoneText(device)) + ", die App rechnet noch mit " +
-    escapeHTML(zoneText(travel.current)) + " (Mahlzeiten, Korrekturfaktor, Warnzeiten). " +
-    '<button type="button" class="banner-action" data-timezone-switch="' + escapeHTML(device) + '">Auf ' +
-    escapeHTML(device) + " umstellen</button>";
+  banner.innerHTML = escapeHTML(t("app.tzBanner", { device: zoneText(device), app: zoneText(travel.current) })) + " " +
+    '<button type="button" class="banner-action" data-timezone-switch="' + escapeHTML(device) + '">' +
+    escapeHTML(t("app.tzSwitch", { zone: device })) + "</button>";
 }
 
 // Switches the zone the app calculates with (settings or the banner); true when it worked.
@@ -223,7 +226,7 @@ async function switchTimezone(payload) {
     if (state.settingsData) state.settingsData = { ...state.settingsData, travel: state.travel };
     renderTimezone();
     renderSettings();
-    toast(payload.undo ? "Zeitzonen-Wechsel zurückgenommen" : "Die App rechnet jetzt mit " + state.travel.current);
+    toast(payload.undo ? t("app.tzUndone") : t("app.tzNow", { zone: state.travel.current }));
     if (todayDay() !== state.day) changeDay(todayDay()); else await loadDay();
     return true;
   } catch (error) {
@@ -242,7 +245,7 @@ async function loadSettings() {
   state.settingsData = data;
   state.travel = data.travel || null;
   settingsLoads += 1;
-  $("#connection").textContent = data.connected ? "" : "Nightscout einrichten";
+  $("#connection").textContent = data.connected ? "" : t("app.setupNightscout");
   $("#connection").hidden = data.connected;
   renderTimezone();
   renderSettings();
@@ -305,8 +308,8 @@ function renderDay(data) {
   const errors = [data.sync_error, data.profile_sync_error].filter(Boolean);
   banner.hidden = data.connected && !errors.length;
   banner.textContent = !data.connected
-    ? "Nightscout ist noch nicht verbunden. Setze NIGHTSCOUT_URL und NIGHTSCOUT_CREDENTIAL im Deployment."
-    : errors.length ? "Nightscout konnte nicht vollständig aktualisiert werden: " + errors.join(" · ") + ". Lokale Daten werden angezeigt." : "";
+    ? t("app.notConnected")
+    : errors.length ? t("app.syncFailed", { errors: errors.join(" · ") }) : "";
   state.dayStatus = "ready";
   applyDiaryMode();
   renderReview();
@@ -359,7 +362,7 @@ async function loadReviewPending() {
   if (!link) return;
   const count = reviewPending.length;
   link.classList.toggle("has-pending", count > 0);
-  if (count) link.setAttribute("aria-label", "Verlauf, " + count + (count === 1 ? " Tag" : " Tage") + " noch nicht geprüft");
+  if (count) link.setAttribute("aria-label", t("app.historyPending", { count }));
   else link.removeAttribute("aria-label");
 }
 
@@ -401,7 +404,7 @@ function todayDay() {
 const entry = {
   onManualKind: () => {
     // Switching the kind by hand (wide screens) drops the title the "+" choice gave.
-    $("#entry-title").textContent = "Eintrag hinzufügen";
+    $("#entry-title").textContent = t("entry.addTitle");
     delete $("#entry-drawer").dataset.quick;
     renderEntryActive();
   },
@@ -454,7 +457,7 @@ function editEntry(id) {
     effect: item.sport_effect_default_mgdl, minutes: item.sport_minutes_default };
   entryCard.open({
     item: { ...item, time: timeOnly(item.at), title: entryLabel(item, state.dayData) },
-    dateLabel: new Date(state.day + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long" }) +
+    dateLabel: new Date(state.day + "T12:00:00").toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "long" }) +
       " · " + timeOnly(item.at),
     factor: factor == null ? null : Number(factor),
     places: state.dayData.place_options || [], dishes: state.dayData.dish_options || [],
@@ -473,7 +476,7 @@ async function saveEditedEntry(item, values) {
   const result = await post("/api/entry/edit", { ...values, id: item.id, original_day: state.day, original_kind: item.kind,
     at: toInstant(state.day, values.at), ...(basal ? { event_id: state.pendingBasal } : {}) });
   if (basal) state.pendingBasal = null;
-  return finishEdit(result.day, basal ? "Basal gespeichert" : "Änderung in Nightscout gespeichert", result.day_view);
+  return finishEdit(result.day, basal ? t("app.basalSaved") : t("app.changeSaved"), result.day_view);
 }
 
 async function finishEdit(day, message, refreshed = null) {
@@ -491,10 +494,10 @@ async function finishEdit(day, message, refreshed = null) {
 async function deleteEditedEntry(item) {
   if (item.kind === "basal") {
     await deleteBasal(item.id);
-    toast("Basal gelöscht");
+    toast(t("app.basalDeleted"));
   } else {
     await api("/api/treatment/delete", { method: "POST", body: JSON.stringify({ id: item.id, day: state.day }) });
-    toast("Eintrag aus Nightscout gelöscht");
+    toast(t("common.deletedFromNightscout"));
   }
   closeEditDialog();
   await loadDay();
@@ -580,7 +583,7 @@ async function loadAgent() {
 // full-screen sheet opened from "+", settings as one page at a time. Wide screens: a rail on the left,
 // the entry stays in the page. The breakpoint matches the CSS.
 const compactLayout = () => matchMedia("(max-width: 950px)").matches;
-const QUICK_TITLES = { meal: "Essen", manual: "KE & IE", exercise: "Sport", basal: "Basal" };
+const QUICK_TITLES = { meal: t("quick.meal"), manual: t("quick.manual"), exercise: t("quick.exercise"), basal: t("quick.basal") };
 
 function updateNav() {
   const current = state.view === "diary" ? (state.diaryMode === "review" ? "history" : "today") : state.view;
@@ -612,15 +615,15 @@ function navigate(target) {
 // Each choice says what it would do: the correction dose now, whether today's basal is still open.
 function quickAddHints() {
   const today = state.day === todayDay();
-  const hints = { meal: agent.info?.available ? "Foto, Sprache oder Text" : "KH eintragen", manual: "KH und Insulin, auch nur Korrektur",
-    exercise: "Art, Dauer, Wirkung", basal: "" };
+  const hints = { meal: agent.info?.available ? t("app.hints.mealAgent") : t("app.hints.meal"), manual: t("app.hints.manual"),
+    exercise: t("app.hints.exercise"), basal: "" };
   const preview = state.preview;
   const suggested = today && preview && preview.day === state.day && preview.mode === "meal" && !(Number(preview.carbs_g) > 0)
     ? (preview.options || []).find(option => option.suggested) : null;
-  if (suggested && Number(suggested.units) > 0) hints.manual = "Korrektur jetzt " + num(suggested.units, 1) + " IE empfohlen";
+  if (suggested && Number(suggested.units) > 0) hints.manual = t("app.hints.correction", { units: num(suggested.units, 1), unit: UNIT.insulin });
   if (today && state.dayData) {
     const doses = state.dayData.basal || [];
-    hints.basal = doses.length ? "heute " + num(doses[doses.length - 1].units, 1) + " IE um " + timeOnly(doses[doses.length - 1].at) : "heute noch offen";
+    hints.basal = doses.length ? t("app.hints.basal", { units: num(doses[doses.length - 1].units, 1), unit: UNIT.insulin, time: timeOnly(doses[doses.length - 1].at) }) : t("app.hints.basalOpen");
   }
   return hints;
 }
@@ -631,7 +634,7 @@ function openQuickAdd() {
 
 function chooseEntry(kind) {
   if (state.view !== "diary") view("diary");
-  $("#entry-title").textContent = QUICK_TITLES[kind] || "Eintrag hinzufügen";
+  $("#entry-title").textContent = QUICK_TITLES[kind] || t("entry.addTitle");
   // "KE & IE" is the manual entry: no "Essen einschätzen" there, and it shows what still acts (user feedback 2026-11-18).
   $("#entry-drawer").dataset.quick = kind;
   renderEntryActive();
@@ -654,7 +657,7 @@ function openEntryDrawer() {
 function closeEntryDrawer() {
   document.body.classList.remove("entry-open");
   const title = $("#entry-title");
-  if (title) title.textContent = "Eintrag hinzufügen";
+  if (title) title.textContent = t("entry.addTitle");
   delete $("#entry-drawer")?.dataset.quick;
   renderEntryActive();
   renderEntry();

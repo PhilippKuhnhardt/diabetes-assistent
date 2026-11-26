@@ -1,17 +1,20 @@
-// What every part of the page shares: the API call, the toast, German number and time formats, the
-// names of meals and sport kinds, and a few small components (icons, badges, the exclusion button).
-// Components only draw what the server sends (AGENTS.md: "web/ only draws"); no domain rule lives here.
+// What every part of the page shares: the API call, the toast, number and time formats of the page's
+// language, the names of meals and sport kinds, and a few small components (icons, badges, the exclusion
+// button). Components only draw what the server sends (AGENTS.md: "web/ only draws"); no domain rule lives here.
 import { html } from "./html.js";
+import { t, locale } from "./i18n.js";
 
 export const MINUTE = 60000;
-export const names = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen" };
-export const CERTAINTY_LABELS = { weighed: "KH sicher", known: "Halbwegs sicher", unsure: "KH unsicher" };
+export const names = { breakfast: t("meal.breakfast"), lunch: t("meal.lunch"), dinner: t("meal.dinner") };
+export const CERTAINTY_LABELS = { weighed: t("certainty.weighed"), known: t("certainty.known"), unsure: t("certainty.unsure") };
 // Meal factors picked on a carb entry; shown as icons wherever the meal or entry appears.
-export const MEAL_FACTORS = { alcohol: "Alkohol", fat_protein: "Fettreich", fast: "Schnell" };
+export const MEAL_FACTORS = { alcohol: t("factor.alcohol"), fat_protein: t("factor.fat_protein"), fast: t("factor.fast") };
 export const sportKinds = ["jogging", "gym", "light_cardio", "racing"];
-export const sportNames = { jogging: "Joggen", gym: "Gym", light_cardio: "Leichtes Cardio", racing: "Rennsport" };
+export const sportNames = Object.fromEntries(sportKinds.map(kind => [kind, t("sport.kinds." + kind)]));
 // When the second part of a split dose is due, as the dose help and "Wirkt noch" word it.
-export const SPLIT_TIMING = { early: "jetzt: BZ steigt schnell", due: "jetzt fällig", wait: "BZ tief oder fallend: lieber warten", later: "" };
+// Units as the page's language writes them: IE/U, KE/CU (10 g carbohydrate) and the factor IE/KE.
+export const UNIT = { insulin: t("unit.insulin"), carbUnit: t("unit.carbUnit"), factor: t("unit.factor") };
+export const SPLIT_TIMING = { early: t("split.early"), due: t("split.due"), wait: t("split.wait"), later: "" };
 
 // ---- API ----
 // The app version the page was loaded with; a different one after a deploy marks an update as waiting.
@@ -26,7 +29,7 @@ export async function api(path, options = {}) {
   else if (version && version !== appVersion) updateWaiting = true;
   const data = await response.json();
   if (!response.ok) {
-    const error = new Error(data.error || "Anfrage fehlgeschlagen");
+    const error = new Error(data.error || t("common.requestFailed"));
     error.code = data.code || null;
     throw error;
   }
@@ -60,18 +63,18 @@ export function toast(message, error = false, action = null) {
 }
 
 // ---- Numbers and times ----
-export const num = (value, digits = 2) => Number(value).toLocaleString("de-DE", { maximumFractionDigits: digits, minimumFractionDigits: 0 });
-export const factorNum = value => Number(value).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+export const num = (value, digits = 2) => Number(value).toLocaleString(locale, { maximumFractionDigits: digits, minimumFractionDigits: 0 });
+export const factorNum = value => Number(value).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 export const signedChange = (value, digits = 1) => value == null ? "—" : (Number(value) > 0 ? "+" : "") + num(value, digits) + " mg/dL";
 // The API stores a sport effect as glucose drop; the UI shows the signed glucose change.
 export const sportChange = effect => -Number(effect || 0);
-export const timeOnly = value => new Date(value).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+export const timeOnly = value => new Date(value).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 // A place factor as a signed percentage: 0.85 -> "−15 %".
 export function signedPercent(scale) {
   const value = Math.round((Number(scale) - 1) * 100);
   return (value > 0 ? "+" : value < 0 ? "−" : "±") + Math.abs(value) + " %";
 }
-export const dayDate = (day, options) => new Date(day + "T12:00:00").toLocaleDateString("de-DE", options);
+export const dayDate = (day, options) => new Date(day + "T12:00:00").toLocaleDateString(locale, options);
 export const minuteClock = minute => String(Math.floor(minute / 60)).padStart(2, "0") + ":" + String(minute % 60).padStart(2, "0");
 export function clockMinute(value) {
   const [hours, minutes] = value.split(":").map(Number);
@@ -84,9 +87,9 @@ export const localInputTime = date => {
 };
 
 export const toInstant = (date, clock) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(clock)) throw new Error("Zeit bitte im 24-Stunden-Format HH:MM eingeben");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(clock)) throw new Error(t("common.timeFormat"));
   const parsed = new Date(date + "T" + clock + ":00");
-  if (!Number.isFinite(parsed.getTime()) || localInputTime(parsed) !== date + "T" + clock) throw new Error("Dieser lokale Zeitpunkt existiert nicht");
+  if (!Number.isFinite(parsed.getTime()) || localInputTime(parsed) !== date + "T" + clock) throw new Error(t("common.timeMissing"));
   return parsed.toISOString();
 };
 
@@ -133,14 +136,14 @@ export function FactorIcons({ marks }) {
     html`<span class=${"factor-icon factor-" + key}></span>`)}</span>`;
 }
 
-export const DishBadge = ({ dish }) => dish ? html`<span class="place-badge dish-badge" title="Gericht">${dish.name}</span>` : null;
-export const PlaceBadge = ({ place }) => place ? html`<span class="place-badge" title="Ort">${place.name}</span>` : null;
+export const DishBadge = ({ dish }) => dish ? html`<span class="place-badge dish-badge" title=${t("common.dish")}>${dish.name}</span>` : null;
+export const PlaceBadge = ({ place }) => place ? html`<span class="place-badge" title=${t("common.place")}>${place.name}</span>` : null;
 export const CertaintyBadge = ({ level }) => level
   ? html`<span class=${"outlier-badge certainty-" + level}>${CERTAINTY_LABELS[level]}</span>` : null;
 
 // Ausklammern: the server decides which meals can be excluded; the button only flips the mark.
 export function ExcludeButton({ mealId, day, excluded, onDone }) {
-  const label = excluded ? "Mahlzeit wieder berücksichtigen" : "Mahlzeit ausklammern";
+  const label = excluded ? t("exclude.include") : t("exclude.exclude");
   async function flip(event) {
     const button = event.currentTarget;
     button.disabled = true;
@@ -154,7 +157,7 @@ export function ExcludeButton({ mealId, day, excluded, onDone }) {
     }
   }
   return html`<button type="button" class=${"exclude-meal" + (excluded ? " is-excluded" : "")} aria-pressed=${String(excluded)}
-    aria-label=${label} title=${label} onClick=${flip}><${Icon} name=${excluded ? "exclude" : "check"} /><span>${excluded ? "Ausgeklammert" : "Berücksichtigt"}</span></button>`;
+    aria-label=${label} title=${label} onClick=${flip}><${Icon} name=${excluded ? "exclude" : "check"} /><span>${excluded ? t("exclude.excluded") : t("exclude.included")}</span></button>`;
 }
 
 // Disables a button while its async action runs; errors become a toast.
