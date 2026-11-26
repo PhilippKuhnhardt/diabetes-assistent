@@ -8,6 +8,7 @@ from app import tables as api_tables
 from app.common import local_zone, parse_instant, zone_name_at
 from app.services import day_view
 from app.store import config, marks, mirror
+from app.i18n import tr
 
 
 class ApiNotFound(Exception):
@@ -26,15 +27,15 @@ def api_day_range(params: dict, today: date) -> tuple[date, date]:
             last = date.fromisoformat(params["to"][0]) if "to" in params else today
             first = date.fromisoformat(params["from"][0]) if "from" in params else last - timedelta(days=29)
         except ValueError:
-            raise ValueError("Ungültiges Datum, erwartet JJJJ-MM-TT") from None
+            raise ValueError(tr("Ungültiges Datum, erwartet JJJJ-MM-TT")) from None
     else:
         days = int(params.get("days", ["30"])[0])
         if not 1 <= days <= API_MAX_DAYS:
-            raise ValueError("Ungültiger Zeitraum")
+            raise ValueError(tr("Ungültiger Zeitraum"))
         first, last = today - timedelta(days=days - 1), today
     last = min(last, today)
     if first > last or (last - first).days >= API_MAX_DAYS:
-        raise ValueError("Ungültiger Zeitraum")
+        raise ValueError(tr("Ungültiger Zeitraum"))
     return first, last
 
 

@@ -12,12 +12,13 @@ from app.ingestion import nightscout, sync
 from app.services import day_view, factors
 from app.store import config, marks, results
 from app.analysis.stats import median, quartile, strong_outlier_flags
+from app.i18n import tr
 
 
 def summary(params: dict) -> dict:
     days = int(params.get("days", ["14"])[0])
     if days not in (1, 3, 7, 14, 30):
-        raise ValueError("Ungültiger Zeitraum")
+        raise ValueError(tr("Ungültiger Zeitraum"))
     profile_sync_error = None
     if nightscout.is_configured():
         try:
@@ -235,7 +236,7 @@ def compute_summary(days: int, today: date) -> dict:
         "day_type_ratio": json_safe(day_type_ratio),
         "sport_analysis": sport_analysis.analyze(
             sport_meals, sport_sessions, settings["sport_lookback_minutes"],
-            settings["window_minutes"], episodes.SPORT_LABELS),
+            settings["window_minutes"], episodes.SPORT_NAMES),
         "night": {
             "count": len(night_start_values),
             "unavailable_count": days - len(night_start_values),

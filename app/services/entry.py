@@ -12,6 +12,7 @@ from app.common import local_zone, parse_instant
 from app.ingestion import nightscout
 from app.services import basal, day_view, diary, dose_help, places, settings as settings_service
 from app.store import config, marks
+from app.i18n import tr
 
 MODES = ("meal", "exercise", "basal")
 # fast / slow: the ends of a correction without food after a recent meal (app/correction_scale.py); they take
@@ -30,7 +31,7 @@ DOSE_CHECK_KEYS = (
     "carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl",
     "low_target_mgdl", "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "auto_units_per_ke",
     "recent_rapid_doses")
-DOSE_CHANGED = "Empfehlung neu berechnet. Bitte den neuen Wert prüfen und neu antippen."
+DOSE_CHANGED = tr("Empfehlung neu berechnet. Bitte den neuen Wert prüfen und neu antippen.")
 
 
 class DoseChanged(ValueError):
@@ -58,9 +59,9 @@ def _sport_drop(payload: dict) -> Decimal | None:
     try:
         change = Decimal(raw)
     except InvalidOperation:
-        raise ValueError("Ungültiger Sporteinfluss") from None
+        raise ValueError(tr("Ungültiger Sporteinfluss")) from None
     if not change.is_finite() or not -500 <= change <= 500:
-        raise ValueError("Sporteinfluss muss zwischen −500 und 500 mg/dL liegen")
+        raise ValueError(tr("Sporteinfluss muss zwischen −500 und 500 mg/dL liegen"))
     return -change
 
 
@@ -70,7 +71,7 @@ def _sport_minutes(payload: dict) -> int | None:
     if minutes is None or minutes == "":
         return None
     if isinstance(minutes, bool) or not isinstance(minutes, (int, float)) or not 30 <= minutes <= 1440:
-        raise ValueError("Die Wirkdauer muss zwischen 0,5 und 24 h liegen.")
+        raise ValueError(tr("Die Wirkdauer muss zwischen 0,5 und 24 h liegen."))
     return int(round(minutes))
 
 
@@ -84,7 +85,7 @@ def _finger(payload: dict) -> Decimal | None:
     except InvalidOperation:
         value = Decimal("NaN")
     if not value.is_finite() or not 20 <= value <= 600:
-        raise ValueError("Blutig gemessener BZ muss zwischen 20 und 600 mg/dL liegen")
+        raise ValueError(tr("Blutig gemessener BZ muss zwischen 20 und 600 mg/dL liegen"))
     return value
 
 
@@ -93,7 +94,7 @@ def _context(payload: dict) -> dict:
     date.fromisoformat(day)
     mode = payload.get("mode", "meal")
     if mode not in MODES:
-        raise ValueError("Ungültiger Eintragstyp")
+        raise ValueError(tr("Ungültiger Eintragstyp"))
     _, settings = config.get_settings()
     zone = local_zone(settings["timezone"])
     today = datetime.now(zone).date().isoformat()
@@ -280,7 +281,7 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
     if context["mode"] != "meal" or carbs is None:
         return {"message": ""}
     if context["day"] != context["today"]:
-        return {"message": "Eine aktuelle Empfehlung gibt es nur für den heutigen Tag." if carbs > 0 else ""}
+        return {"message": tr("Eine aktuelle Empfehlung gibt es nur für den heutigen Tag.") if carbs > 0 else ""}
     # Sport is part of what still acts (app.on_board), so it needs no extra input here.
     result = dose_help.dose_help({"carbs": str(carbs),
                                   "snack": bool(assignment and assignment["snack"]),
@@ -429,16 +430,16 @@ def save(payload: dict) -> dict:
     context = _context(payload)
     mode = context["mode"]
     if mode == "basal":
-        raise ValueError("Basal wird über die Basal-Eingabe gespeichert")
+        raise ValueError(tr("Basal wird über die Basal-Eingabe gespeichert"))
     carbs = context["carbs"] if mode == "meal" else Decimal(0)
     if carbs is None:
-        raise ValueError("KH oder Insulin außerhalb des erlaubten Bereichs")
+        raise ValueError(tr("KH oder Insulin außerhalb des erlaubten Bereichs"))
     insulin = calculation.dec(payload.get("insulin") or 0) if mode == "meal" else Decimal(0)
     finger = context["finger"]
     if mode == "meal" and carbs <= 0 and insulin <= 0 and finger is None:
-        raise ValueError("Bitte Kohlenhydrate, Insulin oder beides eintragen.")
+        raise ValueError(tr("Bitte Kohlenhydrate, Insulin oder beides eintragen."))
     if context["at"] is None:
-        raise ValueError("Zeit fehlt")
+        raise ValueError(tr("Zeit fehlt"))
     if finger is not None:
         # Saved first so the dose re-check below and later suggestions see the same start value.
         event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
@@ -473,7 +474,7 @@ def save(payload: dict) -> dict:
             # A dose chosen on the slider: its total, of which the saved insulin is the first part.
             total = calculation.dec(total)
             if not total.is_finite() or not 0 <= total <= 100:
-                raise ValueError("Gesamtdosis muss zwischen 0 und 100 IE liegen")
+                raise ValueError(tr("Gesamtdosis muss zwischen 0 und 100 IE liegen"))
             later = total - insulin
             split_units = str(later) if later > 0 else None
         elif option and option.get("full_units") is not None:

@@ -17,11 +17,13 @@ from app.ingestion import nightscout, sync
 from app.services import settings as settings_service
 from app.store import basal_doses as basal_store, config, dishes as dish_store, marks, mirror, places as place_store, results
 from app.analysis.night import night_analysis
+from app import i18n
+from app.i18n import tr
 
-# Any change to the app's code recalculates stored days once, so a stored result never
-# outlives the code that produced it.
+# Any change to the app's code or its language (APP_LANGUAGE: stored days hold texts) recalculates stored
+# days once, so a stored result never outlives the code that produced it.
 CODE_VERSION = hashlib.sha256(b"".join(
-    path.read_bytes() for path in sorted(Path(__file__).resolve().parents[1].rglob("*.py")))).hexdigest()
+    path.read_bytes() for path in sorted(Path(__file__).resolve().parents[1].rglob("*.py"))) + i18n.LANGUAGE.encode()).hexdigest()
 
 
 def day_payload(day: str, refresh: bool = True) -> dict:
@@ -163,7 +165,7 @@ def compute_day(day: str) -> dict:
         auto_effect = sum((effect for _, effect in sport_parts), Decimal(0))
         confirmed_effect = auto_effect
         if not meal_settings["isf_schedule"]:
-            output["calculation"] = {"reason": "Korrekturfaktor-Profil aus Nightscout fehlt"}
+            output["calculation"] = {"reason": tr("Korrekturfaktor-Profil aus Nightscout fehlt")}
         else:
             try:
                 output["calculation"] = calculation.calculate_episode(
@@ -237,13 +239,13 @@ def compute_day(day: str) -> dict:
         if item["eventType"] == "Exercise":
             kind = item.get("sport_type")
             note = episodes.EVENT_TAG.sub("", episodes.SPORT_TAG.sub("", item["notes"])).strip()
-            for label in episodes.SPORT_LABELS.values():
+            for label in episodes.NOTE_LABELS:
                 if note == label or note.startswith((label + " —", label + " |")):
                     note = note[len(label):].lstrip(" —|")
                     break
             exercises.append({
                 "id": item["id"], "at": item["at"],
-                "kind": kind, "label": episodes.SPORT_LABELS.get(kind, "Sportart unbekannt"),
+                "kind": kind, "label": episodes.SPORT_NAMES.get(kind, tr("Sportart unbekannt")),
                 "duration_minutes": item["duration"], "notes": note,
                 **sport_session(item, settings, session_effects, session_minutes),
             })
@@ -281,7 +283,7 @@ def compute_day(day: str) -> dict:
             kind = "other"
         note = episodes.QUALITY_TAG.sub("", episodes.EVENT_TAG.sub("", episodes.SPORT_TAG.sub("",
                episodes.TAG.sub("", item["notes"])))).replace("[DA2:snack]", "").strip()
-        for label in episodes.SPORT_LABELS.values():
+        for label in episodes.NOTE_LABELS:
             if kind == "exercise" and (note == label or note.startswith(label + " — ")):
                 note = note[len(label):].lstrip(" —")
                 break

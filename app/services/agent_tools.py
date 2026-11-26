@@ -23,6 +23,7 @@ from app.common import local_zone, parse_instant
 from app.ingestion import nightscout
 from app.services import basal, day_view, diary, dishes, entry, read_api, sync
 from app.store import config, places as place_store
+from app.i18n import tr
 
 CERTAINTIES = list(episodes.CERTAINTIES)
 SPORT_KINDS = list(episodes.SPORT_LABELS)
@@ -52,9 +53,9 @@ class Args(BaseModel):
             if isinstance(data, dict) else data
 
 
-AT_TEXT = ("Zeitpunkt ISO-8601 mit Zeitzone. Weglassen = jetzt (Standard). "
-           "Nur setzen, wenn Philipp ausdrücklich eine andere Zeit nennt.")
-DAY_TEXT = "JJJJ-MM-TT, Standard heute."
+AT_TEXT = (tr("Zeitpunkt ISO-8601 mit Zeitzone. Weglassen = jetzt (Standard). "
+           "Nur setzen, wenn Philipp ausdrücklich eine andere Zeit nennt."))
+DAY_TEXT = tr("JJJJ-MM-TT, Standard heute.")
 
 
 class GetStatusArgs(Args):
@@ -63,66 +64,66 @@ class GetStatusArgs(Args):
 
 class EntryArgs(Args):
     carbs_g: Annotated[Decimal | None, Field(ge=0, le=500, description=
-        "Kohlenhydrate in Gramm (1 KE = 10 g). 0 oder weglassen = Korrektur ohne Essen.")] = None
+        tr("Kohlenhydrate in Gramm (1 KE = 10 g). 0 oder weglassen = Korrektur ohne Essen."))] = None
     at: Annotated[str | None, Field(description=AT_TEXT)] = None
     own_main_meal: Annotated[bool | None, Field(description=
-        "true, wenn ein Eintrag, den die App als Snack einer Mahlzeit einordnet, eine eigene Hauptmahlzeit sein soll.")] = None
+        tr("true, wenn ein Eintrag, den die App als Snack einer Mahlzeit einordnet, eine eigene Hauptmahlzeit sein soll."))] = None
     close_meal: Annotated[bool | None, Field(description=
-        "true, wenn ein Snack, den die App einer Mahlzeit zuordnet (assignment.close gesetzt), stattdessen die "
-        "Mahlzeit abschließen soll: ihr Zeitraum endet beim Snack, der Snack zählt als Snack ohne Mahlzeit.")] = None
+        tr("true, wenn ein Snack, den die App einer Mahlzeit zuordnet (assignment.close gesetzt), stattdessen die "
+        "Mahlzeit abschließen soll: ihr Zeitraum endet beim Snack, der Snack zählt als Snack ohne Mahlzeit."))] = None
     split: Annotated[bool | None, Field(description=
-        "Split-Bolus an/aus. Weglassen = App-Vorgabe (ab split_min_grams KH an).")] = None
+        tr("Split-Bolus an/aus. Weglassen = App-Vorgabe (ab split_min_grams KH an)."))] = None
     finger_mgdl: Annotated[Decimal | None, Field(ge=20, le=600, description=
-        "Blutig gemessener BZ in mg/dL (z. B. Sensor ausgefallen). Ersetzt für die Empfehlung einen fehlenden oder "
-        "älteren CGM-Wert; save_entry speichert ihn als Nightscout-BG-Check, auch ohne KH und Insulin.")] = None
+        tr("Blutig gemessener BZ in mg/dL (z. B. Sensor ausgefallen). Ersetzt für die Empfehlung einen fehlenden oder "
+        "älteren CGM-Wert; save_entry speichert ihn als Nightscout-BG-Check, auch ohne KH und Insulin."))] = None
     carbs_certainty: Annotated[Literal[tuple(CERTAINTIES)] | None, Field(description=
-        "weighed = gewogen oder genormt (Packung, Portionsangabe), known = alle relevanten Zutaten bekannt, nur das Gewicht "
-        "geschätzt, unsure = unbekannte Zutaten oder sehr unklare Menge.")] = None
-    fat_protein: Annotated[bool | None, Field(description="true = fett-/eiweißreich.")] = None
+        tr("weighed = gewogen oder genormt (Packung, Portionsangabe), known = alle relevanten Zutaten bekannt, nur das Gewicht "
+        "geschätzt, unsure = unbekannte Zutaten oder sehr unklare Menge."))] = None
+    fat_protein: Annotated[bool | None, Field(description=tr("true = fett-/eiweißreich."))] = None
     fast: Annotated[bool | None, Field(description=
-        "true = wirkt schnell (z. B. Saft, Weißbrot; nur erfasst, ändert keine Rechnung). Mit fat_protein kombinierbar.")] = None
+        tr("true = wirkt schnell (z. B. Saft, Weißbrot; nur erfasst, ändert keine Rechnung). Mit fat_protein kombinierbar."))] = None
     fat_g: Annotated[Decimal | None, Field(ge=0, le=500, description=
-        "Geschätztes Fett der ganzen Mahlzeit in Gramm. Mit protein_g bietet die Empfehlung den berechneten "
-        "Fett/Eiweiß-Zuschlag an (surcharge_choice).")] = None
-    protein_g: Annotated[Decimal | None, Field(ge=0, le=500, description="Geschätztes Eiweiß der ganzen Mahlzeit in Gramm.")] = None
+        tr("Geschätztes Fett der ganzen Mahlzeit in Gramm. Mit protein_g bietet die Empfehlung den berechneten "
+        "Fett/Eiweiß-Zuschlag an (surcharge_choice)."))] = None
+    protein_g: Annotated[Decimal | None, Field(ge=0, le=500, description=tr("Geschätztes Eiweiß der ganzen Mahlzeit in Gramm."))] = None
     surcharge_mode: Annotated[Literal["static", "fpe"] | None, Field(description=
-        "Zuschlag der Hauptmahlzeit: static = fest (Mahlzeitzuschlag, mit fat_protein plus Fett-Zuschlag), fpe = aus fat_g "
-        "und protein_g berechnet (dann Split: KH jetzt, Zuschlag später). Weglassen = static.")] = None
+        tr("Zuschlag der Hauptmahlzeit: static = fest (Mahlzeitzuschlag, mit fat_protein plus Fett-Zuschlag), fpe = aus fat_g "
+        "und protein_g berechnet (dann Split: KH jetzt, Zuschlag später). Weglassen = static."))] = None
     place: Annotated[str | None, Field(description=
-        "Ort-Chip, an dem gegessen wurde (z. B. Kantine, Restaurant), nur bei KH. Die Vorschau listet die vorhandenen "
-        "Orte in places; weglassen, wenn Philipp keinen nennt.")] = None
+        tr("Ort-Chip, an dem gegessen wurde (z. B. Kantine, Restaurant), nur bei KH. Die Vorschau listet die vorhandenen "
+        "Orte in places; weglassen, wenn Philipp keinen nennt."))] = None
 
 
 class SaveEntryArgs(EntryArgs):
     kind: Annotated[Literal["meal", "exercise"] | None, Field(description=
-        "meal = Essen und/oder Insulin (Standard), exercise = Sport.")] = None
+        tr("meal = Essen und/oder Insulin (Standard), exercise = Sport."))] = None
     insulin_units: Annotated[Decimal | None, Field(ge=0, le=100, description=
-        "Tatsächlich gespritzte schnelle IE (Fiasp).")] = None
+        tr("Tatsächlich gespritzte schnelle IE (Fiasp)."))] = None
     dose_variant: Annotated[Literal[entry.DOSE_VARIANTS] | None, Field(description=
-        "Welcher Vorschlag gewählt wurde (bestimmt beim Split den 2. Teil).")] = None
+        tr("Welcher Vorschlag gewählt wurde (bestimmt beim Split den 2. Teil)."))] = None
     with_basal: Annotated[bool | None, Field(description=
-        "Den vorgeschlagenen Basal (basal_suggestion_units) mit eintragen.")] = None
+        tr("Den vorgeschlagenen Basal (basal_suggestion_units) mit eintragen."))] = None
     dish: Annotated[str | None, Field(description=
-        "Gericht aus dem Katalog (list_dishes), z. B. Porridge, nur bei KH. Ein vorhandenes Gericht mit genau seinem "
-        "Namen nennen, damit sein Verlauf zusammenbleibt; ein neuer Name legt ein neues Gericht an.")] = None
+        tr("Gericht aus dem Katalog (list_dishes), z. B. Porridge, nur bei KH. Ein vorhandenes Gericht mit genau seinem "
+        "Namen nennen, damit sein Verlauf zusammenbleibt; ein neuer Name legt ein neues Gericht an."))] = None
     description: Annotated[str | None, Field(description=
-        "Was gegessen wurde, in Philipps Worten (Bestandteile, Mengen), nur bei KH.")] = None
-    sport_kind: Annotated[Literal[tuple(SPORT_KINDS)] | None, Field(description="Nur für kind=exercise.")] = None
-    duration_minutes: Annotated[int | None, Field(ge=1, le=1440, description="Nur für kind=exercise.")] = None
+        tr("Was gegessen wurde, in Philipps Worten (Bestandteile, Mengen), nur bei KH."))] = None
+    sport_kind: Annotated[Literal[tuple(SPORT_KINDS)] | None, Field(description=tr("Nur für kind=exercise."))] = None
+    duration_minutes: Annotated[int | None, Field(ge=1, le=1440, description=tr("Nur für kind=exercise."))] = None
     sport_change_mgdl: Annotated[Decimal | None, Field(ge=-500, le=500, description=
-        "Nur für kind=exercise, wenn Philipp einen eigenen Einfluss nennt: BZ-Änderung in mg/dL, −70 senkt, +40 hebt. "
-        "Weglassen = Standard der Sportart. Wirkt automatisch über die Wirkdauer der Sportart nach dem Ende.")] = None
-    notes: Annotated[str | None, Field(description="Notiz, z. B. was gegessen wurde.",
+        tr("Nur für kind=exercise, wenn Philipp einen eigenen Einfluss nennt: BZ-Änderung in mg/dL, −70 senkt, +40 hebt. "
+        "Weglassen = Standard der Sportart. Wirkt automatisch über die Wirkdauer der Sportart nach dem Ende."))] = None
+    notes: Annotated[str | None, Field(description=tr("Notiz, z. B. was gegessen wurde."),
                                        json_schema_extra={"maxLength": 500})] = None
     event_id: Annotated[str | None, Field(description=
-        "UUID. Bei Wiederholung nach Fehler/Timeout dieselbe event_id verwenden, dann entsteht kein Duplikat.")] = None
+        tr("UUID. Bei Wiederholung nach Fehler/Timeout dieselbe event_id verwenden, dann entsteht kein Duplikat."))] = None
 
 
 class SaveBasalArgs(Args):
-    units: Annotated[Decimal, Field(ge=Decimal("0.5"), le=100, description="IE in 0,5er-Schritten.")]
+    units: Annotated[Decimal, Field(ge=Decimal("0.5"), le=100, description=tr("IE in 0,5er-Schritten."))]
     at: Annotated[str | None, Field(description=AT_TEXT)] = None
     notes: Annotated[str | None, Field(json_schema_extra={"maxLength": 500})] = None
-    event_id: Annotated[str | None, Field(description="UUID für sichere Wiederholung.")] = None
+    event_id: Annotated[str | None, Field(description=tr("UUID für sichere Wiederholung."))] = None
 
 
 class DeleteEntryArgs(Args):
@@ -135,14 +136,14 @@ class GetDayArgs(Args):
 
 
 class ListDishesArgs(Args):
-    dish: Annotated[str | None, Field(description="Name eines Gerichts für dessen Verlauf.")] = None
+    dish: Annotated[str | None, Field(description=tr("Name eines Gerichts für dessen Verlauf."))] = None
     days: Annotated[int | None, Field(ge=1, le=dishes.VIEW_MAX_DAYS, description=
-        f"Zeitraum in Tagen (Standard {dishes.VIEW_DAYS}).")] = None
+        tr("Zeitraum in Tagen (Standard {days}).", days=dishes.VIEW_DAYS))] = None
 
 
 class ReadDataArgs(Args):
     table: Literal[tuple(READ_TABLES)] | None = None
-    days: Annotated[int | None, Field(ge=1, le=read_api.API_MAX_DAYS, description="Letzte N Tage (Standard 30).")] = None
+    days: Annotated[int | None, Field(ge=1, le=read_api.API_MAX_DAYS, description=tr("Letzte N Tage (Standard 30)."))] = None
     from_: Annotated[str | None, Field(alias="from", description="JJJJ-MM-TT")] = None
     to: Annotated[str | None, Field(description="JJJJ-MM-TT")] = None
 
@@ -184,26 +185,26 @@ def _bounds(model: type[Args], name: str) -> tuple:
 
 
 def _message(model: type[Args], error: dict) -> str:
-    """The first validation error in the German the agent passes on."""
-    name = ".".join(str(part) for part in error["loc"]) or "Argumente"
+    """The first validation error in words the agent passes on."""
+    name = ".".join(str(part) for part in error["loc"]) or tr("Argumente")
     kind, context = error["type"], error.get("ctx") or {}
     if kind == "missing":
-        return f"{name} fehlt"
+        return tr("{name} fehlt", name=name)
     if kind == "literal_error":
         choices = context["expected"].replace("'", "").replace(" or ", ", ")
-        return f"{name} muss einer von {choices} sein"
+        return tr("{name} muss einer von {choices} sein", name=name, choices=choices)
     if kind in ("greater_than_equal", "less_than_equal"):
         low, high = _bounds(model, name)
-        return f"{name} muss zwischen {low} und {high} liegen"
+        return tr("{name} muss zwischen {low} und {high} liegen", name=name, low=low, high=high)
     if kind.startswith("bool"):
-        return f"{name} muss true oder false sein"
+        return tr("{name} muss true oder false sein", name=name)
     if kind.startswith("int"):
-        return f"{name} muss eine ganze Zahl sein"
+        return tr("{name} muss eine ganze Zahl sein", name=name)
     if kind.startswith(("decimal", "float", "finite")):
-        return f"{name} muss eine Zahl sein"
+        return tr("{name} muss eine Zahl sein", name=name)
     if kind.startswith("string"):
-        return f"{name} muss Text sein"
-    return f"{name} ist ungültig"
+        return tr("{name} muss Text sein", name=name)
+    return tr("{name} ist ungültig", name=name)
 
 
 def _bind(model: type[Args], handler: Callable) -> dict:
@@ -229,14 +230,14 @@ def _at(raw: str | None) -> datetime:
     try:
         return parse_instant(str(raw))
     except ValueError:
-        raise ToolError("Zeit als ISO-8601 mit Zeitzone angeben, z. B. 2026-10-08T12:30:00+02:00") from None
+        raise ToolError(tr("Zeit als ISO-8601 mit Zeitzone angeben, z. B. 2026-10-08T12:30:00+02:00")) from None
 
 
 def _event_id(raw: str | None) -> str:
     try:
         return str(uuid.UUID(raw or str(uuid.uuid4())))
     except ValueError:
-        raise ToolError("event_id muss eine UUID sein") from None
+        raise ToolError(tr("event_id muss eine UUID sein")) from None
 
 
 def _day(raw: str | None) -> str:
@@ -245,7 +246,7 @@ def _day(raw: str | None) -> str:
     try:
         return date.fromisoformat(str(raw)).isoformat()
     except ValueError:
-        raise ToolError("day als JJJJ-MM-TT angeben") from None
+        raise ToolError(tr("day als JJJJ-MM-TT angeben")) from None
 
 
 def _local(value) -> str | None:
@@ -333,8 +334,8 @@ def _place_id(args: EntryArgs) -> int | None:
     options = place_store.all_places()
     found = next((place for place in options if place["name"].casefold() == name.casefold()), None)
     if found is None:
-        raise ToolError("Unbekannter Ort. Vorhandene Orte: " + (", ".join(place["name"] for place in options)
-                                                                 or "keine, Philipp legt sie in den Einstellungen an"))
+        raise ToolError(tr("Unbekannter Ort. Vorhandene Orte: ") + (", ".join(place["name"] for place in options)
+                                                                 or tr("keine, Philipp legt sie in den Einstellungen an")))
     return found["id"]
 
 
@@ -373,7 +374,7 @@ def save_entry(args: SaveEntryArgs) -> dict:
     if kind == "exercise":
         sport_kind, minutes, change = args.sport_kind, args.duration_minutes, args.sport_change_mgdl
         if sport_kind is None or minutes is None:
-            raise ToolError("Sport braucht sport_kind und duration_minutes (ganze Minuten)")
+            raise ToolError(tr("Sport braucht sport_kind und duration_minutes (ganze Minuten)"))
         payload.update({"sport_kind": sport_kind, "duration_minutes": minutes,
                         "sport_effect_mgdl": str(change) if change is not None else None})
     saved = entry.save(payload)
@@ -406,7 +407,7 @@ def delete_entry(args: DeleteEntryArgs) -> dict:
     current = day_view.day_payload(day, refresh=False)
     item = next((row for row in current["timeline"] if row["id"] == entry_id), None)
     if item is None:
-        raise ToolError("Eintrag an diesem Tag nicht gefunden; id und day aus get_day verwenden")
+        raise ToolError(tr("Eintrag an diesem Tag nicht gefunden; id und day aus get_day verwenden"))
     if item["kind"] == "basal":
         basal.delete_basal_entry({"id": entry_id})
     else:
@@ -437,7 +438,7 @@ def list_dishes(args: ListDishesArgs) -> dict:
     if name:
         found = [dish for dish in current["dishes"] if dish["name"].casefold() == name]
         if not found:
-            raise ToolError("Unbekanntes Gericht. Vorhandene Gerichte: "
+            raise ToolError(tr("Unbekanntes Gericht. Vorhandene Gerichte: ")
                             + (", ".join(dish["name"] for dish in current["dishes"]) or "keine"))
         return {"days": current["days"], "dish": found[0]}
     return {"days": current["days"],
@@ -452,23 +453,23 @@ def read_data(args: ReadDataArgs) -> dict:
     try:
         return read_api.api_read(f"/api/v1/{table}", urlencode(query))
     except read_api.ApiNotFound:
-        raise ToolError("Unbekannte Tabelle") from None
+        raise ToolError(tr("Unbekannte Tabelle")) from None
 
 
 TOOLS = [
     {
         "name": "get_status",
-        "title": "Wie läuft der Blutzucker?",
-        "description": "Aktueller CGM-Wert mit Trend, was noch wirkt (Insulin, KH, Aufschlag; erwarteter Wert "
+        "title": tr("Wie läuft der Blutzucker?"),
+        "description": tr("Aktueller CGM-Wert mit Trend, was noch wirkt (Insulin, KH, Aufschlag; erwarteter Wert "
                        "wenn alles gewirkt hat), offener zweiter Split-Teil, Korrekturvorschlag ohne Essen, "
-                       "Basal heute und alle Einträge und Mahlzeitfaktoren von heute.",
+                       "Basal heute und alle Einträge und Mahlzeitfaktoren von heute."),
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
         **_bind(GetStatusArgs, get_status),
     },
     {
         "name": "preview_entry",
-        "title": "Empfehlung berechnen",
-        "description": "Vor jedem Eintrag aufrufen: zeigt, was das Eintragsformular für diese KH zeigt. "
+        "title": tr("Empfehlung berechnen"),
+        "description": tr("Vor jedem Eintrag aufrufen: zeigt, was das Eintragsformular für diese KH zeigt. "
                        "assignment = Snack einer Hauptmahlzeit (snack=true; meal=null = Snack ohne Mahlzeit, weil "
                        "die eigene Mahlzeit heute schon eingetragen ist) oder eigene Mahlzeit; Sport steckt "
                        "automatisch in on_board.sport_mgdl und der Dosis; basal_suggestion_units > 0 = Basal heute "
@@ -479,63 +480,63 @@ TOOLS = [
                        "bei Split units = jetzt und "
                        "later_units/later_at = zweiter Teil; ohne KH ggf. Option split = geplanter 2. Teil; mit KH bei offenem "
                        "split_plan nur die KH (der Anstieg bleibt beim 2. Teil). "
-                       "Speichert nichts.",
+                       "Speichert nichts."),
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
         **_bind(EntryArgs, preview_entry),
     },
     {
         "name": "save_entry",
-        "title": "Eintrag speichern",
-        "description": "Speichert Mahlzeit, Snack, Korrektur oder Sport in Nightscout, genau wie das "
+        "title": tr("Eintrag speichern"),
+        "description": tr("Speichert Mahlzeit, Snack, Korrektur oder Sport in Nightscout, genau wie das "
                        "Eintragsformular. Nur aufrufen, wenn Philipp die Werte ausdrücklich bestätigt hat "
                        "(gegessene KH, tatsächlich gespritzte IE). Bei KH immer KH-Sicherheit und fett-/"
                        "eiweißreich mitgeben (erfragen, falls nicht genannt). Bei Split insulin_units = jetzt "
-                       "gespritzter Teil, der Rest wird als geplanter 2. Teil vermerkt.",
+                       "gespritzter Teil, der Rest wird als geplanter 2. Teil vermerkt."),
         "annotations": {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": True,
                         "openWorldHint": False},
         **_bind(SaveEntryArgs, save_entry),
     },
     {
         "name": "save_basal",
-        "title": "Basal speichern",
-        "description": "Speichert eine Basal-Injektion (lokal und als Notiz in Nightscout). Nur auf Philipps "
-                       "ausdrückliche Angabe.",
+        "title": tr("Basal speichern"),
+        "description": tr("Speichert eine Basal-Injektion (lokal und als Notiz in Nightscout). Nur auf Philipps "
+                       "ausdrückliche Angabe."),
         "annotations": {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": True,
                         "openWorldHint": False},
         **_bind(SaveBasalArgs, save_basal),
     },
     {
         "name": "delete_entry",
-        "title": "Eintrag löschen",
-        "description": "Löscht einen Eintrag (auch Basal) eines Tages, z. B. einen falsch verstandenen. Nur auf "
-                       "ausdrückliche Bitte und nach Nennung des Eintrags. id und day aus get_day/get_status.",
+        "title": tr("Eintrag löschen"),
+        "description": tr("Löscht einen Eintrag (auch Basal) eines Tages, z. B. einen falsch verstandenen. Nur auf "
+                       "ausdrückliche Bitte und nach Nennung des Eintrags. id und day aus get_day/get_status."),
         "annotations": {"readOnlyHint": False, "destructiveHint": True, "idempotentHint": True,
                         "openWorldHint": False},
         **_bind(DeleteEntryArgs, delete_entry),
     },
     {
         "name": "get_day",
-        "title": "Tag anzeigen",
-        "description": "Ein Tagebuchtag: alle Einträge (mit id), Mahlzeiten mit Faktor (IE/KE) oder "
-                       "Blockgrund, Tagesart und BZ-Kennzahlen.",
+        "title": tr("Tag anzeigen"),
+        "description": tr("Ein Tagebuchtag: alle Einträge (mit id), Mahlzeiten mit Faktor (IE/KE) oder "
+                       "Blockgrund, Tagesart und BZ-Kennzahlen."),
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
         **_bind(GetDayArgs, get_day),
     },
     {
         "name": "list_dishes",
-        "title": "Gerichte und ihr Verlauf",
-        "description": "Gerichte-Katalog: je Gericht Anzahl Einträge, übliche KH und Ergebnis (ratio = "
+        "title": tr("Gerichte und ihr Verlauf"),
+        "description": tr("Gerichte-Katalog: je Gericht Anzahl Einträge, übliche KH und Ergebnis (ratio = "
                        "Mahlzeitfaktor ÷ üblicher Faktor der Mahlzeitenart in den 30 Tagen davor; 1,2 = brauchte "
                        "20 % mehr Insulin als üblich, effective_carbs = übliche KH × ratio). Mit dish: ein Gericht "
-                       "samt seinen letzten Hauptmahlzeiten (KH, IE, Faktor, BZ vorher/nachher, Ort).",
+                       "samt seinen letzten Hauptmahlzeiten (KH, IE, Faktor, BZ vorher/nachher, Ort)."),
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
         **_bind(ListDishesArgs, list_dishes),
     },
     {
         "name": "read_data",
-        "title": "Daten lesen",
-        "description": "Lese-API für längere Zeiträume: meals (Faktoren), window-events, entries (CGM), "
-                       "treatments, basal, meal-records (Einträge mit Gericht/Beschreibung samt Ergebnis), data (alles), profile (Einstellungen und Nightscout-Profil).",
+        "title": tr("Daten lesen"),
+        "description": tr("Lese-API für längere Zeiträume: meals (Faktoren), window-events, entries (CGM), "
+                       "treatments, basal, meal-records (Einträge mit Gericht/Beschreibung samt Ergebnis), data (alles), profile (Einstellungen und Nightscout-Profil)."),
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
         **_bind(ReadDataArgs, read_data),
     },

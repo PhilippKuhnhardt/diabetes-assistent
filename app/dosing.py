@@ -7,6 +7,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from app.common import local_zone
 from app import calculation, glucose
 from app.on_board import FORECAST_SPREAD_MGDL
+from app.i18n import tr
 
 # Trends that rule out the lower target: glucose already falls without what still acts.
 FALLING = ("down", "down_fast")
@@ -57,10 +58,10 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
     now = now or datetime.now(timezone.utc)
     grams = calculation.dec(carbs)
     if not grams.is_finite() or not 0 <= grams <= 500:
-        raise ValueError("Kohlenhydrate müssen zwischen 0 und 500 g liegen")
+        raise ValueError(tr("Kohlenhydrate müssen zwischen 0 und 500 g liegen"))
     activity = calculation.dec(activity_change if activity_change not in (None, "") else 0)
     if not activity.is_finite() or not -500 <= activity <= 500:
-        raise ValueError("Sporteinfluss muss zwischen -500 und 500 mg/dL liegen")
+        raise ValueError(tr("Sporteinfluss muss zwischen -500 und 500 mg/dL liegen"))
     timezone_name = settings["timezone"]
     points = sorted((entry["at"], calculation.dec(entry["sgv"])) for entry in entries
                     if entry.get("sgv") is not None and entry["at"] <= now)
@@ -93,7 +94,7 @@ def suggest(carbs: object, settings: dict, entries: list[dict],
             now, settings.get("ic_schedule", []), timezone_name, "grams_per_unit")
         isf = calculation.isf_at(now, settings.get("isf_schedule", []), timezone_name)
     except ValueError:
-        result["reason"] = "I:C- oder Korrekturfaktor-Profil aus Nightscout fehlt"
+        result["reason"] = tr("I:C- oder Korrekturfaktor-Profil aus Nightscout fehlt")
         return result
     result["nightscout_units_per_ke"] = str(Decimal(10) / ratio)
     carb_units = grams / ratio if units_per_ke is None else grams * units_per_ke / 10

@@ -6,6 +6,7 @@ from datetime import date, datetime, time, timedelta, timezone, tzinfo
 from decimal import Decimal
 from functools import lru_cache
 from zoneinfo import ZoneInfo
+from app.i18n import tr
 
 
 
@@ -141,7 +142,7 @@ def local_day_range(day: str, timezone_name: str) -> tuple[datetime, datetime]:
 def parse_instant(value: str) -> datetime:
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
-        raise ValueError("Zeitpunkt benötigt eine Zeitzone")
+        raise ValueError(tr("Zeitpunkt benötigt eine Zeitzone"))
     return parsed.astimezone(timezone.utc)
 
 
