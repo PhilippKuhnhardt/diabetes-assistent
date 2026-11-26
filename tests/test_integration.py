@@ -596,6 +596,8 @@ class IntegrationTests(unittest.TestCase):
                 ({"dose_target_mgdl": "viel"}, "Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen"),
                 ({"timezone": "Mars/Olympus"}, "Unbekannte Zeitzone"),
                 ({"low_limit_mgdl": 40}, "Grenze für tief muss zwischen 54 und 90 mg/dL liegen"),
+                ({"glucose_unit": "mg"}, "Unbekannte Blutzucker-Einheit"),
+                ({"carb_unit": "kg"}, "Unbekannte Einheit für den Insulinfaktor"),
                 ({"window_minutes": 90.5}, "Ungültige Zeitparameter"),
                 ({"auto_lookback_days": 14}, "Zeitraum der Automatik muss 8, 15 oder 30 Tage sein"),
                 ({"basal_default_units": "10.3"}, "Basal-Standard muss zwischen 0 und 100 IE in 0,5er-Schritten liegen"),
@@ -614,6 +616,14 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], new)
         self.request("/api/settings", method="POST", body={"auto_lookback_days": 8})
         self.assertEqual(self.request("/api/settings")["settings"]["auto_lookback_days"], 8)
+
+    def test_display_units_are_saved_and_change_no_stored_value(self):
+        before = self.request("/api/settings")["settings"]
+        self.assertEqual((before["glucose_unit"], before["carb_unit"]), ("mgdl", "ke"))
+        self.request("/api/settings", method="POST", body={"glucose_unit": "mmol", "carb_unit": "g"})
+        after = self.request("/api/settings")["settings"]
+        self.assertEqual((after["glucose_unit"], after["carb_unit"]), ("mmol", "g"))
+        self.assertEqual(after["dose_target_mgdl"], before["dose_target_mgdl"])
 
     def test_manual_meal_window_is_persisted_validated_and_resettable(self):
         self.request("/api/treatment", method="POST", body={

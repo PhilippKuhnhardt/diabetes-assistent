@@ -3,9 +3,14 @@
 // bands, events and each meal's window; the chart only places them. Chart units equal CSS pixels at
 // the measured width, so text and touch targets keep their size.
 import { html, useState, useEffect, useRef } from "./html.js";
-import { MINUTE, num, timeOnly, sportNames, UNIT } from "./lib.js";
+import { MINUTE, num, glNum, timeOnly, sportNames, UNIT } from "./lib.js";
 import { t } from "./i18n.js";
 import { prefs } from "./prefs.js";
+import { mmol, MGDL_PER_MMOL } from "./units.js";
+
+// Grid lines every 50 mg/dL, or every 3 mmol/L.
+const GRID_STEP = mmol ? 3 * MGDL_PER_MMOL : 50;
+const gridLabel = g => mmol ? String(Math.round(g / MGDL_PER_MMOL)) : String(g);
 
 export function chartLayout(width) {
   const clamped = Math.max(300, Math.min(900, Math.round(width || 600)));
@@ -154,7 +159,7 @@ export function GlucoseChart({ layout, range, view, entries, treatments, bands, 
   const height = interactive ? 324 : layout.height;
   const { left, right, plotTop, plotBottom, width } = layout;
   const grid = [];
-  for (let g = Math.ceil(scales.bottom / 50) * 50; g <= scales.top; g += 50) grid.push(g);
+  for (let g = Math.ceil(scales.bottom / GRID_STEP) * GRID_STEP; g <= scales.top; g += GRID_STEP) grid.push(g);
   const hour = 60 * MINUTE;
   const step = [1, 2, 3, 6].map(hours => hours * hour).find(candidate => (view.to - view.from) / candidate * 48 <= right - left) || 6 * hour;
   const ticks = [];
@@ -209,8 +214,8 @@ export function GlucoseChart({ layout, range, view, entries, treatments, bands, 
     <line class="axis" x1=${left} x2=${right} y1=${plotBottom} y2=${plotBottom} />
     ${ticks.map(t => html`<line class="tick" x1=${scales.x(t).toFixed(1)} x2=${scales.x(t).toFixed(1)} y1=${plotBottom} y2=${plotBottom + 5} />
       <text class="x-label" x=${scales.x(t).toFixed(1)} y=${plotBottom + 19} text-anchor="middle">${timeOnly(t)}</text>`)}
-    ${grid.map(g => html`<text class="y-label" x=${left - 6} y=${(scales.y(g) + 4).toFixed(1)} text-anchor="end">${g}</text>`)}
-    ${!layout.compact && html`<text class="y-unit" x="2" y=${plotTop - 16}>mg/dL</text>`}</svg>`;
+    ${grid.map(g => html`<text class="y-label" x=${left - 6} y=${(scales.y(g) + 4).toFixed(1)} text-anchor="end">${gridLabel(g)}</text>`)}
+    ${!layout.compact && html`<text class="y-unit" x="2" y=${plotTop - 16}>${UNIT.glucose}</text>`}</svg>`;
 }
 
 // The day as one chart: today the last hours up to now, otherwise the whole day.

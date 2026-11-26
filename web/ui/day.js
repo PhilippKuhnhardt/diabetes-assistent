@@ -5,7 +5,7 @@
 // own (the day's chart, effects and night cards were removed 2026-11-23). Everything shown comes from the day payload
 // (/api/day) and the week (/api/days/week); actions post and then reload the day.
 import { html, useState, useEffect, useLayoutEffect, useRef, useMemo } from "./html.js";
-import { MINUTE, api, post, toast, num, factorNum, signedChange, sportChange, timeOnly, trendSymbol, names, sportNames,
+import { MINUTE, api, post, toast, num, glNum, gl, factorNum, signedChange, sportChange, timeOnly, trendSymbol, names, sportNames,
   dayDate, UNIT, Icon, FactorIcons, ExcludeButton } from "./lib.js";
 import { t } from "./i18n.js";
 import { sportSummary, signedMgdl } from "./sport.js";
@@ -64,7 +64,7 @@ function EntryRow({ item, data, ctx }) {
   const label = entryLabel(item, data);
   const amounts = [Number(item.carbs) ? num(item.carbs) + " g" : "", Number(item.insulin) ? num(item.insulin) + " " + UNIT.insulin : "",
     item.kind === "basal" ? num(item.basal_units) + " " + UNIT.insulin + (item.nightscout_synced ? "" : " · " + t("history.localOnly")) : "",
-    item.kind === "finger" && item.glucose_mgdl != null ? num(item.glucose_mgdl, 0) + " mg/dL" : ""].filter(Boolean).join(" + ");
+    item.kind === "finger" && item.glucose_mgdl != null ? gl(item.glucose_mgdl, 0) : ""].filter(Boolean).join(" + ");
   const detail = item.description || item.notes || "";
   if (item.kind === "finger") {
     const remove = event => {
@@ -92,7 +92,7 @@ function Calculation({ result }) {
     num(result.rapid_units_in_window, 2) + " " + UNIT.insulin,
     result.delta_mgdl != null ? "ΔG " + signedChange(result.delta_mgdl, 0) : "",
     Number(result.sport_effect_mgdl) ? t("sport.sport") + " " + signedChange(sportChange(result.sport_effect_mgdl), 0) : "",
-    Number(result.prior_insulin_effect_mgdl) >= 1 ? t("history.priorInsulin", { mgdl: num(result.prior_insulin_effect_mgdl, 0) }) : "",
+    Number(result.prior_insulin_effect_mgdl) >= 1 ? t("history.priorInsulin", { mgdl: glNum(result.prior_insulin_effect_mgdl, 0) }) : "",
   ].filter(Boolean);
   return html`<p class="history-calc">${parts.join(" · ")}${result.reason && html`<br />${result.reason}`}</p>`;
 }
@@ -468,7 +468,7 @@ function WindowEditor({ meal, readings, data, day, onClose, onSaved }) {
       <button id="close-window" type="button" class="quiet" aria-label=${t("common.close")} onClick=${() => dialog.current.close()}>×</button></div>
     <div id="window-readout" class="window-readout" data-tone=${active?.tone || "none"} aria-live="polite">
       <span class="readout-label">${(ed.active === "start" ? t("window.start") : t("window.end")) + " · " + t("common.clock", { time: timeOnly(ed[ed.active]) })}${ed.snapped[ed.active] && " · " + t("window.snapped", { label: ed.snapped[ed.active].label })}</span>
-      <span class="readout-value"><strong>${activeValue == null ? "—" : num(activeValue, 0)}</strong><span class="readout-trend">${activeValue == null ? "" : trendSymbol(active.trend)}</span><small>mg/dL</small></span></div>
+      <span class="readout-value"><strong>${activeValue == null ? "—" : glNum(activeValue, 0)}</strong><span class="readout-trend">${activeValue == null ? "" : trendSymbol(active.trend)}</span><small>${UNIT.glucose}</small></span></div>
     <div class="window-handle-switch" role="group" aria-label=${t("window.pickHandle")}>${[["start", t("window.start")], ["end", t("window.end")]].map(([handle, label]) =>
       html`<button type="button" data-window-handle=${handle} aria-pressed=${String(ed.active === handle)} onClick=${() => setEd(state => ({ ...state, active: handle }))}>${label}</button>`)}</div>
     <div id="window-chart" class=${"window-chart" + (dragging ? " is-dragging" : "")} ref=${node => { chart.current = node; ref.current = node; }}
@@ -479,8 +479,8 @@ function WindowEditor({ meal, readings, data, day, onClose, onSaved }) {
       html`<button type="button" data-nudge=${minutes} onClick=${() => nudge(ed.active, minutes)}>${minutes > 0 ? "+" + minutes : "−" + -minutes} min</button>`)}</div>
     <div id="window-summary" class="window-summary" aria-live="polite">
       <div class="window-facts">
-        <${Cell} label=${t("window.start")} value=${timeOnly(ed.start)} detail=${g0 == null ? t("window.noCgm") : num(g0, 0) + " mg/dL"} />
-        <${Cell} label=${html`${t("window.end")} <small>${t("window.exclusive")}</small>`} value=${timeOnly(ed.end)} detail=${g1 == null ? t("window.noCgm") : num(g1, 0) + " mg/dL"} />
+        <${Cell} label=${t("window.start")} value=${timeOnly(ed.start)} detail=${g0 == null ? t("window.noCgm") : gl(g0, 0)} />
+        <${Cell} label=${html`${t("window.end")} <small>${t("window.exclusive")}</small>`} value=${timeOnly(ed.end)} detail=${g1 == null ? t("window.noCgm") : gl(g1, 0)} />
         <${Cell} label="ΔG" value=${g0 == null || g1 == null ? "—" : signedChange(g1 - g0, 0)} />
         <${Cell} label=${t("window.duration")} value=${Math.floor(minutes / 60) + " h " + String(minutes % 60).padStart(2, "0") + " min"} />
         <${Cell} label=${t("window.carbsInWindow")} value=${summary ? num(summary.carbs_g, 0) + " g" : "…"} />

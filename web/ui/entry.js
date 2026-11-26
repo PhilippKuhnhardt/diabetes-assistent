@@ -5,7 +5,8 @@
 // app.js mounts the form, passes the day and settings, and talks to it through `control`
 // (refresh, tick, choose, applyAgent, submit), since the minute tick, "+" and the agent live outside.
 import { html, useRef, useState, useEffect } from "./html.js";
-import { post, toast, num, timeOnly, names, sportNames, localInputTime, toInstant, currentPosition, UNIT } from "./lib.js";
+import { post, toast, num, glNum, timeOnly, names, sportNames, localInputTime, toInstant, currentPosition, UNIT } from "./lib.js";
+import { glField, toMgdl, mmol } from "./units.js";
 import { t } from "./i18n.js";
 import { SportEffectFields, sportFields, sportValues } from "./sport.js";
 import { DoseHelp, sliderUnits, firstPart } from "./dose.js";
@@ -110,7 +111,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
     const carbs = Number(s.carbs) > 0;
     return {
       day, at, mode: s.kind, carbs: s.carbs, as: s.entryAs || null,
-      finger_mgdl: fingerActive(s) ? s.finger || null : null,
+      finger_mgdl: fingerActive(s) && s.finger ? toMgdl(s.finger) : null,
       split: s.split ?? null, close_meal: Boolean(s.closeMeal),
       // Saving re-checks the shown options with these, so the preview must send the same marks.
       carbs_certainty: carbs ? certaintyValue(s) : null,
@@ -353,7 +354,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
       reset();
       await props.current.onSaved(result, result.day_view);
       const basal = result.basal;
-      const what = (result.kind === "exercise" ? t("sport.sport") : [result.finger_mgdl != null ? t("entry.bg", { value: num(result.finger_mgdl, 0) }) : "",
+      const what = (result.kind === "exercise" ? t("sport.sport") : [result.finger_mgdl != null ? t("entry.bg", { value: glNum(result.finger_mgdl, 0) }) : "",
         carbs > 0 ? num(carbs, 0) + " g" : "", insulin > 0 ? num(insulin, 2) + " " + UNIT.insulin : ""]
         .filter(Boolean).join(" + ")) + (basal ? " + " + t("entryKind.basal") + " " + num(basal.units, 1) + " " + UNIT.insulin : "");
       const message = t("entry.saved", { what }) +
@@ -590,7 +591,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
           onChoose=${chooseDayType} hintId="entry-day-type-hint" hint=${dayType.source} /></div>`}
     </section>
     <section id="entry-dose" class="entry-card entry-dose-card" aria-label=${t("entry.dose")} hidden=${!meal}>
-      <label id="entry-finger-field" hidden=${!fingerOpen}>${t("entry.finger")} <span>mg/dL</span><input name="finger_mgdl" type="number" min="20" max="600" step="1" inputmode="numeric"
+      <label id="entry-finger-field" hidden=${!fingerOpen}>${t("entry.finger")} <span>${UNIT.glucose}</span><input name="finger_mgdl" type="number" ...${glField(20, 600)} inputmode=${mmol ? "decimal" : "numeric"}
         ref=${refs.finger} value=${f.finger} disabled=${!fingerActive(f)} onInput=${event => { refs.carbs.current.setCustomValidity(""); set({ finger: event.currentTarget.value }); schedule(); }} /></label>
       ${choice && html`<${SurchargeChoice} mode=${choice.mode} staticMgdl=${choice.static_mgdl} fat=${choice.static_fat} splitNote
         calculated=${{ fpe: choice.fpe, mgdl: choice.fpe_mgdl, minutes: choice.fpe_minutes, fat_g: choice.fat_g, protein_g: choice.protein_g }}

@@ -104,12 +104,12 @@ def glucose_warnings(now: datetime, settings: dict, treatments: list[dict], entr
             continue
         minutes = max(0, round((warning["at"] - now).total_seconds() / 60))
         if warning["kind"] == "low":
-            crossing, extreme = tr("unter {mgdl}", mgdl=f"{low_limit:.0f}"), tr("Tiefstwert")
+            crossing, extreme = tr("unter {mgdl}", mgdl=cgm.shown(low_limit, settings)), tr("Tiefstwert")
         else:
-            crossing, extreme = tr("über {mgdl}", mgdl=f"{high_limit:.0f}"), tr("Höchstwert")
+            crossing, extreme = tr("über {mgdl}", mgdl=cgm.shown(high_limit, settings)), tr("Höchstwert")
         message = tr("BZ {glucose}, {crossing} um {time} (in {minutes} min), {extreme} {mgdl}",
-                     glucose=f"{warning['glucose_mgdl']:.0f}", crossing=crossing, time=_clock(warning["at"], zone),
-                     minutes=minutes, extreme=extreme, mgdl=f"{warning['mgdl']:.0f}")
+                     glucose=cgm.shown(warning['glucose_mgdl'], settings), crossing=crossing, time=_clock(warning["at"], zone),
+                     minutes=minutes, extreme=extreme, mgdl=cgm.shown(warning['mgdl'], settings))
         reminders.append({"key": f"{warning['kind']}:{now.astimezone(timezone.utc).isoformat()}",
                           "kind": warning["kind"], "title": LABELS[warning["kind"]], "message": message})
     return reminders
@@ -141,8 +141,7 @@ TEMPO_LEAN = {"fast": tr("wenig"), "normal": tr("normal"), "slow": tr("viel")}
 def correction_reminder(now: datetime, settings: dict, treatments: list[dict], entries: list[dict],
                         enabled: dict[str, bool], correction: Callable[[], dict | None] | None = None,
                         found: dict | None = None) -> list[dict]:
-    """The tr("BZ prüfen") reminder when due (app/correction_check.py), with the dose help's correction
-   ."""
+    """The tr("BZ prüfen") reminder when due (app/correction_check.py), with the dose help's correction."""
     if not enabled.get("check"):
         return []
     found = found if found is not None else _acting(now, settings, treatments)
@@ -154,8 +153,8 @@ def correction_reminder(now: datetime, settings: dict, treatments: list[dict], e
     zone = local_zone(settings["timezone"])
     rise = hit["rise_mgdl"]
     message = tr("BZ {glucose} ({rise} in 30 min), Prognose Ende {end}, Mahlzeit um {time}",
-                 glucose=f"{hit['glucose_mgdl']:.0f}", rise=f"{'+' if rise >= 0 else ''}{rise:.0f}",
-                 end=f"{hit['end_mgdl']:.0f}", time=_clock(hit["meal_at"], zone))
+                 glucose=cgm.shown(hit['glucose_mgdl'], settings), rise=cgm.shown(rise, settings, signed=True),
+                 end=cgm.shown(hit['end_mgdl'], settings), time=_clock(hit["meal_at"], zone))
     units = correction() if correction else None
     if units:
         normal, cautious = units.get("normal"), units.get("cautious")

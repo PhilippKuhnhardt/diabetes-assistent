@@ -13,10 +13,12 @@
   "auto_vacation": "separate",
   "basal_default_units": "0",
   "breakfast_end_minute": 660,
+  "carb_unit": "ke",
   "day_types": true,
   "dose_cautious_target_mgdl": "150",
   "dose_target_mgdl": "120",
   "fpe_surcharge_mgdl": "20",
+  "glucose_unit": "mgdl",
   "high_limit_mgdl": "250",
   "ic_schedule": [
    {
