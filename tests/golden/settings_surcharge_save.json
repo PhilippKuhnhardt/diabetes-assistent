@@ -22,6 +22,7 @@
   "split_first_percent": 60,
   "split_min_grams": 80,
   "split_min_units": "6.5",
+  "sport_custom": {},
   "sport_durations_minutes": {
    "gym": 300,
    "jogging": 300,
@@ -34,6 +35,7 @@
    "light_cardio": "20",
    "racing": "-40"
   },
+  "sport_hidden": [],
   "sport_lookback_minutes": 360,
   "timezone": "Europe/Berlin",
   "window_minutes": 170

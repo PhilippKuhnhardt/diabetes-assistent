@@ -264,6 +264,9 @@ def compute_day(day: str) -> dict:
     meal_sources = {meal["source_id"] for meal in meals}
     episode_ids = {meal["id"] for meal in meals if not meal["imported"]}
     zone = local_zone(settings["timezone"])
+    # Sport kind names come from the current settings, not the day's version: a kind added or renamed today
+    # names older sessions too (every settings save is part of the day fingerprint).
+    current_settings = config.get_settings()[1]
     other_events = []
     exercises = []
     for item in treatments:
@@ -276,13 +279,13 @@ def compute_day(day: str) -> dict:
         if item["eventType"] == "Exercise":
             kind = item.get("sport_type")
             note = episodes.EVENT_TAG.sub("", episodes.SPORT_TAG.sub("", item["notes"])).strip()
-            for label in episodes.NOTE_LABELS:
+            for label in episodes.note_labels(current_settings):
                 if note == label or note.startswith((label + " —", label + " |")):
                     note = note[len(label):].lstrip(" —|")
                     break
             exercises.append({
                 "id": item["id"], "at": item["at"],
-                "kind": kind, "label": episodes.SPORT_NAMES.get(kind, tr("Sportart unbekannt")),
+                "kind": kind, "label": episodes.sport_names(current_settings).get(kind, tr("Sportart unbekannt")),
                 "duration_minutes": item["duration"], "notes": note,
                 **sport_session(item, settings, session_effects, session_minutes),
             })
@@ -320,7 +323,7 @@ def compute_day(day: str) -> dict:
             kind = "other"
         note = episodes.QUALITY_TAG.sub("", episodes.EVENT_TAG.sub("", episodes.SPORT_TAG.sub("",
                episodes.TAG.sub("", item["notes"])))).replace("[DA2:snack]", "").strip()
-        for label in episodes.NOTE_LABELS:
+        for label in episodes.note_labels(current_settings):
             if kind == "exercise" and (note == label or note.startswith(label + " — ")):
                 note = note[len(label):].lstrip(" —")
                 break

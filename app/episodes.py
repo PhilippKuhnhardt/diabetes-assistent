@@ -20,7 +20,7 @@ SNACK_GAP = timedelta(minutes=120)
 # A carb entry below this that would start a main meal defaults to a snack of no meal;
 # from this size a snack of no meal carries the main-meal surcharge.
 SMALL_SNACK_GRAMS = Decimal(20)
-SPORT_TAG = re.compile(r"\[DAS1:(jogging|gym|light_cardio|racing)\]")
+SPORT_TAG = re.compile(r"\[DAS1:([a-z][a-z0-9_]{0,31})\]")
 # Data-quality marks on carb entries: how certain the carbs are (weighed, known dish or FDDB
 # estimate, no serious estimate) and the meal factors: fat-/protein-rich, alcohol, fast-acting
 #. Alcohol and fast are recorded only.
@@ -74,6 +74,17 @@ SPORT_LABELS = {"jogging": "Joggen", "gym": "Gym", "light_cardio": "Leichtes Car
 # either spelling, since notes written before a language switch keep theirs.
 SPORT_NAMES = {kind: tr(label) for kind, label in SPORT_LABELS.items()}
 NOTE_LABELS = tuple(dict.fromkeys([*SPORT_LABELS.values(), *SPORT_NAMES.values()]))
+
+
+def sport_names(settings: dict | None) -> dict[str, str]:
+    """Every sport kind with its name: the built-in kinds in the configured language, then the user's own
+    kinds (setting `sport_custom`, key -> name), hidden ones included so older sessions keep their name."""
+    return {**SPORT_NAMES, **((settings or {}).get("sport_custom") or {})}
+
+
+def note_labels(settings: dict | None) -> tuple[str, ...]:
+    """The labels a sport note may start with: built-in kinds in either language and the user's own names."""
+    return tuple(dict.fromkeys([*NOTE_LABELS, *((settings or {}).get("sport_custom") or {}).values()]))
 
 
 def parse_at(value: dict) -> datetime:

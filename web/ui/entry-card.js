@@ -5,7 +5,7 @@
 // (standard, own value, none) and effect duration; basal its units. Saving and deleting stay in
 // app.js (onSave, onDelete), which knows the day and redraws it.
 import { html, useState, useEffect } from "./html.js";
-import { api, toast, num, factorNum, sportNames, UNIT } from "./lib.js";
+import { api, toast, num, factorNum, sportOptions, UNIT } from "./lib.js";
 import { t } from "./i18n.js";
 import { mealChat } from "./main.js";
 import { CERTAINTY_LEVELS, CertaintySlider, FactorChips, SurchargeChoice } from "./meal-fields.js";
@@ -156,7 +156,7 @@ export function EntryCard({ item, dateLabel, factor, places, dishes, sportDefaul
 
       ${sport && html`<div class="card-list">
         <${Row} label=${t("entry.sportKind")}><select value=${v.sportKind} onChange=${event => set({ sportKind: event.currentTarget.value })}>
-          ${Object.entries(sportNames).map(([key, name]) => html`<option value=${key}>${name}</option>`)}</select><//>
+          ${sportOptions(v.sportKind).map(([key, name]) => html`<option value=${key}>${name}</option>`)}</select><//>
         <${Row} label=${t("card.start")}><input type="time" step="60" required value=${v.at} onInput=${event => set({ at: event.currentTarget.value })} /><//>
         <${Row} label=${t("window.duration")}><span class="card-number"><input inputmode="numeric" required value=${v.duration}
           onInput=${event => set({ duration: event.currentTarget.value })} aria-label=${t("card.durationIn")} /><small>min</small></span><//>

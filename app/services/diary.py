@@ -62,7 +62,7 @@ def save_diary_treatment(payload: dict) -> dict:
     sport_kind = None
     if kind == "exercise":
         sport_kind = str(payload.get("sport_kind", ""))
-        if sport_kind not in episodes.SPORT_LABELS:
+        if sport_kind not in episodes.sport_names(settings):
             raise ValueError(tr("Ungültige Sportart"))
         duration = int(payload.get("duration_minutes", 0))
         if not 1 <= duration <= 1440:
@@ -89,7 +89,7 @@ def save_diary_treatment(payload: dict) -> dict:
     event_id = previous_id or str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
     if kind == "exercise":
         event_type = "Exercise"
-        label = episodes.SPORT_NAMES[sport_kind]
+        label = episodes.sport_names(settings)[sport_kind]
         notes = label + (f" — {note}" if note else "") + f" [DAS1:{sport_kind}] [DAE:{event_id}]"
     else:
         event_type = {"meal": "Meal Bolus", "snack": "Snack Bolus" if units > 0 else "Carb Correction",

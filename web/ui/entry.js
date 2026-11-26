@@ -5,7 +5,7 @@
 // app.js mounts the form, passes the day and settings, and talks to it through `control`
 // (refresh, tick, choose, applyAgent, submit), since the minute tick, "+" and the agent live outside.
 import { html, useRef, useState, useEffect } from "./html.js";
-import { post, toast, num, glNum, timeOnly, names, sportNames, localInputTime, toInstant, currentPosition, UNIT } from "./lib.js";
+import { post, toast, num, glNum, timeOnly, names, sportKinds, sportOptions, localInputTime, toInstant, currentPosition, UNIT } from "./lib.js";
 import { glField, toMgdl, mmol } from "./units.js";
 import { t } from "./i18n.js";
 import { SportEffectFields, sportFields, sportValues } from "./sport.js";
@@ -48,7 +48,7 @@ function blank(kind = "meal") {
   return {
     kind, at: nowTime(), timeTouched: false, timeOpen: false, noteOpen: false, fingerOpen: false,
     carbs: "", insulin: "", finger: "", notes: "", certainty: 1, certaintyUnset: false, fat: false, fast: false,
-    withBasal: true, basalUnits: "", sportKind: "jogging", duration: "", sportFx: sportFields(null),
+    withBasal: true, basalUnits: "", sportKind: sportKinds[0] || "jogging", duration: "", sportFx: sportFields(null),
     entryAs: null, split: null, closeMeal: false, place: undefined, agent: null,
     position: null, positionAt: 0, positionPending: false, positionError: null,
     preview: null, busy: false, doseChoice: null, slider: null, sliderKey: null, doseNote: "", doseChanged: {},
@@ -578,7 +578,7 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
       ref=${refs.basal} value=${f.basalUnits} disabled=${f.kind !== "basal"} required=${f.kind === "basal"}
       onInput=${event => { event.currentTarget.setCustomValidity(""); set({ basalUnits: event.currentTarget.value }); }} /></label>
     <label id="entry-sport-field" hidden=${f.kind !== "exercise"}>${t("entry.sportKind")}
-      <select name="sport_kind" ref=${refs.sport} disabled=${f.kind !== "exercise"} onChange=${event => set({ sportKind: event.currentTarget.value })}>${Object.entries(sportNames).map(([kind, label]) =>
+      <select name="sport_kind" ref=${refs.sport} disabled=${f.kind !== "exercise"} onChange=${event => set({ sportKind: event.currentTarget.value })}>${sportOptions(f.sportKind).map(([kind, label]) =>
         html`<option value=${kind} selected=${f.sportKind === kind}>${label}</option>`)}</select></label>
     <label id="entry-duration-field" hidden=${f.kind !== "exercise"}>${t("window.duration")} <span>${t("entry.minutes")}</span><input name="duration_minutes" type="number" min="1" max="1440" step="1"
       value=${f.duration} disabled=${f.kind !== "exercise"} required=${f.kind === "exercise"} onInput=${event => set({ duration: event.currentTarget.value })} /></label>

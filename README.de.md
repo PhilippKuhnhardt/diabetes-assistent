@@ -13,6 +13,7 @@ Eine private Web-App für Typ-1-Diabetes mit Pen. Sie liest CGM-Werte (FreeStyle
 - **Spritzhilfe.** Vorschläge für eine Mahlzeit oder Korrektur aus den Mahlzeitfaktoren der letzten Wochen, abzüglich dessen, was noch wirkt, mit dem Bereich, in dem der BZ meist landet. Große Mahlzeiten lassen sich splitten.
 - **Verlauf.** Wochenweise jede Mahlzeit mit Faktor, Zeitraum und Kurve; hier wird geprüft und korrigiert.
 - **Analyse.** Faktoren je Mahlzeit und Tagesart sowie ein Rückblick über 90 Tage, wie die Einstellungen gewirkt hätten.
+- **Sport.** Joggen, Gym, leichtes Cardio und Rennsport sind eingebaut; eigene Sportarten mit eigener BZ-Wirkung und Wirkdauer kommen unter Mehr → Profil & Modell → Sport dazu.
 - **Einheiten.** BZ in mg/dL oder mmol/L, der Faktor als IE je KE (10 g), IE je BE (12 g) oder g KH je IE, unter Mehr → Profil & Modell. Auch die Grenzen für tief und hoch (Warnungen, Kurven) sind Einstellungen.
 - **Erinnerungen.** Optional per Pushover: Basal vergessen, 2. Split-Teil fällig, Frühwarnung vor Tief oder Hoch.
 - **Agenten und Skripte.** Eine Lese-API (`/api/v1`) und ein MCP-Server (`/mcp`), über den ein Assistent wie Claude BZ abfragen, eine Empfehlung holen und eintragen kann.

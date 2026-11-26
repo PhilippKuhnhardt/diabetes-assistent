@@ -44,10 +44,13 @@ MESSAGES = {
     "split_min_units": tr("Split-Bolus: Mindestdosis 0–30 IE in 0,5er-Schritten (0 = immer)"),
     "sport_effects_mgdl": tr("Ungültiger Sporteffekt"),
     "sport_durations_minutes": tr("Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen"),
+    "sport_custom": tr("Eigene Sportart: Name mit 1 bis 40 Zeichen, jeder Name nur einmal"),
+    "sport_hidden": tr("Ungültige Sportarten"),
 }
 
 
-SportKind = Literal[tuple(episodes.SPORT_LABELS)]
+# A built-in kind or one the user added (setting `sport_custom`); which keys exist is checked between fields.
+SportKind = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,31}$")]
 
 
 class SettingsInput(BaseModel):
@@ -84,6 +87,10 @@ class SettingsInput(BaseModel):
     sport_effects_mgdl: dict[SportKind, Annotated[Decimal, Field(ge=-500, le=500)]]
     # Whole minutes: 300 and "300" pass, a fraction is refused instead of cut.
     sport_durations_minutes: dict[SportKind, Annotated[int, Field(ge=30, le=1440)]] | None = None
+    # The user's own sport kinds (key -> name) and the kinds the entry form no longer offers. A kind is never
+    # deleted, only hidden, so sessions recorded with it keep their name and effect.
+    sport_custom: dict[SportKind, Annotated[str, Field(min_length=1, max_length=40)]] = {}
+    sport_hidden: list[SportKind] = []
 
     @field_validator("timezone")
     @classmethod
@@ -101,12 +108,24 @@ class SettingsInput(BaseModel):
             raise ValueError(MESSAGES["auto_lookback_days"])
         return value
 
-    @field_validator("sport_effects_mgdl", "sport_durations_minutes", mode="before")
+    @field_validator("sport_custom", mode="before")
     @classmethod
-    def _every_sport(cls, value):
-        if value is not None and (not isinstance(value, dict) or set(value) != set(episodes.SPORT_LABELS)):
+    def _custom_names(cls, value):
+        if not isinstance(value, dict):
+            raise ValueError(MESSAGES["sport_custom"])
+        names = {key: " ".join(str(name).split()) for key, name in value.items()}
+        folded = [name.casefold() for name in [*episodes.SPORT_NAMES.values(), *names.values()]]
+        if set(names) & set(episodes.SPORT_LABELS) or len(set(folded)) != len(folded):
+            raise ValueError(MESSAGES["sport_custom"])
+        return names
+
+    @model_validator(mode="after")
+    def _every_sport(self):
+        kinds = set(episodes.SPORT_LABELS) | set(self.sport_custom)
+        if (set(self.sport_effects_mgdl) != kinds or set(self.sport_hidden) - kinds
+                or (self.sport_durations_minutes is not None and set(self.sport_durations_minutes) != kinds)):
             raise ValueError(tr("Ungültige Sportarten"))
-        return value
+        return self
 
     @model_validator(mode="after")
     def _between_fields(self):
@@ -144,13 +163,16 @@ def validate_settings(value: dict) -> dict:
         **checked.model_dump(include={"timezone", "window_minutes",
                                       "breakfast_end_minute", "lunch_end_minute", "sport_lookback_minutes",
                                       "auto_lookback_days", "auto_method", "auto_vacation", "day_types", "glucose_unit", "carb_unit",
+                                      "sport_custom",
                                       *config.DEFAULT_SPLIT}),
         **{key: str(getattr(checked, key)) for key in (
             "dose_target_mgdl", "dose_cautious_target_mgdl", "auto_percentile",
             "auto_half_life_days", "auto_surcharge_mgdl", "auto_fat_surcharge_mgdl", "fpe_surcharge_mgdl",
             "low_limit_mgdl", "high_limit_mgdl")},
         "sport_effects_mgdl": {kind: str(amount) for kind, amount in checked.sport_effects_mgdl.items()},
-        "sport_durations_minutes": checked.sport_durations_minutes or dict(config.DEFAULT_SPORT_DURATIONS),
+        "sport_durations_minutes": checked.sport_durations_minutes or {
+            kind: config.DEFAULT_SPORT_DURATIONS.get(kind, 300) for kind in checked.sport_effects_mgdl},
+        "sport_hidden": sorted(set(checked.sport_hidden)),
         "basal_default_units": unit_text(checked.basal_default_units),
         "split_min_units": unit_text(checked.split_min_units),
     })
