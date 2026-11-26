@@ -4,11 +4,13 @@
 import { html, useState, useEffect, useRef } from "./html.js";
 import { api, post, toast, busy, num, signedPercent, sportKinds, sportChange, minuteClock, clockMinute, toInstant, localInputTime,
   pickerMinimum, currentPosition, MINUTE } from "./lib.js";
+import { ThemePanel } from "./theme.js";
 
 // The pages in the order they appear; `form` pages belong to the model form and its save button.
 export const SETTINGS_PAGES = [
   { group: "Allgemein", pages: [["nightscout", "Nightscout"], ["timezone", "Zeitzone"], ["vacation", "Urlaub"],
-    ["notify", "Benachrichtigungen"], ["agent", "Essens-Agent"], ["places", "Orte"]] },
+    ["notify", "Benachrichtigungen"], ["agent", "Essens-Agent"], ["places", "Orte"],
+    ["theme", "Darstellung"]] },
   { group: "Nightscout-Profil", pages: [["isf", "Korrekturfaktor"], ["ic", "Insulinfaktor"], ["target", "Zielbereich"]] },
   { group: "Modell", form: true, pages: [["dose", "Spritzhilfe"], ["meals", "Mahlzeiten"], ["sport", "Sport"]] },
 ];
@@ -431,6 +433,7 @@ export function SettingsView({ data, loadCount, page, onPage, today, agentInfo, 
       <${Notifications} page=${page} />
       <${Agent} page=${page} info=${agentInfo} onInfo=${onAgentInfo} />
       <${Places} page=${page} onPlacesChanged=${onPlacesChanged} />
+      <${ThemePanel} page=${page} />
     </div>
     <h2 class="settings-heading">Nightscout-Profil</h2>
     <div class="settings-grid settings-cols" key=${"profile-" + loadCount}>
