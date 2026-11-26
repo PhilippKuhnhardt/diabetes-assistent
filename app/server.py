@@ -24,6 +24,7 @@ WEB_VERSION = hashlib.sha256(b"".join(
 # home-screen icon and the web app manifest without the session cookie.
 PUBLIC_FILES = {
     "/styles.css": "text/css",
+    "/theme.js": "text/javascript",
     "/logo.svg": "image/svg+xml",
     "/apple-touch-icon.png": "image/png",
     "/icon-192.png": "image/png",
