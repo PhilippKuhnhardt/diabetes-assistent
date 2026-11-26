@@ -1,5 +1,5 @@
 # Vendor SDKs for the meal agent.
-anthropic==2.3.0
+anthropic==2.13.0
 openai==3.41.0
 # Validation of settings and agent tool arguments.
 pydantic==2.13.5
