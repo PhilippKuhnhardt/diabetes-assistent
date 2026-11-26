@@ -14,21 +14,42 @@
 </head>
 <body class="login-page">
   <main class="login-card panel">
-    <div class="login-brand"><img src="/logo.svg" width="48" height="48" alt=""><span>Diabetes-Tagebuch</span></div>
-    <h1>Anmelden</h1>
+    <div class="login-brand"><img src="/logo.svg" width="48" height="48" alt=""><span data-l="brand">Diabetes-Tagebuch</span></div>
+    <h1 data-l="login">Anmelden</h1>
     <form action="/login" method="post">
-      <label>Benutzername
+      <label><span data-l="user">Benutzername</span>
         <input name="username" autocomplete="username" value="privat" required>
       </label>
-      <label>Passwort
+      <label><span data-l="password">Passwort</span>
         <input name="password" type="password" autocomplete="current-password" required autofocus>
       </label>
-      <p id="login-error" class="form-error" hidden>Passwort stimmt nicht.</p>
-      <p id="login-wait" class="form-error" hidden>Zu viele falsche Passwörter. Bitte in einer Viertelstunde noch einmal versuchen.</p>
-      <button class="primary" type="submit">Anmelden</button>
+      <p id="login-error" class="form-error" hidden data-l="wrong">Passwort stimmt nicht.</p>
+      <p id="login-wait" class="form-error" hidden data-l="wait">Zu viele falsche Passwörter. Bitte in einer Viertelstunde noch einmal versuchen.</p>
+      <button class="primary" type="submit" data-l="login">Anmelden</button>
     </form>
   </main>
   <script>
+    // The page loads without the app's modules: its few texts in English when the stored choice or the
+    // browser says so (same rule as web/ui/i18n.js), German otherwise.
+    (function () {
+      var language = null;
+      try { language = localStorage.getItem("language"); } catch (error) { /* private mode */ }
+      if (language !== "de" && language !== "en") {
+        var wanted = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+        language = "de";
+        for (var i = 0; i < wanted.length; i++) {
+          var base = String(wanted[i] || "").slice(0, 2).toLowerCase();
+          if (base === "de" || base === "en") { language = base; break; }
+        }
+      }
+      if (language !== "en") return;
+      var texts = { brand: "Diabetes diary", login: "Log in", user: "Username", password: "Password",
+        wrong: "Wrong password.", wait: "Too many wrong passwords. Please try again in a quarter of an hour." };
+      document.documentElement.lang = "en";
+      document.title = "Log in · Diary";
+      var nodes = document.querySelectorAll("[data-l]");
+      for (var j = 0; j < nodes.length; j++) nodes[j].textContent = texts[nodes[j].getAttribute("data-l")];
+    })();
     document.getElementById("login-error").hidden = !location.search.includes("error=1");
     document.getElementById("login-wait").hidden = !location.search.includes("error=wait");
   </script>

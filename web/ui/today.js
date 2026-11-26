@@ -3,36 +3,37 @@
 // /api/entry/preview); these components only draw them. Open tasks of past days live in Verlauf's week
 // strip and day cards (the former "Zu erledigen" list was removed 2026-11-23).
 import { html, useState } from "./html.js";
-import { MINUTE, num, timeOnly, names, sportNames, SPLIT_TIMING, FactorIcons } from "./lib.js";
+import { MINUTE, num, timeOnly, names, sportNames, SPLIT_TIMING, UNIT, FactorIcons } from "./lib.js";
+import { t } from "./i18n.js";
 import { DayChart, glucosePoints } from "./charts.js";
 import { dayBounds, mealBlocks, entryLabel } from "./day.js";
 import { sportSummary } from "./sport.js";
 
-const HOURS = [[3, "3 h"], [6, "6 h"], [24, "Tag"]];
+const HOURS = [[3, "3 h"], [6, "6 h"], [24, t("today.wholeDay")]];
 
 // Today's "Wirkt noch" card: what still lowers and raises glucose and the expected value after it.
 export function ActiveCard({ active, id = "day-overview-active" }) {
-  const until = value => value ? "bis " + timeOnly(value) : "wirkt nicht mehr";
+  const until = value => value ? t("today.until", { time: timeOnly(value) }) : t("today.actsNoMore");
   const nothing = !active.lowering_until && !active.raising_until;
   const value = (sign, mgdl) => html`${sign + num(mgdl, 0)} <small>mg/dL</small>`;
   const Item = ({ label, strong, lines, className = "" }) => html`<div class=${"active-item" + className}><span>${label}</span>
     <strong>${strong}</strong>${lines.map(line => html`<small>${line}</small>`)}</div>`;
   const split = active.split_plan;
-  return html`<div id=${id} class="active-card" aria-label="Was noch wirkt" aria-live="polite">
-    <${Item} label="Senkt noch" strong=${value("−", active.lowering_mgdl)} lines=${["Insulin " + num(active.insulin_units, 1) + " IE",
+  return html`<div id=${id} class="active-card" aria-label=${t("today.activeLabel")} aria-live="polite">
+    <${Item} label=${t("today.lowering")} strong=${value("−", active.lowering_mgdl)} lines=${[t("today.insulinLine", { units: num(active.insulin_units, 1), unit: UNIT.insulin }),
       ...(active.sports || []).filter(row => Number(row.remaining_mgdl) > 0).map(row =>
-        (sportNames[row.kind] || "Sport") + " " + timeOnly(row.at) + " −" + num(row.remaining_mgdl, 0)),
+        (sportNames[row.kind] || t("sport.sport")) + " " + timeOnly(row.at) + " −" + num(row.remaining_mgdl, 0)),
       until(active.lowering_until)]} />
-    <${Item} label="Hebt noch" strong=${value("+", active.raising_mgdl)} lines=${["KH " + num(active.carbs_remaining_g, 0) + " g +" + num(active.carbs_mgdl, 0),
-      "Fett/Eiweiß +" + num(active.surcharge_mgdl, 0), until(active.raising_until)]} />
-    <${Item} label="Erwartet" className=" expected" strong=${active.expected_mgdl == null ? "—" : value("≈ ", active.expected_mgdl)}
-      lines=${active.expected_mgdl == null ? ["kein aktueller CGM-Wert"]
-        : [(active.expected_at ? "um " + timeOnly(active.expected_at) : "jetzt"),
-           "wahrscheinlich " + num(active.expected_low_mgdl, 0) + "–" + num(active.expected_high_mgdl, 0) + " mg/dL"]} />
-    ${nothing && html`<p class="hint">Nichts wirkt mehr nach.</p>`}
-    ${split && html`<p class="hint">2. Teil geplant: ${num(split.units, 1)} IE um ${timeOnly(split.due_at)}, in der Prognose noch nicht enthalten${split.state === "later" ? ""
-      : " (" + (split.state === "wait" ? SPLIT_TIMING.wait + " bis " + timeOnly(split.latest_at) : SPLIT_TIMING[split.state]) + ")"}. Die Menge kommt aus der Prognose.</p>`}
-    ${active.fresh_meal_at && html`<p class="hint">Mahlzeit um ${timeOnly(active.fresh_meal_at)}: Die KH steigen noch, die Prognose ist hier am unsichersten.</p>`}</div>`;
+    <${Item} label=${t("today.raising")} strong=${value("+", active.raising_mgdl)} lines=${[t("today.carbsLine", { grams: num(active.carbs_remaining_g, 0), mgdl: num(active.carbs_mgdl, 0) }),
+      t("today.surchargeLine", { mgdl: num(active.surcharge_mgdl, 0) }), until(active.raising_until)]} />
+    <${Item} label=${t("today.expected")} className=" expected" strong=${active.expected_mgdl == null ? "—" : value("≈ ", active.expected_mgdl)}
+      lines=${active.expected_mgdl == null ? [t("today.noCgm")]
+        : [(active.expected_at ? t("today.at", { time: timeOnly(active.expected_at) }) : t("today.now")),
+           t("today.likely", { low: num(active.expected_low_mgdl, 0), high: num(active.expected_high_mgdl, 0) })]} />
+    ${nothing && html`<p class="hint">${t("today.nothingActs")}</p>`}
+    ${split && html`<p class="hint">${t("today.splitPlanned", { units: num(split.units, 1), unit: UNIT.insulin, time: timeOnly(split.due_at),
+      state: split.state === "later" ? "" : " (" + (split.state === "wait" ? t("today.waitUntil", { wait: SPLIT_TIMING.wait, time: timeOnly(split.latest_at) }) : SPLIT_TIMING[split.state]) + ")" })}</p>`}
+    ${active.fresh_meal_at && html`<p class="hint">${t("today.freshMeal", { time: timeOnly(active.fresh_meal_at) })}</p>`}</div>`;
 }
 
 // What happened in the last three hours, newest first, as context for the next decision.
@@ -43,21 +44,21 @@ function Recent({ treatments }) {
     .sort((a, b) => new Date(b.at) - new Date(a.at))
     .map(item => {
       const parts = item.eventType === "Exercise"
-        ? [(sportNames[item.sport_type] || "Sport") + (Number(item.duration) ? " " + num(item.duration, 0) + " min" : "")]
-        : item.basal ? ["Basal " + num(item.basal, 1) + " IE"]
-        : item.finger_mgdl ? ["BZ blutig " + num(item.finger_mgdl, 0) + " mg/dL"]
-        : [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 2) + " IE" : ""].filter(Boolean);
+        ? [(sportNames[item.sport_type] || t("sport.sport")) + (Number(item.duration) ? " " + num(item.duration, 0) + " min" : "")]
+        : item.basal ? [t("entryKind.basal") + " " + num(item.basal, 1) + " " + UNIT.insulin]
+        : item.finger_mgdl ? [t("entryKind.finger") + " " + num(item.finger_mgdl, 0) + " mg/dL"]
+        : [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 2) + " " + UNIT.insulin : ""].filter(Boolean);
       return parts.length ? html`<span class="recent-chip"><time>${timeOnly(item.at)}</time> ${parts.join(" + ")}<${FactorIcons} marks=${item} /></span>` : null;
     }).filter(Boolean);
-  return html`<div id="day-overview-recent" class="overview-recent" aria-label="Einträge der letzten 3 Stunden">${items.length
-    ? html`<span class="recent-label">Letzte 3 h</span>${items}` : html`<span class="recent-label">Letzte 3 h: keine Einträge</span>`}</div>`;
+  return html`<div id="day-overview-recent" class="overview-recent" aria-label=${t("today.recentLabel")}>${items.length
+    ? html`<span class="recent-label">${t("today.recent")}</span>${items}` : html`<span class="recent-label">${t("today.recentNone")}</span>`}</div>`;
 }
 
 // Today's meals in short (user request 2026-11-18): time, carbs, insulin and the factor once it is known.
 // Each row sums all entries the server grouped under the meal (`meal_id`, as in "Verlauf") and unfolds to
 // them, each tappable to correct it; the meal still running is unfolded (user request 2026-11-20).
 const sumOf = (items, key) => items.reduce((sum, item) => sum + (Number(item[key]) || 0), 0);
-const amounts = item => [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 1) + " IE" : "",
+const amounts = item => [Number(item.carbs) > 0 ? num(item.carbs, 0) + " g" : "", Number(item.insulin) > 0 ? num(item.insulin, 1) + " " + UNIT.insulin : "",
   item.kind === "exercise" ? num(item.duration_minutes, 0) + " min" : ""].filter(Boolean);
 
 function MealToday({ meal, items, data, onEdit }) {
@@ -71,16 +72,16 @@ function MealToday({ meal, items, data, onEdit }) {
   const listId = "meal-today-" + meal.id;
   return html`<li class=${open ? "is-open" : ""}>
     <button type="button" class="meal-today" aria-expanded=${String(open)} aria-controls=${listId} onClick=${() => setOpen(!open)}>
-      <time>${timeOnly(meal.at)}</time><b>${names[meal.meal] || "Mahlzeit"}</b>
-      <span>${[num(carbs, 0) + " g", insulin > 0 ? num(insulin, 1) + " IE" : "",
-        entries.length > 1 ? entries.length + " Einträge" : ""].filter(Boolean).join(" · ")}</span>
-      <small>${factor != null ? num(factor, 2) + " IE/KE" : running ? "bis " + timeOnly(meal.window.end) : ""}</small>
+      <time>${timeOnly(meal.at)}</time><b>${names[meal.meal] || t("meal.meal")}</b>
+      <span>${[num(carbs, 0) + " g", insulin > 0 ? num(insulin, 1) + " " + UNIT.insulin : "",
+        entries.length > 1 ? t("common.entries", { count: entries.length }) : ""].filter(Boolean).join(" · ")}</span>
+      <small>${factor != null ? num(factor, 2) + " " + UNIT.factor : running ? t("today.until", { time: timeOnly(meal.window.end) }) : ""}</small>
       <i class="meal-today-toggle" aria-hidden="true">›</i></button>
     <ul id=${listId} class="meal-today-entries" hidden=${!open}>${entries.map(item => {
       const editable = item.kind !== "other" && item.kind !== "finger";
       const label = entryLabel(item, data);
       return html`<li key=${item.id}><button type="button" class="meal-today-entry" disabled=${!editable}
-        aria-label=${label + " um " + timeOnly(item.at) + (editable ? " bearbeiten" : "")} onClick=${() => onEdit(item.id)}>
+        aria-label=${t(editable ? "common.editAt" : "common.itemAt", { label, time: timeOnly(item.at) })} onClick=${() => onEdit(item.id)}>
         <time>${timeOnly(item.at)}</time><b>${label}<${FactorIcons} marks=${item} /></b>
         <span>${amounts(item).join(" + ")}</span>
         ${item.dish?.name && html`<small>${item.dish.name}</small>`}</button></li>`;
@@ -91,17 +92,17 @@ function MealToday({ meal, items, data, onEdit }) {
 function SportToday({ item, onEdit }) {
   const summary = sportSummary(item);
   return html`<li><button type="button" class="meal-today sport-today" onClick=${() => onEdit(item.id)}
-    aria-label=${summary.title + " um " + timeOnly(item.at) + " öffnen"}>
+    aria-label=${t("common.openAt", { label: summary.title, time: timeOnly(item.at) })}>
     <time>${timeOnly(item.at)}</time><b>${summary.title}</b>
-    <span>${summary.parts.map(part => part.text).join(" · ") || "wirkt in keiner Mahlzeit"}</span>
+    <span>${summary.parts.map(part => part.text).join(" · ") || t("today.sportNoMeal")}</span>
     <small>${summary.effect}</small><i class="meal-today-toggle" aria-hidden="true">›</i></button></li>`;
 }
 
 function MealsToday({ data, onEdit }) {
   const { blocks } = mealBlocks(data);
   const sessions = data.timeline.filter(item => item.kind === "exercise");
-  const label = sessions.length ? "Mahlzeiten und Sport heute" : "Mahlzeiten heute";
-  if (!blocks.length && !sessions.length) return html`<div class="meals-today"><span class="recent-label">Mahlzeiten heute: noch keine</span></div>`;
+  const label = sessions.length ? t("today.mealsAndSport") : t("today.meals");
+  if (!blocks.length && !sessions.length) return html`<div class="meals-today"><span class="recent-label">${t("today.mealsNone")}</span></div>`;
   const rows = [...blocks.map(block => ({ t: new Date(block.meal.at).getTime(), block })),
     ...sessions.map(item => ({ t: new Date(item.at).getTime(), item }))].sort((a, b) => a.t - b.t);
   return html`<div class="meals-today" aria-label=${label}><span class="recent-label">${label}</span>
@@ -122,10 +123,10 @@ export function Overview({ data, day, today, active, hours, onHours, onEdit = ()
   const clipped = bounds && isToday && hours < 24 && view.from === bounds.dayStart && view.to - view.from < hours * 60 * MINUTE;
   const last = data && glucosePoints(data.entries).some(point => point.t >= view.from && point.t <= view.to);
   // The current value is in the header; the note only explains gaps.
-  const note = data ? [last ? "" : "Keine CGM-Werte in diesem Zeitraum.", clipped ? "Werte vor Mitternacht stehen beim Vortag." : ""].filter(Boolean).join(" ") : "";
+  const note = data ? [last ? "" : t("today.noValues"), clipped ? t("today.beforeMidnight") : ""].filter(Boolean).join(" ") : "";
   return html`<div id="day-overview" class="day-overview">
-    <div class="section-head"><h2>Verlauf</h2>
-      <div class="overview-span" role="group" aria-label="Zeitraum des Verlaufs">${HOURS.map(([value, label]) =>
+    <div class="section-head"><h2>${t("today.chart")}</h2>
+      <div class="overview-span" role="group" aria-label=${t("today.span")}>${HOURS.map(([value, label]) =>
         html`<button type="button" data-overview-hours=${value} aria-pressed=${String(value === hours)} hidden=${!isToday}
           onClick=${() => onHours(value)}>${label}</button>`)}</div></div>
     ${data ? html`<${DayChart} id="day-overview-chart" data=${data} view=${view} clipId="overview-clip" />` : html`<div class="day-overview-chart"></div>`}
