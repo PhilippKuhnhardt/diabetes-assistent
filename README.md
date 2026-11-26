@@ -6,7 +6,7 @@ A personal web app for living with type 1 diabetes on multiple daily injections.
 
 The user interface and most of the documentation are in German, because the app was built for one German-speaking user. The code, comments and commit history are in English.
 
-> **Not medical advice.** This is a private hobby project built around one person's data, settings and habits. Its calculations rest on simplifying model assumptions, it is not a medical device, and it is not validated for anyone else. Use it as inspiration, not as a dosing tool.
+> **Disclaimer: not a medical device, not medical advice.** This is a private hobby project built around one person's data, settings and habits. It is not a medical device, it is not certified or clinically validated, and nothing it shows is a therapy recommendation. Its calculations rest on simplifying model assumptions and can be wrong. Never base an insulin dose on it alone; discuss any change to your therapy with your diabetes care team. You use it entirely at your own risk; the authors accept no liability for any harm arising from its use (see also sections 15 and 16 of the license).
 
 ## What it does
 
@@ -47,3 +47,7 @@ node --check web/app.js
 ```
 
 The integration tests run against a local fake Nightscout server, and the golden tests use 40 days of synthetic data.
+
+## License
+
+[GNU Affero General Public License v3.0](LICENSE). If you run a modified version as a network service, the AGPL requires you to offer its users the source code of that version.

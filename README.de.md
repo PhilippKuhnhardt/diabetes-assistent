@@ -4,6 +4,8 @@
 
 Private, deutschsprachige Web-App für FreeStyle Libre 3 Plus über Nightscout und manuell erfasstes Fiasp. Nightscout ist die maßgebliche Quelle für CGM, Kohlenhydrate, Injektionen, Sport und das aktuelle Profil. SQLite spiegelt diese Daten und speichert lokale Analyseentscheidungen sowie versionierte Einstellungen. Berechnete Faktoren werden nie nach Nightscout geschrieben. Die Formeln und Annahmen stehen in [Rechenwege](docs/rechenwege.md).
 
+> **Haftungsausschluss: kein Medizinprodukt, keine Therapieempfehlung.** Dies ist ein privates Hobbyprojekt, gebaut um die Daten, Einstellungen und Gewohnheiten einer Person. Die App ist kein Medizinprodukt, weder zertifiziert noch klinisch geprüft, und nichts, was sie anzeigt, ist eine Therapieempfehlung. Ihre Berechnungen beruhen auf vereinfachenden Modellannahmen und können falsch sein. Keine Insulindosis allein danach festlegen; Änderungen der Therapie mit dem Diabetes-Team besprechen. Die Nutzung erfolgt vollständig auf eigene Verantwortung; die Autoren haften nicht für Schäden aus der Nutzung (siehe auch Abschnitte 15 und 16 der Lizenz).
+
 ## Deployment mit Umgebungsvariablen
 
 Compose liest alle Zugangsdaten direkt aus der Umgebung des Deployment-Prozesses. Es gibt kein `env_file` und keine erforderliche `.env`-Datei.
@@ -117,3 +119,7 @@ Mit `PUSHOVER_APP_TOKEN` und `PUSHOVER_USER_KEY` schickt der Hintergrund-Sync Er
 - **2. Split-Teil fällig:** der 2. Teil ist fällig und nach der Mahlzeit wurde noch kein Insulin erfasst. Steigt der BZ 60–105 min nach der Mahlzeit über 180 schnell, kommt die Meldung früher; ist er zum geplanten Zeitpunkt unter 110 oder fällt, bis zu 60 min später. Die Meldung nennt die Menge aus der aktuellen Prognose und die geplante.
 
 Beide lassen sich unter **Einstellungen → Benachrichtigungen** einzeln abschalten; dort gibt es auch eine Testmeldung und die letzten gesendeten Meldungen. Meldungen gehen mit hoher Priorität (Pushover-Ruhezeiten werden übergangen); ob sie auf dem iPhone als kritischer Alarm auch im Stumm-Modus klingeln, stellt man in der Pushover-App ein. Ist `APP_HEARTBEAT_URL` gesetzt, ruft die App diese Adresse nach jeder fehlerfreien Runde auf; ein externer Wächter wie Healthchecks.io meldet dann, wenn die App oder der Abgleich ausfällt.
+
+## Lizenz
+
+[GNU Affero General Public License v3.0](LICENSE). Wer eine veränderte Fassung als Netzwerkdienst betreibt, muss deren Nutzern nach der AGPL den Quellcode dieser Fassung anbieten.
