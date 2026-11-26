@@ -66,6 +66,7 @@
   "neighbours": 2,
   "reference_days": 7
  },
+ "day_types": true,
  "days": 30,
  "groups": {
   "breakfast": {
