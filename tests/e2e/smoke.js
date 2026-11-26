@@ -136,7 +136,9 @@ async function doseHelp(page, name) {
   await page.click("#dose-result .ds-zero");
   check((await readout()) === "0" && await page.inputValue(form + " [name=insulin]") === "0"
     && await page.getAttribute("#dose-result .ds-zero", "aria-pressed") === "true", `${name}: "0" chooses no insulin`);
-  check((await page.textContent("#entry-submit")).includes("speichern") && !(await page.textContent("#entry-submit")).includes("IE"), `${name}: "0" saves without insulin`);
+  // Before today's basal is given it rides along on the button ("… + Basal 17 IE"), depending on the hour.
+  const label = (await page.textContent("#entry-submit")).replace(/ \+ Basal [\d,]+ IE/, "");
+  check(label.includes("speichern") && !label.includes("IE"), `${name}: "0" saves without insulin (${label})`);
   await page.click("#dose-result .ds-zero");
   check(await page.getAttribute("#dose-result .ds-zero", "aria-pressed") === "false" && await page.inputValue(form + " [name=insulin]") !== "0", `${name}: a second tap on "0" goes back`);
   await page.fill(form + " [name=insulin]", "0.5");
@@ -235,24 +237,37 @@ async function history(page, name) {
   check(!(await page.$(`.week-panel.is-current .week-day[data-day="${shown}"]`)), `${name}: a swipe to the right shows the week before`);
   await swipeWeek(page, -120);
   check(!!(await page.$(`.week-panel.is-current .week-day[data-day="${shown}"]`)), `${name}: a swipe to the left comes back`);
-  // The fake data has a sport session yesterday and a sensor gap two days ago.
-  const yesterday = await page.evaluate(() => new Date(Date.now() - 864e5).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }));
-  const yesterdayButton = `.week-panel.is-current .week-day[data-day="${yesterday}"]`;
-  // Verlauf may open an earlier unchecked day (the red dot), so yesterday can lie in the week before or after.
-  if (!(await page.$(yesterdayButton))) { await page.click(yesterday < shown ? ".week-prev" : ".week-next"); await page.waitForSelector(yesterdayButton); }
-  await page.click(".week-panel.is-current .week-day[data-state=open] >> nth=0");
+  // The fake data has a sport session yesterday and a sensor gap two days ago (days in Berlin, like the app).
+  // Verlauf may open an earlier unchecked day (the red dot), and either day can lie in another week than the
+  // one shown (on a Monday or Tuesday), so each is picked from its own week.
+  const daysAgo = days => page.evaluate(days => {
+    const date = new Date(new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }) + "T12:00:00Z");
+    date.setUTCDate(date.getUTCDate() - days);
+    return date.toISOString().slice(0, 10);
+  }, days);
+  const pickDay = async day => {
+    const button = `.week-panel.is-current .week-day[data-day="${day}"]`;
+    // A week still loading shows empty placeholders without days.
+    while (!(await page.waitForSelector(".week-panel.is-current .week-day[data-day]") && await page.$(button))) {
+      const first = await page.getAttribute(".week-panel.is-current .week-day >> nth=0", "data-day");
+      await page.click(day < first ? ".week-prev" : ".week-next");
+      await page.waitForFunction(before => document.querySelector(".week-panel.is-current .week-day")?.dataset.day !== before, first);
+    }
+    await page.click(button);
+    await page.waitForSelector(`.week-panel.is-current .week-day[data-day="${day}"][aria-current=date]`);
+  };
+  const gapDay = await daysAgo(2);
+  await pickDay(gapDay);
+  check(await page.getAttribute(`.week-panel.is-current .week-day[data-day="${gapDay}"]`, "data-state") === "open", `${name}: the day with the sensor gap has an open task`);
   await page.waitForSelector(".history-tasks a");
   check(true, `${name}: a day with an open task lists it`);
-  const sport = await page.$(yesterdayButton);
-  if (sport) {
-    await sport.click();
-    await page.waitForSelector("#timeline .history-sport");
-    await page.click("#timeline .history-sport");
-    await page.waitForSelector("#edit-dialog[open] .sport-shares li");
-    check(true, `${name}: a sport session shows where its effect lands`);
-    await page.keyboard.press("Escape");
-    await page.waitForFunction(() => !document.querySelector("#edit-dialog").open);
-  } else check(false, `${name}: the week has a day with sport`);
+  await pickDay(await daysAgo(1));
+  await page.waitForSelector("#timeline .history-sport");
+  await page.click("#timeline .history-sport");
+  await page.waitForSelector("#edit-dialog[open] .sport-shares li");
+  check(true, `${name}: a sport session shows where its effect lands`);
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => !document.querySelector("#edit-dialog").open);
   const check0 = page.locator("#timeline .window-check").first();
   const was = await check0.getAttribute("aria-pressed");
   await check0.click();
@@ -377,15 +392,20 @@ async function analysis(page, name) {
 // Settings (web/ui/settings.js): the model form saves and keeps the value, places can be created,
 // renamed and deleted, a notification kind switches.
 async function settings(page, name) {
+  // A save reloads the settings and draws the form anew with a new version; the next step waits for that,
+  // or a value typed meanwhile is reset by the redrawn form (flaky timeout 2026-11-26).
+  const saveSettings = async () => {
+    const version = await page.textContent("#settings-version");
+    await page.click("#settings-form button[type=submit]");
+    await page.waitForFunction(before => document.querySelector("#settings-version")?.textContent !== before, version);
+  };
   const target = await page.inputValue("[name=dose_target_mgdl]");
   await page.fill("[name=dose_target_mgdl]", "105");
-  await page.click("#settings-form button[type=submit]");
-  await page.waitForFunction(() => document.querySelector("#toast")?.textContent.includes("Einstellungen gespeichert"));
+  await saveSettings();
   check(await page.inputValue("[name=dose_target_mgdl]") === "105", `${name}: a saved setting stays`);
   await page.fill("[name=dose_target_mgdl]", target);
-  await page.click("#settings-form button[type=submit]");
-  await page.waitForFunction(wanted => document.querySelector("[name=dose_target_mgdl]")?.value === wanted &&
-    document.querySelector("#settings-version")?.textContent !== "", target);
+  await saveSettings();
+  check(await page.inputValue("[name=dose_target_mgdl]") === target, `${name}: a setting saved back stays`);
   await page.fill("#place-new input[name=name]", "Testort");
   await page.click("#place-new button[type=submit]");
   await page.waitForSelector(".place-item .place-name");

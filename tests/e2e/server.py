@@ -16,30 +16,36 @@ while t <= now:
     entries.append({"_id": f"g{i}", "date": int(t.timestamp()*1000), "type": "sgv", "sgv": int(v), "direction": "Flat"})
     t += timedelta(minutes=5); i += 1
 entries.reverse()
+# The fake days are days in Berlin, like the app and the test count them: built in UTC, they slid a day
+# against the test's "yesterday" between midnight in Berlin and midnight UTC (flaky runs 2026-11-26).
+from zoneinfo import ZoneInfo
+BERLIN = ZoneInfo("Europe/Berlin")
+berlin_midnight = now.astimezone(BERLIN).replace(hour=0, minute=0)
+def local(days_ago, hours, minutes=0):
+    """A wall-clock time in Berlin `days_ago` days before today, in UTC."""
+    day = (berlin_midnight - timedelta(days=days_ago)).replace(tzinfo=None)
+    return (day + timedelta(hours=hours, minutes=minutes)).replace(tzinfo=BERLIN).astimezone(timezone.utc)
 # A sensor gap over lunch two days ago: that meal's factor cannot be calculated, so "Zu erledigen"
 # always has a hint to open, whatever the hour the suite runs (CI run 2026-11-19 02:30 UTC had none).
-gap_day = (now - timedelta(days=2)).replace(hour=0, minute=0)
-gap = (int((gap_day + timedelta(hours=10, minutes=30)).timestamp() * 1000), int((gap_day + timedelta(hours=15)).timestamp() * 1000))
+gap = (int(local(2, 11, 30).timestamp() * 1000), int(local(2, 16).timestamp() * 1000))
 entries = [entry for entry in entries if not gap[0] <= entry["date"] <= gap[1]]
 treat = []
 def add(dt, **kw):
     kw.update({"_id": f"t{len(treat)}", "created_at": dt.strftime("%Y-%m-%dT%H:%M:%S.000Z"), "eventType": "Meal Bolus"})
     treat.append(kw)
 for d in range(3, -1, -1):
-    day = (now - timedelta(days=d)).replace(hour=0, minute=0)
-    for hh, c, ins in ((6, 45, 3.5), (11, 70, 4.5), (17, 78, 4.5)):
-        dt = day + timedelta(hours=hh, minutes=20)
+    for hh, c, ins in ((7, 45, 3.5), (12, 70, 4.5), (18, 78, 4.5)):
+        dt = local(d, hh, 20)
         if dt < now: add(dt, carbs=c, insulin=ins, notes="")
-    dt = day + timedelta(hours=14)
+    dt = local(d, 15)
     if dt < now: add(dt, carbs=15, notes="")
 # A run yesterday afternoon: its effect reaches into lunch and dinner, so Verlauf shows a sport card and shares.
-run = (now - timedelta(days=1)).replace(hour=15, minute=0)
+run = local(1, 16)
 treat.append({"_id": f"t{len(treat)}", "created_at": run.strftime("%Y-%m-%dT%H:%M:%S.000Z"), "eventType": "Exercise",
               "duration": 45, "notes": "Joggen [DAS1:jogging]"})
-# "Heute" always has a meal, whatever the hour the suite runs: before the first fixed meal (06:20 UTC)
+# "Heute" always has a meal, whatever the hour the suite runs: before the first fixed meal (07:20)
 # today would be empty and the smoke test of today's meals fails (CI run 2026-11-19 02:30 UTC).
-from zoneinfo import ZoneInfo
-berlin_midnight = now.astimezone(ZoneInfo("Europe/Berlin")).replace(hour=0, minute=0).astimezone(timezone.utc)
+berlin_midnight = berlin_midnight.astimezone(timezone.utc)
 if not any(t["created_at"] >= berlin_midnight.strftime("%Y-%m-%dT%H:%M:%S.000Z") and t.get("insulin") for t in treat):
     add(max(now - timedelta(minutes=40), berlin_midnight + timedelta(minutes=1)), carbs=30, insulin=2.5, notes="")
 PROFILE = {"_id": "p", "startDate": "2026-01-01T00:00:00.000Z", "defaultProfile": "Default", "store": {"Default": {
@@ -80,7 +86,7 @@ os.environ.update({"NIGHTSCOUT_URL": "http://127.0.0.1:8799", "NIGHTSCOUT_AUTH_M
 db.init()
 # The default basal is 0 (off); the suite checks that the usual dose rides along, so it sets one.
 from app.store import config
-config.save_settings({**config.default_settings(), "basal_default_units": "17"})
+config.save_settings({**config.default_settings(), "basal_default_units": "17", "day_types": True})
 from app.server import Handler
 from app.services import day_view
 # The red dot on "Verlauf" counts from a fixed day in production; here the fake days of the last week count.
