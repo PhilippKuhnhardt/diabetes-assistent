@@ -84,6 +84,17 @@ async function run(browser, name, options) {
     check(await page.isVisible(".settings-save"), `${name}: save button on a model page`);
     await page.click("#settings-back");
     check(await page.isVisible("#settings-index"), `${name}: back to the settings list`);
+    // "Darstellung": dark holds over a reload, "System" removes the choice again.
+    await page.click("[data-settings-open=theme]");
+    await page.click(".theme-switch button >> text=Dunkel");
+    await page.reload();
+    await page.waitForSelector(".appnav-item.active");
+    check(await page.evaluate(() => document.documentElement.dataset.theme) === "dark", `${name}: dark theme kept after reload`);
+    await page.click("[data-nav=settings]");
+    await page.click("[data-settings-open=theme]");
+    await page.click(".theme-switch button >> text=System");
+    check(await page.evaluate(() => !document.documentElement.dataset.theme), `${name}: System follows the device`);
+    await page.click("#settings-back");
   } else {
     check(await page.isVisible("[name=dose_target_mgdl]"), `${name}: all settings on one page`);
     await settings(page, name);
