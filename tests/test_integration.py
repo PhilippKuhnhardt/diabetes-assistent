@@ -277,12 +277,9 @@ class IntegrationTests(unittest.TestCase):
             self.request("/api/settings", method="POST", body={"dose_target_mgdl": "141"})
         self.assertEqual(high.exception.code, 400)
         high.exception.close()
-        with self.assertRaises(urllib.error.HTTPError) as above:
-            self.request("/api/settings", method="POST", body={"dose_low_target_mgdl": "116"})
-        self.assertEqual(above.exception.code, 400)
-        above.exception.close()
-        lower = self.request("/api/settings", method="POST", body={"dose_low_target_mgdl": "95"})
-        self.assertEqual(Decimal(lower["settings"]["dose_low_target_mgdl"]), Decimal(95))
+        # The lower target was removed (2026-11-26): the field is ignored and not stored.
+        ignored = self.request("/api/settings", method="POST", body={"dose_low_target_mgdl": "95"})
+        self.assertNotIn("dose_low_target_mgdl", ignored["settings"])
 
     def test_dose_help_suggestion_can_be_written_once_to_nightscout(self):
         self.request("/api/settings")  # Sync the current Nightscout I:C and KF schedules.
@@ -1924,7 +1921,7 @@ class IntegrationTests(unittest.TestCase):
             version = response.headers["X-App-Version"]
         self.assertRegex(version, r"^[0-9a-f]{16}$")
 
-    def test_slider_replaces_lower_and_cautious_and_marks_the_recommendation(self):
+    def test_slider_replaces_cautious_and_marks_the_recommendation(self):
         # User request 2026-11-15: one slider per dose, from little to much need; lower and cautious are gone.
         self.request("/api/settings")
         self.request("/api/settings", method="POST", body={"dose_target_mgdl": "120"})
@@ -1936,7 +1933,7 @@ class IntegrationTests(unittest.TestCase):
         }
         entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "", "as": "meal"}
         variants = lambda dose: [item["variant"] for item in dose["options"]]
-        with fake_days(return_value=current_day), patch.object(dosing, "LOW_TARGET_HOURS", (0, 24)):
+        with fake_days(return_value=current_day):
             correction = self.request("/api/entry/preview", method="POST", body=entry)["dose"]
             self.assertEqual(variants(correction), ["normal"])
             slider, normal = correction["slider"], Decimal(correction["options"][0]["units"])
@@ -1973,7 +1970,7 @@ class IntegrationTests(unittest.TestCase):
             "basal": [], "day_type": "work", "day_type_source": "weekday", "meals": [],
         }
         entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "", "as": "meal"}
-        with fake_days(return_value=current_day), patch.object(dosing, "LOW_TARGET_HOURS", (0, 0)):
+        with fake_days(return_value=current_day):
             dose = self.request("/api/entry/preview", method="POST", body=entry)["dose"]
             options = {item["variant"]: item for item in dose["options"]}
             self.assertEqual([item["variant"] for item in dose["options"]], ["fast", "normal", "slow"])

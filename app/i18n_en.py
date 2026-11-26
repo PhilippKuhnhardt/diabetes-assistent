@@ -310,7 +310,6 @@ EN = {
     "Ungültige Mahlzeiten- oder Sportzeiten": "Invalid meal or exercise times",
     "Zielwert der Spritzhilfe muss zwischen 60 und 140 mg/dL liegen": "Dose help target must be between 60 and 140 mg/dL",
     "Vorsichtiger Zielwert muss zwischen dem Zielwert und 250 mg/dL liegen": "Cautious target must be between the target and 250 mg/dL",
-    "Tieferer Zielwert muss zwischen 60 mg/dL und dem Zielwert liegen (gleich = aus)": "Lower target must be between 60 mg/dL and the target (equal = off)",
     "Perzentil der Automatik muss zwischen 25 und 50 % liegen": "Automatic percentile must be between 25 and 50 %",
     "Zeitraum der Automatik muss 8, 15 oder 30 Tage sein": "Automatic period must be 8, 15 or 30 days",
     "Halbwertszeit der Automatik muss zwischen 1 und 28 Tagen liegen": "Automatic half-life must be between 1 and 28 days",

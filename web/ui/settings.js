@@ -358,7 +358,6 @@ function ModelForm({ page, data, onReload }) {
         window_minutes: Number(f.window_minutes.value),
         dose_target_mgdl: f.dose_target_mgdl.value,
         dose_cautious_target_mgdl: f.dose_cautious_target_mgdl.value,
-        dose_low_target_mgdl: f.dose_low_target_mgdl.value,
         auto_method: f.auto_method.value,
         auto_percentile: f.auto_percentile.value,
         auto_lookback_days: Number(f.auto_lookback_days.value),
@@ -391,7 +390,6 @@ function ModelForm({ page, data, onReload }) {
       <${Panel} id="dose" page=${page} title=${t("settings.pages.dose")}>
         <${Field} label=${t("settings.model.target")} unit="mg/dL"><${NumberInput} name="dose_target_mgdl" min="60" max="140" step="1" defaultValue=${s.dose_target_mgdl} /><//>
         <${Field} label=${t("settings.model.cautiousTarget")} unit="mg/dL"><${NumberInput} name="dose_cautious_target_mgdl" min="60" max="250" step="1" defaultValue=${s.dose_cautious_target_mgdl} /><//>
-        <${Field} label=${t("settings.model.lowTarget")} unit="mg/dL"><${NumberInput} name="dose_low_target_mgdl" min="60" max="140" step="1" defaultValue=${s.dose_low_target_mgdl ?? 100} /><//>
         <${Field} label=${t("settings.model.method")}><${Choice} name="auto_method" value=${s.auto_method || "percentile"} options=${[["percentile", t("analysis.tuning.percentile")], ["surcharge", t("settings.model.methodSurcharge")]]} /><//>
         <${Field} label=${t("settings.model.mealSurcharge")} unit="mg/dL"><${NumberInput} name="auto_surcharge_mgdl" min="5" max="150" step="5" defaultValue=${s.auto_surcharge_mgdl ?? 40} /><//>
         <${Field} label=${t("settings.model.fatSurcharge")} unit="mg/dL"><${NumberInput} name="auto_fat_surcharge_mgdl" min="0" max="200" step="10" defaultValue=${s.auto_fat_surcharge_mgdl ?? 120} /><//>

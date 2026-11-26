@@ -14,7 +14,7 @@ Ziel: Philipp spricht mit einem Agenten (Claude-App, auch per Sprache, oder Clau
 | Tool | Zweck | Schreibt? |
 | --- | --- | --- |
 | `get_status` | Aktueller CGM-Wert mit Trend, „Wirkt noch“ (Insulin, KH, Aufschlag, erwarteter Wert), offener 2. Split-Teil, Korrekturvorschlag ohne Essen, Basal heute, alle Einträge und Mahlzeitfaktoren von heute | nein |
-| `preview_entry` | Was das Formular für diese KH zeigt: Snack oder Hauptmahlzeit, Basal offen, Tagesart, Split, Optionen normal / tiefer (nur ohne KH-Unsicherheit) / vorsichtig / nur KH mit Faktor, bei Split Teil jetzt + 2. Teil mit Uhrzeit | nein |
+| `preview_entry` | Was das Formular für diese KH zeigt: Snack oder Hauptmahlzeit, Basal offen, Tagesart, Split, Optionen normal / vorsichtig / nur KH mit Faktor, bei Split Teil jetzt + 2. Teil mit Uhrzeit | nein |
 | `save_entry` | Mahlzeit, Snack, Korrektur oder Sport speichern, mit KH-Sicherheit (`weighed`/`known`/`unsure`), fett-/eiweißreich, gewählter Option, Split und Basal, bei KH optional Gericht (`dish`) und Beschreibung (`description`); Sport mit Sportart, Dauer und optional eigenem Einfluss (`sport_change_mgdl`, sonst Standard der Sportart) | ja |
 | `save_basal` | Basal-Injektion beliebiger Menge | ja |
 | `delete_entry` | Einen falsch verstandenen Eintrag löschen (nur auf ausdrückliche Bitte) | ja |
