@@ -1,4 +1,5 @@
-"""Night overview from the last rapid dose to breakfast."""
+"""Night overview from three hours after the last rapid dose to breakfast: how far glucose falls
+without bolus insulin and how much it rises again towards the morning (how the basal works)."""
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -6,6 +7,9 @@ from decimal import Decimal
 
 from app import calculation, episodes
 from app.i18n import tr
+
+NIGHT_GAP = timedelta(hours=3)  # after a rapid dose before its effect no longer dominates the curve
+MORNING = timedelta(hours=2)  # a rapid dose this close before breakfast ends the night
 
 
 
@@ -28,19 +32,25 @@ def night_analysis(day: str, treatments: list[dict], entries: list[dict], meals:
                    if dinner["at"] <= item["at"] < breakfast["at"]
                    and Decimal(str(item.get("insulin") or 0)) > 0
                    and calculation.is_rapid_insulin(item)]
-    if not rapid_doses:
+    # The night starts three hours after the evening's last rapid dose. A dose in the last two hours
+    # before breakfast (a correction on waking, a pre-bolus) belongs to the morning and ends the night
+    # instead, so it no longer voids the night (user request 2026-11-26: how the basal works).
+    morning = [at for at in rapid_doses if at >= breakfast["at"] - MORNING]
+    evening = [at for at in rapid_doses if at < breakfast["at"] - MORNING]
+    if not evening:
         return {
             "reason": tr("Zwischen Abendessen und Frühstück ist keine schnell wirksame Injektion erfasst."),
             "dinner_at": dinner["at"], "breakfast_at": breakfast["at"],
         }
-    last_injection_at = max(rapid_doses)
-    start = last_injection_at + timedelta(hours=3)
-    end = breakfast["at"]
+    last_injection_at = max(evening)
+    morning_dose_at = min(morning) if morning else None
+    end = morning_dose_at or breakfast["at"]
+    start = last_injection_at + NIGHT_GAP
     if end <= start:
         return {
-            "reason": tr("Das Frühstück beginnt vor dem Nachtstart drei Stunden nach der letzten Injektion."),
+            "reason": tr("Frühstück oder Morgendosis kommen vor dem Nachtstart drei Stunden nach der letzten Injektion."),
             "dinner_at": dinner["at"], "breakfast_at": breakfast["at"],
-            "last_injection_at": last_injection_at, "start": start, "end": end,
+            "last_injection_at": last_injection_at, "morning_dose_at": morning_dose_at, "start": start, "end": end,
         }
     try:
         start_glucose = calculation.interpolate_glucose(entries, start)["value"]
@@ -58,11 +68,16 @@ def night_analysis(day: str, treatments: list[dict], entries: list[dict], meals:
         for item in entries if start < item["at"] < end and item.get("sgv") is not None
     )
     minimum, minimum_at = min(candidates, key=lambda point: point[0])
+    # Carbs eaten in the night (a hypo snack) lift the curve, so such a night says little about the basal.
+    night_carbs = sum((calculation.dec(item.get("carbs") or 0) for item in treatments
+                       if start <= item["at"] < end), Decimal(0))
     return {
         "dinner_at": dinner["at"], "breakfast_at": breakfast["at"],
-        "last_injection_at": last_injection_at,
+        "last_injection_at": last_injection_at, "morning_dose_at": morning_dose_at,
         "start": start, "end": end,
         "start_glucose": start_glucose, "end_glucose": end_glucose,
         "delta_mgdl": end_glucose - start_glucose,
         "minimum_glucose": minimum, "minimum_at": minimum_at,
+        "drop_mgdl": minimum - start_glucose, "rise_mgdl": end_glucose - minimum,
+        "carbs_g": night_carbs,
     }
