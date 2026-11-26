@@ -2246,7 +2246,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(episodes.surcharge_plan(note), {"mgdl": "105", "minutes": 337})
 
     def test_manual_entry_sets_fat_protein_level_as_fpe(self):
-        # Philipp 2026-11-26: the manual carb entry offers Nichts / Normal / Fett instead of the fat mark, as FPE.
+        # 2026-11-26: the manual carb entry offers Nichts / Normal / Fett instead of the fat mark, as FPE.
         self.request("/api/settings")
         self.request("/api/settings", method="POST", body={"auto_method": "surcharge", "split_min_units": 1})
         now = datetime.now(timezone.utc)
