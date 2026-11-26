@@ -64,6 +64,13 @@ def delete_cached_treatment(record_id: str) -> None:
         db.execute("DELETE FROM treatments WHERE id=?", (record_id,))
 
 
+def never_synced(days: list[str]) -> list[str]:
+    """The given days that were never mirrored from Nightscout, in the given order."""
+    with connect() as db:
+        known = {row["day"] for row in db.execute("SELECT day FROM synced_days")}
+    return [day for day in days if day not in known]
+
+
 def synced_at(day: str) -> str | None:
     with connect() as db:
         row = db.execute("SELECT synced_at FROM synced_days WHERE day=?", (day,)).fetchone()
