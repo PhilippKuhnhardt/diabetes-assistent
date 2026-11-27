@@ -200,29 +200,12 @@ def with_checks(payload: dict, now: datetime | None = None) -> dict:
     """The day with the user's checks laid over it at request time, so a check never recalculates a stored
     day: "Passt" on a meal holds only for the window it was given for, and only
     a finished meal can be checked. Only main meals need a check: reviewing is about the factor, so snacks, sport and other entries outside the meal cards never do. The day is done once
-    every meal is checked or excluded."""
-    now = now or datetime.now(timezone.utc)
-    checks = marks.window_checks()
-    meals = []
-    for meal in payload.get("meals", []):
-        window = meal.get("window") or {}
-        stored = checks.get(meal["id"])
-        checked = bool(stored and window.get("start") and window.get("end")
-                       and parse_instant(stored[0]) == _instant(window["start"])
-                       and parse_instant(stored[1]) == _instant(window["end"]))
-        finished = bool(window.get("end")) and _instant(window["end"]) <= now
-        meals.append({**meal, "review": {**meal["review"], "checked": checked, "checkable": finished}})
-    open_meals = sum(not meal["review"]["checked"] and not meal.get("excluded") for meal in meals)
-    review = {**payload.get("review", {}),
-              "checked": sum(meal["review"]["checked"] for meal in meals),
-              "tasks": sum(bool(meal["review"]["open"]) and not meal["review"]["checked"] and not meal.get("excluded")
-                           for meal in meals),
-              "total": len(meals),
-              # What still waits for a look, and whether "Tag prüfen" can check it all (every meal finished).
-              "unchecked": open_meals,
-              "checkable": all(meal["review"]["checkable"] for meal in meals),
-              "done": bool(meals) and open_meals == 0}
-    return {**payload, "meals": meals, "review": review}
+    every meal is checked or excluded. (The rule: day.rs with_checks.)"""
+    meals = payload.get("meals", [])
+    result = core.call("day.with_checks", now=now or datetime.now(timezone.utc), checks=marks.window_checks(),
+                       meals=[{key: meal.get(key) for key in ("id", "window", "review", "excluded")} for meal in meals])
+    return {**payload, "meals": [{**meal, "review": review} for meal, review in zip(meals, result["meals"])],
+            "review": {**payload.get("review", {}), **result["review"]}}
 
 
 def week_view(params: dict) -> dict:
@@ -272,7 +255,3 @@ def meal_review(meal: dict) -> dict:
 def day_review(meals: list[dict]) -> dict:
     """The day's check list: what still needs a look, and what is done (day.rs day_review)."""
     return core.call("day.day_review", meals=meals)
-
-
-def _instant(value):
-    return parse_instant(value) if isinstance(value, str) else value

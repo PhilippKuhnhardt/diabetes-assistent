@@ -286,6 +286,46 @@ pub fn day_review(meals: &[Map<String, Value>]) -> Value {
     })
 }
 
+/// The user's checks laid over a day at request time, so a check never recalculates a stored day:
+/// "Passt" on a meal holds only for the window it was given for, and only a finished meal can be checked.
+/// Only main meals need a check (reviewing is about the factor), and the day is done once every meal is
+/// checked or excluded. `meals` carry id, window, review and excluded; `checks` maps a meal id to the
+/// (start, end) it was checked for. Returns each meal's review and the day's review fields.
+pub fn with_checks(meals: &[Map<String, Value>], checks: &HashMap<String, (String, String)>, now: Instant) -> Value {
+    let reviews: Vec<Map<String, Value>> = meals.iter().map(|meal| {
+        let window = meal.get("window");
+        let start = instant_of(window.and_then(|w| w.get("start")));
+        let end = instant_of(window.and_then(|w| w.get("end")));
+        let stored = meal.get("id").and_then(Value::as_str).and_then(|id| checks.get(id));
+        let checked = match (stored, start, end) {
+            (Some((from, to)), Some(start), Some(end)) =>
+                instant_of(Some(&json!(from))) == Some(start) && instant_of(Some(&json!(to))) == Some(end),
+            _ => false,
+        };
+        let mut review = meal.get("review").and_then(Value::as_object).cloned().unwrap_or_default();
+        review.insert("checked".into(), json!(checked));
+        review.insert("checkable".into(), json!(end.is_some_and(|end| end <= now)));
+        review
+    }).collect();
+    let excluded = |meal: &Map<String, Value>| meal.get("excluded").and_then(Value::as_bool).unwrap_or(false);
+    let open = |review: &Map<String, Value>| review.get("open").is_some_and(|o| o.as_array().is_some_and(|a| !a.is_empty())
+        || o.as_bool() == Some(true));
+    let checked = |review: &Map<String, Value>| review["checked"].as_bool() == Some(true);
+    let unchecked = meals.iter().zip(&reviews).filter(|(meal, review)| !checked(review) && !excluded(meal)).count();
+    json!({
+        "meals": reviews,
+        "review": {
+            "checked": reviews.iter().filter(|review| checked(review)).count(),
+            "tasks": meals.iter().zip(&reviews).filter(|(meal, review)| open(review) && !checked(review) && !excluded(meal)).count(),
+            "total": meals.len(),
+            // What still waits for a look, and whether "Tag prüfen" can check it all (every meal finished).
+            "unchecked": unchecked,
+            "checkable": reviews.iter().all(|review| review["checkable"].as_bool() == Some(true)),
+            "done": !meals.is_empty() && unchecked == 0,
+        },
+    })
+}
+
 /// One diary day from its snapshot.
 pub fn compute_day(snapshot: &Snapshot) -> Res<Value> {
     let day = snapshot.day;

@@ -424,6 +424,8 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
             let meal: Value = a.get("meal")?;
             Ok(crate::day::meal_review(&meal["calculation"]))
         }
+        "day.with_checks" => Ok(crate::day::with_checks(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?,
+            &a.get("checks")?, a.get("now")?)),
         "day.day_review" => Ok(crate::day::day_review(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?)),
         "factors.counted_days" => out(crate::services::counted_days(day(&a, "today")?, a.get("days_back")?,
             &a.get::<Vec<crate::services::VacationPeriod>>("periods")?, &a.get::<String>("mode")?)),
