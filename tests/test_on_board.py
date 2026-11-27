@@ -61,8 +61,7 @@ class OnBoardTests(unittest.TestCase):
         }
 
     def active(self, treatments, factor=Decimal("1.17"), surcharge=Decimal(40)):
-        found = on_board.sources(treatments, self.now, self.settings, lambda at: factor, surcharge,
-                                 forecast.surcharge_share)
+        found = on_board.sources(treatments, self.now, self.settings, lambda at: factor, surcharge)
         return on_board.summary(found, self.now)
 
     def test_fat_entry_carries_the_fat_surcharge_over_six_hours(self):
@@ -71,7 +70,7 @@ class OnBoardTests(unittest.TestCase):
                  {"id": "l", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 40,
                   "insulin": 0, "fat_protein": True}]
         found = on_board.sources(meals, self.now, self.settings, lambda at: Decimal(1), Decimal(80),
-                                 forecast.surcharge_share, fat_surcharge_mgdl=Decimal(120))
+                                 fat_surcharge_mgdl=Decimal(120))
         rows = {row["at"]: row for row in found["surcharges"]}
         self.assertEqual(rows[breakfast]["mgdl"], 80)
         lunch = rows[self.now - timedelta(minutes=30)]
@@ -80,13 +79,13 @@ class OnBoardTests(unittest.TestCase):
         self.assertEqual(lunch["minutes"], 360)
         # Breakfast 4 h ago: a fifth of its 80 is left (linear over 5 h); the fat lunch's surcharge acts over 6 h,
         # so after 30 min 11/12 are still to come.
-        self.assertEqual(on_board.effects_at(found, self.now)["surcharge_mgdl"], Decimal(16) + lunch["mgdl"] * 11 / 12)
+        self.assertAlmostEqual(on_board.effects_at(found, self.now)["surcharge_mgdl"], Decimal(16) + lunch["mgdl"] * 11 / 12,
+                               places=20)
 
     def test_place_factor_scales_carbs_and_surcharge_of_its_entries(self):
         meal = [{"id": "k", "at": self.now - timedelta(minutes=30), "eventType": "Meal Bolus", "carbs": 40,
                  "insulin": 0, "event_id": "e1"}]
         found = on_board.sources(meal, self.now, self.settings, lambda at: Decimal(1), Decimal(80),
-                                 forecast.surcharge_share,
                                  scale=lambda item: Decimal("0.8") if item.get("event_id") == "e1" else None)
         self.assertEqual(found["surcharges"][0]["mgdl"], 64)
         self.assertEqual(found["carbs"][0]["mgdl_per_gram"], Decimal("0.8") * 35 / 10)
@@ -154,11 +153,12 @@ class OnBoardTests(unittest.TestCase):
         active = self.active(meal)
         result = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 65}], meal, self.now,
                                 on_board=active)
-        self.assertEqual(Decimal(result["forecast_mgdl"]), 65 - active["lowering_mgdl"] + active["raising_mgdl"])
+        self.assertAlmostEqual(Decimal(result["forecast_mgdl"]), 65 - active["lowering_mgdl"] + active["raising_mgdl"],
+                               places=20)
         self.assertGreater(Decimal(result["entry_units"]), 0)
-        self.assertEqual(Decimal(result["cautious_forecast_mgdl"]),
-                         max(65 - max(Decimal(0), active["lowering_mgdl"] - active["raising_mgdl"]),
-                             Decimal(result["forecast_mgdl"]) - on_board.FORECAST_SPREAD_MGDL))
+        self.assertAlmostEqual(Decimal(result["cautious_forecast_mgdl"]),
+                               max(65 - max(Decimal(0), active["lowering_mgdl"] - active["raising_mgdl"]),
+                                   Decimal(result["forecast_mgdl"]) - on_board.FORECAST_SPREAD_MGDL), places=20)
 
     def test_gym_lowers_the_forecast_over_five_hours_after_it_ends(self):
         # Reported case: after gym the expected value ignored it and a correction came out too high.
@@ -173,10 +173,10 @@ class OnBoardTests(unittest.TestCase):
         result = dosing.suggest("0", self.settings, [{"at": self.now, "sgv": 200}], [gym], self.now, on_board=active)
         self.assertEqual(Decimal(result["forecast_mgdl"]), 144)
         # The user's own value for the session wins; 0 leaves it out.
-        found = on_board.sources([gym], self.now, self.settings, lambda at: None, None, None,
+        found = on_board.sources([gym], self.now, self.settings, lambda at: None, None,
                                  sport_overrides={"g": "30"})
         self.assertEqual(on_board.summary(found, self.now)["sport_mgdl"], 24)
-        found = on_board.sources([gym], self.now, self.settings, lambda at: None, None, None,
+        found = on_board.sources([gym], self.now, self.settings, lambda at: None, None,
                                  sport_overrides={"g": "0"})
         self.assertEqual(found["sports"], [])
 
@@ -230,8 +230,7 @@ class OnBoardTests(unittest.TestCase):
                  "insulin": 4.5}
         second = {"id": "s", "at": self.now, "eventType": "Snack Bolus", "carbs": 155, "insulin": 4,
                   "notes": "[DA2:snack]"}
-        found = lambda rows: on_board.sources(rows, self.now, self.settings, lambda at: Decimal(1), Decimal(80),
-                                              forecast.surcharge_share)["surcharges"]
+        found = lambda rows: on_board.sources(rows, self.now, self.settings, lambda at: Decimal(1), Decimal(80))["surcharges"]
         inside = on_board.stomach_grams([first], self.now)
         self.assertAlmostEqual(float(inside), 10.6, places=1)
         self.assertEqual([row["mgdl"] for row in found([first, second])],
@@ -251,7 +250,7 @@ class OnBoardTests(unittest.TestCase):
         dessert = {"id": "s", "at": start + timedelta(minutes=10), "eventType": "Snack Bolus", "carbs": 20,
                    "insulin": 2, "notes": "[DA2:snack]"}
         found = lambda rows, **extra: on_board.sources(rows, self.now, self.settings, lambda at: Decimal(1), Decimal(80),
-                                                       forecast.surcharge_share, **extra)["surcharges"]
+                                                       **extra)["surcharges"]
         self.assertEqual([row["mgdl"] for row in found([whole])], [60])
         parts = found([starter, dessert])
         self.assertEqual(parts[0]["mgdl"], 20)
@@ -288,7 +287,7 @@ class TimelineTests(unittest.TestCase):
     def rows(self, treatments):
         end = self.start + timedelta(hours=6)
         found = on_board.sources(treatments, end, self.settings, lambda at: Decimal(1), None,
-                                 forecast.surcharge_share, keep_all=True)
+                                 keep_all=True)
         return on_board.timeline(found, self.entries, self.start, end)
 
     def test_without_events_the_model_is_the_glucose_three_hours_earlier(self):
@@ -374,7 +373,7 @@ class CalculatedSurchargeTests(unittest.TestCase):
         settings = {"timezone": "UTC", "isf_schedule": [], "breakfast_end_minute": 600}
         meal = {"id": "m", "at": now - timedelta(minutes=120), "eventType": "Meal Bolus", "role": "meal", "carbs": 80,
                 "insulin": 0, "surcharge": {"mgdl": "120", "minutes": 360}}
-        found = on_board.sources([meal], now, settings, lambda at: None, Decimal(80), lambda grams: min(1, grams / 40),
+        found = on_board.sources([meal], now, settings, lambda at: None, Decimal(80),
                                  fat_surcharge_mgdl=Decimal(120))
         self.assertEqual(found["surcharges"][0]["mgdl"], Decimal(120))
         # Linear from the meal start to 360 min: after 120 min two thirds are left.

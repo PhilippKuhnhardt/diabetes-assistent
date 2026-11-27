@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["diabetes-core", "diabetes-core-ffi"]
+members = ["diabetes-core", "diabetes-core-ffi", "diabetes-core-py"]
 
 [profile.release]
 debug = false

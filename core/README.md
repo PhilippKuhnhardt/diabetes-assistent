@@ -1,15 +1,16 @@
 # Rust calculation core
 
-A port of the app's calculation core to Rust, so a native client (iPhone app, widget, Watch through the
-phone) can compute everything offline with the same rules as the server. The Python code in `app/`
-stays the reference; nothing in the server uses this crate yet. The target picture is in
+The one implementation of the app's calculation rules. The server calls it through the PyO3 module
+`diabetes-core-py` (`app/core.py` is the only bridge), and a native client (iPhone app, widget, Watch
+through the phone) can link the same crate to compute offline. Python in `app/` is the outer layer
+(web, APIs, sync, storage, LLMs) and holds no rule of its own for the modules below. The target picture is in
 [docs/architecture.svg](../docs/architecture.svg).
 
 ![Target architecture](../docs/architecture.svg)
 
-## What is ported
+## What lives here
 
-| Rust module | Python reference |
+| Rust module | Python wrapper (names and signatures only) |
 | --- | --- |
 | `calculation` | `app/calculation.py`: meal window, pre-bolus, endpoint, meal factor |
 | `episodes` | `app/episodes.py`: normalizing Nightscout records, snack grouping, meals of a day |
@@ -21,13 +22,14 @@ stays the reference; nothing in the server uses this crate yet. The target pictu
 | `services` | `app/services/dose_help.py` with the parts of `factors.py` and `store/marks.py` it reads |
 | `zone`, `context` | travel time zones (`common.TravelZone`), language of the texts (`app/i18n.py`) |
 
-Not ported: storage, Nightscout sync, the day payload assembly (`day_view.compute_day`), analysis pages,
-dishes, places catalogue, the meal agent. On a phone those stay with the server or the app itself.
+Still in Python and due to move here: meal points (`services/factors.py`), the day payload assembly
+(`day_view.compute_day`), the analysis pages (`analysis/summary.py`, `night.py`, `sport_analysis.py`) and
+the dish outcome rules. Storage, Nightscout sync, the places catalogue and the meal agent stay outside.
 
-## Differences to the reference
+## Differences to the former Python reference
 
-Typed structs replace the reference's dicts and `rust_decimal` its `Decimal` (28 digits). Values agree
-with the reference within the last digits; every rule decision and every dose in 0.5 IE steps agrees
+Typed structs replace the former dicts and `rust_decimal` Python's `Decimal` (28 digits). Values agree
+with the former reference within the last digits; every rule decision and every dose in 0.5 IE steps agrees
 exactly on the recorded calls. Numbers in JSON results are strings in their natural form (`"2.5"`, not
 `"2.50"`), instants are RFC 3339 in UTC.
 
@@ -42,13 +44,24 @@ as a line protocol on stdin/stdout:
 {"ok":"2.5"}
 ```
 
-## Checking against the reference
+## Building for the server
+
+```
+python3 core/build.py              # cargo build -p diabetes-core-py, copies it to app/diabetes_core.abi3.so
+```
+
+The Dockerfile builds it in a Rust stage. `app/core_types.json` tells `app/core.py` which result paths
+are Decimal, datetime, date, int, float or tuple; a new core function gets its entry there by hand.
+
+## Golden calls
+
+`golden/calls.jsonl.gz` holds about 10,000 calls recorded once from the former Python reference while the
+test suite ran (synthetic test data only; never record from a real database). CI replays them:
 
 ```
 cargo build --release --manifest-path core/Cargo.toml
-python3 core/parity/record.py      # runs the Python test suite and records every distinct core call
-python3 core/parity/compare.py     # replays them against the Rust core
+python3 core/golden/compare.py
 ```
 
-CI runs both steps (job `core-parity`) on every push. The recording holds synthetic test data only (`calls.jsonl`, ignored by git); never record from a real
-database.
+Numbers agree within 1e-9 relative, doses and rule decisions exactly. A deliberate rule change updates
+the affected expectations in the file together with the Rust change.

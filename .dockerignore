@@ -6,3 +6,5 @@ __pycache__
 *.pyc
 tests
 
+core/target
+app/diabetes_core*.so

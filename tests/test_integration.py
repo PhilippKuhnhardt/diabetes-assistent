@@ -29,6 +29,27 @@ from app.server import Handler
 MEAL_AT = "2026-09-23T10:00:00Z"
 
 
+def automatik(units_per_ke: Decimal, count: int, surcharge_mgdl: Decimal = Decimal(40)):
+    """Meal factors from which the Automatik suggests units_per_ke for every meal kind and day type: `count`
+    equal meals of 40 g (the full surcharge size) at Σ[g × KF] = 4000 on the days before today, so with the
+    surcharge method their factor without the surcharge is units_per_ke as well. The dose help runs in the
+    Rust core, so a test sets its inputs rather than patching a Python function."""
+    def points(day, lookback, *args, **kwargs):
+        rows = []
+        for kind, day_type in (("breakfast", None), ("breakfast", "work"), ("breakfast", "free"),
+                               ("lunch", None), ("dinner", None)):
+            for age in range(1, count + 1):
+                at = datetime.combine(day - timedelta(days=age), datetime.min.time(), tzinfo=timezone.utc)
+                rows.append({"id": f"{kind}-{day_type}-{age}", "day": day - timedelta(days=age),
+                             "real_day": day - timedelta(days=age), "at": at + timedelta(hours=12),
+                             "key": (kind, day_type), "day_type": day_type,
+                             "value": units_per_ke + 10 * surcharge_mgdl / Decimal(4000), "end_glucose": None,
+                             "carbs_isf": Decimal(4000), "carbs_g": Decimal(40), "fat": False, "surcharge_mgdl": None,
+                             "place_id": None, "own_place": False})
+        return rows
+    return patch("app.services.factors.meal_points", side_effect=points)
+
+
 @contextlib.contextmanager
 def fake_days(**day_payload):
     """Patch the stored diary days with fakes. Stored analysis pages are keyed by day
@@ -970,7 +991,7 @@ class IntegrationTests(unittest.TestCase):
         def ask(treatments, body):
             day = {"entries": glucose, "treatments": treatments}
             with fake_days(return_value=day), \
-                    patch("app.forecast.predict_method", return_value={"count": 5, "units_per_ke": Decimal(1)}):
+                    automatik(Decimal(1), 5):
                 return self.request("/api/dose-help", method="POST", body=body)
         meal = ask([], {"carbs": "20"})
         # 20 g is half of the full-surcharge size (default 40 mg/dL): 20 mg/dL at the current KF.
@@ -1633,12 +1654,12 @@ class IntegrationTests(unittest.TestCase):
         expected = forecast.weighted_quantile(
             [(Decimal(value), forecast.weight(age, Decimal(7)))
              for age, value in enumerate(["1.5", "0.8", "1.2", "1.0", "1.1"], start=1)], Decimal("0.375"))
-        self.assertEqual(Decimal(result["auto_units_per_ke"]), expected)
+        self.assertAlmostEqual(Decimal(result["auto_units_per_ke"]), expected, places=20)
         self.assertTrue(Decimal("1.0") < expected < Decimal("1.1"))
         self.assertEqual(Decimal(result["auto_median_units_per_ke"]), Decimal("1.1"))
         self.assertEqual(Decimal(result["auto_q1_units_per_ke"]), Decimal("1.0"))
         self.assertEqual(Decimal(result["cautious_target_mgdl"]), Decimal(150))
-        self.assertEqual(Decimal(result["auto_total_units"]), 2 * expected)
+        self.assertAlmostEqual(Decimal(result["auto_total_units"]), 2 * expected, places=20)
         self.assertEqual(Decimal(result["auto_entry_units"]), Decimal("2"))
         self.assertEqual(result["factor_source"], "nightscout")
         self.assertEqual(too_few["auto_factor_count"], 3)
@@ -2246,7 +2267,7 @@ class IntegrationTests(unittest.TestCase):
         entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "60", "as": "meal",
                  "fat_g": "37", "protein_g": "48"}
         auto = {"units_per_ke": Decimal("0.5"), "count": 6}
-        with fake_days(return_value=current_day), patch.object(forecast, "predict_method", return_value=auto):
+        with fake_days(return_value=current_day), automatik(auto["units_per_ke"], auto["count"]):
             static = self.request("/api/entry/preview", method="POST", body=entry)
             choice = static["dose"]["surcharge_choice"]
             self.assertEqual((choice["mode"], choice["static_mgdl"], choice["fpe"], choice["fpe_mgdl"], choice["fpe_minutes"]),
@@ -2281,7 +2302,7 @@ class IntegrationTests(unittest.TestCase):
         entry = {"day": today, "at": now.isoformat(), "mode": "meal", "carbs": "60", "as": "meal"}
         auto = {"units_per_ke": Decimal("0.5"), "count": 6}
         units = {}
-        with fake_days(return_value=current_day), patch.object(forecast, "predict_method", return_value=auto):
+        with fake_days(return_value=current_day), automatik(auto["units_per_ke"], auto["count"]):
             for level in ("none", "normal", "fat"):
                 dose = self.request("/api/entry/preview", method="POST", body={**entry, "fpe_level": level})["dose"]
                 self.assertTrue(dose["surcharge_levels"])

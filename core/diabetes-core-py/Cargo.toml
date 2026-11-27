@@ -1,0 +1,15 @@
+[package]
+name = "diabetes-core-py"
+version = "0.1.0"
+edition = "2021"
+description = "Python binding of the calculation core, imported by the server as app.diabetes_core."
+license = "AGPL-3.0-only"
+
+[lib]
+name = "diabetes_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+core-lib = { package = "diabetes-core", path = "../diabetes-core" }
+pyo3 = { version = "0.27", features = ["extension-module", "abi3-py311"] }
+serde_json = { version = "1", features = ["arbitrary_precision"] }
