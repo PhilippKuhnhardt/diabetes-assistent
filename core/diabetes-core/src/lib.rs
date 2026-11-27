@@ -9,6 +9,7 @@ pub mod api;
 pub mod calculation;
 pub mod context;
 pub mod correction_check;
+pub mod day;
 pub mod correction_scale;
 pub mod dosing;
 pub mod episodes;
@@ -19,9 +20,11 @@ pub mod glucose_alerts;
 pub mod insulin;
 pub mod on_board;
 pub mod model;
+pub mod notifications;
 pub mod services;
 pub mod split;
 pub mod stats;
+pub mod summary;
 pub mod zone;
 
 /// An error the Python reference raises: ValueError with its (translated) message, or an

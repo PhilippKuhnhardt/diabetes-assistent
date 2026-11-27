@@ -69,7 +69,7 @@ def _decode(value, path: str, types: dict[str, list[str]]):
     if isinstance(value, list):
         items = [_decode(item, path + "[]", types) for item in value]
         return tuple(items) if kinds and "tuple" in kinds else items
-    if isinstance(value, str) and _INSTANT.match(value):
+    if isinstance(value, str) and _INSTANT.match(value) and not (kinds and "str" in kinds):
         # Instants: a datetime where the callers expect one, else the text as Python writes it.
         moment = datetime.fromisoformat(value.replace("Z", "+00:00"))
         return moment if kinds and "datetime" in kinds else moment.isoformat()

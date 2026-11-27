@@ -101,6 +101,11 @@
    "Decimal"
   ]
  },
+ "day.compute_day": {
+  "$.meals[].calculation.nightscout_profile.start_at": [
+   "str"
+  ]
+ },
  "dosing.half_units": {
   "$": [
    "Decimal"
@@ -211,6 +216,51 @@
  "episodes.taken_meal": {
   "$.at": [
    "datetime"
+  ]
+ },
+ "factors.counted_days": {
+  "$[]": [
+   "tuple"
+  ],
+  "$[][]": [
+   "date"
+  ]
+ },
+ "factors.meal_points": {
+  "$[].at": [
+   "datetime"
+  ],
+  "$[].carbs_g": [
+   "Decimal"
+  ],
+  "$[].carbs_isf": [
+   "Decimal"
+  ],
+  "$[].day": [
+   "date"
+  ],
+  "$[].end_glucose": [
+   "Decimal"
+  ],
+  "$[].key": [
+   "tuple"
+  ],
+  "$[].place_id": [
+   "int"
+  ],
+  "$[].real_day": [
+   "date"
+  ],
+  "$[].surcharge_mgdl": [
+   "Decimal"
+  ],
+  "$[].value": [
+   "Decimal"
+  ]
+ },
+ "factors.meal_surcharge_mgdl": {
+  "$": [
+   "Decimal"
   ]
  },
  "forecast.backtest": {
@@ -606,6 +656,50 @@
    "Decimal"
   ]
  },
+ "night.night_analysis": {
+  "$.breakfast_at": [
+   "datetime"
+  ],
+  "$.carbs_g": [
+   "Decimal"
+  ],
+  "$.delta_mgdl": [
+   "Decimal"
+  ],
+  "$.dinner_at": [
+   "datetime"
+  ],
+  "$.drop_mgdl": [
+   "Decimal"
+  ],
+  "$.end": [
+   "datetime"
+  ],
+  "$.end_glucose": [
+   "Decimal"
+  ],
+  "$.last_injection_at": [
+   "datetime"
+  ],
+  "$.minimum_at": [
+   "datetime"
+  ],
+  "$.minimum_glucose": [
+   "Decimal"
+  ],
+  "$.morning_dose_at": [
+   "datetime"
+  ],
+  "$.rise_mgdl": [
+   "Decimal"
+  ],
+  "$.start": [
+   "datetime"
+  ],
+  "$.start_glucose": [
+   "Decimal"
+  ]
+ },
  "on_board.attach_stomach": {
   "$[].absorbed[]": [
    "float"
@@ -885,6 +979,16 @@
  },
  "stats.quartile": {
   "$": [
+   "Decimal"
+  ]
+ },
+ "summary.history_days": {
+  "$": [
+   "int"
+  ]
+ },
+ "summary.suggestion_miss": {
+  "$[]": [
    "Decimal"
   ]
  }

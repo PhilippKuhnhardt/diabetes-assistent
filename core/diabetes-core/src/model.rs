@@ -262,6 +262,9 @@ pub struct Settings {
     pub split_delay_minutes: i64,
     #[serde(default = "split_min_units", deserialize_with = "amount")]
     pub split_min_units: Decimal,
+    /// The usual basal dose the reminder names (0 = none).
+    #[serde(default, deserialize_with = "amount")]
+    pub basal_default_units: Decimal,
     #[serde(default = "fpe_default", deserialize_with = "amount")]
     pub fpe_surcharge_mgdl: Decimal,
     #[serde(default = "percentile_method")]

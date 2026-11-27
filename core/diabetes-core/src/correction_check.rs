@@ -23,11 +23,14 @@ pub const NO_INSULIN_MINUTES: i64 = 90;
 pub const REPEAT_MINUTES: i64 = 90;
 pub const FRESH_MINUTES: i64 = 10;
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, serde::Deserialize)]
 pub struct Check {
     pub meal_at: Instant,
+    #[serde(deserialize_with = "crate::model::amount")]
     pub glucose_mgdl: Decimal,
+    #[serde(deserialize_with = "crate::model::amount")]
     pub rise_mgdl: Decimal,
+    #[serde(deserialize_with = "crate::model::amount")]
     pub end_mgdl: Decimal,
 }
 

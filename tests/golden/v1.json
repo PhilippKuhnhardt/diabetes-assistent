@@ -62,11 +62,11 @@
   },
   "meals": {
    "rows": 115,
-   "sha256": "1e5dfcf622e3ae4d5736d9113bbf1dbde80bd97a53dc2e372906c0c89f72bda0"
+   "sha256": "1798a9f48c82aafddd2d4d2f663e4a6cf7f587cd872d4e2f961df9871249a210"
   },
   "treatments": {
    "rows": 149,
-   "sha256": "516329db2fc34a110b591f49567198f7836681f069412daee5950258d9708e19"
+   "sha256": "77ec04c87cd2cd5a2e377e9c267bc1d5dfde0102ebf65b7bd3387594e0c8480d"
   },
   "window_events": {
    "rows": 310,
@@ -2862,7 +2862,7 @@
     "meal_isf": "35",
     "place": null,
     "rapid_units": "14.5",
-    "sport_effect_mgdl": "22.66666666666666666666666667",
+    "sport_effect_mgdl": "22.666666666666666666666666668",
     "sport_status": "auto",
     "vacation": false,
     "window_end": "2026-09-26T21:05:00+02:00",

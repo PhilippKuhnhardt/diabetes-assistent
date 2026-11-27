@@ -51,11 +51,10 @@ class DueReminderTests(unittest.TestCase):
         cgm = lambda minutes, values: [{"at": MEAL_AT + timedelta(minutes=minutes - 15 + 5 * step), "sgv": value}
                                        for step, value in enumerate(values)]
         due = lambda minutes, values, units=None: notifications.due_reminders(
-            MEAL_AT + timedelta(minutes=minutes), SETTINGS, [MEAL], [{"units": "17"}], ON, cgm(minutes, values),
-            (lambda: units))
+            MEAL_AT + timedelta(minutes=minutes), SETTINGS, [MEAL], [{"units": "17"}], ON, cgm(minutes, values), units)
         # 75 min after the meal: high and rising fast means the second part now.
         early = due(75, [170, 180, 190, 200], Decimal("5.5"))
-        self.assertEqual([item["title"] for item in early], [notifications.EARLY_SPLIT_TITLE])
+        self.assertEqual([item["title"] for item in early], ["2. Split-Teil jetzt: BZ steigt schnell"])
         self.assertEqual(early[0]["message"], "5,5 IE laut Prognose (geplant 4,5) zur Mahlzeit um 12:30")
         self.assertEqual(due(75, [180, 182, 184, 186]), [])
         self.assertEqual(due(50, [170, 180, 190, 200]), [])
@@ -70,21 +69,12 @@ class DueReminderTests(unittest.TestCase):
         now = datetime(2026, 10, 9, 12, tzinfo=timezone.utc)
         found = [{"kind": "low", "at": now + timedelta(minutes=25), "glucose_mgdl": 95, "mgdl": 62},
                  {"kind": "high", "at": now + timedelta(minutes=40), "glucose_mgdl": 210, "mgdl": 268}]
-        with patch.object(notifications.marks, "analysis_day_types", return_value={}), \
-                patch.object(notifications.marks, "vacation_periods", return_value=[]), \
-                patch.object(notifications.marks, "day_type_for", return_value=("work",)), \
-                patch.object(notifications.marks, "sport_session_effects", return_value={}), \
-                patch.object(notifications.marks, "sport_session_minutes", return_value={}), \
-                patch.object(notifications.factors, "forecast_settings", return_value=(None, None, 30)), \
-                patch.object(notifications.factors, "meal_points", return_value=[]), \
-                patch.object(notifications.factors, "carb_factor", return_value=None), \
-                patch.object(notifications.factors, "place_scales", return_value={}), \
-                patch.object(notifications.on_board, "sources", return_value=[]), \
-                patch.object(notifications.glucose_alerts, "warnings", return_value=found):
-            due = notifications.glucose_warnings(now, SETTINGS, [], [], {"low": True, "high": True})
+        due = notifications.warning_reminders(now, SETTINGS, found, {"low": True, "high": True})
         self.assertEqual([item["message"] for item in due],
                          ["BZ 95, unter 70 um 14:25 (in 25 min), Tiefstwert 62",
                           "BZ 210, über 250 um 14:40 (in 40 min), Höchstwert 268"])
+        self.assertEqual([item["key"] for item in due], ["low:2026-10-09T12:00:00+00:00", "high:2026-10-09T12:00:00+00:00"])
+        self.assertEqual([item["kind"] for item in notifications.warning_reminders(now, SETTINGS, found, {"high": True})], ["high"])
 
 
 class CheckTests(unittest.TestCase):
@@ -95,23 +85,18 @@ class CheckTests(unittest.TestCase):
         db.init()
         self.env = patch.dict(os.environ, {"PUSHOVER_APP_TOKEN": "t" * 30, "PUSHOVER_USER_KEY": "u" * 30})
         self.env.start()
-        self.inputs = patch.object(notifications, "_today_inputs", return_value=([MEAL], [], []))
-        self.inputs.start()
-        self.warnings = patch.object(notifications, "glucose_warnings", return_value=[])
-        self.warnings.start()
-        self.corrections = patch.object(notifications, "correction_reminder", return_value=[])
-        self.corrections.start()
+        # The local copy as the dose help reads it: the split meal, readings from the test's own `cgm`.
+        self.treatments, self.cgm = [MEAL], lambda now: []
+        self.snapshot = patch.object(notifications.dose_help, "snapshot", side_effect=lambda payload, now: {
+            "now": now, "settings": SETTINGS, "payload": payload, "entries": self.cgm(now),
+            "treatments": self.treatments, "meal_points": []})
+        self.snapshot.start()
         self.settings = patch.object(notifications.config, "get_settings", return_value=(1, SETTINGS))
         self.settings.start()
-        self.second = patch.object(notifications, "_second_part", return_value=None)
-        self.second.start()
 
     def tearDown(self):
-        self.second.stop()
         self.settings.stop()
-        self.corrections.stop()
-        self.warnings.stop()
-        self.inputs.stop()
+        self.snapshot.stop()
         self.env.stop()
         db.DB_PATH = self.old_path
         self.temp.cleanup()
@@ -140,13 +125,9 @@ class CheckTests(unittest.TestCase):
                     {"kind": "high", "pause_minutes": "30"}, {"kind": "basal", "pause_minutes": 10}):
             with self.assertRaises(ValueError):
                 notifications.set_enabled(bad)
-        self.warnings.stop()
-        try:
-            with patch.object(notifications, "glucose_warnings", return_value=[]) as warned, patch.object(pushover, "send"):
-                notifications.check(MEAL_AT + timedelta(minutes=130))
-            self.assertEqual(warned.call_args.args[5], {"low": 15, "high": 45})
-        finally:
-            self.warnings.start()
+        with patch.object(notifications.core, "call", wraps=notifications.core.call) as call, patch.object(pushover, "send"):
+            notifications.check(MEAL_AT + timedelta(minutes=130))
+        self.assertEqual(call.call_args.kwargs["pauses"], {"low": 15, "high": 45})
 
     def test_switched_off_kinds_and_missing_setup_send_nothing(self):
         for kind in notifications.KINDS:
@@ -181,14 +162,14 @@ class CheckTests(unittest.TestCase):
     def test_a_glucose_warning_repeats_at_most_once_per_hour(self):
         notifications.set_enabled({"kind": "basal", "enabled": False})
         notifications.set_enabled({"kind": "split", "enabled": False})
-        warn = lambda now, *args: [{"key": "low:" + now.isoformat(), "kind": "low", "title": "Tief droht", "message": "x"}]
-        self.warnings.stop()
-        self.warnings = patch.object(notifications, "glucose_warnings", side_effect=warn)
-        self.warnings.start()
+        self.treatments = []
+        # Falling faster than the model expects: a low warning every round while it lasts.
+        self.cgm = lambda now: [{"at": now - timedelta(minutes=5 * (6 - step)), "sgv": value}
+                                for step, value in enumerate([116, 110, 104, 98, 92, 86, 80])]
         with patch.object(pushover, "send") as send:
             for minutes in (0, 5, 55, 61):
                 notifications.check(MEAL_AT + timedelta(minutes=minutes))
-        self.assertEqual(send.call_count, 2)
+        self.assertEqual([call.args[0] for call in send.call_args_list], ["Tief droht", "Tief droht"])
 
 
 class GlucoseAlertTests(unittest.TestCase):
@@ -325,21 +306,18 @@ class CorrectionCheckTests(unittest.TestCase):
     def test_message_names_the_dose_helps_correction(self):
         now = self.MEAL + timedelta(minutes=150)
         hit = {"meal_at": self.MEAL, "glucose_mgdl": Decimal(205), "rise_mgdl": Decimal(15), "end_mgdl": Decimal("231.4")}
-        with patch.object(notifications.correction_check, "due", return_value=hit):
-            due = notifications.correction_reminder(now, SETTINGS, [], [], {"check": True},
-                                                    lambda: {"normal": Decimal("2.5"), "cautious": Decimal("1.5")}, found={})
-            self.assertEqual(due[0]["title"], "BZ prüfen")
-            self.assertEqual(due[0]["message"], "BZ 205 (+15 in 30 min), Prognose Ende 231, Mahlzeit um 12:00. "
-                                                "Korrektur 2,5 IE (vorsichtig 1,5 IE)")
-            scaled = notifications.correction_reminder(now, SETTINGS, [], [], {"check": True},
-                                                       lambda: {"normal": Decimal("3"), "cautious": Decimal("2"),
-                                                                "fast": Decimal("2"), "slow": Decimal("4"), "tempo": "fast"},
-                                                       found={})
-            self.assertTrue(scaled[0]["message"].endswith("Korrektur 3 IE (wenig 2 · viel 4 IE, eher wenig)"))
-            none = notifications.correction_reminder(now, SETTINGS, [], [], {"check": True},
-                                                     lambda: {"normal": Decimal(0), "cautious": Decimal(0)}, found={})
-            self.assertTrue(none[0]["message"].endswith("Laut Dosishilfe keine Korrektur nötig"))
-            self.assertEqual(notifications.correction_reminder(now, SETTINGS, [], [], {"check": False}, found={}), [])
+        due = notifications.correction_reminder(now, SETTINGS, hit, {"normal": Decimal("2.5"), "cautious": Decimal("1.5")})
+        self.assertEqual(due["title"], "BZ prüfen")
+        self.assertEqual(due["key"], "check:2026-11-14T13:30:00+00:00")
+        self.assertEqual(due["message"], "BZ 205 (+15 in 30 min), Prognose Ende 231, Mahlzeit um 12:00. "
+                                         "Korrektur 2,5 IE (vorsichtig 1,5 IE)")
+        scaled = notifications.correction_reminder(now, SETTINGS, hit, {
+            "normal": Decimal("3"), "cautious": Decimal("2"), "fast": Decimal("2"), "slow": Decimal("4"), "tempo": "fast"})
+        self.assertTrue(scaled["message"].endswith("Korrektur 3 IE (wenig 2 · viel 4 IE, eher wenig)"))
+        none = notifications.correction_reminder(now, SETTINGS, hit, {"normal": Decimal(0), "cautious": Decimal(0)})
+        self.assertTrue(none["message"].endswith("Laut Dosishilfe keine Korrektur nötig"))
+        bare = notifications.correction_reminder(now, SETTINGS, hit, None)
+        self.assertTrue(bare["message"].endswith("Mahlzeit um 12:00"))
 
 
 class PushoverTests(unittest.TestCase):

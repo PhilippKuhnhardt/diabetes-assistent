@@ -390,7 +390,78 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
             let values: Vec<Value> = a.get("values")?;
             out(stats::strong_outlier_flags(&values.iter().map(|v| decimal_of(v).unwrap_or_default()).collect::<Vec<_>>()))
         }
+        "notifications.due" => out(crate::notifications::due(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("inputs: {error}")))?)?),
+        "notifications.due_reminders" => {
+            let second = a.dec("second_part");
+            out(crate::notifications::due_reminders(a.get("now")?, &a.get("settings")?, &a.get::<Vec<Treatment>>("treatments")?,
+                a.get::<Option<bool>>("basal_today")?.unwrap_or(false), &a.get("enabled")?,
+                &a.opt::<Vec<Reading>>("entries")?.unwrap_or_default(), &mut || second))
+        }
+        "notifications.warning_reminders" => out(crate::notifications::warning_reminders(a.get("now")?, &a.get("settings")?,
+            &a.get::<Vec<crate::notifications::WarningInput>>("warnings")?.into_iter().map(Into::into).collect::<Vec<_>>(), &a.get("enabled")?)),
+        "notifications.correction_reminder" => out(crate::notifications::correction_reminder(a.get("now")?, &a.get("settings")?,
+            &a.get("hit")?, a.opt::<crate::notifications::Correction>("correction")?.as_ref())),
+        "factors.place_scales" => out(crate::services::place_scales(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?)),
+        "factors.meal_surcharge_mgdl" => out(crate::services::meal_surcharge_mgdl(&a.get("settings")?, a.get::<Option<bool>>("fat")?.unwrap_or(false))),
         "services.dose_help" => crate::services::dose_help(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
+        "day.compute_day" => crate::day::compute_day(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
+        "night.night_analysis" => {
+            // The dinner of the day from its meals (only "meal" and "at" are read).
+            let meals: Vec<Value> = a.get("meals")?;
+            let dinner_at = meals.iter().filter(|meal| meal["meal"] == "dinner")
+                .filter_map(|meal| meal["at"].as_str().and_then(|text| DateTime::parse_from_rfc3339(text).ok()))
+                .map(|at| at.with_timezone(&Utc)).max();
+            let entries: Vec<Reading> = a.get("entries")?;
+            let reading_at = calculation::Interpolator::new(&entries, 15);
+            Ok(crate::day::night_analysis(day(&a, "day")?, &a.get::<Vec<Treatment>>("treatments")?, &entries, &reading_at,
+                                          dinner_at, &a.get::<Settings>("settings")?))
+        }
+        "day.meal_review" => {
+            let meal: Value = a.get("meal")?;
+            Ok(crate::day::meal_review(&meal["calculation"]))
+        }
+        "day.with_checks" => Ok(crate::day::with_checks(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?,
+            &a.get("checks")?, a.get("now")?)),
+        "day.day_review" => Ok(crate::day::day_review(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?)),
+        "factors.counted_days" => out(crate::services::counted_days(day(&a, "today")?, a.get("days_back")?,
+            &a.get::<Vec<crate::services::VacationPeriod>>("periods")?, &a.get::<String>("mode")?)),
+        "factors.meal_points" => {
+            let snapshot: crate::summary::Snapshot = serde_json::from_value(json!({
+                "today": args["today"], "days": 1, "settings": Value::Null, "payloads": args["payloads"],
+                "analysis_exclusions": args["analysis_exclusions"], "places": args["places"],
+                "day_types": args["day_types"], "vacation_periods": args["vacation_periods"]}))
+                .map_err(|error| CoreError::Value(format!("meal points: {error}")))?;
+            out(crate::summary::meal_points(day(&a, "today")?, a.get("days_back")?, &snapshot, &a.get::<String>("mode")?))
+        }
+        "summary.history_days" => out(crate::summary::history_days(a.get("days")?)),
+        "summary.suggestion_miss" => {
+            let configured = crate::summary::Configured::of(&a.get::<Value>("settings")?)?;
+            let (suggested, deviation) = crate::summary::suggestion_miss(&a.get::<Vec<forecast::MealPoint>>("points")?,
+                                                                          &a.get::<forecast::MealPoint>("point")?, &configured);
+            out((suggested, deviation))
+        }
+        "summary.miss_trend" => {
+            let points: Vec<forecast::MealPoint> = a.get("points")?;
+            let configured = crate::summary::Configured::of(&a.get::<Value>("settings")?)?;
+            Ok(crate::summary::miss_trend(&points, day(&a, "today")?, &crate::summary::point_misses(&points, &configured)))
+        }
+        "sport_analysis.suggested_drop" => {
+            let ratios: Vec<Value> = a.get("ratios")?;
+            Ok(crate::summary::suggested_drop(a.dec("standard"), &ratios.iter().filter_map(decimal_of).collect::<Vec<_>>()))
+        }
+        "sport_analysis.analyze" => {
+            let labels: HashMap<String, String> = a.get("labels")?;
+            let standards: HashMap<String, Value> = a.get::<Option<HashMap<String, Value>>>("standards")?.unwrap_or_default();
+            let standards = standards.into_iter().filter_map(|(key, value)| decimal_of(&value).map(|v| (key, v))).collect();
+            let own: std::collections::HashSet<String> = a.get::<Option<Vec<String>>>("own_sessions")?.unwrap_or_default().into_iter().collect();
+            Ok(crate::summary::sport_analysis(&a.get::<Vec<Value>>("meals")?, &a.get::<Vec<Value>>("exercises")?,
+                a.get("lookback_minutes")?, a.get("window_minutes")?, &labels, &standards, &own))
+        }
+        "summary.compute_summary" => crate::summary::compute_summary(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         other => Err(CoreError::Value(format!("unknown function {other}"))),
     }
