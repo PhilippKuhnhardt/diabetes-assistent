@@ -411,6 +411,15 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
             &a.get::<Vec<Treatment>>("treatments")?, &a.get("settings")?)),
         "window.preview" => Ok(crate::window::preview(&a.get("meal")?, &a.get::<Vec<Reading>>("entries")?,
             &a.get::<Vec<Treatment>>("treatments")?, &a.get("settings")?, a.get("start")?, a.get("end")?)),
+        "dishes.typical_carbs" => out(crate::dishes::typical_carbs(&a.get::<Vec<Value>>("carbs")?.iter()
+            .map(|v| v.as_f64().or_else(|| v.as_str().and_then(|t| t.parse().ok()))).collect::<Vec<_>>())),
+        "dishes.reference_factor" => out(crate::dishes::reference_factor(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, &a.get("meal")?)),
+        "dishes.with_ratio" => out(crate::dishes::with_ratio(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, &a.get("meal")?)),
+        "dishes.history" => out(crate::dishes::history(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, a.get("dish_id")?)),
+        "dishes.outcome" => Ok(crate::dishes::outcome(&a.get::<Vec<serde_json::Map<String, Value>>>("rows")?, a.get("typical")?)),
+        "dishes.hint" => out(crate::dishes::hint(a.get("count")?, a.get("typical")?, a.opt::<Value>("result")?.as_ref())),
+        "dishes.catalogue" => Ok(crate::dishes::catalogue(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?,
+            &a.get::<Vec<i64>>("dish_ids")?, &a.get::<Vec<serde_json::Map<String, Value>>>("records")?)),
         "services.dose_help" => crate::services::dose_help(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         "day.compute_day" => crate::day::compute_day(&serde_json::from_value(args.clone())

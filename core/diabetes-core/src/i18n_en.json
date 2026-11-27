@@ -60,5 +60,13 @@
  "über {mgdl}": "above {mgdl}",
  "Beginn muss höchstens zwei Stunden vor oder nach dem Mahlzeitbeginn liegen": "Start must be at most two hours before or after the start of the meal",
  "Ende muss mindestens 30 Minuten nach Mahlzeit- und Fensterbeginn liegen": "End must be at least 30 minutes after the start of the meal and the window",
- "Zeitraum darf höchstens zehn Stunden lang sein": "The window may be at most ten hours long"
+ "Zeitraum darf höchstens zehn Stunden lang sein": "The window may be at most ten hours long",
+ ", verhielt sich wie {low}–{high} g": ", behaved like {low}–{high} g",
+ "brauchte {need} ({count} Mahlzeiten)": "needed {need} ({count} meals)",
+ "meist {grams} g": "usually {grams} g",
+ "noch nie eingetragen": "never logged",
+ "wie üblich": "as usual",
+ "{count}× eingetragen": "logged {count}×",
+ "{percent} % mehr Insulin als üblich": "{percent} % more insulin than usual",
+ "{percent} % weniger Insulin als üblich": "{percent} % less insulin than usual"
 }

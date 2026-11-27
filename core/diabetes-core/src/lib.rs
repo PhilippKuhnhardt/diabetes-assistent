@@ -10,6 +10,7 @@ pub mod calculation;
 pub mod context;
 pub mod correction_check;
 pub mod day;
+pub mod dishes;
 pub mod correction_scale;
 pub mod dosing;
 pub mod episodes;

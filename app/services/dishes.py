@@ -11,7 +11,6 @@ from app.i18n import tr
 
 VIEW_DAYS = 120
 VIEW_MAX_DAYS = 730
-HISTORY_ROWS = 12
 
 
 def _zone():
@@ -92,19 +91,9 @@ def view(params: dict | None = None) -> dict:
     days = _days(params)
     meals = _meal_rows(days)
     records = store.dish_records()
-    result = []
-    for dish in store.all_dishes():
-        own = [record for record in records if record["dish_id"] == dish["id"]]
-        typical = rules.typical_carbs([record["carbs_g"] for record in own])
-        rows = rules.history(meals, dish["id"])
-        outcome = rules.outcome(rows, typical)
-        result.append({
-            **dish, "count": len(own), "typical_carbs": typical,
-            "last_at": own[-1]["at"] if own else None,
-            "outcome": outcome, "hint": rules.hint(len(own), typical, outcome),
-            "history": [{key: value for key, value in row.items() if key != "dish_id"}
-                        for row in rows[-HISTORY_ROWS:]][::-1],
-        })
+    catalogue = store.all_dishes()
+    numbers = rules.catalogue(meals, [dish["id"] for dish in catalogue], records)
+    result = [{**dish, **numbers[dish["id"]]} for dish in catalogue]
     result.sort(key=lambda dish: (dish["archived"], -(dish["count"]), dish["name"].casefold()))
     return {"days": days, "dishes": result,
             "categories": sorted({dish["category"] for dish in result if dish["category"]}, key=str.casefold)}
