@@ -15,7 +15,7 @@ use crate::{CoreError, Res};
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::{Decimal, RoundingStrategy};
 use rust_decimal_macros::dec;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
 
@@ -63,9 +63,22 @@ pub struct Inputs {
     pub nearby: Vec<Value>,
 }
 
+/// A diary entry's Nightscout record, checked. `record` stays in Nightscout's own shape: the edited record
+/// with its other fields kept.
+#[derive(Clone, Debug, Serialize)]
+pub struct DiaryRecord {
+    pub record: Map<String, Value>,
+    pub event_type: String,
+    pub notes: String,
+    pub carbs: Decimal,
+    pub insulin: Decimal,
+    /// The entry's local day (YYYY-MM-DD).
+    pub day: String,
+}
+
 /// The Nightscout record of a diary entry, checked: `record` (the edited one updated), its `event_type`,
 /// `notes`, `carbs`, `insulin` and local `day`.
-pub fn record(inputs: &Inputs) -> Res<Value> {
+pub fn record(inputs: &Inputs) -> Res<DiaryRecord> {
     let payload = &inputs.payload;
     let settings: Settings = serde_json::from_value(inputs.settings.clone()).map_err(|e| invalid(format!("settings: {e}")))?;
     let kind = payload.get("kind").and_then(Value::as_str).unwrap_or_default();
@@ -160,7 +173,7 @@ pub fn record(inputs: &Inputs) -> Res<Value> {
                 _ => return Err(invalid(t("Ungültiger Split-Bolus"))),
             }
         } else if kind == "meal" && existing.is_some() {
-            if let Some(kept) = regex_find(r"\[DASP:(\d+(?:\.\d+)?)@(\d+)\]", &old_notes) {
+            if let Some(kept) = episodes::split_re().find(&old_notes).map(|m| m.as_str().to_string()) {
                 split = format!(" {kept}");
             }
         }
@@ -188,7 +201,7 @@ pub fn record(inputs: &Inputs) -> Res<Value> {
                 }
             }
             None if eats && existing.is_some() && payload.get("fpe_surcharge").is_none() => {
-                if let Some(kept) = regex_find(r"\[DAZ:(\d+(?:\.\d+)?)@(\d+)\]", &old_notes) {
+                if let Some(kept) = episodes::surcharge_re().find(&old_notes).map(|m| m.as_str().to_string()) {
                     surcharge = format!(" {kept}");
                 }
             }
@@ -196,10 +209,8 @@ pub fn record(inputs: &Inputs) -> Res<Value> {
         }
         let mut notes = format!("{note}{marker}{quality}{split}{surcharge} [DAE:{event_id}]").trim().to_string();
         if kind == "meal" {
-            if let Some(legacy) = regex_captures(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction|snack)\]", &old_notes) {
-                if legacy.1 == "meal" {
-                    notes += &format!(" {}", legacy.0);
-                }
+            if let Some(legacy) = episodes::tag_re().captures(&old_notes).filter(|c| &c[3] == "meal") {
+                notes += &format!(" {}", &legacy[0]);
             }
         }
         (event_type, notes)
@@ -236,22 +247,20 @@ pub fn record(inputs: &Inputs) -> Res<Value> {
     } else {
         record.remove("duration");
     }
-    Ok(json!({"record": record, "event_type": event_type, "notes": notes, "carbs": carbs.to_string(),
-              "insulin": units.to_string(), "day": day}))
+    Ok(DiaryRecord { record, event_type, notes, carbs, insulin: units, day })
 }
 
-fn regex_find(pattern: &str, text: &str) -> Option<String> {
-    regex::Regex::new(pattern).ok()?.find(text).map(|m| m.as_str().to_string())
-}
-
-fn regex_captures(pattern: &str, text: &str) -> Option<(String, String)> {
-    let captures = regex::Regex::new(pattern).ok()?.captures(text)?;
-    Some((captures[0].to_string(), captures[3].to_string()))
+/// What a card edit becomes: basal (replaced elsewhere, only its kind) or an entry with its new kind and amounts.
+#[derive(Clone, Debug, Serialize)]
+#[serde(untagged)]
+pub enum EditKind {
+    Basal { kind: &'static str },
+    Entry { kind: &'static str, carbs: Decimal, insulin: Decimal },
 }
 
 /// A saved entry changed on its card: the kind follows from the entry's kind (`original_kind`) and the new
 /// values. Returns kind, carbs and insulin (basal is replaced elsewhere and returns only its kind).
-pub fn edit_kind(payload: &Value) -> Res<Value> {
+pub fn edit_kind(payload: &Value) -> Res<EditKind> {
     let original = payload.get("original_kind").and_then(Value::as_str).unwrap_or_default();
     if !EDITABLE_KINDS.contains(&original) {
         return Err(invalid(t("Dieser Eintragstyp kann hier nicht bearbeitet werden")));
@@ -260,7 +269,7 @@ pub fn edit_kind(payload: &Value) -> Res<Value> {
         return Err(invalid(t("Ungültiger Eintrag")));
     }
     if original == "basal" {
-        return Ok(json!({"kind": "basal"}));
+        return Ok(EditKind::Basal { kind: "basal" });
     }
     let sport = original == "exercise";
     let bad = || invalid(t("KH oder Insulin außerhalb des erlaubten Bereichs"));
@@ -272,12 +281,26 @@ pub fn edit_kind(payload: &Value) -> Res<Value> {
     let kind = if sport { "exercise" }
         else if carbs > Decimal::ZERO { if original == "snack" { "snack" } else if original == "carbs" && units.is_zero() { "carbs" } else { "meal" } }
         else { "correction" };
-    Ok(json!({"kind": kind, "carbs": carbs.to_string(), "insulin": units.to_string()}))
+    Ok(EditKind::Entry { kind, carbs, insulin: units })
+}
+
+/// Changes to a sport session's own effect and duration; only what changed is set.
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct SportChanges {
+    /// Back to the effect of its kind.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reset: Option<bool>,
+    /// The session's own glucose drop in mg/dL.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub effect_mgdl: Option<i64>,
+    /// The session's own effect duration as the card sent it (null: its kind's).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minutes: Option<Value>,
 }
 
 /// The session's own effect and duration from the card (null = its kind's setting), as changes to the stored
 /// ones: `reset`, `effect_mgdl` (a drop) and `minutes`. Only a change is listed.
-pub fn sport_changes(payload: &Value, effects: &HashMap<String, Value>, durations: &HashMap<String, Value>, record_id: &str) -> Res<Value> {
+pub fn sport_changes(payload: &Value, effects: &HashMap<String, Value>, durations: &HashMap<String, Value>, record_id: &str) -> Res<SportChanges> {
     let duration = payload.get("duration_minutes").filter(|v| v.is_number()).and_then(Value::as_f64);
     if !duration.is_some_and(|d| (*SPORT_DURATION_MINUTES.start() as f64..=*SPORT_DURATION_MINUTES.end() as f64).contains(&d)) {
         return Err(invalid(t("Bitte eine Dauer zwischen 1 und 1440 Minuten eintragen.")));
@@ -294,17 +317,17 @@ pub fn sport_changes(payload: &Value, effects: &HashMap<String, Value>, duration
             return Err(invalid(t("Die Wirkdauer muss zwischen 0,5 und 24 h liegen.")));
         }
     }
-    let mut changes = Map::new();
+    let mut changes = SportChanges::default();
     // The API stores a session's effect as a glucose drop; the card shows the signed change.
     let stored = effects.get(record_id);
     match change {
-        None if stored.is_some() => { changes.insert("reset".into(), json!(true)); }
-        Some(change) if stored.and_then(decimal_of) != Some(Decimal::from(-change)) => { changes.insert("effect_mgdl".into(), json!(-change)); }
+        None if stored.is_some() => changes.reset = Some(true),
+        Some(change) if stored.and_then(decimal_of) != Some(Decimal::from(-change)) => changes.effect_mgdl = Some(-change),
         _ => {}
     }
     let current = durations.get(record_id).and_then(Value::as_f64);
     if minutes.and_then(Value::as_f64) != current {
-        changes.insert("minutes".into(), minutes.cloned().unwrap_or(Value::Null));
+        changes.minutes = Some(minutes.cloned().unwrap_or(Value::Null));
     }
-    Ok(Value::Object(changes))
+    Ok(changes)
 }
