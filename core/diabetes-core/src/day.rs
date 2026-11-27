@@ -679,7 +679,7 @@ pub struct DayPayload {
     pub entries: Vec<EntryPoint>,
     pub target_bands: Py<Vec<glucose::Band>>,
     pub treatments: Vec<TreatmentRow>,
-    pub window_limits: Value,
+    pub window_limits: crate::window::Limits,
     pub place_options: Vec<Named>,
     pub dish_options: Vec<Named>,
 }
@@ -1146,7 +1146,7 @@ pub fn night_analysis(day: NaiveDate, treatments: &[Treatment], entries: &[Readi
 }
 
 /// A stretch without bolus and food: how glucose moved on basal alone.
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct QuietPeriod {
     #[serde(serialize_with = "py_iso")]
     pub start: Instant,

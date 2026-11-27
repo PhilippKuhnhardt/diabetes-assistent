@@ -4,19 +4,21 @@
 //! stretches, from the stored day payloads in a snapshot.
 
 use crate::calculation::{schedule_value_at, ScheduleKey};
-use crate::context::{t, tr};
-use crate::wire::{iso, to_value};
-use crate::forecast::{self, MealKey, MealPoint, Variant};
-use crate::model::{decimal_of, Instant};
+use crate::context::t;
+use crate::day::QuietPeriod;
+use crate::forecast::{self, CloudPoint, DayTypeRatios, Explanation, MealKey, MealPoint, Prediction, TradeoffOption, Variant,
+                      VariantStats, Verdict};
+use crate::model::{decimal_of, lenient, opt_amount, Instant};
 use crate::services::{self, VacationPeriod};
 use crate::stats::{median, quartile, strong_outlier_flags};
+use crate::wire::{py_iso, py_iso_opt, to_value};
 use crate::{CoreError, Res};
 use chrono::{Duration, NaiveDate, NaiveTime};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
-use serde::Deserialize;
-use serde_json::{json, Map, Value};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use serde::{Deserialize, Serialize, Serializer};
+use serde_json::{json, Value};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::Mutex;
 
 pub const MEALS: [&str; 3] = ["breakfast", "lunch", "dinner"];
@@ -54,11 +56,175 @@ pub struct Snapshot {
     pub own_sport_sessions: HashSet<String>,
     /// Day payloads by day (ISO date).
     #[serde(default)]
-    pub payloads: HashMap<String, Value>,
+    pub payloads: HashMap<String, StoredDay>,
     /// The meal points over history_days(days) (factors.meal_points), when the caller already has them;
     /// else they are taken from `payloads`.
     #[serde(default)]
     pub points: Option<Vec<MealPoint>>,
+}
+
+/// What the analysis reads of a stored day payload (day.rs DayPayload). Every part is read leniently:
+/// a payload stored by an older version may lack or shape a field differently.
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct StoredDay {
+    #[serde(default, deserialize_with = "lenient")]
+    pub meals: Vec<StoredMeal>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub timeline: Vec<StoredRow>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub quiet_periods: Vec<QuietPeriod>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub night: StoredNight,
+    #[serde(default, deserialize_with = "lenient")]
+    pub basal: Vec<StoredBasal>,
+}
+
+fn empty_object() -> Value {
+    json!({})
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct StoredMeal {
+    #[serde(default, deserialize_with = "lenient")]
+    pub id: String,
+    #[serde(default, deserialize_with = "lenient")]
+    pub meal: String,
+    #[serde(default, deserialize_with = "lenient")]
+    pub at: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub calculation: StoredCalc,
+    /// Passed through to the page as stored.
+    #[serde(default = "empty_object")]
+    pub sport: Value,
+    #[serde(default, deserialize_with = "lenient")]
+    pub quality: StoredQuality,
+    #[serde(default, deserialize_with = "lenient")]
+    pub place: Option<StoredId>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub dish: Option<StoredName>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub fpe_surcharge: Option<StoredSurcharge>,
+}
+
+/// The fields of a meal's calculation the analysis reads (calculation.rs MealCalculation or a blocked window).
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct StoredCalc {
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub factor_units_per_ke: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub ratio_g_per_unit: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub g3: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub carbs_times_isf_total: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub carbs_total: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub rapid_units_in_window: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub delta_mgdl: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub insulin_effect_mgdl: Option<Decimal>,
+    #[serde(default, deserialize_with = "crate::model::opt_text")]
+    pub start: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub end: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub reason: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub end_reason: Option<String>,
+    #[serde(default, deserialize_with = "crate::model::opt_int")]
+    pub extra_carb_count: Option<i64>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub manual_window: bool,
+    #[serde(default, deserialize_with = "lenient")]
+    pub blockers: Vec<Value>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct StoredQuality {
+    #[serde(default, deserialize_with = "lenient")]
+    pub carbs_certainty: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub fast: bool,
+    #[serde(default, deserialize_with = "lenient")]
+    pub fat_protein: bool,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct StoredId {
+    #[serde(default, deserialize_with = "lenient")]
+    pub id: Option<i64>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct StoredName {
+    #[serde(default, deserialize_with = "lenient")]
+    pub name: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct StoredSurcharge {
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub mgdl: Option<Decimal>,
+}
+
+/// A timeline row: only sport sessions are read.
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct StoredRow {
+    #[serde(default, deserialize_with = "lenient")]
+    pub kind: String,
+    #[serde(default)]
+    pub id: Value,
+    #[serde(default, deserialize_with = "lenient")]
+    pub at: Option<String>,
+    #[serde(default)]
+    pub duration_minutes: Value,
+    #[serde(default, deserialize_with = "lenient")]
+    pub sport_kind: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub notes: String,
+}
+
+/// A day's night (day.rs Night) with every field optional: the outcomes share them.
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct StoredNight {
+    #[serde(default, deserialize_with = "lenient", serialize_with = "py_iso_opt")]
+    pub start: Option<Instant>,
+    #[serde(default, deserialize_with = "lenient", serialize_with = "py_iso_opt")]
+    pub end: Option<Instant>,
+    #[serde(default, deserialize_with = "lenient", serialize_with = "py_iso_opt")]
+    pub dinner_at: Option<Instant>,
+    #[serde(default, deserialize_with = "lenient", serialize_with = "py_iso_opt")]
+    pub breakfast_at: Option<Instant>,
+    #[serde(default, deserialize_with = "lenient", serialize_with = "py_iso_opt")]
+    pub last_injection_at: Option<Instant>,
+    #[serde(default, deserialize_with = "lenient", serialize_with = "py_iso_opt")]
+    pub morning_dose_at: Option<Instant>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub delta_mgdl: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub start_glucose: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub end_glucose: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub minimum_glucose: Option<Decimal>,
+    #[serde(default, deserialize_with = "lenient", serialize_with = "py_iso_opt")]
+    pub minimum_at: Option<Instant>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub drop_mgdl: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub rise_mgdl: Option<Decimal>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub carbs_g: Option<Decimal>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub reason: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct StoredBasal {
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub units: Option<Decimal>,
 }
 
 /// How many days before today the analysis reads (period, 90-day matrix with lookback, stress tile).
@@ -66,20 +232,17 @@ pub fn history_days(days: i64) -> i64 {
     ((days - 1).max(forecast::BACKTEST_DAYS - 1) + forecast::LOOKBACKS[2] + 1).max(forecast::RATIO_DAYS + forecast::RATIO_REFERENCE_DAYS)
 }
 
-fn s(value: Decimal) -> Value {
-    Value::String(value.to_string())
-}
-
-fn opt(value: Option<Decimal>) -> Value {
-    value.map(s).unwrap_or(Value::Null)
-}
-
 fn dec_of(value: Option<&Value>) -> Option<Decimal> {
     value.filter(|v| !v.is_null()).and_then(decimal_of)
 }
 
-fn instant(value: &Value) -> Option<Instant> {
-    value.as_str().and_then(|text| chrono::DateTime::parse_from_rfc3339(text).ok()).map(|at| at.with_timezone(&chrono::Utc))
+fn instant(value: Option<&str>) -> Option<Instant> {
+    value.and_then(|text| chrono::DateTime::parse_from_rfc3339(text).ok()).map(|at| at.with_timezone(&chrono::Utc))
+}
+
+fn sorted(mut values: Vec<Decimal>) -> Vec<Decimal> {
+    values.sort();
+    values
 }
 
 /// The Automatik's configured percentile, half-life and lookback (factors.forecast_settings).
@@ -131,37 +294,34 @@ impl Configured {
     }
 }
 
-/// Valid, non-excluded meal factors from today back over days_back days (factors.meal_points).
 /// The misses of every point against the suggestion from the points before it (summary.miss_trend's input).
 pub fn point_misses(points: &[MealPoint], configured: &Configured) -> HashMap<String, (Option<Decimal>, Option<Decimal>)> {
     points.iter().map(|point| (point_id(point), suggestion_miss(points, point, configured))).collect()
 }
 
+/// Valid, non-excluded meal factors from today back over days_back days (factors.meal_points).
 pub fn meal_points(today: NaiveDate, days_back: i64, snapshot: &Snapshot, mode: &str) -> Vec<MealPoint> {
     let own_places: HashSet<i64> = snapshot.places.iter().filter(|place| place.adjust).map(|place| place.id).collect();
     let mut points = Vec::new();
     for (real_day, day) in services::counted_days(today, days_back, &snapshot.vacation_periods, mode) {
         let Some(payload) = snapshot.payloads.get(&real_day.to_string()) else { continue };
         let day_type = services::day_type_for(real_day, snapshot.day_types.as_ref(), &snapshot.vacation_periods).0;
-        for meal in payload.get("meals").and_then(Value::as_array).into_iter().flatten() {
-            let result = meal.get("calculation").cloned().unwrap_or(Value::Null);
-            let kind = meal.get("meal").and_then(Value::as_str).unwrap_or_default();
-            let id = meal.get("id").and_then(Value::as_str).unwrap_or_default();
-            let Some(factor) = dec_of(result.get("factor_units_per_ke")) else { continue };
-            if !MEALS.contains(&kind) || snapshot.analysis_exclusions.contains(id) {
+        for meal in &payload.meals {
+            let result = &meal.calculation;
+            let Some(factor) = result.factor_units_per_ke else { continue };
+            if !MEALS.contains(&meal.meal.as_str()) || snapshot.analysis_exclusions.contains(&meal.id) {
                 continue;
             }
-            let at = meal.get("at").and_then(instant)
+            let at = instant(meal.at.as_deref())
                 .unwrap_or_else(|| real_day.and_time(NaiveTime::from_hms_opt(12, 0, 0).unwrap()).and_utc());
-            let place_id = meal.get("place").and_then(|p| p.get("id")).and_then(Value::as_i64);
+            let place_id = meal.place.as_ref().and_then(|place| place.id);
             points.push(MealPoint {
-                id: json!(id), day, real_day: Some(real_day), at,
-                key: (kind.to_string(), if kind == "breakfast" { day_type.clone() } else { None }),
+                id: json!(meal.id), day, real_day: Some(real_day), at,
+                key: (meal.meal.clone(), if meal.meal == "breakfast" { day_type.clone() } else { None }),
                 day_type: day_type.clone(), value: factor,
-                end_glucose: dec_of(result.get("g3")), carbs_isf: dec_of(result.get("carbs_times_isf_total")),
-                carbs_g: dec_of(result.get("carbs_total")),
-                fat: meal.get("quality").and_then(|q| q.get("fat_protein")).and_then(Value::as_bool).unwrap_or(false),
-                surcharge_mgdl: meal.get("fpe_surcharge").and_then(|plan| dec_of(plan.get("mgdl"))),
+                end_glucose: result.g3, carbs_isf: result.carbs_times_isf_total, carbs_g: result.carbs_total,
+                fat: meal.quality.fat_protein,
+                surcharge_mgdl: meal.fpe_surcharge.as_ref().and_then(|plan| plan.mgdl),
                 place_id, own_place: place_id.is_some_and(|id| own_places.contains(&id)),
             });
         }
@@ -184,48 +344,199 @@ pub fn suggestion_miss(points: &[MealPoint], point: &MealPoint, configured: &Con
     }
 }
 
-fn miss_stats(deviations: &[Decimal]) -> Map<String, Value> {
-    let mut out = Map::new();
-    if deviations.is_empty() {
-        out.insert("median_abs_deviation_mgdl".into(), Value::Null);
-        out.insert("median_deviation_mgdl".into(), Value::Null);
-        return out;
-    }
-    let mut absolute: Vec<Decimal> = deviations.iter().map(|v| v.abs()).collect();
-    absolute.sort();
-    let mut signed = deviations.to_vec();
-    signed.sort();
-    out.insert("median_abs_deviation_mgdl".into(), opt(median(&absolute)));
-    out.insert("median_deviation_mgdl".into(), opt(median(&signed)));
-    out
+/// The typical miss and its direction.
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct MissStats {
+    pub median_abs_deviation_mgdl: Option<Decimal>,
+    pub median_deviation_mgdl: Option<Decimal>,
 }
 
-fn tuning_apply(key: &str, value: &Value) -> Value {
-    match key {
-        "percentile" => json!({"auto_percentile": value_text(value)}),
-        "half_life" => json!({"auto_half_life_days": value_text(value)}),
-        "lookback" => json!({"auto_lookback_days": decimal_of(value).and_then(|v| i64::try_from(v.trunc()).ok())}),
-        _ => if decimal_of(value).is_some_and(|v| !v.is_zero()) {
-            json!({"auto_method": forecast::SURCHARGE, "auto_surcharge_mgdl": value_text(value)})
-        } else {
-            json!({"auto_method": "percentile"})
-        },
+impl MissStats {
+    fn of(deviations: &[Decimal]) -> Self {
+        MissStats {
+            median_abs_deviation_mgdl: median(&sorted(deviations.iter().map(|v| v.abs()).collect())),
+            median_deviation_mgdl: median(&sorted(deviations.to_vec())),
+        }
     }
 }
 
-fn value_text(value: &Value) -> Value {
-    match value {
-        Value::String(_) => value.clone(),
-        other => Value::String(other.to_string()),
+/// Misses with how many meals they rest on.
+#[derive(Clone, Debug, Serialize)]
+pub struct MissCell {
+    pub count: usize,
+    #[serde(flatten)]
+    pub stats: MissStats,
+}
+
+impl MissCell {
+    fn of(deviations: &[Decimal]) -> Self {
+        MissCell { count: deviations.len(), stats: MissStats::of(deviations) }
     }
+}
+
+/// A settings change the page saves with "Übernehmen".
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct SettingsPatch {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_percentile: Option<Decimal>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_half_life_days: Option<Decimal>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_lookback_days: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_method: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_surcharge_mgdl: Option<Decimal>,
+}
+
+impl SettingsPatch {
+    /// The change that sets one Automatik setting (`key` as forecast.tuning names it) to `value`.
+    fn set(mut self, key: &str, value: Decimal) -> Self {
+        match key {
+            "percentile" => self.auto_percentile = Some(value),
+            "half_life" => self.auto_half_life_days = Some(value),
+            "lookback" => self.auto_lookback_days = i64::try_from(value.trunc()).ok(),
+            _ if !value.is_zero() => {
+                self.auto_method = Some(forecast::SURCHARGE);
+                self.auto_surcharge_mgdl = Some(value);
+            }
+            _ => self.auto_method = Some("percentile"),
+        }
+        self
+    }
+}
+
+/// A backtest cell's column: a percentile or the configured percentile with the surcharge.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Column {
+    Percentile(Decimal),
+    Surcharge,
+}
+
+impl Serialize for Column {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Column::Percentile(value) => Serialize::serialize(value, serializer),
+            Column::Surcharge => serializer.serialize_str(forecast::SURCHARGE),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct Shares {
+    pub below: Decimal,
+    pub in_range: Decimal,
+    pub above: Decimal,
+}
+
+/// Which best cell: per lookback period or overall.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Best {
+    Lookback,
+    Overall,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct Cell {
+    pub percentile: Column,
+    pub stats: VariantStats,
+    pub shares: Shares,
+    pub active: bool,
+    pub best: Option<Best>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct MatrixRow {
+    pub lookback_days: i64,
+    pub half_life_days: Decimal,
+    pub cells: Vec<Cell>,
+}
+
+/// One option of a tuning row: the value as a number like the page's settings, and its settings change.
+#[derive(Clone, Debug, Serialize)]
+pub struct TuningOptionView {
+    pub value: serde_json::Number,
+    pub active: bool,
+    #[serde(flatten)]
+    pub stats: VariantStats,
+    pub best: bool,
+    pub apply: SettingsPatch,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct TuningView {
+    pub key: &'static str,
+    pub meal_count: usize,
+    pub options: Vec<TuningOptionView>,
+    #[serde(flatten)]
+    pub verdict: Verdict,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct TradeoffView {
+    #[serde(flatten)]
+    pub option: TradeoffOption,
+    pub apply: SettingsPatch,
+}
+
+impl From<TradeoffOption> for TradeoffView {
+    fn from(option: TradeoffOption) -> Self {
+        let mut apply = SettingsPatch::default();
+        for (key, value) in [("lookback", Decimal::from(option.lookback_days)), ("half_life", option.half_life_days),
+                             ("percentile", option.percentile), ("surcharge", option.surcharge_mgdl)] {
+            if option.changes.contains(&key) {
+                apply = apply.set(key, value);
+            }
+        }
+        TradeoffView { option, apply }
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct TradeoffsView {
+    pub meal_count: usize,
+    pub current: TradeoffView,
+    pub line: Vec<TradeoffView>,
+    pub cloud: Vec<CloudPoint>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct Weight {
+    pub age_days: i64,
+    pub weight: Decimal,
+}
+
+/// How the Automatik works and how its options would have done.
+#[derive(Clone, Debug, Serialize)]
+pub struct Derivation {
+    pub percentile: Decimal,
+    pub half_life_days: Decimal,
+    pub lookback_days: i64,
+    pub method: String,
+    pub surcharge_mgdl: Decimal,
+    pub fat_surcharge_mgdl: Decimal,
+    pub surcharge_full_grams: Decimal,
+    pub min_meals: usize,
+    pub meal_count: usize,
+    pub backtest_days: i64,
+    pub variants: Vec<MatrixRow>,
+    pub glucose_low_mgdl: Decimal,
+    pub glucose_high_mgdl: Decimal,
+    pub dose_target_mgdl: Decimal,
+    pub tuning: Vec<TuningView>,
+    pub active_surcharge_mgdl: Decimal,
+    pub tradeoffs: TradeoffsView,
+    pub examples: Vec<Explanation>,
+    pub weights: Vec<Weight>,
 }
 
 /// The period-independent part: suggestions, backtest matrix with the Automatik view, day-type ratio
 /// and each meal's miss against its own suggestion.
 struct Automatik {
-    predictions: HashMap<MealKey, Value>,
-    derivation: Value,
-    day_type_ratio: Value,
+    predictions: HashMap<MealKey, Prediction>,
+    derivation: Derivation,
+    day_type_ratio: Option<DayTypeRatios>,
     misses: HashMap<String, (Option<Decimal>, Option<Decimal>)>,
 }
 
@@ -246,15 +557,14 @@ fn automatik(today: NaiveDate, points: &[MealPoint], settings: &Value, configure
 }
 
 fn compute_automatik(today: NaiveDate, points: &[MealPoint], c: &Configured) -> Automatik {
-    let predictions: HashMap<MealKey, Value> = c.keys().into_iter().map(|key| {
+    let predictions: HashMap<MealKey, Prediction> = c.keys().into_iter().map(|key| {
         let prediction = forecast::predict_method(points, &key, today, c.percentile, c.half_life, c.lookback, &c.method,
                                                   c.surcharge_mgdl, c.fat_mgdl);
-        (key, json!({"count": prediction.count, "units_per_ke": opt(prediction.units_per_ke), "surcharge": c.surcharge()}))
+        (key, prediction)
     }).collect();
     // Backtest matrix: every lookback × half-life (plus the configured ones), each at 25 %, the configured
     // percentile and 50 %, plus the configured percentile with the surcharge, on the meals of the last 90 days.
-    let mut percentiles: Vec<Decimal> = BTreeSet::from([dec!(25), c.percentile, dec!(50)]).into_iter().collect();
-    percentiles.sort();
+    let percentiles: Vec<Decimal> = BTreeSet::from([dec!(25), c.percentile, dec!(50)]).into_iter().collect();
     let lookbacks: Vec<i64> = BTreeSet::from_iter(forecast::LOOKBACKS.iter().copied().chain([c.lookback])).into_iter().collect();
     let half_lives: Vec<Decimal> = {
         let mut values: Vec<Decimal> = forecast::HALF_LIVES.to_vec();
@@ -274,80 +584,56 @@ fn compute_automatik(today: NaiveDate, points: &[MealPoint], c: &Configured) -> 
         variants.push(Variant { lookback: *lookback, half_life: *half_life, percentile: c.percentile, surcharge_mgdl: Some(c.surcharge_mgdl) });
     }
     let test = forecast::backtest(points, since, &variants, c.target, c.fat_mgdl);
-    let mut cells = test.stats.iter();
-    let mut cell_percentiles: Vec<Value> = percentiles.iter().map(|p| s(*p)).collect();
-    cell_percentiles.push(json!(forecast::SURCHARGE));
-    let variant_rows: Vec<Value> = rows.iter().map(|(lookback, half_life)| json!({
-        "lookback_days": lookback, "half_life_days": s(*half_life),
-        "cells": cell_percentiles.iter().map(|p| json!({"percentile": p, "stats": to_value(cells.next().unwrap())})).collect::<Vec<_>>(),
-    })).collect();
-    let mut derivation = json!({
-        "percentile": s(c.percentile), "half_life_days": s(c.half_life), "lookback_days": c.lookback,
-        "method": c.method, "surcharge_mgdl": s(c.surcharge_mgdl), "fat_surcharge_mgdl": s(c.fat_mgdl),
-        "surcharge_full_grams": s(forecast::SURCHARGE_FULL_GRAMS),
-        "min_meals": forecast::MIN_MEALS, "meal_count": test.rows.len(),
-        "backtest_days": forecast::BACKTEST_DAYS,
-        "variants": variant_rows,
-        "glucose_low_mgdl": s(forecast::GLUCOSE_LOW), "glucose_high_mgdl": s(forecast::GLUCOSE_HIGH),
-        "dose_target_mgdl": s(c.target),
-    });
-    mark_matrix(&mut derivation);
+    let mut stats = test.stats.into_iter();
+    let columns: Vec<Column> = percentiles.iter().map(|p| Column::Percentile(*p)).chain([Column::Surcharge]).collect();
+    let mut matrix: Vec<MatrixRow> = rows.iter().map(|(lookback, half_life)| MatrixRow {
+        lookback_days: *lookback, half_life_days: *half_life,
+        cells: columns.iter().map(|column| cell(*column, stats.next().unwrap_or_default(), *lookback, *half_life, c)).collect(),
+    }).collect();
+    mark_best(&mut matrix);
     let active = c.active_surcharge();
-    let tuning: Vec<Value> = forecast::tuning(points, since, c.lookback, c.half_life, c.percentile, active, c.target, c.fat_mgdl)
-        .iter().map(|row| {
-            let mut value = to_value(row);
-            let key = row.key;
-            if let Some(options) = value.get_mut("options").and_then(Value::as_array_mut) {
-                for option in options {
-                    if key == "lookback" {
-                        let days = option.get("value").and_then(decimal_of).and_then(|v| i64::try_from(v.trunc()).ok());
-                        option["value"] = json!(days);
-                    } else if let Some(number) = option.get("value").and_then(decimal_of)
-                        .and_then(|v| v.normalize().to_string().parse::<serde_json::Number>().ok()) {
-                        // A number like the page's settings, not text.
-                        option["value"] = Value::Number(number);
-                    }
-                    let apply = tuning_apply(key, &option["value"]);
-                    option["apply"] = apply;
-                }
-            }
-            value
+    let tuning: Vec<TuningView> = forecast::tuning(points, since, c.lookback, c.half_life, c.percentile, active, c.target, c.fat_mgdl)
+        .into_iter().map(|row| TuningView {
+            key: row.key,
+            meal_count: row.meal_count,
+            options: row.options.into_iter().map(|option| TuningOptionView {
+                // A number like the page's settings, not text; the lookback in whole days.
+                value: if row.key == "lookback" {
+                    serde_json::Number::from(i64::try_from(option.value.trunc()).unwrap_or(0))
+                } else {
+                    option.value.normalize().to_string().parse().unwrap_or_else(|_| serde_json::Number::from(0))
+                },
+                active: option.active,
+                stats: option.stats,
+                best: option.best,
+                apply: SettingsPatch::default().set(row.key, option.value),
+            }).collect(),
+            verdict: row.verdict,
         }).collect();
-    derivation["tuning"] = Value::Array(tuning);
-    derivation["active_surcharge_mgdl"] = s(active);
-    let mut tradeoffs = to_value(&forecast::tradeoffs(points, since, c.lookback, c.half_life, c.percentile, active, c.target, c.fat_mgdl));
-    let tradeoff_map = tradeoffs.as_object_mut().into_iter().flat_map(|map| map.iter_mut());
-    let mut options: Vec<&mut Value> = Vec::new();
-    for (key, value) in tradeoff_map {
-        match key.as_str() {
-            "current" if value.is_object() => options.push(value),
-            "line" => options.extend(value.as_array_mut().into_iter().flatten()),
-            _ => {}
-        }
-    }
-    for option in options {
-        let changes: Vec<String> = option.get("changes").and_then(Value::as_array).into_iter().flatten()
-            .filter_map(|v| v.as_str().map(str::to_string)).collect();
-        let mut apply = Map::new();
-        for (key, field) in [("lookback", "lookback_days"), ("half_life", "half_life_days"), ("percentile", "percentile"), ("surcharge", "surcharge_mgdl")] {
-            if changes.iter().any(|change| change == key) {
-                if let Value::Object(map) = tuning_apply(key, &option[field]) {
-                    apply.extend(map);
-                }
-            }
-        }
-        option["apply"] = Value::Object(apply);
-    }
-    derivation["tradeoffs"] = tradeoffs;
-    derivation["examples"] = Value::Array(c.keys().iter().map(|key| to_value(&forecast::explain(
-        points, key, today, c.lookback, c.half_life, c.percentile, active, c.fat_mgdl))).collect());
+    let tradeoffs = forecast::tradeoffs(points, since, c.lookback, c.half_life, c.percentile, active, c.target, c.fat_mgdl);
     let mut ages: BTreeSet<i64> = BTreeSet::from([1, c.lookback]);
     for k in [1, 2, 4] {
         ages.insert(i64::try_from((c.half_life * Decimal::from(k)).trunc()).unwrap_or(0));
     }
-    derivation["weights"] = Value::Array(ages.into_iter().filter(|age| (1..=c.lookback).contains(age))
-        .map(|age| json!({"age_days": age, "weight": s(forecast::weight(age, c.half_life))})).collect());
-    let day_type_ratio = if c.day_types { to_value(&forecast::day_type_ratios(points, today)) } else { Value::Null };
+    let derivation = Derivation {
+        percentile: c.percentile, half_life_days: c.half_life, lookback_days: c.lookback, method: c.method.clone(),
+        surcharge_mgdl: c.surcharge_mgdl, fat_surcharge_mgdl: c.fat_mgdl, surcharge_full_grams: forecast::SURCHARGE_FULL_GRAMS,
+        min_meals: forecast::MIN_MEALS, meal_count: test.rows.len(), backtest_days: forecast::BACKTEST_DAYS,
+        variants: matrix,
+        glucose_low_mgdl: forecast::GLUCOSE_LOW, glucose_high_mgdl: forecast::GLUCOSE_HIGH, dose_target_mgdl: c.target,
+        tuning,
+        active_surcharge_mgdl: active,
+        tradeoffs: TradeoffsView {
+            meal_count: tradeoffs.meal_count,
+            current: tradeoffs.current.into(),
+            line: tradeoffs.line.into_iter().map(TradeoffView::from).collect(),
+            cloud: tradeoffs.cloud,
+        },
+        examples: c.keys().iter().map(|key| forecast::explain(points, key, today, c.lookback, c.half_life, c.percentile, active, c.fat_mgdl)).collect(),
+        weights: ages.into_iter().filter(|age| (1..=c.lookback).contains(age))
+            .map(|age| Weight { age_days: age, weight: forecast::weight(age, c.half_life) }).collect(),
+    };
+    let day_type_ratio = c.day_types.then(|| forecast::day_type_ratios(points, today));
     let misses = point_misses(points, c);
     Automatik { predictions, derivation, day_type_ratio, misses }
 }
@@ -356,92 +642,204 @@ fn point_id(point: &MealPoint) -> String {
     point.id.as_str().map(str::to_string).unwrap_or_else(|| point.id.to_string())
 }
 
-/// Add to every backtest cell its shares below / in / above range, whether it is the configured variant,
-/// and the best cells: most endpoints in range, then fewest below, per lookback period and overall.
-fn mark_matrix(derivation: &mut Value) {
-    let method = derivation["method"].as_str().unwrap_or_default().to_string();
-    let percentile = decimal_of(&derivation["percentile"]).unwrap_or_default();
-    let lookback = derivation["lookback_days"].as_i64().unwrap_or_default();
-    let half_life = decimal_of(&derivation["half_life_days"]).unwrap_or_default();
-    let count = |stats: &Value, key: &str| stats[key].as_u64().unwrap_or(0);
-    let better = |cell: &Value, top: Option<&Value>| match top {
-        None => true,
-        Some(best) => count(&cell["stats"], "in_range") > count(&best["stats"], "in_range")
-            || (count(&cell["stats"], "in_range") == count(&best["stats"], "in_range") && count(&cell["stats"], "below") < count(&best["stats"], "below")),
+/// A backtest cell with its shares below / in / above range and whether it is the configured variant.
+fn cell(column: Column, stats: VariantStats, lookback: i64, half_life: Decimal, c: &Configured) -> Cell {
+    let share = |count: usize| if stats.glucose_count > 0 {
+        Decimal::from(count) * dec!(100) / Decimal::from(stats.glucose_count)
+    } else {
+        Decimal::ZERO
     };
+    let configured_column = if c.surcharge() { column == Column::Surcharge } else { column == Column::Percentile(c.percentile) };
+    Cell {
+        percentile: column,
+        shares: Shares { below: share(stats.below), in_range: share(stats.in_range), above: share(stats.above) },
+        active: configured_column && lookback == c.lookback && half_life == c.half_life,
+        stats,
+        best: None,
+    }
+}
+
+/// The best cells: most endpoints in range, then fewest below, per lookback period and overall (the
+/// first of equal cells wins).
+fn mark_best(matrix: &mut [MatrixRow]) {
+    let better = |cell: &Cell, top: Option<&Cell>| match top {
+        None => true,
+        Some(best) => cell.stats.in_range > best.stats.in_range
+            || (cell.stats.in_range == best.stats.in_range && cell.stats.below < best.stats.below),
+    };
+    let at = |matrix: &[MatrixRow], (row, column): (usize, usize)| -> Cell { matrix[row].cells[column].clone() };
     let mut overall: Option<(usize, usize)> = None;
     let mut per_lookback: Vec<(i64, (usize, usize))> = Vec::new();
-    let variants = derivation["variants"].as_array_mut().unwrap();
-    for (vi, variant) in variants.iter_mut().enumerate() {
-        let variant_lookback = variant["lookback_days"].as_i64().unwrap_or_default();
-        let variant_half_life = decimal_of(&variant["half_life_days"]).unwrap_or_default();
-        for cell in variant["cells"].as_array_mut().unwrap().iter_mut() {
-            let total = count(&cell["stats"], "glucose_count");
-            let mut shares = Map::new();
-            for key in ["below", "in_range", "above"] {
-                let share = if total > 0 { Decimal::from(count(&cell["stats"], key)) * dec!(100) / Decimal::from(total) } else { Decimal::ZERO };
-                shares.insert(key.into(), s(share));
+    for (ri, row) in matrix.iter().enumerate() {
+        for (ci, cell) in row.cells.iter().enumerate() {
+            if better(cell, overall.map(|place| at(matrix, place)).as_ref()) {
+                overall = Some((ri, ci));
             }
-            cell["shares"] = Value::Object(shares);
-            let surcharge = cell["percentile"] == forecast::SURCHARGE;
-            let active = (if method == forecast::SURCHARGE { surcharge } else { !surcharge && decimal_of(&cell["percentile"]) == Some(percentile) })
-                && variant_lookback == lookback && variant_half_life == half_life;
-            cell["active"] = json!(active);
-            cell["best"] = Value::Null;
-        }
-        let _ = vi;
-    }
-    // Second pass: pick the best cells (the first of equal cells wins).
-    for (vi, variant) in variants.iter().enumerate() {
-        let variant_lookback = variant["lookback_days"].as_i64().unwrap_or_default();
-        for (ci, cell) in variant["cells"].as_array().unwrap().iter().enumerate() {
-            if better(cell, overall.map(|(v, c)| &variants[v]["cells"][c])) {
-                overall = Some((vi, ci));
-            }
-            let current = per_lookback.iter().find(|(l, _)| *l == variant_lookback).map(|(_, at)| *at);
-            if better(cell, current.map(|(v, c)| &variants[v]["cells"][c])) {
-                match per_lookback.iter_mut().find(|(l, _)| *l == variant_lookback) {
-                    Some(entry) => entry.1 = (vi, ci),
-                    None => per_lookback.push((variant_lookback, (vi, ci))),
+            let current = per_lookback.iter().find(|(l, _)| *l == row.lookback_days).map(|(_, place)| *place);
+            if better(cell, current.map(|place| at(matrix, place)).as_ref()) {
+                match per_lookback.iter_mut().find(|(l, _)| *l == row.lookback_days) {
+                    Some(entry) => entry.1 = (ri, ci),
+                    None => per_lookback.push((row.lookback_days, (ri, ci))),
                 }
             }
         }
     }
-    for (_, (v, c)) in per_lookback {
-        variants[v]["cells"][c]["best"] = json!("lookback");
+    for (_, (row, column)) in per_lookback {
+        matrix[row].cells[column].best = Some(Best::Lookback);
     }
-    if let Some((v, c)) = overall {
-        variants[v]["cells"][c]["best"] = json!("overall");
+    if let Some((row, column)) = overall {
+        matrix[row].cells[column].best = Some(Best::Overall);
     }
 }
 
-fn suggestion_factor(prediction: &Value, c: &Configured) -> Value {
-    json!({
-        "auto_units_per_ke": prediction["units_per_ke"], "count": prediction["count"], "days": c.lookback,
-        "min_meals": forecast::MIN_MEALS, "percentile": s(c.percentile), "half_life_days": s(c.half_life),
-        "surcharge": prediction.get("surcharge").cloned().unwrap_or(json!(false)),
-        "surcharge_mgdl": s(c.surcharge_mgdl), "surcharge_full_grams": s(forecast::SURCHARGE_FULL_GRAMS),
-    })
+/// The Automatik suggestion of a meal kind as the page shows it.
+#[derive(Clone, Debug, Serialize)]
+pub struct Suggestion {
+    pub auto_units_per_ke: Option<Decimal>,
+    pub count: usize,
+    pub days: i64,
+    pub min_meals: usize,
+    pub percentile: Decimal,
+    pub half_life_days: Decimal,
+    pub surcharge: bool,
+    pub surcharge_mgdl: Decimal,
+    pub surcharge_full_grams: Decimal,
 }
 
-fn sorted(mut values: Vec<Decimal>) -> Vec<Decimal> {
-    values.sort();
-    values
+impl Suggestion {
+    fn of(prediction: &Prediction, c: &Configured) -> Self {
+        Suggestion {
+            auto_units_per_ke: prediction.units_per_ke, count: prediction.count, days: c.lookback, min_meals: forecast::MIN_MEALS,
+            percentile: c.percentile, half_life_days: c.half_life, surcharge: c.surcharge(), surcharge_mgdl: c.surcharge_mgdl,
+            surcharge_full_grams: forecast::SURCHARGE_FULL_GRAMS,
+        }
+    }
 }
 
-fn stats_block(values: &[Decimal], out: &mut Map<String, Value>) {
-    let mean = if values.is_empty() { None } else { Some(values.iter().copied().sum::<Decimal>() / Decimal::from(values.len())) };
-    out.insert("mean_units_per_ke".into(), opt(mean));
-    out.insert("median_units_per_ke".into(), opt(median(values)));
-    out.insert("min_units_per_ke".into(), opt(values.first().copied()));
-    out.insert("max_units_per_ke".into(), opt(values.last().copied()));
-    // With fewer than five meals, quartiles imply more precision than the data support.
-    out.insert("q1_units_per_ke".into(), if values.len() >= 5 { s(quartile(values, dec!(0.25))) } else { Value::Null });
-    out.insert("q3_units_per_ke".into(), if values.len() >= 5 { s(quartile(values, dec!(0.75))) } else { Value::Null });
+/// Mean, median, range and (from five meals) quartiles of the factors.
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct FactorStats {
+    pub mean_units_per_ke: Option<Decimal>,
+    pub median_units_per_ke: Option<Decimal>,
+    pub min_units_per_ke: Option<Decimal>,
+    pub max_units_per_ke: Option<Decimal>,
+    pub q1_units_per_ke: Option<Decimal>,
+    pub q3_units_per_ke: Option<Decimal>,
+}
+
+impl FactorStats {
+    /// From sorted values.
+    fn of(values: &[Decimal]) -> Self {
+        // With fewer than five meals, quartiles imply more precision than the data support.
+        let enough = values.len() >= 5;
+        FactorStats {
+            mean_units_per_ke: (!values.is_empty()).then(|| values.iter().copied().sum::<Decimal>() / Decimal::from(values.len())),
+            median_units_per_ke: median(values),
+            min_units_per_ke: values.first().copied(),
+            max_units_per_ke: values.last().copied(),
+            q1_units_per_ke: enough.then(|| quartile(values, dec!(0.25))),
+            q3_units_per_ke: enough.then(|| quartile(values, dec!(0.75))),
+        }
+    }
+}
+
+/// One meal in the analysis list.
+#[derive(Clone, Debug, Serialize)]
+pub struct MealItem {
+    pub id: String,
+    pub day: String,
+    pub at: Option<String>,
+    pub day_type: Option<String>,
+    pub units_per_ke: Option<Decimal>,
+    pub carbs_total: Option<Decimal>,
+    pub rapid_units_in_window: Option<Decimal>,
+    pub delta_mgdl: Option<Decimal>,
+    pub end: Option<String>,
+    pub reason: Option<String>,
+    pub manual_window: bool,
+    pub excluded: bool,
+    pub sport: Value,
+    pub certainty: Option<String>,
+    pub fast: bool,
+    pub dish: Option<String>,
+    pub expected_delta_mgdl: Option<Decimal>,
+    pub deviation_mgdl: Option<Decimal>,
+    pub expected_units_per_ke: Option<Decimal>,
+    pub strong_outlier: bool,
+}
+
+/// Breakfasts of one day type.
+#[derive(Clone, Debug, Serialize)]
+pub struct DayTypeGroup {
+    pub total: usize,
+    pub count: usize,
+    pub valid_count: usize,
+    pub excluded_count: usize,
+    pub blocked_count: usize,
+    #[serde(flatten)]
+    pub stats: FactorStats,
+    pub suggestion: Suggestion,
+}
+
+/// One meal kind over the period.
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct MealGroup {
+    pub total: usize,
+    pub count: usize,
+    pub valid_count: usize,
+    pub excluded_count: usize,
+    pub blocked_count: usize,
+    pub multi_carb_count: usize,
+    pub shortened_count: usize,
+    pub strong_outlier_count: usize,
+    #[serde(flatten)]
+    pub stats: FactorStats,
+    pub median_g_per_unit: Option<Decimal>,
+    pub recent_median_units_per_ke: Option<Decimal>,
+    pub previous_median_units_per_ke: Option<Decimal>,
+    pub trend_units_per_ke: Option<Decimal>,
+    #[serde(flatten)]
+    pub misses: MissStats,
+    pub expected_count: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suggestion: Option<Suggestion>,
+    pub nightscout_units_per_ke: Vec<Decimal>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub by_day_type: Option<BTreeMap<&'static str, DayTypeGroup>>,
+    pub calculations: Vec<MealItem>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct Misses {
+    pub certainty: BTreeMap<String, MissCell>,
+    pub fast: BTreeMap<String, MissCell>,
+}
+
+/// A kind's sport effect with the settings change "Übernehmen" saves.
+#[derive(Clone, Debug, Serialize)]
+pub struct KindApply {
+    pub standard_drop_mgdl: Option<Decimal>,
+    pub apply: Option<Value>,
+}
+
+/// The analysis page.
+#[derive(Clone, Debug, Serialize)]
+pub struct Summary {
+    pub days: i64,
+    pub groups: BTreeMap<&'static str, MealGroup>,
+    pub misses: Misses,
+    pub trend: Trend,
+    pub profile_sync_error: Option<String>,
+    pub suggestion_derivation: Derivation,
+    pub day_types: bool,
+    pub day_type_ratio: Option<DayTypeRatios>,
+    pub sport_analysis: SportAnalysis,
+    pub night: NightOverview,
+    pub quiet: QuietOverview,
 }
 
 /// The analysis page for the last `days` days.
-pub fn compute_summary(snapshot: &Snapshot) -> Res<Value> {
+pub fn compute_summary(snapshot: &Snapshot) -> Res<Summary> {
     let today = snapshot.today;
     let days = snapshot.days;
     if !PERIODS.contains(&days) {
@@ -450,210 +848,153 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Value> {
     let settings = &snapshot.settings;
     let c = Configured::of(settings)?;
     let day_types = snapshot.day_types.as_ref();
-    let mut groups: HashMap<&str, Map<String, Value>> = HashMap::new();
-    let mut values: HashMap<&str, (Vec<Decimal>, Vec<Decimal>)> = HashMap::new();
-    let mut calculations: HashMap<&str, Vec<(Map<String, Value>, Value)>> = HashMap::new();
-    for name in MEALS {
-        let mut group = Map::new();
-        for key in ["total", "count", "valid_count", "excluded_count", "blocked_count", "multi_carb_count", "shortened_count"] {
-            group.insert(key.into(), json!(0));
-        }
-        groups.insert(name, group);
-        values.insert(name, (Vec::new(), Vec::new()));
-        calculations.insert(name, Vec::new());
-    }
-    let bump = |group: &mut Map<String, Value>, key: &str| {
-        let value = group[key].as_i64().unwrap_or(0) + 1;
-        group.insert(key.into(), json!(value));
-    };
+    let mut groups: BTreeMap<&'static str, MealGroup> = MEALS.iter().map(|name| (*name, MealGroup::default())).collect();
+    let mut values: HashMap<&str, (Vec<Decimal>, Vec<Decimal>)> = MEALS.iter().map(|name| (*name, (Vec::new(), Vec::new()))).collect();
+    let mut calculations: HashMap<&str, Vec<MealItem>> = MEALS.iter().map(|name| (*name, Vec::new())).collect();
     let mut night_records = Vec::new();
     let mut quiet_records = Vec::new();
     let mut sport_meals = Vec::new();
     let mut sport_sessions = Vec::new();
-    let empty = json!({"meals": []});
+    let empty = StoredDay::default();
     for offset in 0..days {
         let day = today - Duration::days(offset);
         let key = day.to_string();
         let payload = snapshot.payloads.get(&key).unwrap_or(&empty);
-        night_records.push(night_record(&key, payload));
-        for item in payload.get("quiet_periods").and_then(Value::as_array).into_iter().flatten() {
-            let mut row = Map::from_iter([("day".to_string(), json!(key))]);
-            if let Value::Object(map) = item {
-                row.extend(map.clone());
-            }
-            quiet_records.push(Value::Object(row));
-        }
+        night_records.push(NightRecord {
+            day: key.clone(), night: payload.night.clone(),
+            basal_units: (!payload.basal.is_empty()).then(|| payload.basal.iter().filter_map(|dose| dose.units).sum()),
+        });
+        quiet_records.extend(payload.quiet_periods.iter().map(|period| QuietRecord { day: key.clone(), period: period.clone() }));
         let day_type = services::day_type_for(day, day_types, &snapshot.vacation_periods).0;
-        for item in payload.get("timeline").and_then(Value::as_array).into_iter().flatten() {
-            if item["kind"] == "exercise" {
-                sport_sessions.push(json!({"id": item["id"], "at": item["at"], "duration_minutes": item["duration_minutes"],
-                                           "kind": item["sport_kind"], "notes": item["notes"]}));
-            }
-        }
-        for meal in payload.get("meals").and_then(Value::as_array).into_iter().flatten() {
-            let id = meal["id"].as_str().unwrap_or_default();
-            let excluded = snapshot.analysis_exclusions.contains(id);
-            let result = meal.get("calculation").filter(|v| v.is_object()).cloned().unwrap_or(json!({}));
-            sport_meals.push(json!({"id": meal["id"], "day": key, "meal": meal["meal"], "at": meal["at"], "excluded": excluded,
-                                    "calculation": result, "sport": meal.get("sport").filter(|v| v.is_object()).cloned().unwrap_or(json!({}))}));
-            let Some(name) = MEALS.iter().find(|name| meal["meal"] == **name).copied() else { continue };
+        sport_sessions.extend(payload.timeline.iter().filter(|row| row.kind == "exercise").map(|row| SportSessionIn {
+            id: row.id.clone(), at: row.at.clone(), duration_minutes: dec_of(Some(&row.duration_minutes)),
+            kind: row.sport_kind.clone(), notes: row.notes.clone(),
+        }));
+        for meal in &payload.meals {
+            let excluded = snapshot.analysis_exclusions.contains(&meal.id);
+            let result = &meal.calculation;
+            sport_meals.push(SportMeal {
+                id: meal.id.clone(), day: Some(key.clone()), meal: meal.meal.clone(), at: meal.at.clone(), excluded,
+                calculation: result.clone(), sport: serde_json::from_value(meal.sport.clone()).unwrap_or_default(),
+            });
+            let Some(name) = MEALS.iter().find(|name| meal.meal == **name).copied() else { continue };
             let group = groups.get_mut(name).unwrap();
-            bump(group, "total");
-            if result.get("end_reason").and_then(Value::as_str) == Some("before_next_meal") {
-                bump(group, "shortened_count");
+            group.total += 1;
+            if result.end_reason.as_deref() == Some("before_next_meal") {
+                group.shortened_count += 1;
             }
-            if result.get("extra_carb_count").and_then(Value::as_i64).unwrap_or(0) != 0 {
-                bump(group, "multi_carb_count");
+            if result.extra_carb_count.unwrap_or(0) != 0 {
+                group.multi_carb_count += 1;
             }
-            let factor = result.get("factor_units_per_ke").filter(|v| !v.is_null()).cloned();
-            let quality = meal.get("quality").cloned().unwrap_or(json!({}));
-            let mut item = Map::new();
-            item.insert("id".into(), meal["id"].clone());
-            item.insert("day".into(), json!(key));
-            item.insert("at".into(), meal["at"].clone());
-            item.insert("day_type".into(), json!(day_type));
-            item.insert("units_per_ke".into(), factor.clone().unwrap_or(Value::Null));
-            for field in ["carbs_total", "rapid_units_in_window", "delta_mgdl", "end", "reason"] {
-                item.insert(field.into(), result.get(field).cloned().unwrap_or(Value::Null));
-            }
-            item.insert("manual_window".into(), json!(result.get("manual_window").and_then(Value::as_bool).unwrap_or(false)));
-            item.insert("excluded".into(), json!(excluded));
-            item.insert("sport".into(), meal.get("sport").cloned().unwrap_or(json!({})));
-            item.insert("certainty".into(), quality.get("carbs_certainty").cloned().unwrap_or(Value::Null));
-            item.insert("fast".into(), json!(quality.get("fast").and_then(Value::as_bool).unwrap_or(false)));
-            item.insert("dish".into(), meal.get("dish").and_then(|d| d.get("name")).cloned().unwrap_or(Value::Null));
-            item.insert("expected_delta_mgdl".into(), Value::Null);
-            item.insert("deviation_mgdl".into(), Value::Null);
-            item.insert("expected_units_per_ke".into(), Value::Null);
-            match factor.as_ref().and_then(decimal_of) {
-                None => bump(group, "blocked_count"),
+            match result.factor_units_per_ke {
+                None => group.blocked_count += 1,
                 Some(value) => {
-                    bump(group, "valid_count");
+                    group.valid_count += 1;
                     if excluded {
-                        bump(group, "excluded_count");
+                        group.excluded_count += 1;
                     } else {
-                        bump(group, "count");
+                        group.count += 1;
                         let entry = values.get_mut(name).unwrap();
                         entry.0.push(value);
-                        entry.1.push(dec_of(result.get("ratio_g_per_unit")).unwrap_or_default());
+                        entry.1.push(result.ratio_g_per_unit.unwrap_or_default());
                     }
                 }
             }
-            calculations.get_mut(name).unwrap().push((item, result));
+            calculations.get_mut(name).unwrap().push(MealItem {
+                id: meal.id.clone(), day: key.clone(), at: meal.at.clone(), day_type: day_type.clone(),
+                units_per_ke: result.factor_units_per_ke, carbs_total: result.carbs_total,
+                rapid_units_in_window: result.rapid_units_in_window, delta_mgdl: result.delta_mgdl,
+                end: result.end.clone(), reason: result.reason.clone(), manual_window: result.manual_window, excluded,
+                sport: meal.sport.clone(), certainty: meal.quality.carbs_certainty.clone(), fast: meal.quality.fast,
+                dish: meal.dish.as_ref().and_then(|dish| dish.name.clone()),
+                expected_delta_mgdl: None, deviation_mgdl: None, expected_units_per_ke: None, strong_outlier: false,
+            });
         }
     }
-    let factor_of = |item: &Map<String, Value>| dec_of(item.get("units_per_ke"));
     for name in MEALS {
         let items = calculations.get_mut(name).unwrap();
-        for (item, _) in items.iter_mut() {
-            item.insert("strong_outlier".into(), json!(false));
-        }
-        let comparable: Vec<usize> = (0..items.len()).filter(|i| factor_of(&items[*i].0).is_some()).collect();
+        let comparable: Vec<usize> = (0..items.len()).filter(|i| items[*i].units_per_ke.is_some()).collect();
         let sets: Vec<Vec<usize>> = if name == "breakfast" && day_types.is_some() {
-            ["work", "free"].iter().map(|kind| comparable.iter().copied().filter(|i| items[*i].0["day_type"] == *kind).collect()).collect()
+            ["work", "free"].iter().map(|kind| comparable.iter().copied().filter(|i| items[*i].day_type.as_deref() == Some(*kind)).collect()).collect()
         } else {
             vec![comparable.clone()]
         };
         for set in sets {
-            let factors: Vec<Decimal> = set.iter().map(|i| factor_of(&items[*i].0).unwrap()).collect();
+            let factors: Vec<Decimal> = set.iter().filter_map(|i| items[*i].units_per_ke).collect();
             for (index, flag) in set.iter().zip(strong_outlier_flags(&factors)) {
-                items[*index].0.insert("strong_outlier".into(), json!(flag));
+                items[*index].strong_outlier = flag;
             }
         }
         let group = groups.get_mut(name).unwrap();
-        group.insert("strong_outlier_count".into(), json!(comparable.iter().filter(|i| items[**i].0["strong_outlier"] == true).count()));
+        group.strong_outlier_count = comparable.iter().filter(|i| items[**i].strong_outlier).count();
         let (own, nightscout) = values.remove(name).unwrap();
-        let own = sorted(own);
-        let nightscout = sorted(nightscout);
-        stats_block(&own, group);
-        group.insert("median_g_per_unit".into(), opt(median(&nightscout)));
-        let mut chronological: Vec<&Map<String, Value>> = items.iter().map(|(item, _)| item)
-            .filter(|item| factor_of(item).is_some() && item["excluded"] == false).collect();
-        chronological.sort_by(|a, b| b["at"].as_str().cmp(&a["at"].as_str()));
+        group.stats = FactorStats::of(&sorted(own));
+        group.median_g_per_unit = median(&sorted(nightscout));
+        let mut chronological: Vec<&MealItem> = items.iter().filter(|item| item.units_per_ke.is_some() && !item.excluded).collect();
+        chronological.sort_by(|a, b| b.at.cmp(&a.at));
         if chronological.len() >= 6 {
-            let recent = median(&sorted(chronological[..3].iter().map(|item| factor_of(item).unwrap()).collect())).unwrap();
-            let previous = median(&sorted(chronological[3..6].iter().map(|item| factor_of(item).unwrap()).collect())).unwrap();
-            group.insert("recent_median_units_per_ke".into(), s(recent));
-            group.insert("previous_median_units_per_ke".into(), s(previous));
-            group.insert("trend_units_per_ke".into(), s(recent - previous));
-        } else {
-            for field in ["recent_median_units_per_ke", "previous_median_units_per_ke", "trend_units_per_ke"] {
-                group.insert(field.into(), Value::Null);
-            }
-        }
-    }
-    let mut by_day_type = Map::new();
-    if day_types.is_some() {
-        let items = &calculations["breakfast"];
-        for kind in ["work", "free"] {
-            let mine: Vec<&Map<String, Value>> = items.iter().map(|(item, _)| item).filter(|item| item["day_type"] == kind).collect();
-            let kind_values = sorted(mine.iter().filter(|item| item["excluded"] == false).filter_map(|item| factor_of(item)).collect());
-            let mut row = Map::new();
-            row.insert("total".into(), json!(mine.len()));
-            row.insert("count".into(), json!(kind_values.len()));
-            row.insert("valid_count".into(), json!(mine.iter().filter(|item| factor_of(item).is_some()).count()));
-            row.insert("excluded_count".into(), json!(mine.iter().filter(|item| factor_of(item).is_some() && item["excluded"] == true).count()));
-            row.insert("blocked_count".into(), json!(mine.iter().filter(|item| factor_of(item).is_none()).count()));
-            stats_block(&kind_values, &mut row);
-            by_day_type.insert(kind.into(), Value::Object(row));
+            let factors = |items: &[&MealItem]| median(&sorted(items.iter().filter_map(|item| item.units_per_ke).collect())).unwrap();
+            let (recent, previous) = (factors(&chronological[..3]), factors(&chronological[3..6]));
+            group.recent_median_units_per_ke = Some(recent);
+            group.previous_median_units_per_ke = Some(previous);
+            group.trend_units_per_ke = Some(recent - previous);
         }
     }
     let mode = settings.get("auto_vacation").and_then(Value::as_str).unwrap_or(services::DEFAULT_AUTO_VACATION);
     let points = snapshot.points.clone().unwrap_or_else(|| meal_points(today, history_days(days), snapshot, mode));
     let part = automatik(today, &points, settings, &c);
-    let by_id: HashMap<String, &MealPoint> = points.iter().map(|point| (point_id(point), point)).collect();
+    let by_day_type: Option<BTreeMap<&'static str, DayTypeGroup>> = day_types.map(|_| ["work", "free"].into_iter().map(|kind| {
+        let mine: Vec<&MealItem> = calculations["breakfast"].iter().filter(|item| item.day_type.as_deref() == Some(kind)).collect();
+        let kind_values = sorted(mine.iter().filter(|item| !item.excluded).filter_map(|item| item.units_per_ke).collect());
+        let key: MealKey = ("breakfast".into(), Some(kind.into()));
+        (kind, DayTypeGroup {
+            total: mine.len(),
+            count: kind_values.len(),
+            valid_count: mine.iter().filter(|item| item.units_per_ke.is_some()).count(),
+            excluded_count: mine.iter().filter(|item| item.units_per_ke.is_some() && item.excluded).count(),
+            blocked_count: mine.iter().filter(|item| item.units_per_ke.is_none()).count(),
+            stats: FactorStats::of(&kind_values),
+            suggestion: Suggestion::of(&part.predictions[&key], &c),
+        })
+    }).collect());
+    let known: HashSet<String> = points.iter().map(point_id).collect();
     // Erwartet / Delta per meal, the typical miss per meal kind, carb certainty and "Schnell" mark.
-    let mut certainty: Vec<(String, Vec<Decimal>)> = Vec::new();
-    let mut fast: Vec<(String, Vec<Decimal>)> = Vec::new();
-    let push = |list: &mut Vec<(String, Vec<Decimal>)>, key: String, value: Decimal| match list.iter_mut().find(|(k, _)| *k == key) {
-        Some(entry) => entry.1.push(value),
-        None => list.push((key, vec![value])),
-    };
+    let mut certainty: BTreeMap<String, Vec<Decimal>> = BTreeMap::new();
+    let mut fast: BTreeMap<String, Vec<Decimal>> = BTreeMap::new();
     for name in MEALS {
         let items = calculations.get_mut(name).unwrap();
-        for (item, result) in items.iter_mut() {
-            let id = item["id"].as_str().unwrap_or_default().to_string();
-            let Some(delta) = dec_of(result.get("delta_mgdl")) else { continue };
-            if !by_id.contains_key(&id) {
+        for item in items.iter_mut() {
+            let Some(delta) = item.delta_mgdl else { continue };
+            if !known.contains(&item.id) {
                 continue;
             }
-            let (Some(suggested), Some(deviation)) = part.misses.get(&id).copied().unwrap_or((None, None)) else { continue };
-            item.insert("expected_units_per_ke".into(), s(suggested));
-            item.insert("expected_delta_mgdl".into(), s(delta - deviation));
-            item.insert("deviation_mgdl".into(), s(deviation));
-            push(&mut certainty, item["certainty"].as_str().unwrap_or("none").to_string(), deviation);
-            push(&mut fast, if item["fast"] == true { "fast".into() } else { "other".into() }, deviation);
+            let (Some(suggested), Some(deviation)) = part.misses.get(&item.id).copied().unwrap_or((None, None)) else { continue };
+            item.expected_units_per_ke = Some(suggested);
+            item.expected_delta_mgdl = Some(delta - deviation);
+            item.deviation_mgdl = Some(deviation);
+            certainty.entry(item.certainty.clone().unwrap_or_else(|| "none".into())).or_default().push(deviation);
+            fast.entry(if item.fast { "fast" } else { "other" }.into()).or_default().push(deviation);
         }
-        let deviations: Vec<Decimal> = items.iter().filter_map(|(item, _)| dec_of(item.get("deviation_mgdl"))).collect();
+        let deviations: Vec<Decimal> = items.iter().filter_map(|item| item.deviation_mgdl).collect();
         let group = groups.get_mut(name).unwrap();
-        group.extend(miss_stats(&deviations));
-        group.insert("expected_count".into(), json!(deviations.len()));
+        group.misses = MissStats::of(&deviations);
+        group.expected_count = deviations.len();
     }
-    let levels = |list: Vec<(String, Vec<Decimal>)>| -> Value {
-        Value::Object(list.into_iter().map(|(key, values)| {
-            let mut row = Map::from_iter([("count".to_string(), json!(values.len()))]);
-            row.extend(miss_stats(&values));
-            (key, Value::Object(row))
-        }).collect())
-    };
-    let misses = json!({"certainty": levels(certainty), "fast": levels(fast)});
+    let levels = |list: BTreeMap<String, Vec<Decimal>>| list.into_iter().map(|(key, values)| (key, MissCell::of(&values))).collect();
+    let misses = Misses { certainty: levels(certainty), fast: levels(fast) };
     let trend = miss_trend(&points, today, &part.misses);
-    for (kind, row) in by_day_type.iter_mut() {
-        let key: MealKey = ("breakfast".into(), Some(kind.clone()));
-        row["suggestion"] = suggestion_factor(&part.predictions[&key], &c);
-    }
     let named: &[&str] = if day_types.is_some() { &["lunch", "dinner"] } else { &MEALS };
     for name in named {
         let key: MealKey = (name.to_string(), None);
-        groups.get_mut(name).unwrap().insert("suggestion".into(), suggestion_factor(&part.predictions[&key], &c));
+        groups.get_mut(name).unwrap().suggestion = Some(Suggestion::of(&part.predictions[&key], &c));
     }
     let timezone = settings.get("timezone").and_then(Value::as_str).unwrap_or("UTC");
     let ic_schedule: Vec<crate::model::IsfRow> = serde_json::from_value(settings.get("ic_schedule").cloned().unwrap_or(json!([]))).unwrap_or_default();
     for name in MEALS {
         let mut current: Vec<Decimal> = Vec::new();
         if !ic_schedule.is_empty() {
-            for (item, _) in &calculations[name] {
-                if let Some(at) = instant(&item["at"]) {
+            for item in &calculations[name] {
+                if let Some(at) = instant(item.at.as_deref()) {
                     let grams = schedule_value_at(at, &ic_schedule, timezone, ScheduleKey::GramsPerUnit)?;
                     let value = dec!(10) / grams;
                     if !current.contains(&value) {
@@ -664,11 +1005,11 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Value> {
         }
         current.sort();
         let group = groups.get_mut(name).unwrap();
-        group.insert("nightscout_units_per_ke".into(), Value::Array(current.into_iter().map(s).collect()));
+        group.nightscout_units_per_ke = current;
         if name == "breakfast" {
-            group.insert("by_day_type".into(), Value::Object(by_day_type.clone()));
+            group.by_day_type = Some(by_day_type.clone().unwrap_or_default());
         }
-        group.insert("calculations".into(), Value::Array(calculations[name].iter().map(|(item, _)| Value::Object(item.clone())).collect()));
+        group.calculations = calculations.remove(name).unwrap_or_default();
     }
     let names = sport_names(settings);
     let standards: HashMap<String, Decimal> = settings.get("sport_effects_mgdl").and_then(Value::as_object).into_iter().flatten()
@@ -676,39 +1017,57 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Value> {
     let lookback_minutes = dec_of(settings.get("sport_lookback_minutes")).and_then(|v| i64::try_from(v.trunc()).ok()).unwrap_or(360);
     let window_minutes = dec_of(settings.get("window_minutes")).and_then(|v| i64::try_from(v.trunc()).ok()).unwrap_or(180);
     let mut sport = sport_analysis(&sport_meals, &sport_sessions, lookback_minutes, window_minutes, &names, &standards, &snapshot.own_sport_sessions);
-    for group in sport["kinds"].as_array_mut().into_iter().flatten() {
-        let kind = group["kind"].as_str().map(str::to_string);
-        group["standard_drop_mgdl"] = kind.as_ref().and_then(|k| standards.get(k)).map(|v| s(*v)).unwrap_or(Value::Null);
-        let suggested = group["suggested_drop_mgdl"].clone();
-        group["apply"] = if suggested.is_null() { Value::Null } else {
+    for group in sport.kinds.iter_mut() {
+        let apply = group.suggested_drop_mgdl.map(|suggested| {
             let mut effects = settings.get("sport_effects_mgdl").cloned().unwrap_or(json!({}));
-            if let (Some(map), Some(kind)) = (effects.as_object_mut(), kind) {
-                map.insert(kind, suggested);
+            if let (Some(map), Some(kind)) = (effects.as_object_mut(), group.kind.clone()) {
+                map.insert(kind, Value::String(suggested.to_string()));
             }
             json!({"sport_effects_mgdl": effects})
-        };
+        });
+        group.apply = Some(KindApply { standard_drop_mgdl: group.kind.as_ref().and_then(|k| standards.get(k)).copied(), apply });
     }
-    let mut out = Map::new();
-    out.insert("days".into(), json!(days));
-    out.insert("groups".into(), Value::Object(groups.into_iter().map(|(k, v)| (k.to_string(), Value::Object(v))).collect()));
-    out.insert("misses".into(), misses);
-    out.insert("trend".into(), trend);
-    out.insert("profile_sync_error".into(), Value::Null);
-    out.insert("suggestion_derivation".into(), part.derivation.clone());
-    out.insert("day_types".into(), json!(day_types.is_some()));
-    out.insert("day_type_ratio".into(), part.day_type_ratio.clone());
-    out.insert("sport_analysis".into(), sport);
-    out.insert("night".into(), night_overview(&night_records, days));
-    out.insert("quiet".into(), quiet_overview(quiet_records));
-    Ok(Value::Object(out))
+    Ok(Summary {
+        days,
+        groups,
+        misses,
+        trend,
+        profile_sync_error: None,
+        suggestion_derivation: part.derivation.clone(),
+        day_types: day_types.is_some(),
+        day_type_ratio: part.day_type_ratio.clone(),
+        sport_analysis: sport,
+        night: night_overview(night_records, days),
+        quiet: quiet_overview(quiet_records),
+    })
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct TrendWeek {
+    pub start: String,
+    pub end: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct TrendKind {
+    pub weeks: Vec<MissCell>,
+    /// "up" or "down" when the last weeks all missed the same way.
+    pub drift: Option<&'static str>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct Trend {
+    pub weeks: Vec<TrendWeek>,
+    pub kinds: BTreeMap<&'static str, TrendKind>,
 }
 
 /// The miss week by week over the last TREND_WEEKS weeks before today, per meal kind; `drift` names a
 /// direction when the last DRIFT_WEEKS weeks with meals all missed the same way by at least DRIFT_MGDL.
-pub fn miss_trend(points: &[MealPoint], today: NaiveDate, misses: &HashMap<String, (Option<Decimal>, Option<Decimal>)>) -> Value {
-    let weeks: Vec<Value> = (0..TREND_WEEKS).rev().map(|index| json!({
-        "start": (today - Duration::days(7 * (index + 1))).to_string(),
-        "end": (today - Duration::days(7 * index + 1)).to_string()})).collect();
+pub fn miss_trend(points: &[MealPoint], today: NaiveDate, misses: &HashMap<String, (Option<Decimal>, Option<Decimal>)>) -> Trend {
+    let weeks: Vec<TrendWeek> = (0..TREND_WEEKS).rev().map(|index| TrendWeek {
+        start: (today - Duration::days(7 * (index + 1))).to_string(),
+        end: (today - Duration::days(7 * index + 1)).to_string(),
+    }).collect();
     let mut buckets: HashMap<&str, Vec<Vec<Decimal>>> = MEALS.iter().map(|meal| (*meal, vec![Vec::new(); TREND_WEEKS as usize])).collect();
     for point in points {
         let age = (today - point.day).num_days();
@@ -719,59 +1078,82 @@ pub fn miss_trend(points: &[MealPoint], today: NaiveDate, misses: &HashMap<Strin
             buckets.get_mut(point.key.0.as_str()).unwrap()[(TREND_WEEKS - 1 - (age - 1) / 7) as usize].push(*deviation);
         }
     }
-    let mut kinds = Map::new();
-    for meal in MEALS {
-        let cells: Vec<Value> = buckets[meal].iter().map(|values| {
-            let mut row = Map::from_iter([("count".to_string(), json!(values.len()))]);
-            row.extend(miss_stats(values));
-            Value::Object(row)
-        }).collect();
-        let medians: Vec<Decimal> = cells.iter().filter(|cell| cell["count"].as_u64().unwrap_or(0) > 0)
-            .filter_map(|cell| decimal_of(&cell["median_deviation_mgdl"])).collect();
+    let kinds = MEALS.iter().map(|meal| {
+        let cells: Vec<MissCell> = buckets[meal].iter().map(|values| MissCell::of(values)).collect();
+        let medians: Vec<Decimal> = cells.iter().filter(|cell| cell.count > 0).filter_map(|cell| cell.stats.median_deviation_mgdl).collect();
         let recent = &medians[medians.len().saturating_sub(DRIFT_WEEKS)..];
-        let drift = if recent.len() == DRIFT_WEEKS && recent.iter().all(|v| *v >= DRIFT_MGDL) { json!("up") }
-            else if recent.len() == DRIFT_WEEKS && recent.iter().all(|v| *v <= -DRIFT_MGDL) { json!("down") }
-            else { Value::Null };
-        kinds.insert(meal.into(), json!({"weeks": cells, "drift": drift}));
+        let drift = if recent.len() == DRIFT_WEEKS && recent.iter().all(|v| *v >= DRIFT_MGDL) { Some("up") }
+            else if recent.len() == DRIFT_WEEKS && recent.iter().all(|v| *v <= -DRIFT_MGDL) { Some("down") }
+            else { None };
+        (*meal, TrendKind { weeks: cells, drift })
+    }).collect();
+    Trend { weeks, kinds }
+}
+
+/// A day's night with that day's basal.
+#[derive(Clone, Debug, Serialize)]
+pub struct NightRecord {
+    pub day: String,
+    #[serde(flatten)]
+    pub night: StoredNight,
+    pub basal_units: Option<Decimal>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct NightOverview {
+    pub count: usize,
+    pub with_carbs_count: usize,
+    pub unavailable_count: i64,
+    pub median_start_glucose: Option<Decimal>,
+    pub median_end_glucose: Option<Decimal>,
+    pub median_minimum_glucose: Option<Decimal>,
+    pub median_delta_mgdl: Option<Decimal>,
+    pub median_drop_mgdl: Option<Decimal>,
+    pub median_rise_mgdl: Option<Decimal>,
+    pub nights: Vec<NightRecord>,
+}
+
+fn night_overview(records: Vec<NightRecord>, days: i64) -> NightOverview {
+    let complete: Vec<&StoredNight> = records.iter().map(|record| &record.night)
+        .filter(|night| night.minimum_glucose.is_some() && night.start_glucose.is_some()).collect();
+    // Nights with carbs in them are shown but left out of the medians.
+    let clean: Vec<&&StoredNight> = complete.iter().filter(|night| night.carbs_g.unwrap_or_default().is_zero()).collect();
+    let middle = |pick: fn(&StoredNight) -> Option<Decimal>| median(&sorted(clean.iter().filter_map(|night| pick(night)).collect()));
+    NightOverview {
+        count: clean.len(),
+        with_carbs_count: complete.len() - clean.len(),
+        unavailable_count: days - complete.len() as i64,
+        median_start_glucose: middle(|night| night.start_glucose),
+        median_end_glucose: middle(|night| night.end_glucose),
+        median_minimum_glucose: middle(|night| night.minimum_glucose),
+        median_delta_mgdl: middle(|night| night.delta_mgdl),
+        median_drop_mgdl: middle(|night| night.drop_mgdl),
+        median_rise_mgdl: middle(|night| night.rise_mgdl),
+        nights: records,
     }
-    json!({"weeks": weeks, "kinds": kinds})
 }
 
-fn night_record(day: &str, payload: &Value) -> Value {
-    let night = payload.get("night").cloned().unwrap_or(json!({}));
-    let mut row = Map::from_iter([("day".to_string(), json!(day))]);
-    for key in ["start", "end", "dinner_at", "breakfast_at", "last_injection_at", "morning_dose_at", "delta_mgdl",
-                "start_glucose", "end_glucose", "minimum_glucose", "minimum_at", "drop_mgdl", "rise_mgdl", "carbs_g", "reason"] {
-        row.insert(key.into(), night.get(key).cloned().unwrap_or(Value::Null));
-    }
-    let basal = payload.get("basal").and_then(Value::as_array).filter(|doses| !doses.is_empty());
-    row.insert("basal_units".into(), match basal {
-        Some(doses) => s(doses.iter().filter_map(|dose| dec_of(dose.get("units"))).sum()),
-        None => Value::Null,
-    });
-    Value::Object(row)
+/// A stretch without bolus and food with its day.
+#[derive(Clone, Debug, Serialize)]
+pub struct QuietRecord {
+    pub day: String,
+    #[serde(flatten)]
+    pub period: QuietPeriod,
 }
 
-fn night_overview(records: &[Value], days: i64) -> Value {
-    let complete: Vec<&Value> = records.iter().filter(|item| !item["minimum_glucose"].is_null() && !item["start_glucose"].is_null()).collect();
-    let clean: Vec<&&Value> = complete.iter().filter(|item| dec_of(item.get("carbs_g")).unwrap_or_default().is_zero()).collect();
-    let middle = |key: &str| opt(median(&sorted(clean.iter().filter_map(|item| dec_of(item.get(key))).collect())));
-    json!({
-        "count": clean.len(), "with_carbs_count": complete.len() - clean.len(),
-        "unavailable_count": days - complete.len() as i64,
-        "median_start_glucose": middle("start_glucose"), "median_end_glucose": middle("end_glucose"),
-        "median_minimum_glucose": middle("minimum_glucose"), "median_delta_mgdl": middle("delta_mgdl"),
-        "median_drop_mgdl": middle("drop_mgdl"), "median_rise_mgdl": middle("rise_mgdl"),
-        "nights": records,
-    })
+#[derive(Clone, Debug, Serialize)]
+pub struct QuietOverview {
+    pub count: usize,
+    pub hours: Decimal,
+    pub median_rate_mgdl_per_hour: Option<Decimal>,
+    pub periods: Vec<QuietRecord>,
 }
 
-fn quiet_overview(mut records: Vec<Value>) -> Value {
-    let rates = sorted(records.iter().filter_map(|item| dec_of(item.get("rate_mgdl_per_hour"))).collect());
-    let hours: Decimal = records.iter().filter_map(|item| dec_of(item.get("hours"))).sum();
-    let count = records.len();
-    records.sort_by(|a, b| b["start"].as_str().unwrap_or_default().cmp(a["start"].as_str().unwrap_or_default()));
-    json!({"count": count, "hours": s(hours), "median_rate_mgdl_per_hour": opt(median(&rates)), "periods": records})
+fn quiet_overview(mut records: Vec<QuietRecord>) -> QuietOverview {
+    let rates = sorted(records.iter().map(|item| item.period.rate_mgdl_per_hour).collect());
+    let hours: Decimal = records.iter().map(|item| item.period.hours).sum();
+    records.sort_by_key(|record| std::cmp::Reverse(record.period.start));
+    QuietOverview { count: records.len(), hours, median_rate_mgdl_per_hour: median(&rates), periods: records }
 }
 
 fn sport_names(settings: &Value) -> HashMap<String, String> {
@@ -789,14 +1171,12 @@ fn sport_median(values: &[Decimal]) -> Option<Decimal> {
 }
 
 /// Factor without any sport correction, or None when blocked (sport_analysis.raw_factor).
-fn raw_factor(result: &Value) -> Option<Decimal> {
-    if result.get("blockers").and_then(Value::as_array).is_some_and(|items| !items.is_empty())
-        || result.get("start").is_none_or(|v| v.is_null() || v == "") {
+fn raw_factor(result: &StoredCalc) -> Option<Decimal> {
+    if !result.blockers.is_empty() || result.start.is_none() {
         return None;
     }
-    let delta = dec_of(result.get("delta_mgdl"))?;
-    let insulin = dec_of(result.get("insulin_effect_mgdl"))?;
-    let carb_effect = dec_of(result.get("carbs_times_isf_total"))?;
+    let carb_effect = result.carbs_times_isf_total?;
+    let (delta, insulin) = (result.delta_mgdl?, result.insulin_effect_mgdl?);
     if carb_effect <= Decimal::ZERO {
         return None;
     }
@@ -804,146 +1184,249 @@ fn raw_factor(result: &Value) -> Option<Decimal> {
 }
 
 /// The kind's standard drop that would have matched what the meals measured (sport_analysis.suggested_drop).
-pub fn suggested_drop(standard: Option<Decimal>, ratios: &[Decimal]) -> Value {
-    let Some(standard) = standard.filter(|v| !v.is_zero()) else { return Value::Null };
+pub fn suggested_drop(standard: Option<Decimal>, ratios: &[Decimal]) -> Option<Decimal> {
+    let standard = standard.filter(|v| !v.is_zero())?;
     if ratios.len() < SPORT_SUGGEST_MIN_MEALS {
-        return Value::Null;
+        return None;
     }
-    let ratio = sport_median(ratios).unwrap().clamp(Decimal::ZERO, SPORT_SUGGEST_MAX_RATIO);
+    let ratio = sport_median(ratios)?.clamp(Decimal::ZERO, SPORT_SUGGEST_MAX_RATIO);
     let rounded = (standard * ratio / dec!(5)).round_dp_with_strategy(0, rust_decimal::RoundingStrategy::MidpointNearestEven) * dec!(5);
-    let mut value = rounded.clamp(dec!(-500), dec!(500));
-    if value.is_zero() {
-        value = Decimal::ZERO;
-    }
-    if value == standard { Value::Null } else { Value::String(value.normalize().to_string()) }
+    let value = rounded.clamp(dec!(-500), dec!(500));
+    let value = if value.is_zero() { Decimal::ZERO } else { value.normalize() };
+    (value != standard).then_some(value)
+}
+
+/// A meal as the sport analysis reads it.
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct SportMeal {
+    #[serde(default, deserialize_with = "crate::model::text")]
+    pub id: String,
+    #[serde(default, deserialize_with = "lenient")]
+    pub day: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub meal: String,
+    #[serde(default, deserialize_with = "lenient")]
+    pub at: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub excluded: bool,
+    #[serde(default, deserialize_with = "lenient")]
+    pub calculation: StoredCalc,
+    #[serde(default, deserialize_with = "lenient")]
+    pub sport: StoredSport,
+}
+
+/// The sport part of a stored meal.
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct StoredSport {
+    #[serde(default, deserialize_with = "lenient")]
+    pub status: Option<String>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub effect_mgdl: Option<Decimal>,
+}
+
+/// A sport session as the sport analysis reads it.
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct SportSessionIn {
+    #[serde(default)]
+    pub id: Value,
+    #[serde(default, deserialize_with = "lenient")]
+    pub at: Option<String>,
+    #[serde(default, deserialize_with = "opt_amount")]
+    pub duration_minutes: Option<Decimal>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub kind: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub notes: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct Baseline {
+    pub median_units_per_ke: Option<Decimal>,
+    pub count: usize,
+}
+
+/// A meal near a sport session: what it would have needed without sport against what it measured.
+#[derive(Clone, Debug, Serialize)]
+pub struct InfluencedMeal {
+    pub id: String,
+    pub day: Option<String>,
+    pub meal: String,
+    #[serde(serialize_with = "py_iso")]
+    pub start: Instant,
+    #[serde(serialize_with = "py_iso")]
+    pub end: Instant,
+    pub excluded: bool,
+    pub carbs_total: Option<Decimal>,
+    pub rapid_units_in_window: Option<Decimal>,
+    pub delta_mgdl: Option<Decimal>,
+    pub expected_delta_mgdl: Option<Decimal>,
+    pub effect_mgdl: Option<Decimal>,
+    pub factor_without_sport_units_per_ke: Option<Decimal>,
+    pub baseline_units_per_ke: Option<Decimal>,
+    pub confirmed_effect_mgdl: Option<Decimal>,
+    pub applied_mgdl: Option<Decimal>,
+    pub shared: bool,
+    pub session_ids: Vec<Value>,
+    pub reason: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct SessionView {
+    pub id: Value,
+    pub kind: Option<String>,
+    pub label: String,
+    #[serde(serialize_with = "py_iso")]
+    pub start: Instant,
+    #[serde(serialize_with = "py_iso_opt")]
+    pub end: Option<Instant>,
+    pub duration_minutes: Option<i64>,
+    pub notes: String,
+    pub meals: Vec<InfluencedMeal>,
+}
+
+/// What the meals measured per sport kind against what the factors assumed.
+#[derive(Clone, Debug, Serialize)]
+pub struct SportKindView {
+    pub kind: Option<String>,
+    pub label: String,
+    pub session_count: usize,
+    pub meal_count: usize,
+    pub suggested_drop_mgdl: Option<Decimal>,
+    pub median_applied_mgdl: Option<Decimal>,
+    pub effect_count: usize,
+    pub median_effect_mgdl: Option<Decimal>,
+    pub min_effect_mgdl: Option<Decimal>,
+    pub max_effect_mgdl: Option<Decimal>,
+    /// Only on the analysis page.
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub apply: Option<KindApply>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct SportAnalysis {
+    pub baselines: BTreeMap<&'static str, Baseline>,
+    pub kinds: Vec<SportKindView>,
+    pub sessions: Vec<SessionView>,
+    pub lookback_minutes: i64,
 }
 
 /// Link sport sessions to meals and estimate each meal's sport effect (sport_analysis.analyze).
-pub fn sport_analysis(meals: &[Value], exercises: &[Value], lookback_minutes: i64, window_minutes: i64,
-                  labels: &HashMap<String, String>, standards: &HashMap<String, Decimal>, own_sessions: &HashSet<String>) -> Value {
-    struct Session { item: Value, start: Instant, end: Instant, duration: i64, meal_ids: Vec<String> }
+pub fn sport_analysis(meals: &[SportMeal], exercises: &[SportSessionIn], lookback_minutes: i64, window_minutes: i64,
+                      labels: &HashMap<String, String>, standards: &HashMap<String, Decimal>, own_sessions: &HashSet<String>) -> SportAnalysis {
+    struct Session<'a> { item: &'a SportSessionIn, start: Instant, end: Instant, duration: i64, meal_ids: Vec<String> }
     let mut sessions: Vec<Session> = exercises.iter().filter_map(|item| {
-        let start = instant(&item["at"])?;
-        let duration = dec_of(item.get("duration_minutes")).map(|v| i64::try_from(v.trunc()).unwrap_or(0)).unwrap_or(0);
-        Some(Session { item: item.clone(), start, end: start + Duration::minutes(duration), duration, meal_ids: Vec::new() })
+        let start = instant(item.at.as_deref())?;
+        let duration = item.duration_minutes.map(|v| i64::try_from(v.trunc()).unwrap_or(0)).unwrap_or(0);
+        Some(Session { item, start, end: start + Duration::minutes(duration), duration, meal_ids: Vec::new() })
     }).collect();
     sessions.sort_by_key(|session| session.start);
     let lookback = Duration::minutes(lookback_minutes);
-    struct Prepared<'a> { meal: &'a Value, start: Instant, end: Instant, sessions: Vec<usize>, confirmed: bool, factor: Option<Decimal> }
+    struct Prepared<'a> { meal: &'a SportMeal, start: Instant, end: Instant, sessions: Vec<usize>, confirmed: bool, factor: Option<Decimal> }
     let mut prepared = Vec::new();
     for meal in meals {
-        let result = &meal["calculation"];
-        let Some(start) = instant(&meal["at"]) else { continue };
-        let end = result.get("end").and_then(instant).unwrap_or(start + Duration::minutes(window_minutes));
+        let result = &meal.calculation;
+        let Some(start) = instant(meal.at.as_deref()) else { continue };
+        let end = instant(result.end.as_deref()).unwrap_or(start + Duration::minutes(window_minutes));
         let linked: Vec<usize> = (0..sessions.len()).filter(|i| sessions[*i].end >= start - lookback && sessions[*i].start < end).collect();
         for index in &linked {
-            sessions[*index].meal_ids.push(meal["id"].as_str().unwrap_or_default().to_string());
+            sessions[*index].meal_ids.push(meal.id.clone());
         }
-        prepared.push(Prepared { meal, start, end, sessions: linked, confirmed: meal["sport"].get("status").and_then(Value::as_str) == Some("affected"),
+        prepared.push(Prepared { meal, start, end, sessions: linked, confirmed: meal.sport.status.as_deref() == Some("affected"),
                                  factor: raw_factor(result) });
     }
-    let mut baselines = Map::new();
-    for kind in MEALS {
-        let found: Vec<Decimal> = prepared.iter().filter(|item| item.meal["meal"] == kind && item.sessions.is_empty() && !item.confirmed
-                && item.meal["excluded"] != true).filter_map(|item| item.factor).filter(|f| *f > Decimal::ZERO).collect();
-        baselines.insert(kind.into(), json!({"median_units_per_ke": opt(sport_median(&found)), "count": found.len()}));
-    }
-    let mut influenced: Vec<(String, Value)> = Vec::new();
+    let baselines: BTreeMap<&'static str, Baseline> = MEALS.iter().map(|kind| {
+        let found: Vec<Decimal> = prepared.iter().filter(|item| item.meal.meal == *kind && item.sessions.is_empty() && !item.confirmed
+                && !item.meal.excluded).filter_map(|item| item.factor).filter(|f| *f > Decimal::ZERO).collect();
+        (*kind, Baseline { median_units_per_ke: sport_median(&found), count: found.len() })
+    }).collect();
+    let mut influenced: Vec<InfluencedMeal> = Vec::new();
     for item in &prepared {
         if item.sessions.is_empty() && !item.confirmed {
             continue;
         }
         let meal = item.meal;
-        let result = &meal["calculation"];
-        let baseline = baselines.get(meal["meal"].as_str().unwrap_or_default()).map(|b| b["median_units_per_ke"].clone()).unwrap_or(Value::Null);
-        let (mut expected, mut effect, mut reason) = (None, None, Value::Null);
+        let result = &meal.calculation;
+        let baseline = baselines.get(meal.meal.as_str()).and_then(|b| b.median_units_per_ke);
+        let (mut expected, mut effect, mut reason) = (None, None, None);
         if item.factor.is_none() {
-            reason = json!(result.get("reason").and_then(Value::as_str).filter(|r| !r.is_empty()).map(str::to_string).unwrap_or_else(|| t("Mahlzeit nicht berechenbar")));
-        } else if let Some(base) = decimal_of(&baseline) {
-            let carb_effect = dec_of(result.get("carbs_times_isf_total")).unwrap_or_default();
-            let value = base * carb_effect / dec!(10) - dec_of(result.get("insulin_effect_mgdl")).unwrap_or_default();
+            reason = Some(result.reason.clone().filter(|r| !r.is_empty()).unwrap_or_else(|| t("Mahlzeit nicht berechenbar")));
+        } else if let Some(base) = baseline {
+            let value = base * result.carbs_times_isf_total.unwrap_or_default() / dec!(10) - result.insulin_effect_mgdl.unwrap_or_default();
             expected = Some(value);
-            effect = Some(dec_of(result.get("delta_mgdl")).unwrap_or_default() - value);
+            effect = Some(result.delta_mgdl.unwrap_or_default() - value);
         } else {
-            reason = json!(t("Keine Vergleichsmahlzeiten ohne Sport"));
+            reason = Some(t("Keine Vergleichsmahlzeiten ohne Sport"));
         }
-        let sport = &meal["sport"];
-        let id = meal["id"].as_str().unwrap_or_default().to_string();
-        influenced.push((id.clone(), json!({
-            "id": id, "day": meal["day"], "meal": meal["meal"], "start": iso(&item.start), "end": iso(&item.end),
-            "excluded": meal["excluded"] == true,
-            "carbs_total": result.get("carbs_total").cloned().unwrap_or(Value::Null),
-            "rapid_units_in_window": result.get("rapid_units_in_window").cloned().unwrap_or(Value::Null),
-            "delta_mgdl": result.get("delta_mgdl").cloned().unwrap_or(Value::Null),
-            "expected_delta_mgdl": opt(expected), "effect_mgdl": opt(effect),
-            "factor_without_sport_units_per_ke": opt(item.factor), "baseline_units_per_ke": baseline,
-            "confirmed_effect_mgdl": if item.confirmed { sport.get("effect_mgdl").cloned().unwrap_or(Value::Null) } else { Value::Null },
-            "applied_mgdl": dec_of(sport.get("effect_mgdl")).map(|v| s(-v)).unwrap_or(Value::Null),
-            "shared": item.sessions.len() > 1,
-            "session_ids": item.sessions.iter().map(|i| sessions[*i].item["id"].clone()).collect::<Vec<_>>(),
-            "reason": reason,
-        })));
+        influenced.push(InfluencedMeal {
+            id: meal.id.clone(), day: meal.day.clone(), meal: meal.meal.clone(), start: item.start, end: item.end,
+            excluded: meal.excluded, carbs_total: result.carbs_total, rapid_units_in_window: result.rapid_units_in_window,
+            delta_mgdl: result.delta_mgdl, expected_delta_mgdl: expected, effect_mgdl: effect,
+            factor_without_sport_units_per_ke: item.factor, baseline_units_per_ke: baseline,
+            confirmed_effect_mgdl: if item.confirmed { meal.sport.effect_mgdl } else { None },
+            applied_mgdl: meal.sport.effect_mgdl.map(|v| -v),
+            shared: item.sessions.len() > 1,
+            session_ids: item.sessions.iter().map(|i| sessions[*i].item.id.clone()).collect(),
+            reason,
+        });
     }
-    let find = |id: &str| influenced.iter().find(|(key, _)| key == id).map(|(_, v)| v.clone()).unwrap_or(Value::Null);
-    let mut rendered: Vec<Value> = sessions.iter().map(|session| {
-        let kind = session.item["kind"].as_str();
-        json!({"id": session.item["id"], "kind": session.item["kind"],
-               "label": kind.and_then(|k| labels.get(k)).cloned().unwrap_or_else(|| t("Sportart unbekannt")),
-               "start": iso(&session.start), "end": iso(&session.end), "duration_minutes": session.duration,
-               "notes": session.item["notes"].as_str().unwrap_or_default(),
-               "meals": session.meal_ids.iter().map(|id| find(id)).collect::<Vec<_>>()})
+    let mut rendered: Vec<SessionView> = sessions.iter().map(|session| SessionView {
+        id: session.item.id.clone(),
+        kind: session.item.kind.clone(),
+        label: session.item.kind.as_ref().and_then(|k| labels.get(k)).cloned().unwrap_or_else(|| t("Sportart unbekannt")),
+        start: session.start,
+        end: Some(session.end),
+        duration_minutes: Some(session.duration),
+        notes: session.item.notes.clone(),
+        meals: session.meal_ids.iter().filter_map(|id| influenced.iter().find(|meal| meal.id == *id)).cloned().collect(),
     }).collect();
-    for (_, meal) in &influenced {
-        if meal["session_ids"].as_array().is_some_and(|ids| ids.is_empty()) {
-            rendered.push(json!({"id": null, "kind": null, "label": t("Sport ohne Eintrag"), "start": meal["start"], "end": null,
-                                 "duration_minutes": null, "notes": "", "meals": [meal]}));
+    for meal in &influenced {
+        if meal.session_ids.is_empty() {
+            rendered.push(SessionView { id: Value::Null, kind: None, label: t("Sport ohne Eintrag"), start: meal.start, end: None,
+                                        duration_minutes: None, notes: String::new(), meals: vec![meal.clone()] });
         }
     }
-    rendered.sort_by(|a, b| b["start"].as_str().unwrap_or_default().cmp(a["start"].as_str().unwrap_or_default()));
-    struct Kind { kind: Value, label: Value, sessions: usize, meals: usize, effects: Vec<Decimal>, applied: Vec<Decimal>, ratios: Vec<Decimal> }
+    rendered.sort_by_key(|session| std::cmp::Reverse(session.start));
+    struct Kind { kind: Option<String>, label: String, sessions: usize, meals: usize, effects: Vec<Decimal>, applied: Vec<Decimal>, ratios: Vec<Decimal> }
     let mut by_kind: Vec<(String, Kind)> = Vec::new();
     for session in &rendered {
-        let key = session["kind"].as_str().unwrap_or_default().to_string();
+        let key = session.kind.clone().unwrap_or_default();
         let index = match by_kind.iter().position(|(k, _)| *k == key) {
             Some(index) => index,
             None => {
-                by_kind.push((key.clone(), Kind { kind: session["kind"].clone(), label: session["label"].clone(), sessions: 0, meals: 0,
-                                                  effects: Vec::new(), applied: Vec::new(), ratios: Vec::new() }));
+                by_kind.push((key, Kind { kind: session.kind.clone(), label: session.label.clone(), sessions: 0, meals: 0,
+                                          effects: Vec::new(), applied: Vec::new(), ratios: Vec::new() }));
                 by_kind.len() - 1
             }
         };
         let group = &mut by_kind[index].1;
         group.sessions += 1;
-        for meal in session["meals"].as_array().into_iter().flatten() {
+        for meal in &session.meals {
             group.meals += 1;
             // Shared meals cannot be attributed to one session; excluded meals stay out of medians.
-            if let Some(effect) = dec_of(meal.get("effect_mgdl")) {
-                if meal["shared"] != true && meal["excluded"] != true {
-                    group.effects.push(effect);
-                    if let Some(applied) = dec_of(meal.get("applied_mgdl")) {
-                        group.applied.push(applied);
-                        let own = session["id"].as_str().is_some_and(|id| own_sessions.contains(id));
-                        if !applied.is_zero() && !own {
-                            group.ratios.push(effect / applied);
-                        }
-                    }
+            let Some(effect) = meal.effect_mgdl.filter(|_| !meal.shared && !meal.excluded) else { continue };
+            group.effects.push(effect);
+            if let Some(applied) = meal.applied_mgdl {
+                group.applied.push(applied);
+                let own = session.id.as_str().is_some_and(|id| own_sessions.contains(id));
+                if !applied.is_zero() && !own {
+                    group.ratios.push(effect / applied);
                 }
             }
         }
     }
-    let mut kinds: Vec<Value> = by_kind.into_iter().map(|(_, group)| {
-        let standard = group.kind.as_str().and_then(|k| standards.get(k)).copied();
-        json!({"kind": group.kind, "label": group.label, "session_count": group.sessions, "meal_count": group.meals,
-               "suggested_drop_mgdl": suggested_drop(standard, &group.ratios),
-               "median_applied_mgdl": opt(sport_median(&group.applied)),
-               "effect_count": group.effects.len(), "median_effect_mgdl": opt(sport_median(&group.effects)),
-               "min_effect_mgdl": opt(group.effects.iter().min().copied()), "max_effect_mgdl": opt(group.effects.iter().max().copied())})
+    let mut kinds: Vec<SportKindView> = by_kind.into_iter().map(|(_, group)| {
+        let standard = group.kind.as_ref().and_then(|k| standards.get(k)).copied();
+        SportKindView {
+            suggested_drop_mgdl: suggested_drop(standard, &group.ratios),
+            median_applied_mgdl: sport_median(&group.applied),
+            effect_count: group.effects.len(),
+            median_effect_mgdl: sport_median(&group.effects),
+            min_effect_mgdl: group.effects.iter().min().copied(),
+            max_effect_mgdl: group.effects.iter().max().copied(),
+            kind: group.kind, label: group.label, session_count: group.sessions, meal_count: group.meals,
+            apply: None,
+        }
     }).collect();
-    kinds.sort_by(|a, b| a["label"].as_str().unwrap_or_default().cmp(b["label"].as_str().unwrap_or_default()));
-    json!({"baselines": baselines, "kinds": kinds, "sessions": rendered, "lookback_minutes": lookback_minutes})
-}
-
-#[allow(dead_code)]
-fn unused(text: &str) -> String {
-    tr(text, &[])
+    kinds.sort_by(|a, b| a.label.cmp(&b.label));
+    SportAnalysis { baselines, kinds, sessions: rendered, lookback_minutes }
 }
