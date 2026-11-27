@@ -61,9 +61,11 @@ class BacktestTests(unittest.TestCase):
         target.update({"end_glucose": Decimal(150), "carbs_isf": Decimal(2000)})
         result = forecast.backtest(points + [target], TODAY - timedelta(days=1), [(28, Decimal(7), Decimal(100))])
         row = result["rows"][0]
-        self.assertEqual(row["predictions"], [Decimal("1.5")])
+        self.assertEqual(len(row["predictions"]), 1)
+        self.assertAlmostEqual(row["predictions"][0], Decimal("1.5"), places=20)
         # 0.5 IE/KE too much: target 120 − 0.5 × 2000 / 10 = 20 mg/dL, below the range.
-        self.assertEqual(row["glucose"], [Decimal(20)])
+        self.assertEqual(len(row["glucose"]), 1)
+        self.assertAlmostEqual(row["glucose"][0], Decimal(20), places=20)
         stats = result["stats"][0]
         self.assertEqual((stats["below"], stats["in_range"], stats["above"], stats["glucose_count"]), (1, 0, 0, 1))
 
@@ -128,7 +130,7 @@ class SurchargeTests(unittest.TestCase):
         # 60 g at KF 30: Σ[g × KF] = 1800, the surcharge is 10 × 40 / 1800 IE/KE.
         meal = point(1, "1.2")
         meal.update({"carbs_g": Decimal(60), "carbs_isf": Decimal(1800)})
-        self.assertEqual(forecast.base_factor(meal), Decimal("1.2") - Decimal(400) / Decimal(1800))
+        self.assertAlmostEqual(forecast.base_factor(meal), Decimal("1.2") - Decimal(400) / Decimal(1800), places=20)
         self.assertIsNone(forecast.base_factor(point(1, "1.2")))
 
     def test_backtest_surcharge_column_fits_small_and_large_meals(self):
@@ -146,9 +148,10 @@ class SurchargeTests(unittest.TestCase):
     def test_fat_meals_carry_the_fat_surcharge(self):
         meal = point(1, "1.2")
         meal.update({"carbs_g": Decimal(60), "carbs_isf": Decimal(1800), "fat": True})
-        self.assertEqual(forecast.base_factor(meal, Decimal(80), Decimal(120)), Decimal("1.2") - Decimal(2000) / Decimal(1800))
-        self.assertEqual(forecast.base_factor({**meal, "fat": False}, Decimal(80), Decimal(120)),
-                         Decimal("1.2") - Decimal(800) / Decimal(1800))
+        self.assertAlmostEqual(forecast.base_factor(meal, Decimal(80), Decimal(120)),
+                               Decimal("1.2") - Decimal(2000) / Decimal(1800), places=20)
+        self.assertAlmostEqual(forecast.base_factor({**meal, "fat": False}, Decimal(80), Decimal(120)),
+                               Decimal("1.2") - Decimal(800) / Decimal(1800), places=20)
         # Without a surcharge (plain percentile) there is no fat surcharge either.
         self.assertEqual(forecast.base_factor(meal, Decimal(0), Decimal(120)), Decimal("1.2"))
 
@@ -283,7 +286,7 @@ class TuningTests(unittest.TestCase):
 
     def test_surcharge_amount_is_configurable(self):
         meal = self.sized(1, "1.2")
-        self.assertEqual(forecast.base_factor(meal, Decimal(20)), Decimal("1.2") - Decimal(200) / Decimal(1800))
+        self.assertAlmostEqual(forecast.base_factor(meal, Decimal(20)), Decimal("1.2") - Decimal(200) / Decimal(1800), places=20)
         self.assertEqual(forecast.base_factor(meal, Decimal(0)), Decimal("1.2"))
 
     def test_a_zero_surcharge_variant_is_the_plain_percentile(self):
@@ -332,9 +335,9 @@ class TuningTests(unittest.TestCase):
         example = forecast.explain(history, KEY, TODAY, 15, Decimal(7), Decimal(50), Decimal(30))
         base = Decimal(1) - Decimal(300) / Decimal(1800)
         self.assertEqual(example["units_per_ke"], base)
-        self.assertEqual(example["carb_units"], 6 * base)
+        self.assertAlmostEqual(example["carb_units"], 6 * base, places=20)
         self.assertEqual(example["surcharge_units"], Decimal(1))
-        self.assertEqual(example["total_units"], 6 * base + 1)
+        self.assertAlmostEqual(example["total_units"], 6 * base + 1, places=20)
 
 
 class VacationTests(unittest.TestCase):

@@ -17,6 +17,17 @@ jobs:
           node-version: "22"
       - name: Install Python packages
         run: pip install -r requirements.txt
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            core/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('core/Cargo.lock') }}
+      - name: Build the Rust calculation core
+        run: python core/build.py
+      - name: Rust core against the golden calls of the former Python reference
+        run: cargo build --release --locked --manifest-path core/Cargo.toml && python core/golden/compare.py
       - name: Python unit tests
         run: python -m unittest discover -s tests -v
       - name: Check web/app.js syntax
@@ -28,28 +39,3 @@ jobs:
           python tests/e2e/server.py > e2e-server.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:8765/ > /dev/null && break; sleep 1; done
           node tests/e2e/smoke.js || (cat e2e-server.log; exit 1)
-
-  core-parity:
-    # The Rust core (core/) must compute what the Python reference computes: record every core call the
-    # Python tests make and replay it through the Rust build.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-      - name: Install Python packages
-        run: pip install -r requirements.txt
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            core/target
-          key: cargo-${{ runner.os }}-${{ hashFiles('core/Cargo.lock') }}
-      - name: Build the Rust core
-        run: cargo build --release --locked --manifest-path core/Cargo.toml
-      - name: Record core calls of the Python tests
-        run: python core/parity/record.py
-      - name: Replay them against the Rust core
-        run: python core/parity/compare.py

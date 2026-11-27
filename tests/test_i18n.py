@@ -44,6 +44,38 @@ class CatalogueTest(unittest.TestCase):
         self.assertEqual(sorted(set(EN) - used), [])
 
 
+class CoreCatalogueTest(unittest.TestCase):
+    """The calculation core's texts (core/diabetes-core/src, t()/tr()) have their English in its i18n_en.json."""
+
+    SOURCES = sorted((ROOT / "core" / "diabetes-core" / "src").glob("*.rs"))
+    CATALOGUE = ROOT / "core" / "diabetes-core" / "src" / "i18n_en.json"
+
+    def literals(self, pattern: str) -> set[str]:
+        import json
+        found = set()
+        for path in self.SOURCES:
+            for match in re.finditer(pattern, path.read_text(encoding="utf-8")):
+                try:
+                    found.add(json.loads(f'"{match.group(1)}"'))
+                except ValueError:  # a regex or other Rust escape, not a text
+                    pass
+        return found
+
+    def test_every_core_text_has_an_english_version(self):
+        import json
+        english = json.loads(self.CATALOGUE.read_text(encoding="utf-8"))
+        missing = sorted(self.literals(r'\btr?\(\s*"((?:[^"\\]|\\.)*)"') - set(english))
+        self.assertEqual(missing, [])
+        wrong = [key for key, value in english.items()
+                 if set(PLACEHOLDER.findall(key)) != set(PLACEHOLDER.findall(value))]
+        self.assertEqual(wrong, [])
+
+    def test_no_unused_core_entries(self):
+        import json
+        english = json.loads(self.CATALOGUE.read_text(encoding="utf-8"))
+        self.assertEqual(sorted(set(english) - self.literals(r'"((?:[^"\\]|\\.)*)"')), [])
+
+
 class TranslateTest(unittest.TestCase):
     def setUp(self):
         self.addCleanup(setattr, i18n, "LANGUAGE", i18n.LANGUAGE)

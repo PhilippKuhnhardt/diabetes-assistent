@@ -15,10 +15,10 @@ Its amount is always the current forecast's correction; the planned IE stay as o
 """
 from __future__ import annotations
 
+from app import core
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from app import calculation, dosing, glucose, on_board
 
 # A plan stays open this long past its due time, then it is no longer offered.
 OPEN_AFTER_DUE = timedelta(hours=3)
@@ -39,11 +39,7 @@ def offer(carbs: Decimal, snack: bool, settings: dict, fat: bool = False) -> dic
     """Whether the entry form offers (and preselects) a split for this meal: a main meal from split_min_grams,
     or any fat/protein main meal, whose fat surcharge would otherwise be injected at once while it acts
     over hours."""
-    minimum = int(settings.get("split_min_grams", 80))
-    if snack or minimum <= 0 or carbs <= 0 or (carbs < minimum and not fat):
-        return None
-    return {"first_percent": int(settings.get("split_first_percent", 60)),
-            "delay_minutes": int(settings.get("split_delay_minutes", 120))}
+    return core.call("split.offer", carbs=carbs, snack=snack, settings=settings, fat=fat)
 
 
 def worth_it(full_units, settings: dict) -> bool:
@@ -51,51 +47,21 @@ def worth_it(full_units, settings: dict) -> bool:
     raised to 6.5 IE 2026-11-17).
     A small second part hardly acts and costs an extra injection; a low glucose shrinking the dose
     below the limit means the whole dose is given at once."""
-    if full_units is None:
-        return True
-    return Decimal(str(full_units)) >= Decimal(str(settings.get("split_min_units", "6.5")))
+    return core.call("split.worth_it", full_units=full_units, settings=settings)
 
 
 def parts(full_units: Decimal, first_percent: int, later_units: Decimal | None = None) -> tuple[Decimal, Decimal]:
     """The injectable first part (0.5 IE steps) and the rest of an already rounded dose. With later_units
     (the calculated fat/protein surcharge, app/fpe.py) the rest is that amount, at most the whole dose."""
-    if later_units is not None:
-        later = min(max(later_units, Decimal(0)), full_units)
-        return full_units - later, later
-    now = dosing.half_units(full_units * Decimal(first_percent) / 100)
-    return now, full_units - now
+    return core.call("split.parts", full_units=full_units, first_percent=first_percent, later_units=later_units)
 
 
 def open_plan(treatments: list[dict], now: datetime) -> dict | None:
     """The latest planned second part that has not been injected yet."""
-    meals = [item for item in treatments if item.get("split") and on_board.is_main_meal(item) and item["at"] <= now]
-    if not meals:
-        return None
-    meal = max(meals, key=lambda item: item["at"])
-    due = meal["at"] + timedelta(minutes=int(meal["split"]["delay_minutes"]))
-    if now > due + OPEN_AFTER_DUE:
-        return None
-    # A dose with carbs of its own (a dessert, a snack) covers those carbs only (dosing.suggest hold_rise,
-    # user request 2026-11-23), so the second part stays open for the meal's later rise.
-    later_doses = [item for item in treatments
-                   if meal["at"] + FIRST_PART_MINUTES < item["at"] <= now and calculation.is_rapid_insulin(item)
-                   and calculation.dec(item.get("insulin") or 0) > 0 and calculation.dec(item.get("carbs") or 0) <= 0]
-    if later_doses:
-        return None
-    return {"meal_at": meal["at"], "units": calculation.dec(meal["split"]["units"]), "due_at": due}
+    return core.call("split.open_plan", treatments=treatments, now=now)
 
 
 def timing(plan: dict, entries: list[dict], settings: dict, now: datetime) -> dict:
     """When the second part fits now: early, due, wait (glucose low or falling at the planned time) or later.
     Without a fresh CGM value the planned time decides."""
-    status = glucose.current_status(entries, settings, now)
-    value = calculation.dec(status["glucose_mgdl"]) if status["fresh"] else None
-    rise = calculation.dec(status["trend_delta_mgdl"]) if value is not None and status["trend_delta_mgdl"] else None
-    latest = plan["due_at"] + WAIT_AT_MOST
-    if now < plan["due_at"]:
-        early = (plan["meal_at"] + EARLY_FROM <= now < plan["due_at"] - EARLY_BEFORE_DUE
-                 and value is not None and rise is not None and value >= EARLY_MGDL and rise >= EARLY_RISE_MGDL)
-        return {"state": "early" if early else "later", "latest_at": latest}
-    waiting = (now < latest and value is not None
-               and (value < WAIT_BELOW_MGDL or (rise is not None and rise < -WAIT_FALL_MGDL)))
-    return {"state": "wait" if waiting else "due", "latest_at": latest}
+    return core.call("split.timing", plan=plan, entries=entries, settings=settings, now=now)

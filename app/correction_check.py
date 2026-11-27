@@ -14,10 +14,10 @@ mostly fast absorption, not more carbs. From 2 h the trend no longer counts (few
 """
 from __future__ import annotations
 
+from app import core
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from app import calculation, on_board, split
 
 FROM_MINUTES, TO_MINUTES = 90, 450
 STRICT_UNTIL_MINUTES = 120
@@ -30,43 +30,6 @@ REPEAT = timedelta(minutes=90)
 FRESH_MINUTES = 10
 
 
-def _glucose_at(entries: list[dict], at: datetime) -> Decimal | None:
-    try:
-        return calculation.interpolate_glucose(entries, at)["value"]
-    except ValueError:
-        return None
-
-
 def due(entries: list[dict], found: dict, treatments: list[dict], now: datetime) -> dict | None:
     """The reminder's numbers when it is due now, else None."""
-    meals = [item["at"] for item in treatments if on_board.is_main_meal(item) and item["at"] <= now]
-    if not meals:
-        return None
-    meal_at = max(meals)
-    minutes = (now - meal_at).total_seconds() / 60
-    if not FROM_MINUTES <= minutes <= TO_MINUTES or split.open_plan(treatments, now):
-        return None
-    if any(now - NO_INSULIN < item["at"] <= now and calculation.is_rapid_insulin(item)
-           and calculation.dec(item.get("insulin") or 0) > 0 for item in treatments):
-        return None
-    readings = [entry for entry in entries if entry.get("sgv") is not None and entry["at"] <= now]
-    if not readings:
-        return None
-    latest = max(readings, key=lambda entry: entry["at"])
-    if now - latest["at"] > timedelta(minutes=FRESH_MINUTES):
-        return None
-    glucose = calculation.dec(latest["sgv"])
-    before = _glucose_at(entries, latest["at"] - timedelta(minutes=RISE_MINUTES))
-    if before is None:
-        return None
-    rise = glucose - before
-    if minutes < STRICT_UNTIL_MINUTES:
-        if glucose < EARLY_HIGH_MGDL and (glucose < EARLY_MGDL or rise < EARLY_RISE_MGDL):
-            return None
-    elif glucose < MIN_MGDL:
-        return None
-    acting = on_board.effects_at(found, latest["at"], now)
-    end = glucose - acting["lowering_mgdl"] + acting["raising_mgdl"]
-    if end < END_MGDL:
-        return None
-    return {"meal_at": meal_at, "glucose_mgdl": glucose, "rise_mgdl": rise, "end_mgdl": end}
+    return core.call("correction_check.due", entries=entries, found=found, treatments=treatments, now=now)

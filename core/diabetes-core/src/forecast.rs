@@ -336,7 +336,8 @@ pub struct BacktestRow {
     pub glucose: Option<Vec<Decimal>>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct VariantStats {
     pub count: usize,
     pub glucose_count: usize,
@@ -431,12 +432,15 @@ fn options_of(values: &[Decimal], configured: Decimal) -> Vec<Decimal> {
     all
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TuningOption {
+    #[serde(default, deserialize_with = "crate::model::amount")]
     pub value: Decimal,
+    #[serde(default)]
     pub active: bool,
     #[serde(flatten)]
     pub stats: VariantStats,
+    #[serde(default)]
     pub best: bool,
 }
 

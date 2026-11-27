@@ -1,163 +1,42 @@
-"""Dose suggestion for an entry being typed today."""
+"""Dose suggestion for an entry being typed today.
+
+The whole calculation runs in the Rust core (services.dose_help, core/diabetes-core/src/services.rs);
+this module only gathers what it reads from the local store into one snapshot.
+"""
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from decimal import Decimal
 
-from app import calculation, correction_scale, dosing, forecast, fpe, on_board, split
-from app.common import local_zone, parse_instant
+from app import core
+from app.common import local_zone
 from app.services import day_view, factors
 from app.store import config, marks
-from app.analysis.stats import median, quartile
+from app.store import places as place_store
+
+# Days of meal factors the snapshot carries: the Automatik's lookback plus the place factor's 60 days,
+# and at least the breakfast day-type median's 28 days.
+PLACE_DAYS, MIN_DAYS, MARGIN_DAYS = 60, 28, 5
+
+
+def snapshot(payload: dict, now: datetime) -> dict:
+    """Everything services.dose_help reads, from the local copy only."""
+    _, settings = config.get_settings()
+    today = now.astimezone(local_zone(settings["timezone"])).date()
+    # A rolling span, not the calendar day: just after midnight last evening's doses, carbs and split still act.
+    current = day_view.recent(now, refresh=not day_view.mirror_current(today.isoformat()))
+    overrides, periods = marks.analysis_day_types(), marks.vacation_periods()
+    mode = factors.vacation_mode(settings)
+    back = max(int(settings["auto_lookback_days"]) + PLACE_DAYS, MIN_DAYS) + MARGIN_DAYS
+    return {
+        "now": now, "settings": settings, "payload": payload,
+        "entries": current["entries"], "treatments": current["treatments"],
+        "day_types": overrides, "vacation_periods": periods,
+        "meal_points": factors.meal_points(today, back, overrides, periods, mode=mode),
+        "places": place_store.all_places(), "entry_places": place_store.entry_places(),
+        "sport_overrides": marks.sport_session_effects(), "sport_minutes_overrides": marks.sport_session_minutes(),
+        "auto_vacation": mode,
+    }
 
 
 def dose_help(payload: dict) -> dict:
-    _, current_settings = config.get_settings()
-    now = datetime.now(timezone.utc)
-    today = now.astimezone(local_zone(current_settings["timezone"])).date().isoformat()
-    # A rolling span, not the calendar day: just after midnight last evening's doses, carbs and split still act.
-    current = day_view.recent(now, refresh=not day_view.mirror_current(today))
-    entries = [{"at": parse_instant(row["at"]), "sgv": row["sgv"]}
-               for row in current["entries"]]
-    treatments = [{"at": parse_instant(row["at"]), **{k: v for k, v in row.items() if k != "at"}}
-                  for row in current["treatments"]]
-    finger = [{"at": row["at"], "mgdl": row["finger_mgdl"]} for row in treatments if row.get("finger_mgdl")]
-    if payload.get("finger_mgdl") is not None:
-        # A value typed in the entry form counts before it is saved, at the entry's time.
-        at = payload.get("finger_at") or now
-        finger.append({"at": min(at, now), "mgdl": Decimal(str(payload["finger_mgdl"]))})
-    local_now = now.astimezone(local_zone(current_settings["timezone"]))
-    overrides, periods = marks.analysis_day_types(), marks.vacation_periods()
-    day_type, day_type_source = marks.day_type_for(today, overrides, periods)
-    minute = local_now.hour * 60 + local_now.minute
-    is_breakfast = minute < int(current_settings["breakfast_end_minute"])
-    meal_kind = ("breakfast" if is_breakfast else
-                 "lunch" if minute < int(current_settings["lunch_end_minute"]) else "dinner")
-    meal_values = factors.meal_factor_values(meal_kind, day_type if is_breakfast else None,
-                                     local_now.date(), overrides, periods,
-                                     factors.vacation_mode(current_settings))
-    factor = ({"count": len(meal_values), "days": factors.BREAKFAST_FACTOR_DAYS,
-               "median_units_per_ke": median(meal_values) if meal_values else None}
-              if is_breakfast else None)
-    use_factor = bool(factor and factor["count"] >= factors.BREAKFAST_FACTOR_MIN_MEALS
-                      and factor["median_units_per_ke"] > 0)
-    auto_percentile, half_life, lookback = factors.forecast_settings(current_settings)
-    points = factors.meal_points(local_now.date(), lookback, overrides, periods,
-                                 mode=factors.vacation_mode(current_settings))
-    method = current_settings.get("auto_method", "percentile")
-    surcharge_mgdl = factors.surcharge_mgdl(current_settings)
-    fat_mgdl = factors.fat_surcharge_mgdl(current_settings)
-    prediction = forecast.predict_method(points, (meal_kind, day_type if is_breakfast else None),
-                                         local_now.date(), auto_percentile, half_life, lookback, method,
-                                         surcharge_mgdl, fat_mgdl)
-    auto_value = prediction["units_per_ke"]
-    # Place factor: an entry at a place switched on for it scales the factor
-    # and the surcharge by what meals there needed compared with the Automatik.
-    scales = factors.place_scales(current_settings, local_now.date(), overrides, periods)
-    place = scales.get(payload.get("place_id")) if payload.get("place_id") is not None else None
-    place_scale = place["scale"] if place and place["scale"] is not None else Decimal(1)
-    carb_factor = factors.carb_factor(current_settings, local_now.date(), points, day_type,
-                                      {(meal_kind, day_type if is_breakfast else None): auto_value})
-
-    try:
-        active = on_board.summary(on_board.sources(
-            treatments, now, current_settings, carb_factor,
-            surcharge_mgdl if method == forecast.SURCHARGE else None, forecast.surcharge_share,
-            sport_overrides=marks.sport_session_effects(),
-            sport_minutes_overrides=marks.sport_session_minutes(), fat_surcharge_mgdl=fat_mgdl,
-            scale=factors.entry_scale(scales)), now)
-    except ValueError:
-        active = None
-    # The surcharge follows the stomach: this entry gets the share its
-    # carbs add to what is still in the stomach, exactly what "Wirkt noch" counts once it is saved.
-    surcharge = method == forecast.SURCHARGE and auto_value is not None
-    before = on_board.stomach_grams(treatments, now)
-    added_share = lambda grams: forecast.surcharge_share(before + grams) - forecast.surcharge_share(before)
-    meal_surcharge = factors.meal_surcharge_mgdl(current_settings, payload.get("fat_protein") is True)
-    # Transition phase: with the agent's fat and protein estimate the form offers
-    # the calculated surcharge next to the static one, and the user picks which one the dose uses (app/fpe.py).
-    # It belongs to the entry, whatever came before.
-    calculated = (fpe.estimate(payload, current_settings)
-                  if surcharge and meal_surcharge is not None else None)
-    use_fpe = fpe.chosen(calculated, payload)
-    if use_fpe:
-        meal_surcharge = calculated["mgdl"]
-    plan = split.open_plan(treatments, now)
-    result = dosing.suggest(payload.get("carbs", 0), current_settings, entries, treatments, now,
-                            activity_change=payload.get("activity_change_mgdl", 0),
-                            units_per_ke=factor["median_units_per_ke"] if use_factor else None,
-                            auto_units_per_ke=auto_value * place_scale if auto_value is not None else None,
-                            auto_surcharge_mgdl=meal_surcharge * place_scale if surcharge else None,
-                            surcharge_share=added_share, on_board=active, finger=finger,
-                            hold_rise=plan is not None and calculation.dec(payload.get("carbs") or 0) > 0)
-    if calculation.dec(payload.get("carbs") or 0) == 0:
-        # A correction without food also shows the ends of what was right after recent meals (x0.6 / x1.4)
-        # and marks the end the last meal's rise leans to (app/correction_scale.py).
-        result["correction_scale"] = correction_scale.scale(
-            result, correction_scale.meal_rise(entries, treatments, now))
-    when = split.timing(plan, entries, current_settings, now) if plan else None
-    result["split_plan"] = plan and {"meal_at": plan["meal_at"].isoformat(), "units": str(plan["units"]),
-                                     "due_at": plan["due_at"].isoformat(), "state": when["state"],
-                                     "latest_at": when["latest_at"].isoformat()}
-    result["on_board"] = on_board_view(active, result) if active else None
-    result.update({
-        "auto_meal": meal_kind, "auto_factor_count": prediction["count"], "auto_method": method,
-        "auto_fat_surcharge_mgdl": (str(fat_mgdl) if surcharge and payload.get("fat_protein") is True and not use_fpe
-                                    else None),
-        # The level switch (Nichts / Normal / Fett) of an entry without the agent's estimate needs the surcharge method.
-        "surcharge_levels": surcharge and meal_surcharge is not None,
-        "surcharge_choice": calculated and calculated["level"] is None and {
-            "mode": "fpe" if use_fpe else "static",
-            "static_mgdl": str(factors.meal_surcharge_mgdl(current_settings, payload.get("fat_protein") is True)),
-            "static_fat": payload.get("fat_protein") is True,
-            "fpe": str(calculated["fpe"].quantize(Decimal("0.1"))), "fpe_mgdl": str(calculated["mgdl"]),
-            "fpe_minutes": calculated["minutes"], "per_fpe_mgdl": str(fpe.per_fpe_mgdl(current_settings)),
-            "fat_g": str(payload.get("fat_g")), "protein_g": str(payload.get("protein_g"))},
-        "place_factor": ({"name": place["name"], "count": place["count"], "min_meals": place["min_meals"],
-                          "days": place["days"], "scale": str(place["scale"]) if place["scale"] is not None else None}
-                         if place else None),
-        "auto_factor_min_meals": factors.AUTO_FACTOR_MIN_MEALS, "auto_percentile": str(auto_percentile),
-        "auto_half_life_days": str(half_life), "auto_factor_days": lookback,
-        "auto_median_units_per_ke": str(median(meal_values)) if meal_values else None,
-        "auto_q1_units_per_ke": (str(quartile(meal_values, Decimal("0.25")))
-                                 if len(meal_values) >= factors.AUTO_FACTOR_MIN_MEALS else None),
-        "day_type": day_type, "day_type_source": day_type_source, "breakfast": is_breakfast,
-        "factor_source": "breakfast_day_type" if use_factor else "nightscout",
-        "breakfast_factor_count": factor["count"] if factor else None,
-        "breakfast_factor_days": factor["days"] if factor else None,
-        "breakfast_factor_min_meals": factors.BREAKFAST_FACTOR_MIN_MEALS,
-        "breakfast_factor_units_per_ke": (str(factor["median_units_per_ke"])
-                                          if factor and factor["median_units_per_ke"] is not None else None),
-    })
-    return result
-
-
-def on_board_view(active: dict, result: dict) -> dict:
-    """The diary's "Wirkt noch" card: what still lowers and raises glucose, until when, and the
-    expected value once all of it has acted (normal forecast, with its likely range)."""
-    instant = lambda value: value.isoformat() if value else None
-    fresh = result.get("glucose_fresh")
-    expected = (Decimal(result["glucose_mgdl"]) - active["lowering_mgdl"] + active["raising_mgdl"]) if fresh else None
-    below, above = on_board.forecast_band(active["lowering_mgdl"], active["raising_mgdl"])
-    return {
-        "glucose_mgdl": result.get("glucose_mgdl"), "glucose_fresh": bool(fresh),
-        "glucose_source": result.get("glucose_source"),
-        "insulin_units": str(active["insulin_units"]),
-        "lowering_mgdl": str(active["lowering_mgdl"]), "lowering_until": instant(active["lowering_until"]),
-        "raising_mgdl": str(active["raising_mgdl"]), "raising_until": instant(active["raising_until"]),
-        "carbs_mgdl": str(active["carbs_mgdl"]), "surcharge_mgdl": str(active["surcharge_mgdl"]),
-        "sport_mgdl": str(active["sport_mgdl"]),
-        "sports": [{"at": row["at"].isoformat(), "end": row["end"].isoformat(), "kind": row["kind"],
-                    "mgdl": str(row["mgdl"]), "remaining_mgdl": str(row["remaining_mgdl"])} for row in active["sports"]],
-        "carbs_remaining_g": str(sum((row["remaining_grams"] for row in active["carbs"]), Decimal(0))),
-        "expected_mgdl": str(expected) if expected is not None else None,
-        "expected_low_mgdl": str(expected - below) if expected is not None else None,
-        "expected_high_mgdl": str(expected + above) if expected is not None else None,
-        "expected_at": instant(active["settled_at"]),
-        "fresh_meal_at": instant(active["fresh_meal_at"]),
-        "split_plan": result.get("split_plan"),
-        "doses": [{"at": dose["at"].isoformat(), "units": str(dose["units"]),
-                   "remaining_units": str(dose["remaining_units"])} for dose in active["doses"]],
-        "carbs": [{"at": row["at"].isoformat(), "grams": str(row["grams"]),
-                   "remaining_grams": str(row["remaining_grams"])} for row in active["carbs"]],
-    }
+    return core.call("services.dose_help", **snapshot(payload, datetime.now(timezone.utc)))

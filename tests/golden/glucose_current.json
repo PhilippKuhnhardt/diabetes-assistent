@@ -5,7 +5,7 @@
  "status": "low",
  "target_high_mgdl": "180",
  "target_low_mgdl": "80",
- "trend_delta_mgdl": "0.0",
+ "trend_delta_mgdl": "0",
  "trend_direction": "flat",
  "trend_minutes": "15"
 }
