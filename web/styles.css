@@ -1280,3 +1280,9 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 .trend-week i.is-up { background: var(--amber); }
 .trend-week i.is-down { background: var(--blue); }
 .trend-axis { display: flex; justify-content: space-between; margin: -4px 0 0 104px; color: var(--muted); font-size: 11px; }
+/* Connection: no answer from the server, and entries whose save got none (web/ui/unsent.js). */
+.offline-banner { margin: 0 0 16px; }
+.unsent p { margin: 4px 0 8px; }
+.unsent ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.unsent li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
+.unsent-actions { display: flex; gap: 6px; }

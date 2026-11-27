@@ -1,6 +1,7 @@
 """HTTP layer: authentication, request parsing, routing and JSON responses. No domain logic."""
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
 import mimetypes
@@ -37,6 +38,27 @@ MAX_BODY = 64 * 1024
 # Photos and voice notes for the meal agent.
 MAX_UPLOAD_BODY = 16 * 1024 * 1024
 UPLOAD_ROUTES = {"/api/agent/estimate", "/api/agent/transcribe"}
+CSP = ("default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; "
+       "base-uri 'none'; frame-ancestors 'none'")
+# Text worth compressing; images are compressed already. Small answers are sent as they are.
+COMPRESSIBLE = ("text/", "application/json", "application/manifest+json", "image/svg+xml")
+MIN_GZIP = 1024
+# Files of web/ as served: bytes, gzip bytes and an ETag per file, rebuilt when the file changes on disk.
+_static_cache: dict[Path, tuple[tuple[int, int], bytes, bytes | None, str]] = {}
+
+
+def static_file(target: Path, content_type: str) -> tuple[bytes, bytes | None, str]:
+    """A web/ file with its gzip form (None when not worth it) and a strong ETag of its content."""
+    stat = target.stat()
+    key = (stat.st_mtime_ns, stat.st_size)
+    cached = _static_cache.get(target)
+    if cached and cached[0] == key:
+        return cached[1:]
+    data = target.read_bytes()
+    packed = gzip.compress(data, 6, mtime=0) if content_type.startswith(COMPRESSIBLE) and len(data) >= MIN_GZIP else None
+    etag = '"' + hashlib.sha256(data).hexdigest()[:20] + '"'
+    _static_cache[target] = (key, data, packed, etag)
+    return data, packed, etag
 
 
 def day_view_request(params: dict) -> dict:
@@ -119,17 +141,53 @@ class Handler(BaseHTTPRequestHandler):
 
     def _response(self, status: int, payload: object, headers: dict | None = None):
         body = json.dumps(json_safe(payload), ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        packed = len(body) >= MIN_GZIP and self._accepts_gzip()
+        if packed:
+            body = gzip.compress(body, 5, mtime=0)
         self.send_response(status)
         for name, value in (headers or {}).items():
             self.send_header(name, value)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        if packed:
+            self.send_header("Content-Encoding", "gzip")
+        self.send_header("Vary", "Accept-Encoding")
+        # Data is never cached: an old glucose or insulin value must never look current.
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-App-Version", WEB_VERSION)
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Content-Security-Policy", "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'")
+        self.send_header("Content-Security-Policy", CSP)
         self.end_headers()
         self.wfile.write(body)
+
+    def _accepts_gzip(self) -> bool:
+        return any(part.split(";")[0].strip() == "gzip" for part in self.headers.get("Accept-Encoding", "").split(","))
+
+    def _static(self, target: Path, content_type: str, page: bool = False) -> None:
+        """Code and icons of the page: the browser keeps a copy and asks each time whether it is still current
+        (no-cache + ETag), so an unchanged file costs a 304 and a deploy reaches the page at once."""
+        data, packed, etag = static_file(target, content_type)
+        if packed is not None and self._accepts_gzip():
+            data, etag = packed, etag[:-1] + '-gz"'
+        unchanged = etag in [tag.strip() for tag in self.headers.get("If-None-Match", "").split(",")]
+        if unchanged:
+            self.send_response(304)
+        else:
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(data)))
+            if data is packed:
+                self.send_header("Content-Encoding", "gzip")
+        self.send_header("ETag", etag)
+        self.send_header("Cache-Control", "no-cache")
+        if packed is not None:
+            self.send_header("Vary", "Accept-Encoding")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        if page:
+            self.send_header("Content-Security-Policy", CSP)
+        self.end_headers()
+        if not unchanged:
+            self.wfile.write(data)
 
     def _client(self) -> str:
         return auth.client_address(self.headers, self.client_address[0])
@@ -280,13 +338,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/login" or path in PUBLIC_FILES:
             target = WEB / ("login.html" if path == "/login" else path.lstrip("/"))
-            data = target.read_bytes()
-            self.send_response(200)
-            self.send_header("Content-Type", PUBLIC_FILES.get(path) or "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(data)))
-            self.send_header("Cache-Control", "no-store")
-            self.end_headers()
-            self.wfile.write(data)
+            self._static(target, PUBLIC_FILES.get(path) or "text/html; charset=utf-8")
             return
         if path in ("/api/v1/photo", "/api/agent/photo"):
             # A photo of an agent estimate: the read key (scripts) or the browser login.
@@ -328,15 +380,7 @@ class Handler(BaseHTTPRequestHandler):
             if not target.is_file() or not target.resolve().is_relative_to(WEB):
                 self._response(404, {"error": tr("Nicht gefunden")})
                 return
-            data = target.read_bytes()
-            self.send_response(200)
-            self.send_header("Content-Type", mimetypes.guess_type(target)[0] or "application/octet-stream")
-            self.send_header("Content-Length", str(len(data)))
-            self.send_header("Cache-Control", "no-store")
-            self.send_header("X-Content-Type-Options", "nosniff")
-            self.send_header("Content-Security-Policy", "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'")
-            self.end_headers()
-            self.wfile.write(data)
+            self._static(target, mimetypes.guess_type(target)[0] or "application/octet-stream", page=True)
         except (ValueError, KeyError) as error:
             self._response(400, {"error": str(error)})
         except nightscout.NightscoutError as error:

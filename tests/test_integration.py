@@ -1,4 +1,5 @@
 import contextlib
+import gzip
 import json
 import os
 import tempfile
@@ -223,6 +224,27 @@ class IntegrationTests(unittest.TestCase):
                 self.assertEqual(response.status, 200)
         with urllib.request.urlopen(self.base + "/app.js") as response:
             self.assertTrue(response.url.endswith("/login"))
+
+    def test_static_files_revalidate_and_compress(self):
+        # Code is cached by the browser and revalidated (ETag, 304); data is never cached.
+        req = urllib.request.Request(self.base + "/styles.css", headers={"Accept-Encoding": "gzip"})
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.headers["Cache-Control"], "no-cache")
+            self.assertEqual(response.headers["Content-Encoding"], "gzip")
+            etag = response.headers["ETag"]
+            body = gzip.decompress(response.read())
+        self.assertEqual(body, (Path(__file__).resolve().parent.parent / "web" / "styles.css").read_bytes())
+        req = urllib.request.Request(self.base + "/styles.css", headers={"Accept-Encoding": "gzip", "If-None-Match": etag})
+        with self.assertRaises(urllib.error.HTTPError) as caught:
+            urllib.request.urlopen(req)
+        self.assertEqual(caught.exception.code, 304)
+        with urllib.request.urlopen(self.base + "/styles.css") as response:
+            self.assertIsNone(response.headers["Content-Encoding"])
+            self.assertNotEqual(response.headers["ETag"], etag)
+        with urllib.request.urlopen(urllib.request.Request(self.base + "/api/settings", headers={"Accept-Encoding": "gzip"})) as response:
+            self.assertEqual(response.headers["Cache-Control"], "no-store")
+            self.assertEqual(response.headers["Content-Encoding"], "gzip")
+            self.assertIsInstance(json.loads(gzip.decompress(response.read())), dict)
 
     def test_login_session_ends_on_logout(self):
         os.environ["APP_PASSWORD"] = "secret-test-password"

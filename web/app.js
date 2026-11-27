@@ -9,7 +9,8 @@ import { Overview, ActiveCard } from "./ui/today.js";
 import { EntryForm, deleteBasal } from "./ui/entry.js";
 import { glucosePoints } from "./ui/charts.js";
 import { SettingsView, FORM_PAGES, zoneText, deviceZone, deviceZoneDiffers } from "./ui/settings.js";
-import { sportNames, api, post, appUpdateWaiting, toast, num, gl, glNum, timeOnly, toInstant, trendSymbol, UNIT } from "./ui/lib.js";
+import { UnsentEntries } from "./ui/unsent.js";
+import { sportNames, api, post, appUpdateWaiting, isOnline, NO_ANSWER, toast, num, gl, glNum, timeOnly, toInstant, trendSymbol, UNIT } from "./ui/lib.js";
 import { syncUnits } from "./ui/units.js";
 import { t, locale, translateDocument } from "./ui/i18n.js";
 
@@ -44,6 +45,8 @@ function reloadForUpdate() {
 
 const glucoseStatuses = new Set(["in_range", "outside", "low", "high", "stale", "no_target", "unavailable"]);
 let glucoseRefresh = null;
+// The last value the server sent, only to name it while the server cannot be reached; never shown as the value.
+let lastGlucose = null;
 
 function loadCurrentGlucose() {
   if (glucoseRefresh) return glucoseRefresh;
@@ -65,12 +68,15 @@ function loadCurrentGlucose() {
         : data.glucose_mgdl == null ? t("glucose.noValue") : "";
       $("#glucose-meta").textContent = meta;
       $("#glucose-meta").hidden = !meta;
+      if (data.glucose_mgdl != null && data.glucose_at) lastGlucose = { mgdl: data.glucose_mgdl, at: data.glucose_at };
       if (data.glucose_at) catchUpDay(new Date(data.glucose_at).getTime());
     } catch (error) {
       widget.dataset.status = "unavailable";
       $("#glucose-value").textContent = "—";
       $("#glucose-trend").textContent = t("glucose.trendUnavailable");
-      $("#glucose-meta").textContent = t("glucose.cgmUnavailable");
+      $("#glucose-meta").textContent = !NO_ANSWER.has(error.code) ? t("glucose.cgmUnavailable")
+        : lastGlucose ? t("glucose.offlineLast", { value: gl(lastGlucose.mgdl, 1), time: timeOnly(lastGlucose.at) })
+          : t("glucose.offline");
       $("#glucose-meta").hidden = false;
     }
     publishGlucose();
@@ -306,6 +312,7 @@ function renderVisibleCharts() {
 function renderDay(data) {
   state.dayData = data;
   renderEntry();
+  renderUnsent();
   const banner = $("#banner");
   const errors = [data.sync_error, data.profile_sync_error].filter(Boolean);
   banner.hidden = data.connected && !errors.length;
@@ -316,6 +323,20 @@ function renderDay(data) {
   applyDiaryMode();
   renderReview();
   renderVisibleCharts();
+}
+
+// Entries whose save got no answer, until they are sent or discarded (web/ui/unsent.js).
+function renderUnsent() {
+  render(html`<${UnsentEntries} onSaved=${async result => {
+    if (result?.day_view && result.day === state.day) renderDay(result.day_view);
+    else if (result?.day === state.day) await loadDay();
+    refreshTodayPreview();
+  }} />`, $("#unsent-host"));
+}
+
+// Without an answer from the server the page says so; once it answers again everything shown is refreshed.
+function renderConnection() {
+  $("#offline-banner").hidden = isOnline();
 }
 
 // Verlauf (web/ui/day.js): week strip, the day's meal and sport cards, the window editor.
@@ -534,6 +555,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       entry.submit?.();
     }
   });
+  renderUnsent();
   const initialGlucose = loadCurrentGlucose();
   try {
     await loadSettings();
@@ -565,6 +587,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     reloadForUpdate();
   };
   document.addEventListener("visibilitychange", resume);
+  window.addEventListener("connection:change", event => {
+    renderConnection();
+    if (event.detail.online) resume();
+  });
+  // The browser's own hint: going offline shows it at once, coming back asks the server.
+  window.addEventListener("offline", () => loadCurrentGlucose());
+  window.addEventListener("online", () => loadCurrentGlucose());
   window.addEventListener("pageshow", event => { if (event.persisted) resume(); });
   window.addEventListener("focus", loadCurrentGlucose);
 });

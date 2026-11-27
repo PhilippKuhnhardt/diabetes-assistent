@@ -40,12 +40,55 @@ let appVersion = null;
 let updateWaiting = false;
 export const appUpdateWaiting = () => updateWaiting;
 
+// Whether the server answered the last call. A call that gets no answer (no network, the proxy fails,
+// timeout) marks the page offline until the next answer; app.js shows it and nothing old looks current.
+let online = true;
+export const isOnline = () => online;
+function setOnline(value) {
+  if (value === online) return;
+  online = value;
+  window.dispatchEvent(new CustomEvent("connection:change", { detail: { online } }));
+}
+
+// Reads wait at most 30 s, writes 60 s (a Nightscout write can take two 18-s reads); `timeout: null`
+// waits as long as it takes (the meal agent). A write that timed out may still have been saved: retrying
+// with the same event id never stores it twice (the server checks Nightscout).
+const READ_TIMEOUT_MS = 30000;
+const WRITE_TIMEOUT_MS = 60000;
+// Codes of a call that got no usable answer: the entry may or may not have reached the server.
+export const NO_ANSWER = new Set(["offline", "timeout", "bad_response"]);
+
+function connectionError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
 export async function api(path, options = {}) {
-  const response = await fetch(path, { headers: { "Content-Type": "application/json" }, cache: "no-store", ...options });
+  const { timeout = (options.method || "GET") === "GET" ? READ_TIMEOUT_MS : WRITE_TIMEOUT_MS, ...init } = options;
+  const controller = new AbortController();
+  const timer = timeout ? setTimeout(() => controller.abort(), timeout) : null;
+  let response;
+  try {
+    response = await fetch(path, { headers: { "Content-Type": "application/json" }, cache: "no-store", signal: controller.signal, ...init });
+  } catch (error) {
+    setOnline(false);
+    throw controller.signal.aborted ? connectionError("timeout", t("common.timeout")) : connectionError("offline", t("common.offline"));
+  } finally {
+    clearTimeout(timer);
+  }
   const version = response.headers.get("X-App-Version");
   if (version && !appVersion) appVersion = version;
   else if (version && version !== appVersion) updateWaiting = true;
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch (_) {
+    // Not our JSON: a proxy or gateway answered (502/504 during a deploy) or the body broke off.
+    setOnline(false);
+    throw connectionError("bad_response", t("common.badResponse", { status: response.status }));
+  }
+  setOnline(true);
   if (!response.ok) {
     const error = new Error(data.error || t("common.requestFailed"));
     error.code = data.code || null;

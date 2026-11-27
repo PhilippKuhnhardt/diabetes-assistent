@@ -108,6 +108,7 @@ async function run(browser, name, options) {
     check(await page.isVisible("[name=dose_target_mgdl]"), `${name}: all settings on one page`);
     await settings(page, name);
     await saving(page, name);
+    await offline(page, name);
   }
   await reviewDay(page, name);
   await page.click("[data-nav=today]");
@@ -179,6 +180,29 @@ async function saving(page, name) {
   check(await page.isVisible("#entry-sport-effect-field [name=sport_effect_mgdl]"), `${name}: sport takes an own effect like its card`);
   await page.click("#entry-sport-effect-field [data-sport-effect=standard]");
   await page.click("[data-entry-mode=meal]");
+}
+
+// Without network (web/ui/unsent.js): the page says so, an entry whose save got no answer stays on the
+// device, and sending it once the server answers again stores it once.
+async function offline(page, name) {
+  await page.click("[data-nav=today]");
+  await page.click("[data-entry-mode=meal]");
+  await page.fill("#entry-form [name=carbs]", "15");
+  await page.fill("#entry-form [name=insulin]", "1.5");
+  await page.context().setOffline(true);
+  await page.click("#entry-submit");
+  await toastSays(page, "bleibt auf dem Gerät");
+  check(await page.isVisible("#offline-banner"), `${name}: offline banner shown`);
+  check((await page.textContent("#unsent-host .unsent")).includes("15 g · 1,5 IE"), `${name}: the unsent entry is listed`);
+  await page.context().setOffline(false);
+  await page.click("#unsent-host .banner-action >> text=Senden");
+  await toastSays(page, "Eintrag gespeichert");
+  check(!(await page.$("#unsent-host .unsent")), `${name}: a sent entry leaves the list`);
+  await page.waitForFunction(() => document.querySelector("#offline-banner").hidden);
+  check(true, `${name}: the banner goes once the server answers`);
+  // The form still holds it; saving it again finds the same event id and stores nothing twice.
+  await page.fill("#entry-form [name=carbs]", "");
+  await page.fill("#entry-form [name=insulin]", "");
 }
 
 // The meal card (web/ui/entry-card.js) saves through the server (/api/entry/edit), which checks it.

@@ -494,7 +494,7 @@ export function AnalysisView({ tab, onTab, reloadKey, getSettings, onSettings, o
     const id = ++request.current;
     setSummary(current => ({ ...current, loading: true, failed: false }));
     try {
-      const data = await api("/api/summary?days=" + days);
+      const data = await api("/api/summary?days=" + days, { timeout: null });
       // The summary endpoint may refresh the Nightscout profile before calculating.
       onSettings?.((await api("/api/settings")).settings);
       if (id === request.current) setSummary({ data, loading: false, failed: false });
