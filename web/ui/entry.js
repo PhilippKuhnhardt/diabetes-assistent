@@ -5,7 +5,8 @@
 // app.js mounts the form, passes the day and settings, and talks to it through `control`
 // (refresh, tick, choose, applyAgent, submit), since the minute tick, "+" and the agent live outside.
 import { html, useRef, useState, useEffect } from "./html.js";
-import { post, toast, num, glNum, timeOnly, names, sportKinds, sportOptions, localInputTime, toInstant, currentPosition, UNIT } from "./lib.js";
+import { post, NO_ANSWER, toast, num, glNum, timeOnly, names, sportKinds, sportOptions, localInputTime, toInstant, currentPosition, UNIT } from "./lib.js";
+import { keepUnsent, dropUnsent } from "./unsent.js";
 import { glField, toMgdl, mmol } from "./units.js";
 import { t } from "./i18n.js";
 import { SportEffectFields, sportFields, sportValues } from "./sport.js";
@@ -23,7 +24,18 @@ const nowTime = () => localInputTime(new Date()).slice(11, 16);
 export async function saveBasal(at, units, notes = "", pending = {}) {
   const event_id = pending.id || crypto.randomUUID();
   pending.id = event_id;
-  const result = await post("/api/basal", { at, units, event_id, notes });
+  const payload = { at, units, event_id, notes };
+  let result;
+  try {
+    result = await post("/api/basal", payload);
+  } catch (error) {
+    if (NO_ANSWER.has(error.code)) {
+      keepUnsent("/api/basal", payload);
+      error.message = t("unsent.kept", { error: error.message });
+    }
+    throw error;
+  }
+  dropUnsent(event_id);
   pending.id = null;
   return result;
 }
@@ -349,9 +361,14 @@ export function EntryForm({ day, today, settings, agentInfo, connected, control,
           set(state => ({ doseChoice: null, insulin: Number(state.insulin) === Number(chosen) ? "" : state.insulin }));
           await refreshPreview();
           document.getElementById("dose-result")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        } else if (NO_ANSWER.has(error.code)) {
+          // No answer: maybe saved, maybe not. The device keeps it until it is sent or discarded by hand.
+          keepUnsent("/api/entry", payload);
+          error.message = t("unsent.kept", { error: error.message });
         } else if (payload.dose_check) await refreshPreview();
         throw error;
       }
+      dropUnsent(payload.event_id);
       const restore = { day: result.day, time: s.at, carbs: s.carbs, insulin: s.insulin, notes: s.notes };
       reset();
       await props.current.onSaved(result, result.day_view);
