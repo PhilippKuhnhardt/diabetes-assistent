@@ -28,11 +28,12 @@ These are model assumptions for a rough forecast, not physiological facts or dos
 """
 from __future__ import annotations
 
+from app import core
 from datetime import datetime, timedelta
 from decimal import Decimal
-
 from app import calculation
 from app.calculation import INSULIN_DELAY, INSULIN_DURATION, INSULIN_PEAK, insulin_remaining  # noqa: F401
+
 
 # Stomach: every carb entry reaches the stomach
 # STOMACH_DELAY minutes after it is entered; the stomach passes on at most STOMACH_RATE g/min, less when little is
@@ -68,30 +69,7 @@ HORIZON = timedelta(hours=8)
 
 def stomach(entries: list[tuple[datetime, Decimal]]) -> list[list[float]]:
     """Absorbed share of each (time, grams) entry, minute by minute from the first entry's time (index 0)."""
-    if not entries:
-        return []
-    first = min(at for at, _ in entries)
-    starts = [int(_minutes(at, first)) + STOMACH_DELAY for at, _ in entries]
-    grams = [float(amount) for _, amount in entries]
-    inside, taken = [0.0] * len(entries), [0.0] * len(entries)
-    curves: list[list[float]] = [[] for _ in entries]
-    minute, last = 0, max(starts)
-    while True:
-        for index, begin in enumerate(starts):
-            if begin == minute:
-                inside[index] += grams[index]
-        total = sum(inside)
-        if total > 1e-9:
-            share = min(total, STOMACH_RATE * total / (total + STOMACH_HALF_GRAMS)) / total
-            for index in range(len(entries)):
-                part = inside[index] * share
-                inside[index] -= part
-                taken[index] += part
-        for index in range(len(entries)):
-            curves[index].append(taken[index] / grams[index] if grams[index] > 0 else 1.0)
-        minute += 1
-        if minute > last and (sum(inside) < 0.01 or minute > last + 24 * 60):
-            return curves
+    return core.call("on_board.stomach", entries=entries)
 
 
 def attach_stomach(rows: list[dict]) -> list[dict]:
@@ -122,24 +100,16 @@ def carb_left(row: dict, moment: datetime) -> Decimal:
 
 def stomach_grams(treatments: list[dict], now: datetime) -> Decimal:
     """Carbs still in the stomach (or on their way to it) at `now`: what a new entry joins."""
-    rows = [{"at": item["at"], "grams": calculation.dec(item.get("carbs") or 0)} for item in treatments
-            if item.get("eventType") != "Exercise" and item["at"] <= now
-            and calculation.dec(item.get("carbs") or 0) > 0 and _minutes(now, item["at"]) < CARBS_LOOKBACK]
-    attach_stomach(rows)
-    return sum((row["grams"] * carb_left(row, now) for row in rows), Decimal(0))
+    return core.call("on_board.stomach_grams", treatments=treatments, now=now)
 
 
 def surcharge_remaining(minutes: Decimal, duration: Decimal = SURCHARGE_MINUTES) -> Decimal:
     """Share of an entry's surcharge still to come: linear from the entry over `duration` minutes."""
-    if minutes <= 0:
-        return Decimal(1)
-    return max(Decimal(0), (duration - minutes) / duration)
+    return core.call("on_board.surcharge_remaining", minutes=minutes, duration=duration)
 
 
 def sport_remaining(minutes_after_end: Decimal, duration: Decimal = SPORT_MINUTES) -> Decimal:
-    if minutes_after_end <= 0:
-        return Decimal(1)
-    return max(Decimal(0), 1 - minutes_after_end / duration)
+    return core.call("on_board.sport_remaining", minutes_after_end=minutes_after_end, duration=duration)
 
 
 def sport_minutes(item: dict, settings: dict, overrides: dict | None = None) -> Decimal:
@@ -203,57 +173,17 @@ def entry_surcharges(carbs: list[dict], treatments: list[dict], now: datetime, s
 
 
 def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, surcharge_mgdl: Decimal | None,
-            surcharge_share, keep_all: bool = False, sport_overrides: dict | None = None,
+            keep_all: bool = False, sport_overrides: dict | None = None,
             fat_surcharge_mgdl: Decimal = Decimal(0), scale=None, sport_minutes_overrides: dict | None = None) -> dict:
     """The doses, carb entries, surcharges and sport sessions that may still act at `now`, with their full
     effect in mg/dL. carb_factor(at) gives the IE/KE that values a carb entry made at `at`. keep_all keeps
     everything up to `now` however old, for a whole-day timeline. sport_overrides maps a session's id to
     the drop the user set for it, sport_minutes_overrides its effect duration. A fat/protein main meal carries fat_surcharge_mgdl more surcharge;
     scale(item) gives the place factor of an entry (None = 1) for its carbs and surcharge."""
-    zone = settings["timezone"]
-    isf = lambda at: calculation.isf_at(at, settings.get("isf_schedule", []), zone)
-    seen, doses, carbs, surcharges, meals, sports, stomach_rows = set(), [], [], [], [], [], []
-    for item in sorted(treatments, key=lambda row: row["at"]):
-        key = item.get("id") or (item["at"], item.get("insulin"), item.get("carbs"))
-        if key in seen:
-            continue
-        if item.get("eventType") == "Exercise" and item.get("sport_type"):
-            seen.add(key)
-            effect = sport_effect(item, settings, sport_overrides)
-            duration = sport_minutes(item, settings, sport_minutes_overrides)
-            ahead = timedelta(0) if keep_all else SPORT_AHEAD
-            if (effect != 0 and item["at"] <= now + ahead
-                    and (keep_all or _minutes(now, sport_end(item)) < duration)):
-                sports.append({"id": item.get("id"), "at": item["at"], "end": sport_end(item),
-                               "kind": item["sport_type"], "mgdl": effect, "minutes": duration})
-            continue
-        if item["at"] > now:
-            continue
-        seen.add(key)
-        age = Decimal(0) if keep_all else _minutes(now, item["at"])
-        units = calculation.dec(item.get("insulin") or 0)
-        if units > 0 and calculation.is_rapid_insulin(item) and age < INSULIN_DELAY + INSULIN_DURATION:
-            doses.append({"at": item["at"], "units": units, "mgdl_per_unit": isf(item["at"])})
-        grams = calculation.dec(item.get("carbs") or 0)
-        if grams > 0 and (keep_all or _minutes(now, item["at"]) < CARBS_LOOKBACK):
-            stomach_rows.append({"at": item["at"], "grams": grams, "key": key, "item": item})
-        if is_main_meal(item) and age < FRESH_MEAL_MINUTES:
-            meals.append(item["at"])
-    # All carb entries share one stomach; the curves count every entry, also one without a factor.
-    attach_stomach(stomach_rows)
-    for row in stomach_rows:
-        item = row["item"]
-        if not keep_all and row["grams"] * carb_left(row, now) < NEGLIGIBLE_GRAMS:
-            continue
-        factor = carb_factor(item["at"])
-        if factor is not None:
-            place = (scale(item) if scale else None) or Decimal(1)
-            carbs.append({"at": row["at"], "grams": row["grams"], "absorbed": row["absorbed"], "origin": row["origin"],
-                          "mgdl_per_gram": factor * place * isf(item["at"]) / 10})
-    if surcharge_mgdl is not None:
-        surcharges = entry_surcharges(stomach_rows, treatments, now, surcharge_mgdl, surcharge_share,
-                                      fat_surcharge_mgdl, keep_all, scale)
-    return {"doses": doses, "carbs": carbs, "surcharges": surcharges, "fresh_meals": meals, "sports": sports}
+    return core.sources(treatments=treatments, now=now, settings=settings, carb_factor=carb_factor,
+                        surcharge_mgdl=surcharge_mgdl, keep_all=keep_all,
+                        sport_overrides=sport_overrides, fat_surcharge_mgdl=fat_surcharge_mgdl, scale=scale,
+                        sport_minutes_overrides=sport_minutes_overrides)
 
 
 def effects_at(found: dict, moment: datetime, cutoff: datetime | None = None) -> dict:
@@ -261,60 +191,17 @@ def effects_at(found: dict, moment: datetime, cutoff: datetime | None = None) ->
     Entries after `cutoff` (default `moment`) do not count; entries between `moment` and a later cutoff
     count in full, so effects_at(a, b) − effects_at(b, b) is what acted from a to b. Sport sessions count
     whatever the cutoff, as they are known ahead. sport_mgdl is signed: positive lowers glucose."""
-    cutoff = cutoff or moment
-    sports = found.get("sports", [])
-    found = {key: [row for row in found[key] if row["at"] <= cutoff] for key in ("doses", "carbs", "surcharges")}
-    units = sum((dose["units"] * insulin_remaining(_minutes(moment, dose["at"])) for dose in found["doses"]), Decimal(0))
-    lowering = sum((dose["units"] * insulin_remaining(_minutes(moment, dose["at"])) * dose["mgdl_per_unit"]
-                    for dose in found["doses"]), Decimal(0))
-    carbs = sum((row["grams"] * carb_left(row, moment) * row["mgdl_per_gram"] for row in found["carbs"]), Decimal(0))
-    surcharge = sum((row["mgdl"] * surcharge_remaining(_minutes(moment, row["at"]),
-                                                       row.get("minutes", SURCHARGE_MINUTES_FAT if row.get("fat")
-                                                               else SURCHARGE_MINUTES))
-                     for row in found["surcharges"]), Decimal(0))
-    sport = sum((row["mgdl"] * sport_remaining(_minutes(moment, row["end"]), row["minutes"]) for row in sports),
-                Decimal(0))
-    return {"insulin_units": units, "lowering_mgdl": lowering + max(sport, Decimal(0)), "carbs_mgdl": carbs,
-            "surcharge_mgdl": surcharge, "sport_mgdl": sport,
-            "raising_mgdl": carbs + surcharge + max(-sport, Decimal(0))}
+    return core.call("on_board.effects_at", found=found, moment=moment, cutoff=cutoff)
 
 
 def forecast_band(lowering_mgdl: Decimal, raising_mgdl: Decimal) -> tuple[Decimal, Decimal]:
     """How far below and above the expected value glucose likely ends (8 of 10 cases)."""
-    acting = lowering_mgdl + raising_mgdl
-    for start, below, above in FORECAST_BAND:
-        if acting >= start:
-            return below, above
-    return FORECAST_BAND[-1][1], FORECAST_BAND[-1][2]
-
-
-def _until(found: dict, now: datetime, key: str) -> datetime | None:
-    """First 5-minute step from now at which less than NEGLIGIBLE_MGDL of the effect is left."""
-    if effects_at(found, now)[key] < NEGLIGIBLE_MGDL:
-        return None
-    moment = now
-    while moment < now + HORIZON:
-        moment += STEP
-        if effects_at(found, moment)[key] < NEGLIGIBLE_MGDL:
-            return moment
-    return moment
+    return core.call("on_board.forecast_band", lowering_mgdl=lowering_mgdl, raising_mgdl=raising_mgdl)
 
 
 def summary(found: dict, now: datetime) -> dict:
     """Current remaining effects plus when each side has finished acting."""
-    current = effects_at(found, now)
-    lowering_until, raising_until = _until(found, now, "lowering_mgdl"), _until(found, now, "raising_mgdl")
-    ends = [moment for moment in (lowering_until, raising_until) if moment]
-    return {**current, "lowering_until": lowering_until, "raising_until": raising_until,
-            "settled_at": max(ends) if ends else None, "fresh_meal_at": max(found["fresh_meals"], default=None),
-            "doses": [{"at": dose["at"], "units": dose["units"],
-                       "remaining_units": dose["units"] * insulin_remaining(_minutes(now, dose["at"]))}
-                      for dose in found["doses"]],
-            "carbs": [{"at": row["at"], "grams": row["grams"],
-                       "remaining_grams": row["grams"] * carb_left(row, now)}
-                      for row in found["carbs"]],
-            "sports": [{**row, "remaining_mgdl": row["mgdl"] * sport_remaining(_minutes(now, row["end"]), row["minutes"])}
-                       for row in found.get("sports", [])]}
+    return core.call("on_board.summary", found=found, now=now)
 
 
 def timeline(found: dict, entries: list[dict], start: datetime, end: datetime,
@@ -322,24 +209,5 @@ def timeline(found: dict, entries: list[dict], start: datetime, end: datetime,
     """Every STEP from start to end: how fast insulin lowers and carbs plus surcharge raise glucose
     (mg/dL per hour over the step), the measured glucose and the model's value from the glucose
     `horizon` earlier: G(t − h) − insulin acted + carbs and surcharge acted since then."""
-    glucose_at = calculation.glucose_interpolator(entries)
-
-    def reading(moment):
-        try:
-            return glucose_at(moment)["value"]
-        except ValueError:
-            return None
-    per_hour = Decimal(3600) / Decimal(str(STEP.total_seconds()))
-    rows, moment = [], start
-    while moment <= end:
-        now, after = effects_at(found, moment), effects_at(found, moment + STEP)
-        step_start, before = effects_at(found, moment, moment + STEP), effects_at(found, moment - horizon, moment)
-        earlier = reading(moment - horizon)
-        model = (None if earlier is None else earlier - (before["lowering_mgdl"] - now["lowering_mgdl"])
-                 + (before["raising_mgdl"] - now["raising_mgdl"]))
-        rows.append({"at": moment, "glucose_mgdl": reading(moment), "model_mgdl": model,
-                     "lowering_per_hour": (step_start["lowering_mgdl"] - after["lowering_mgdl"]) * per_hour,
-                     "raising_per_hour": (step_start["raising_mgdl"] - after["raising_mgdl"]) * per_hour,
-                     "insulin_units": now["insulin_units"]})
-        moment += STEP
-    return rows
+    return core.call("on_board.timeline", found=found, entries=entries, start=start, end=end,
+                     horizon_seconds=horizon.total_seconds())

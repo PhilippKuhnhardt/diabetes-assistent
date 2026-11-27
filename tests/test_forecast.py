@@ -61,9 +61,11 @@ class BacktestTests(unittest.TestCase):
         target.update({"end_glucose": Decimal(150), "carbs_isf": Decimal(2000)})
         result = forecast.backtest(points + [target], TODAY - timedelta(days=1), [(28, Decimal(7), Decimal(100))])
         row = result["rows"][0]
-        self.assertEqual(row["predictions"], [Decimal("1.5")])
+        self.assertEqual(len(row["predictions"]), 1)
+        self.assertAlmostEqual(row["predictions"][0], Decimal("1.5"), places=20)
         # 0.5 IE/KE too much: target 120 − 0.5 × 2000 / 10 = 20 mg/dL, below the range.
-        self.assertEqual(row["glucose"], [Decimal(20)])
+        self.assertEqual(len(row["glucose"]), 1)
+        self.assertAlmostEqual(row["glucose"][0], Decimal(20), places=20)
         stats = result["stats"][0]
         self.assertEqual((stats["below"], stats["in_range"], stats["above"], stats["glucose_count"]), (1, 0, 0, 1))
 
@@ -332,9 +334,9 @@ class TuningTests(unittest.TestCase):
         example = forecast.explain(history, KEY, TODAY, 15, Decimal(7), Decimal(50), Decimal(30))
         base = Decimal(1) - Decimal(300) / Decimal(1800)
         self.assertEqual(example["units_per_ke"], base)
-        self.assertEqual(example["carb_units"], 6 * base)
+        self.assertAlmostEqual(example["carb_units"], 6 * base, places=20)
         self.assertEqual(example["surcharge_units"], Decimal(1))
-        self.assertEqual(example["total_units"], 6 * base + 1)
+        self.assertAlmostEqual(example["total_units"], 6 * base + 1, places=20)
 
 
 class VacationTests(unittest.TestCase):

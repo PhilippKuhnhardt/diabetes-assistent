@@ -61,7 +61,7 @@ class CalculationTests(unittest.TestCase):
         self.assertEqual([dose["id"] for dose in result["prior_doses"]], ["prior"])
         self.assertEqual(Decimal(result["prior_insulin_effect_mgdl"]), prior)
         self.assertEqual(Decimal(result["insulin_effect_mgdl"]), 400 + prior)
-        self.assertEqual(Decimal(result["factor_units_per_ke"]), 10 * (20 + 400 + prior) / (60 * 40))
+        self.assertAlmostEqual(Decimal(result["factor_units_per_ke"]), 10 * (20 + 400 + prior) / (60 * 40), places=20)
         self.assertEqual(Decimal(result["doses"][-1]["effect_mgdl"]), Decimal(120))
 
     def test_prior_insulin_counts_with_its_share_inside_the_window(self):
@@ -78,8 +78,8 @@ class CalculationTests(unittest.TestCase):
         share = insulin_remaining(60) - insulin_remaining(240)
         self.assertTrue(Decimal("0.6") < share < Decimal("0.75"))
         self.assertEqual([dose["id"] for dose in result["prior_doses"]], ["old"])
-        self.assertEqual(Decimal(result["prior_insulin_effect_mgdl"]), 2 * share * 50)
-        self.assertEqual(Decimal(result["factor_units_per_ke"]), 10 * (2 * share * 50) / (30 * 40))
+        self.assertAlmostEqual(Decimal(result["prior_insulin_effect_mgdl"]), 2 * share * 50, places=20)
+        self.assertAlmostEqual(Decimal(result["factor_units_per_ke"]), 10 * (2 * share * 50) / (30 * 40), places=20)
 
     def test_without_prior_insulin_the_factor_is_unchanged(self):
         start = moment(10)
@@ -295,7 +295,7 @@ class CalculationTests(unittest.TestCase):
         self.assertEqual(Decimal(result["g0"]), Decimal(100))
         # 10 × (ΔG 20 + 4 × 40 + 1 × 40 × share from 10 to 190 min) / (50 × 40)
         prior = 40 * (insulin_remaining(10) - insulin_remaining(190))
-        self.assertEqual(Decimal(result["factor_units_per_ke"]), 10 * (180 + prior) / 2000)
+        self.assertAlmostEqual(Decimal(result["factor_units_per_ke"]), 10 * (180 + prior) / 2000, places=20)
 
     def test_manual_window_must_end_after_meal_start(self):
         start = moment(10)

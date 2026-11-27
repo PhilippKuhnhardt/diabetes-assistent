@@ -1,13 +1,14 @@
 """Normalize Nightscout records and associate app-entered meal episodes."""
 from __future__ import annotations
 
+from app import core
 import re
 from bisect import bisect_left
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal, InvalidOperation
-
 from app.common import local_zone
 from app.i18n import tr
+
 
 TAG = re.compile(r"\[DA1:([a-f0-9-]{36}):(breakfast|lunch|dinner):(meal|meal-dose|correction|snack)\]")
 EVENT_TAG = re.compile(r"\[(?:DAE:[a-f0-9-]{36}|DA2:(?:snack|meal|basal)|DASP:\d+(?:\.\d+)?@\d+|DAZ:\d+(?:\.\d+)?@\d+)\]")
@@ -69,6 +70,8 @@ def surcharge_tag(mgdl, minutes: int) -> str:
 def least_certain(levels) -> str | None:
     marked = [level for level in levels if level in CERTAINTIES]
     return max(marked, key=CERTAINTIES.index) if marked else None
+
+
 SPORT_LABELS = {"jogging": "Joggen", "gym": "Gym", "light_cardio": "Leichtes Cardio", "racing": "Rennsport"}
 # The same in the configured language (app/i18n.py): shown and written into new notes. Reading a note strips
 # either spelling, since notes written before a language switch keep theirs.
@@ -110,26 +113,7 @@ def tag(episode_id: str, meal: str, role: str) -> str:
 
 
 def normalize_entries(raw: list[dict]) -> list[dict]:
-    readings = []
-    for item in raw:
-        if item.get("sgv") is None:
-            continue
-        if item.get("date"):
-            millis = int(item["date"])
-            at = datetime.fromtimestamp(millis // 1000, timezone.utc) + timedelta(milliseconds=millis % 1000)
-        else:
-            at = datetime.fromisoformat(item["dateString"].replace("Z", "+00:00")).astimezone(timezone.utc)
-        readings.append(({"id": str(item.get("_id") or item.get("date")), "at": at, "sgv": item["sgv"]},
-                         bool(item.get("direction"))))
-    live = sorted(entry["at"] for entry, has_trend in readings if has_trend)
-    window = timedelta(seconds=HISTORY_SECONDS)
-
-    def beside_live(at: datetime) -> bool:
-        index = bisect_left(live, at - window)
-        return index < len(live) and live[index] <= at + window
-
-    result = [entry for entry, has_trend in readings if has_trend or not beside_live(entry["at"])]
-    return sorted(result, key=lambda x: x["at"])
+    return core.call("episodes.normalize_entries", raw=raw)
 
 
 def finger_mgdl(item: dict) -> Decimal | None:
@@ -148,43 +132,7 @@ def finger_mgdl(item: dict) -> Decimal | None:
 
 
 def normalize_treatments(raw: list[dict]) -> list[dict]:
-    result = []
-    for item in raw:
-        try:
-            at = parse_at(item)
-        except (ValueError, KeyError):
-            continue
-        marker = treatment_tag(item) or {}
-        sport_notes = str(item.get("notes") or "")
-        sport_match = SPORT_TAG.search(sport_notes) if item.get("eventType") == "Exercise" else None
-        sport_type = sport_match.group(1) if sport_match else None
-        if item.get("eventType") == "Exercise" and not sport_type:
-            # Recover recognizable legacy/manual entries from their note prefix.
-            for key, label in SPORT_LABELS.items():
-                prefix = label.casefold()
-                note = sport_notes.strip().casefold()
-                if note == prefix or note.startswith((prefix + " —", prefix + " |")):
-                    sport_type = key
-                    break
-        result.append({
-            "id": str(item.get("_id") or item.get("identifier") or ""),
-            "at": at,
-            "eventType": item.get("eventType", ""),
-            "carbs": item.get("carbs") or 0,
-            "insulin": item.get("insulin") or 0,
-            "basal_units": item.get("basal_units") or 0,
-            "duration": item.get("duration") or 0,
-            "notes": item.get("notes") or "",
-            "sport_type": sport_type,
-            "carbs_certainty": carbs_certainty(str(item.get("notes") or "")),
-            **{flag: tag in str(item.get("notes") or "") for flag, tag in QUALITY_MARKERS.items()},
-            "split": split_plan(str(item.get("notes") or "")),
-            "surcharge": surcharge_plan(str(item.get("notes") or "")),
-            "finger_mgdl": finger_mgdl(item),
-            "event_id": event_id(item),
-            **marker,
-        })
-    return sorted(result, key=lambda x: x["at"])
+    return core.call("episodes.normalize_treatments", raw=raw)
 
 
 def group_diary_followups(treatments: list[dict], settings: dict) -> None:
@@ -200,23 +148,8 @@ def group_diary_followups(treatments: list[dict], settings: dict) -> None:
     A diary snack stored as such ([DA2:snack]) whose meal became a snack of
     no meal this way is classified afresh, so it can become the main meal.
     """
-    free = set()
-    for item in sorted(treatments, key=lambda x: x["at"]):
-        notes = item.get("notes") or ""
-        if "[DA2:snack]" in notes:
-            if not free or item.get("episode_id") or float(item.get("carbs") or 0) <= 0:
-                continue
-            # Which meal the snack joined when it was saved: freed entries still count as main meals.
-            view = [{**other, "eventType": "Meal Bolus"} if other.get("id") in free else other
-                    for other in treatments if other is not item]
-            joined = preceding_meal(item["at"], view, settings)
-            if joined is None or joined["id"] not in free:
-                continue
-            item["eventType"] = "Meal Bolus"
-            item["notes"] = re.sub(r"\s*\[DA2:snack\]", "", notes).strip()
-        root = classify_diary_entry(item, treatments, settings)
-        if root is not None and root.get("free"):
-            free.add(item.get("id"))
+    core.update_in_place(treatments, core.call("episodes.group_diary_followups", treatments=treatments,
+                                               settings=settings))
 
 
 def classify_diary_entry(item: dict, treatments: list[dict], settings: dict) -> dict | None:
@@ -241,73 +174,24 @@ def classify_diary_entry(item: dict, treatments: list[dict], settings: dict) -> 
 
 
 def meal_kind_at(at: datetime, settings: dict) -> tuple:
-    local = at.astimezone(local_zone(settings["timezone"]))
-    minute = local.hour * 60 + local.minute
-    breakfast_end = int(settings.get("breakfast_end_minute", 660))
-    lunch_end = int(settings.get("lunch_end_minute", 1020))
-    return local.date(), "breakfast" if minute < breakfast_end else "lunch" if minute < lunch_end else "dinner"
+    return core.call("episodes.meal_kind_at", at=at, settings=settings)
 
 
 def preceding_meal(at: datetime, treatments: list[dict], settings: dict) -> dict | None:
     """Return the main meal a new carb entry at `at` would count as a snack for."""
-    window = timedelta(minutes=int(settings.get("window_minutes", 180)))
-    kind = meal_kind_at(at, settings)
-    root = None
-    for item in sorted(treatments, key=lambda x: x["at"]):
-        if item["at"] > at:
-            break
-        if item.get("eventType") == "Meal Bolus" and float(item.get("carbs") or 0) > 0:
-            root = {"id": item.get("id"), "at": item["at"], "end": item["at"] + window,
-                    "meal": item.get("meal") or meal_kind_at(item["at"], settings)[1],
-                    "same_kind": meal_kind_at(item["at"], settings) == kind}
-        elif (root is not None and item["at"] < root["end"]
-                and float(item.get("insulin") or 0) > 0
-                and item.get("eventType") in {"Snack Bolus", "Correction Bolus", "Bolus"}):
-            root["end"] = max(root["end"], item["at"] + window)
-    if root is None or root["at"] == at:
-        return None
-    if at - root["at"] < SNACK_GAP or (root["same_kind"] and at < root["end"]):
-        return root
-    return None
+    return core.call("episodes.preceding_meal", at=at, treatments=treatments, settings=settings)
 
 
 def taken_meal(at: datetime, treatments: list[dict], settings: dict) -> dict | None:
     """An earlier main meal of the same day and clock-based kind as `at`; each kind counts once a day."""
-    kind = meal_kind_at(at, settings)
-    for item in sorted(treatments, key=lambda x: x["at"]):
-        if item["at"] >= at:
-            break
-        if (item.get("eventType") == "Meal Bolus" and float(item.get("carbs") or 0) > 0
-                and meal_kind_at(item["at"], settings) == kind):
-            return {"id": item.get("id"), "at": item["at"], "meal": item.get("meal") or kind[1]}
-    return None
+    return core.call("episodes.taken_meal", at=at, treatments=treatments, settings=settings)
 
 
 def meals_for_day(treatments: list[dict], day: str, timezone_name: str,
                   settings: dict | None = None) -> list[dict]:
-    zone = local_zone(timezone_name)
-    roots = []
-    settings = settings or {}
-    breakfast_end = int(settings.get("breakfast_end_minute", 660))
-    lunch_end = int(settings.get("lunch_end_minute", 1020))
-    for item in treatments:
-        tagged = item.get("role") == "meal" and item.get("episode_id")
-        imported = not item.get("episode_id") and item.get("eventType") == "Meal Bolus" and float(item.get("carbs") or 0) > 0
-        if not (tagged or imported):
-            continue
-        if item["at"].astimezone(zone).date().isoformat() != day:
-            continue
-        local = item["at"].astimezone(zone)
-        minute = local.hour * 60 + local.minute
-        inferred = ("breakfast" if minute < breakfast_end else
-                    "lunch" if minute < lunch_end else "dinner")
-        roots.append({
-            "id": item["episode_id"] if tagged else item["id"],
-            "source_id": item["id"], "imported": bool(imported),
-            "at": item["at"], "meal": item["meal"] if tagged else inferred,
-            "carbs": item["carbs"], "notes": QUALITY_TAG.sub("", EVENT_TAG.sub("", TAG.sub("", item["notes"]))).strip(),
-        })
-    return roots
+    return core.call(
+        "episodes.meals_for_day",
+        treatments=treatments, day=day, timezone_name=timezone_name, settings=settings)
 
 
 def serialize_treatment(item: dict) -> dict:

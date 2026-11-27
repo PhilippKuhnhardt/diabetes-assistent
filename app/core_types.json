@@ -1,0 +1,813 @@
+{
+ "calculation.automatic_window": {
+  "$.end": [
+   "datetime"
+  ],
+  "$.extended_end": [
+   "datetime"
+  ],
+  "$.next_main_meal_at": [
+   "datetime"
+  ],
+  "$.nominal_end": [
+   "datetime"
+  ],
+  "$.start": [
+   "datetime"
+  ]
+ },
+ "calculation.calculate_episode": {
+  "$.extra_carb_count": [
+   "int"
+  ],
+  "$.window_minutes": [
+   "int"
+  ]
+ },
+ "calculation.finger_glucose": {
+  "$.after": [
+   "datetime"
+  ],
+  "$.before": [
+   "datetime"
+  ],
+  "$.value": [
+   "Decimal"
+  ]
+ },
+ "calculation.insulin_remaining": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "calculation.interpolate_glucose": {
+  "$.after": [
+   "datetime"
+  ],
+  "$.before": [
+   "datetime"
+  ],
+  "$.value": [
+   "Decimal"
+  ]
+ },
+ "calculation.isf_at": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "calculation.minutes_between": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "calculation.prebolus_start": {
+  "$": [
+   "datetime"
+  ]
+ },
+ "calculation.schedule_value_at": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "calculation.window_totals": {
+  "$": [
+   "tuple"
+  ],
+  "$[]": [
+   "Decimal"
+  ]
+ },
+ "correction_check.due": {
+  "$.end_mgdl": [
+   "Decimal"
+  ],
+  "$.glucose_mgdl": [
+   "Decimal"
+  ],
+  "$.meal_at": [
+   "datetime"
+  ],
+  "$.rise_mgdl": [
+   "Decimal"
+  ]
+ },
+ "correction_scale.meal_rise": {
+  "$.meal_at": [
+   "datetime"
+  ],
+  "$.slope_mgdl_per_min": [
+   "Decimal"
+  ]
+ },
+ "dosing.half_units": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "episodes.group_diary_followups": {
+  "$[].at": [
+   "datetime"
+  ],
+  "$[].basal_units": [
+   "float",
+   "int"
+  ],
+  "$[].carbs": [
+   "float",
+   "int"
+  ],
+  "$[].duration": [
+   "int"
+  ],
+  "$[].finger_mgdl": [
+   "Decimal"
+  ],
+  "$[].insulin": [
+   "float",
+   "int"
+  ],
+  "$[].split.delay_minutes": [
+   "int"
+  ],
+  "$[].surcharge.minutes": [
+   "int"
+  ]
+ },
+ "episodes.meal_kind_at": {
+  "$": [
+   "tuple"
+  ],
+  "$[]": [
+   "date",
+   "str"
+  ]
+ },
+ "episodes.meals_for_day": {
+  "$[].at": [
+   "datetime"
+  ],
+  "$[].carbs": [
+   "float",
+   "int"
+  ]
+ },
+ "episodes.normalize_entries": {
+  "$[].at": [
+   "datetime"
+  ],
+  "$[].sgv": [
+   "int"
+  ]
+ },
+ "episodes.normalize_treatments": {
+  "$[].at": [
+   "datetime"
+  ],
+  "$[].basal_units": [
+   "float",
+   "int"
+  ],
+  "$[].carbs": [
+   "float",
+   "int"
+  ],
+  "$[].duration": [
+   "int"
+  ],
+  "$[].finger_mgdl": [
+   "Decimal"
+  ],
+  "$[].insulin": [
+   "float",
+   "int"
+  ],
+  "$[].split.delay_minutes": [
+   "int"
+  ],
+  "$[].surcharge.minutes": [
+   "int"
+  ]
+ },
+ "episodes.preceding_meal": {
+  "$.at": [
+   "datetime"
+  ],
+  "$.end": [
+   "datetime"
+  ]
+ },
+ "episodes.taken_meal": {
+  "$.at": [
+   "datetime"
+  ]
+ },
+ "forecast.backtest": {
+  "$.rows[].glucose[]": [
+   "Decimal"
+  ],
+  "$.rows[].predictions[]": [
+   "Decimal"
+  ],
+  "$.rows[].units_per_ke": [
+   "Decimal"
+  ],
+  "$.stats[].above": [
+   "int"
+  ],
+  "$.stats[].below": [
+   "int"
+  ],
+  "$.stats[].count": [
+   "int"
+  ],
+  "$.stats[].glucose_count": [
+   "int"
+  ],
+  "$.stats[].in_range": [
+   "int"
+  ],
+  "$.stats[].mean_glucose": [
+   "Decimal"
+  ],
+  "$.stats[].median_abs_deviation": [
+   "Decimal"
+  ],
+  "$.stats[].median_glucose": [
+   "Decimal"
+  ]
+ },
+ "forecast.day_type_ratios": {
+  "$.days": [
+   "int"
+  ],
+  "$.meals.breakfast.free_count": [
+   "int"
+  ],
+  "$.meals.breakfast.free_median": [
+   "Decimal"
+  ],
+  "$.meals.breakfast.single_max": [
+   "Decimal"
+  ],
+  "$.meals.breakfast.single_median": [
+   "Decimal"
+  ],
+  "$.meals.breakfast.single_min": [
+   "Decimal"
+  ],
+  "$.meals.breakfast.singles[].after": [
+   "int"
+  ],
+  "$.meals.breakfast.singles[].before": [
+   "int"
+  ],
+  "$.meals.breakfast.singles[].surcharge": [
+   "Decimal"
+  ],
+  "$.meals.breakfast.surcharge": [
+   "Decimal"
+  ],
+  "$.meals.breakfast.work_count": [
+   "int"
+  ],
+  "$.meals.breakfast.work_median": [
+   "Decimal"
+  ],
+  "$.neighbours": [
+   "int"
+  ],
+  "$.reference_days": [
+   "int"
+  ]
+ },
+ "forecast.explain": {
+  "$.carb_units": [
+   "Decimal"
+  ],
+  "$.carbs_g": [
+   "Decimal"
+  ],
+  "$.count": [
+   "int"
+  ],
+  "$.isf": [
+   "Decimal"
+  ],
+  "$.min_meals": [
+   "int"
+  ],
+  "$.surcharge_units": [
+   "Decimal"
+  ],
+  "$.total_units": [
+   "Decimal"
+  ],
+  "$.units_per_ke": [
+   "Decimal"
+  ]
+ },
+ "forecast.history": {
+  "$[]": [
+   "tuple"
+  ],
+  "$[][]": [
+   "Decimal",
+   "int"
+  ]
+ },
+ "forecast.median": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "forecast.place_scale": {
+  "$.count": [
+   "int"
+  ],
+  "$.days": [
+   "int"
+  ],
+  "$.min_meals": [
+   "int"
+  ],
+  "$.scale": [
+   "Decimal"
+  ]
+ },
+ "forecast.predict": {
+  "$.count": [
+   "int"
+  ],
+  "$.units_per_ke": [
+   "Decimal"
+  ]
+ },
+ "forecast.predict_method": {
+  "$.count": [
+   "int"
+  ],
+  "$.units_per_ke": [
+   "Decimal"
+  ]
+ },
+ "forecast.surcharge_share": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "forecast.tradeoffs": {
+  "$.cloud[].above": [
+   "int"
+  ],
+  "$.cloud[].below": [
+   "int"
+  ],
+  "$.cloud[].variants": [
+   "int"
+  ],
+  "$.current.above": [
+   "int"
+  ],
+  "$.current.below": [
+   "int"
+  ],
+  "$.current.delta_above": [
+   "int"
+  ],
+  "$.current.delta_below": [
+   "int"
+  ],
+  "$.current.half_life_days": [
+   "Decimal"
+  ],
+  "$.current.in_range": [
+   "int"
+  ],
+  "$.current.lookback_days": [
+   "int"
+  ],
+  "$.current.median_abs_deviation": [
+   "Decimal"
+  ],
+  "$.current.median_glucose": [
+   "Decimal"
+  ],
+  "$.current.percentile": [
+   "Decimal"
+  ],
+  "$.current.surcharge_mgdl": [
+   "Decimal"
+  ],
+  "$.current.variants": [
+   "int"
+  ],
+  "$.line[].above": [
+   "int"
+  ],
+  "$.line[].below": [
+   "int"
+  ],
+  "$.line[].delta_above": [
+   "int"
+  ],
+  "$.line[].delta_below": [
+   "int"
+  ],
+  "$.line[].delta_median_glucose": [
+   "Decimal"
+  ],
+  "$.line[].half_life_days": [
+   "Decimal"
+  ],
+  "$.line[].in_range": [
+   "int"
+  ],
+  "$.line[].lookback_days": [
+   "int"
+  ],
+  "$.line[].median_abs_deviation": [
+   "Decimal"
+  ],
+  "$.line[].median_glucose": [
+   "Decimal"
+  ],
+  "$.line[].percentile": [
+   "Decimal"
+  ],
+  "$.line[].surcharge_mgdl": [
+   "Decimal"
+  ],
+  "$.line[].variants": [
+   "int"
+  ],
+  "$.meal_count": [
+   "int"
+  ]
+ },
+ "forecast.tuning": {
+  "$[].meal_count": [
+   "int"
+  ],
+  "$[].noise_meals": [
+   "Decimal"
+  ],
+  "$[].options[].above": [
+   "int"
+  ],
+  "$[].options[].below": [
+   "int"
+  ],
+  "$[].options[].count": [
+   "int"
+  ],
+  "$[].options[].glucose_count": [
+   "int"
+  ],
+  "$[].options[].in_range": [
+   "int"
+  ],
+  "$[].options[].mean_glucose": [
+   "Decimal"
+  ],
+  "$[].options[].median_abs_deviation": [
+   "Decimal"
+  ],
+  "$[].options[].median_glucose": [
+   "Decimal"
+  ],
+  "$[].options[].value": [
+   "Decimal",
+   "int"
+  ]
+ },
+ "forecast.weight": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "forecast.weighted_quantile": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "fpe.estimate": {
+  "$.fpe": [
+   "Decimal"
+  ],
+  "$.mgdl": [
+   "Decimal"
+  ],
+  "$.minutes": [
+   "int"
+  ]
+ },
+ "fpe.minutes": {
+  "$": [
+   "int"
+  ]
+ },
+ "fpe.units": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "glucose.limits": {
+  "$": [
+   "tuple"
+  ],
+  "$[]": [
+   "Decimal"
+  ]
+ },
+ "glucose.target_at": {
+  "$.start_minute": [
+   "int"
+  ]
+ },
+ "glucose.target_bands": {
+  "$[].from": [
+   "datetime"
+  ],
+  "$[].to": [
+   "datetime"
+  ]
+ },
+ "glucose_alerts.forecast": {
+  "$.at": [
+   "datetime"
+  ],
+  "$.glucose_mgdl": [
+   "Decimal"
+  ],
+  "$.miss_per_hour": [
+   "Decimal"
+  ],
+  "$.points[].at": [
+   "datetime"
+  ],
+  "$.points[].mgdl": [
+   "Decimal"
+  ]
+ },
+ "glucose_alerts.warnings": {
+  "$[].at": [
+   "datetime"
+  ],
+  "$[].glucose_mgdl": [
+   "Decimal"
+  ],
+  "$[].mgdl": [
+   "Decimal"
+  ]
+ },
+ "on_board.effects_at": {
+  "$.carbs_mgdl": [
+   "Decimal"
+  ],
+  "$.insulin_units": [
+   "Decimal"
+  ],
+  "$.lowering_mgdl": [
+   "Decimal"
+  ],
+  "$.raising_mgdl": [
+   "Decimal"
+  ],
+  "$.sport_mgdl": [
+   "Decimal"
+  ],
+  "$.surcharge_mgdl": [
+   "Decimal"
+  ]
+ },
+ "on_board.forecast_band": {
+  "$": [
+   "tuple"
+  ],
+  "$[]": [
+   "Decimal"
+  ]
+ },
+ "on_board.sources": {
+  "$.carbs[].absorbed[]": [
+   "float"
+  ],
+  "$.carbs[].at": [
+   "datetime"
+  ],
+  "$.carbs[].grams": [
+   "Decimal"
+  ],
+  "$.carbs[].mgdl_per_gram": [
+   "Decimal"
+  ],
+  "$.carbs[].origin": [
+   "datetime"
+  ],
+  "$.doses[].at": [
+   "datetime"
+  ],
+  "$.doses[].mgdl_per_unit": [
+   "Decimal"
+  ],
+  "$.doses[].units": [
+   "Decimal"
+  ],
+  "$.fresh_meals[]": [
+   "datetime"
+  ],
+  "$.sports[].at": [
+   "datetime"
+  ],
+  "$.sports[].end": [
+   "datetime"
+  ],
+  "$.sports[].mgdl": [
+   "Decimal"
+  ],
+  "$.sports[].minutes": [
+   "Decimal"
+  ],
+  "$.surcharges[].at": [
+   "datetime"
+  ],
+  "$.surcharges[].mgdl": [
+   "Decimal"
+  ],
+  "$.surcharges[].minutes": [
+   "Decimal"
+  ]
+ },
+ "on_board.sport_remaining": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "on_board.stomach": {
+  "$[][]": [
+   "float"
+  ]
+ },
+ "on_board.stomach_grams": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "on_board.summary": {
+  "$.carbs[].at": [
+   "datetime"
+  ],
+  "$.carbs[].grams": [
+   "Decimal"
+  ],
+  "$.carbs[].remaining_grams": [
+   "Decimal"
+  ],
+  "$.carbs_mgdl": [
+   "Decimal"
+  ],
+  "$.doses[].at": [
+   "datetime"
+  ],
+  "$.doses[].remaining_units": [
+   "Decimal"
+  ],
+  "$.doses[].units": [
+   "Decimal"
+  ],
+  "$.fresh_meal_at": [
+   "datetime"
+  ],
+  "$.insulin_units": [
+   "Decimal"
+  ],
+  "$.lowering_mgdl": [
+   "Decimal"
+  ],
+  "$.lowering_until": [
+   "datetime"
+  ],
+  "$.raising_mgdl": [
+   "Decimal"
+  ],
+  "$.raising_until": [
+   "datetime"
+  ],
+  "$.settled_at": [
+   "datetime"
+  ],
+  "$.sport_mgdl": [
+   "Decimal"
+  ],
+  "$.sports[].at": [
+   "datetime"
+  ],
+  "$.sports[].end": [
+   "datetime"
+  ],
+  "$.sports[].mgdl": [
+   "Decimal"
+  ],
+  "$.sports[].minutes": [
+   "Decimal"
+  ],
+  "$.sports[].remaining_mgdl": [
+   "Decimal"
+  ],
+  "$.surcharge_mgdl": [
+   "Decimal"
+  ]
+ },
+ "on_board.surcharge_remaining": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "on_board.timeline": {
+  "$[].at": [
+   "datetime"
+  ],
+  "$[].glucose_mgdl": [
+   "Decimal"
+  ],
+  "$[].insulin_units": [
+   "Decimal"
+  ],
+  "$[].lowering_per_hour": [
+   "Decimal"
+  ],
+  "$[].model_mgdl": [
+   "Decimal"
+  ],
+  "$[].raising_per_hour": [
+   "Decimal"
+  ]
+ },
+ "services.dose_help": {
+  "$.auto_factor_count": [
+   "int"
+  ],
+  "$.auto_factor_days": [
+   "int"
+  ],
+  "$.auto_factor_min_meals": [
+   "int"
+  ],
+  "$.breakfast_factor_count": [
+   "int"
+  ],
+  "$.breakfast_factor_days": [
+   "int"
+  ],
+  "$.breakfast_factor_min_meals": [
+   "int"
+  ],
+  "$.surcharge_choice.fpe_minutes": [
+   "int"
+  ]
+ },
+ "split.offer": {
+  "$.delay_minutes": [
+   "int"
+  ],
+  "$.first_percent": [
+   "int"
+  ]
+ },
+ "split.open_plan": {
+  "$.due_at": [
+   "datetime"
+  ],
+  "$.meal_at": [
+   "datetime"
+  ],
+  "$.units": [
+   "Decimal"
+  ]
+ },
+ "split.parts": {
+  "$": [
+   "tuple"
+  ],
+  "$[]": [
+   "Decimal"
+  ]
+ },
+ "split.timing": {
+  "$.latest_at": [
+   "datetime"
+  ]
+ },
+ "stats.median": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "stats.quartile": {
+  "$": [
+   "Decimal"
+  ]
+ }
+}

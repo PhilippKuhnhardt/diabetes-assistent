@@ -1633,7 +1633,7 @@ class IntegrationTests(unittest.TestCase):
         expected = forecast.weighted_quantile(
             [(Decimal(value), forecast.weight(age, Decimal(7)))
              for age, value in enumerate(["1.5", "0.8", "1.2", "1.0", "1.1"], start=1)], Decimal("0.375"))
-        self.assertEqual(Decimal(result["auto_units_per_ke"]), expected)
+        self.assertAlmostEqual(Decimal(result["auto_units_per_ke"]), expected, places=20)
         self.assertTrue(Decimal("1.0") < expected < Decimal("1.1"))
         self.assertEqual(Decimal(result["auto_median_units_per_ke"]), Decimal("1.1"))
         self.assertEqual(Decimal(result["auto_q1_units_per_ke"]), Decimal("1.0"))

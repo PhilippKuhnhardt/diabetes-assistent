@@ -27,11 +27,12 @@ carb entry.
 """
 from __future__ import annotations
 
+from app import core
 from datetime import datetime, timedelta
 from decimal import Decimal
-
 from app.common import local_zone
 from app import calculation, on_board
+
 
 LOW_MGDL, HIGH_MGDL = Decimal(70), Decimal(250)
 HORIZON_MINUTES = 60
@@ -61,48 +62,9 @@ LOW_PAUSE_MINUTES = 15
 HIGH_PAUSE_MINUTES = 30
 
 
-def _faded(minutes: Decimal, fade: Decimal = FADE_MINUTES) -> Decimal:
-    """Minutes' worth of the miss rate still added after `minutes`, with the rate fading linearly to 0."""
-    k = min(minutes, fade)
-    return k - k * k / (2 * fade)
-
-
-def _earlier(entries: list[dict], at: datetime) -> Decimal | None:
-    try:
-        return calculation.interpolate_glucose(entries, at)["value"]
-    except ValueError:
-        return None
-
-
 def forecast(entries: list[dict], found: dict, now: datetime, fade: Decimal = FADE_MINUTES) -> dict | None:
     """Forecast every 5 minutes for the next hour from the latest fresh CGM reading, or None."""
-    readings = [entry for entry in entries if entry.get("sgv") is not None and entry["at"] <= now]
-    if not readings:
-        return None
-    latest = max(readings, key=lambda entry: entry["at"])
-    start, glucose = latest["at"], calculation.dec(latest["sgv"])
-    if now - start > timedelta(minutes=FRESH_MINUTES):
-        return None
-    earlier = _earlier(entries, start - timedelta(minutes=MISS_MINUTES))
-    at_start = on_board.effects_at(found, start)
-    rate = Decimal(0)
-    if earlier is not None:
-        before = on_board.effects_at(found, start - timedelta(minutes=MISS_MINUTES), start)
-        modelled = -(before["lowering_mgdl"] - at_start["lowering_mgdl"]) + (before["raising_mgdl"] - at_start["raising_mgdl"])
-        rate = ((glucose - earlier) - modelled) / MISS_MINUTES
-    # Ahead, entries made after the reading (up to now) count too.
-    ahead, points = on_board.effects_at(found, start, now), []
-    for minutes in range(STEP_MINUTES, HORIZON_MINUTES + 1, STEP_MINUTES):
-        later = on_board.effects_at(found, start + timedelta(minutes=minutes), now)
-        value = (glucose - (ahead["lowering_mgdl"] - later["lowering_mgdl"])
-                 + (ahead["raising_mgdl"] - later["raising_mgdl"]) + rate * _faded(Decimal(minutes), fade))
-        points.append({"at": start + timedelta(minutes=minutes), "mgdl": value})
-    return {"at": start, "glucose_mgdl": glucose, "miss_per_hour": rate * 60, "points": points}
-
-
-def _since(rows: list[dict], now: datetime, pause_minutes: int) -> bool:
-    """Whether one of the rows (with "at") lies within the last pause_minutes before now."""
-    return any(now - timedelta(minutes=pause_minutes) < row["at"] <= now for row in rows)
+    return core.call("glucose_alerts.forecast", entries=entries, found=found, now=now, fade=fade)
 
 
 def warnings(entries: list[dict], found: dict, now: datetime, timezone_name: str,
@@ -111,24 +73,6 @@ def warnings(entries: list[dict], found: dict, now: datetime, timezone_name: str
     """The low and high warnings due now: kind, the glucose now, when and how far the forecast crosses.
     No low warning within low_pause_minutes after a carb entry, no high warning within
     high_pause_minutes after rapid insulin (0 = no pause)."""
-    local = now.astimezone(local_zone(timezone_name))
-    if not DAY_FROM <= local.hour < DAY_TO:
-        return []
-    result, low_result = forecast(entries, found, now), forecast(entries, found, now, LOW_FADE_MINUTES)
-    if result is None:
-        return []
-    due, glucose = [], result["glucose_mgdl"]
-    before = _earlier(entries, result["at"] - timedelta(minutes=LOW_FALL_MINUTES))
-    falling = before is None or glucose - before <= -LOW_FALL_MGDL
-    paused = _since(found["carbs"], now, low_pause_minutes)
-    low_points = [point for point in low_result["points"] if point["at"] <= result["at"] + timedelta(minutes=LOW_WITHIN_MINUTES)]
-    low = next((point for point in low_points if point["mgdl"] < low_mgdl), None)
-    if low and glucose >= low_mgdl and falling and not paused:
-        due.append({"kind": "low", "glucose_mgdl": glucose, "at": low["at"],
-                    "mgdl": min(point["mgdl"] for point in low_points)})
-    high_points = [point for point in result["points"] if point["at"] <= result["at"] + timedelta(minutes=HIGH_WITHIN_MINUTES)]
-    high = next((point for point in high_points if point["mgdl"] > high_mgdl), None)
-    if high and high_mgdl - HIGH_FROM_BELOW <= glucose <= high_mgdl and not _since(found["doses"], now, high_pause_minutes):
-        due.append({"kind": "high", "glucose_mgdl": glucose, "at": high["at"],
-                    "mgdl": max(point["mgdl"] for point in high_points)})
-    return due
+    return core.call(
+        "glucose_alerts.warnings",
+        entries=entries, found=found, now=now, timezone_name=timezone_name, low_pause_minutes=low_pause_minutes, high_pause_minutes=high_pause_minutes, low_mgdl=low_mgdl, high_mgdl=high_mgdl)
