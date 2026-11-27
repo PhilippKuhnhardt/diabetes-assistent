@@ -20,8 +20,8 @@ use crate::Res;
 use chrono::{Datelike, Duration, NaiveDate};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
-use serde::Deserialize;
-use serde_json::{json, Map, Value};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
@@ -165,10 +165,6 @@ pub fn meal_surcharge_mgdl(settings: &Settings, fat: bool) -> Option<Decimal> {
     settings.surcharge_method().then(|| settings.auto_surcharge_mgdl + if fat { fat_surcharge(settings) } else { Decimal::ZERO })
 }
 
-fn text(value: Option<Decimal>) -> Value {
-    value.map(|v| json!(v.to_string())).unwrap_or(Value::Null)
-}
-
 /// The Automatik factors of `today` as "Wirkt noch" values carb entries with them (factors.carb_factor), and
 /// the place factor of every place switched on for it (factors.place_scales, factors.entry_scale).
 pub(crate) struct Factors<'a> {
@@ -243,8 +239,159 @@ pub fn place_scales(snapshot: &Snapshot) -> HashMap<i64, PlaceScale> {
     Factors::new(snapshot).scales.into_iter().map(|(id, (_, scale))| (id, scale)).collect()
 }
 
+/// The second part of an open split plan and whether it fits now (split::timing).
+#[derive(Clone, Debug, Serialize)]
+pub struct SplitPlanView {
+    pub meal_at: Instant,
+    pub units: Decimal,
+    pub due_at: Instant,
+    pub state: &'static str,
+    pub latest_at: Instant,
+}
+
+/// The calculated against the static fat/protein surcharge, as the entry form offers the choice.
+#[derive(Clone, Debug, Serialize)]
+pub struct SurchargeChoice {
+    pub mode: &'static str,
+    pub static_mgdl: Option<Decimal>,
+    pub static_fat: bool,
+    pub fpe: Decimal,
+    pub fpe_mgdl: Decimal,
+    pub fpe_minutes: i64,
+    pub per_fpe_mgdl: Decimal,
+    pub fat_g: Value,
+    pub protein_g: Value,
+}
+
+/// `surcharge_choice`: the choice, `false` when a fat/protein level was picked instead of the agent's grams,
+/// null without a calculated surcharge.
+#[derive(Clone, Debug, Serialize)]
+#[serde(untagged)]
+pub enum SurchargeOffer {
+    Choice(Box<SurchargeChoice>),
+    Level(bool),
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct PlaceFactorView {
+    pub name: String,
+    pub count: usize,
+    pub min_meals: usize,
+    pub days: i64,
+    pub scale: Option<Decimal>,
+}
+
+/// One line of the "Wirkt noch" card: a dose, a carb entry or a sport session still acting.
+#[derive(Clone, Debug, Serialize)]
+pub struct DoseRest {
+    pub at: Instant,
+    pub units: Decimal,
+    pub remaining_units: Decimal,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct CarbRest {
+    pub at: Instant,
+    pub grams: Decimal,
+    pub remaining_grams: Decimal,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct SportRest {
+    pub at: Instant,
+    pub end: Instant,
+    pub kind: String,
+    pub mgdl: Decimal,
+    pub remaining_mgdl: Decimal,
+}
+
+/// The diary's "Wirkt noch" card.
+#[derive(Clone, Debug, Serialize)]
+pub struct OnBoardView {
+    pub glucose_mgdl: Option<Decimal>,
+    pub glucose_fresh: bool,
+    pub glucose_source: Option<&'static str>,
+    pub insulin_units: Decimal,
+    pub lowering_mgdl: Decimal,
+    pub lowering_until: Option<Instant>,
+    pub raising_mgdl: Decimal,
+    pub raising_until: Option<Instant>,
+    pub carbs_mgdl: Decimal,
+    pub surcharge_mgdl: Decimal,
+    pub sport_mgdl: Decimal,
+    pub sports: Vec<SportRest>,
+    pub carbs_remaining_g: Decimal,
+    pub expected_mgdl: Option<Decimal>,
+    pub expected_low_mgdl: Option<Decimal>,
+    pub expected_high_mgdl: Option<Decimal>,
+    pub expected_at: Option<Instant>,
+    pub fresh_meal_at: Option<Instant>,
+    pub split_plan: Option<SplitPlanView>,
+    pub doses: Vec<DoseRest>,
+    pub carbs: Vec<CarbRest>,
+}
+
+/// The dose help for one entry: the dose suggestion with the factor it used and where that came from, the
+/// correction scale (without carbs), the open split plan and "Wirkt noch".
+#[derive(Clone, Debug, Serialize)]
+pub struct DoseHelp {
+    #[serde(flatten)]
+    pub suggestion: dosing::Suggestion,
+    /// Only without carbs (absent with carbs): the ends of what was right after recent meals, null without them.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub correction_scale: Option<Option<correction_scale::Scale>>,
+    pub split_plan: Option<SplitPlanView>,
+    pub on_board: Option<OnBoardView>,
+    pub auto_meal: &'static str,
+    pub auto_factor_count: usize,
+    pub auto_method: String,
+    pub auto_fat_surcharge_mgdl: Option<Decimal>,
+    pub surcharge_levels: bool,
+    pub surcharge_choice: Option<SurchargeOffer>,
+    pub place_factor: Option<PlaceFactorView>,
+    pub auto_factor_min_meals: usize,
+    pub auto_percentile: Decimal,
+    pub auto_half_life_days: Decimal,
+    pub auto_factor_days: i64,
+    pub auto_median_units_per_ke: Option<Decimal>,
+    pub auto_q1_units_per_ke: Option<Decimal>,
+    pub day_type: Option<String>,
+    pub day_type_source: &'static str,
+    pub breakfast: bool,
+    pub factor_source: &'static str,
+    pub breakfast_factor_count: Option<usize>,
+    pub breakfast_factor_days: Option<i64>,
+    pub breakfast_factor_min_meals: usize,
+    pub breakfast_factor_units_per_ke: Option<Decimal>,
+}
+
+impl DoseHelp {
+    /// Whether the options use the Automatik factor: with carbs once it has enough meals; until then the
+    /// breakfast day-type median or Nightscout's I:C stands in.
+    pub fn uses_auto(&self) -> bool {
+        self.suggestion.carbs_g > Decimal::ZERO && self.suggestion.auto_units_per_ke.is_some()
+    }
+
+    /// The normal option (to the target) with the factor the options use: IE now and where glucose likely ends.
+    pub fn normal(&self) -> (Option<Decimal>, Option<Decimal>) {
+        let s = &self.suggestion;
+        if self.uses_auto() { (s.auto_entry_units, s.auto_expected_glucose_mgdl) } else { (s.entry_units, s.expected_glucose_mgdl) }
+    }
+
+    /// The correction scale of an entry without carbs.
+    pub fn scale(&self) -> Option<&correction_scale::Scale> {
+        self.correction_scale.as_ref().and_then(Option::as_ref)
+    }
+
+    /// The carbs-only option (no correction) with the factor the options use.
+    pub fn carbs_only(&self) -> (Option<Decimal>, Option<Decimal>) {
+        let s = &self.suggestion;
+        if self.uses_auto() { (s.auto_carbs_entry_units, s.auto_carbs_expected_glucose_mgdl) } else { (s.carbs_entry_units, s.carbs_expected_glucose_mgdl) }
+    }
+}
+
 /// The dose help result for the entry in `snapshot.payload` (the server's /api/entry/preview dose part).
-pub fn dose_help(snapshot: &Snapshot) -> Res<Value> {
+pub fn dose_help(snapshot: &Snapshot) -> Res<DoseHelp> {
     let settings = &snapshot.settings;
     let now = snapshot.now;
     let zone = local_zone(&settings.timezone);
@@ -299,74 +446,69 @@ pub fn dose_help(snapshot: &Snapshot) -> Res<Value> {
         finger, hold_rise: plan.is_some() && carbs > Decimal::ZERO,
     };
     let suggestion = dosing::suggest(carbs, settings, &snapshot.entries, treatments, now, &dose)?;
-    let mut result: Map<String, Value> = match serde_json::to_value(&suggestion).unwrap() { Value::Object(map) => map, _ => unreachable!() };
-    if carbs.is_zero() {
-        // A correction without food also shows the ends of what was right after recent meals.
+    // A correction without food also shows the ends of what was right after recent meals.
+    let correction_scale = carbs.is_zero().then(|| {
         let normal = correction_scale::Normal { forecast_mgdl: suggestion.forecast_mgdl, correction_units: suggestion.correction_units,
             entry_units: suggestion.entry_units, isf_mgdl_per_unit: suggestion.isf_mgdl_per_unit };
         let rise = correction_scale::meal_rise(&snapshot.entries, treatments, now);
-        result.insert("correction_scale".into(), serde_json::to_value(correction_scale::scale(&normal, rise.as_ref())).unwrap());
-    }
+        correction_scale::scale(&normal, rise.as_ref())
+    });
     let split_plan = plan.as_ref().map(|plan| {
         let when = split::timing(plan, &snapshot.entries, settings, now);
-        json!({"meal_at": plan.meal_at, "units": plan.units.to_string(), "due_at": plan.due_at, "state": when.state, "latest_at": when.latest_at})
+        SplitPlanView { meal_at: plan.meal_at, units: plan.units, due_at: plan.due_at, state: when.state, latest_at: when.latest_at }
     });
-    result.insert("split_plan".into(), split_plan.clone().unwrap_or(Value::Null));
-    result.insert("on_board".into(), active.as_ref().map(|a| on_board_view(a, &suggestion, split_plan.clone())).unwrap_or(Value::Null));
+    let on_board = active.as_ref().map(|a| on_board_view(a, &suggestion, split_plan.clone()));
     let q1 = (meal_values.len() >= forecast::MIN_MEALS).then(|| stats::quartile(&meal_values, dec!(0.25)));
-    let extra = json!({
-        "auto_meal": kind, "auto_factor_count": prediction.count, "auto_method": method,
-        "auto_fat_surcharge_mgdl": if surcharge && fat && !use_fpe { json!(fat_mgdl.to_string()) } else { Value::Null },
-        "surcharge_levels": surcharge && meal_surcharge.is_some(),
-        "surcharge_choice": match &calculated {
-            Some(c) if c.level.is_none() => json!({
-                "mode": if use_fpe { "fpe" } else { "static" },
-                "static_mgdl": text(meal_surcharge_mgdl(settings, fat)), "static_fat": fat,
-                "fpe": c.fpe.round_dp_with_strategy(1, rust_decimal::RoundingStrategy::MidpointNearestEven).to_string(),
-                "fpe_mgdl": c.mgdl.to_string(), "fpe_minutes": c.minutes, "per_fpe_mgdl": settings.fpe_surcharge_mgdl.to_string(),
-                "fat_g": payload.get("fat_g").cloned().unwrap_or(Value::Null), "protein_g": payload.get("protein_g").cloned().unwrap_or(Value::Null)}),
-            Some(_) => json!(false),
-            None => Value::Null,
-        },
-        "place_factor": place.map(|(name, s)| json!({"name": name, "count": s.count, "min_meals": s.min_meals, "days": s.days,
-                                                      "scale": text(s.scale)})),
-        "auto_factor_min_meals": forecast::MIN_MEALS, "auto_percentile": percentile.to_string(),
-        "auto_half_life_days": half_life.to_string(), "auto_factor_days": lookback,
-        "auto_median_units_per_ke": text(breakfast_median.filter(|_| !meal_values.is_empty())),
-        "auto_q1_units_per_ke": text(q1),
-        "day_type": day_type, "day_type_source": day_type_source, "breakfast": is_breakfast,
-        "factor_source": if use_factor { "breakfast_day_type" } else { "nightscout" },
-        "breakfast_factor_count": if is_breakfast { json!(meal_values.len()) } else { Value::Null },
-        "breakfast_factor_days": if is_breakfast { json!(BREAKFAST_FACTOR_DAYS) } else { Value::Null },
-        "breakfast_factor_min_meals": BREAKFAST_FACTOR_MIN_MEALS,
-        "breakfast_factor_units_per_ke": if is_breakfast { text(breakfast_median) } else { Value::Null },
+    let surcharge_choice = calculated.as_ref().map(|c| match c.level {
+        Some(_) => SurchargeOffer::Level(false),
+        None => SurchargeOffer::Choice(Box::new(SurchargeChoice {
+            mode: if use_fpe { "fpe" } else { "static" },
+            static_mgdl: meal_surcharge_mgdl(settings, fat), static_fat: fat,
+            fpe: c.fpe.round_dp_with_strategy(1, rust_decimal::RoundingStrategy::MidpointNearestEven),
+            fpe_mgdl: c.mgdl, fpe_minutes: c.minutes, per_fpe_mgdl: settings.fpe_surcharge_mgdl,
+            fat_g: payload.get("fat_g").cloned().unwrap_or(Value::Null),
+            protein_g: payload.get("protein_g").cloned().unwrap_or(Value::Null),
+        })),
     });
-    if let Value::Object(map) = extra {
-        result.extend(map);
-    }
-    Ok(Value::Object(result))
+    Ok(DoseHelp {
+        suggestion, correction_scale, split_plan, on_board,
+        auto_meal: kind, auto_factor_count: prediction.count, auto_method: method.to_string(),
+        auto_fat_surcharge_mgdl: (surcharge && fat && !use_fpe).then_some(fat_mgdl),
+        surcharge_levels: surcharge && meal_surcharge.is_some(),
+        surcharge_choice,
+        place_factor: place.map(|(name, s)| PlaceFactorView { name: name.clone(), count: s.count, min_meals: s.min_meals, days: s.days, scale: s.scale }),
+        auto_factor_min_meals: forecast::MIN_MEALS, auto_percentile: percentile,
+        auto_half_life_days: half_life, auto_factor_days: lookback,
+        auto_median_units_per_ke: breakfast_median.filter(|_| !meal_values.is_empty()),
+        auto_q1_units_per_ke: q1,
+        day_type, day_type_source, breakfast: is_breakfast,
+        factor_source: if use_factor { "breakfast_day_type" } else { "nightscout" },
+        breakfast_factor_count: is_breakfast.then_some(meal_values.len()),
+        breakfast_factor_days: is_breakfast.then_some(BREAKFAST_FACTOR_DAYS),
+        breakfast_factor_min_meals: BREAKFAST_FACTOR_MIN_MEALS,
+        breakfast_factor_units_per_ke: if is_breakfast { breakfast_median } else { None },
+    })
 }
 
-/// The diary's "Wirkt noch" card.
-fn on_board_view(active: &Summary, result: &dosing::Suggestion, split_plan: Option<Value>) -> Value {
+fn on_board_view(active: &Summary, result: &dosing::Suggestion, split_plan: Option<SplitPlanView>) -> OnBoardView {
     let e = &active.effects;
     let expected = result.glucose_mgdl.filter(|_| result.glucose_fresh).map(|g| g - e.lowering_mgdl + e.raising_mgdl);
     let (below, above) = on_board::forecast_band(e.lowering_mgdl, e.raising_mgdl);
-    json!({
-        "glucose_mgdl": text(result.glucose_mgdl), "glucose_fresh": result.glucose_fresh, "glucose_source": result.glucose_source,
-        "insulin_units": e.insulin_units.to_string(),
-        "lowering_mgdl": e.lowering_mgdl.to_string(), "lowering_until": active.lowering_until,
-        "raising_mgdl": e.raising_mgdl.to_string(), "raising_until": active.raising_until,
-        "carbs_mgdl": e.carbs_mgdl.to_string(), "surcharge_mgdl": e.surcharge_mgdl.to_string(), "sport_mgdl": e.sport_mgdl.to_string(),
-        "sports": active.sports.iter().map(|row| json!({"at": row.session.at, "end": row.session.end, "kind": row.session.kind,
-            "mgdl": row.session.mgdl.to_string(), "remaining_mgdl": row.remaining_mgdl.to_string()})).collect::<Vec<_>>(),
-        "carbs_remaining_g": active.carbs.iter().map(|row| row.remaining_grams).sum::<Decimal>().to_string(),
-        "expected_mgdl": text(expected),
-        "expected_low_mgdl": text(expected.map(|x| x - below)),
-        "expected_high_mgdl": text(expected.map(|x| x + above)),
-        "expected_at": active.settled_at, "fresh_meal_at": active.fresh_meal_at,
-        "split_plan": split_plan,
-        "doses": active.doses.iter().map(|d| json!({"at": d.at, "units": d.units.to_string(), "remaining_units": d.remaining_units.to_string()})).collect::<Vec<_>>(),
-        "carbs": active.carbs.iter().map(|c| json!({"at": c.at, "grams": c.grams.to_string(), "remaining_grams": c.remaining_grams.to_string()})).collect::<Vec<_>>(),
-    })
+    OnBoardView {
+        glucose_mgdl: result.glucose_mgdl, glucose_fresh: result.glucose_fresh, glucose_source: result.glucose_source,
+        insulin_units: e.insulin_units,
+        lowering_mgdl: e.lowering_mgdl, lowering_until: active.lowering_until,
+        raising_mgdl: e.raising_mgdl, raising_until: active.raising_until,
+        carbs_mgdl: e.carbs_mgdl, surcharge_mgdl: e.surcharge_mgdl, sport_mgdl: e.sport_mgdl,
+        sports: active.sports.iter().map(|row| SportRest { at: row.session.at, end: row.session.end, kind: row.session.kind.clone(),
+            mgdl: row.session.mgdl, remaining_mgdl: row.remaining_mgdl }).collect(),
+        carbs_remaining_g: active.carbs.iter().map(|row| row.remaining_grams).sum(),
+        expected_mgdl: expected,
+        expected_low_mgdl: expected.map(|x| x - below),
+        expected_high_mgdl: expected.map(|x| x + above),
+        expected_at: active.settled_at, fresh_meal_at: active.fresh_meal_at,
+        split_plan,
+        doses: active.doses.iter().map(|d| DoseRest { at: d.at, units: d.units, remaining_units: d.remaining_units }).collect(),
+        carbs: active.carbs.iter().map(|c| CarbRest { at: c.at, grams: c.grams, remaining_grams: c.remaining_grams }).collect(),
+    }
 }

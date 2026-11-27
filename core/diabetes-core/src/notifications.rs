@@ -10,14 +10,14 @@ use crate::correction_check;
 use crate::wire::iso;
 use crate::glucose::{limits, shown};
 use crate::glucose_alerts::{self, Warning};
-use crate::model::{decimal_of, Instant, Reading, Settings, Treatment};
-use crate::services::{self, Factors, Snapshot};
+use crate::model::{Instant, Reading, Settings, Treatment};
+use crate::services::{self, DoseHelp, Factors, Snapshot};
 use crate::split;
 use crate::Res;
 use chrono::Duration;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::json;
 use std::collections::HashMap;
 
 /// Minutes before a low or high warning may come again.
@@ -195,21 +195,21 @@ pub struct Inputs {
     pub last_sent: HashMap<String, Option<Instant>>,
 }
 
-fn dose_help_now(snapshot: &Snapshot) -> Option<Value> {
+fn dose_help_now(snapshot: &Snapshot) -> Option<DoseHelp> {
     let mut without_food = snapshot.clone();
     without_food.payload = json!({"carbs": "0"});
     services::dose_help(&without_food).ok()
 }
 
-fn correction_of(result: &Value) -> Option<Correction> {
-    let normal = result.get("entry_units").and_then(decimal_of)?;
-    let scale = result.get("correction_scale").filter(|scale| scale.is_object());
+fn correction_of(result: &DoseHelp) -> Option<Correction> {
+    let normal = result.suggestion.entry_units?;
+    let scale = result.scale();
     Some(Correction {
         normal: Some(normal),
-        cautious: result.get("cautious_entry_units").and_then(decimal_of),
-        fast: scale.and_then(|s| s.get("fast_entry_units")).and_then(decimal_of),
-        slow: scale.and_then(|s| s.get("slow_entry_units")).and_then(decimal_of),
-        tempo: scale.and_then(|s| s.get("tempo")).and_then(Value::as_str).map(str::to_string),
+        cautious: result.suggestion.cautious_entry_units,
+        fast: scale.map(|s| s.fast_entry_units),
+        slow: scale.map(|s| s.slow_entry_units),
+        tempo: scale.and_then(|s| s.tempo.clone()),
     })
 }
 
@@ -221,10 +221,10 @@ pub fn due(inputs: &Inputs) -> Res<Vec<Reminder>> {
         return Ok(Vec::new());
     }
     // The dose help without food: its correction is the second split part's amount and the check's correction.
-    let mut help: Option<Option<Value>> = None;
+    let mut help: Option<Option<DoseHelp>> = None;
     let mut help_now = || help.get_or_insert_with(|| dose_help_now(snapshot)).clone();
     let mut reminders = due_reminders(now, settings, &snapshot.treatments, inputs.basal_today, enabled, &snapshot.entries,
-        &mut || help_now().and_then(|result| result.get("entry_units").and_then(decimal_of)));
+        &mut || help_now().and_then(|result| result.suggestion.entry_units));
     let wants_warning = on(enabled, "low") || on(enabled, "high");
     if wants_warning || on(enabled, "check") {
         // What still acts now ("Wirkt noch"), as for the dose help.
