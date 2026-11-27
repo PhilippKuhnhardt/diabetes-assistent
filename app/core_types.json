@@ -101,6 +101,11 @@
    "Decimal"
   ]
  },
+ "day.compute_day": {
+  "$.meals[].calculation.nightscout_profile.start_at": [
+   "str"
+  ]
+ },
  "dosing.half_units": {
   "$": [
    "Decimal"
@@ -603,6 +608,50 @@
    "Decimal"
   ],
   "$[].mgdl": [
+   "Decimal"
+  ]
+ },
+ "night.night_analysis": {
+  "$.breakfast_at": [
+   "datetime"
+  ],
+  "$.carbs_g": [
+   "Decimal"
+  ],
+  "$.delta_mgdl": [
+   "Decimal"
+  ],
+  "$.dinner_at": [
+   "datetime"
+  ],
+  "$.drop_mgdl": [
+   "Decimal"
+  ],
+  "$.end": [
+   "datetime"
+  ],
+  "$.end_glucose": [
+   "Decimal"
+  ],
+  "$.last_injection_at": [
+   "datetime"
+  ],
+  "$.minimum_at": [
+   "datetime"
+  ],
+  "$.minimum_glucose": [
+   "Decimal"
+  ],
+  "$.morning_dose_at": [
+   "datetime"
+  ],
+  "$.rise_mgdl": [
+   "Decimal"
+  ],
+  "$.start": [
+   "datetime"
+  ],
+  "$.start_glucose": [
    "Decimal"
   ]
  },

@@ -1,10 +1,6 @@
 """English for the server's texts (app/i18n.py), keyed by the German source text."""
 
 EN = {
-    "Für diesen Tag ist kein Abendessen erfasst.": "No dinner is logged for this day.",
-    "Für den folgenden Tag ist kein Frühstück erfasst.": "No breakfast is logged for the following day.",
-    "Zwischen Abendessen und Frühstück ist keine schnell wirksame Injektion erfasst.": "No rapid-acting injection is logged between dinner and breakfast.",
-    "Frühstück oder Morgendosis kommen vor dem Nachtstart drei Stunden nach der letzten Injektion.": "Breakfast or a morning dose comes before the night start three hours after the last injection.",
     "Kohlenhydrate müssen positiv sein": "Carbohydrates must be positive",
     "Ungültiger Sporteffekt": "Invalid exercise effect",
     "Zeitpunkt benötigt eine Zeitzone": "Instant needs a time zone",
@@ -214,7 +210,6 @@ EN = {
     "Basal muss zwischen 0,5 und 100 IE in 0,5er-Schritten liegen": "Basal must be between 0.5 and 100 U in steps of 0.5",
     "Basal-Eintrag nicht gefunden": "Basal entry not found",
     "Ungültiger Eintrag": "Invalid entry",
-    "Korrekturfaktor-Profil aus Nightscout fehlt": "Correction factor profile from Nightscout missing",
     "Sportart unbekannt": "Unknown exercise kind",
     "Ohne Fett/Eiweiß-Schätzung des Agenten gibt es keinen berechneten Zuschlag": "Without the agent's fat/protein estimate there is no calculated surcharge",
     "Zuerst Nightscout verbinden": "Connect Nightscout first",

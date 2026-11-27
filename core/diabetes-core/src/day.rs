@@ -125,7 +125,9 @@ fn python_instants(value: &mut Value) {
             }
         }
         Value::Array(items) => items.iter_mut().for_each(python_instants),
-        Value::Object(map) => map.values_mut().for_each(python_instants),
+        // The Nightscout profile is passed through as Nightscout wrote it.
+        Value::Object(map) => map.iter_mut().filter(|(key, _)| key.as_str() != "nightscout_profile")
+            .for_each(|(_, item)| python_instants(item)),
         _ => {}
     }
 }
@@ -187,11 +189,6 @@ fn serialize_treatment(item: &Treatment, raw: &Raw) -> Map<String, Value> {
     };
     for key in ["carbs", "insulin", "basal_units", "duration"] {
         out.insert(key.into(), raw.get(item, key));
-    }
-    for key in ["episode_id", "meal", "role"] {
-        if out.get(key).is_some_and(Value::is_null) {
-            out.remove(key);
-        }
     }
     if let Some(Value::Object(plan)) = out.get_mut("split") {
         if let Some(units) = plan.get("units").and_then(decimal_of) {
@@ -272,12 +269,12 @@ fn instant_of(value: Option<&Value>) -> Option<Instant> {
         .map(|at| at.with_timezone(&chrono::Utc))
 }
 
-fn meal_review(calculation: &Value) -> Value {
+pub fn meal_review(calculation: &Value) -> Value {
     let calculated = calculation.get("factor_units_per_ke").is_some_and(|v| !v.is_null());
     json!({"open": if calculated { json!([]) } else { json!(["blocked"]) }, "calculated": calculated, "excludable": calculated})
 }
 
-fn day_review(meals: &[Map<String, Value>]) -> Value {
+pub fn day_review(meals: &[Map<String, Value>]) -> Value {
     let open = |meal: &Map<String, Value>| meal["review"]["open"].as_array().is_some_and(|items| !items.is_empty());
     let calculated = |meal: &Map<String, Value>| meal["review"]["calculated"].as_bool().unwrap_or(false);
     let excluded = |meal: &Map<String, Value>| meal["excluded"].as_bool().unwrap_or(false);
@@ -426,7 +423,8 @@ pub fn compute_day(snapshot: &Snapshot) -> Res<Value> {
         let window = meal_window(output, &reading_at, &settings);
         output.insert("window".into(), window);
     }
-    let night = night_analysis(day, &treatments, &entries, &reading_at, &meals, &settings);
+    let dinner_at = meals.iter().filter(|meal| meal.meal == "dinner").map(|meal| meal.at).max();
+    let night = night_analysis(day, &treatments, &entries, &reading_at, dinner_at, &settings);
     let meal_sources: HashSet<&str> = meals.iter().map(|meal| meal.source_id.as_str()).collect();
     let episode_ids: HashSet<&str> = meals.iter().filter(|meal| !meal.imported).map(|meal| meal.id.as_str()).collect();
     let labels = note_labels(raw_settings);
@@ -702,21 +700,21 @@ fn sport_shares(item: &Treatment, row: &Map<String, Value>, meals: &[Map<String,
 }
 
 /// Night from three hours after the last rapid dose to breakfast (app/analysis/night.py night_analysis).
-fn night_analysis(day: NaiveDate, treatments: &[Treatment], entries: &[Reading], reading_at: &Interpolator,
-                  meals: &[MealRoot], settings: &Settings) -> Value {
-    let Some(dinner) = meals.iter().filter(|meal| meal.meal == "dinner").max_by_key(|meal| meal.at) else {
+pub fn night_analysis(day: NaiveDate, treatments: &[Treatment], entries: &[Reading], reading_at: &Interpolator,
+                      dinner_at: Option<Instant>, settings: &Settings) -> Value {
+    let Some(dinner_at) = dinner_at else {
         return json!({"reason": t("Für diesen Tag ist kein Abendessen erfasst.")});
     };
     let next_meals = episodes::meals_for_day(treatments, day + Duration::days(1), settings);
-    let Some(breakfast) = next_meals.iter().filter(|meal| meal.meal == "breakfast" && meal.at > dinner.at).min_by_key(|meal| meal.at) else {
+    let Some(breakfast) = next_meals.iter().filter(|meal| meal.meal == "breakfast" && meal.at > dinner_at).min_by_key(|meal| meal.at) else {
         return json!({"reason": t("Für den folgenden Tag ist kein Frühstück erfasst.")});
     };
-    let rapid: Vec<Instant> = treatments.iter().filter(|item| dinner.at <= item.at && item.at < breakfast.at && item.has_rapid_dose())
+    let rapid: Vec<Instant> = treatments.iter().filter(|item| dinner_at <= item.at && item.at < breakfast.at && item.has_rapid_dose())
         .map(|item| item.at).collect();
     let morning_from = breakfast.at - Duration::minutes(MORNING_MINUTES);
     let morning: Vec<Instant> = rapid.iter().copied().filter(|at| *at >= morning_from).collect();
     let evening: Vec<Instant> = rapid.iter().copied().filter(|at| *at < morning_from).collect();
-    let (dinner_at, breakfast_at) = (iso(&dinner.at), iso(&breakfast.at));
+    let (dinner_at, breakfast_at) = (iso(&dinner_at), iso(&breakfast.at));
     let Some(last_injection_at) = evening.iter().max().copied() else {
         return json!({"reason": t("Zwischen Abendessen und Frühstück ist keine schnell wirksame Injektion erfasst."),
                       "dinner_at": dinner_at, "breakfast_at": breakfast_at});

@@ -394,6 +394,22 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         "day.compute_day" => crate::day::compute_day(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
+        "night.night_analysis" => {
+            // The dinner of the day from its meals (only "meal" and "at" are read).
+            let meals: Vec<Value> = a.get("meals")?;
+            let dinner_at = meals.iter().filter(|meal| meal["meal"] == "dinner")
+                .filter_map(|meal| meal["at"].as_str().and_then(|text| DateTime::parse_from_rfc3339(text).ok()))
+                .map(|at| at.with_timezone(&Utc)).max();
+            let entries: Vec<Reading> = a.get("entries")?;
+            let reading_at = calculation::Interpolator::new(&entries, 15);
+            Ok(crate::day::night_analysis(day(&a, "day")?, &a.get::<Vec<Treatment>>("treatments")?, &entries, &reading_at,
+                                          dinner_at, &a.get::<Settings>("settings")?))
+        }
+        "day.meal_review" => {
+            let meal: Value = a.get("meal")?;
+            Ok(crate::day::meal_review(&meal["calculation"]))
+        }
+        "day.day_review" => Ok(crate::day::day_review(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?)),
         "summary.compute_summary" => crate::summary::compute_summary(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         other => Err(CoreError::Value(format!("unknown function {other}"))),

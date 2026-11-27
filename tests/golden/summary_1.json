@@ -243,12 +243,12 @@
      "rapid_units_in_window": null,
      "reason": "CGM-Werte um den Messzeitpunkt fehlen",
      "sport": {
-      "effect_mgdl": "22.66666666666666666666666667",
+      "effect_mgdl": "22.666666666666666666666666668",
       "events": [
        {
         "at": "2026-10-07T07:40:00+00:00",
         "effect_from": "2026-10-07T08:20:00+00:00",
-        "effect_mgdl": "22.66666666666666666666666667",
+        "effect_mgdl": "22.666666666666666666666666668",
         "effect_until": "2026-10-07T13:20:00+00:00",
         "id": "ns-0004",
         "kind": "jogging",
@@ -257,7 +257,7 @@
       ],
       "status": "auto",
       "suggested": true,
-      "suggested_effect_mgdl": "22.66666666666666666666666667"
+      "suggested_effect_mgdl": "22.666666666666666666666666668"
      },
      "strong_outlier": false,
      "units_per_ke": null
