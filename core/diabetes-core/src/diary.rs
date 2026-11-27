@@ -4,6 +4,8 @@
 //! The adapter (app/services/diary.py) fetches the entry being edited and the day's treatments, resolves the
 //! agent's calculated surcharge, writes the record to Nightscout and keeps the local records (place, dish).
 
+use crate::limits::{MAX_CARBS_G, MAX_UNITS, SPORT_DURATION_MINUTES, SPORT_EFFECT_MAX_MGDL, SPORT_EFFECT_MINUTES};
+use crate::wire::truthy;
 use crate::context::{local_zone, t};
 use crate::day::{iso, sport_names};
 use crate::episodes::{self, CERTAINTIES};
@@ -75,7 +77,7 @@ pub fn record(inputs: &Inputs) -> Res<Value> {
     let out_of_range = || invalid(t("KH oder Insulin außerhalb des erlaubten Bereichs"));
     let carbs = amount(payload.get("carbs")).ok_or_else(out_of_range)?;
     let units = amount(payload.get("insulin")).ok_or_else(out_of_range)?;
-    if !(Decimal::ZERO <= carbs && carbs <= dec!(500) && Decimal::ZERO <= units && units <= dec!(100)) {
+    if !(Decimal::ZERO <= carbs && carbs <= MAX_CARBS_G && Decimal::ZERO <= units && units <= MAX_UNITS) {
         return Err(out_of_range());
     }
     if ["meal", "snack", "carbs"].contains(&kind) && carbs <= Decimal::ZERO {
@@ -100,7 +102,7 @@ pub fn record(inputs: &Inputs) -> Res<Value> {
             None => 0,
             Some(value) => decimal_of(value).and_then(|d| d.trunc().to_i64()).ok_or_else(|| invalid(t("Sportdauer muss zwischen 1 und 1440 Minuten liegen")))?,
         };
-        if !(1..=1440).contains(&duration) {
+        if !SPORT_DURATION_MINUTES.contains(&duration) {
             return Err(invalid(t("Sportdauer muss zwischen 1 und 1440 Minuten liegen")));
         }
     }
@@ -238,17 +240,6 @@ pub fn record(inputs: &Inputs) -> Res<Value> {
               "insulin": units.to_string(), "day": day}))
 }
 
-fn truthy(value: &Value) -> bool {
-    match value {
-        Value::Null => false,
-        Value::Bool(flag) => *flag,
-        Value::Number(n) => n.as_f64().is_some_and(|v| v != 0.0),
-        Value::String(text) => !text.is_empty(),
-        Value::Array(items) => !items.is_empty(),
-        Value::Object(map) => !map.is_empty(),
-    }
-}
-
 fn regex_find(pattern: &str, text: &str) -> Option<String> {
     regex::Regex::new(pattern).ok()?.find(text).map(|m| m.as_str().to_string())
 }
@@ -288,18 +279,18 @@ pub fn edit_kind(payload: &Value) -> Res<Value> {
 /// ones: `reset`, `effect_mgdl` (a drop) and `minutes`. Only a change is listed.
 pub fn sport_changes(payload: &Value, effects: &HashMap<String, Value>, durations: &HashMap<String, Value>, record_id: &str) -> Res<Value> {
     let duration = payload.get("duration_minutes").filter(|v| v.is_number()).and_then(Value::as_f64);
-    if !duration.is_some_and(|d| (1.0..=1440.0).contains(&d)) {
+    if !duration.is_some_and(|d| (*SPORT_DURATION_MINUTES.start() as f64..=*SPORT_DURATION_MINUTES.end() as f64).contains(&d)) {
         return Err(invalid(t("Bitte eine Dauer zwischen 1 und 1440 Minuten eintragen.")));
     }
     let change = payload.get("sport_effect_change_mgdl").filter(|v| !v.is_null());
     let change = match change {
         None => None,
-        Some(Value::Number(n)) if n.is_i64() && n.as_i64().unwrap().abs() <= 500 => n.as_i64(),
+        Some(Value::Number(n)) if n.as_i64().is_some_and(|v| Decimal::from(v.abs()) <= SPORT_EFFECT_MAX_MGDL) => n.as_i64(),
         Some(_) => return Err(invalid(t("Bitte eine BZ-Wirkung zwischen −500 und +500 mg/dL eintragen."))),
     };
     let minutes = payload.get("sport_minutes").filter(|v| !v.is_null());
     if let Some(value) = minutes {
-        if !value.as_f64().is_some_and(|m| value.is_number() && (30.0..=1440.0).contains(&m)) {
+        if !value.as_f64().is_some_and(|m| value.is_number() && (*SPORT_EFFECT_MINUTES.start() as f64..=*SPORT_EFFECT_MINUTES.end() as f64).contains(&m)) {
             return Err(invalid(t("Die Wirkdauer muss zwischen 0,5 und 24 h liegen.")));
         }
     }

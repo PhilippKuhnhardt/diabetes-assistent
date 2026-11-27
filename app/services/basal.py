@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import uuid
-from decimal import Decimal
 
-from app import calculation
+from app import calculation, core
 from app.common import local_day_range, local_zone, parse_instant, unit_text
 from app.ingestion import basal_sync, nightscout
 from app.store import basal_doses, config, mirror
@@ -15,9 +14,7 @@ from app.i18n import tr
 def save_basal(payload: dict) -> dict:
     """Store a basal injection locally and, when connected, as a Nightscout note."""
     at = parse_instant(str(payload["at"]))
-    units = calculation.dec(payload.get("units") or 0)
-    if not units.is_finite() or not 0 < units <= 100 or units % Decimal("0.5"):
-        raise ValueError(tr("Basal muss zwischen 0,5 und 100 IE in 0,5er-Schritten liegen"))
+    units = calculation.dec(core.call("limits.basal_units", units=payload.get("units")))
     dose_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
     note = str(payload.get("notes") or "").strip()[:500]
     _, settings = config.get_settings()

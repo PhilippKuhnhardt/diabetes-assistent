@@ -91,12 +91,12 @@ def _decode(value, path: str, types: dict[str, list[str]]):
 
 def _configure() -> None:
     global _context
-    from app import i18n
+    from app import i18n, insulin
     from app.store import timezones
-    context = (i18n.LANGUAGE, timezones.switches())
+    context = (i18n.LANGUAGE, insulin.ACTIVE.key, timezones.switches())
     if context != _context:
-        diabetes_core.configure(json.dumps({"language": context[0],
-                                            "switches": [[at.isoformat(), zone] for at, zone in context[1]]}))
+        diabetes_core.configure(json.dumps({"language": context[0], "insulin": context[1],
+                                            "switches": [[at.isoformat(), zone] for at, zone in context[2]]}))
         _context = context
 
 

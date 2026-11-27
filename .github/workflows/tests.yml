@@ -26,6 +26,8 @@ jobs:
           key: cargo-${{ runner.os }}-${{ hashFiles('core/Cargo.lock') }}
       - name: Build the Rust calculation core
         run: python core/build.py
+      - name: Rust unit tests
+        run: cargo test --locked --manifest-path core/Cargo.toml -p diabetes-core
       - name: Rust core against the golden calls of the former Python reference
         run: cargo build --release --locked --manifest-path core/Cargo.toml && python core/golden/compare.py
       - name: Python unit tests

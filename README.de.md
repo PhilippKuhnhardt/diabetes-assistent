@@ -48,7 +48,7 @@ Die Datenbank liegt als `app.sqlite3` in `APP_DATA_DIR` (Standard `./data`) und 
 | `NIGHTSCOUT_AUTH_MODE` | `secret` (Standard, sendet den SHA-1-Hash der `API_SECRET`) oder `token`. |
 | `APP_LANGUAGE` | `de` (Standard) oder `en`: Sprache von Server-Texten, Push-Nachrichten und Essens-Agent. |
 | `APP_TIMEZONE` | Heimat-Zeitzone, falls das Nightscout-Profil keine hat (Standard `Europe/Berlin`). |
-| `APP_INSULIN` | Wirkprofil des schnellen Insulins aus [app/insulin.py](app/insulin.py) (Standard und einziges Profil hier: `fiasp`; ein Fork kann dort eigene ergänzen). |
+| `APP_INSULIN` | Wirkprofil des schnellen Insulins aus [core/diabetes-core/src/insulin.rs](core/diabetes-core/src/insulin.rs) (Standard und einziges Profil hier: `fiasp`; ein Fork kann dort eigene ergänzen). |
 | `APP_SYNC_MINUTES` | Abgleich mit Nightscout alle N Minuten (Standard `2`, `0` = aus). |
 | `APP_BIND_ADDRESS`, `APP_PORT` | Wo Compose die App bereitstellt (Standard `127.0.0.1:8765`). |
 | `APP_DATA_DIR`, `APP_UID`, `APP_GID` | Datenverzeichnis und sein Benutzer (Standard `./data`, `1000`). |

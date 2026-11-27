@@ -25,7 +25,10 @@ through the phone) can link the same crate to compute offline. Python in `app/` 
 | `dishes` | a dish's reference factor, ratio, spread, typical carbs and hint (`app/dishes.py`) |
 | `entry` | the entry form: assignment, closing a meal, chips, dose options and slider, save plan (`services/entry.py`) |
 | `diary` | a diary entry's Nightscout record and checks, card edits, sport session changes (`services/diary.py`) |
-| `zone`, `context` | travel time zones (`common.TravelZone`), language of the texts (`app/i18n.py`) |
+| `insulin` | rapid-insulin profiles (`APP_INSULIN` picks one, `app/insulin.py` passes the key) |
+| `limits` | input limits shared by the entry form, the card, the sport-session and basal endpoints and MCP |
+| `zone`, `context` | travel time zones (`common.TravelZone`), language of the texts (`app/i18n.py`), active insulin |
+| `wire` | the JSON shape exchanged with the server (Python isoformat instants, truthiness of loose values) |
 
 The day payload and the analysis page take a whole snapshot each (`day_view.day_snapshot`,
 `summary.summary_snapshot`): Python reads the store, the core computes the page. Coarse calls matter, since a
@@ -72,5 +75,6 @@ cargo build --release --manifest-path core/Cargo.toml
 python3 core/golden/compare.py
 ```
 
-Numbers agree within 1e-9 relative, doses and rule decisions exactly. A deliberate rule change updates
+Numbers agree within 1e-9 relative, doses and rule decisions exactly. Rules without a recorded call (input
+limits, insulin profiles, marker parsing) have unit tests next to them (`cargo test -p diabetes-core`). A deliberate rule change updates
 the affected expectations in the file together with the Rust change.

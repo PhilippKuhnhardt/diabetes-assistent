@@ -14,20 +14,16 @@ use crate::glucose;
 use crate::model::{decimal_of, Instant, Reading, Settings, Treatment};
 use crate::on_board;
 use crate::services::{self, VacationPeriod};
+pub use crate::wire::iso;
+use crate::wire::to_value;
 use crate::{CoreError, Res};
-use chrono::{Duration, NaiveDate, NaiveTime, Timelike};
+use chrono::{Duration, NaiveDate, NaiveTime};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use std::collections::{HashMap, HashSet};
 
-/// Manual-window limits (app/services/settings.py): start within this long before or after the meal,
-/// at least MIN and at most MAX long.
-pub const MANUAL_WINDOW_LEAD_MINUTES: i64 = 120;
-pub const MANUAL_WINDOW_LAG_MINUTES: i64 = 120;
-pub const MANUAL_WINDOW_MIN_MINUTES: i64 = 30;
-pub const MANUAL_WINDOW_MAX_MINUTES: i64 = 600;
 /// After a rapid dose before its effect no longer dominates the night curve.
 pub const NIGHT_GAP_MINUTES: i64 = 180;
 /// A rapid dose this close before breakfast ends the night.
@@ -98,44 +94,12 @@ pub struct Snapshot {
     pub meal_records: HashMap<String, MealRecord>,
 }
 
-/// An instant as Python's datetime.isoformat() in UTC: microseconds only when there are any.
-pub fn iso(at: &Instant) -> String {
-    let micros = at.nanosecond() / 1000;
-    if micros == 0 {
-        at.format("%Y-%m-%dT%H:%M:%S+00:00").to_string()
-    } else {
-        format!("{}.{:06}+00:00", at.format("%Y-%m-%dT%H:%M:%S"), micros)
-    }
-}
-
 fn text(value: Decimal) -> Value {
     Value::String(value.to_string())
 }
 
 fn settings_of(value: &Value) -> Res<Settings> {
     serde_json::from_value(value.clone()).map_err(|error| CoreError::Value(format!("settings: {error}")))
-}
-
-/// Every string chrono wrote as an RFC 3339 instant ("…Z") in Python's isoformat instead.
-fn python_instants(value: &mut Value) {
-    match value {
-        Value::String(text) if text.len() >= 20 && text.ends_with('Z') && text.as_bytes().get(10) == Some(&b'T') => {
-            if let Ok(parsed) = chrono::DateTime::parse_from_rfc3339(text) {
-                *text = iso(&parsed.with_timezone(&chrono::Utc));
-            }
-        }
-        Value::Array(items) => items.iter_mut().for_each(python_instants),
-        // The Nightscout profile is passed through as Nightscout wrote it.
-        Value::Object(map) => map.iter_mut().filter(|(key, _)| key.as_str() != "nightscout_profile")
-            .for_each(|(_, item)| python_instants(item)),
-        _ => {}
-    }
-}
-
-fn to_value<T: serde::Serialize>(value: &T) -> Value {
-    let mut value = serde_json::to_value(value).unwrap_or(Value::Null);
-    python_instants(&mut value);
-    value
 }
 
 fn minutes(value: Decimal) -> Duration {
@@ -547,8 +511,7 @@ pub fn compute_day(snapshot: &Snapshot) -> Res<Value> {
         row.insert("rapid".into(), json!(item.is_rapid()));
         Value::Object(row)
     }).collect()));
-    payload.insert("window_limits".into(), json!({"lead_minutes": MANUAL_WINDOW_LEAD_MINUTES, "lag_minutes": MANUAL_WINDOW_LAG_MINUTES,
-        "min_minutes": MANUAL_WINDOW_MIN_MINUTES, "max_minutes": MANUAL_WINDOW_MAX_MINUTES}));
+    payload.insert("window_limits".into(), crate::window::limits());
     payload.insert("place_options".into(), Value::Array(snapshot.places.iter().map(|p| json!({"id": p.id, "name": p.name})).collect()));
     payload.insert("dish_options".into(), Value::Array(snapshot.dishes.iter().map(|d| json!({"id": d.id, "name": d.name})).collect()));
     let _ = meal_roots;

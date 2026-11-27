@@ -101,8 +101,12 @@ fn key(args: &Args, name: &str) -> Res<forecast::MealKey> {
     Ok((parts.first().cloned().flatten().unwrap_or_default(), parts.get(1).cloned().flatten()))
 }
 
-/// Set the process context: {"language": "de"|"en", "switches": [[instant, zone], ...]}.
-pub fn configure(context_value: &Value) {
+/// Set the process context: {"language": "de"|"en", "insulin": "fiasp", "switches": [[instant, zone], ...]}.
+/// An unknown insulin profile is an error (and leaves the context as it was).
+pub fn configure(context_value: &Value) -> Res<()> {
+    if let Some(key) = context_value.get("insulin").and_then(Value::as_str) {
+        context::set_insulin(key).map_err(CoreError::Value)?;
+    }
     if let Some(language) = context_value.get("language").and_then(Value::as_str) {
         context::set_language(language);
     }
@@ -113,6 +117,7 @@ pub fn configure(context_value: &Value) {
         }).collect();
         context::set_switches(parsed);
     }
+    Ok(())
 }
 
 /// Run one core function on JSON arguments. Decimal numbers come back in their natural form
@@ -149,6 +154,10 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
     let a = Args(args);
     match name {
         "calculation.minutes_between" => out(calculation::minutes_between(a.get("later")?, a.get("earlier")?)),
+        "insulin.active" => {
+            let profile = crate::insulin::active();
+            Ok(json!({"key": profile.key, "name": profile.name}))
+        }
         "calculation.insulin_remaining" => out(calculation::insulin_remaining(a.dec_or("minutes", Decimal::ZERO))),
         "calculation.schedule_value_at" => {
             let key = if a.str("key") == "grams_per_unit" { ScheduleKey::GramsPerUnit } else { ScheduleKey::MgdlPerUnit };
@@ -421,6 +430,10 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
         "dishes.catalogue" => Ok(crate::dishes::catalogue(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?,
             &a.get::<Vec<i64>>("dish_ids")?, &a.get::<Vec<serde_json::Map<String, Value>>>("records")?)),
         "entry.dose_variants" => out(crate::entry::DOSE_VARIANTS),
+        "limits.basal_units" => out(crate::limits::basal_units(&a.raw("units"))?),
+        "limits.sport_effect_minutes" => out(crate::limits::sport_effect_minutes(&a.raw("minutes"))?),
+        "limits.sport_effect_mgdl" => out(crate::limits::sport_effect_mgdl(&a.raw("effect_mgdl"))?),
+        "limits.finger_mgdl" => out(crate::limits::finger_mgdl(&a.raw("mgdl"))?),
         "entry.carbs" => out(crate::entry::carbs(&a.get::<Value>("payload")?)),
         "entry.preview" => crate::entry::preview(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("inputs: {error}")))?),

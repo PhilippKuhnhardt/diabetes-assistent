@@ -23,7 +23,10 @@ fn main() {
             }
         };
         if let Some(context) = request.get("context") {
-            api::configure(context);
+            if let Err(error) = api::configure(context) {
+                writeln!(stdout, "{}", json!({"error": error.to_string(), "kind": "context"})).unwrap();
+                continue;
+            }
         }
         let name = request["fn"].as_str().unwrap_or_default().to_string();
         let args = request.get("args").cloned().unwrap_or(json!({}));

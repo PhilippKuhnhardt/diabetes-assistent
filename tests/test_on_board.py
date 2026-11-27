@@ -14,14 +14,13 @@ class CurveTests(unittest.TestCase):
             with self.subTest(minutes):
                 self.assertAlmostEqual(float(on_board.insulin_remaining(Decimal(minutes))), float(share), places=2)
 
-    def test_another_profile_changes_the_curve_and_unknown_names_are_refused(self):
+    def test_unknown_insulin_profiles_are_refused(self):
+        # The curves live in the core (insulin.rs, with its own test for another profile); Python picks one by key.
         from app import insulin
-        slower = insulin.InsulinProfile("slow", "Slow", Decimal(15), Decimal(75), Decimal(360))
-        self.assertGreater(slower.remaining(Decimal(90)), insulin.PROFILES["fiasp"].remaining(Decimal(90)))
-        self.assertEqual(slower.remaining(Decimal(375)), 0)
-        self.assertEqual(insulin.ACTIVE.key, "fiasp")
+        self.assertEqual(insulin.ACTIVE, insulin.InsulinProfile("fiasp", "Fiasp"))
         with unittest.mock.patch.dict("os.environ", {"APP_INSULIN": "nope"}), self.assertRaises(SystemExit):
             insulin._configured()
+        self.assertAlmostEqual(float(on_board.insulin_remaining(Decimal(90))), 0.54, places=2)
 
     def test_stomach_digests_larger_and_consecutive_meals_slower(self):
         at = datetime(2026, 10, 8, 12, tzinfo=timezone.utc)
