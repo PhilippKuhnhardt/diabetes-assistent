@@ -108,7 +108,7 @@ function Misses({ misses }) {
     .filter(([, row]) => row);
   const fast = [[MEAL_FACTORS.fast, misses.fast?.fast], [t("analysis.misses.notFast"), misses.fast?.other]].filter(([, row]) => row);
   if (!certainty.length && !fast.length) return null;
-  return html`<${Card} id="misses" title=${t("analysis.misses.title")} hint=${t("analysis.misses.hint")}>
+  return html`<${Card} id="misses" title=${t("analysis.misses.title")}>
     ${certainty.length > 0 && html`<h3 class="werte-sub">${t("analysis.misses.certainty")}</h3>
       <ul class="miss-list">${certainty.map(([label, row]) => html`<${MissRow} key=${label} label=${label} row=${row} />`)}</ul>`}
     ${fast.length > 0 && html`<h3 class="werte-sub">${MEAL_FACTORS.fast}</h3>
@@ -136,8 +136,7 @@ function Calculations({ groups, onOpenMeal }) {
       <${Icon} name="chevron" /></button></li>`;
   };
   return html`<${Card} title=${t("analysis.meals.title")} hint=${t("analysis.meals.hint")}>
-    ${rows.length ? html`<ul class="werte-list" id="calculations"><${ShowMore} items=${rows} render=${row} /></ul>
-      <p class="hint">${t("analysis.expectedNote")}</p>` : html`<${Empty}>${t("analysis.noMeals")}<//>`}<//>`;
+    ${rows.length ? html`<ul class="werte-list" id="calculations"><${ShowMore} items=${rows} render=${row} /></ul>` : html`<${Empty}>${t("analysis.noMeals")}<//>`}<//>`;
 }
 
 // Per sport kind: what the factors assumed for sport against what the meals measured, with "Übernehmen"
