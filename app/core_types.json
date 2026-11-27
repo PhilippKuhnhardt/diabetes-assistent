@@ -132,6 +132,11 @@
    "Decimal"
   ]
  },
+ "entry.carbs": {
+  "$": [
+   "Decimal"
+  ]
+ },
  "episodes.group_diary_followups": {
   "$[].at": [
    "datetime"

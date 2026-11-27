@@ -420,6 +420,12 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
         "dishes.hint" => out(crate::dishes::hint(a.get("count")?, a.get("typical")?, a.opt::<Value>("result")?.as_ref())),
         "dishes.catalogue" => Ok(crate::dishes::catalogue(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?,
             &a.get::<Vec<i64>>("dish_ids")?, &a.get::<Vec<serde_json::Map<String, Value>>>("records")?)),
+        "entry.dose_variants" => out(crate::entry::DOSE_VARIANTS),
+        "entry.carbs" => out(crate::entry::carbs(&a.get::<Value>("payload")?)),
+        "entry.preview" => crate::entry::preview(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("inputs: {error}")))?),
+        "entry.save_plan" => crate::entry::save_plan(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("inputs: {error}")))?),
         "services.dose_help" => crate::services::dose_help(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         "day.compute_day" => crate::day::compute_day(&serde_json::from_value(args.clone())

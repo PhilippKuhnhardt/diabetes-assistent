@@ -68,5 +68,16 @@
  "wie üblich": "as usual",
  "{count}× eingetragen": "logged {count}×",
  "{percent} % mehr Insulin als üblich": "{percent} % more insulin than usual",
- "{percent} % weniger Insulin als üblich": "{percent} % less insulin than usual"
+ "{percent} % weniger Insulin als üblich": "{percent} % less insulin than usual",
+ "Basal wird über die Basal-Eingabe gespeichert": "Basal is saved through the basal input",
+ "Bitte Kohlenhydrate, Insulin oder beides eintragen.": "Please enter carbohydrates, insulin or both.",
+ "Blutig gemessener BZ muss zwischen 20 und 600 mg/dL liegen": "Finger-stick BG must be between 20 and 600 mg/dL",
+ "Die Wirkdauer muss zwischen 0,5 und 24 h liegen.": "The duration of effect must be between 0.5 and 24 h.",
+ "Eine aktuelle Empfehlung gibt es nur für den heutigen Tag.": "A current suggestion exists only for today.",
+ "Gesamtdosis muss zwischen 0 und 100 IE liegen": "Total dose must be between 0 and 100 U",
+ "KH oder Insulin außerhalb des erlaubten Bereichs": "Carbs or insulin outside the allowed range",
+ "Sporteinfluss muss zwischen −500 und 500 mg/dL liegen": "Exercise effect must be between −500 and 500 mg/dL",
+ "Ungültiger Eintragstyp": "Invalid entry type",
+ "Ungültiger Sporteinfluss": "Invalid exercise effect",
+ "Zeit fehlt": "Time missing"
 }

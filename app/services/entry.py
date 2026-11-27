@@ -4,30 +4,19 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from datetime import date, datetime, timedelta
-from decimal import Decimal, InvalidOperation
+from datetime import date, datetime, timezone
 
-from app import calculation, correction_scale, dosing, episodes, fpe, split as split_bolus
+from app import calculation, core
 from app.common import local_zone, parse_instant
 from app.ingestion import nightscout
-from app.services import basal, day_view, diary, dose_help, places, settings as settings_service
+from app.services import basal, day_view, diary, dose_help, places
 from app.store import config, marks
 from app.i18n import tr
 
-MODES = ("meal", "exercise", "basal")
-# fast / slow: the ends of a correction without food after a recent meal (app/correction_scale.py); they take
-# the cautious option's place there.
-DOSE_VARIANTS = ("fast", "normal", "slow", "cautious", "carbs")
-SMALL_SNACK_GRAMS = episodes.SMALL_SNACK_GRAMS
-# The planned second part of a split bolus, offered as its own option while it is open.
-SPLIT_VARIANT = "split"
-# The fields a shown suggestion depends on; saving a tapped suggestion re-checks them together with the
-# shown option units. Raw totals and expected values are left out: what still acts decays every second,
-# so they never match between showing and saving, while the rounded doses only change for a real reason.
-DOSE_CHECK_KEYS = (
-    "carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl",
-    "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "auto_units_per_ke",
-    "recent_rapid_doses")
+# The rules of the form (assignment, closing a meal, basal chip, split chip, dose options, slider, what a
+# save stores) are in the Rust core (core/diabetes-core/src/entry.rs). This module reads what they need,
+# hashes the dose check, and writes the entry.
+DOSE_VARIANTS = tuple(core.call("entry.dose_variants"))
 DOSE_CHANGED = tr("Empfehlung neu berechnet. Bitte den neuen Wert prüfen und neu antippen.")
 
 
@@ -35,439 +24,77 @@ class DoseChanged(ValueError):
     """The tapped suggestion's dose is no longer the current one; the page shows the new one."""
 
 
-def _carbs(payload: dict) -> Decimal | None:
-    """Empty carbohydrates mean a correction without food; invalid input yields None."""
-    raw = str(payload.get("carbs") if payload.get("carbs") is not None else "").strip()
-    if raw == "":
-        return Decimal(0)
-    try:
-        carbs = Decimal(raw)
-    except InvalidOperation:
+def _check(material) -> str | None:
+    """The tapped-suggestion check: a hash of what the shown suggestion depends on (entry.rs DOSE_CHECK_KEYS)."""
+    if material is None:
         return None
-    return carbs if carbs.is_finite() and 0 <= carbs <= 500 else None
+    return hashlib.sha256(json.dumps(material, default=str).encode()).hexdigest()
 
 
-def _sport_drop(payload: dict) -> Decimal | None:
-    """The glucose drop typed for a sport session (the form shows the signed change, −70 lowers);
-    None when left empty, so the session follows the setting of its kind."""
-    raw = str(payload.get("sport_effect_mgdl") if payload.get("sport_effect_mgdl") is not None else "").strip()
-    if raw == "":
-        return None
-    try:
-        change = Decimal(raw)
-    except InvalidOperation:
-        raise ValueError(tr("Ungültiger Sporteinfluss")) from None
-    if not change.is_finite() or not -500 <= change <= 500:
-        raise ValueError(tr("Sporteinfluss muss zwischen −500 und 500 mg/dL liegen"))
-    return -change
-
-
-def _sport_minutes(payload: dict) -> int | None:
-    """The session's own effect duration in minutes (the same field as on the entry card); None follows its kind."""
-    minutes = payload.get("sport_minutes")
-    if minutes is None or minutes == "":
-        return None
-    if isinstance(minutes, bool) or not isinstance(minutes, (int, float)) or not 30 <= minutes <= 1440:
-        raise ValueError(tr("Die Wirkdauer muss zwischen 0,5 und 24 h liegen."))
-    return int(round(minutes))
-
-
-def _finger(payload: dict) -> Decimal | None:
-    """Blood glucose measured by hand in the form; empty means none, out of range raises."""
-    raw = str(payload.get("finger_mgdl") if payload.get("finger_mgdl") is not None else "").strip()
-    if raw == "":
-        return None
-    try:
-        value = Decimal(raw)
-    except InvalidOperation:
-        value = Decimal("NaN")
-    if not value.is_finite() or not 20 <= value <= 600:
-        raise ValueError(tr("Blutig gemessener BZ muss zwischen 20 und 600 mg/dL liegen"))
-    return value
-
-
-def _context(payload: dict) -> dict:
+def _inputs(payload: dict) -> dict:
+    """What entry.rs reads: the stored day, the settings, the place chips and, for today, the dose help's snapshot."""
     day = str(payload.get("day", ""))
     date.fromisoformat(day)
-    mode = payload.get("mode", "meal")
-    if mode not in MODES:
-        raise ValueError(tr("Ungültiger Eintragstyp"))
     _, settings = config.get_settings()
     zone = local_zone(settings["timezone"])
-    today = datetime.now(zone).date().isoformat()
+    now = datetime.now(timezone.utc)
+    today = now.astimezone(zone).date().isoformat()
     # Today follows the local copy while the background job keeps it current; same rule as the dose help.
     current = day_view.day_payload(day, refresh=day == today and not day_view.mirror_current(day))
     at = parse_instant(str(payload["at"])) if payload.get("at") else None
-    treatments = [{**row, "at": parse_instant(row["at"])} for row in current["treatments"]]
-    return {"day": day, "mode": mode, "settings": settings, "zone": zone, "today": today,
-            "current": current, "at": at, "treatments": treatments, "carbs": _carbs(payload),
-            "finger": _finger(payload) if mode == "meal" else None}
-
-
-def _assignment(context: dict, payload: dict) -> dict | None:
-    """A new carb entry right after a main meal counts as its snack unless flipped to its own meal.
-
-    When the day already has a main meal of the entry's own kind, it can only be a snack
-    (of the preceding meal, or of no meal), so each kind counts once a day. An entry
-    below SMALL_SNACK_GRAMS that would start a main meal is a snack of no meal until
-    flipped, so a bite before sport does not take the day's meal."""
-    at, carbs = context["at"], context["carbs"]
-    if context["mode"] != "meal" or at is None or not carbs or carbs <= 0:
-        return None
-    settings = context["settings"]
-    own_meal = episodes.meal_kind_at(at, settings)[1]
-    taken = episodes.taken_meal(at, context["treatments"], settings)
-    root = episodes.preceding_meal(at, context["treatments"], settings)
-    if root is None and taken is None:
-        if carbs >= SMALL_SNACK_GRAMS:
-            return None
-        return {"meal": None, "at": None, "own_meal": own_meal,
-                "snack": payload.get("as") != "meal", "own_meal_taken": False}
-    if taken is not None:
-        result = {"meal": root["meal"] if root else None, "at": root["at"] if root else None,
-                  "own_meal": own_meal, "snack": True, "own_meal_taken": True}
-    else:
-        result = {"meal": root["meal"], "at": root["at"], "own_meal": own_meal,
-                  "snack": payload.get("as") != "meal", "own_meal_taken": False}
-    return _closing(context, root, result, payload)
-
-
-def _instant(value):
-    return parse_instant(value) if isinstance(value, str) else value
-
-
-def _closing(context: dict, root: dict | None, result: dict, payload: dict) -> dict:
-    """A snack after a main meal can end that meal instead: the meal's window
-    then ends at the entry, the same manual window "Tag durchgehen" sets, so the snack and anything
-    later no longer count in its factor. A meal whose manual window already ended keeps no snacks."""
-    result["close"] = None
-    if root is None or not result["snack"]:
-        return result
-    at = context["at"]
-    meal = next((row for row in context["current"]["meals"] if row.get("source_id") == root["id"]), None)
-    if meal is None or not meal.get("window"):
-        return result
-    start, end = _instant(meal["window"]["start"]), _instant(meal["window"]["end"])
-    if meal["window"].get("manual") and end <= at:
-        return {**result, "meal": None, "at": None}
-    if end <= at:
-        return result
-    try:
-        settings_service.validate_manual_window(_instant(meal["at"]), start, at)
-    except ValueError:
-        return result  # Too soon after the meal to end it here.
-    active = payload.get("close_meal") is True
-    result["close"] = {"meal": root["meal"], "at": root["at"], "meal_id": meal["id"], "start": start,
-                       "end": at, "active": active}
-    if active:
-        result.update({"meal": None, "at": None})
-    return result
-
-
-def _serial(assignment: dict | None) -> dict | None:
-    """The assignment as the form and the agent read it."""
-    if assignment is None:
-        return None
-    close = assignment.get("close")
-    return {**assignment, "at": assignment["at"] and assignment["at"].isoformat(),
-            "close": close and {"meal": close["meal"], "at": close["at"].isoformat(),
-                                "end": close["end"].isoformat(), "active": close["active"]}}
-
-
-def _minute(context: dict) -> int | None:
-    at = context["at"]
-    if at is None:
-        return None
-    local = at.astimezone(context["zone"])
-    return local.hour * 60 + local.minute
-
-
-def _before_breakfast_end(context: dict) -> bool:
-    minute = _minute(context)
-    return minute is not None and minute < int(context["settings"]["breakfast_end_minute"])
-
-
-def _basal_units(context: dict) -> Decimal:
-    """Before breakfast end, while the day has no basal yet, the usual dose rides along."""
-    units = calculation.dec(context["settings"].get("basal_default_units", config.DEFAULT_BASAL_UNITS))
-    if (context["mode"] != "meal" or not units.is_finite() or units <= 0 or context["current"]["basal"]
-            or not _before_breakfast_end(context)):
-        return Decimal(0)
-    return units
-
-
-def _dose_check(result: dict, options: list[dict]) -> str:
-    shown = [[option.get(key) for key in ("variant", "units", "later_units")] for option in options]
-    return hashlib.sha256(json.dumps([[result.get(key) for key in DOSE_CHECK_KEYS], shown],
-                                     default=str).encode()).hexdigest()
-
-
-def _same_dose(dose: dict, payload: dict, insulin: Decimal) -> bool:
-    """The tapped option still offers exactly the dose that was shown and is being saved."""
-    shown = payload.get("dose_shown")
-    option = next((item for item in dose.get("options", []) if item["variant"] == payload.get("dose_variant")), None)
-    if not isinstance(shown, dict) or option is None or not option.get("savable"):
-        return False
-
-    def same(a: object, b: object) -> bool:
-        if a is None or b is None:
-            return a is None and b is None
-        try:
-            return calculation.dec(a) == calculation.dec(b)
-        except ArithmeticError:
-            return False
-
-    return (same(option["units"], shown.get("units")) and same(option["units"], insulin)
-            and same(option.get("later_units"), shown.get("later_units")))
-
-
-def _split(context: dict, assignment: dict | None, payload: dict) -> dict | None:
-    """The split-bolus chip: offered and preselected for a large or fat/protein main meal; the form can switch it off."""
-    carbs, at = context["carbs"], context["at"]
-    if context["mode"] != "meal" or not carbs or at is None:
-        return None
-    calculated = _fpe_surcharge(context, assignment, payload)
-    # With the calculated surcharge every main meal may split ("carbs now, surcharge later"); _dose drops the
-    # split again when the surcharge part stays small (app/fpe.py).
-    offer = split_bolus.offer(carbs, bool(assignment and assignment["snack"]), context["settings"],
-                              fat=payload.get("fat_protein") is True or calculated is not None)
-    if offer is None:
-        return None
-    if calculated is not None:
-        offer = {**offer, "fpe": True}
-    return {**offer, "active": payload.get("split") is not False,
-            "due_at": (at + timedelta(minutes=offer["delay_minutes"])).isoformat()}
-
-
-def _fpe_surcharge(context: dict, assignment: dict | None, payload: dict) -> dict | None:
-    """The calculated fat/protein surcharge (app/fpe.py) when the form chose it, else None. Snacks carry it like
-    meals (the surcharge belongs to each carb entry, app/on_board.py)."""
-    if context["mode"] != "meal" or not context["carbs"]:
-        return None
-    found = fpe.estimate(payload, context["settings"])
-    return found if fpe.chosen(found, payload) else None
-
-
-def _place_choice(context: dict, payload: dict) -> int | None:
-    """The place the entry will be saved with: the chosen chip ("none" = no place), else the one the
-    position suggests, as the form preselects it."""
-    chosen = payload.get("place_id")
-    if chosen is not None:
-        return places.place_id(chosen)
-    return places.chips(payload, context["at"])["place_id"]
-
-
-def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | None = None) -> dict:
-    """The suggestion for today, with the three options already resolved for display."""
-    carbs = context["carbs"]
-    if context["mode"] != "meal" or carbs is None:
-        return {"message": ""}
-    if context["day"] != context["today"]:
-        return {"message": tr("Eine aktuelle Empfehlung gibt es nur für den heutigen Tag.") if carbs > 0 else ""}
-    # Sport is part of what still acts (app.on_board), so it needs no extra input here.
-    result = dose_help.dose_help({"carbs": str(carbs),
-                                  "snack": bool(assignment and assignment["snack"]),
-                                  "fat_protein": carbs > 0 and payload.get("fat_protein") is True,
-                                  **({key: payload.get(key) for key in ("fat_g", "protein_g", "surcharge_mode", "fpe_level")}
-                                     if carbs > 0 else {}),
-                                  "place_id": _place_choice(context, payload) if carbs > 0 else None,
-                                  "finger_mgdl": context["finger"], "finger_at": context["at"]})
-    # With carbs every option uses the calculated factor; until it has enough meals the
-    # breakfast day-type median or Nightscout's I:C stands in.
-    prefix = "auto_" if carbs > 0 and result.get("auto_units_per_ke") is not None else ""
-    if split and not split_bolus.worth_it(result.get(prefix + "entry_units"), context["settings"]):
-        # The normal dose is too small to split (e.g. shrunk by a low glucose): all of it now, no chip.
-        split = None
-    if split and split.get("fpe"):
-        # Calculated surcharge: the carbs (and correction) now, the surcharge later.
-        chosen = _fpe_surcharge(context, assignment, payload) is not None
-        later = dosing.half_units(Decimal(str(result.get("auto_surcharge_units") or 0))) if chosen else None
-        full = result.get(prefix + "entry_units")
-        if not chosen:
-            # The static surcharge was used after all: the usual rule (carbs, fat mark) decides.
-            split = (split if carbs >= int(context["settings"].get("split_min_grams", 80)) or payload.get("fat_protein") is True
-                     else None)
-        elif later < fpe.SPLIT_LATER_MIN_UNITS and carbs < int(context["settings"].get("split_min_grams", 80)):
-            split = None
-        else:
-            share = (100 * (Decimal(str(full)) - later) / Decimal(str(full))) if full and Decimal(str(full)) > 0 else 100
-            split = {**split, "later_units": str(later), "first_percent": int(round(max(0, min(100, share))))}
-    keys = {"normal": ("entry_units", "expected_glucose_mgdl"),
-            "cautious": ("cautious_entry_units", "cautious_expected_glucose_mgdl"),
-            "carbs": ("carbs_entry_units", "carbs_expected_glucose_mgdl")}
-    scale = result.get("correction_scale") if carbs == 0 else None
-    if scale:
-        keys.update({name: (scale[name + "_entry_units"], scale[name + "_expected_glucose_mgdl"]) for name in ("fast", "slow")})
-    options = []
-    for variant in DOSE_VARIANTS:
-        if variant == "carbs" and carbs <= 0:
-            continue
-        if variant in ("fast", "slow"):
-            if scale:
-                option = {"variant": variant, "units": keys[variant][0], "expected_mgdl": keys[variant][1],
-                          "savable": Decimal(keys[variant][0]) <= 100}
-                option["suggested"] = scale["tempo"] == variant
-                options.append(option)
-            continue
-        if variant == "cautious":
-            # The slider replaces the cautious target.
-            continue
-        units = result.get(prefix + keys[variant][0])
-        if units is None:
-            continue
-        option = {"variant": variant, "units": units, "expected_mgdl": result.get(prefix + keys[variant][1])}
-        if split and split["active"]:
-            # The shown units are the first part; the expected value assumes the planned second part too.
-            first, later = split_bolus.parts(Decimal(str(units)), split["first_percent"],
-                                             Decimal(split["later_units"]) if split.get("later_units") else None)
-            option.update({"units": str(first), "full_units": str(units), "later_units": str(later),
-                           "later_at": split["due_at"]})
-        option["savable"] = Decimal(option["units"]) <= 100
-        if scale and variant == "normal":
-            option["suggested"] = scale["tempo"] == "normal"
-        options.append(option)
-    plan = result.get("split_plan")
-    if plan and carbs == 0:
-        # The second part is what the current forecast asks for; the planned IE
-        # only stand in without a fresh glucose value.
-        forecast_units = result.get("entry_units")
-        units = Decimal(str(forecast_units)) if forecast_units is not None else Decimal(plan["units"])
-        forecast = result.get("forecast_mgdl")
-        options.insert(0, {"variant": SPLIT_VARIANT, "units": str(units), "due_at": plan["due_at"],
-                           "planned_units": plan["units"], "state": plan["state"], "latest_at": plan["latest_at"],
-                           "from_forecast": forecast_units is not None,
-                           "expected_mgdl": (str(Decimal(forecast) - units * Decimal(result["isf_mgdl_per_unit"]))
-                                             if forecast is not None else None),
-                           "savable": 0 < units <= 100})
-    # Without a fresh CGM value the form offers its field for blood glucose measured by hand.
-    finger_offer = not result.get("glucose_fresh") or result.get("glucose_source") == "finger"
-    return {**result, "options": options, "check": _dose_check(result, options), "finger_offer": finger_offer,
-            "split": split,
-            "slider": _slider(result, options, carbs, scale, split)}
-
-
-def _slider(result: dict, options: list[dict], carbs: Decimal, scale: dict | None, split: dict | None) -> dict | None:
-    """The dose slider around the normal dose (app/correction_scale.py): ends, recommendation, where glucose
-    likely ends (expected value of the normal dose, its KF and the corridor offsets) and, for a split meal,
-    how a total is divided."""
-    by_variant = {option["variant"]: option for option in options}
-    base = by_variant.get(SPLIT_VARIANT) or by_variant.get("normal")
-    if base is None:
-        return None
-    normal = Decimal(str(base.get("full_units") or base["units"]))
-    tempo = scale["tempo"] if scale else None
-    out = correction_scale.dose_range(normal, carbs == 0, tempo)
-    out.update({"expected_mgdl": base.get("expected_mgdl"), "isf_mgdl_per_unit": result.get("isf_mgdl_per_unit"),
-                "first_percent": split["first_percent"] if split and split["active"] else None,
-                "later_at": split["due_at"] if split and split["active"] else None,
-                # Calculated surcharge: the later part is that surcharge, whatever total is chosen.
-                "later_units": split.get("later_units") if split and split["active"] else None})
-    return out
-
-
-def _on_board(context: dict, dose: dict) -> dict | None:
-    """Today's "Wirkt noch" card, whatever the form currently holds."""
-    if context["day"] != context["today"]:
-        return None
-    if "on_board" in dose:
-        return dose["on_board"]
-    try:
-        return dose_help.dose_help({"carbs": "0"}).get("on_board")
-    except ValueError:
-        return None
+    place = place_id = None
+    carbs = core.call("entry.carbs", payload=payload)
+    if payload.get("mode", "meal") == "meal" and carbs and carbs > 0:
+        place = places.chips(payload, at)
+        chosen = payload.get("place_id")
+        # The place the entry will be saved with: the chosen chip ("none" = no place), else the suggested one.
+        place_id = places.place_id(chosen) if chosen is not None else place["place_id"]
+    return {
+        "payload": payload, "settings": settings, "at": at, "day": day, "today": today,
+        "treatments": current["treatments"],
+        "meals": [{key: meal.get(key) for key in ("id", "at", "source_id", "window")} for meal in current["meals"]],
+        "basal_today": bool(current["basal"]), "day_type": current.get("day_type"),
+        "day_type_source": current.get("day_type_source"), "place": place, "place_id": place_id,
+        "snapshot": dose_help.snapshot({}, now) if day == today else None,
+    }
 
 
 def preview(payload: dict) -> dict:
     """Everything the entry form shows for the values typed so far."""
-    context = _context(payload)
-    assignment = _assignment(context, payload)
-    current = context["current"]
-    # The day type is asked once, with the day's first meal; later it is changed in "Tag durchgehen".
-    first_meal = not any(float(item.get("carbs") or 0) > 0 for item in context["treatments"])
-    day_type_visible = (context["mode"] == "meal" and bool(current.get("day_type"))
-                        and _before_breakfast_end(context) and first_meal)
-    split = _split(context, assignment, payload)
-    dose = _dose(context, payload, assignment, split)
-    split = dose.pop("split", split)
-    return {
-        "day": context["day"],
-        "assignment": _serial(assignment),
-        "basal_units": str(_basal_units(context)),
-        "day_type": ({"value": current["day_type"], "source": current["day_type_source"]}
-                     if day_type_visible else None),
-        "split": split,
-        "place": (places.chips(payload, context["at"])
-                  if context["mode"] == "meal" and context["carbs"] and context["carbs"] > 0 else None),
-        "dose": dose,
-        "on_board": _on_board(context, dose),
-    }
+    result = core.call("entry.preview", **_inputs(payload))
+    dose = result["dose"]
+    if "check_material" in dose:
+        dose["check"] = _check(dose.pop("check_material"))
+    return result
 
 
 def save(payload: dict) -> dict:
     """Save a diary entry with the basal riding along in one call."""
-    context = _context(payload)
-    mode = context["mode"]
-    if mode == "basal":
-        raise ValueError(tr("Basal wird über die Basal-Eingabe gespeichert"))
-    carbs = context["carbs"] if mode == "meal" else Decimal(0)
-    if carbs is None:
-        raise ValueError(tr("KH oder Insulin außerhalb des erlaubten Bereichs"))
-    insulin = calculation.dec(payload.get("insulin") or 0) if mode == "meal" else Decimal(0)
-    finger = context["finger"]
-    if mode == "meal" and carbs <= 0 and insulin <= 0 and finger is None:
-        raise ValueError(tr("Bitte Kohlenhydrate, Insulin oder beides eintragen."))
-    if context["at"] is None:
-        raise ValueError(tr("Zeit fehlt"))
+    inputs = _inputs(payload)
+    plan = core.call("entry.save_plan", **inputs)
+    at = inputs["at"]
+    finger = calculation.dec(plan["finger_mgdl"]) if plan["finger_mgdl"] is not None else None
     if finger is not None:
-        # Saved first so the dose re-check below and later suggestions see the same start value.
+        # Saved first so later suggestions see the same start value.
         event_id = str(uuid.UUID(str(payload.get("event_id") or uuid.uuid4())))
-        diary.save_glucose_check(context["at"], finger, str(uuid.uuid5(uuid.UUID(event_id), "finger")))
+        diary.save_glucose_check(at, finger, str(uuid.uuid5(uuid.UUID(event_id), "finger")))
         payload = {**payload, "event_id": event_id}
-        if carbs <= 0 and insulin <= 0:
-            day = context["at"].astimezone(context["zone"]).date().isoformat()
+        if plan["kind"] == "finger":
+            day = plan["day"]
             return {"day": day, "kind": "finger", "event_id": event_id, "id": None, "split_units": None,
                     "carbs": "0", "insulin": "0", "finger_mgdl": str(finger), "basal": None,
                     "basal_error": None,
                     "day_view": day_view.with_checks(day_view.day_payload(day))}
-    assignment = _assignment(context, payload)
-    basal_units = _basal_units(context) if payload.get("with_basal") else Decimal(0)
-    sport_drop = _sport_drop(payload) if mode == "exercise" else None
-    sport_minutes = _sport_minutes(payload) if mode == "exercise" else None
-    split = _split(context, assignment, payload) if carbs > 0 else None
-    dose = (_dose(context, payload, assignment, split)
-            if payload.get("dose_check") or (split and split["active"]) else {})
-    split = dose.pop("split", split)
-    if payload.get("dose_check"):
+    if plan["tapped"] and _check(plan["check_material"]) != payload["dose_check"] and not plan["same_dose"]:
         # A tapped suggestion must still match the current one (new CGM value, new dose, profile change).
         # Newer data that leaves the tapped dose as it was (e.g. only a new CGM reading) still saves it.
-        if dose.get("check") != payload["dose_check"] and not _same_dose(dose, payload, insulin):
-            raise DoseChanged(DOSE_CHANGED)
-    split_units = None
-    if split and split["active"] and context["day"] == context["today"]:
-        # The second part completes the chosen suggestion (normal unless another was tapped).
-        options = {option["variant"]: option for option in dose.get("options", [])}
-        option = options.get(payload.get("dose_variant")) or options.get("normal") or options.get("carbs")
-        total = payload.get("dose_total_units")
-        if total not in (None, ""):
-            # A dose chosen on the slider: its total, of which the saved insulin is the first part.
-            total = calculation.dec(total)
-            if not total.is_finite() or not 0 <= total <= 100:
-                raise ValueError(tr("Gesamtdosis muss zwischen 0 und 100 IE liegen"))
-            later = total - insulin
-            split_units = str(later) if later > 0 else None
-        elif option and option.get("full_units") is not None:
-            later = Decimal(option["full_units"]) - insulin
-            split_units = str(later) if later > 0 else None
-    if mode == "exercise":
-        kind = "exercise"
-    elif carbs > 0:
-        kind = "snack" if assignment and assignment["snack"] else "meal"
-    else:
-        kind = "correction"
+        raise DoseChanged(DOSE_CHANGED)
+    kind, carbs, insulin = plan["kind"], calculation.dec(plan["carbs"]), calculation.dec(plan["insulin"])
+    split_units = plan["split_units"]
     saved = diary.save_diary_treatment({
-        "kind": kind, "at": context["at"].isoformat(), "carbs": str(carbs), "insulin": str(insulin),
+        "kind": kind, "at": at.isoformat(), "carbs": str(carbs), "insulin": str(insulin),
         "sport_kind": payload.get("sport_kind"), "duration_minutes": payload.get("duration_minutes") or 0,
-        "notes": payload.get("notes") or "", "main_meal": bool(assignment and not assignment["snack"]),
+        "notes": payload.get("notes") or "", "main_meal": plan["main_meal"],
         "carbs_certainty": payload.get("carbs_certainty") if carbs > 0 else None,
         "fat_protein": carbs > 0 and payload.get("fat_protein") is True,
         "alcohol": carbs > 0 and payload.get("alcohol") is True,
@@ -475,38 +102,36 @@ def save(payload: dict) -> dict:
         "event_id": payload.get("event_id"),
         **({key: payload[key] for key in ("dish_id", "dish_name", "description", "agent_session", "portion") if key in payload}
            if carbs > 0 else {}),
-        **({"split_units": split_units, "split_delay_minutes": split["delay_minutes"]}
-           if split_units and kind == "meal" else {}),
-        **({"fpe_surcharge": fpe.plan(calculated)}
-           if carbs > 0 and (calculated := _fpe_surcharge(context, assignment, payload)) else {}),
+        **({"split_units": split_units, "split_delay_minutes": plan["split_delay_minutes"]} if split_units else {}),
+        **({"fpe_surcharge": plan["fpe_surcharge"]} if plan["fpe_surcharge"] else {}),
     })
     day = saved["day"]
-    close = assignment and assignment.get("close")
-    if carbs > 0 and close and close["active"]:
-        # The preceding meal ends at this snack, exactly like "Zeitraum anpassen" in "Tag durchgehen".
-        marks.set_analysis_window(close["meal_id"], close["start"], close["end"])
+    if plan["close"]:
+        # The preceding meal ends at this snack, exactly like "Zeitraum anpassen" in "Verlauf".
+        marks.set_analysis_window(plan["close"]["meal_id"], parse_instant(plan["close"]["start"]),
+                                  parse_instant(plan["close"]["end"]))
     if carbs > 0:
-        places.record(saved["event_id"], context["at"], payload)
+        places.record(saved["event_id"], at, payload)
+    basal_units = calculation.dec(plan["basal_units"])
     basal_result = basal_error = None
     if basal_units > 0:
         try:
-            basal_result = basal.save_basal({"at": context["at"].isoformat(), "units": str(basal_units),
+            basal_result = basal.save_basal({"at": at.isoformat(), "units": str(basal_units),
                                              "event_id": payload.get("basal_event_id")})
         except (ValueError, nightscout.NightscoutError) as error:
             basal_error = str(error)
     current = day_view.day_payload(day)
     marker = f"[DAE:{saved['event_id']}]"
     treatment = next((item for item in current["treatments"] if marker in str(item.get("notes") or "")), None)
-    if treatment and sport_drop is not None:
-        if sport_drop != calculation.dec(context["settings"]["sport_effects_mgdl"].get(payload.get("sport_kind"), 0)):
-            marks.set_sport_session_effect(treatment["id"], str(sport_drop))
-            current = day_view.day_payload(day, refresh=False)
-    if treatment and sport_minutes is not None:
-        marks.set_sport_session_minutes(treatment["id"], sport_minutes)
+    if treatment and plan["sport_drop"] is not None:
+        marks.set_sport_session_effect(treatment["id"], plan["sport_drop"])
+        current = day_view.day_payload(day, refresh=False)
+    if treatment and plan["sport_minutes"] is not None:
+        marks.set_sport_session_minutes(treatment["id"], plan["sport_minutes"])
         current = day_view.day_payload(day, refresh=False)
     return {
         "day": day, "kind": kind, "event_id": saved["event_id"], "id": treatment and treatment["id"],
-        "split_units": split_units if kind == "meal" else None,
+        "split_units": split_units,
         "carbs": str(carbs), "insulin": str(insulin), "finger_mgdl": str(finger) if finger is not None else None,
         "basal": basal_result and {**basal_result, "units": str(basal_units)}, "basal_error": basal_error,
         "day_view": day_view.with_checks(current),

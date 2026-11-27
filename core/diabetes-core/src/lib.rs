@@ -13,6 +13,7 @@ pub mod day;
 pub mod dishes;
 pub mod correction_scale;
 pub mod dosing;
+pub mod entry;
 pub mod episodes;
 pub mod forecast;
 pub mod fpe;
