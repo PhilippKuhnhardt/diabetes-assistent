@@ -1,8 +1,11 @@
-# Rust calculation core (experiment)
+# Rust calculation core
 
 A port of the app's calculation core to Rust, so a native client (iPhone app, widget, Watch through the
 phone) can compute everything offline with the same rules as the server. The Python code in `app/`
-stays the reference; nothing in the server uses this crate yet.
+stays the reference; nothing in the server uses this crate yet. The target picture is in
+[docs/architecture.svg](../docs/architecture.svg).
+
+![Target architecture](../docs/architecture.svg)
 
 ## What is ported
 
@@ -47,5 +50,5 @@ python3 core/parity/record.py      # runs the Python test suite and records ever
 python3 core/parity/compare.py     # replays them against the Rust core
 ```
 
-The recording holds synthetic test data only (`calls.jsonl`, ignored by git); never record from a real
+CI runs both steps (job `core-parity`) on every push. The recording holds synthetic test data only (`calls.jsonl`, ignored by git); never record from a real
 database.
