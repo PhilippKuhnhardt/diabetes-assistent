@@ -7,6 +7,7 @@
 
 use crate::context::tr;
 use chrono::{Duration, NaiveDate};
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 
 /// The usual factor of a meal kind: the median of its valid meals in this many days before the meal.
@@ -114,70 +115,102 @@ fn spread(values: &[f64]) -> (f64, f64) {
     (quantile(0.25), quantile(0.75))
 }
 
+/// How a dish turned out over its main meals.
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(default)]
+pub struct Outcome {
+    pub meals: usize,
+    pub valid: usize,
+    pub ratio: Option<f64>,
+    pub ratio_low: Option<f64>,
+    pub ratio_high: Option<f64>,
+    pub effective_carbs: Option<i64>,
+    pub effective_low: Option<i64>,
+    pub effective_high: Option<i64>,
+    pub delta_mgdl: Option<i64>,
+    pub end_mgdl: Option<i64>,
+}
+
 /// How a dish turned out over its main meals (history rows): how many, the ratio to the usual factor with
 /// its spread, and the carbs the typical entry behaved like.
-pub fn outcome(rows: &[Row], typical: Option<i64>) -> Value {
+pub fn outcome(rows: &[Row], typical: Option<i64>) -> Outcome {
     let ratios: Vec<f64> = rows.iter().filter_map(|row| number(row.get("ratio"))).collect();
     let valid = |key: &str| -> Vec<f64> { rows.iter().filter(|row| !excluded(row)).filter_map(|row| number(row.get(key))).collect() };
-    let mut result = json!({
-        "meals": rows.len(), "valid": ratios.len(), "ratio": null, "ratio_low": null, "ratio_high": null,
-        "effective_carbs": null, "effective_low": null, "effective_high": null,
-        "delta_mgdl": median(&valid("delta_mgdl")).map(whole), "end_mgdl": median(&valid("g_end_mgdl")).map(whole),
-    });
+    let mut result = Outcome {
+        meals: rows.len(), valid: ratios.len(),
+        delta_mgdl: median(&valid("delta_mgdl")).map(whole), end_mgdl: median(&valid("g_end_mgdl")).map(whole),
+        ..Outcome::default()
+    };
     if ratios.len() >= RATIO_MIN_MEALS {
         let (low, high) = spread(&ratios);
         let middle = median(&ratios).unwrap_or_default();
-        result["ratio"] = json!(round_to(middle, 2));
-        result["ratio_low"] = json!(round_to(low, 2));
-        result["ratio_high"] = json!(round_to(high, 2));
+        result.ratio = Some(round_to(middle, 2));
+        result.ratio_low = Some(round_to(low, 2));
+        result.ratio_high = Some(round_to(high, 2));
         if let Some(typical) = typical.filter(|t| *t != 0) {
             let typical = typical as f64;
-            result["effective_carbs"] = json!(whole(typical * middle));
-            result["effective_low"] = json!(whole(typical * low));
-            result["effective_high"] = json!(whole(typical * high));
+            result.effective_carbs = Some(whole(typical * middle));
+            result.effective_low = Some(whole(typical * low));
+            result.effective_high = Some(whole(typical * high));
         }
     }
     result
 }
 
 /// One line on a dish for the entry form and the catalogue.
-pub fn hint(count: usize, typical: Option<i64>, result: Option<&Value>) -> String {
+pub fn hint(count: usize, typical: Option<i64>, result: Option<&Outcome>) -> String {
     let mut parts = vec![if count > 0 { tr("{count}× eingetragen", &[("count", count.to_string())]) } else { tr("noch nie eingetragen", &[]) }];
     let typical = typical.filter(|t| *t != 0);
     if let Some(grams) = typical {
         parts.push(tr("meist {grams} g", &[("grams", grams.to_string())]));
     }
-    if let Some(ratio) = result.and_then(|r| number(r.get("ratio"))) {
-        let result = result.unwrap();
+    if let Some((result, ratio)) = result.and_then(|r| r.ratio.map(|ratio| (r, ratio))) {
         let percent = whole((ratio - 1.0) * 100.0);
         let need = if percent.abs() < 5 { tr("wie üblich", &[]) }
             else if percent > 0 { tr("{percent} % mehr Insulin als üblich", &[("percent", percent.abs().to_string())]) }
             else { tr("{percent} % weniger Insulin als üblich", &[("percent", percent.abs().to_string())]) };
-        let mut line = tr("brauchte {need} ({count} Mahlzeiten)", &[("need", need), ("count", result["valid"].to_string())]);
+        let mut line = tr("brauchte {need} ({count} Mahlzeiten)", &[("need", need), ("count", result.valid.to_string())]);
         if typical.is_some() && percent.abs() >= 5 {
-            let shown = |key: &str| match &result[key] { Value::Null => "None".to_string(), other => other.to_string() };
-            line += &tr(", verhielt sich wie {low}–{high} g", &[("low", shown("effective_low")), ("high", shown("effective_high"))]);
+            // Python prints a missing number as None.
+            let shown = |value: Option<i64>| value.map_or_else(|| "None".to_string(), |v| v.to_string());
+            line += &tr(", verhielt sich wie {low}–{high} g", &[("low", shown(result.effective_low)), ("high", shown(result.effective_high))]);
         }
         parts.push(line);
     }
     parts.join(", ")
 }
 
+/// A dish in the catalogue.
+#[derive(Clone, Debug, Serialize)]
+pub struct CatalogueRow {
+    pub id: i64,
+    pub count: usize,
+    pub typical_carbs: Option<i64>,
+    /// The latest record's time as stored.
+    pub last_at: Value,
+    pub hint: String,
+    pub outcome: Outcome,
+    /// Its latest main meals (rows from the adapter with the ratio added).
+    pub history: Vec<Row>,
+}
+
 /// The catalogue's numbers for every dish: entries, typical carbs, outcome, hint and its latest main meals
 /// (newest first), in the order of `dish_ids`. `records` are the dish records oldest first (dish_id, carbs_g, at).
-pub fn catalogue(meals: &[Row], dish_ids: &[i64], records: &[Row]) -> Value {
-    let rows: Vec<Value> = dish_ids.iter().map(|id| {
+pub fn catalogue(meals: &[Row], dish_ids: &[i64], records: &[Row]) -> Vec<CatalogueRow> {
+    dish_ids.iter().map(|id| {
         let own: Vec<&Row> = records.iter().filter(|record| record.get("dish_id").and_then(Value::as_i64) == Some(*id)).collect();
         let typical = typical_carbs(&own.iter().map(|record| number(record.get("carbs_g"))).collect::<Vec<_>>());
         let history = history(meals, *id);
         let outcome = outcome(&history, typical);
-        let shown: Vec<Row> = history[history.len().saturating_sub(HISTORY_ROWS)..].iter().rev()
-            .map(|row| { let mut row = row.clone(); row.remove("dish_id"); row }).collect();
-        json!({
-            "id": id, "count": own.len(), "typical_carbs": typical,
-            "last_at": own.last().and_then(|record| record.get("at")).cloned().unwrap_or(Value::Null),
-            "hint": hint(own.len(), typical, Some(&outcome)), "outcome": outcome, "history": shown,
-        })
-    }).collect();
-    Value::Array(rows)
+        CatalogueRow {
+            id: *id,
+            count: own.len(),
+            typical_carbs: typical,
+            last_at: own.last().and_then(|record| record.get("at")).cloned().unwrap_or(Value::Null),
+            hint: hint(own.len(), typical, Some(&outcome)),
+            outcome,
+            history: history[history.len().saturating_sub(HISTORY_ROWS)..].iter().rev()
+                .map(|row| { let mut row = row.clone(); row.remove("dish_id"); row }).collect(),
+        }
+    }).collect()
 }

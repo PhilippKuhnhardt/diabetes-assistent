@@ -414,20 +414,20 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
         "factors.place_scales" => out(crate::services::place_scales(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?)),
         "factors.meal_surcharge_mgdl" => out(crate::services::meal_surcharge_mgdl(&a.get("settings")?, a.get::<Option<bool>>("fat")?.unwrap_or(false))),
-        "window.limits" => Ok(crate::window::limits()),
+        "window.limits" => out(crate::window::limits()),
         "window.problem" => out(crate::window::problem(a.get("meal_at")?, a.get("start")?, a.get("end")?)),
-        "window.editor" => Ok(crate::window::editor(&a.get("meal")?, &a.get::<Vec<Reading>>("entries")?,
+        "window.editor" => out(crate::window::editor(&a.get("meal")?, &a.get::<Vec<Reading>>("entries")?,
             &a.get::<Vec<Treatment>>("treatments")?, &a.get("settings")?)),
-        "window.preview" => Ok(crate::window::preview(&a.get("meal")?, &a.get::<Vec<Reading>>("entries")?,
+        "window.preview" => out(crate::window::preview(&a.get("meal")?, &a.get::<Vec<Reading>>("entries")?,
             &a.get::<Vec<Treatment>>("treatments")?, &a.get("settings")?, a.get("start")?, a.get("end")?)),
         "dishes.typical_carbs" => out(crate::dishes::typical_carbs(&a.get::<Vec<Value>>("carbs")?.iter()
             .map(|v| v.as_f64().or_else(|| v.as_str().and_then(|t| t.parse().ok()))).collect::<Vec<_>>())),
         "dishes.reference_factor" => out(crate::dishes::reference_factor(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, &a.get("meal")?)),
         "dishes.with_ratio" => out(crate::dishes::with_ratio(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, &a.get("meal")?)),
         "dishes.history" => out(crate::dishes::history(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, a.get("dish_id")?)),
-        "dishes.outcome" => Ok(crate::dishes::outcome(&a.get::<Vec<serde_json::Map<String, Value>>>("rows")?, a.get("typical")?)),
-        "dishes.hint" => out(crate::dishes::hint(a.get("count")?, a.get("typical")?, a.opt::<Value>("result")?.as_ref())),
-        "dishes.catalogue" => Ok(crate::dishes::catalogue(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?,
+        "dishes.outcome" => out(crate::dishes::outcome(&a.get::<Vec<serde_json::Map<String, Value>>>("rows")?, a.get("typical")?)),
+        "dishes.hint" => out(crate::dishes::hint(a.get("count")?, a.get("typical")?, a.opt::<crate::dishes::Outcome>("result")?.as_ref())),
+        "dishes.catalogue" => out(crate::dishes::catalogue(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?,
             &a.get::<Vec<i64>>("dish_ids")?, &a.get::<Vec<serde_json::Map<String, Value>>>("records")?)),
         "entry.dose_variants" => out(crate::entry::DOSE_VARIANTS),
         "limits.basal_units" => out(crate::limits::basal_units(&a.raw("units"))?),
@@ -487,22 +487,23 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
         "summary.miss_trend" => {
             let points: Vec<forecast::MealPoint> = a.get("points")?;
             let configured = crate::summary::Configured::of(&a.get::<Value>("settings")?)?;
-            Ok(crate::summary::miss_trend(&points, day(&a, "today")?, &crate::summary::point_misses(&points, &configured)))
+            out(crate::summary::miss_trend(&points, day(&a, "today")?, &crate::summary::point_misses(&points, &configured)))
         }
         "sport_analysis.suggested_drop" => {
             let ratios: Vec<Value> = a.get("ratios")?;
-            Ok(crate::summary::suggested_drop(a.dec("standard"), &ratios.iter().filter_map(decimal_of).collect::<Vec<_>>()))
+            out(crate::summary::suggested_drop(a.dec("standard"), &ratios.iter().filter_map(decimal_of).collect::<Vec<_>>()))
         }
         "sport_analysis.analyze" => {
             let labels: HashMap<String, String> = a.get("labels")?;
             let standards: HashMap<String, Value> = a.get::<Option<HashMap<String, Value>>>("standards")?.unwrap_or_default();
             let standards = standards.into_iter().filter_map(|(key, value)| decimal_of(&value).map(|v| (key, v))).collect();
             let own: std::collections::HashSet<String> = a.get::<Option<Vec<String>>>("own_sessions")?.unwrap_or_default().into_iter().collect();
-            Ok(crate::summary::sport_analysis(&a.get::<Vec<Value>>("meals")?, &a.get::<Vec<Value>>("exercises")?,
+            out(crate::summary::sport_analysis(&a.get::<Vec<crate::summary::SportMeal>>("meals")?,
+                &a.get::<Vec<crate::summary::SportSessionIn>>("exercises")?,
                 a.get("lookback_minutes")?, a.get("window_minutes")?, &labels, &standards, &own))
         }
-        "summary.compute_summary" => crate::summary::compute_summary(&serde_json::from_value(args.clone())
-            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
+        "summary.compute_summary" => out(crate::summary::compute_summary(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?)?),
         other => Err(CoreError::Value(format!("unknown function {other}"))),
     }
 }

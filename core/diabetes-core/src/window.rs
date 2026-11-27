@@ -5,13 +5,12 @@
 
 use crate::calculation::{window_totals, Episode, Interpolator};
 use crate::context::t;
-use crate::wire::iso;
 use crate::glucose::{tone, trend};
-use crate::model::{Instant, Reading, Settings, Treatment};
+use crate::model::{lenient, Instant, Reading, Settings, Treatment};
+use crate::wire::py_iso;
 use chrono::{Duration, Timelike};
 use rust_decimal::{prelude::ToPrimitive, Decimal, RoundingStrategy};
-use serde::Deserialize;
-use serde_json::{json, Value};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 /// A manual window starts at most this long before or after the meal ...
@@ -25,8 +24,17 @@ const VIEW_LEAD_MINUTES: i64 = LEAD_MINUTES + 30;
 const VIEW_LAG_MINUTES: i64 = MAX_MINUTES + 60;
 const MAX_GAP_MINUTES: i64 = 15;
 
-pub fn limits() -> Value {
-    json!({"lead_minutes": LEAD_MINUTES, "lag_minutes": LAG_MINUTES, "min_minutes": MIN_MINUTES, "max_minutes": MAX_MINUTES})
+/// The manual-window limits the page draws.
+#[derive(Clone, Copy, Debug, Serialize)]
+pub struct Limits {
+    pub lead_minutes: i64,
+    pub lag_minutes: i64,
+    pub min_minutes: i64,
+    pub max_minutes: i64,
+}
+
+pub fn limits() -> Limits {
+    Limits { lead_minutes: LEAD_MINUTES, lag_minutes: LAG_MINUTES, min_minutes: MIN_MINUTES, max_minutes: MAX_MINUTES }
 }
 
 /// Why a manual window is not allowed, or None.
@@ -52,26 +60,46 @@ pub struct Meal {
     pub source_id: Option<String>,
     #[serde(default, deserialize_with = "crate::model::amount")]
     pub carbs: Decimal,
-    #[serde(default)]
-    pub window: Value,
+    #[serde(default, deserialize_with = "lenient")]
+    pub window: Handles,
+}
+
+/// The instants the stored window's handles snap to.
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct Handles {
+    #[serde(default, deserialize_with = "lenient")]
+    pub auto_start: Option<Instant>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub auto_end: Option<Instant>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub start: Option<Instant>,
+    #[serde(default, deserialize_with = "lenient")]
+    pub end: Option<Instant>,
 }
 
 /// The CGM value at an instant with its colour and trend, as the editor draws it.
-fn reading(entries: &[Reading], interpolator: &Interpolator, at: Instant, settings: &Settings) -> Value {
+#[derive(Clone, Debug, Serialize)]
+pub struct EditorReading {
+    #[serde(serialize_with = "py_iso")]
+    pub t: Instant,
+    pub value: Option<Decimal>,
+    pub tone: &'static str,
+    pub trend: Option<&'static str>,
+}
+
+fn reading(entries: &[Reading], interpolator: &Interpolator, at: Instant, settings: &Settings) -> EditorReading {
     let Ok(point) = interpolator.at(at) else {
-        return json!({"t": iso(&at), "value": Value::Null, "tone": "none", "trend": Value::Null});
+        return EditorReading { t: at, value: None, tone: "none", trend: None };
     };
     let value = point.value;
     let mut course: Vec<(Instant, Decimal)> = entries.iter()
         .filter(|row| at - Duration::minutes(16) <= row.at && row.at < at)
         .filter_map(|row| row.sgv.map(|sgv| (row.at, sgv))).collect();
     course.push((at, value));
-    let direction = trend(&course).and_then(|t| t.trend_direction);
     // Decimal.quantize(Decimal("0.1")): always one decimal.
     let mut shown = value.round_dp_with_strategy(1, RoundingStrategy::MidpointNearestEven);
     shown.rescale(1);
-    json!({"t": iso(&at), "value": shown.to_string(),
-           "tone": tone(Some(value), at, settings), "trend": direction})
+    EditorReading { t: at, value: Some(shown), tone: tone(Some(value), at, settings), trend: trend(&course).and_then(|t| t.trend_direction) }
 }
 
 fn sorted(entries: &[Reading]) -> Vec<Reading> {
@@ -80,14 +108,16 @@ fn sorted(entries: &[Reading]) -> Vec<Reading> {
     entries
 }
 
-fn window_instant(window: &Value, key: &str) -> Option<Instant> {
-    window.get(key).and_then(Value::as_str).and_then(|text| chrono::DateTime::parse_from_rfc3339(text).ok())
-        .map(|at| at.with_timezone(&chrono::Utc))
-}
-
 /// Readings for every minute the handles can reach, plus the instants they snap to (window ends, entries,
 /// a sport session's end).
-pub fn editor(meal: &Meal, entries: &[Reading], treatments: &[Treatment], settings: &Settings) -> Value {
+#[derive(Clone, Debug, Serialize)]
+pub struct Editor {
+    pub meal_id: String,
+    pub limits: Limits,
+    pub readings: Vec<EditorReading>,
+}
+
+pub fn editor(meal: &Meal, entries: &[Reading], treatments: &[Treatment], settings: &Settings) -> Editor {
     let entries = sorted(entries);
     let interpolator = Interpolator::new(&entries, MAX_GAP_MINUTES);
     let lead = meal.at - Duration::minutes(VIEW_LEAD_MINUTES);
@@ -99,35 +129,47 @@ pub fn editor(meal: &Meal, entries: &[Reading], treatments: &[Treatment], settin
         moments.insert(at);
         at += Duration::minutes(1);
     }
-    moments.extend(["auto_start", "auto_end", "start", "end"].iter().filter_map(|key| window_instant(&meal.window, key)));
+    let handles = &meal.window;
+    moments.extend([handles.auto_start, handles.auto_end, handles.start, handles.end].into_iter().flatten());
     for item in treatments.iter().filter(|item| start <= item.at && item.at <= end) {
         moments.insert(item.at);
         if item.event_type == "Exercise" {
             moments.insert(item.at + Duration::minutes(item.duration.trunc().to_i64().unwrap_or(0)));
         }
     }
-    json!({"meal_id": meal.id, "limits": limits(),
-           "readings": moments.into_iter().map(|moment| reading(&entries, &interpolator, moment, settings)).collect::<Vec<_>>()})
+    Editor { meal_id: meal.id.clone(), limits: limits(),
+             readings: moments.into_iter().map(|moment| reading(&entries, &interpolator, moment, settings)).collect() }
+}
+
+/// What a candidate window counts.
+#[derive(Clone, Debug, Serialize)]
+pub struct WindowPreview {
+    pub start: EditorReading,
+    pub end: EditorReading,
+    pub delta_mgdl: Option<Decimal>,
+    pub minutes: i64,
+    pub carbs_g: Decimal,
+    pub rapid_units: Decimal,
+    pub missing_glucose: bool,
+    pub problem: Option<String>,
 }
 
 /// What a candidate window counts, with the same half-open rule and full doses as the factor.
-pub fn preview(meal: &Meal, entries: &[Reading], treatments: &[Treatment], settings: &Settings, start: Instant, end: Instant) -> Value {
+pub fn preview(meal: &Meal, entries: &[Reading], treatments: &[Treatment], settings: &Settings, start: Instant, end: Instant) -> WindowPreview {
     let entries = sorted(entries);
     let interpolator = Interpolator::new(&entries, MAX_GAP_MINUTES);
     let episode = Episode { at: meal.at, source_id: meal.source_id.clone(), carbs: meal.carbs };
     let (carbs, insulin) = window_totals(&episode, treatments, start, end);
     let first = reading(&entries, &interpolator, start, settings);
     let last = reading(&entries, &interpolator, end, settings);
-    let value = |reading: &Value| reading["value"].as_str().and_then(|text| text.parse::<Decimal>().ok());
-    let delta = match (value(&first), value(&last)) {
-        (Some(a), Some(b)) => json!((b - a).to_string()),
-        _ => Value::Null,
-    };
-    let missing = first["value"].is_null() || last["value"].is_null();
-    json!({
-        "start": first, "end": last, "delta_mgdl": delta,
-        "minutes": (end - start).num_microseconds().unwrap_or(0) / 60_000_000,
-        "carbs_g": carbs.to_string(), "rapid_units": insulin.to_string(),
-        "missing_glucose": missing, "problem": problem(meal.at, start, end),
-    })
+    WindowPreview {
+        delta_mgdl: first.value.zip(last.value).map(|(a, b)| b - a),
+        missing_glucose: first.value.is_none() || last.value.is_none(),
+        start: first,
+        end: last,
+        minutes: (end - start).num_microseconds().unwrap_or(0) / 60_000_000,
+        carbs_g: carbs,
+        rapid_units: insulin,
+        problem: problem(meal.at, start, end),
+    }
 }

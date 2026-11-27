@@ -63,6 +63,12 @@ pub fn truthy<'de, D: Deserializer<'de>>(deserializer: D) -> Result<bool, D::Err
     })
 }
 
+/// A value of the expected shape, else its default: stored payloads may come from older versions.
+pub fn lenient<'de, D: Deserializer<'de>, T: serde::de::DeserializeOwned + Default>(deserializer: D) -> Result<T, D::Error> {
+    let value = Value::deserialize(deserializer)?;
+    Ok(T::deserialize(value).unwrap_or_default())
+}
+
 /// Text that defaults to "" for null.
 pub fn text<'de, D: Deserializer<'de>>(deserializer: D) -> Result<String, D::Error> {
     let value = Value::deserialize(deserializer)?;
