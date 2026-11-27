@@ -204,7 +204,7 @@ fn serialize_treatment(item: &Treatment, raw: &Raw) -> Map<String, Value> {
 }
 
 /// The sport kind names (episodes.sport_names): built-in kinds in the configured language, then the user's own.
-fn sport_names(settings: &Value) -> Vec<(String, String)> {
+pub(crate) fn sport_names(settings: &Value) -> Vec<(String, String)> {
     let mut names: Vec<(String, String)> = episodes::SPORT_LABELS.iter().map(|(kind, label)| (kind.to_string(), t(label))).collect();
     if let Some(Value::Object(custom)) = settings.get("sport_custom") {
         for (kind, name) in custom {

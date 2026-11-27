@@ -10,8 +10,11 @@ pub mod calculation;
 pub mod context;
 pub mod correction_check;
 pub mod day;
+pub mod diary;
+pub mod dishes;
 pub mod correction_scale;
 pub mod dosing;
+pub mod entry;
 pub mod episodes;
 pub mod forecast;
 pub mod fpe;
@@ -25,6 +28,7 @@ pub mod services;
 pub mod split;
 pub mod stats;
 pub mod summary;
+pub mod window;
 pub mod zone;
 
 /// An error the Python reference raises: ValueError with its (translated) message, or an

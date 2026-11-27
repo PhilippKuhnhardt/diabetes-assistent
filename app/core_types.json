@@ -106,7 +106,38 @@
    "str"
   ]
  },
+ "diary.record": {
+  "$.record.created_at": [
+   "str"
+  ]
+ },
+ "dishes.catalogue": {
+  "$[].history[].at": [
+   "str"
+  ],
+  "$[].last_at": [
+   "str"
+  ],
+  "$[].id": [
+   "int"
+  ]
+ },
+ "dishes.history": {
+  "$[].at": [
+   "str"
+  ]
+ },
+ "dishes.with_ratio": {
+  "$.at": [
+   "str"
+  ]
+ },
  "dosing.half_units": {
+  "$": [
+   "Decimal"
+  ]
+ },
+ "entry.carbs": {
   "$": [
    "Decimal"
   ]

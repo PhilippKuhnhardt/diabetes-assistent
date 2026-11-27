@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, ValidationError, field_validator, model_validator
 
-from app import auth, calculation, episodes, forecast, fpe
+from app import auth, calculation, core, episodes, forecast, fpe
 from app.common import local_zone, parse_instant, unit_text, zone_name_at
 from app.ingestion import nightscout, sync
 from app.store import config, marks, timezones
@@ -179,25 +179,12 @@ def validate_settings(value: dict) -> dict:
     return result
 
 
-MANUAL_WINDOW_LEAD = timedelta(hours=2)
-MANUAL_WINDOW_LAG = timedelta(hours=2)
-MANUAL_WINDOW_MIN = timedelta(minutes=30)
-MANUAL_WINDOW_MAX = timedelta(hours=10)
-# The same limits in minutes, for the diary's charts and the window editor.
-MANUAL_WINDOW_LIMITS = {
-    "lead_minutes": MANUAL_WINDOW_LEAD // timedelta(minutes=1), "lag_minutes": MANUAL_WINDOW_LAG // timedelta(minutes=1),
-    "min_minutes": MANUAL_WINDOW_MIN // timedelta(minutes=1), "max_minutes": MANUAL_WINDOW_MAX // timedelta(minutes=1),
-}
-
-
 def validate_manual_window(meal_at: datetime, start: datetime, end: datetime) -> None:
-    """A manual window starts within two hours around the meal and ends after it."""
-    if not meal_at - MANUAL_WINDOW_LEAD <= start <= meal_at + MANUAL_WINDOW_LAG:
-        raise ValueError(tr("Beginn muss höchstens zwei Stunden vor oder nach dem Mahlzeitbeginn liegen"))
-    if end < max(start, meal_at) + MANUAL_WINDOW_MIN:
-        raise ValueError(tr("Ende muss mindestens 30 Minuten nach Mahlzeit- und Fensterbeginn liegen"))
-    if end - start > MANUAL_WINDOW_MAX:
-        raise ValueError(tr("Zeitraum darf höchstens zehn Stunden lang sein"))
+    """A manual window starts within two hours around the meal, ends at least 30 minutes after meal and window
+    start and lasts at most ten hours (the rule: window.rs problem)."""
+    problem = core.call("window.problem", meal_at=meal_at, start=start, end=end)
+    if problem:
+        raise ValueError(problem)
 
 
 VACATION_BACKDATE_DAYS = 14

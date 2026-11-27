@@ -405,6 +405,33 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
         "factors.place_scales" => out(crate::services::place_scales(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?)),
         "factors.meal_surcharge_mgdl" => out(crate::services::meal_surcharge_mgdl(&a.get("settings")?, a.get::<Option<bool>>("fat")?.unwrap_or(false))),
+        "window.limits" => Ok(crate::window::limits()),
+        "window.problem" => out(crate::window::problem(a.get("meal_at")?, a.get("start")?, a.get("end")?)),
+        "window.editor" => Ok(crate::window::editor(&a.get("meal")?, &a.get::<Vec<Reading>>("entries")?,
+            &a.get::<Vec<Treatment>>("treatments")?, &a.get("settings")?)),
+        "window.preview" => Ok(crate::window::preview(&a.get("meal")?, &a.get::<Vec<Reading>>("entries")?,
+            &a.get::<Vec<Treatment>>("treatments")?, &a.get("settings")?, a.get("start")?, a.get("end")?)),
+        "dishes.typical_carbs" => out(crate::dishes::typical_carbs(&a.get::<Vec<Value>>("carbs")?.iter()
+            .map(|v| v.as_f64().or_else(|| v.as_str().and_then(|t| t.parse().ok()))).collect::<Vec<_>>())),
+        "dishes.reference_factor" => out(crate::dishes::reference_factor(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, &a.get("meal")?)),
+        "dishes.with_ratio" => out(crate::dishes::with_ratio(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, &a.get("meal")?)),
+        "dishes.history" => out(crate::dishes::history(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, a.get("dish_id")?)),
+        "dishes.outcome" => Ok(crate::dishes::outcome(&a.get::<Vec<serde_json::Map<String, Value>>>("rows")?, a.get("typical")?)),
+        "dishes.hint" => out(crate::dishes::hint(a.get("count")?, a.get("typical")?, a.opt::<Value>("result")?.as_ref())),
+        "dishes.catalogue" => Ok(crate::dishes::catalogue(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?,
+            &a.get::<Vec<i64>>("dish_ids")?, &a.get::<Vec<serde_json::Map<String, Value>>>("records")?)),
+        "entry.dose_variants" => out(crate::entry::DOSE_VARIANTS),
+        "entry.carbs" => out(crate::entry::carbs(&a.get::<Value>("payload")?)),
+        "entry.preview" => crate::entry::preview(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("inputs: {error}")))?),
+        "entry.save_plan" => crate::entry::save_plan(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("inputs: {error}")))?),
+        "diary.record" => crate::diary::record(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("inputs: {error}")))?),
+        "diary.edit_kind" => crate::diary::edit_kind(&a.get::<Value>("payload")?),
+        "diary.sport_changes" => crate::diary::sport_changes(&a.get::<Value>("payload")?,
+            &a.get::<std::collections::HashMap<String, Value>>("effects")?,
+            &a.get::<std::collections::HashMap<String, Value>>("durations")?, &a.get::<String>("record_id")?),
         "services.dose_help" => crate::services::dose_help(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         "day.compute_day" => crate::day::compute_day(&serde_json::from_value(args.clone())
