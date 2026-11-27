@@ -62,15 +62,15 @@
   },
   "meals": {
    "rows": 115,
-   "sha256": "5a7d954255943d0bdb312562cfd07a786fcbedf091dc33f38e8130997e614e87"
+   "sha256": "1e5dfcf622e3ae4d5736d9113bbf1dbde80bd97a53dc2e372906c0c89f72bda0"
   },
   "treatments": {
    "rows": 149,
-   "sha256": "86217452129e93d3d3ae3772e7c0b5899883a0a52902d42fae3b55b784869e1e"
+   "sha256": "516329db2fc34a110b591f49567198f7836681f069412daee5950258d9708e19"
   },
   "window_events": {
    "rows": 310,
-   "sha256": "f78da4cf6fe5fb45915bf205c465c52762c050b66fc1bea47c32189c7aa4a0b4"
+   "sha256": "f31528e1162d53f193276cf3cf2983e9b7fb7d8562dbbde0597432e220b1a5f3"
   }
  },
  "index": {
@@ -116,7 +116,7 @@
     "fat_protein": false,
     "g0_mgdl": "129.88408153939715680575761954",
     "g_end_mgdl": "129.05507198411385073638921066",
-    "insulin_effect_mgdl": "255.0",
+    "insulin_effect_mgdl": "255",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0001",
@@ -215,13 +215,13 @@
     "fat_protein": false,
     "g0_mgdl": "135",
     "g_end_mgdl": "132.72502522537424530642626747",
-    "insulin_effect_mgdl": "180.0",
+    "insulin_effect_mgdl": "180",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0004",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "6.0",
+    "rapid_units": "6",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -254,7 +254,7 @@
     "meal_id": "t-0005",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "17.0",
+    "rapid_units": "17",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -287,7 +287,7 @@
     "meal_id": "t-0007",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "3.0",
+    "rapid_units": "3",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -314,7 +314,7 @@
     "fat_protein": false,
     "g0_mgdl": "129.16603111364067539366344147",
     "g_end_mgdl": "232.01096028362924029852805253",
-    "insulin_effect_mgdl": "315.0",
+    "insulin_effect_mgdl": "315",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0008",
@@ -353,7 +353,7 @@
     "meal_id": "t-0009",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "3.0",
+    "rapid_units": "3",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -413,7 +413,7 @@
     "fat_protein": false,
     "g0_mgdl": "132.96528901157147675723303343",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "315.0",
+    "insulin_effect_mgdl": "315",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0011",
@@ -452,7 +452,7 @@
     "meal_id": "t-0012",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "10.0",
+    "rapid_units": "10",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -512,13 +512,13 @@
     "fat_protein": false,
     "g0_mgdl": "118",
     "g_end_mgdl": "205.00678105961542940610827735",
-    "insulin_effect_mgdl": "280.0",
+    "insulin_effect_mgdl": "280",
     "manual_window": false,
     "meal": "lunch",
     "meal_id": "t-0015",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "8.0",
+    "rapid_units": "8",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -535,7 +535,7 @@
     "carbs_total_g": "80",
     "day": "2026-09-02",
     "day_type": "work",
-    "delta_mgdl": "-109.07646121554239030280450930",
+    "delta_mgdl": "-109.0764612155423903028045093",
     "dish": null,
     "end_reason": "fixed_window",
     "excluded": false,
@@ -543,7 +543,7 @@
     "factor_ie_per_ke": "0.8606495037505968969228062774",
     "fast": false,
     "fat_protein": false,
-    "g0_mgdl": "149.07646121554239030280450930",
+    "g0_mgdl": "149.0764612155423903028045093",
     "g_end_mgdl": "40",
     "insulin_effect_mgdl": "350.05832226570952144119026698",
     "manual_window": false,
@@ -551,7 +551,7 @@
     "meal_id": "t-0016",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "10.0",
+    "rapid_units": "10",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -578,13 +578,13 @@
     "fat_protein": false,
     "g0_mgdl": "128",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "390.0",
+    "insulin_effect_mgdl": "390",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0017",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "13.0",
+    "rapid_units": "13",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -650,7 +650,7 @@
     "meal_id": "t-0021",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "12.0",
+    "rapid_units": "12",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -677,13 +677,13 @@
     "fat_protein": false,
     "g0_mgdl": "125.18873385217342576202578378",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "600.0",
+    "insulin_effect_mgdl": "600",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0022",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "20.0",
+    "rapid_units": "20",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -716,7 +716,7 @@
     "meal_id": "t-0023",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "5.0",
+    "rapid_units": "5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -743,14 +743,14 @@
     "fat_protein": false,
     "g0_mgdl": "88.95847541160612593910980923",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "245.0",
+    "insulin_effect_mgdl": "245",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0025",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "7.0",
-    "sport_effect_mgdl": "24.00",
+    "rapid_units": "7",
+    "sport_effect_mgdl": "24",
     "sport_status": "auto",
     "vacation": false,
     "window_end": "2026-09-04T21:20:00+02:00",
@@ -766,7 +766,7 @@
     "carbs_total_g": "55",
     "day": "2026-09-05",
     "day_type": "free",
-    "delta_mgdl": "-54.303954250572806302251080550",
+    "delta_mgdl": "-54.30395425057280630225108055",
     "dish": null,
     "end_reason": "fixed_window",
     "excluded": false,
@@ -774,15 +774,15 @@
     "factor_ie_per_ke": "1.3072487621177405678651449664",
     "fast": false,
     "fat_protein": false,
-    "g0_mgdl": "128.27134629110163161651202550",
-    "g_end_mgdl": "73.967392040528825314260944950",
-    "insulin_effect_mgdl": "270.0",
+    "g0_mgdl": "128.2713462911016316165120255",
+    "g_end_mgdl": "73.96739204052882531426094495",
+    "insulin_effect_mgdl": "270",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0026",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "9.0",
+    "rapid_units": "9",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -808,7 +808,7 @@
     "fast": false,
     "fat_protein": false,
     "g0_mgdl": "74.973992255486837064200098517",
-    "g_end_mgdl": "118.95336695541443962267312300",
+    "g_end_mgdl": "118.953366955414439622673123",
     "insulin_effect_mgdl": "161.25066978439312009646751018",
     "manual_window": false,
     "meal": "lunch",
@@ -875,7 +875,7 @@
     "fat_protein": false,
     "g0_mgdl": "134.03746887714823586567073541",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "345.0",
+    "insulin_effect_mgdl": "345",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0029",
@@ -914,7 +914,7 @@
     "meal_id": "t-0030",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "3.0",
+    "rapid_units": "3",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1013,7 +1013,7 @@
     "meal_id": "t-0034",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "8.0",
+    "rapid_units": "8",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1073,7 +1073,7 @@
     "fat_protein": false,
     "g0_mgdl": "134.88667016933554806434032888",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "285.0",
+    "insulin_effect_mgdl": "285",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0038",
@@ -1112,7 +1112,7 @@
     "meal_id": "t-0039",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "7.0",
+    "rapid_units": "7",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1162,7 +1162,7 @@
     "carbs_total_g": "60",
     "day": "2026-09-09",
     "day_type": "work",
-    "delta_mgdl": "-46.898520482134481631415197640",
+    "delta_mgdl": "-46.89852048213448163141519764",
     "dish": null,
     "end_reason": "fixed_window",
     "excluded": false,
@@ -1171,14 +1171,14 @@
     "fast": false,
     "fat_protein": false,
     "g0_mgdl": "124.12321620837819549122812866",
-    "g_end_mgdl": "77.224695726243713859812931020",
-    "insulin_effect_mgdl": "180.0",
+    "g_end_mgdl": "77.22469572624371385981293102",
+    "insulin_effect_mgdl": "180",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0041",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "6.0",
+    "rapid_units": "6",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1211,7 +1211,7 @@
     "meal_id": "t-0042",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "7.0",
+    "rapid_units": "7",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1271,13 +1271,13 @@
     "fat_protein": false,
     "g0_mgdl": "124.03843821914642030475896976",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "390.0",
+    "insulin_effect_mgdl": "390",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0044",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "13.0",
+    "rapid_units": "13",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1376,7 +1376,7 @@
     "meal_id": "t-0050",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "12.0",
+    "rapid_units": "12",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1403,13 +1403,13 @@
     "fat_protein": false,
     "g0_mgdl": "130.83529952158062773538459548",
     "g_end_mgdl": "44",
-    "insulin_effect_mgdl": "330.0",
+    "insulin_effect_mgdl": "330",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0051",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "11.0",
+    "rapid_units": "11",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1469,13 +1469,13 @@
     "fat_protein": false,
     "g0_mgdl": "117.03635740010289830217801406",
     "g_end_mgdl": "128.93651988999213755627286992",
-    "insulin_effect_mgdl": "385.0",
+    "insulin_effect_mgdl": "385",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0053",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "11.0",
+    "rapid_units": "11",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1502,13 +1502,13 @@
     "fat_protein": false,
     "g0_mgdl": "125.05884301281043302542347364",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "210.0",
+    "insulin_effect_mgdl": "210",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0054",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "7.0",
+    "rapid_units": "7",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1558,7 +1558,7 @@
     "carbs_total_g": "90",
     "day": "2026-09-13",
     "day_type": "free",
-    "delta_mgdl": "41.94399719985999299964998250",
+    "delta_mgdl": "41.9439971998599929996499825",
     "dish": null,
     "end_reason": "after_last_injection",
     "excluded": false,
@@ -1567,14 +1567,14 @@
     "fast": false,
     "fat_protein": false,
     "g0_mgdl": "40",
-    "g_end_mgdl": "81.94399719985999299964998250",
+    "g_end_mgdl": "81.9439971998599929996499825",
     "insulin_effect_mgdl": "315.04199852477237833641765705",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0056",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "9.0",
+    "rapid_units": "9",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1601,7 +1601,7 @@
     "fat_protein": false,
     "g0_mgdl": "132",
     "g_end_mgdl": "62",
-    "insulin_effect_mgdl": "225.0",
+    "insulin_effect_mgdl": "225",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0059",
@@ -1624,7 +1624,7 @@
     "carbs_total_g": "90",
     "day": "2026-09-14",
     "day_type": "work",
-    "delta_mgdl": "-33.415237250209676531448241470",
+    "delta_mgdl": "-33.41523725020967653144824147",
     "dish": null,
     "end_reason": "fixed_window",
     "excluded": false,
@@ -1632,7 +1632,7 @@
     "factor_ie_per_ke": "0.9545652445041608888778213873",
     "fast": false,
     "fat_protein": true,
-    "g0_mgdl": "73.415237250209676531448241470",
+    "g0_mgdl": "73.41523725020967653144824147",
     "g_end_mgdl": "40",
     "insulin_effect_mgdl": "334.10328926902035652796197846",
     "manual_window": false,
@@ -1700,13 +1700,13 @@
     "fat_protein": false,
     "g0_mgdl": "125.41815291321806113250839957",
     "g_end_mgdl": "104.44495825346181047807706709",
-    "insulin_effect_mgdl": "120.0",
+    "insulin_effect_mgdl": "120",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0062",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "4.0",
+    "rapid_units": "4",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1773,7 +1773,7 @@
     "meal_isf": "35",
     "place": null,
     "rapid_units": "7.5",
-    "sport_effect_mgdl": "-24.00",
+    "sport_effect_mgdl": "-24",
     "sport_status": "auto",
     "vacation": false,
     "window_end": "2026-09-15T21:10:00+02:00",
@@ -1799,13 +1799,13 @@
     "fat_protein": false,
     "g0_mgdl": "133.89716852279890733347341879",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "330.0",
+    "insulin_effect_mgdl": "330",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0067",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "11.0",
+    "rapid_units": "11",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1838,7 +1838,7 @@
     "meal_id": "t-0068",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "4.0",
+    "rapid_units": "4",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1863,7 +1863,7 @@
     "factor_ie_per_ke": "0.9333260136709389346986338196",
     "fast": false,
     "fat_protein": false,
-    "g0_mgdl": "94.87672422536639789035955170",
+    "g0_mgdl": "94.8767242253663978903595517",
     "g_end_mgdl": "96.04159757474643689152483749",
     "insulin_effect_mgdl": "227.5",
     "manual_window": false,
@@ -1898,13 +1898,13 @@
     "fat_protein": false,
     "g0_mgdl": "127.30619250308938624193326926",
     "g_end_mgdl": "98.14664211294710996084677152",
-    "insulin_effect_mgdl": "120.0",
+    "insulin_effect_mgdl": "120",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0071",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "4.0",
+    "rapid_units": "4",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1929,7 +1929,7 @@
     "factor_ie_per_ke": "1.2588471801316211971526173204",
     "fast": false,
     "fat_protein": false,
-    "g0_mgdl": "107.75189659102008921303682480",
+    "g0_mgdl": "107.7518965910200892130368248",
     "g_end_mgdl": "157.96349637463994711803569533",
     "insulin_effect_mgdl": "368.35508761014419014824638851",
     "manual_window": false,
@@ -1954,7 +1954,7 @@
     "carbs_total_g": "90",
     "day": "2026-09-17",
     "day_type": "work",
-    "delta_mgdl": "-59.02642244364743558972178600",
+    "delta_mgdl": "-59.026422443647435589721786",
     "dish": null,
     "end_reason": "fixed_window",
     "excluded": false,
@@ -1962,15 +1962,15 @@
     "factor_ie_per_ke": "1.1459478652582621092389784571",
     "fast": false,
     "fat_protein": false,
-    "g0_mgdl": "99.02642244364743558972178600",
+    "g0_mgdl": "99.026422443647435589721786",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "420.0",
+    "insulin_effect_mgdl": "420",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0073",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "12.0",
+    "rapid_units": "12",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -1997,7 +1997,7 @@
     "fat_protein": false,
     "g0_mgdl": "133.99248230208616117109027502",
     "g_end_mgdl": "76",
-    "insulin_effect_mgdl": "135.0",
+    "insulin_effect_mgdl": "135",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0074",
@@ -2061,15 +2061,15 @@
     "factor_ie_per_ke": "1.1128703497764740605926878097",
     "fast": false,
     "fat_protein": false,
-    "g0_mgdl": "93.09708467912718196426088840",
+    "g0_mgdl": "93.0970846791271819642608884",
     "g_end_mgdl": "78.126475979804807111329585138",
-    "insulin_effect_mgdl": "385.0",
+    "insulin_effect_mgdl": "385",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0076",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "11.0",
+    "rapid_units": "11",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2094,9 +2094,9 @@
     "factor_ie_per_ke": "1.0155083004575480479091868722",
     "fast": false,
     "fat_protein": false,
-    "g0_mgdl": "128.01476933015599919577849630",
+    "g0_mgdl": "128.0147693301559991957784963",
     "g_end_mgdl": "133.83038200173651716172357338",
-    "insulin_effect_mgdl": "375.0",
+    "insulin_effect_mgdl": "375",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0077",
@@ -2127,7 +2127,7 @@
     "factor_ie_per_ke": "1.2292888071850328963997322926",
     "fast": false,
     "fat_protein": false,
-    "g0_mgdl": "135.02604790724039496149159400",
+    "g0_mgdl": "135.026047907240394961491594",
     "g_end_mgdl": "130.26914526761512181821098048",
     "insulin_effect_mgdl": "391.98287690291063550919628568",
     "manual_window": false,
@@ -2135,7 +2135,7 @@
     "meal_id": "t-0079",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "11.0",
+    "rapid_units": "11",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2168,7 +2168,7 @@
     "meal_id": "t-0081",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "4.0",
+    "rapid_units": "4",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2194,7 +2194,7 @@
     "fast": false,
     "fat_protein": false,
     "g0_mgdl": "222.79427438344280579997521378",
-    "g_end_mgdl": "217.05661315174710472687509320",
+    "g_end_mgdl": "217.0566131517471047268750932",
     "insulin_effect_mgdl": "332.5",
     "manual_window": true,
     "meal": "lunch",
@@ -2294,13 +2294,13 @@
     "fat_protein": false,
     "g0_mgdl": "134.88769626571048103337816851",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "390.0",
+    "insulin_effect_mgdl": "390",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0086",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "13.0",
+    "rapid_units": "13",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2360,13 +2360,13 @@
     "fat_protein": false,
     "g0_mgdl": "120",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "490.0",
+    "insulin_effect_mgdl": "490",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0088",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "14.0",
+    "rapid_units": "14",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2393,7 +2393,7 @@
     "fat_protein": false,
     "g0_mgdl": "133.96579837225586476986034335",
     "g_end_mgdl": "51.183100677103665513481497436",
-    "insulin_effect_mgdl": "225.0",
+    "insulin_effect_mgdl": "225",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0089",
@@ -2432,7 +2432,7 @@
     "meal_id": "t-0090",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "12.0",
+    "rapid_units": "12",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2492,7 +2492,7 @@
     "fat_protein": false,
     "g0_mgdl": "126.14704785459113571232285165",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "195.0",
+    "insulin_effect_mgdl": "195",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0092",
@@ -2531,7 +2531,7 @@
     "meal_id": "t-0093",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "7.0",
+    "rapid_units": "7",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2557,14 +2557,14 @@
     "fast": false,
     "fat_protein": false,
     "g0_mgdl": "85.96098769456442017765463287",
-    "g_end_mgdl": "97.03536438594252726902797080",
-    "insulin_effect_mgdl": "105.08388040041134479624213070",
+    "g_end_mgdl": "97.0353643859425272690279708",
+    "insulin_effect_mgdl": "105.0838804004113447962421307",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0095",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "3.0",
+    "rapid_units": "3",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2591,13 +2591,13 @@
     "fat_protein": false,
     "g0_mgdl": "131.83487693135472614798801629",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "420.0",
+    "insulin_effect_mgdl": "420",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0096",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "14.0",
+    "rapid_units": "14",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2647,7 +2647,7 @@
     "carbs_total_g": "110",
     "day": "2026-09-24",
     "day_type": "work",
-    "delta_mgdl": "90.88654728055665470636171790",
+    "delta_mgdl": "90.8865472805566547063617179",
     "dish": null,
     "end_reason": "fixed_window",
     "excluded": false,
@@ -2690,13 +2690,13 @@
     "fat_protein": false,
     "g0_mgdl": "125.96998059818250114584446152",
     "g_end_mgdl": "106.98519245658666076761420197",
-    "insulin_effect_mgdl": "150.0",
+    "insulin_effect_mgdl": "150",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0099",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "5.0",
+    "rapid_units": "5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2729,7 +2729,7 @@
     "meal_id": "t-0100",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "9.0",
+    "rapid_units": "9",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2789,7 +2789,7 @@
     "fat_protein": false,
     "g0_mgdl": "130.17405183930412413852544064",
     "g_end_mgdl": "72.157460167498253176266816254",
-    "insulin_effect_mgdl": "375.0",
+    "insulin_effect_mgdl": "375",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0103",
@@ -2888,13 +2888,13 @@
     "fat_protein": false,
     "g0_mgdl": "135.95261293474143144826302812",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "330.0",
+    "insulin_effect_mgdl": "330",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0108",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "11.0",
+    "rapid_units": "11",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -2954,7 +2954,7 @@
     "fat_protein": false,
     "g0_mgdl": "128.18035094858508058296714657",
     "g_end_mgdl": "45",
-    "insulin_effect_mgdl": "297.58388040041134479624213070",
+    "insulin_effect_mgdl": "297.5838804004113447962421307",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0112",
@@ -2987,13 +2987,13 @@
     "fat_protein": false,
     "g0_mgdl": "131.85750704776292539487705194",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "390.0",
+    "insulin_effect_mgdl": "390",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0113",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "13.0",
+    "rapid_units": "13",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3026,7 +3026,7 @@
     "meal_id": "t-0114",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "9.0",
+    "rapid_units": "9",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3059,7 +3059,7 @@
     "meal_id": "t-0115",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "11.0",
+    "rapid_units": "11",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3119,13 +3119,13 @@
     "fat_protein": false,
     "g0_mgdl": "44.949180913565870957497485841",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "245.0",
+    "insulin_effect_mgdl": "245",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0118",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "7.0",
+    "rapid_units": "7",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3152,13 +3152,13 @@
     "fat_protein": false,
     "g0_mgdl": "126.01781027371578552680914886",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "420.0",
+    "insulin_effect_mgdl": "420",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0119",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "14.0",
+    "rapid_units": "14",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3191,7 +3191,7 @@
     "meal_id": "t-0120",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "4.0",
+    "rapid_units": "4",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3218,13 +3218,13 @@
     "fat_protein": false,
     "g0_mgdl": "87.25655864835459196327884466",
     "g_end_mgdl": "152.16821814519773281861257795",
-    "insulin_effect_mgdl": "245.0",
+    "insulin_effect_mgdl": "245",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0121",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "7.0",
+    "rapid_units": "7",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3251,7 +3251,7 @@
     "fat_protein": false,
     "g0_mgdl": "133.75182257179929638696041842",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "585.0",
+    "insulin_effect_mgdl": "585",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0122",
@@ -3350,13 +3350,13 @@
     "fat_protein": false,
     "g0_mgdl": "125",
     "g_end_mgdl": "65.296354046040077114030251925",
-    "insulin_effect_mgdl": "150.0",
+    "insulin_effect_mgdl": "150",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0127",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "5.0",
+    "rapid_units": "5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": true,
@@ -3449,7 +3449,7 @@
     "fat_protein": false,
     "g0_mgdl": "132.87497531788990681915770536",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "525.0",
+    "insulin_effect_mgdl": "525",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0130",
@@ -3488,7 +3488,7 @@
     "meal_id": "t-0131",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "7.0",
+    "rapid_units": "7",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3521,7 +3521,7 @@
     "meal_id": "t-0132",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "15.0",
+    "rapid_units": "15",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3548,7 +3548,7 @@
     "fat_protein": false,
     "g0_mgdl": "131.09772113913814437007375364",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "345.0",
+    "insulin_effect_mgdl": "345",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0133",
@@ -3614,13 +3614,13 @@
     "fat_protein": false,
     "g0_mgdl": "94.13368236543792895925072103",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "315.0",
+    "insulin_effect_mgdl": "315",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0135",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "9.0",
+    "rapid_units": "9",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3647,7 +3647,7 @@
     "fat_protein": false,
     "g0_mgdl": "131.00831699303108190466096081",
     "g_end_mgdl": "178.01488035799514594327455885",
-    "insulin_effect_mgdl": "255.0",
+    "insulin_effect_mgdl": "255",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0136",
@@ -3678,7 +3678,7 @@
     "factor_ie_per_ke": "0.7600231664873488104055884466",
     "fast": false,
     "fat_protein": true,
-    "g0_mgdl": "161.25446371099513769917113120",
+    "g0_mgdl": "161.2544637109951376991711312",
     "g_end_mgdl": "48.331289453580475252301877689",
     "insulin_effect_mgdl": "405.53209335504395445302080546",
     "manual_window": false,
@@ -3703,7 +3703,7 @@
     "carbs_total_g": "95",
     "day": "2026-10-05",
     "day_type": "work",
-    "delta_mgdl": "52.798806330506223259373070170",
+    "delta_mgdl": "52.79880633050622325937307017",
     "dish": null,
     "end_reason": "fixed_window",
     "excluded": false,
@@ -3711,7 +3711,7 @@
     "factor_ie_per_ke": "1.317438216190872016198330627",
     "fast": false,
     "fat_protein": false,
-    "g0_mgdl": "69.163735811327412809504205140",
+    "g0_mgdl": "69.16373581132741280950420514",
     "g_end_mgdl": "121.96254214183363606887727531",
     "insulin_effect_mgdl": "385.24940055295872212657186332",
     "manual_window": false,
@@ -3719,7 +3719,7 @@
     "meal_id": "t-0140",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "11.0",
+    "rapid_units": "11",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3745,8 +3745,8 @@
     "fast": false,
     "fat_protein": false,
     "g0_mgdl": "127.49987964171238170047256464",
-    "g_end_mgdl": "121.05991399680253116191459340",
-    "insulin_effect_mgdl": "375.0",
+    "g_end_mgdl": "121.0599139968025311619145934",
+    "insulin_effect_mgdl": "375",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0141",
@@ -3785,7 +3785,7 @@
     "meal_id": "t-0142",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "5.0",
+    "rapid_units": "5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3812,13 +3812,13 @@
     "fat_protein": false,
     "g0_mgdl": "98.42377757106490600265489948",
     "g_end_mgdl": "91.96326731282483494872875404",
-    "insulin_effect_mgdl": "210.0",
+    "insulin_effect_mgdl": "210",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0143",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "6.0",
+    "rapid_units": "6",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -3845,13 +3845,13 @@
     "fat_protein": false,
     "g0_mgdl": "127.94350724776043407004312059",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "240.0",
+    "insulin_effect_mgdl": "240",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0145",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "8.0",
+    "rapid_units": "8",
     "sport_effect_mgdl": "5.333333333333333333333333332",
     "sport_status": "auto",
     "vacation": false,
@@ -4003,13 +4003,13 @@
     "fat_protein": false,
     "g0_mgdl": "128",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "390.0",
+    "insulin_effect_mgdl": "390",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0017",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "13.0",
+    "rapid_units": "13",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -4075,7 +4075,7 @@
     "meal_id": "t-0021",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "12.0",
+    "rapid_units": "12",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -4102,13 +4102,13 @@
     "fat_protein": false,
     "g0_mgdl": "125.18873385217342576202578378",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "600.0",
+    "insulin_effect_mgdl": "600",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0022",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "20.0",
+    "rapid_units": "20",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -4141,7 +4141,7 @@
     "meal_id": "t-0023",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "5.0",
+    "rapid_units": "5",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -4168,14 +4168,14 @@
     "fat_protein": false,
     "g0_mgdl": "88.95847541160612593910980923",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "245.0",
+    "insulin_effect_mgdl": "245",
     "manual_window": false,
     "meal": "dinner",
     "meal_id": "t-0025",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "7.0",
-    "sport_effect_mgdl": "24.00",
+    "rapid_units": "7",
+    "sport_effect_mgdl": "24",
     "sport_status": "auto",
     "vacation": false,
     "window_end": "2026-09-04T21:20:00+02:00",
@@ -4191,7 +4191,7 @@
     "carbs_total_g": "55",
     "day": "2026-09-05",
     "day_type": "free",
-    "delta_mgdl": "-54.303954250572806302251080550",
+    "delta_mgdl": "-54.30395425057280630225108055",
     "dish": null,
     "end_reason": "fixed_window",
     "excluded": false,
@@ -4199,15 +4199,15 @@
     "factor_ie_per_ke": "1.3072487621177405678651449664",
     "fast": false,
     "fat_protein": false,
-    "g0_mgdl": "128.27134629110163161651202550",
-    "g_end_mgdl": "73.967392040528825314260944950",
-    "insulin_effect_mgdl": "270.0",
+    "g0_mgdl": "128.2713462911016316165120255",
+    "g_end_mgdl": "73.96739204052882531426094495",
+    "insulin_effect_mgdl": "270",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0026",
     "meal_isf": "30",
     "place": null,
-    "rapid_units": "9.0",
+    "rapid_units": "9",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -4233,7 +4233,7 @@
     "fast": false,
     "fat_protein": false,
     "g0_mgdl": "74.973992255486837064200098517",
-    "g_end_mgdl": "118.95336695541443962267312300",
+    "g_end_mgdl": "118.953366955414439622673123",
     "insulin_effect_mgdl": "161.25066978439312009646751018",
     "manual_window": false,
     "meal": "lunch",
@@ -4300,7 +4300,7 @@
     "fat_protein": false,
     "g0_mgdl": "134.03746887714823586567073541",
     "g_end_mgdl": "40",
-    "insulin_effect_mgdl": "345.0",
+    "insulin_effect_mgdl": "345",
     "manual_window": false,
     "meal": "breakfast",
     "meal_id": "t-0029",
@@ -4339,7 +4339,7 @@
     "meal_id": "t-0030",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "3.0",
+    "rapid_units": "3",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -4438,7 +4438,7 @@
     "meal_id": "t-0034",
     "meal_isf": "35",
     "place": null,
-    "rapid_units": "8.0",
+    "rapid_units": "8",
     "sport_effect_mgdl": "0",
     "sport_status": "auto",
     "vacation": false,
@@ -4532,7 +4532,7 @@
     "isf": "30",
     "kind": "insulin_prior",
     "meal_id": "t-0002",
-    "share": "0.0213904661488108349363935560",
+    "share": "0.021390466148810834936393556",
     "units": "8.5"
    },
    {
@@ -4573,7 +4573,7 @@
     "kind": "insulin",
     "meal_id": "t-0004",
     "share": null,
-    "units": "6.0"
+    "units": "6"
    },
    {
     "at": "2026-08-30T12:30:00+02:00",
@@ -4603,7 +4603,7 @@
     "kind": "insulin",
     "meal_id": "t-0005",
     "share": null,
-    "units": "16.0"
+    "units": "16"
    },
    {
     "at": "2026-08-30T14:05:00+02:00",
@@ -4623,7 +4623,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0005",
     "share": "0.0023965828688955656069180199",
-    "units": "6.0"
+    "units": "6"
    },
    {
     "at": "2026-08-30T18:20:00+02:00",
@@ -4643,7 +4643,7 @@
     "kind": "insulin",
     "meal_id": "t-0007",
     "share": null,
-    "units": "3.0"
+    "units": "3"
    },
    {
     "at": "2026-08-30T12:30:00+02:00",
@@ -4653,7 +4653,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0007",
     "share": "0.0003857038156951960365940853",
-    "units": "16.0"
+    "units": "16"
    },
    {
     "at": "2026-08-30T14:05:00+02:00",
@@ -4703,7 +4703,7 @@
     "kind": "insulin",
     "meal_id": "t-0009",
     "share": null,
-    "units": "3.0"
+    "units": "3"
    },
    {
     "at": "2026-08-31T06:50:00+02:00",
@@ -4773,7 +4773,7 @@
     "kind": "insulin",
     "meal_id": "t-0012",
     "share": null,
-    "units": "10.0"
+    "units": "10"
    },
    {
     "at": "2026-09-01T07:50:00+02:00",
@@ -4803,7 +4803,7 @@
     "kind": "insulin",
     "meal_id": "t-0013",
     "share": null,
-    "units": "9.0"
+    "units": "9"
    },
    {
     "at": "2026-09-01T21:35:00+02:00",
@@ -4833,7 +4833,7 @@
     "kind": "insulin",
     "meal_id": "t-0015",
     "share": null,
-    "units": "8.0"
+    "units": "8"
    },
    {
     "at": "2026-09-02T18:30:00+02:00",
@@ -4853,7 +4853,7 @@
     "kind": "insulin",
     "meal_id": "t-0016",
     "share": null,
-    "units": "10.0"
+    "units": "10"
    },
    {
     "at": "2026-09-02T12:35:00+02:00",
@@ -4863,7 +4863,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0016",
     "share": "0.0002082938061054337185366678",
-    "units": "8.0"
+    "units": "8"
    },
    {
     "at": "2026-09-03T07:20:00+02:00",
@@ -4893,7 +4893,7 @@
     "kind": "insulin",
     "meal_id": "t-0017",
     "share": null,
-    "units": "13.0"
+    "units": "13"
    },
    {
     "at": "2026-09-03T12:15:00+02:00",
@@ -4943,7 +4943,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0019",
     "share": "0.0085245131612837956101707785",
-    "units": "13.0"
+    "units": "13"
    },
    {
     "at": "2026-09-03T19:30:00+02:00",
@@ -4963,7 +4963,7 @@
     "kind": "insulin",
     "meal_id": "t-0021",
     "share": null,
-    "units": "12.0"
+    "units": "12"
    },
    {
     "at": "2026-09-03T13:50:00+02:00",
@@ -4993,7 +4993,7 @@
     "kind": "insulin",
     "meal_id": "t-0022",
     "share": null,
-    "units": "20.0"
+    "units": "20"
    },
    {
     "at": "2026-09-04T11:35:00+02:00",
@@ -5013,7 +5013,7 @@
     "kind": "insulin",
     "meal_id": "t-0023",
     "share": null,
-    "units": "5.0"
+    "units": "5"
    },
    {
     "at": "2026-09-04T08:10:00+02:00",
@@ -5023,7 +5023,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0023",
     "share": "0.0857252310401045328378214127",
-    "units": "20.0"
+    "units": "20"
    },
    {
     "at": "2026-09-04T18:20:00+02:00",
@@ -5043,7 +5043,7 @@
     "kind": "insulin",
     "meal_id": "t-0025",
     "share": null,
-    "units": "7.0"
+    "units": "7"
    },
    {
     "at": "2026-09-05T07:50:00+02:00",
@@ -5063,7 +5063,7 @@
     "kind": "insulin",
     "meal_id": "t-0026",
     "share": null,
-    "units": "9.0"
+    "units": "9"
    },
    {
     "at": "2026-09-05T12:30:00+02:00",
@@ -5093,7 +5093,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0027",
     "share": "0.0138913695718263707276574451",
-    "units": "9.0"
+    "units": "9"
    },
    {
     "at": "2026-09-05T19:30:00+02:00",
@@ -5153,7 +5153,7 @@
     "kind": "insulin",
     "meal_id": "t-0030",
     "share": null,
-    "units": "3.0"
+    "units": "3"
    },
    {
     "at": "2026-09-06T07:55:00+02:00",
@@ -5213,7 +5213,7 @@
     "kind": "insulin",
     "meal_id": "t-0034",
     "share": null,
-    "units": "7.0"
+    "units": "7"
    },
    {
     "at": "2026-09-07T13:20:00+02:00",
@@ -5233,7 +5233,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0034",
     "share": "0.0161282877864758486765516905",
-    "units": "11.0"
+    "units": "11"
    },
    {
     "at": "2026-09-07T19:20:00+02:00",
@@ -5253,7 +5253,7 @@
     "kind": "insulin",
     "meal_id": "t-0036",
     "share": null,
-    "units": "4.0"
+    "units": "4"
    },
    {
     "at": "2026-09-07T21:40:00+02:00",
@@ -5313,7 +5313,7 @@
     "kind": "insulin",
     "meal_id": "t-0039",
     "share": null,
-    "units": "7.0"
+    "units": "7"
    },
    {
     "at": "2026-09-08T08:10:00+02:00",
@@ -5363,7 +5363,7 @@
     "kind": "insulin",
     "meal_id": "t-0041",
     "share": null,
-    "units": "6.0"
+    "units": "6"
    },
    {
     "at": "2026-09-09T12:50:00+02:00",
@@ -5383,7 +5383,7 @@
     "kind": "insulin",
     "meal_id": "t-0042",
     "share": null,
-    "units": "7.0"
+    "units": "7"
    },
    {
     "at": "2026-09-09T08:05:00+02:00",
@@ -5393,7 +5393,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0042",
     "share": "0.0118905621766429586392972763",
-    "units": "6.0"
+    "units": "6"
    },
    {
     "at": "2026-09-09T18:45:00+02:00",
@@ -5423,7 +5423,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0043",
     "share": "0.0002082938061054337185366678",
-    "units": "7.0"
+    "units": "7"
    },
    {
     "at": "2026-09-10T07:20:00+02:00",
@@ -5443,7 +5443,7 @@
     "kind": "insulin",
     "meal_id": "t-0044",
     "share": null,
-    "units": "13.0"
+    "units": "13"
    },
    {
     "at": "2026-09-10T19:15:00+02:00",
@@ -5523,7 +5523,7 @@
     "kind": "insulin",
     "meal_id": "t-0050",
     "share": null,
-    "units": "12.0"
+    "units": "12"
    },
    {
     "at": "2026-09-11T13:15:00+02:00",
@@ -5553,7 +5553,7 @@
     "kind": "insulin",
     "meal_id": "t-0051",
     "share": null,
-    "units": "11.0"
+    "units": "11"
    },
    {
     "at": "2026-09-12T12:45:00+02:00",
@@ -5583,7 +5583,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0052",
     "share": "0.0138913695718263707276574451",
-    "units": "11.0"
+    "units": "11"
    },
    {
     "at": "2026-09-12T19:25:00+02:00",
@@ -5603,7 +5603,7 @@
     "kind": "insulin",
     "meal_id": "t-0053",
     "share": null,
-    "units": "11.0"
+    "units": "11"
    },
    {
     "at": "2026-09-13T07:25:00+02:00",
@@ -5623,7 +5623,7 @@
     "kind": "insulin",
     "meal_id": "t-0054",
     "share": null,
-    "units": "7.0"
+    "units": "7"
    },
    {
     "at": "2026-09-13T12:55:00+02:00",
@@ -5653,7 +5653,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0055",
     "share": "0.0018173558917852283517206812",
-    "units": "7.0"
+    "units": "7"
    },
    {
     "at": "2026-09-13T18:55:00+02:00",
@@ -5793,7 +5793,7 @@
     "kind": "insulin",
     "meal_id": "t-0062",
     "share": null,
-    "units": "4.0"
+    "units": "4"
    },
    {
     "at": "2026-09-15T12:30:00+02:00",
@@ -5843,7 +5843,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0063",
     "share": "0.0138913695718263707276574451",
-    "units": "4.0"
+    "units": "4"
    },
    {
     "at": "2026-09-15T18:10:00+02:00",
@@ -5903,7 +5903,7 @@
     "kind": "insulin",
     "meal_id": "t-0067",
     "share": null,
-    "units": "11.0"
+    "units": "11"
    },
    {
     "at": "2026-09-16T12:00:00+02:00",
@@ -5923,7 +5923,7 @@
     "kind": "insulin",
     "meal_id": "t-0068",
     "share": null,
-    "units": "4.0"
+    "units": "4"
    },
    {
     "at": "2026-09-16T07:25:00+02:00",
@@ -5933,7 +5933,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0068",
     "share": "0.0161282877864758486765516905",
-    "units": "11.0"
+    "units": "11"
    },
    {
     "at": "2026-09-16T19:25:00+02:00",
@@ -5973,7 +5973,7 @@
     "kind": "insulin",
     "meal_id": "t-0071",
     "share": null,
-    "units": "4.0"
+    "units": "4"
    },
    {
     "at": "2026-09-17T11:55:00+02:00",
@@ -6003,7 +6003,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0072",
     "share": "0.0071257300845349179020532376",
-    "units": "4.0"
+    "units": "4"
    },
    {
     "at": "2026-09-17T19:05:00+02:00",
@@ -6023,7 +6023,7 @@
     "kind": "insulin",
     "meal_id": "t-0073",
     "share": null,
-    "units": "12.0"
+    "units": "12"
    },
    {
     "at": "2026-09-18T07:00:00+02:00",
@@ -6093,7 +6093,7 @@
     "kind": "insulin",
     "meal_id": "t-0076",
     "share": null,
-    "units": "11.0"
+    "units": "11"
    },
    {
     "at": "2026-09-19T07:15:00+02:00",
@@ -6153,7 +6153,7 @@
     "kind": "insulin",
     "meal_id": "t-0079",
     "share": null,
-    "units": "10.0"
+    "units": "10"
    },
    {
     "at": "2026-09-19T13:20:00+02:00",
@@ -6193,7 +6193,7 @@
     "kind": "insulin",
     "meal_id": "t-0081",
     "share": null,
-    "units": "3.0"
+    "units": "3"
    },
    {
     "at": "2026-09-19T21:00:00+02:00",
@@ -6282,7 +6282,7 @@
     "isf": "35",
     "kind": "insulin_prior",
     "meal_id": "t-0084",
-    "share": "0.6404948047738401865965053160",
+    "share": "0.640494804773840186596505316",
     "units": "5.5"
    },
    {
@@ -6333,7 +6333,7 @@
     "kind": "insulin",
     "meal_id": "t-0086",
     "share": null,
-    "units": "13.0"
+    "units": "13"
    },
    {
     "at": "2026-09-21T11:40:00+02:00",
@@ -6363,7 +6363,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0087",
     "share": "0.0698965482767850397035003919",
-    "units": "13.0"
+    "units": "13"
    },
    {
     "at": "2026-09-21T18:25:00+02:00",
@@ -6383,7 +6383,7 @@
     "kind": "insulin",
     "meal_id": "t-0088",
     "share": null,
-    "units": "14.0"
+    "units": "14"
    },
    {
     "at": "2026-09-22T07:20:00+02:00",
@@ -6423,7 +6423,7 @@
     "kind": "insulin",
     "meal_id": "t-0090",
     "share": null,
-    "units": "12.0"
+    "units": "12"
    },
    {
     "at": "2026-09-22T07:20:00+02:00",
@@ -6503,7 +6503,7 @@
     "kind": "insulin",
     "meal_id": "t-0093",
     "share": null,
-    "units": "6.0"
+    "units": "6"
    },
    {
     "at": "2026-09-23T13:15:00+02:00",
@@ -6543,7 +6543,7 @@
     "kind": "insulin",
     "meal_id": "t-0095",
     "share": null,
-    "units": "3.0"
+    "units": "3"
    },
    {
     "at": "2026-09-23T13:15:00+02:00",
@@ -6573,7 +6573,7 @@
     "kind": "insulin",
     "meal_id": "t-0096",
     "share": null,
-    "units": "14.0"
+    "units": "14"
    },
    {
     "at": "2026-09-24T19:05:00+02:00",
@@ -6613,7 +6613,7 @@
     "kind": "insulin",
     "meal_id": "t-0099",
     "share": null,
-    "units": "5.0"
+    "units": "5"
    },
    {
     "at": "2026-09-25T11:55:00+02:00",
@@ -6633,7 +6633,7 @@
     "kind": "insulin",
     "meal_id": "t-0100",
     "share": null,
-    "units": "9.0"
+    "units": "9"
    },
    {
     "at": "2026-09-25T07:25:00+02:00",
@@ -6643,7 +6643,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0100",
     "share": "0.0186210050744283613578567618",
-    "units": "5.0"
+    "units": "5"
    },
    {
     "at": "2026-09-25T18:40:00+02:00",
@@ -6773,7 +6773,7 @@
     "kind": "insulin",
     "meal_id": "t-0108",
     "share": null,
-    "units": "11.0"
+    "units": "11"
    },
    {
     "at": "2026-09-27T12:05:00+02:00",
@@ -6823,7 +6823,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0110",
     "share": "0.0138913695718263707276574451",
-    "units": "11.0"
+    "units": "11"
    },
    {
     "at": "2026-09-27T19:05:00+02:00",
@@ -6873,7 +6873,7 @@
     "kind": "insulin",
     "meal_id": "t-0113",
     "share": null,
-    "units": "13.0"
+    "units": "13"
    },
    {
     "at": "2026-09-28T12:30:00+02:00",
@@ -6893,7 +6893,7 @@
     "kind": "insulin",
     "meal_id": "t-0114",
     "share": null,
-    "units": "9.0"
+    "units": "9"
    },
    {
     "at": "2026-09-28T07:20:00+02:00",
@@ -6903,7 +6903,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0114",
     "share": "0.0048207849782860913162138712",
-    "units": "13.0"
+    "units": "13"
    },
    {
     "at": "2026-09-28T18:15:00+02:00",
@@ -6923,7 +6923,7 @@
     "kind": "insulin",
     "meal_id": "t-0115",
     "share": null,
-    "units": "11.0"
+    "units": "11"
    },
    {
     "at": "2026-09-28T12:30:00+02:00",
@@ -6933,7 +6933,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0115",
     "share": "0.0006277831450744620923043049",
-    "units": "9.0"
+    "units": "9"
    },
    {
     "at": "2026-09-29T11:45:00+02:00",
@@ -6973,7 +6973,7 @@
     "kind": "insulin",
     "meal_id": "t-0118",
     "share": null,
-    "units": "7.0"
+    "units": "7"
    },
    {
     "at": "2026-09-30T07:50:00+02:00",
@@ -6993,7 +6993,7 @@
     "kind": "insulin",
     "meal_id": "t-0119",
     "share": null,
-    "units": "14.0"
+    "units": "14"
    },
    {
     "at": "2026-09-30T12:00:00+02:00",
@@ -7013,7 +7013,7 @@
     "kind": "insulin",
     "meal_id": "t-0120",
     "share": null,
-    "units": "4.0"
+    "units": "4"
    },
    {
     "at": "2026-09-30T07:50:00+02:00",
@@ -7023,7 +7023,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0120",
     "share": "0.0315885842730346018710547905",
-    "units": "14.0"
+    "units": "14"
    },
    {
     "at": "2026-09-30T18:20:00+02:00",
@@ -7043,7 +7043,7 @@
     "kind": "insulin",
     "meal_id": "t-0121",
     "share": null,
-    "units": "7.0"
+    "units": "7"
    },
    {
     "at": "2026-10-01T07:20:00+02:00",
@@ -7183,7 +7183,7 @@
     "kind": "insulin",
     "meal_id": "t-0127",
     "share": null,
-    "units": "5.0"
+    "units": "5"
    },
    {
     "at": "2026-10-02T12:30:00+02:00",
@@ -7213,7 +7213,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0128",
     "share": "0.0161282877864758486765516905",
-    "units": "5.0"
+    "units": "5"
    },
    {
     "at": "2026-10-02T19:15:00+02:00",
@@ -7273,7 +7273,7 @@
     "kind": "insulin",
     "meal_id": "t-0131",
     "share": null,
-    "units": "7.0"
+    "units": "7"
    },
    {
     "at": "2026-10-03T08:00:00+02:00",
@@ -7303,7 +7303,7 @@
     "kind": "insulin",
     "meal_id": "t-0132",
     "share": null,
-    "units": "15.0"
+    "units": "15"
    },
    {
     "at": "2026-10-03T12:55:00+02:00",
@@ -7313,7 +7313,7 @@
     "kind": "insulin_prior",
     "meal_id": "t-0132",
     "share": "0.0009417604232239819646011377",
-    "units": "7.0"
+    "units": "7"
    },
    {
     "at": "2026-10-04T07:45:00+02:00",
@@ -7383,7 +7383,7 @@
     "kind": "insulin",
     "meal_id": "t-0135",
     "share": null,
-    "units": "9.0"
+    "units": "9"
    },
    {
     "at": "2026-10-05T07:55:00+02:00",
@@ -7483,7 +7483,7 @@
     "kind": "insulin",
     "meal_id": "t-0140",
     "share": null,
-    "units": "11.0"
+    "units": "11"
    },
    {
     "at": "2026-10-05T14:15:00+02:00",
@@ -7533,7 +7533,7 @@
     "kind": "insulin",
     "meal_id": "t-0142",
     "share": null,
-    "units": "5.0"
+    "units": "5"
    },
    {
     "at": "2026-10-06T07:20:00+02:00",
@@ -7563,7 +7563,7 @@
     "kind": "insulin",
     "meal_id": "t-0143",
     "share": null,
-    "units": "6.0"
+    "units": "6"
    },
    {
     "at": "2026-10-07T08:10:00+02:00",
@@ -7583,7 +7583,7 @@
     "kind": "insulin",
     "meal_id": "t-0145",
     "share": null,
-    "units": "8.0"
+    "units": "8"
    }
   ],
   "timezone": "Europe/Berlin",

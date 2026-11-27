@@ -55,9 +55,9 @@
   <text x="282" y="240" font-size="11.5" class="quiet">inputs with seq</text>
   <text x="282" y="256" font-size="11.5" class="quiet">days as a cache</text>
   <rect x="492" y="200" width="228" height="72" rx="8" class="main"/>
-  <text x="508" y="224" font-weight="600" class="ink">app/ (Python, reference)</text>
-  <text x="508" y="240" font-size="11.5" class="ink">factor, Automatik, dose</text>
-  <text x="508" y="256" font-size="11.5" class="ink">"Wirkt noch", warnings</text>
+  <text x="508" y="224" font-weight="600" class="ink">app/ (Python, outer layer)</text>
+  <text x="508" y="240" font-size="11.5" class="ink">web, APIs, LLMs, storage</text>
+  <text x="508" y="256" font-size="11.5" class="ink">rules: core/ through PyO3</text>
 
   <text x="252" y="318" font-size="11.5" class="quiet">pull: changes since seq</text>
   <text x="252" y="334" font-size="11.5" class="quiet">push: queue with op_id</text>
@@ -71,7 +71,7 @@
   <text x="56" y="456" font-size="11.5" class="quiet">BG age always visible</text>
   <rect x="256" y="400" width="192" height="72" rx="8" class="main"/>
   <text x="272" y="424" font-weight="600" class="ink">core/ (Rust)</text>
-  <text x="272" y="440" font-size="11.5" class="ink">same rules, parity-checked</text>
+  <text x="272" y="440" font-size="11.5" class="ink">the one copy of every rule</text>
   <text x="272" y="456" font-size="11.5" class="ink">computes offline</text>
   <rect x="40" y="488" width="408" height="56" rx="8" class="box"/>
   <text x="56" y="512" font-weight="600" class="ink">Local SQLite + queue</text>

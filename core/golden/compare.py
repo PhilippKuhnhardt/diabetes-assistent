@@ -1,14 +1,20 @@
-"""Replay recorded calls (calls.jsonl, from record.py) against the Rust core and compare.
+"""Replay the golden calls (calls.jsonl.gz) against the Rust core and compare.
+
+The calls were recorded from the former Python reference while its test suite ran (2026-11-27, synthetic
+test data only), before the rules moved to Rust: every core function with its arguments and the result
+Python computed. They pin the rules: a change that moves a result shows up here and is either a bug or a
+deliberate rule change, which then needs new expectations (edit the "expect" of the affected lines).
 
 Numbers agree when they differ by at most 1e-9 relative (rust_decimal and Python's Decimal round the
 last of their ~28 digits differently, and the stomach model runs on floats); times by instant; texts
-exactly. A field the Rust result leaves out counts only when the Python value is not empty.
+exactly. A field the Rust result leaves out counts only when the expected value is empty.
 
     cargo build --release --manifest-path core/Cargo.toml
-    python3 core/parity/compare.py [--show N]
+    python3 core/golden/compare.py [--show N]
 """
 from __future__ import annotations
 
+import gzip
 import json
 import subprocess
 import sys
@@ -86,7 +92,7 @@ def differences(want, got, path="$"):
 
 def main():
     show = int(sys.argv[sys.argv.index("--show") + 1]) if "--show" in sys.argv else 3
-    calls = [json.loads(line) for line in (HERE / "calls.jsonl").open()]
+    calls = [json.loads(line) for line in gzip.open(HERE / "calls.jsonl.gz", "rt", encoding="utf-8")]
     feed = "".join(json.dumps({"fn": c["fn"], "args": c["args"], "context": c["context"]}) + "\n" for c in calls)
     answers = subprocess.run([str(BINARY)], input=feed, capture_output=True, text=True, check=True).stdout.splitlines()
     totals, failures = defaultdict(int), defaultdict(list)
@@ -107,7 +113,7 @@ def main():
         print(f"{'ok  ' if not failed else 'DIFF'} {name}: {totals[name] - len(failed)}/{totals[name]}")
         for found in failed[:show]:
             for path, a, b in found[:4]:
-                print(f"       {path}: python={str(a)[:120]} rust={str(b)[:120]}")
+                print(f"       {path}: expected={str(a)[:120]} rust={str(b)[:120]}")
     print(f"{sum(totals.values()) - bad}/{sum(totals.values())} calls agree")
     return 1 if bad else 0
 

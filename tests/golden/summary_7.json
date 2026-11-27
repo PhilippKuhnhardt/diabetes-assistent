@@ -138,7 +138,7 @@
      "fast": false,
      "id": "t-0145",
      "manual_window": false,
-     "rapid_units_in_window": "8.0",
+     "rapid_units_in_window": "8",
      "reason": null,
      "sport": {
       "effect_mgdl": "5.333333333333333333333333332",
@@ -256,7 +256,7 @@
      "end": "2026-10-03T08:50:00+00:00",
      "excluded": false,
      "expected_delta_mgdl": "-215.3172895324279593411700333",
-     "expected_units_per_ke": "0.9831197157700699703454919580",
+     "expected_units_per_ke": "0.983119715770069970345491958",
      "fast": false,
      "id": "t-0130",
      "manual_window": false,
@@ -288,7 +288,7 @@
      "fast": false,
      "id": "t-0127",
      "manual_window": false,
-     "rapid_units_in_window": "5.0",
+     "rapid_units_in_window": "5",
      "reason": null,
      "sport": {
       "effect_mgdl": "0",
@@ -345,7 +345,7 @@
    ],
    "previous_median_units_per_ke": "1.0579261619202577317913593598",
    "q1_units_per_ke": "1.0323073532350689726267023433",
-   "q3_units_per_ke": "1.4085794716202394699126612150",
+   "q3_units_per_ke": "1.408579471620239469912661215",
    "recent_median_units_per_ke": "1.3115818840464408271940851062",
    "shortened_count": 0,
    "strong_outlier_count": 0,
@@ -372,7 +372,7 @@
      "fast": false,
      "id": "t-0143",
      "manual_window": false,
-     "rapid_units_in_window": "6.0",
+     "rapid_units_in_window": "6",
      "reason": null,
      "sport": {
       "effect_mgdl": "0",
@@ -390,17 +390,17 @@
      "certainty": null,
      "day": "2026-10-05",
      "day_type": "work",
-     "delta_mgdl": "52.798806330506223259373070170",
+     "delta_mgdl": "52.79880633050622325937307017",
      "deviation_mgdl": "52.73353367055819393873469048",
      "dish": null,
      "end": "2026-10-05T20:05:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "0.065272659948029320638379690",
+     "expected_delta_mgdl": "0.06527265994802932063837969",
      "expected_units_per_ke": "1.1588411224448323351795796782",
      "fast": false,
      "id": "t-0140",
      "manual_window": false,
-     "rapid_units_in_window": "11.0",
+     "rapid_units_in_window": "11",
      "reason": null,
      "sport": {
       "effect_mgdl": "0",
@@ -428,7 +428,7 @@
      "fast": false,
      "id": "t-0135",
      "manual_window": false,
-     "rapid_units_in_window": "9.0",
+     "rapid_units_in_window": "9",
      "reason": null,
      "sport": {
       "effect_mgdl": "0",
@@ -456,7 +456,7 @@
      "fast": false,
      "id": "t-0132",
      "manual_window": false,
-     "rapid_units_in_window": "15.0",
+     "rapid_units_in_window": "15",
      "reason": null,
      "sport": {
       "effect_mgdl": "0",
@@ -546,7 +546,7 @@
    "shortened_count": 0,
    "strong_outlier_count": 0,
    "suggestion": {
-    "auto_units_per_ke": "1.1101406053318617921123512380",
+    "auto_units_per_ke": "1.110140605331861792112351238",
     "count": 30,
     "days": 30,
     "half_life_days": "5",
@@ -613,11 +613,11 @@
      "end": "2026-10-06T12:30:00+00:00",
      "excluded": false,
      "expected_delta_mgdl": "57.46459620734133869689707260",
-     "expected_units_per_ke": "1.2552555379851513246601536680",
+     "expected_units_per_ke": "1.255255537985151324660153668",
      "fast": false,
      "id": "t-0142",
      "manual_window": false,
-     "rapid_units_in_window": "5.0",
+     "rapid_units_in_window": "5",
      "reason": null,
      "sport": {
       "effect_mgdl": "0",
@@ -701,7 +701,7 @@
      "fast": false,
      "id": "t-0131",
      "manual_window": false,
-     "rapid_units_in_window": "7.0",
+     "rapid_units_in_window": "7",
      "reason": null,
      "sport": {
       "effect_mgdl": "0",
@@ -836,7 +836,7 @@
   "count": 6,
   "median_delta_mgdl": "56.313103877360114276846578075",
   "median_drop_mgdl": "-1.154102619641206983900109315",
-  "median_end_glucose": "129.47591212039575798735204070",
+  "median_end_glucose": "129.4759121203957579873520407",
   "median_minimum_glucose": "66",
   "median_rise_mgdl": "60.471753623880217035021560295",
   "median_start_glucose": "70.15864974652010275817498222",
@@ -943,7 +943,7 @@
     "day": "2026-10-02",
     "delta_mgdl": "18.83733569737509776119978786",
     "dinner_at": "2026-10-02T17:15:00+00:00",
-    "drop_mgdl": "-2.03763962051480905795791750",
+    "drop_mgdl": "-2.0376396205148090579579175",
     "end": "2026-10-03T06:00:00+00:00",
     "end_glucose": "132.87497531788990681915770536",
     "last_injection_at": "2026-10-02T17:15:00+00:00",
@@ -953,7 +953,7 @@
     "reason": null,
     "rise_mgdl": "20.87497531788990681915770536",
     "start": "2026-10-02T20:15:00+00:00",
-    "start_glucose": "114.03763962051480905795791750"
+    "start_glucose": "114.0376396205148090579579175"
    },
    {
     "basal_units": null,
@@ -1024,7 +1024,7 @@
     "day": "2026-10-05",
     "delta_mgdl": "15.22523255006219275198525898",
     "end": "2026-10-05T17:15:00+00:00",
-    "end_glucose": "69.163735811327412809504205140",
+    "end_glucose": "69.16373581132741280950420514",
     "hours": "2",
     "minimum_at": "2026-10-05T15:20:05.328000+00:00",
     "minimum_glucose": "48",
@@ -1090,7 +1090,7 @@
     "minimum_glucose": "112",
     "rate_mgdl_per_hour": "1.932034430500010026789721832",
     "start": "2026-10-02T20:15:00+00:00",
-    "start_glucose": "114.03763962051480905795791750"
+    "start_glucose": "114.0376396205148090579579175"
    },
    {
     "day": "2026-10-02",
@@ -1184,7 +1184,7 @@
       "factor_without_sport_units_per_ke": "1.267137439601996382749640662",
       "id": "t-0145",
       "meal": "breakfast",
-      "rapid_units_in_window": "8.0",
+      "rapid_units_in_window": "8",
       "reason": null,
       "session_ids": [
        "ns-0004"
@@ -1263,7 +1263,7 @@
    },
    {
     "carb_units": "8.603589691321928888870722094",
-    "carbs_g": "77.50",
+    "carbs_g": "77.5",
     "count": 30,
     "day_type": null,
     "isf": "35",
@@ -1271,7 +1271,7 @@
     "min_meals": 4,
     "surcharge_units": "0",
     "total_units": "8.603589691321928888870722094",
-    "units_per_ke": "1.1101406053318617921123512380"
+    "units_per_ke": "1.110140605331861792112351238"
    }
   ],
   "fat_surcharge_mgdl": "120",
@@ -2242,7 +2242,7 @@
      ],
      "delta_above": 4,
      "delta_below": -4,
-     "delta_median_glucose": "14.16467313323968955705790360",
+     "delta_median_glucose": "14.1646731332396895570579036",
      "half_life_days": "2",
      "in_range": 44,
      "lookback_days": 30,
@@ -2288,7 +2288,7 @@
      ],
      "delta_above": -1,
      "delta_below": -2,
-     "delta_median_glucose": "1.35668400366488740979574110",
+     "delta_median_glucose": "1.3566840036648874097957411",
      "half_life_days": "14",
      "in_range": 47,
      "lookback_days": 30,
@@ -2374,7 +2374,7 @@
    {
     "key": "percentile",
     "meal_count": 88,
-    "noise_meals": "4.40",
+    "noise_meals": "4.4",
     "options": [
      {
       "above": 29,
@@ -2421,7 +2421,7 @@
       "in_range": 49,
       "mean_glucose": "129.3679217446465689073409888",
       "median_abs_deviation": "0.1304554968181244800533062488",
-      "median_glucose": "129.18154349777749955733444300",
+      "median_glucose": "129.181543497777499557334443",
       "value": 35
      },
      {
@@ -2467,7 +2467,7 @@
       "count": 88,
       "glucose_count": 88,
       "in_range": 54,
-      "mean_glucose": "119.326768168143034404531540",
+      "mean_glucose": "119.32676816814303440453154",
       "median_abs_deviation": "0.1228661189078971806314448333",
       "median_glucose": "124.53275081194388873241766994",
       "value": 45
@@ -2494,7 +2494,7 @@
    {
     "key": "surcharge",
     "meal_count": 88,
-    "noise_meals": "4.40",
+    "noise_meals": "4.4",
     "options": [
      {
       "above": 24,
@@ -2576,7 +2576,7 @@
       "glucose_count": 88,
       "in_range": 39,
       "mean_glucose": "134.43000584490821329266843478",
-      "median_abs_deviation": "0.1663114904484554402409112010",
+      "median_abs_deviation": "0.166311490448455440240911201",
       "median_glucose": "129.4157659495305818149609042",
       "value": 80
      }
@@ -2586,7 +2586,7 @@
    {
     "key": "half_life",
     "meal_count": 88,
-    "noise_meals": "4.40",
+    "noise_meals": "4.4",
     "options": [
      {
       "above": 21,
@@ -2690,7 +2690,7 @@
    {
     "key": "lookback",
     "meal_count": 80,
-    "noise_meals": "4.00",
+    "noise_meals": "4",
     "options": [
      {
       "above": 22,
@@ -3021,7 +3021,7 @@
        "glucose_count": 80,
        "in_range": 42,
        "mean_glucose": "138.95662507987657365055354028",
-       "median_abs_deviation": "0.1466165569520375835605063910",
+       "median_abs_deviation": "0.146616556952037583560506391",
        "median_glucose": "139.42390479812315452784930833"
       }
      },
@@ -3127,7 +3127,7 @@
        "glucose_count": 80,
        "in_range": 45,
        "mean_glucose": "126.53542689623949099807377696",
-       "median_abs_deviation": "0.1158831002533949893638324690",
+       "median_abs_deviation": "0.115883100253394989363832469",
        "median_glucose": "131.04589715704074798754393034"
       }
      },
@@ -3320,7 +3320,7 @@
        "in_range": 43,
        "mean_glucose": "115.1875258077609807918426238",
        "median_abs_deviation": "0.136994117835228078441379939",
-       "median_glucose": "115.27820878886109876330575670"
+       "median_glucose": "115.2782087888610987633057567"
       }
      },
      {
@@ -3340,7 +3340,7 @@
        "in_range": 38,
        "mean_glucose": "127.83983343980874413773173936",
        "median_abs_deviation": "0.1793192636986321106607842196",
-       "median_glucose": "122.98271242117333960873750630"
+       "median_glucose": "122.9827124211733396087375063"
       }
      }
     ],
@@ -3366,7 +3366,7 @@
        "in_range": 43,
        "mean_glucose": "140.68497981873233121949000739",
        "median_abs_deviation": "0.1310771096333054946767967349",
-       "median_glucose": "140.08958511781667926943684260"
+       "median_glucose": "140.0895851178166792694368426"
       }
      },
      {
@@ -3538,7 +3538,7 @@
        "in_range": 43,
        "mean_glucose": "141.95766106415199404500428809",
        "median_abs_deviation": "0.141152389895012268194878193",
-       "median_glucose": "139.66611254476559708251588190"
+       "median_glucose": "139.6661125447655970825158819"
       }
      },
      {
@@ -3663,7 +3663,7 @@
        "glucose_count": 80,
        "in_range": 51,
        "mean_glucose": "116.02582173863496546275757784",
-       "median_abs_deviation": "0.1071446181793046550123575410",
+       "median_abs_deviation": "0.107144618179304655012357541",
        "median_glucose": "121.8527102115389619849359928"
       }
      },
@@ -3816,7 +3816,7 @@
        "in_range": 46,
        "mean_glucose": "125.73123362953043224331707342",
        "median_abs_deviation": "0.1283295001348504190383722174",
-       "median_glucose": "127.28151346050435566712733380"
+       "median_glucose": "127.2815134605043556671273338"
       }
      },
      {
@@ -3856,7 +3856,7 @@
        "in_range": 36,
        "mean_glucose": "128.5115284556695352723526252",
        "median_abs_deviation": "0.1793192636986321106607842196",
-       "median_glucose": "127.26857947343531618416748590"
+       "median_glucose": "127.2685794734353161841674859"
       }
      }
     ],

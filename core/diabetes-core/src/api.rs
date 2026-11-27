@@ -115,8 +115,37 @@ pub fn configure(context_value: &Value) {
     }
 }
 
-/// Run one core function on JSON arguments.
+/// Run one core function on JSON arguments. Decimal numbers come back in their natural form
+/// ("2.5", not "2.50"), whatever scale the arithmetic left them with.
 pub fn call(name: &str, args: &Value) -> Res<Value> {
+    let mut value = dispatch(name, args)?;
+    natural(&mut value);
+    Ok(value)
+}
+
+/// Drop trailing zeros after the decimal point of every number written as text.
+fn natural(value: &mut Value) {
+    match value {
+        Value::String(text) => {
+            let digits = text.strip_prefix('-').unwrap_or(text);
+            let mut parts = digits.splitn(2, '.');
+            let whole = parts.next().unwrap_or_default();
+            if let Some(fraction) = parts.next() {
+                let numeric = !whole.is_empty() && whole.bytes().all(|b| b.is_ascii_digit())
+                    && !fraction.is_empty() && fraction.bytes().all(|b| b.is_ascii_digit());
+                if numeric && fraction.ends_with('0') {
+                    let trimmed = text.trim_end_matches('0').trim_end_matches('.').to_string();
+                    *text = if trimmed == "-0" { "0".to_string() } else { trimmed };
+                }
+            }
+        }
+        Value::Array(items) => items.iter_mut().for_each(natural),
+        Value::Object(map) => map.values_mut().for_each(natural),
+        _ => {}
+    }
+}
+
+fn dispatch(name: &str, args: &Value) -> Res<Value> {
     let a = Args(args);
     match name {
         "calculation.minutes_between" => out(calculation::minutes_between(a.get("later")?, a.get("earlier")?)),

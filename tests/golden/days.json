@@ -56,7 +56,7 @@
      "doses": [
       {
        "at": "2026-08-29T05:25:00+00:00",
-       "effect_mgdl": "255.0",
+       "effect_mgdl": "255",
        "event_type": "Meal Bolus",
        "id": "t-0001",
        "isf": "30",
@@ -80,7 +80,7 @@
       "2026-08-29T08:20:14.490000+00:00",
       "2026-08-29T08:25:16.640000+00:00"
      ],
-     "insulin_effect_mgdl": "255.0",
+     "insulin_effect_mgdl": "255",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-08-29T09:50:00+00:00",
@@ -247,14 +247,14 @@
      "prior_doses": [
       {
        "at": "2026-08-29T05:25:00+00:00",
-       "effect_mgdl": "5.4545688679467629087803567800",
+       "effect_mgdl": "5.45456886794676290878035678",
        "id": "t-0001",
        "isf": "30",
-       "share": "0.0213904661488108349363935560",
+       "share": "0.021390466148810834936393556",
        "units": "8.5"
       }
      ],
-     "prior_insulin_effect_mgdl": "5.4545688679467629087803567800",
+     "prior_insulin_effect_mgdl": "5.45456886794676290878035678",
      "rapid_units_in_window": "10.5",
      "ratio_g_per_unit": "8.512076937587551257434127839",
      "reason": null,
@@ -723,7 +723,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0004",
-    "insulin": 6.0,
+    "insulin": 6,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -746,7 +746,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0005",
-    "insulin": 16.0,
+    "insulin": 16,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -821,12 +821,12 @@
      "doses": [
       {
        "at": "2026-08-30T05:05:00+00:00",
-       "effect_mgdl": "180.0",
+       "effect_mgdl": "180",
        "event_type": "Meal Bolus",
        "id": "t-0004",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "6.0"
+       "units": "6"
       }
      ],
      "end": "2026-08-30T08:05:00+00:00",
@@ -845,7 +845,7 @@
       "2026-08-30T08:00:11.578000+00:00",
       "2026-08-30T08:05:13.853000+00:00"
      ],
-     "insulin_effect_mgdl": "180.0",
+     "insulin_effect_mgdl": "180",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-08-30T10:30:00+00:00",
@@ -859,7 +859,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "6.0",
+     "rapid_units_in_window": "6",
      "ratio_g_per_unit": "9.284004871613462474622980095",
      "reason": null,
      "settings_version": 1,
@@ -884,7 +884,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0004",
-      "insulin": 6.0,
+      "insulin": 6,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -981,12 +981,12 @@
      "doses": [
       {
        "at": "2026-08-30T10:30:00+00:00",
-       "effect_mgdl": "560.0",
+       "effect_mgdl": "560",
        "event_type": "Meal Bolus",
        "id": "t-0005",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "16.0"
+       "units": "16"
       },
       {
        "at": "2026-08-30T12:05:00+00:00",
@@ -1029,15 +1029,15 @@
      "prior_doses": [
       {
        "at": "2026-08-30T05:05:00+00:00",
-       "effect_mgdl": "0.4313849164012018092452435820",
+       "effect_mgdl": "0.431384916401201809245243582",
        "id": "t-0004",
        "isf": "30",
        "share": "0.0023965828688955656069180199",
-       "units": "6.0"
+       "units": "6"
       }
      ],
-     "prior_insulin_effect_mgdl": "0.4313849164012018092452435820",
-     "rapid_units_in_window": "17.0",
+     "prior_insulin_effect_mgdl": "0.431384916401201809245243582",
+     "rapid_units_in_window": "17",
      "ratio_g_per_unit": "7.7342077655199006098621136026",
      "reason": null,
      "settings_version": 1,
@@ -1062,7 +1062,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0005",
-      "insulin": 16.0,
+      "insulin": 16,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -1173,12 +1173,12 @@
      "doses": [
       {
        "at": "2026-08-30T16:20:00+00:00",
-       "effect_mgdl": "105.0",
+       "effect_mgdl": "105",
        "event_type": "Meal Bolus",
        "id": "t-0007",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "3.0"
+       "units": "3"
       }
      ],
      "end": "2026-08-30T19:20:00+00:00",
@@ -1212,11 +1212,11 @@
      "prior_doses": [
       {
        "at": "2026-08-30T10:30:00+00:00",
-       "effect_mgdl": "0.2159941367893097804926877680",
+       "effect_mgdl": "0.215994136789309780492687768",
        "id": "t-0005",
        "isf": "35",
        "share": "0.0003857038156951960365940853",
-       "units": "16.0"
+       "units": "16"
       },
       {
        "at": "2026-08-30T12:05:00+00:00",
@@ -1228,7 +1228,7 @@
       }
      ],
      "prior_insulin_effect_mgdl": "1.1907428402079815451679771085",
-     "rapid_units_in_window": "3.0",
+     "rapid_units_in_window": "3",
      "ratio_g_per_unit": "7.8917781803804180592311301861",
      "reason": null,
      "settings_version": 1,
@@ -1253,7 +1253,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0007",
-      "insulin": 3.0,
+      "insulin": 3,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -1391,7 +1391,7 @@
     "glucose_at": "2026-08-30T05:05:00+00:00",
     "glucose_mgdl": "135",
     "id": "t-0004",
-    "insulin": 6.0,
+    "insulin": 6,
     "kind": "meal",
     "meal_id": "t-0004",
     "notes": "",
@@ -1415,7 +1415,7 @@
     "glucose_at": "2026-08-30T10:30:00+00:00",
     "glucose_mgdl": "115.01609197017715221317292895",
     "id": "t-0005",
-    "insulin": 16.0,
+    "insulin": 16,
     "kind": "meal",
     "meal_id": "t-0005",
     "notes": "",
@@ -1463,7 +1463,7 @@
     "glucose_at": "2026-08-30T16:20:00+00:00",
     "glucose_mgdl": "40",
     "id": "t-0007",
-    "insulin": 3.0,
+    "insulin": 3,
     "kind": "meal",
     "meal_id": "t-0007",
     "notes": "",
@@ -1511,7 +1511,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0004",
-    "insulin": 6.0,
+    "insulin": 6,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -1534,7 +1534,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0005",
-    "insulin": 16.0,
+    "insulin": 16,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -1580,7 +1580,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0007",
-    "insulin": 3.0,
+    "insulin": 3,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -1626,7 +1626,7 @@
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0009",
-    "insulin": 3.0,
+    "insulin": 3,
     "meal": null,
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
@@ -1701,7 +1701,7 @@
      "doses": [
       {
        "at": "2026-08-31T04:50:00+00:00",
-       "effect_mgdl": "315.0",
+       "effect_mgdl": "315",
        "event_type": "Meal Bolus",
        "id": "t-0008",
        "isf": "30",
@@ -1725,7 +1725,7 @@
       "2026-08-31T07:45:11.633000+00:00",
       "2026-08-31T07:50:01.589000+00:00"
      ],
-     "insulin_effect_mgdl": "315.0",
+     "insulin_effect_mgdl": "315",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-08-31T10:25:00+00:00",
@@ -1853,12 +1853,12 @@
      "doses": [
       {
        "at": "2026-08-31T10:25:00+00:00",
-       "effect_mgdl": "105.0",
+       "effect_mgdl": "105",
        "event_type": "Meal Bolus",
        "id": "t-0009",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "3.0"
+       "units": "3"
       }
      ],
      "end": "2026-08-31T13:25:00+00:00",
@@ -1892,15 +1892,15 @@
      "prior_doses": [
       {
        "at": "2026-08-31T04:50:00+00:00",
-       "effect_mgdl": "0.4206708351486184895634992640",
+       "effect_mgdl": "0.420670835148618489563499264",
        "id": "t-0008",
        "isf": "30",
        "share": "0.0013354629687257729827412675",
        "units": "10.5"
       }
      ],
-     "prior_insulin_effect_mgdl": "0.4206708351486184895634992640",
-     "rapid_units_in_window": "3.0",
+     "prior_insulin_effect_mgdl": "0.420670835148618489563499264",
+     "rapid_units_in_window": "3",
      "ratio_g_per_unit": "27.34388002775627365191596505",
      "reason": null,
      "settings_version": 1,
@@ -1925,7 +1925,7 @@
       "fat_protein": true,
       "finger_mgdl": null,
       "id": "t-0009",
-      "insulin": 3.0,
+      "insulin": 3,
       "meal": null,
       "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
       "role": null,
@@ -2250,7 +2250,7 @@
     "glucose_at": "2026-08-31T10:25:00+00:00",
     "glucose_mgdl": "183.79816240040684861840989998",
     "id": "t-0009",
-    "insulin": 3.0,
+    "insulin": 3,
     "kind": "meal",
     "meal_id": "t-0009",
     "notes": "Pizza",
@@ -2322,7 +2322,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0007",
-    "insulin": 3.0,
+    "insulin": 3,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -2368,7 +2368,7 @@
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0009",
-    "insulin": 3.0,
+    "insulin": 3,
     "meal": null,
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
@@ -2437,7 +2437,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0012",
-    "insulin": 10.0,
+    "insulin": 10,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -2512,7 +2512,7 @@
      "doses": [
       {
        "at": "2026-09-01T05:50:00+00:00",
-       "effect_mgdl": "315.0",
+       "effect_mgdl": "315",
        "event_type": "Meal Bolus",
        "id": "t-0011",
        "isf": "30",
@@ -2536,7 +2536,7 @@
       "2026-09-01T08:45:18.097000+00:00",
       "2026-09-01T08:50:00.665000+00:00"
      ],
-     "insulin_effect_mgdl": "315.0",
+     "insulin_effect_mgdl": "315",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-01T09:40:00+00:00",
@@ -2664,12 +2664,12 @@
      "doses": [
       {
        "at": "2026-09-01T09:40:00+00:00",
-       "effect_mgdl": "350.0",
+       "effect_mgdl": "350",
        "event_type": "Meal Bolus",
        "id": "t-0012",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "10.0"
+       "units": "10"
       }
      ],
      "end": "2026-09-01T12:40:00+00:00",
@@ -2711,7 +2711,7 @@
       }
      ],
      "prior_insulin_effect_mgdl": "15.929304992456364886139988561",
-     "rapid_units_in_window": "10.0",
+     "rapid_units_in_window": "10",
      "ratio_g_per_unit": "9.56468900481242551434860835",
      "reason": null,
      "settings_version": 1,
@@ -2736,7 +2736,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0012",
-      "insulin": 10.0,
+      "insulin": 10,
       "meal": null,
       "notes": "",
       "role": null,
@@ -2825,12 +2825,12 @@
      "doses": [
       {
        "at": "2026-09-01T17:15:00+00:00",
-       "effect_mgdl": "315.0",
+       "effect_mgdl": "315",
        "event_type": "Meal Bolus",
        "id": "t-0013",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "9.0"
+       "units": "9"
       },
       {
        "at": "2026-09-01T19:35:00+00:00",
@@ -2897,7 +2897,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0013",
-      "insulin": 9.0,
+      "insulin": 9,
       "meal": null,
       "notes": "",
       "role": null,
@@ -3057,7 +3057,7 @@
     "glucose_at": "2026-09-01T09:40:00+00:00",
     "glucose_mgdl": "40",
     "id": "t-0012",
-    "insulin": 10.0,
+    "insulin": 10,
     "kind": "meal",
     "meal_id": "t-0012",
     "notes": "",
@@ -3081,7 +3081,7 @@
     "glucose_at": "2026-09-01T17:15:00+00:00",
     "glucose_mgdl": "88.81957169842840437425307444",
     "id": "t-0013",
-    "insulin": 9.0,
+    "insulin": 9,
     "kind": "meal",
     "meal_id": "t-0013",
     "notes": "",
@@ -3176,7 +3176,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0012",
-    "insulin": 10.0,
+    "insulin": 10,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -3199,7 +3199,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0013",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -3245,7 +3245,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0015",
-    "insulin": 8.0,
+    "insulin": 8,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -3320,12 +3320,12 @@
      "doses": [
       {
        "at": "2026-09-02T10:35:00+00:00",
-       "effect_mgdl": "280.0",
+       "effect_mgdl": "280",
        "event_type": "Meal Bolus",
        "id": "t-0015",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "8.0"
+       "units": "8"
       }
      ],
      "end": "2026-09-02T13:35:00+00:00",
@@ -3344,7 +3344,7 @@
       "2026-09-02T13:30:01.495000+00:00",
       "2026-09-02T13:35:02.038000+00:00"
      ],
-     "insulin_effect_mgdl": "280.0",
+     "insulin_effect_mgdl": "280",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-02T16:30:00+00:00",
@@ -3358,7 +3358,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "8.0",
+     "rapid_units_in_window": "8",
      "ratio_g_per_unit": "9.0597781065519261832217981",
      "reason": null,
      "settings_version": 1,
@@ -3383,7 +3383,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0015",
-      "insulin": 8.0,
+      "insulin": 8,
       "meal": null,
       "notes": "",
       "role": null,
@@ -3441,7 +3441,7 @@
     "at": "2026-09-02T16:30:00+00:00",
     "calculation": {
      "actual_window_minutes": "180",
-     "adjusted_delta_mgdl": "-109.07646121554239030280450930",
+     "adjusted_delta_mgdl": "-109.0764612155423903028045093",
      "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -3467,17 +3467,17 @@
      "carbs": "80",
      "carbs_times_isf_total": "2800",
      "carbs_total": "80",
-     "delta_mgdl": "-109.07646121554239030280450930",
+     "delta_mgdl": "-109.0764612155423903028045093",
      "denominator_mgdl": "240.98186105016713113838575768",
      "doses": [
       {
        "at": "2026-09-02T16:30:00+00:00",
-       "effect_mgdl": "350.0",
+       "effect_mgdl": "350",
        "event_type": "Meal Bolus",
        "id": "t-0016",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "10.0"
+       "units": "10"
       }
      ],
      "end": "2026-09-02T19:30:00+00:00",
@@ -3485,7 +3485,7 @@
      "extended_end": "2026-09-02T19:30:00+00:00",
      "extra_carb_count": 0,
      "factor_units_per_ke": "0.8606495037505968969228062774",
-     "g0": "149.07646121554239030280450930",
+     "g0": "149.0764612155423903028045093",
      "g0_source": "cgm",
      "g0_sources": [
       "2026-09-02T16:25:07.039000+00:00",
@@ -3511,15 +3511,15 @@
      "prior_doses": [
       {
        "at": "2026-09-02T10:35:00+00:00",
-       "effect_mgdl": "0.0583222657095214411902669840",
+       "effect_mgdl": "0.058322265709521441190266984",
        "id": "t-0015",
        "isf": "35",
        "share": "0.0002082938061054337185366678",
-       "units": "8.0"
+       "units": "8"
       }
      ],
-     "prior_insulin_effect_mgdl": "0.0583222657095214411902669840",
-     "rapid_units_in_window": "10.0",
+     "prior_insulin_effect_mgdl": "0.058322265709521441190266984",
+     "rapid_units_in_window": "10",
      "ratio_g_per_unit": "11.619131779454145274054209543",
      "reason": null,
      "settings_version": 1,
@@ -3544,7 +3544,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0016",
-      "insulin": 10.0,
+      "insulin": 10,
       "meal": null,
       "notes": "",
       "role": null,
@@ -3594,7 +3594,7 @@
      "start": "2026-09-02T16:30:00+00:00",
      "start_glucose": {
       "tone": "in-range",
-      "value": "149.07646121554239030280450930"
+      "value": "149.0764612155423903028045093"
      }
     }
    }
@@ -3633,10 +3633,10 @@
    {
     "delta_mgdl": "-55.93031984407303910330376805",
     "end": "2026-09-02T16:30:00+00:00",
-    "end_glucose": "149.07646121554239030280450930",
+    "end_glucose": "149.0764612155423903028045093",
     "hours": "2.916666666666666666666666667",
     "minimum_at": "2026-09-02T16:30:00+00:00",
-    "minimum_glucose": "149.07646121554239030280450930",
+    "minimum_glucose": "149.0764612155423903028045093",
     "rate_mgdl_per_hour": "-19.17610966082504197827557761",
     "start": "2026-09-02T13:35:00+00:00",
     "start_glucose": "205.00678105961542940610827735"
@@ -3693,7 +3693,7 @@
     "glucose_at": "2026-09-02T10:35:00+00:00",
     "glucose_mgdl": "118",
     "id": "t-0015",
-    "insulin": 8.0,
+    "insulin": 8,
     "kind": "meal",
     "meal_id": "t-0015",
     "notes": "",
@@ -3715,9 +3715,9 @@
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-02T16:30:00+00:00",
-    "glucose_mgdl": "149.07646121554239030280450930",
+    "glucose_mgdl": "149.0764612155423903028045093",
     "id": "t-0016",
-    "insulin": 10.0,
+    "insulin": 10,
     "kind": "meal",
     "meal_id": "t-0016",
     "notes": "",
@@ -3742,7 +3742,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0013",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -3788,7 +3788,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0015",
-    "insulin": 8.0,
+    "insulin": 8,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -3811,7 +3811,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0016",
-    "insulin": 10.0,
+    "insulin": 10,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -3834,7 +3834,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0017",
-    "insulin": 13.0,
+    "insulin": 13,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -3959,16 +3959,16 @@
      "carbs_times_isf_total": "2550",
      "carbs_total": "85",
      "delta_mgdl": "-88",
-     "denominator_mgdl": "302.0",
+     "denominator_mgdl": "302",
      "doses": [
       {
        "at": "2026-09-03T05:20:00+00:00",
-       "effect_mgdl": "390.0",
+       "effect_mgdl": "390",
        "event_type": "Meal Bolus",
        "id": "t-0017",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "13.0"
+       "units": "13"
       }
      ],
      "end": "2026-09-03T08:20:00+00:00",
@@ -3987,7 +3987,7 @@
       "2026-09-03T08:15:09.758000+00:00",
       "2026-09-03T08:20:00.636000+00:00"
      ],
-     "insulin_effect_mgdl": "390.0",
+     "insulin_effect_mgdl": "390",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-03T10:15:00+00:00",
@@ -4001,7 +4001,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "13.0",
+     "rapid_units_in_window": "13",
      "ratio_g_per_unit": "8.44370860927152317880794702",
      "reason": null,
      "settings_version": 1,
@@ -4026,7 +4026,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0017",
-      "insulin": 13.0,
+      "insulin": 13,
       "meal": null,
       "notes": "",
       "role": null,
@@ -4193,14 +4193,14 @@
      "prior_doses": [
       {
        "at": "2026-09-03T05:20:00+00:00",
-       "effect_mgdl": "3.3245601329006802879666036150",
+       "effect_mgdl": "3.324560132900680287966603615",
        "id": "t-0017",
        "isf": "30",
        "share": "0.0085245131612837956101707785",
-       "units": "13.0"
+       "units": "13"
       }
      ],
-     "prior_insulin_effect_mgdl": "3.3245601329006802879666036150",
+     "prior_insulin_effect_mgdl": "3.324560132900680287966603615",
      "rapid_units_in_window": "7.5",
      "ratio_g_per_unit": "7.998354700733788269783645514",
      "reason": null,
@@ -4337,12 +4337,12 @@
      "doses": [
       {
        "at": "2026-09-03T17:30:00+00:00",
-       "effect_mgdl": "420.0",
+       "effect_mgdl": "420",
        "event_type": "Meal Bolus",
        "id": "t-0021",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "12.0"
+       "units": "12"
       }
      ],
      "end": "2026-09-03T20:30:00+00:00",
@@ -4384,7 +4384,7 @@
       }
      ],
      "prior_insulin_effect_mgdl": "0.0329616148128393687610398195",
-     "rapid_units_in_window": "12.0",
+     "rapid_units_in_window": "12",
      "ratio_g_per_unit": "8.277105773041533270743603787",
      "reason": null,
      "settings_version": 1,
@@ -4409,7 +4409,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0021",
-      "insulin": 12.0,
+      "insulin": 12,
       "meal": null,
       "notes": "",
       "role": null,
@@ -4547,7 +4547,7 @@
     "glucose_at": "2026-09-03T05:20:00+00:00",
     "glucose_mgdl": "128",
     "id": "t-0017",
-    "insulin": 13.0,
+    "insulin": 13,
     "kind": "meal",
     "meal_id": "t-0017",
     "notes": "",
@@ -4643,7 +4643,7 @@
     "glucose_at": "2026-09-03T17:30:00+00:00",
     "glucose_mgdl": "121.75046568252967202296391895",
     "id": "t-0021",
-    "insulin": 12.0,
+    "insulin": 12,
     "kind": "meal",
     "meal_id": "t-0021",
     "notes": "",
@@ -4668,7 +4668,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0016",
-    "insulin": 10.0,
+    "insulin": 10,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -4691,7 +4691,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0017",
-    "insulin": 13.0,
+    "insulin": 13,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -4783,7 +4783,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0021",
-    "insulin": 12.0,
+    "insulin": 12,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -4806,7 +4806,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0022",
-    "insulin": 20.0,
+    "insulin": 20,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -4829,7 +4829,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0023",
-    "insulin": 5.0,
+    "insulin": 5,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -4918,12 +4918,12 @@
      "doses": [
       {
        "at": "2026-09-04T06:10:00+00:00",
-       "effect_mgdl": "600.0",
+       "effect_mgdl": "600",
        "event_type": "Meal Bolus",
        "id": "t-0022",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "20.0"
+       "units": "20"
       }
      ],
      "end": "2026-09-04T09:10:00+00:00",
@@ -4942,7 +4942,7 @@
       "2026-09-04T09:05:18.457000+00:00",
       "2026-09-04T09:10:05.254000+00:00"
      ],
-     "insulin_effect_mgdl": "600.0",
+     "insulin_effect_mgdl": "600",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-04T09:35:00+00:00",
@@ -4956,7 +4956,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "20.0",
+     "rapid_units_in_window": "20",
      "ratio_g_per_unit": "6.4101161279800246102872291454",
      "reason": null,
      "settings_version": 1,
@@ -4981,7 +4981,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0022",
-      "insulin": 20.0,
+      "insulin": 20,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -5070,12 +5070,12 @@
      "doses": [
       {
        "at": "2026-09-04T09:35:00+00:00",
-       "effect_mgdl": "175.0",
+       "effect_mgdl": "175",
        "event_type": "Meal Bolus",
        "id": "t-0023",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "5.0"
+       "units": "5"
       }
      ],
      "end": "2026-09-04T12:35:00+00:00",
@@ -5109,15 +5109,15 @@
      "prior_doses": [
       {
        "at": "2026-09-04T06:10:00+00:00",
-       "effect_mgdl": "51.435138624062719702692847620",
+       "effect_mgdl": "51.43513862406271970269284762",
        "id": "t-0022",
        "isf": "30",
        "share": "0.0857252310401045328378214127",
-       "units": "20.0"
+       "units": "20"
       }
      ],
-     "prior_insulin_effect_mgdl": "51.435138624062719702692847620",
-     "rapid_units_in_window": "5.0",
+     "prior_insulin_effect_mgdl": "51.43513862406271970269284762",
+     "rapid_units_in_window": "5",
      "ratio_g_per_unit": "5.409937730706174879771929059",
      "reason": null,
      "settings_version": 1,
@@ -5142,7 +5142,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0023",
-      "insulin": 5.0,
+      "insulin": 5,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -5231,12 +5231,12 @@
      "doses": [
       {
        "at": "2026-09-04T16:20:00+00:00",
-       "effect_mgdl": "245.0",
+       "effect_mgdl": "245",
        "event_type": "Meal Bolus",
        "id": "t-0025",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "7.0"
+       "units": "7"
       }
      ],
      "end": "2026-09-04T19:20:00+00:00",
@@ -5255,7 +5255,7 @@
       "2026-09-04T19:15:03.858000+00:00",
       "2026-09-04T19:20:19.454000+00:00"
      ],
-     "insulin_effect_mgdl": "245.0",
+     "insulin_effect_mgdl": "245",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-05T05:50:00+00:00",
@@ -5269,11 +5269,11 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "7.0",
+     "rapid_units_in_window": "7",
      "ratio_g_per_unit": "7.1577398990766383315091546143",
      "reason": null,
      "settings_version": 1,
-     "sport_effect_mgdl": "24.00",
+     "sport_effect_mgdl": "24",
      "start": "2026-09-04T16:20:00+00:00",
      "window_minutes": 180
     },
@@ -5294,7 +5294,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0025",
-      "insulin": 7.0,
+      "insulin": 7,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -5325,12 +5325,12 @@
     },
     "source_id": "t-0025",
     "sport": {
-     "effect_mgdl": "24.00",
+     "effect_mgdl": "24.0",
      "events": [
       {
        "at": "2026-09-04T13:50:00+00:00",
        "effect_from": "2026-09-04T14:50:00+00:00",
-       "effect_mgdl": "24.00",
+       "effect_mgdl": "24.0",
        "effect_until": "2026-09-04T19:50:00+00:00",
        "id": "t-0024",
        "kind": "gym",
@@ -5339,7 +5339,7 @@
      ],
      "status": "auto",
      "suggested": true,
-     "suggested_effect_mgdl": "24.00"
+     "suggested_effect_mgdl": "24.0"
     },
     "vacation": false,
     "window": {
@@ -5362,16 +5362,16 @@
   "night": {
    "breakfast_at": "2026-09-05T05:50:00+00:00",
    "carbs_g": "0",
-   "delta_mgdl": "88.27134629110163161651202550",
+   "delta_mgdl": "88.2713462911016316165120255",
    "dinner_at": "2026-09-04T16:20:00+00:00",
    "drop_mgdl": "0",
    "end": "2026-09-05T05:50:00+00:00",
-   "end_glucose": "128.27134629110163161651202550",
+   "end_glucose": "128.2713462911016316165120255",
    "last_injection_at": "2026-09-04T16:20:00+00:00",
    "minimum_at": "2026-09-04T19:20:00+00:00",
    "minimum_glucose": "40",
    "morning_dose_at": null,
-   "rise_mgdl": "88.27134629110163161651202550",
+   "rise_mgdl": "88.2713462911016316165120255",
    "start": "2026-09-04T19:20:00+00:00",
    "start_glucose": "40"
   },
@@ -5380,9 +5380,9 @@
   "profile_sync_error": null,
   "quiet_periods": [
    {
-    "delta_mgdl": "88.27134629110163161651202550",
+    "delta_mgdl": "88.2713462911016316165120255",
     "end": "2026-09-05T05:50:00+00:00",
-    "end_glucose": "128.27134629110163161651202550",
+    "end_glucose": "128.2713462911016316165120255",
     "hours": "10",
     "minimum_at": "2026-09-04T19:50:00+00:00",
     "minimum_glucose": "40",
@@ -5431,7 +5431,7 @@
     "glucose_at": "2026-09-04T06:10:00+00:00",
     "glucose_mgdl": "125.18873385217342576202578378",
     "id": "t-0022",
-    "insulin": 20.0,
+    "insulin": 20,
     "kind": "meal",
     "meal_id": "t-0022",
     "notes": "",
@@ -5455,7 +5455,7 @@
     "glucose_at": "2026-09-04T09:35:00+00:00",
     "glucose_mgdl": "40",
     "id": "t-0023",
-    "insulin": 5.0,
+    "insulin": 5,
     "kind": "meal",
     "meal_id": "t-0023",
     "notes": "",
@@ -5495,7 +5495,7 @@
     "sport_rest_mgdl": "16.0",
     "sport_shares": [
      {
-      "effect_mgdl": "24.00",
+      "effect_mgdl": "24.0",
       "meal": "dinner",
       "meal_id": "t-0025"
      }
@@ -5518,7 +5518,7 @@
     "glucose_at": "2026-09-04T16:20:00+00:00",
     "glucose_mgdl": "88.95847541160612593910980923",
     "id": "t-0025",
-    "insulin": 7.0,
+    "insulin": 7,
     "kind": "meal",
     "meal_id": "t-0025",
     "notes": "",
@@ -5543,7 +5543,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0021",
-    "insulin": 12.0,
+    "insulin": 12,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -5566,7 +5566,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0022",
-    "insulin": 20.0,
+    "insulin": 20,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -5589,7 +5589,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0023",
-    "insulin": 5.0,
+    "insulin": 5,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -5635,7 +5635,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0025",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -5658,7 +5658,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0026",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -5732,7 +5732,7 @@
     "at": "2026-09-05T05:50:00+00:00",
     "calculation": {
      "actual_window_minutes": "180",
-     "adjusted_delta_mgdl": "-54.303954250572806302251080550",
+     "adjusted_delta_mgdl": "-54.30395425057280630225108055",
      "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -5758,17 +5758,17 @@
      "carbs": "55",
      "carbs_times_isf_total": "1650",
      "carbs_total": "55",
-     "delta_mgdl": "-54.303954250572806302251080550",
+     "delta_mgdl": "-54.30395425057280630225108055",
      "denominator_mgdl": "215.69604574942719369774891945",
      "doses": [
       {
        "at": "2026-09-05T05:50:00+00:00",
-       "effect_mgdl": "270.0",
+       "effect_mgdl": "270",
        "event_type": "Meal Bolus",
        "id": "t-0026",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "9.0"
+       "units": "9"
       }
      ],
      "end": "2026-09-05T08:50:00+00:00",
@@ -5776,18 +5776,18 @@
      "extended_end": "2026-09-05T08:50:00+00:00",
      "extra_carb_count": 0,
      "factor_units_per_ke": "1.3072487621177405678651449664",
-     "g0": "128.27134629110163161651202550",
+     "g0": "128.2713462911016316165120255",
      "g0_source": "cgm",
      "g0_sources": [
       "2026-09-05T05:45:10.442000+00:00",
       "2026-09-05T05:50:11.677000+00:00"
      ],
-     "g3": "73.967392040528825314260944950",
+     "g3": "73.96739204052882531426094495",
      "g3_sources": [
       "2026-09-05T08:45:14.333000+00:00",
       "2026-09-05T08:50:09.629000+00:00"
      ],
-     "insulin_effect_mgdl": "270.0",
+     "insulin_effect_mgdl": "270",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-05T10:30:00+00:00",
@@ -5801,7 +5801,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "9.0",
+     "rapid_units_in_window": "9",
      "ratio_g_per_unit": "7.6496534475963232613169955616",
      "reason": null,
      "settings_version": 1,
@@ -5826,7 +5826,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0026",
-      "insulin": 9.0,
+      "insulin": 9,
       "meal": null,
       "notes": "",
       "role": null,
@@ -5870,13 +5870,13 @@
      "end": "2026-09-05T08:50:00+00:00",
      "end_glucose": {
       "tone": "outside",
-      "value": "73.967392040528825314260944950"
+      "value": "73.96739204052882531426094495"
      },
      "manual": false,
      "start": "2026-09-05T05:50:00+00:00",
      "start_glucose": {
       "tone": "in-range",
-      "value": "128.27134629110163161651202550"
+      "value": "128.2713462911016316165120255"
      }
     }
    },
@@ -5934,7 +5934,7 @@
       "2026-09-05T10:25:15.267000+00:00",
       "2026-09-05T10:30:07.603000+00:00"
      ],
-     "g3": "118.95336695541443962267312300",
+     "g3": "118.953366955414439622673123",
      "g3_sources": [
       "2026-09-05T13:25:15.501000+00:00",
       "2026-09-05T13:30:13.916000+00:00"
@@ -5954,14 +5954,14 @@
      "prior_doses": [
       {
        "at": "2026-09-05T05:50:00+00:00",
-       "effect_mgdl": "3.7506697843931200964675101770",
+       "effect_mgdl": "3.750669784393120096467510177",
        "id": "t-0026",
        "isf": "30",
        "share": "0.0138913695718263707276574451",
-       "units": "9.0"
+       "units": "9"
       }
      ],
-     "prior_insulin_effect_mgdl": "3.7506697843931200964675101770",
+     "prior_insulin_effect_mgdl": "3.750669784393120096467510177",
      "rapid_units_in_window": "4.5",
      "ratio_g_per_unit": "7.674314956942513904893880021",
      "reason": null,
@@ -6031,7 +6031,7 @@
      "end": "2026-09-05T13:30:00+00:00",
      "end_glucose": {
       "tone": "in-range",
-      "value": "118.95336695541443962267312300"
+      "value": "118.953366955414439622673123"
      },
      "manual": false,
      "start": "2026-09-05T10:30:00+00:00",
@@ -6223,7 +6223,7 @@
     "minimum_glucose": "95",
     "rate_mgdl_per_hour": "-3.944550093026662938049171668",
     "start": "2026-09-05T13:30:00+00:00",
-    "start_glucose": "118.95336695541443962267312300"
+    "start_glucose": "118.953366955414439622673123"
    },
    {
     "delta_mgdl": "94.03746887714823586567073541",
@@ -6275,9 +6275,9 @@
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-05T05:50:00+00:00",
-    "glucose_mgdl": "128.27134629110163161651202550",
+    "glucose_mgdl": "128.2713462911016316165120255",
     "id": "t-0026",
-    "insulin": 9.0,
+    "insulin": 9,
     "kind": "meal",
     "meal_id": "t-0026",
     "notes": "",
@@ -6373,7 +6373,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0025",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -6396,7 +6396,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0026",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -6511,7 +6511,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0030",
-    "insulin": 3.0,
+    "insulin": 3,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -6594,7 +6594,7 @@
      "doses": [
       {
        "at": "2026-09-06T05:55:00+00:00",
-       "effect_mgdl": "345.0",
+       "effect_mgdl": "345",
        "event_type": "Meal Bolus",
        "id": "t-0029",
        "isf": "30",
@@ -6618,7 +6618,7 @@
       "2026-09-06T08:50:06.242000+00:00",
       "2026-09-06T08:55:03.003000+00:00"
      ],
-     "insulin_effect_mgdl": "345.0",
+     "insulin_effect_mgdl": "345",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-06T09:45:00+00:00",
@@ -6746,12 +6746,12 @@
      "doses": [
       {
        "at": "2026-09-06T09:45:00+00:00",
-       "effect_mgdl": "105.0",
+       "effect_mgdl": "105",
        "event_type": "Meal Bolus",
        "id": "t-0030",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "3.0"
+       "units": "3"
       }
      ],
      "end": "2026-09-06T12:45:00+00:00",
@@ -6793,7 +6793,7 @@
       }
      ],
      "prior_insulin_effect_mgdl": "17.446381658404590113391416043",
-     "rapid_units_in_window": "3.0",
+     "rapid_units_in_window": "3",
      "ratio_g_per_unit": "5.8865461431646552780960574986",
      "reason": null,
      "settings_version": 1,
@@ -6818,7 +6818,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0030",
-      "insulin": 3.0,
+      "insulin": 3,
       "meal": null,
       "notes": "",
       "role": null,
@@ -7157,7 +7157,7 @@
     "glucose_at": "2026-09-06T09:45:00+00:00",
     "glucose_mgdl": "40",
     "id": "t-0030",
-    "insulin": 3.0,
+    "insulin": 3,
     "kind": "meal",
     "meal_id": "t-0030",
     "notes": "",
@@ -7275,7 +7275,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0030",
-    "insulin": 3.0,
+    "insulin": 3,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -7321,7 +7321,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0033",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -7344,7 +7344,7 @@
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0034",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
@@ -7411,7 +7411,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0033",
-      "insulin": 11.0,
+      "insulin": 11,
       "meal": null,
       "notes": "",
       "role": null,
@@ -7503,16 +7503,16 @@
      "carbs_times_isf_total": "2275",
      "carbs_total": "65",
      "delta_mgdl": "16.101198510135748955278116645",
-     "denominator_mgdl": "301.42353347967277901854017450",
+     "denominator_mgdl": "301.4235334796727790185401745",
      "doses": [
       {
        "at": "2026-09-07T09:45:00+00:00",
-       "effect_mgdl": "245.0",
+       "effect_mgdl": "245",
        "event_type": "Meal Bolus",
        "id": "t-0034",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "7.0"
+       "units": "7"
       },
       {
        "at": "2026-09-07T11:20:00+00:00",
@@ -7555,15 +7555,15 @@
      "prior_doses": [
       {
        "at": "2026-09-07T05:10:00+00:00",
-       "effect_mgdl": "5.3223349695370300632620578650",
+       "effect_mgdl": "5.322334969537030063262057865",
        "id": "t-0033",
        "isf": "30",
        "share": "0.0161282877864758486765516905",
-       "units": "11.0"
+       "units": "11"
       }
      ],
-     "prior_insulin_effect_mgdl": "5.3223349695370300632620578650",
-     "rapid_units_in_window": "8.0",
+     "prior_insulin_effect_mgdl": "5.322334969537030063262057865",
+     "rapid_units_in_window": "8",
      "ratio_g_per_unit": "7.5475195109588883409501299488",
      "reason": null,
      "settings_version": 1,
@@ -7588,7 +7588,7 @@
       "fat_protein": true,
       "finger_mgdl": null,
       "id": "t-0034",
-      "insulin": 7.0,
+      "insulin": 7,
       "meal": null,
       "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
       "role": null,
@@ -7699,12 +7699,12 @@
      "doses": [
       {
        "at": "2026-09-07T17:20:00+00:00",
-       "effect_mgdl": "140.0",
+       "effect_mgdl": "140",
        "event_type": "Meal Bolus",
        "id": "t-0036",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "4.0"
+       "units": "4"
       },
       {
        "at": "2026-09-07T19:40:00+00:00",
@@ -7747,14 +7747,14 @@
      "prior_doses": [
       {
        "at": "2026-09-07T11:20:00+00:00",
-       "effect_mgdl": "0.0031110018349909878827894110",
+       "effect_mgdl": "0.003111001834990987882789411",
        "id": "t-0035",
        "isf": "35",
        "share": "0.0000888857667140282252225546",
        "units": "1"
       }
      ],
-     "prior_insulin_effect_mgdl": "0.0031110018349909878827894110",
+     "prior_insulin_effect_mgdl": "0.003111001834990987882789411",
      "rapid_units_in_window": "5.5",
      "ratio_g_per_unit": "7.4101486320077379416456917616",
      "reason": null,
@@ -7780,7 +7780,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0036",
-      "insulin": 4.0,
+      "insulin": 4,
       "meal": null,
       "notes": "",
       "role": null,
@@ -7929,7 +7929,7 @@
     "glucose_at": "2026-09-07T05:10:00+00:00",
     "glucose_mgdl": "126.91145769535090826626586197",
     "id": "t-0033",
-    "insulin": 11.0,
+    "insulin": 11,
     "kind": "meal",
     "meal_id": "t-0033",
     "notes": "",
@@ -7953,7 +7953,7 @@
     "glucose_at": "2026-09-07T09:45:00+00:00",
     "glucose_mgdl": "40",
     "id": "t-0034",
-    "insulin": 7.0,
+    "insulin": 7,
     "kind": "meal",
     "meal_id": "t-0034",
     "notes": "Pizza",
@@ -8001,7 +8001,7 @@
     "glucose_at": "2026-09-07T17:20:00+00:00",
     "glucose_mgdl": "95.93914733878535996782410511",
     "id": "t-0036",
-    "insulin": 4.0,
+    "insulin": 4,
     "kind": "meal",
     "meal_id": "t-0036",
     "notes": "",
@@ -8073,7 +8073,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0033",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -8096,7 +8096,7 @@
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0034",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
@@ -8142,7 +8142,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0036",
-    "insulin": 4.0,
+    "insulin": 4,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -8211,7 +8211,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0039",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -8285,7 +8285,7 @@
      "doses": [
       {
        "at": "2026-09-08T06:10:00+00:00",
-       "effect_mgdl": "285.0",
+       "effect_mgdl": "285",
        "event_type": "Meal Bolus",
        "id": "t-0038",
        "isf": "30",
@@ -8309,7 +8309,7 @@
       "2026-09-08T09:05:00.343000+00:00",
       "2026-09-08T09:10:04.836000+00:00"
      ],
-     "insulin_effect_mgdl": "285.0",
+     "insulin_effect_mgdl": "285",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-08T09:35:00+00:00",
@@ -8437,12 +8437,12 @@
      "doses": [
       {
        "at": "2026-09-08T09:35:00+00:00",
-       "effect_mgdl": "245.0",
+       "effect_mgdl": "245",
        "event_type": "Meal Bolus",
        "id": "t-0039",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "7.0"
+       "units": "7"
       }
      ],
      "end": "2026-09-08T12:35:00+00:00",
@@ -8484,7 +8484,7 @@
       }
      ],
      "prior_insulin_effect_mgdl": "24.431690846429791858779102618",
-     "rapid_units_in_window": "7.0",
+     "rapid_units_in_window": "7",
      "ratio_g_per_unit": "9.599201386554883824971410635",
      "reason": null,
      "settings_version": 1,
@@ -8509,7 +8509,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0039",
-      "insulin": 7.0,
+      "insulin": 7,
       "meal": null,
       "notes": "",
       "role": null,
@@ -8835,7 +8835,7 @@
     "glucose_at": "2026-09-08T09:35:00+00:00",
     "glucose_mgdl": "40",
     "id": "t-0039",
-    "insulin": 7.0,
+    "insulin": 7,
     "kind": "meal",
     "meal_id": "t-0039",
     "notes": "",
@@ -8884,7 +8884,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0036",
-    "insulin": 4.0,
+    "insulin": 4,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -8953,7 +8953,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0039",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -8999,7 +8999,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0041",
-    "insulin": 6.0,
+    "insulin": 6,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -9022,7 +9022,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0042",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -9065,7 +9065,7 @@
     "at": "2026-09-09T06:05:00+00:00",
     "calculation": {
      "actual_window_minutes": "180",
-     "adjusted_delta_mgdl": "-46.898520482134481631415197640",
+     "adjusted_delta_mgdl": "-46.89852048213448163141519764",
      "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -9091,17 +9091,17 @@
      "carbs": "60",
      "carbs_times_isf_total": "1800",
      "carbs_total": "60",
-     "delta_mgdl": "-46.898520482134481631415197640",
+     "delta_mgdl": "-46.89852048213448163141519764",
      "denominator_mgdl": "133.10147951786551836858480236",
      "doses": [
       {
        "at": "2026-09-09T06:05:00+00:00",
-       "effect_mgdl": "180.0",
+       "effect_mgdl": "180",
        "event_type": "Meal Bolus",
        "id": "t-0041",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "6.0"
+       "units": "6"
       }
      ],
      "end": "2026-09-09T09:05:00+00:00",
@@ -9115,12 +9115,12 @@
       "2026-09-09T06:00:09.248000+00:00",
       "2026-09-09T06:05:09.241000+00:00"
      ],
-     "g3": "77.224695726243713859812931020",
+     "g3": "77.22469572624371385981293102",
      "g3_sources": [
       "2026-09-09T09:00:08.482000+00:00",
       "2026-09-09T09:05:13.717000+00:00"
      ],
-     "insulin_effect_mgdl": "180.0",
+     "insulin_effect_mgdl": "180",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-09T10:50:00+00:00",
@@ -9134,7 +9134,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "6.0",
+     "rapid_units_in_window": "6",
      "ratio_g_per_unit": "13.52351609103184592976532926",
      "reason": null,
      "settings_version": 1,
@@ -9159,7 +9159,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0041",
-      "insulin": 6.0,
+      "insulin": 6,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -9203,7 +9203,7 @@
      "end": "2026-09-09T09:05:00+00:00",
      "end_glucose": {
       "tone": "outside",
-      "value": "77.224695726243713859812931020"
+      "value": "77.22469572624371385981293102"
      },
      "manual": false,
      "start": "2026-09-09T06:05:00+00:00",
@@ -9248,12 +9248,12 @@
      "doses": [
       {
        "at": "2026-09-09T10:50:00+00:00",
-       "effect_mgdl": "245.0",
+       "effect_mgdl": "245",
        "event_type": "Meal Bolus",
        "id": "t-0042",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "7.0"
+       "units": "7"
       }
      ],
      "end": "2026-09-09T13:50:00+00:00",
@@ -9287,15 +9287,15 @@
      "prior_doses": [
       {
        "at": "2026-09-09T06:05:00+00:00",
-       "effect_mgdl": "2.1403011917957325550735097340",
+       "effect_mgdl": "2.140301191795732555073509734",
        "id": "t-0041",
        "isf": "30",
        "share": "0.0118905621766429586392972763",
-       "units": "6.0"
+       "units": "6"
       }
      ],
-     "prior_insulin_effect_mgdl": "2.1403011917957325550735097340",
-     "rapid_units_in_window": "7.0",
+     "prior_insulin_effect_mgdl": "2.140301191795732555073509734",
+     "rapid_units_in_window": "7",
      "ratio_g_per_unit": "8.162592162056993189536698103",
      "reason": null,
      "settings_version": 1,
@@ -9320,7 +9320,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0042",
-      "insulin": 7.0,
+      "insulin": 7,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -9448,14 +9448,14 @@
      "prior_doses": [
       {
        "at": "2026-09-09T10:50:00+00:00",
-       "effect_mgdl": "0.0510319824958312610414836110",
+       "effect_mgdl": "0.051031982495831261041483611",
        "id": "t-0042",
        "isf": "35",
        "share": "0.0002082938061054337185366678",
-       "units": "7.0"
+       "units": "7"
       }
      ],
-     "prior_insulin_effect_mgdl": "0.0510319824958312610414836110",
+     "prior_insulin_effect_mgdl": "0.051031982495831261041483611",
      "rapid_units_in_window": "10.5",
      "ratio_g_per_unit": "6.8170228986146689689900808705",
      "reason": null,
@@ -9619,7 +9619,7 @@
     "glucose_at": "2026-09-09T06:05:00+00:00",
     "glucose_mgdl": "124.12321620837819549122812866",
     "id": "t-0041",
-    "insulin": 6.0,
+    "insulin": 6,
     "kind": "meal",
     "meal_id": "t-0041",
     "notes": "",
@@ -9643,7 +9643,7 @@
     "glucose_at": "2026-09-09T10:50:00+00:00",
     "glucose_mgdl": "80.04749509790383606285730067",
     "id": "t-0042",
-    "insulin": 7.0,
+    "insulin": 7,
     "kind": "meal",
     "meal_id": "t-0042",
     "notes": "",
@@ -9715,7 +9715,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0041",
-    "insulin": 6.0,
+    "insulin": 6,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -9738,7 +9738,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0042",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -9784,7 +9784,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0044",
-    "insulin": 13.0,
+    "insulin": 13,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -9905,12 +9905,12 @@
      "doses": [
       {
        "at": "2026-09-10T05:20:00+00:00",
-       "effect_mgdl": "390.0",
+       "effect_mgdl": "390",
        "event_type": "Meal Bolus",
        "id": "t-0044",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "13.0"
+       "units": "13"
       }
      ],
      "end": "2026-09-10T08:20:00+00:00",
@@ -9929,7 +9929,7 @@
       "2026-09-10T08:15:07.967000+00:00",
       "2026-09-10T08:20:17.931000+00:00"
      ],
-     "insulin_effect_mgdl": "390.0",
+     "insulin_effect_mgdl": "390",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-10T17:15:00+00:00",
@@ -9943,7 +9943,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "13.0",
+     "rapid_units_in_window": "13",
      "ratio_g_per_unit": "7.3538649329145900211247086966",
      "reason": null,
      "settings_version": 1,
@@ -9968,7 +9968,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0044",
-      "insulin": 13.0,
+      "insulin": 13,
       "meal": null,
       "notes": "",
       "role": null,
@@ -10202,7 +10202,7 @@
   "profile_sync_error": null,
   "quiet_periods": [
    {
-    "delta_mgdl": "4.99627446291617714842193180",
+    "delta_mgdl": "4.9962744629161771484219318",
     "end": "2026-09-10T17:15:00+00:00",
     "end_glucose": "86",
     "hours": "4",
@@ -10210,7 +10210,7 @@
     "minimum_glucose": "71",
     "rate_mgdl_per_hour": "1.24906861572904428710548295",
     "start": "2026-09-10T13:15:00+00:00",
-    "start_glucose": "81.00372553708382285157806820"
+    "start_glucose": "81.0037255370838228515780682"
    },
    {
     "delta_mgdl": "-44.97292023147117721482184913",
@@ -10264,7 +10264,7 @@
     "glucose_at": "2026-09-10T05:20:00+00:00",
     "glucose_mgdl": "124.03843821914642030475896976",
     "id": "t-0044",
-    "insulin": 13.0,
+    "insulin": 13,
     "kind": "meal",
     "meal_id": "t-0044",
     "notes": "",
@@ -10384,7 +10384,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0044",
-    "insulin": 13.0,
+    "insulin": 13,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -10742,12 +10742,12 @@
      "doses": [
       {
        "at": "2026-09-11T16:35:00+00:00",
-       "effect_mgdl": "420.0",
+       "effect_mgdl": "420",
        "event_type": "Meal Bolus",
        "id": "t-0050",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "12.0"
+       "units": "12"
       }
      ],
      "end": "2026-09-11T19:35:00+00:00",
@@ -10789,7 +10789,7 @@
       }
      ],
      "prior_insulin_effect_mgdl": "0.1079052993715548240811097375",
-     "rapid_units_in_window": "12.0",
+     "rapid_units_in_window": "12",
      "ratio_g_per_unit": "12.503755477716456528813241154",
      "reason": null,
      "settings_version": 1,
@@ -10814,7 +10814,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0050",
-      "insulin": 12.0,
+      "insulin": 12,
       "meal": null,
       "notes": "",
       "role": null,
@@ -11000,7 +11000,7 @@
     "glucose_at": "2026-09-11T16:35:00+00:00",
     "glucose_mgdl": "152.20041247761332375520148836",
     "id": "t-0050",
-    "insulin": 12.0,
+    "insulin": 12,
     "kind": "meal",
     "meal_id": "t-0050",
     "notes": "",
@@ -11094,7 +11094,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0050",
-    "insulin": 12.0,
+    "insulin": 12,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -11117,7 +11117,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0051",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -11215,12 +11215,12 @@
      "doses": [
       {
        "at": "2026-09-12T06:05:00+00:00",
-       "effect_mgdl": "330.0",
+       "effect_mgdl": "330",
        "event_type": "Meal Bolus",
        "id": "t-0051",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "11.0"
+       "units": "11"
       }
      ],
      "end": "2026-09-12T09:05:00+00:00",
@@ -11239,7 +11239,7 @@
       "2026-09-12T09:00:01.985000+00:00",
       "2026-09-12T09:05:18.544000+00:00"
      ],
-     "insulin_effect_mgdl": "330.0",
+     "insulin_effect_mgdl": "330",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-12T10:45:00+00:00",
@@ -11253,7 +11253,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "11.0",
+     "rapid_units_in_window": "11",
      "ratio_g_per_unit": "11.720451177299620812964393374",
      "reason": null,
      "settings_version": 1,
@@ -11278,7 +11278,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0051",
-      "insulin": 11.0,
+      "insulin": 11,
       "meal": null,
       "notes": "",
       "role": null,
@@ -11406,14 +11406,14 @@
      "prior_doses": [
       {
        "at": "2026-09-12T06:05:00+00:00",
-       "effect_mgdl": "4.5841519587027023401269568830",
+       "effect_mgdl": "4.584151958702702340126956883",
        "id": "t-0051",
        "isf": "30",
        "share": "0.0138913695718263707276574451",
-       "units": "11.0"
+       "units": "11"
       }
      ],
-     "prior_insulin_effect_mgdl": "4.5841519587027023401269568830",
+     "prior_insulin_effect_mgdl": "4.584151958702702340126956883",
      "rapid_units_in_window": "10.5",
      "ratio_g_per_unit": "7.8121989752953473530019240636",
      "reason": null,
@@ -11528,12 +11528,12 @@
      "doses": [
       {
        "at": "2026-09-12T17:25:00+00:00",
-       "effect_mgdl": "385.0",
+       "effect_mgdl": "385",
        "event_type": "Meal Bolus",
        "id": "t-0053",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "11.0"
+       "units": "11"
       }
      ],
      "end": "2026-09-12T20:25:00+00:00",
@@ -11552,7 +11552,7 @@
       "2026-09-12T20:20:02.394000+00:00",
       "2026-09-12T20:25:03.827000+00:00"
      ],
-     "insulin_effect_mgdl": "385.0",
+     "insulin_effect_mgdl": "385",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-13T05:25:00+00:00",
@@ -11566,7 +11566,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "11.0",
+     "rapid_units_in_window": "11",
      "ratio_g_per_unit": "9.25925546854271725506700756",
      "reason": null,
      "settings_version": 1,
@@ -11591,7 +11591,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0053",
-      "insulin": 11.0,
+      "insulin": 11,
       "meal": null,
       "notes": "",
       "role": null,
@@ -11729,7 +11729,7 @@
     "glucose_at": "2026-09-12T06:05:00+00:00",
     "glucose_mgdl": "130.83529952158062773538459548",
     "id": "t-0051",
-    "insulin": 11.0,
+    "insulin": 11,
     "kind": "meal",
     "meal_id": "t-0051",
     "notes": "",
@@ -11777,7 +11777,7 @@
     "glucose_at": "2026-09-12T17:25:00+00:00",
     "glucose_mgdl": "117.03635740010289830217801406",
     "id": "t-0053",
-    "insulin": 11.0,
+    "insulin": 11,
     "kind": "meal",
     "meal_id": "t-0053",
     "notes": "",
@@ -11802,7 +11802,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0050",
-    "insulin": 12.0,
+    "insulin": 12,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -11825,7 +11825,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0051",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -11871,7 +11871,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0053",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -11894,7 +11894,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0054",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -11992,12 +11992,12 @@
      "doses": [
       {
        "at": "2026-09-13T05:25:00+00:00",
-       "effect_mgdl": "210.0",
+       "effect_mgdl": "210",
        "event_type": "Meal Bolus",
        "id": "t-0054",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "7.0"
+       "units": "7"
       }
      ],
      "end": "2026-09-13T08:25:00+00:00",
@@ -12016,7 +12016,7 @@
       "2026-09-13T08:20:00.165000+00:00",
       "2026-09-13T08:25:08.067000+00:00"
      ],
-     "insulin_effect_mgdl": "210.0",
+     "insulin_effect_mgdl": "210",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-13T10:55:00+00:00",
@@ -12030,7 +12030,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "7.0",
+     "rapid_units_in_window": "7",
      "ratio_g_per_unit": "8.403956112777619923363891217",
      "reason": null,
      "settings_version": 1,
@@ -12055,7 +12055,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0054",
-      "insulin": 7.0,
+      "insulin": 7,
       "meal": null,
       "notes": "",
       "role": null,
@@ -12183,14 +12183,14 @@
      "prior_doses": [
       {
        "at": "2026-09-13T05:25:00+00:00",
-       "effect_mgdl": "0.3816447372748979538613430520",
+       "effect_mgdl": "0.381644737274897953861343052",
        "id": "t-0054",
        "isf": "30",
        "share": "0.0018173558917852283517206812",
-       "units": "7.0"
+       "units": "7"
       }
      ],
-     "prior_insulin_effect_mgdl": "0.3816447372748979538613430520",
+     "prior_insulin_effect_mgdl": "0.381644737274897953861343052",
      "rapid_units_in_window": "13.5",
      "ratio_g_per_unit": "7.309969329664372603400360592",
      "reason": null,
@@ -12274,7 +12274,7 @@
     "at": "2026-09-13T16:55:00+00:00",
     "calculation": {
      "actual_window_minutes": "320",
-     "adjusted_delta_mgdl": "41.94399719985999299964998250",
+     "adjusted_delta_mgdl": "41.9439971998599929996499825",
      "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -12300,7 +12300,7 @@
      "carbs": "90",
      "carbs_times_isf_total": "3150",
      "carbs_total": "90",
-     "delta_mgdl": "41.94399719985999299964998250",
+     "delta_mgdl": "41.9439971998599929996499825",
      "denominator_mgdl": "356.98599572463237133606763955",
      "doses": [
       {
@@ -12342,7 +12342,7 @@
       "2026-09-13T16:50:01.020000+00:00",
       "2026-09-13T16:55:06.499000+00:00"
      ],
-     "g3": "81.94399719985999299964998250",
+     "g3": "81.9439971998599929996499825",
      "g3_sources": [
       "2026-09-13T22:10:13.969000+00:00",
       "2026-09-13T22:15:08.240000+00:00"
@@ -12370,7 +12370,7 @@
       }
      ],
      "prior_insulin_effect_mgdl": "0.0419985247723783364176570485",
-     "rapid_units_in_window": "9.0",
+     "rapid_units_in_window": "9",
      "ratio_g_per_unit": "8.823875551773212096301495066",
      "reason": null,
      "settings_version": 1,
@@ -12483,7 +12483,7 @@
      "end": "2026-09-13T22:15:00+00:00",
      "end_glucose": {
       "tone": "in-range",
-      "value": "81.94399719985999299964998250"
+      "value": "81.9439971998599929996499825"
      },
      "manual": false,
      "start": "2026-09-13T16:55:00+00:00",
@@ -12497,9 +12497,9 @@
   "night": {
    "breakfast_at": "2026-09-14T05:25:00+00:00",
    "carbs_g": "0",
-   "delta_mgdl": "50.05600280014000700035001750",
+   "delta_mgdl": "50.0560028001400070003500175",
    "dinner_at": "2026-09-13T16:55:00+00:00",
-   "drop_mgdl": "-14.94399719985999299964998250",
+   "drop_mgdl": "-14.9439971998599929996499825",
    "end": "2026-09-14T05:25:00+00:00",
    "end_glucose": "132",
    "last_injection_at": "2026-09-13T19:15:00+00:00",
@@ -12508,7 +12508,7 @@
    "morning_dose_at": null,
    "rise_mgdl": "65",
    "start": "2026-09-13T22:15:00+00:00",
-   "start_glucose": "81.94399719985999299964998250"
+   "start_glucose": "81.9439971998599929996499825"
   },
   "other_events": [],
   "place_options": [],
@@ -12577,7 +12577,7 @@
     "glucose_at": "2026-09-13T05:25:00+00:00",
     "glucose_mgdl": "125.05884301281043302542347364",
     "id": "t-0054",
-    "insulin": 7.0,
+    "insulin": 7,
     "kind": "meal",
     "meal_id": "t-0054",
     "notes": "",
@@ -12698,7 +12698,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0053",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -12721,7 +12721,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0054",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -12930,11 +12930,11 @@
      "carbs_times_isf_total": "1350",
      "carbs_total": "45",
      "delta_mgdl": "-70",
-     "denominator_mgdl": "155.0",
+     "denominator_mgdl": "155",
      "doses": [
       {
        "at": "2026-09-14T05:25:00+00:00",
-       "effect_mgdl": "225.0",
+       "effect_mgdl": "225",
        "event_type": "Meal Bolus",
        "id": "t-0059",
        "isf": "30",
@@ -12958,7 +12958,7 @@
       "2026-09-14T08:20:09.145000+00:00",
       "2026-09-14T08:25:05.317000+00:00"
      ],
-     "insulin_effect_mgdl": "225.0",
+     "insulin_effect_mgdl": "225",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-14T10:25:00+00:00",
@@ -13055,7 +13055,7 @@
     "at": "2026-09-14T10:25:00+00:00",
     "calculation": {
      "actual_window_minutes": "180",
-     "adjusted_delta_mgdl": "-33.415237250209676531448241470",
+     "adjusted_delta_mgdl": "-33.41523725020967653144824147",
      "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -13081,7 +13081,7 @@
      "carbs": "90",
      "carbs_times_isf_total": "3150",
      "carbs_total": "90",
-     "delta_mgdl": "-33.415237250209676531448241470",
+     "delta_mgdl": "-33.41523725020967653144824147",
      "denominator_mgdl": "300.68805201881067999651373699",
      "doses": [
       {
@@ -13099,7 +13099,7 @@
      "extended_end": "2026-09-14T13:25:00+00:00",
      "extra_carb_count": 0,
      "factor_units_per_ke": "0.9545652445041608888778213873",
-     "g0": "73.415237250209676531448241470",
+     "g0": "73.41523725020967653144824147",
      "g0_source": "cgm",
      "g0_sources": [
       "2026-09-14T10:20:09.249000+00:00",
@@ -13125,14 +13125,14 @@
      "prior_doses": [
       {
        "at": "2026-09-14T05:25:00+00:00",
-       "effect_mgdl": "1.6032892690203565279619784600",
+       "effect_mgdl": "1.60328926902035652796197846",
        "id": "t-0059",
        "isf": "30",
        "share": "0.0071257300845349179020532376",
        "units": "7.5"
       }
      ],
-     "prior_insulin_effect_mgdl": "1.6032892690203565279619784600",
+     "prior_insulin_effect_mgdl": "1.60328926902035652796197846",
      "rapid_units_in_window": "9.5",
      "ratio_g_per_unit": "10.475973284774680102314396645",
      "reason": null,
@@ -13208,7 +13208,7 @@
      "start": "2026-09-14T10:25:00+00:00",
      "start_glucose": {
       "tone": "outside",
-      "value": "73.415237250209676531448241470"
+      "value": "73.41523725020967653144824147"
      }
     }
    },
@@ -13386,7 +13386,7 @@
   "profile_sync_error": null,
   "quiet_periods": [
    {
-    "delta_mgdl": "50.05600280014000700035001750",
+    "delta_mgdl": "50.0560028001400070003500175",
     "end": "2026-09-14T05:25:00+00:00",
     "end_glucose": "132",
     "hours": "7.166666666666666666666666667",
@@ -13394,12 +13394,12 @@
     "minimum_glucose": "67",
     "rate_mgdl_per_hour": "6.984558530252094000048839651",
     "start": "2026-09-13T22:15:00+00:00",
-    "start_glucose": "81.94399719985999299964998250"
+    "start_glucose": "81.9439971998599929996499825"
    },
    {
     "delta_mgdl": "11.41523725020967653144824147",
     "end": "2026-09-14T10:25:00+00:00",
-    "end_glucose": "73.415237250209676531448241470",
+    "end_glucose": "73.41523725020967653144824147",
     "hours": "2",
     "minimum_at": "2026-09-14T08:30:17.817000+00:00",
     "minimum_glucose": "55",
@@ -13492,7 +13492,7 @@
     "fast": false,
     "fat_protein": true,
     "glucose_at": "2026-09-14T10:25:00+00:00",
-    "glucose_mgdl": "73.415237250209676531448241470",
+    "glucose_mgdl": "73.41523725020967653144824147",
     "id": "t-0060",
     "insulin": 9.5,
     "kind": "meal",
@@ -13681,7 +13681,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0062",
-    "insulin": 4.0,
+    "insulin": 4,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -13802,12 +13802,12 @@
      "doses": [
       {
        "at": "2026-09-15T05:50:00+00:00",
-       "effect_mgdl": "120.0",
+       "effect_mgdl": "120",
        "event_type": "Meal Bolus",
        "id": "t-0062",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "4.0"
+       "units": "4"
       }
      ],
      "end": "2026-09-15T08:50:00+00:00",
@@ -13826,7 +13826,7 @@
       "2026-09-15T08:45:07.382000+00:00",
       "2026-09-15T08:50:19.863000+00:00"
      ],
-     "insulin_effect_mgdl": "120.0",
+     "insulin_effect_mgdl": "120",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-15T10:30:00+00:00",
@@ -13840,7 +13840,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "4.0",
+     "rapid_units_in_window": "4",
      "ratio_g_per_unit": "9.08844829344652972399157611",
      "reason": null,
      "settings_version": 1,
@@ -13865,7 +13865,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0062",
-      "insulin": 4.0,
+      "insulin": 4,
       "meal": null,
       "notes": "",
       "role": null,
@@ -14010,14 +14010,14 @@
      "prior_doses": [
       {
        "at": "2026-09-15T05:50:00+00:00",
-       "effect_mgdl": "1.6669643486191644873188934120",
+       "effect_mgdl": "1.666964348619164487318893412",
        "id": "t-0062",
        "isf": "30",
        "share": "0.0138913695718263707276574451",
-       "units": "4.0"
+       "units": "4"
       }
      ],
-     "prior_insulin_effect_mgdl": "1.6669643486191644873188934120",
+     "prior_insulin_effect_mgdl": "1.666964348619164487318893412",
      "rapid_units_in_window": "6.5",
      "ratio_g_per_unit": "8.851460200401662476239416452",
      "reason": null,
@@ -14203,7 +14203,7 @@
      "prior_doses": [
       {
        "at": "2026-09-15T10:30:00+00:00",
-       "effect_mgdl": "0.1812888814706165281857190090",
+       "effect_mgdl": "0.181288881470616528185719009",
        "id": "t-0063",
        "isf": "35",
        "share": "0.0009417604232239819646011377",
@@ -14223,7 +14223,7 @@
      "ratio_g_per_unit": "11.055879203400319238872261182",
      "reason": null,
      "settings_version": 1,
-     "sport_effect_mgdl": "-24.00",
+     "sport_effect_mgdl": "-24",
      "start": "2026-09-15T16:10:00+00:00",
      "window_minutes": 180
     },
@@ -14275,12 +14275,12 @@
     },
     "source_id": "t-0066",
     "sport": {
-     "effect_mgdl": "-24.00",
+     "effect_mgdl": "-24.0",
      "events": [
       {
        "at": "2026-09-15T13:40:00+00:00",
        "effect_from": "2026-09-15T14:40:00+00:00",
-       "effect_mgdl": "-24.00",
+       "effect_mgdl": "-24.0",
        "effect_until": "2026-09-15T19:40:00+00:00",
        "id": "t-0065",
        "kind": "racing",
@@ -14289,7 +14289,7 @@
      ],
      "status": "auto",
      "suggested": true,
-     "suggested_effect_mgdl": "-24.00"
+     "suggested_effect_mgdl": "-24.0"
     },
     "vacation": false,
     "window": {
@@ -14338,7 +14338,7 @@
     "minimum_glucose": "109",
     "rate_mgdl_per_hour": "-1.552804515062059099204635775",
     "start": "2026-09-15T19:40:00+00:00",
-    "start_glucose": "149.03701254465398355071861760"
+    "start_glucose": "149.0370125446539835507186176"
    }
   ],
   "review": {
@@ -14381,7 +14381,7 @@
     "glucose_at": "2026-09-15T05:50:00+00:00",
     "glucose_mgdl": "125.41815291321806113250839957",
     "id": "t-0062",
-    "insulin": 4.0,
+    "insulin": 4,
     "kind": "meal",
     "meal_id": "t-0062",
     "notes": "",
@@ -14474,7 +14474,7 @@
       "meal_id": "t-0063"
      },
      {
-      "effect_mgdl": "-24.00",
+      "effect_mgdl": "-24.0",
       "meal": "dinner",
       "meal_id": "t-0066"
      }
@@ -14545,7 +14545,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0062",
-    "insulin": 4.0,
+    "insulin": 4,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -14683,7 +14683,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0067",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -14706,7 +14706,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0068",
-    "insulin": 4.0,
+    "insulin": 4,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -14789,12 +14789,12 @@
      "doses": [
       {
        "at": "2026-09-16T05:25:00+00:00",
-       "effect_mgdl": "330.0",
+       "effect_mgdl": "330",
        "event_type": "Meal Bolus",
        "id": "t-0067",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "11.0"
+       "units": "11"
       }
      ],
      "end": "2026-09-16T08:25:00+00:00",
@@ -14813,7 +14813,7 @@
       "2026-09-16T08:20:04.555000+00:00",
       "2026-09-16T08:25:00.838000+00:00"
      ],
-     "insulin_effect_mgdl": "330.0",
+     "insulin_effect_mgdl": "330",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-16T10:00:00+00:00",
@@ -14827,7 +14827,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "11.0",
+     "rapid_units_in_window": "11",
      "ratio_g_per_unit": "10.165062337389851736145451277",
      "reason": null,
      "settings_version": 1,
@@ -14852,7 +14852,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0067",
-      "insulin": 11.0,
+      "insulin": 11,
       "meal": null,
       "notes": "",
       "role": null,
@@ -14941,12 +14941,12 @@
      "doses": [
       {
        "at": "2026-09-16T10:00:00+00:00",
-       "effect_mgdl": "140.0",
+       "effect_mgdl": "140",
        "event_type": "Meal Bolus",
        "id": "t-0068",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "4.0"
+       "units": "4"
       }
      ],
      "end": "2026-09-16T13:00:00+00:00",
@@ -14980,15 +14980,15 @@
      "prior_doses": [
       {
        "at": "2026-09-16T05:25:00+00:00",
-       "effect_mgdl": "5.3223349695370300632620578650",
+       "effect_mgdl": "5.322334969537030063262057865",
        "id": "t-0067",
        "isf": "30",
        "share": "0.0161282877864758486765516905",
-       "units": "11.0"
+       "units": "11"
       }
      ],
-     "prior_insulin_effect_mgdl": "5.3223349695370300632620578650",
-     "rapid_units_in_window": "4.0",
+     "prior_insulin_effect_mgdl": "5.322334969537030063262057865",
+     "rapid_units_in_window": "4",
      "ratio_g_per_unit": "6.0573344213279954930801193001",
      "reason": null,
      "settings_version": 1,
@@ -15013,7 +15013,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0068",
-      "insulin": 4.0,
+      "insulin": 4,
       "meal": null,
       "notes": "",
       "role": null,
@@ -15115,7 +15115,7 @@
      "extended_end": "2026-09-16T20:25:00+00:00",
      "extra_carb_count": 0,
      "factor_units_per_ke": "0.9333260136709389346986338196",
-     "g0": "94.87672422536639789035955170",
+     "g0": "94.8767242253663978903595517",
      "g0_source": "cgm",
      "g0_sources": [
       "2026-09-16T17:20:03.943000+00:00",
@@ -15215,7 +15215,7 @@
      "start": "2026-09-16T17:25:00+00:00",
      "start_glucose": {
       "tone": "in-range",
-      "value": "94.87672422536639789035955170"
+      "value": "94.8767242253663978903595517"
      }
     }
    }
@@ -15243,7 +15243,7 @@
    {
     "delta_mgdl": "26.85548478320691897552415399",
     "end": "2026-09-16T17:25:00+00:00",
-    "end_glucose": "94.87672422536639789035955170",
+    "end_glucose": "94.8767242253663978903595517",
     "hours": "4.416666666666666666666666667",
     "minimum_at": "2026-09-16T13:00:01.044000+00:00",
     "minimum_glucose": "68",
@@ -15328,7 +15328,7 @@
     "glucose_at": "2026-09-16T05:25:00+00:00",
     "glucose_mgdl": "133.89716852279890733347341879",
     "id": "t-0067",
-    "insulin": 11.0,
+    "insulin": 11,
     "kind": "meal",
     "meal_id": "t-0067",
     "notes": "",
@@ -15352,7 +15352,7 @@
     "glucose_at": "2026-09-16T10:00:00+00:00",
     "glucose_mgdl": "40",
     "id": "t-0068",
-    "insulin": 4.0,
+    "insulin": 4,
     "kind": "meal",
     "meal_id": "t-0068",
     "notes": "",
@@ -15374,7 +15374,7 @@
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-16T17:25:00+00:00",
-    "glucose_mgdl": "94.87672422536639789035955170",
+    "glucose_mgdl": "94.8767242253663978903595517",
     "id": "t-0069",
     "insulin": 6.5,
     "kind": "meal",
@@ -15493,7 +15493,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0067",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -15516,7 +15516,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0068",
-    "insulin": 4.0,
+    "insulin": 4,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -15562,7 +15562,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0071",
-    "insulin": 4.0,
+    "insulin": 4,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -15660,12 +15660,12 @@
      "doses": [
       {
        "at": "2026-09-17T04:55:00+00:00",
-       "effect_mgdl": "120.0",
+       "effect_mgdl": "120",
        "event_type": "Meal Bolus",
        "id": "t-0071",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "4.0"
+       "units": "4"
       }
      ],
      "end": "2026-09-17T07:55:00+00:00",
@@ -15684,7 +15684,7 @@
       "2026-09-17T07:50:07.459000+00:00",
       "2026-09-17T07:55:08.839000+00:00"
      ],
-     "insulin_effect_mgdl": "120.0",
+     "insulin_effect_mgdl": "120",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-17T09:55:00+00:00",
@@ -15698,7 +15698,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "4.0",
+     "rapid_units_in_window": "4",
      "ratio_g_per_unit": "9.90748068581041889348827289",
      "reason": null,
      "settings_version": 1,
@@ -15723,7 +15723,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0071",
-      "insulin": 4.0,
+      "insulin": 4,
       "meal": null,
       "notes": "",
       "role": null,
@@ -15825,7 +15825,7 @@
      "extended_end": "2026-09-17T12:55:00+00:00",
      "extra_carb_count": 0,
      "factor_units_per_ke": "1.2588471801316211971526173204",
-     "g0": "107.75189659102008921303682480",
+     "g0": "107.7518965910200892130368248",
      "g0_source": "cgm",
      "g0_sources": [
       "2026-09-17T09:50:00.490000+00:00",
@@ -15851,14 +15851,14 @@
      "prior_doses": [
       {
        "at": "2026-09-17T04:55:00+00:00",
-       "effect_mgdl": "0.8550876101441901482463885120",
+       "effect_mgdl": "0.855087610144190148246388512",
        "id": "t-0071",
        "isf": "30",
        "share": "0.0071257300845349179020532376",
-       "units": "4.0"
+       "units": "4"
       }
      ],
-     "prior_insulin_effect_mgdl": "0.8550876101441901482463885120",
+     "prior_insulin_effect_mgdl": "0.855087610144190148246388512",
      "rapid_units_in_window": "10.5",
      "ratio_g_per_unit": "7.943775986338890392371424936",
      "reason": null,
@@ -15934,7 +15934,7 @@
      "start": "2026-09-17T09:55:00+00:00",
      "start_glucose": {
       "tone": "in-range",
-      "value": "107.75189659102008921303682480"
+      "value": "107.7518965910200892130368248"
      }
     }
    },
@@ -15942,7 +15942,7 @@
     "at": "2026-09-17T17:05:00+00:00",
     "calculation": {
      "actual_window_minutes": "180",
-     "adjusted_delta_mgdl": "-59.02642244364743558972178600",
+     "adjusted_delta_mgdl": "-59.026422443647435589721786",
      "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -15968,17 +15968,17 @@
      "carbs": "90",
      "carbs_times_isf_total": "3150",
      "carbs_total": "90",
-     "delta_mgdl": "-59.02642244364743558972178600",
-     "denominator_mgdl": "360.97357755635256441027821400",
+     "delta_mgdl": "-59.026422443647435589721786",
+     "denominator_mgdl": "360.973577556352564410278214",
      "doses": [
       {
        "at": "2026-09-17T17:05:00+00:00",
-       "effect_mgdl": "420.0",
+       "effect_mgdl": "420",
        "event_type": "Meal Bolus",
        "id": "t-0073",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "12.0"
+       "units": "12"
       }
      ],
      "end": "2026-09-17T20:05:00+00:00",
@@ -15986,7 +15986,7 @@
      "extended_end": "2026-09-17T20:05:00+00:00",
      "extra_carb_count": 0,
      "factor_units_per_ke": "1.1459478652582621092389784571",
-     "g0": "99.02642244364743558972178600",
+     "g0": "99.026422443647435589721786",
      "g0_source": "cgm",
      "g0_sources": [
       "2026-09-17T17:00:16.060000+00:00",
@@ -15997,7 +15997,7 @@
       "2026-09-17T20:00:13.054000+00:00",
       "2026-09-17T20:05:10.532000+00:00"
      ],
-     "insulin_effect_mgdl": "420.0",
+     "insulin_effect_mgdl": "420",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-18T05:00:00+00:00",
@@ -16011,7 +16011,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "12.0",
+     "rapid_units_in_window": "12",
      "ratio_g_per_unit": "8.726400478739319791216463313",
      "reason": null,
      "settings_version": 1,
@@ -16036,7 +16036,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0073",
-      "insulin": 12.0,
+      "insulin": 12,
       "meal": null,
       "notes": "",
       "role": null,
@@ -16086,7 +16086,7 @@
      "start": "2026-09-17T17:05:00+00:00",
      "start_glucose": {
       "tone": "in-range",
-      "value": "99.02642244364743558972178600"
+      "value": "99.026422443647435589721786"
      }
     }
    }
@@ -16114,7 +16114,7 @@
    {
     "delta_mgdl": "9.60525447807297925219005328",
     "end": "2026-09-17T09:55:00+00:00",
-    "end_glucose": "107.75189659102008921303682480",
+    "end_glucose": "107.7518965910200892130368248",
     "hours": "2",
     "minimum_at": "2026-09-17T08:50:02.630000+00:00",
     "minimum_glucose": "96",
@@ -16125,10 +16125,10 @@
    {
     "delta_mgdl": "-58.93707393099251152831390933",
     "end": "2026-09-17T17:05:00+00:00",
-    "end_glucose": "99.02642244364743558972178600",
+    "end_glucose": "99.026422443647435589721786",
     "hours": "4.166666666666666666666666667",
     "minimum_at": "2026-09-17T17:05:00+00:00",
-    "minimum_glucose": "99.02642244364743558972178600",
+    "minimum_glucose": "99.026422443647435589721786",
     "rate_mgdl_per_hour": "-14.14489774343820276679533824",
     "start": "2026-09-17T12:55:00+00:00",
     "start_glucose": "157.96349637463994711803569533"
@@ -16185,7 +16185,7 @@
     "glucose_at": "2026-09-17T04:55:00+00:00",
     "glucose_mgdl": "127.30619250308938624193326926",
     "id": "t-0071",
-    "insulin": 4.0,
+    "insulin": 4,
     "kind": "meal",
     "meal_id": "t-0071",
     "notes": "",
@@ -16207,7 +16207,7 @@
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-17T09:55:00+00:00",
-    "glucose_mgdl": "107.75189659102008921303682480",
+    "glucose_mgdl": "107.7518965910200892130368248",
     "id": "t-0072",
     "insulin": 10.5,
     "kind": "meal",
@@ -16231,9 +16231,9 @@
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-17T17:05:00+00:00",
-    "glucose_mgdl": "99.02642244364743558972178600",
+    "glucose_mgdl": "99.026422443647435589721786",
     "id": "t-0073",
-    "insulin": 12.0,
+    "insulin": 12,
     "kind": "meal",
     "meal_id": "t-0073",
     "notes": "",
@@ -16281,7 +16281,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0071",
-    "insulin": 4.0,
+    "insulin": 4,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -16327,7 +16327,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0073",
-    "insulin": 12.0,
+    "insulin": 12,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -16448,7 +16448,7 @@
      "doses": [
       {
        "at": "2026-09-18T05:00:00+00:00",
-       "effect_mgdl": "135.0",
+       "effect_mgdl": "135",
        "event_type": "Meal Bolus",
        "id": "t-0074",
        "isf": "30",
@@ -16472,7 +16472,7 @@
       "2026-09-18T07:45:04.641000+00:00",
       "2026-09-18T07:50:19.015000+00:00"
      ],
-     "insulin_effect_mgdl": "135.0",
+     "insulin_effect_mgdl": "135",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-18T10:35:00+00:00",
@@ -16639,14 +16639,14 @@
      "prior_doses": [
       {
        "at": "2026-09-18T05:00:00+00:00",
-       "effect_mgdl": "0.1802875007779793526700711140",
+       "effect_mgdl": "0.180287500777979352670071114",
        "id": "t-0074",
        "isf": "30",
        "share": "0.0013354629687257729827412675",
        "units": "4.5"
       }
      ],
-     "prior_insulin_effect_mgdl": "0.1802875007779793526700711140",
+     "prior_insulin_effect_mgdl": "0.180287500777979352670071114",
      "rapid_units_in_window": "4.5",
      "ratio_g_per_unit": "7.3851596915719755170353009514",
      "reason": null,
@@ -16761,12 +16761,12 @@
      "doses": [
       {
        "at": "2026-09-18T17:10:00+00:00",
-       "effect_mgdl": "385.0",
+       "effect_mgdl": "385",
        "event_type": "Meal Bolus",
        "id": "t-0076",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "11.0"
+       "units": "11"
       }
      ],
      "end": "2026-09-18T20:00:00+00:00",
@@ -16774,7 +16774,7 @@
      "extended_end": "2026-09-18T20:00:00+00:00",
      "extra_carb_count": 0,
      "factor_units_per_ke": "1.1128703497764740605926878097",
-     "g0": "93.09708467912718196426088840",
+     "g0": "93.0970846791271819642608884",
      "g0_source": "cgm",
      "g0_sources": [
       "2026-09-18T17:05:05.717000+00:00",
@@ -16785,7 +16785,7 @@
       "2026-09-18T19:55:14.469000+00:00",
       "2026-09-18T20:00:07.410000+00:00"
      ],
-     "insulin_effect_mgdl": "385.0",
+     "insulin_effect_mgdl": "385",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-19T05:15:00+00:00",
@@ -16799,7 +16799,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "11.0",
+     "rapid_units_in_window": "11",
      "ratio_g_per_unit": "8.985772693116096841405963542",
      "reason": null,
      "settings_version": 2,
@@ -16824,7 +16824,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0076",
-      "insulin": 11.0,
+      "insulin": 11,
       "meal": null,
       "notes": "",
       "role": null,
@@ -16874,7 +16874,7 @@
      "start": "2026-09-18T17:10:00+00:00",
      "start_glucose": {
       "tone": "in-range",
-      "value": "93.09708467912718196426088840"
+      "value": "93.0970846791271819642608884"
      }
     }
    }
@@ -16886,12 +16886,12 @@
    "dinner_at": "2026-09-18T17:10:00+00:00",
    "drop_mgdl": "-5.91820814057975837854028688",
    "end": "2026-09-19T05:15:00+00:00",
-   "end_glucose": "128.01476933015599919577849630",
+   "end_glucose": "128.0147693301559991957784963",
    "last_injection_at": "2026-09-18T17:10:00+00:00",
    "minimum_at": "2026-09-18T20:25:11.379000+00:00",
    "minimum_glucose": "79",
    "morning_dose_at": null,
-   "rise_mgdl": "49.01476933015599919577849630",
+   "rise_mgdl": "49.0147693301559991957784963",
    "start": "2026-09-18T20:10:00+00:00",
    "start_glucose": "84.91820814057975837854028688"
   },
@@ -16913,7 +16913,7 @@
    {
     "delta_mgdl": "1.03636642662810754737825234",
     "end": "2026-09-18T17:10:00+00:00",
-    "end_glucose": "93.09708467912718196426088840",
+    "end_glucose": "93.0970846791271819642608884",
     "hours": "3.583333333333333333333333333",
     "minimum_at": "2026-09-18T17:00:17.615000+00:00",
     "minimum_glucose": "86",
@@ -16924,7 +16924,7 @@
    {
     "delta_mgdl": "43.09656118957624081723820942",
     "end": "2026-09-19T05:15:00+00:00",
-    "end_glucose": "128.01476933015599919577849630",
+    "end_glucose": "128.0147693301559991957784963",
     "hours": "9.083333333333333333333333333",
     "minimum_at": "2026-09-18T20:25:11.379000+00:00",
     "minimum_glucose": "79",
@@ -17019,9 +17019,9 @@
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-18T17:10:00+00:00",
-    "glucose_mgdl": "93.09708467912718196426088840",
+    "glucose_mgdl": "93.0970846791271819642608884",
     "id": "t-0076",
-    "insulin": 11.0,
+    "insulin": 11,
     "kind": "meal",
     "meal_id": "t-0076",
     "notes": "",
@@ -17046,7 +17046,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0073",
-    "insulin": 12.0,
+    "insulin": 12,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -17115,7 +17115,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0076",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -17184,7 +17184,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0079",
-    "insulin": 10.0,
+    "insulin": 10,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -17266,7 +17266,7 @@
      "doses": [
       {
        "at": "2026-09-19T05:15:00+00:00",
-       "effect_mgdl": "375.0",
+       "effect_mgdl": "375",
        "event_type": "Meal Bolus",
        "id": "t-0077",
        "isf": "30",
@@ -17279,7 +17279,7 @@
      "extended_end": "2026-09-19T08:05:00+00:00",
      "extra_carb_count": 1,
      "factor_units_per_ke": "1.0155083004575480479091868722",
-     "g0": "128.01476933015599919577849630",
+     "g0": "128.0147693301559991957784963",
      "g0_source": "cgm",
      "g0_sources": [
       "2026-09-19T05:10:01.082000+00:00",
@@ -17290,7 +17290,7 @@
       "2026-09-19T08:00:05.528000+00:00",
       "2026-09-19T08:05:17.647000+00:00"
      ],
-     "insulin_effect_mgdl": "375.0",
+     "insulin_effect_mgdl": "375",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-19T09:45:00+00:00",
@@ -17401,7 +17401,7 @@
      "start": "2026-09-19T05:15:00+00:00",
      "start_glucose": {
       "tone": "in-range",
-      "value": "128.01476933015599919577849630"
+      "value": "128.0147693301559991957784963"
      }
     }
    },
@@ -17448,12 +17448,12 @@
      "doses": [
       {
        "at": "2026-09-19T09:45:00+00:00",
-       "effect_mgdl": "350.0",
+       "effect_mgdl": "350",
        "event_type": "Meal Bolus",
        "id": "t-0079",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "10.0"
+       "units": "10"
       },
       {
        "at": "2026-09-19T11:20:00+00:00",
@@ -17470,7 +17470,7 @@
      "extended_end": "2026-09-19T14:10:00+00:00",
      "extra_carb_count": 1,
      "factor_units_per_ke": "1.2292888071850328963997322926",
-     "g0": "135.02604790724039496149159400",
+     "g0": "135.026047907240394961491594",
      "g0_source": "cgm",
      "g0_sources": [
       "2026-09-19T09:40:13.063000+00:00",
@@ -17496,15 +17496,15 @@
      "prior_doses": [
       {
        "at": "2026-09-19T05:15:00+00:00",
-       "effect_mgdl": "6.9828769029106355091962856750",
+       "effect_mgdl": "6.982876902910635509196285675",
        "id": "t-0077",
        "isf": "30",
        "share": "0.0186210050744283613578567618",
        "units": "12.5"
       }
      ],
-     "prior_insulin_effect_mgdl": "6.9828769029106355091962856750",
-     "rapid_units_in_window": "11.0",
+     "prior_insulin_effect_mgdl": "6.982876902910635509196285675",
+     "rapid_units_in_window": "11",
      "ratio_g_per_unit": "8.134784878501539298846081362",
      "reason": null,
      "settings_version": 2,
@@ -17529,7 +17529,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0079",
-      "insulin": 10.0,
+      "insulin": 10,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -17601,7 +17601,7 @@
      "start": "2026-09-19T09:45:00+00:00",
      "start_glucose": {
       "tone": "in-range",
-      "value": "135.02604790724039496149159400"
+      "value": "135.026047907240394961491594"
      }
     }
    },
@@ -17640,12 +17640,12 @@
      "doses": [
       {
        "at": "2026-09-19T16:40:00+00:00",
-       "effect_mgdl": "105.0",
+       "effect_mgdl": "105",
        "event_type": "Meal Bolus",
        "id": "t-0081",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "3.0"
+       "units": "3"
       },
       {
        "at": "2026-09-19T19:00:00+00:00",
@@ -17696,7 +17696,7 @@
       }
      ],
      "prior_insulin_effect_mgdl": "0.1079052993715548240811097375",
-     "rapid_units_in_window": "4.0",
+     "rapid_units_in_window": "4",
      "ratio_g_per_unit": "10.460440731604441328835943925",
      "reason": null,
      "settings_version": 2,
@@ -17721,7 +17721,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0081",
-      "insulin": 3.0,
+      "insulin": 3,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -17855,7 +17855,7 @@
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-19T05:15:00+00:00",
-    "glucose_mgdl": "128.01476933015599919577849630",
+    "glucose_mgdl": "128.0147693301559991957784963",
     "id": "t-0077",
     "insulin": 12.5,
     "kind": "meal",
@@ -17903,9 +17903,9 @@
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-19T09:45:00+00:00",
-    "glucose_mgdl": "135.02604790724039496149159400",
+    "glucose_mgdl": "135.026047907240394961491594",
     "id": "t-0079",
-    "insulin": 10.0,
+    "insulin": 10,
     "kind": "meal",
     "meal_id": "t-0079",
     "notes": "",
@@ -17953,7 +17953,7 @@
     "glucose_at": "2026-09-19T16:40:00+00:00",
     "glucose_mgdl": "116.04035361704501087623403425",
     "id": "t-0081",
-    "insulin": 3.0,
+    "insulin": 3,
     "kind": "meal",
     "meal_id": "t-0081",
     "notes": "",
@@ -18002,7 +18002,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0076",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -18071,7 +18071,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0079",
-    "insulin": 10.0,
+    "insulin": 10,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -18117,7 +18117,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0081",
-    "insulin": 3.0,
+    "insulin": 3,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -18282,7 +18282,7 @@
       "2026-09-20T11:10:05.994000+00:00",
       "2026-09-20T11:15:12.616000+00:00"
      ],
-     "g3": "217.05661315174710472687509320",
+     "g3": "217.0566131517471047268750932",
      "g3_sources": [
       "2026-09-20T12:10:01.632000+00:00",
       "2026-09-20T12:15:03.417000+00:00"
@@ -18372,7 +18372,7 @@
      "end": "2026-09-20T12:15:00+00:00",
      "end_glucose": {
       "tone": "outside",
-      "value": "217.05661315174710472687509320"
+      "value": "217.0566131517471047268750932"
      },
      "manual": true,
      "start": "2026-09-20T11:15:00+00:00",
@@ -18459,7 +18459,7 @@
        "effect_mgdl": "123.29524991896423591982727333",
        "id": "t-0083",
        "isf": "35",
-       "share": "0.6404948047738401865965053160",
+       "share": "0.640494804773840186596505316",
        "units": "5.5"
       }
      ],
@@ -18617,14 +18617,14 @@
      "prior_doses": [
       {
        "at": "2026-09-20T11:15:00+00:00",
-       "effect_mgdl": "0.1869648156216082175837774500",
+       "effect_mgdl": "0.18696481562160821758377745",
        "id": "t-0084",
        "isf": "35",
        "share": "0.0013354629687257729827412675",
        "units": "4"
       }
      ],
-     "prior_insulin_effect_mgdl": "0.1869648156216082175837774500",
+     "prior_insulin_effect_mgdl": "0.18696481562160821758377745",
      "rapid_units_in_window": "4.5",
      "ratio_g_per_unit": "12.307850847229688981865010528",
      "reason": null,
@@ -18872,7 +18872,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0081",
-    "insulin": 3.0,
+    "insulin": 3,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -18987,7 +18987,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0086",
-    "insulin": 13.0,
+    "insulin": 13,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -19084,12 +19084,12 @@
      "doses": [
       {
        "at": "2026-09-21T06:05:00+00:00",
-       "effect_mgdl": "390.0",
+       "effect_mgdl": "390",
        "event_type": "Meal Bolus",
        "id": "t-0086",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "13.0"
+       "units": "13"
       }
      ],
      "end": "2026-09-21T08:55:00+00:00",
@@ -19108,7 +19108,7 @@
       "2026-09-21T08:50:09.160000+00:00",
       "2026-09-21T08:55:02.883000+00:00"
      ],
-     "insulin_effect_mgdl": "390.0",
+     "insulin_effect_mgdl": "390",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-21T09:40:00+00:00",
@@ -19122,7 +19122,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "13.0",
+     "rapid_units_in_window": "13",
      "ratio_g_per_unit": "6.607654019588837366967541917",
      "reason": null,
      "settings_version": 2,
@@ -19147,7 +19147,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0086",
-      "insulin": 13.0,
+      "insulin": 13,
       "meal": null,
       "notes": "",
       "role": null,
@@ -19279,7 +19279,7 @@
        "id": "t-0086",
        "isf": "30",
        "share": "0.0698965482767850397035003919",
-       "units": "13.0"
+       "units": "13"
       }
      ],
      "prior_insulin_effect_mgdl": "27.259653827946165484365152841",
@@ -19393,16 +19393,16 @@
      "carbs_times_isf_total": "3150",
      "carbs_total": "90",
      "delta_mgdl": "-80",
-     "denominator_mgdl": "410.0",
+     "denominator_mgdl": "410",
      "doses": [
       {
        "at": "2026-09-21T16:25:00+00:00",
-       "effect_mgdl": "490.0",
+       "effect_mgdl": "490",
        "event_type": "Meal Bolus",
        "id": "t-0088",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "14.0"
+       "units": "14"
       }
      ],
      "end": "2026-09-21T19:15:00+00:00",
@@ -19421,7 +19421,7 @@
       "2026-09-21T19:10:01.720000+00:00",
       "2026-09-21T19:15:05.788000+00:00"
      ],
-     "insulin_effect_mgdl": "490.0",
+     "insulin_effect_mgdl": "490",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-22T05:20:00+00:00",
@@ -19435,7 +19435,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "14.0",
+     "rapid_units_in_window": "14",
      "ratio_g_per_unit": "7.6829268292682926829268292683",
      "reason": null,
      "settings_version": 2,
@@ -19460,7 +19460,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0088",
-      "insulin": 14.0,
+      "insulin": 14,
       "meal": null,
       "notes": "",
       "role": null,
@@ -19598,7 +19598,7 @@
     "glucose_at": "2026-09-21T06:05:00+00:00",
     "glucose_mgdl": "134.88769626571048103337816851",
     "id": "t-0086",
-    "insulin": 13.0,
+    "insulin": 13,
     "kind": "meal",
     "meal_id": "t-0086",
     "notes": "",
@@ -19646,7 +19646,7 @@
     "glucose_at": "2026-09-21T16:25:00+00:00",
     "glucose_mgdl": "120",
     "id": "t-0088",
-    "insulin": 14.0,
+    "insulin": 14,
     "kind": "meal",
     "meal_id": "t-0088",
     "notes": "",
@@ -19694,7 +19694,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0086",
-    "insulin": 13.0,
+    "insulin": 13,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -19740,7 +19740,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0088",
-    "insulin": 14.0,
+    "insulin": 14,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -19786,7 +19786,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0090",
-    "insulin": 12.0,
+    "insulin": 12,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -19860,7 +19860,7 @@
      "doses": [
       {
        "at": "2026-09-22T05:20:00+00:00",
-       "effect_mgdl": "225.0",
+       "effect_mgdl": "225",
        "event_type": "Meal Bolus",
        "id": "t-0089",
        "isf": "30",
@@ -19884,7 +19884,7 @@
       "2026-09-22T08:05:16.454000+00:00",
       "2026-09-22T08:10:13.602000+00:00"
      ],
-     "insulin_effect_mgdl": "225.0",
+     "insulin_effect_mgdl": "225",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-22T09:40:00+00:00",
@@ -20012,12 +20012,12 @@
      "doses": [
       {
        "at": "2026-09-22T09:40:00+00:00",
-       "effect_mgdl": "420.0",
+       "effect_mgdl": "420",
        "event_type": "Meal Bolus",
        "id": "t-0090",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "12.0"
+       "units": "12"
       }
      ],
      "end": "2026-09-22T12:30:00+00:00",
@@ -20051,15 +20051,15 @@
      "prior_doses": [
       {
        "at": "2026-09-22T05:20:00+00:00",
-       "effect_mgdl": "5.5032569128801747801095050940",
+       "effect_mgdl": "5.503256912880174780109505094",
        "id": "t-0089",
        "isf": "30",
        "share": "0.0244589196128007768004866893",
        "units": "7.5"
       }
      ],
-     "prior_insulin_effect_mgdl": "5.5032569128801747801095050940",
-     "rapid_units_in_window": "12.0",
+     "prior_insulin_effect_mgdl": "5.503256912880174780109505094",
+     "rapid_units_in_window": "12",
      "ratio_g_per_unit": "7.6363033435764445676084570803",
      "reason": null,
      "settings_version": 2,
@@ -20084,7 +20084,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0090",
-      "insulin": 12.0,
+      "insulin": 12,
       "meal": null,
       "notes": "",
       "role": null,
@@ -20398,7 +20398,7 @@
     "glucose_at": "2026-09-22T09:40:00+00:00",
     "glucose_mgdl": "53",
     "id": "t-0090",
-    "insulin": 12.0,
+    "insulin": 12,
     "kind": "meal",
     "meal_id": "t-0090",
     "notes": "",
@@ -20447,7 +20447,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0088",
-    "insulin": 14.0,
+    "insulin": 14,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -20493,7 +20493,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0090",
-    "insulin": 12.0,
+    "insulin": 12,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -20562,7 +20562,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0093",
-    "insulin": 6.0,
+    "insulin": 6,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -20636,7 +20636,7 @@
      "doses": [
       {
        "at": "2026-09-23T05:25:00+00:00",
-       "effect_mgdl": "195.0",
+       "effect_mgdl": "195",
        "event_type": "Meal Bolus",
        "id": "t-0092",
        "isf": "30",
@@ -20660,7 +20660,7 @@
       "2026-09-23T08:10:03.686000+00:00",
       "2026-09-23T08:15:01.952000+00:00"
      ],
-     "insulin_effect_mgdl": "195.0",
+     "insulin_effect_mgdl": "195",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-23T09:40:00+00:00",
@@ -20796,12 +20796,12 @@
      "doses": [
       {
        "at": "2026-09-23T09:40:00+00:00",
-       "effect_mgdl": "210.0",
+       "effect_mgdl": "210",
        "event_type": "Meal Bolus",
        "id": "t-0093",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "6.0"
+       "units": "6"
       },
       {
        "at": "2026-09-23T11:15:00+00:00",
@@ -20844,15 +20844,15 @@
      "prior_doses": [
       {
        "at": "2026-09-23T05:25:00+00:00",
-       "effect_mgdl": "5.4307427761897426889051834700",
+       "effect_mgdl": "5.43074277618974268890518347",
        "id": "t-0092",
        "isf": "30",
        "share": "0.0278499629548191932764368383",
        "units": "6.5"
       }
      ],
-     "prior_insulin_effect_mgdl": "5.4307427761897426889051834700",
-     "rapid_units_in_window": "7.0",
+     "prior_insulin_effect_mgdl": "5.43074277618974268890518347",
+     "rapid_units_in_window": "7",
      "ratio_g_per_unit": "6.9382768712874846919868234732",
      "reason": null,
      "settings_version": 2,
@@ -20877,7 +20877,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0093",
-      "insulin": 6.0,
+      "insulin": 6,
       "meal": null,
       "notes": "",
       "role": null,
@@ -20988,12 +20988,12 @@
      "doses": [
       {
        "at": "2026-09-23T16:40:00+00:00",
-       "effect_mgdl": "105.0",
+       "effect_mgdl": "105",
        "event_type": "Meal Bolus",
        "id": "t-0095",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "3.0"
+       "units": "3"
       }
      ],
      "end": "2026-09-23T19:30:00+00:00",
@@ -21007,12 +21007,12 @@
       "2026-09-23T16:35:05.193000+00:00",
       "2026-09-23T16:40:11.968000+00:00"
      ],
-     "g3": "97.03536438594252726902797080",
+     "g3": "97.0353643859425272690279708",
      "g3_sources": [
       "2026-09-23T19:25:12.070000+00:00",
       "2026-09-23T19:30:02.051000+00:00"
      ],
-     "insulin_effect_mgdl": "105.08388040041134479624213070",
+     "insulin_effect_mgdl": "105.0838804004113447962421307",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-24T05:25:00+00:00",
@@ -21035,7 +21035,7 @@
       }
      ],
      "prior_insulin_effect_mgdl": "0.0838804004113447962421306965",
-     "rapid_units_in_window": "3.0",
+     "rapid_units_in_window": "3",
      "ratio_g_per_unit": "9.039391828772699117201491152",
      "reason": null,
      "settings_version": 2,
@@ -21060,7 +21060,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0095",
-      "insulin": 3.0,
+      "insulin": 3,
       "meal": null,
       "notes": "",
       "role": null,
@@ -21104,7 +21104,7 @@
      "end": "2026-09-23T19:30:00+00:00",
      "end_glucose": {
       "tone": "in-range",
-      "value": "97.03536438594252726902797080"
+      "value": "97.0353643859425272690279708"
      },
      "manual": false,
      "start": "2026-09-23T16:40:00+00:00",
@@ -21222,7 +21222,7 @@
     "glucose_at": "2026-09-23T09:40:00+00:00",
     "glucose_mgdl": "40",
     "id": "t-0093",
-    "insulin": 6.0,
+    "insulin": 6,
     "kind": "meal",
     "meal_id": "t-0093",
     "notes": "",
@@ -21270,7 +21270,7 @@
     "glucose_at": "2026-09-23T16:40:00+00:00",
     "glucose_mgdl": "85.96098769456442017765463287",
     "id": "t-0095",
-    "insulin": 3.0,
+    "insulin": 3,
     "kind": "meal",
     "meal_id": "t-0095",
     "notes": "",
@@ -21341,7 +21341,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0093",
-    "insulin": 6.0,
+    "insulin": 6,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -21387,7 +21387,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0095",
-    "insulin": 3.0,
+    "insulin": 3,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -21410,7 +21410,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0096",
-    "insulin": 14.0,
+    "insulin": 14,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -21433,7 +21433,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0097",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -21508,12 +21508,12 @@
      "doses": [
       {
        "at": "2026-09-24T05:25:00+00:00",
-       "effect_mgdl": "420.0",
+       "effect_mgdl": "420",
        "event_type": "Meal Bolus",
        "id": "t-0096",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "14.0"
+       "units": "14"
       }
      ],
      "end": "2026-09-24T08:15:00+00:00",
@@ -21532,7 +21532,7 @@
       "2026-09-24T08:10:05.468000+00:00",
       "2026-09-24T08:15:10.206000+00:00"
      ],
-     "insulin_effect_mgdl": "420.0",
+     "insulin_effect_mgdl": "420",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-24T10:40:00+00:00",
@@ -21546,7 +21546,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "14.0",
+     "rapid_units_in_window": "14",
      "ratio_g_per_unit": "9.598826257173849467599937164",
      "reason": null,
      "settings_version": 2,
@@ -21571,7 +21571,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0096",
-      "insulin": 14.0,
+      "insulin": 14,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -21652,7 +21652,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0097",
-      "insulin": 9.0,
+      "insulin": 9,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -21709,7 +21709,7 @@
     "at": "2026-09-24T17:05:00+00:00",
     "calculation": {
      "actual_window_minutes": "170",
-     "adjusted_delta_mgdl": "90.88654728055665470636171790",
+     "adjusted_delta_mgdl": "90.8865472805566547063617179",
      "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -21735,8 +21735,8 @@
      "carbs": "110",
      "carbs_times_isf_total": "3850",
      "carbs_total": "110",
-     "delta_mgdl": "90.88654728055665470636171790",
-     "denominator_mgdl": "493.38654728055665470636171790",
+     "delta_mgdl": "90.8865472805566547063617179",
+     "denominator_mgdl": "493.3865472805566547063617179",
      "doses": [
       {
        "at": "2026-09-24T17:05:00+00:00",
@@ -21863,7 +21863,7 @@
    "carbs_g": "0",
    "delta_mgdl": "-56.01618886777028644020346338",
    "dinner_at": "2026-09-24T17:05:00+00:00",
-   "drop_mgdl": "-65.98616946595278758604792490",
+   "drop_mgdl": "-65.9861694659527875860479249",
    "end": "2026-09-25T05:25:00+00:00",
    "end_glucose": "125.96998059818250114584446152",
    "last_injection_at": "2026-09-24T17:05:00+00:00",
@@ -21872,7 +21872,7 @@
    "morning_dose_at": null,
    "rise_mgdl": "9.96998059818250114584446152",
    "start": "2026-09-24T20:05:00+00:00",
-   "start_glucose": "181.98616946595278758604792490"
+   "start_glucose": "181.9861694659527875860479249"
   },
   "other_events": [],
   "place_options": [],
@@ -21898,7 +21898,7 @@
     "minimum_glucose": "116",
     "rate_mgdl_per_hour": "-6.001734521546816404307513934",
     "start": "2026-09-24T20:05:00+00:00",
-    "start_glucose": "181.98616946595278758604792490"
+    "start_glucose": "181.9861694659527875860479249"
    }
   ],
   "review": {
@@ -21941,7 +21941,7 @@
     "glucose_at": "2026-09-24T05:25:00+00:00",
     "glucose_mgdl": "131.83487693135472614798801629",
     "id": "t-0096",
-    "insulin": 14.0,
+    "insulin": 14,
     "kind": "meal",
     "meal_id": "t-0096",
     "notes": "",
@@ -21965,7 +21965,7 @@
     "glucose_at": "2026-09-24T10:40:00+00:00",
     "glucose_mgdl": "49.557187807961772338814194681",
     "id": "t-0097",
-    "insulin": 9.0,
+    "insulin": 9,
     "kind": "meal",
     "meal_id": "t-0097",
     "notes": "",
@@ -22014,7 +22014,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0095",
-    "insulin": 3.0,
+    "insulin": 3,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -22037,7 +22037,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0096",
-    "insulin": 14.0,
+    "insulin": 14,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -22060,7 +22060,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0097",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -22106,7 +22106,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0099",
-    "insulin": 5.0,
+    "insulin": 5,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -22129,7 +22129,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0100",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -22212,12 +22212,12 @@
      "doses": [
       {
        "at": "2026-09-25T05:25:00+00:00",
-       "effect_mgdl": "150.0",
+       "effect_mgdl": "150",
        "event_type": "Meal Bolus",
        "id": "t-0099",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "5.0"
+       "units": "5"
       }
      ],
      "end": "2026-09-25T08:15:00+00:00",
@@ -22236,7 +22236,7 @@
       "2026-09-25T08:10:12.830000+00:00",
       "2026-09-25T08:15:02.142000+00:00"
      ],
-     "insulin_effect_mgdl": "150.0",
+     "insulin_effect_mgdl": "150",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-25T09:55:00+00:00",
@@ -22250,7 +22250,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "5.0",
+     "rapid_units_in_window": "5",
      "ratio_g_per_unit": "9.159241762681042981590605847",
      "reason": null,
      "settings_version": 2,
@@ -22275,7 +22275,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0099",
-      "insulin": 5.0,
+      "insulin": 5,
       "meal": null,
       "notes": "",
       "role": null,
@@ -22364,12 +22364,12 @@
      "doses": [
       {
        "at": "2026-09-25T09:55:00+00:00",
-       "effect_mgdl": "315.0",
+       "effect_mgdl": "315",
        "event_type": "Meal Bolus",
        "id": "t-0100",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "9.0"
+       "units": "9"
       }
      ],
      "end": "2026-09-25T12:45:00+00:00",
@@ -22403,15 +22403,15 @@
      "prior_doses": [
       {
        "at": "2026-09-25T05:25:00+00:00",
-       "effect_mgdl": "2.7931507611642542036785142700",
+       "effect_mgdl": "2.79315076116425420367851427",
        "id": "t-0099",
        "isf": "30",
        "share": "0.0186210050744283613578567618",
-       "units": "5.0"
+       "units": "5"
       }
      ],
-     "prior_insulin_effect_mgdl": "2.7931507611642542036785142700",
-     "rapid_units_in_window": "9.0",
+     "prior_insulin_effect_mgdl": "2.79315076116425420367851427",
+     "rapid_units_in_window": "9",
      "ratio_g_per_unit": "8.196843288855393139470381672",
      "reason": null,
      "settings_version": 2,
@@ -22436,7 +22436,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0100",
-      "insulin": 9.0,
+      "insulin": 9,
       "meal": null,
       "notes": "",
       "role": null,
@@ -22695,7 +22695,7 @@
   "profile_sync_error": null,
   "quiet_periods": [
    {
-    "delta_mgdl": "-36.60699464248263414448137580",
+    "delta_mgdl": "-36.6069946424826341444813758",
     "end": "2026-09-25T16:40:00+00:00",
     "end_glucose": "113",
     "hours": "3.75",
@@ -22703,7 +22703,7 @@
     "minimum_glucose": "113",
     "rate_mgdl_per_hour": "-9.761865237995369105195033547",
     "start": "2026-09-25T12:55:00+00:00",
-    "start_glucose": "149.60699464248263414448137580"
+    "start_glucose": "149.6069946424826341444813758"
    }
   ],
   "review": {
@@ -22746,7 +22746,7 @@
     "glucose_at": "2026-09-25T05:25:00+00:00",
     "glucose_mgdl": "125.96998059818250114584446152",
     "id": "t-0099",
-    "insulin": 5.0,
+    "insulin": 5,
     "kind": "meal",
     "meal_id": "t-0099",
     "notes": "",
@@ -22770,7 +22770,7 @@
     "glucose_at": "2026-09-25T09:55:00+00:00",
     "glucose_mgdl": "103.93767308175340758427948709",
     "id": "t-0100",
-    "insulin": 9.0,
+    "insulin": 9,
     "kind": "meal",
     "meal_id": "t-0100",
     "notes": "",
@@ -22866,7 +22866,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0099",
-    "insulin": 5.0,
+    "insulin": 5,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -22889,7 +22889,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0100",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -23102,7 +23102,7 @@
      "doses": [
       {
        "at": "2026-09-26T05:35:00+00:00",
-       "effect_mgdl": "375.0",
+       "effect_mgdl": "375",
        "event_type": "Meal Bolus",
        "id": "t-0103",
        "isf": "30",
@@ -23126,7 +23126,7 @@
       "2026-09-26T08:20:07.161000+00:00",
       "2026-09-26T08:25:12+00:00"
      ],
-     "insulin_effect_mgdl": "375.0",
+     "insulin_effect_mgdl": "375",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-26T09:45:00+00:00",
@@ -23697,7 +23697,7 @@
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-09-26T13:45:00+00:00",
-    "glucose_mgdl": "156.14869314160982627272093000",
+    "glucose_mgdl": "156.14869314160982627272093",
     "id": "t-0105",
     "insulin": 0,
     "kind": "exercise",
@@ -23924,7 +23924,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0108",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -24052,12 +24052,12 @@
      "doses": [
       {
        "at": "2026-09-27T05:25:00+00:00",
-       "effect_mgdl": "330.0",
+       "effect_mgdl": "330",
        "event_type": "Meal Bolus",
        "id": "t-0108",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "11.0"
+       "units": "11"
       }
      ],
      "end": "2026-09-27T08:15:00+00:00",
@@ -24076,7 +24076,7 @@
       "2026-09-27T08:10:03.269000+00:00",
       "2026-09-27T08:15:03.737000+00:00"
      ],
-     "insulin_effect_mgdl": "330.0",
+     "insulin_effect_mgdl": "330",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-27T10:05:00+00:00",
@@ -24090,7 +24090,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "11.0",
+     "rapid_units_in_window": "11",
      "ratio_g_per_unit": "8.972541955422321188822912838",
      "reason": null,
      "settings_version": 2,
@@ -24115,7 +24115,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0108",
-      "insulin": 11.0,
+      "insulin": 11,
       "meal": null,
       "notes": "",
       "role": null,
@@ -24282,14 +24282,14 @@
      "prior_doses": [
       {
        "at": "2026-09-27T05:25:00+00:00",
-       "effect_mgdl": "4.5841519587027023401269568830",
+       "effect_mgdl": "4.584151958702702340126956883",
        "id": "t-0108",
        "isf": "30",
        "share": "0.0138913695718263707276574451",
-       "units": "11.0"
+       "units": "11"
       }
      ],
-     "prior_insulin_effect_mgdl": "4.5841519587027023401269568830",
+     "prior_insulin_effect_mgdl": "4.584151958702702340126956883",
      "rapid_units_in_window": "5.5",
      "ratio_g_per_unit": "6.9786637906312413474043112225",
      "reason": null,
@@ -24450,7 +24450,7 @@
       "2026-09-27T19:50:08.329000+00:00",
       "2026-09-27T19:55:03.112000+00:00"
      ],
-     "insulin_effect_mgdl": "297.58388040041134479624213070",
+     "insulin_effect_mgdl": "297.5838804004113447962421307",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-28T05:20:00+00:00",
@@ -24636,7 +24636,7 @@
     "glucose_at": "2026-09-27T05:25:00+00:00",
     "glucose_mgdl": "135.95261293474143144826302812",
     "id": "t-0108",
-    "insulin": 11.0,
+    "insulin": 11,
     "kind": "meal",
     "meal_id": "t-0108",
     "notes": "",
@@ -24803,7 +24803,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0108",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -24918,7 +24918,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0113",
-    "insulin": 13.0,
+    "insulin": 13,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -24941,7 +24941,7 @@
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0114",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
@@ -25015,12 +25015,12 @@
      "doses": [
       {
        "at": "2026-09-28T05:20:00+00:00",
-       "effect_mgdl": "390.0",
+       "effect_mgdl": "390",
        "event_type": "Meal Bolus",
        "id": "t-0113",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "13.0"
+       "units": "13"
       }
      ],
      "end": "2026-09-28T08:10:00+00:00",
@@ -25039,7 +25039,7 @@
       "2026-09-28T08:05:04.483000+00:00",
       "2026-09-28T08:10:19.442000+00:00"
      ],
-     "insulin_effect_mgdl": "390.0",
+     "insulin_effect_mgdl": "390",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-28T10:30:00+00:00",
@@ -25053,7 +25053,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "13.0",
+     "rapid_units_in_window": "13",
      "ratio_g_per_unit": "7.0436118622528037554420385288",
      "reason": null,
      "settings_version": 2,
@@ -25078,7 +25078,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0113",
-      "insulin": 13.0,
+      "insulin": 13,
       "meal": null,
       "notes": "",
       "role": null,
@@ -25167,12 +25167,12 @@
      "doses": [
       {
        "at": "2026-09-28T10:30:00+00:00",
-       "effect_mgdl": "315.0",
+       "effect_mgdl": "315",
        "event_type": "Meal Bolus",
        "id": "t-0114",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "9.0"
+       "units": "9"
       }
      ],
      "end": "2026-09-28T13:20:00+00:00",
@@ -25206,15 +25206,15 @@
      "prior_doses": [
       {
        "at": "2026-09-28T05:20:00+00:00",
-       "effect_mgdl": "1.8801061415315756133234097680",
+       "effect_mgdl": "1.880106141531575613323409768",
        "id": "t-0113",
        "isf": "30",
        "share": "0.0048207849782860913162138712",
-       "units": "13.0"
+       "units": "13"
       }
      ],
-     "prior_insulin_effect_mgdl": "1.8801061415315756133234097680",
-     "rapid_units_in_window": "9.0",
+     "prior_insulin_effect_mgdl": "1.880106141531575613323409768",
+     "rapid_units_in_window": "9",
      "ratio_g_per_unit": "8.28389018156781344422728646",
      "reason": null,
      "settings_version": 2,
@@ -25239,7 +25239,7 @@
       "fat_protein": true,
       "finger_mgdl": null,
       "id": "t-0114",
-      "insulin": 9.0,
+      "insulin": 9,
       "meal": null,
       "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
       "role": null,
@@ -25328,12 +25328,12 @@
      "doses": [
       {
        "at": "2026-09-28T16:15:00+00:00",
-       "effect_mgdl": "385.0",
+       "effect_mgdl": "385",
        "event_type": "Meal Bolus",
        "id": "t-0115",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "11.0"
+       "units": "11"
       }
      ],
      "end": "2026-09-28T19:05:00+00:00",
@@ -25371,11 +25371,11 @@
        "id": "t-0114",
        "isf": "35",
        "share": "0.0006277831450744620923043049",
-       "units": "9.0"
+       "units": "9"
       }
      ],
      "prior_insulin_effect_mgdl": "0.1977516906984555590758560435",
-     "rapid_units_in_window": "11.0",
+     "rapid_units_in_window": "11",
      "ratio_g_per_unit": "6.5991311537756446740986688177",
      "reason": null,
      "settings_version": 2,
@@ -25400,7 +25400,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0115",
-      "insulin": 11.0,
+      "insulin": 11,
       "meal": null,
       "notes": "",
       "role": null,
@@ -25546,7 +25546,7 @@
     "glucose_at": "2026-09-28T05:20:00+00:00",
     "glucose_mgdl": "131.85750704776292539487705194",
     "id": "t-0113",
-    "insulin": 13.0,
+    "insulin": 13,
     "kind": "meal",
     "meal_id": "t-0113",
     "notes": "",
@@ -25570,7 +25570,7 @@
     "glucose_at": "2026-09-28T10:30:00+00:00",
     "glucose_mgdl": "40",
     "id": "t-0114",
-    "insulin": 9.0,
+    "insulin": 9,
     "kind": "meal",
     "meal_id": "t-0114",
     "notes": "Pizza",
@@ -25618,7 +25618,7 @@
     "glucose_at": "2026-09-28T16:15:00+00:00",
     "glucose_mgdl": "53.936756431004245580059993364",
     "id": "t-0115",
-    "insulin": 11.0,
+    "insulin": 11,
     "kind": "meal",
     "meal_id": "t-0115",
     "notes": "",
@@ -25666,7 +25666,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0113",
-    "insulin": 13.0,
+    "insulin": 13,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -25689,7 +25689,7 @@
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "t-0114",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "Pizza [DAQ:unsure] [DAQ:fat]",
     "rapid": true,
@@ -25735,7 +25735,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0115",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -25984,12 +25984,12 @@
      "doses": [
       {
        "at": "2026-09-29T16:40:00+00:00",
-       "effect_mgdl": "245.0",
+       "effect_mgdl": "245",
        "event_type": "Meal Bolus",
        "id": "t-0118",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "7.0"
+       "units": "7"
       }
      ],
      "end": "2026-09-29T19:30:00+00:00",
@@ -26008,7 +26008,7 @@
       "2026-09-29T19:25:03.314000+00:00",
       "2026-09-29T19:30:06.458000+00:00"
      ],
-     "insulin_effect_mgdl": "245.0",
+     "insulin_effect_mgdl": "245",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-09-30T05:50:00+00:00",
@@ -26022,7 +26022,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "7.0",
+     "rapid_units_in_window": "7",
      "ratio_g_per_unit": "7.2901230108691466990696633099",
      "reason": null,
      "settings_version": 2,
@@ -26047,7 +26047,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0118",
-      "insulin": 7.0,
+      "insulin": 7,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -26209,7 +26209,7 @@
     "glucose_at": "2026-09-29T16:40:00+00:00",
     "glucose_mgdl": "44.949180913565870957497485841",
     "id": "t-0118",
-    "insulin": 7.0,
+    "insulin": 7,
     "kind": "meal",
     "meal_id": "t-0118",
     "notes": "",
@@ -26257,7 +26257,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0115",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -26303,7 +26303,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0118",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -26326,7 +26326,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0119",
-    "insulin": 14.0,
+    "insulin": 14,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -26349,7 +26349,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0120",
-    "insulin": 4.0,
+    "insulin": 4,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -26423,12 +26423,12 @@
      "doses": [
       {
        "at": "2026-09-30T05:50:00+00:00",
-       "effect_mgdl": "420.0",
+       "effect_mgdl": "420",
        "event_type": "Meal Bolus",
        "id": "t-0119",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "14.0"
+       "units": "14"
       }
      ],
      "end": "2026-09-30T08:40:00+00:00",
@@ -26447,7 +26447,7 @@
       "2026-09-30T08:35:02.548000+00:00",
       "2026-09-30T08:40:01.615000+00:00"
      ],
-     "insulin_effect_mgdl": "420.0",
+     "insulin_effect_mgdl": "420",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-09-30T10:00:00+00:00",
@@ -26461,7 +26461,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "14.0",
+     "rapid_units_in_window": "14",
      "ratio_g_per_unit": "7.1860119306569158684922094843",
      "reason": null,
      "settings_version": 2,
@@ -26486,7 +26486,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0119",
-      "insulin": 14.0,
+      "insulin": 14,
       "meal": null,
       "notes": "",
       "role": null,
@@ -26571,16 +26571,16 @@
      "carbs_times_isf_total": "1225",
      "carbs_total": "35",
      "delta_mgdl": "40.91806471588998498463505339",
-     "denominator_mgdl": "194.18527011056451777047806540",
+     "denominator_mgdl": "194.1852701105645177704780654",
      "doses": [
       {
        "at": "2026-09-30T10:00:00+00:00",
-       "effect_mgdl": "140.0",
+       "effect_mgdl": "140",
        "event_type": "Meal Bolus",
        "id": "t-0120",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "4.0"
+       "units": "4"
       }
      ],
      "end": "2026-09-30T12:50:00+00:00",
@@ -26614,15 +26614,15 @@
      "prior_doses": [
       {
        "at": "2026-09-30T05:50:00+00:00",
-       "effect_mgdl": "13.267205394674532785843012010",
+       "effect_mgdl": "13.26720539467453278584301201",
        "id": "t-0119",
        "isf": "30",
        "share": "0.0315885842730346018710547905",
-       "units": "14.0"
+       "units": "14"
       }
      ],
-     "prior_insulin_effect_mgdl": "13.267205394674532785843012010",
-     "rapid_units_in_window": "4.0",
+     "prior_insulin_effect_mgdl": "13.26720539467453278584301201",
+     "rapid_units_in_window": "4",
      "ratio_g_per_unit": "6.3084084560199332377834322667",
      "reason": null,
      "settings_version": 2,
@@ -26647,7 +26647,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0120",
-      "insulin": 4.0,
+      "insulin": 4,
       "meal": null,
       "notes": "",
       "role": null,
@@ -26736,12 +26736,12 @@
      "doses": [
       {
        "at": "2026-09-30T16:20:00+00:00",
-       "effect_mgdl": "245.0",
+       "effect_mgdl": "245",
        "event_type": "Meal Bolus",
        "id": "t-0121",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "7.0"
+       "units": "7"
       }
      ],
      "end": "2026-09-30T19:10:00+00:00",
@@ -26760,7 +26760,7 @@
       "2026-09-30T19:05:07.560000+00:00",
       "2026-09-30T19:10:17.372000+00:00"
      ],
-     "insulin_effect_mgdl": "245.0",
+     "insulin_effect_mgdl": "245",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-01T05:20:00+00:00",
@@ -26774,7 +26774,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "7.0",
+     "rapid_units_in_window": "7",
      "ratio_g_per_unit": "7.9054786256757677182275494793",
      "reason": null,
      "settings_version": 2,
@@ -26799,7 +26799,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0121",
-      "insulin": 7.0,
+      "insulin": 7,
       "meal": null,
       "notes": "",
       "role": null,
@@ -26937,7 +26937,7 @@
     "glucose_at": "2026-09-30T05:50:00+00:00",
     "glucose_mgdl": "126.01781027371578552680914886",
     "id": "t-0119",
-    "insulin": 14.0,
+    "insulin": 14,
     "kind": "meal",
     "meal_id": "t-0119",
     "notes": "",
@@ -26961,7 +26961,7 @@
     "glucose_at": "2026-09-30T10:00:00+00:00",
     "glucose_mgdl": "40",
     "id": "t-0120",
-    "insulin": 4.0,
+    "insulin": 4,
     "kind": "meal",
     "meal_id": "t-0120",
     "notes": "",
@@ -26985,7 +26985,7 @@
     "glucose_at": "2026-09-30T16:20:00+00:00",
     "glucose_mgdl": "87.25655864835459196327884466",
     "id": "t-0121",
-    "insulin": 7.0,
+    "insulin": 7,
     "kind": "meal",
     "meal_id": "t-0121",
     "notes": "",
@@ -27010,7 +27010,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0118",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -27033,7 +27033,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0119",
-    "insulin": 14.0,
+    "insulin": 14,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -27056,7 +27056,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0120",
-    "insulin": 4.0,
+    "insulin": 4,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -27079,7 +27079,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0121",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -27199,7 +27199,7 @@
      "doses": [
       {
        "at": "2026-10-01T05:20:00+00:00",
-       "effect_mgdl": "585.0",
+       "effect_mgdl": "585",
        "event_type": "Meal Bolus",
        "id": "t-0122",
        "isf": "30",
@@ -27223,7 +27223,7 @@
       "2026-10-01T08:05:05.149000+00:00",
       "2026-10-01T08:10:16.938000+00:00"
      ],
-     "insulin_effect_mgdl": "585.0",
+     "insulin_effect_mgdl": "585",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-10-01T10:40:00+00:00",
@@ -27407,14 +27407,14 @@
      "prior_doses": [
       {
        "at": "2026-10-01T05:20:00+00:00",
-       "effect_mgdl": "1.8035600037817020596414056140",
+       "effect_mgdl": "1.803560003781702059641405614",
        "id": "t-0122",
        "isf": "30",
        "share": "0.0030830085534729949737459925",
        "units": "19.5"
       }
      ],
-     "prior_insulin_effect_mgdl": "1.8035600037817020596414056140",
+     "prior_insulin_effect_mgdl": "1.803560003781702059641405614",
      "rapid_units_in_window": "14.5",
      "ratio_g_per_unit": "7.9029488817437549463362653476",
      "reason": null,
@@ -27599,7 +27599,7 @@
      "prior_doses": [
       {
        "at": "2026-10-01T10:40:00+00:00",
-       "effect_mgdl": "0.2966275360476833386137840670",
+       "effect_mgdl": "0.296627536047683338613784067",
        "id": "t-0123",
        "isf": "35",
        "share": "0.0006277831450744620923043049",
@@ -27921,7 +27921,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0121",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -28059,7 +28059,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0127",
-    "insulin": 5.0,
+    "insulin": 5,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -28157,12 +28157,12 @@
      "doses": [
       {
        "at": "2026-10-02T05:55:00+00:00",
-       "effect_mgdl": "150.0",
+       "effect_mgdl": "150",
        "event_type": "Meal Bolus",
        "id": "t-0127",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "5.0"
+       "units": "5"
       }
      ],
      "end": "2026-10-02T08:45:00+00:00",
@@ -28181,7 +28181,7 @@
       "2026-10-02T08:40:02.526000+00:00",
       "2026-10-02T08:45:09.085000+00:00"
      ],
-     "insulin_effect_mgdl": "150.0",
+     "insulin_effect_mgdl": "150",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-10-02T10:30:00+00:00",
@@ -28195,7 +28195,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "5.0",
+     "rapid_units_in_window": "5",
      "ratio_g_per_unit": "11.628376484222482005811895167",
      "reason": null,
      "settings_version": 2,
@@ -28220,7 +28220,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0127",
-      "insulin": 5.0,
+      "insulin": 5,
       "meal": null,
       "notes": "",
       "role": null,
@@ -28348,14 +28348,14 @@
      "prior_doses": [
       {
        "at": "2026-10-02T05:55:00+00:00",
-       "effect_mgdl": "2.4192431679713773014827535750",
+       "effect_mgdl": "2.419243167971377301482753575",
        "id": "t-0127",
        "isf": "30",
        "share": "0.0161282877864758486765516905",
-       "units": "5.0"
+       "units": "5"
       }
      ],
-     "prior_insulin_effect_mgdl": "2.4192431679713773014827535750",
+     "prior_insulin_effect_mgdl": "2.419243167971377301482753575",
      "rapid_units_in_window": "8.5",
      "ratio_g_per_unit": "9.920117403958293128217248054",
      "reason": null,
@@ -28593,7 +28593,7 @@
    "carbs_g": "0",
    "delta_mgdl": "18.83733569737509776119978786",
    "dinner_at": "2026-10-02T17:15:00+00:00",
-   "drop_mgdl": "-2.03763962051480905795791750",
+   "drop_mgdl": "-2.0376396205148090579579175",
    "end": "2026-10-03T06:00:00+00:00",
    "end_glucose": "132.87497531788990681915770536",
    "last_injection_at": "2026-10-02T17:15:00+00:00",
@@ -28602,7 +28602,7 @@
    "morning_dose_at": null,
    "rise_mgdl": "20.87497531788990681915770536",
    "start": "2026-10-02T20:15:00+00:00",
-   "start_glucose": "114.03763962051480905795791750"
+   "start_glucose": "114.0376396205148090579579175"
   },
   "other_events": [],
   "place_options": [],
@@ -28628,7 +28628,7 @@
     "minimum_glucose": "112",
     "rate_mgdl_per_hour": "1.932034430500010026789721832",
     "start": "2026-10-02T20:15:00+00:00",
-    "start_glucose": "114.03763962051480905795791750"
+    "start_glucose": "114.0376396205148090579579175"
    }
   ],
   "review": {
@@ -28671,7 +28671,7 @@
     "glucose_at": "2026-10-02T05:55:00+00:00",
     "glucose_mgdl": "125",
     "id": "t-0127",
-    "insulin": 5.0,
+    "insulin": 5,
     "kind": "meal",
     "meal_id": "t-0127",
     "notes": "",
@@ -28813,7 +28813,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0127",
-    "insulin": 5.0,
+    "insulin": 5,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -28905,7 +28905,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0131",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -28980,7 +28980,7 @@
      "doses": [
       {
        "at": "2026-10-03T06:00:00+00:00",
-       "effect_mgdl": "525.0",
+       "effect_mgdl": "525",
        "event_type": "Meal Bolus",
        "id": "t-0130",
        "isf": "30",
@@ -29004,7 +29004,7 @@
       "2026-10-03T08:45:01.505000+00:00",
       "2026-10-03T08:50:14.272000+00:00"
      ],
-     "insulin_effect_mgdl": "525.0",
+     "insulin_effect_mgdl": "525",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-10-03T10:55:00+00:00",
@@ -29132,12 +29132,12 @@
      "doses": [
       {
        "at": "2026-10-03T10:55:00+00:00",
-       "effect_mgdl": "245.0",
+       "effect_mgdl": "245",
        "event_type": "Meal Bolus",
        "id": "t-0131",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "7.0"
+       "units": "7"
       }
      ],
      "end": "2026-10-03T13:45:00+00:00",
@@ -29171,15 +29171,15 @@
      "prior_doses": [
       {
        "at": "2026-10-03T06:00:00+00:00",
-       "effect_mgdl": "4.4753694096739926953396587140",
+       "effect_mgdl": "4.475369409673992695339658714",
        "id": "t-0130",
        "isf": "30",
        "share": "0.0085245131612837956101707785",
        "units": "17.5"
       }
      ],
-     "prior_insulin_effect_mgdl": "4.4753694096739926953396587140",
-     "rapid_units_in_window": "7.0",
+     "prior_insulin_effect_mgdl": "4.475369409673992695339658714",
+     "rapid_units_in_window": "7",
      "ratio_g_per_unit": "7.7161926027209386271598952108",
      "reason": null,
      "settings_version": 2,
@@ -29204,7 +29204,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0131",
-      "insulin": 7.0,
+      "insulin": 7,
       "meal": null,
       "notes": "",
       "role": null,
@@ -29293,12 +29293,12 @@
      "doses": [
       {
        "at": "2026-10-03T16:35:00+00:00",
-       "effect_mgdl": "525.0",
+       "effect_mgdl": "525",
        "event_type": "Meal Bolus",
        "id": "t-0132",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "15.0"
+       "units": "15"
       }
      ],
      "end": "2026-10-03T19:25:00+00:00",
@@ -29336,11 +29336,11 @@
        "id": "t-0131",
        "isf": "35",
        "share": "0.0009417604232239819646011377",
-       "units": "7.0"
+       "units": "7"
       }
      ],
      "prior_insulin_effect_mgdl": "0.2307313036898755813272787365",
-     "rapid_units_in_window": "15.0",
+     "rapid_units_in_window": "15",
      "ratio_g_per_unit": "7.4262596413175691578649264167",
      "reason": null,
      "settings_version": 2,
@@ -29365,7 +29365,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0132",
-      "insulin": 15.0,
+      "insulin": 15,
       "meal": null,
       "notes": "",
       "role": null,
@@ -29527,7 +29527,7 @@
     "glucose_at": "2026-10-03T10:55:00+00:00",
     "glucose_mgdl": "40",
     "id": "t-0131",
-    "insulin": 7.0,
+    "insulin": 7,
     "kind": "meal",
     "meal_id": "t-0131",
     "notes": "",
@@ -29551,7 +29551,7 @@
     "glucose_at": "2026-10-03T16:35:00+00:00",
     "glucose_mgdl": "46.800163837436854321212397033",
     "id": "t-0132",
-    "insulin": 15.0,
+    "insulin": 15,
     "kind": "meal",
     "meal_id": "t-0132",
     "notes": "",
@@ -29622,7 +29622,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0131",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -29645,7 +29645,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0132",
-    "insulin": 15.0,
+    "insulin": 15,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -29766,7 +29766,7 @@
      "doses": [
       {
        "at": "2026-10-04T05:45:00+00:00",
-       "effect_mgdl": "345.0",
+       "effect_mgdl": "345",
        "event_type": "Meal Bolus",
        "id": "t-0133",
        "isf": "30",
@@ -29790,7 +29790,7 @@
       "2026-10-04T08:30:09.226000+00:00",
       "2026-10-04T08:35:18.249000+00:00"
      ],
-     "insulin_effect_mgdl": "345.0",
+     "insulin_effect_mgdl": "345",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-10-04T09:50:00+00:00",
@@ -30079,12 +30079,12 @@
      "doses": [
       {
        "at": "2026-10-04T17:10:00+00:00",
-       "effect_mgdl": "315.0",
+       "effect_mgdl": "315",
        "event_type": "Meal Bolus",
        "id": "t-0135",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "9.0"
+       "units": "9"
       }
      ],
      "end": "2026-10-04T20:00:00+00:00",
@@ -30103,7 +30103,7 @@
       "2026-10-04T19:55:19.763000+00:00",
       "2026-10-04T20:00:08.720000+00:00"
      ],
-     "insulin_effect_mgdl": "315.0",
+     "insulin_effect_mgdl": "315",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-05T05:55:00+00:00",
@@ -30117,7 +30117,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "9.0",
+     "rapid_units_in_window": "9",
      "ratio_g_per_unit": "10.0626252703013385525376321",
      "reason": null,
      "settings_version": 2,
@@ -30142,7 +30142,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0135",
-      "insulin": 9.0,
+      "insulin": 9,
       "meal": null,
       "notes": "[DAQ:weighed]",
       "role": null,
@@ -30328,7 +30328,7 @@
     "glucose_at": "2026-10-04T17:10:00+00:00",
     "glucose_mgdl": "94.13368236543792895925072103",
     "id": "t-0135",
-    "insulin": 9.0,
+    "insulin": 9,
     "kind": "meal",
     "meal_id": "t-0135",
     "notes": "",
@@ -30353,7 +30353,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0132",
-    "insulin": 15.0,
+    "insulin": 15,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -30422,7 +30422,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0135",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -30582,7 +30582,7 @@
      "doses": [
       {
        "at": "2026-10-05T05:55:00+00:00",
-       "effect_mgdl": "255.0",
+       "effect_mgdl": "255",
        "event_type": "Meal Bolus",
        "id": "t-0136",
        "isf": "30",
@@ -30606,7 +30606,7 @@
       "2026-10-05T08:40:06.775000+00:00",
       "2026-10-05T08:45:02.198000+00:00"
      ],
-     "insulin_effect_mgdl": "255.0",
+     "insulin_effect_mgdl": "255",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-10-05T10:40:00+00:00",
@@ -30786,7 +30786,7 @@
      "extended_end": "2026-10-05T15:05:00+00:00",
      "extra_carb_count": 1,
      "factor_units_per_ke": "0.7600231664873488104055884466",
-     "g0": "161.25446371099513769917113120",
+     "g0": "161.2544637109951376991711312",
      "g0_source": "cgm",
      "g0_sources": [
       "2026-10-05T10:35:04.065000+00:00",
@@ -30812,14 +30812,14 @@
      "prior_doses": [
       {
        "at": "2026-10-05T05:55:00+00:00",
-       "effect_mgdl": "3.0320933550439544530208054580",
+       "effect_mgdl": "3.032093355043954453020805458",
        "id": "t-0136",
        "isf": "30",
        "share": "0.0118905621766429586392972763",
        "units": "8.5"
       }
      ],
-     "prior_insulin_effect_mgdl": "3.0320933550439544530208054580",
+     "prior_insulin_effect_mgdl": "3.032093355043954453020805458",
      "rapid_units_in_window": "11.5",
      "ratio_g_per_unit": "13.157493667222916088533870324",
      "reason": null,
@@ -30917,7 +30917,7 @@
      "start": "2026-10-05T10:40:00+00:00",
      "start_glucose": {
       "tone": "in-range",
-      "value": "161.25446371099513769917113120"
+      "value": "161.2544637109951376991711312"
      }
     }
    },
@@ -30925,7 +30925,7 @@
     "at": "2026-10-05T17:15:00+00:00",
     "calculation": {
      "actual_window_minutes": "170",
-     "adjusted_delta_mgdl": "52.798806330506223259373070170",
+     "adjusted_delta_mgdl": "52.79880633050622325937307017",
      "algorithm": "endpoint-full-dose-v2",
      "assumptions": [
       "alle KH im Fenster wirken bis zum Endpunkt vollständig",
@@ -30951,17 +30951,17 @@
      "carbs": "95",
      "carbs_times_isf_total": "3325",
      "carbs_total": "95",
-     "delta_mgdl": "52.798806330506223259373070170",
+     "delta_mgdl": "52.79880633050622325937307017",
      "denominator_mgdl": "438.04820688346494538594493349",
      "doses": [
       {
        "at": "2026-10-05T17:15:00+00:00",
-       "effect_mgdl": "385.0",
+       "effect_mgdl": "385",
        "event_type": "Meal Bolus",
        "id": "t-0140",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "11.0"
+       "units": "11"
       }
      ],
      "end": "2026-10-05T20:05:00+00:00",
@@ -30969,7 +30969,7 @@
      "extended_end": "2026-10-05T20:05:00+00:00",
      "extra_carb_count": 0,
      "factor_units_per_ke": "1.317438216190872016198330627",
-     "g0": "69.163735811327412809504205140",
+     "g0": "69.16373581132741280950420514",
      "g0_source": "cgm",
      "g0_sources": [
       "2026-10-05T17:10:16.865000+00:00",
@@ -30995,15 +30995,15 @@
      "prior_doses": [
       {
        "at": "2026-10-05T12:15:00+00:00",
-       "effect_mgdl": "0.2494005529587221265718633160",
+       "effect_mgdl": "0.249400552958722126571863316",
        "id": "t-0139",
        "isf": "35",
        "share": "0.0071257300845349179020532376",
        "units": "1"
       }
      ],
-     "prior_insulin_effect_mgdl": "0.2494005529587221265718633160",
-     "rapid_units_in_window": "11.0",
+     "prior_insulin_effect_mgdl": "0.249400552958722126571863316",
+     "rapid_units_in_window": "11",
      "ratio_g_per_unit": "7.5904887812599995978787474745",
      "reason": null,
      "settings_version": 2,
@@ -31028,7 +31028,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0140",
-      "insulin": 11.0,
+      "insulin": 11,
       "meal": null,
       "notes": "",
       "role": null,
@@ -31078,7 +31078,7 @@
      "start": "2026-10-05T17:15:00+00:00",
      "start_glucose": {
       "tone": "low",
-      "value": "69.163735811327412809504205140"
+      "value": "69.16373581132741280950420514"
      }
     }
    }
@@ -31106,7 +31106,7 @@
    {
     "delta_mgdl": "15.22523255006219275198525898",
     "end": "2026-10-05T17:15:00+00:00",
-    "end_glucose": "69.163735811327412809504205140",
+    "end_glucose": "69.16373581132741280950420514",
     "hours": "2",
     "minimum_at": "2026-10-05T15:20:05.328000+00:00",
     "minimum_glucose": "48",
@@ -31212,7 +31212,7 @@
     "fast": false,
     "fat_protein": true,
     "glucose_at": "2026-10-05T10:40:00+00:00",
-    "glucose_mgdl": "161.25446371099513769917113120",
+    "glucose_mgdl": "161.2544637109951376991711312",
     "id": "t-0138",
     "insulin": 10.5,
     "kind": "meal",
@@ -31260,9 +31260,9 @@
     "fast": false,
     "fat_protein": false,
     "glucose_at": "2026-10-05T17:15:00+00:00",
-    "glucose_mgdl": "69.163735811327412809504205140",
+    "glucose_mgdl": "69.16373581132741280950420514",
     "id": "t-0140",
-    "insulin": 11.0,
+    "insulin": 11,
     "kind": "meal",
     "meal_id": "t-0140",
     "notes": "",
@@ -31287,7 +31287,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0135",
-    "insulin": 9.0,
+    "insulin": 9,
     "meal": null,
     "notes": "[DAQ:weighed]",
     "rapid": true,
@@ -31402,7 +31402,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0140",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -31471,7 +31471,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0142",
-    "insulin": 5.0,
+    "insulin": 5,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -31561,7 +31561,7 @@
      "doses": [
       {
        "at": "2026-10-06T05:20:00+00:00",
-       "effect_mgdl": "375.0",
+       "effect_mgdl": "375",
        "event_type": "Meal Bolus",
        "id": "t-0141",
        "isf": "30",
@@ -31580,12 +31580,12 @@
       "2026-10-06T05:15:04.004000+00:00",
       "2026-10-06T05:20:19.728000+00:00"
      ],
-     "g3": "121.05991399680253116191459340",
+     "g3": "121.0599139968025311619145934",
      "g3_sources": [
       "2026-10-06T08:05:19.515000+00:00",
       "2026-10-06T08:10:17.876000+00:00"
      ],
-     "insulin_effect_mgdl": "375.0",
+     "insulin_effect_mgdl": "375",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-10-06T09:40:00+00:00",
@@ -31668,7 +31668,7 @@
      "end": "2026-10-06T08:10:00+00:00",
      "end_glucose": {
       "tone": "in-range",
-      "value": "121.05991399680253116191459340"
+      "value": "121.0599139968025311619145934"
      },
      "manual": false,
      "start": "2026-10-06T05:20:00+00:00",
@@ -31713,12 +31713,12 @@
      "doses": [
       {
        "at": "2026-10-06T09:40:00+00:00",
-       "effect_mgdl": "175.0",
+       "effect_mgdl": "175",
        "event_type": "Meal Bolus",
        "id": "t-0142",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "5.0"
+       "units": "5"
       }
      ],
      "end": "2026-10-06T12:30:00+00:00",
@@ -31760,7 +31760,7 @@
       }
      ],
      "prior_insulin_effect_mgdl": "9.172094854800291300182508486",
-     "rapid_units_in_window": "5.0",
+     "rapid_units_in_window": "5",
      "ratio_g_per_unit": "8.991239312346476801820501019",
      "reason": null,
      "settings_version": 2,
@@ -31785,7 +31785,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0142",
-      "insulin": 5.0,
+      "insulin": 5,
       "meal": null,
       "notes": "",
       "role": null,
@@ -31874,12 +31874,12 @@
      "doses": [
       {
        "at": "2026-10-06T16:50:00+00:00",
-       "effect_mgdl": "210.0",
+       "effect_mgdl": "210",
        "event_type": "Meal Bolus",
        "id": "t-0143",
        "isf": "35",
        "role": "Meal Bolus",
-       "units": "6.0"
+       "units": "6"
       }
      ],
      "end": "2026-10-06T19:40:00+00:00",
@@ -31898,7 +31898,7 @@
       "2026-10-06T19:35:17.855000+00:00",
       "2026-10-06T19:40:02.615000+00:00"
      ],
-     "insulin_effect_mgdl": "210.0",
+     "insulin_effect_mgdl": "210",
      "manual_window": false,
      "meal_isf": "35",
      "next_main_meal_at": "2026-10-07T06:10:00+00:00",
@@ -31912,7 +31912,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "6.0",
+     "rapid_units_in_window": "6",
      "ratio_g_per_unit": "10.317408197614960251912036436",
      "reason": null,
      "settings_version": 2,
@@ -31937,7 +31937,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0143",
-      "insulin": 6.0,
+      "insulin": 6,
       "meal": null,
       "notes": "",
       "role": null,
@@ -32124,7 +32124,7 @@
     "glucose_at": "2026-10-06T09:40:00+00:00",
     "glucose_mgdl": "113.96020808860547071656318174",
     "id": "t-0142",
-    "insulin": 5.0,
+    "insulin": 5,
     "kind": "meal",
     "meal_id": "t-0142",
     "notes": "",
@@ -32148,7 +32148,7 @@
     "glucose_at": "2026-10-06T16:50:00+00:00",
     "glucose_mgdl": "98.42377757106490600265489948",
     "id": "t-0143",
-    "insulin": 6.0,
+    "insulin": 6,
     "kind": "meal",
     "meal_id": "t-0143",
     "notes": "",
@@ -32196,7 +32196,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0140",
-    "insulin": 11.0,
+    "insulin": 11,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -32265,7 +32265,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0142",
-    "insulin": 5.0,
+    "insulin": 5,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -32288,7 +32288,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0143",
-    "insulin": 6.0,
+    "insulin": 6,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -32300,7 +32300,7 @@
    {
     "alcohol": false,
     "at": "2026-10-07T05:10:00+00:00",
-    "basal_units": 17.0,
+    "basal_units": 17,
     "carbs": 0,
     "carbs_certainty": null,
     "duration": 0,
@@ -32334,7 +32334,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0145",
-    "insulin": 8.0,
+    "insulin": 8,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -32347,7 +32347,7 @@
     "alcohol": false,
     "at": "2026-10-07T07:40:00+00:00",
     "basal_units": 0,
-    "carbs": 0.0,
+    "carbs": 0,
     "carbs_certainty": null,
     "duration": 40,
     "episode_id": null,
@@ -32357,7 +32357,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "ns-0004",
-    "insulin": 0.0,
+    "insulin": 0,
     "meal": null,
     "notes": "Joggen — Runde [DAS1:jogging] [DAE:44444444-4444-4444-8444-444444444444]",
     "rapid": false,
@@ -32370,7 +32370,7 @@
     "alcohol": false,
     "at": "2026-10-07T10:05:00+00:00",
     "basal_units": 0,
-    "carbs": 70.0,
+    "carbs": 70,
     "carbs_certainty": "known",
     "duration": 0,
     "episode_id": null,
@@ -32380,7 +32380,7 @@
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "ns-0002",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "Mittag [DAQ:known] [DAQ:fat] [DAE:22222222-2222-4222-8222-222222222222]",
     "rapid": true,
@@ -32393,7 +32393,7 @@
     "alcohol": false,
     "at": "2026-10-07T10:35:00+00:00",
     "basal_units": 0,
-    "carbs": 15.0,
+    "carbs": 15,
     "carbs_certainty": null,
     "duration": 0,
     "episode_id": null,
@@ -32403,7 +32403,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "ns-0003",
-    "insulin": 0.0,
+    "insulin": 0,
     "meal": null,
     "notes": "[DA2:snack] [DAE:33333333-3333-4333-8333-333333333333]",
     "rapid": false,
@@ -32500,12 +32500,12 @@
      "doses": [
       {
        "at": "2026-10-07T06:10:00+00:00",
-       "effect_mgdl": "240.0",
+       "effect_mgdl": "240",
        "event_type": "Meal Bolus",
        "id": "t-0145",
        "isf": "30",
        "role": "Meal Bolus",
-       "units": "8.0"
+       "units": "8"
       }
      ],
      "end": "2026-10-07T09:00:00+00:00",
@@ -32524,7 +32524,7 @@
       "2026-10-07T08:55:14.715000+00:00",
       "2026-10-07T09:00:12.794000+00:00"
      ],
-     "insulin_effect_mgdl": "240.0",
+     "insulin_effect_mgdl": "240",
      "manual_window": false,
      "meal_isf": "30",
      "next_main_meal_at": "2026-10-07T10:05:00+00:00",
@@ -32538,7 +32538,7 @@
      "prebolus": false,
      "prior_doses": [],
      "prior_insulin_effect_mgdl": "0",
-     "rapid_units_in_window": "8.0",
+     "rapid_units_in_window": "8",
      "ratio_g_per_unit": "7.6243810025405302406564422159",
      "reason": null,
      "settings_version": 2,
@@ -32563,7 +32563,7 @@
       "fat_protein": false,
       "finger_mgdl": null,
       "id": "t-0145",
-      "insulin": 8.0,
+      "insulin": 8,
       "meal": null,
       "notes": "",
       "role": null,
@@ -32637,14 +32637,14 @@
      "window_end": "2026-10-07T12:55:00+00:00",
      "window_start": "2026-10-07T10:05:00+00:00"
     },
-    "carbs": 70.0,
+    "carbs": 70,
     "dish": null,
     "events": [
      {
       "alcohol": false,
       "at": "2026-10-07T10:05:00+00:00",
       "basal_units": 0,
-      "carbs": 70.0,
+      "carbs": 70,
       "carbs_certainty": "known",
       "duration": 0,
       "episode_id": null,
@@ -32654,7 +32654,7 @@
       "fat_protein": true,
       "finger_mgdl": null,
       "id": "ns-0002",
-      "insulin": 7.0,
+      "insulin": 7,
       "meal": null,
       "notes": "Mittag [DAQ:known] [DAQ:fat] [DAE:22222222-2222-4222-8222-222222222222]",
       "role": null,
@@ -32725,10 +32725,10 @@
    {
     "at": "2026-10-07T10:35:00+00:00",
     "basal_units": 0,
-    "carbs": 15.0,
+    "carbs": 15,
     "eventType": "Carb Correction",
     "id": "ns-0003",
-    "insulin": 0.0,
+    "insulin": 0,
     "notes": ""
    }
   ],
@@ -32800,7 +32800,7 @@
     "glucose_at": "2026-10-07T06:10:00+00:00",
     "glucose_mgdl": "127.94350724776043407004312059",
     "id": "t-0145",
-    "insulin": 8.0,
+    "insulin": 8,
     "kind": "meal",
     "meal_id": "t-0145",
     "notes": "",
@@ -32812,7 +32812,7 @@
     "alcohol": false,
     "at": "2026-10-07T07:40:00+00:00",
     "basal_units": 0,
-    "carbs": 0.0,
+    "carbs": 0,
     "carbs_certainty": null,
     "description": "",
     "dish": null,
@@ -32824,7 +32824,7 @@
     "glucose_at": "2026-10-07T07:40:00+00:00",
     "glucose_mgdl": "128.17528709511256552434627155",
     "id": "ns-0004",
-    "insulin": 0.0,
+    "insulin": 0,
     "kind": "exercise",
     "meal_id": "t-0145",
     "notes": "Runde",
@@ -32856,7 +32856,7 @@
     "alcohol": false,
     "at": "2026-10-07T10:05:00+00:00",
     "basal_units": 0,
-    "carbs": 70.0,
+    "carbs": 70,
     "carbs_certainty": "known",
     "description": "",
     "dish": null,
@@ -32868,7 +32868,7 @@
     "glucose_at": "2026-10-07T10:05:00+00:00",
     "glucose_mgdl": "40",
     "id": "ns-0002",
-    "insulin": 7.0,
+    "insulin": 7,
     "kind": "meal",
     "meal_id": "ns-0002",
     "notes": "Mittag",
@@ -32880,7 +32880,7 @@
     "alcohol": false,
     "at": "2026-10-07T10:35:00+00:00",
     "basal_units": 0,
-    "carbs": 15.0,
+    "carbs": 15,
     "carbs_certainty": null,
     "description": "",
     "dish": null,
@@ -32892,7 +32892,7 @@
     "glucose_at": "2026-10-07T10:35:00+00:00",
     "glucose_mgdl": "40",
     "id": "ns-0003",
-    "insulin": 0.0,
+    "insulin": 0,
     "kind": "snack",
     "meal_id": "ns-0002",
     "notes": "",
@@ -32917,7 +32917,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0143",
-    "insulin": 6.0,
+    "insulin": 6,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -32929,7 +32929,7 @@
    {
     "alcohol": false,
     "at": "2026-10-07T05:10:00+00:00",
-    "basal_units": 17.0,
+    "basal_units": 17,
     "carbs": 0,
     "carbs_certainty": null,
     "duration": 0,
@@ -32963,7 +32963,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "t-0145",
-    "insulin": 8.0,
+    "insulin": 8,
     "meal": null,
     "notes": "",
     "rapid": true,
@@ -32976,7 +32976,7 @@
     "alcohol": false,
     "at": "2026-10-07T07:40:00+00:00",
     "basal_units": 0,
-    "carbs": 0.0,
+    "carbs": 0,
     "carbs_certainty": null,
     "duration": 40,
     "episode_id": null,
@@ -32986,7 +32986,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "ns-0004",
-    "insulin": 0.0,
+    "insulin": 0,
     "meal": null,
     "notes": "Joggen — Runde [DAS1:jogging] [DAE:44444444-4444-4444-8444-444444444444]",
     "rapid": false,
@@ -32999,7 +32999,7 @@
     "alcohol": false,
     "at": "2026-10-07T10:05:00+00:00",
     "basal_units": 0,
-    "carbs": 70.0,
+    "carbs": 70,
     "carbs_certainty": "known",
     "duration": 0,
     "episode_id": null,
@@ -33009,7 +33009,7 @@
     "fat_protein": true,
     "finger_mgdl": null,
     "id": "ns-0002",
-    "insulin": 7.0,
+    "insulin": 7,
     "meal": null,
     "notes": "Mittag [DAQ:known] [DAQ:fat] [DAE:22222222-2222-4222-8222-222222222222]",
     "rapid": true,
@@ -33022,7 +33022,7 @@
     "alcohol": false,
     "at": "2026-10-07T10:35:00+00:00",
     "basal_units": 0,
-    "carbs": 15.0,
+    "carbs": 15,
     "carbs_certainty": null,
     "duration": 0,
     "episode_id": null,
@@ -33032,7 +33032,7 @@
     "fat_protein": false,
     "finger_mgdl": null,
     "id": "ns-0003",
-    "insulin": 0.0,
+    "insulin": 0,
     "meal": null,
     "notes": "[DA2:snack] [DAE:33333333-3333-4333-8333-333333333333]",
     "rapid": false,

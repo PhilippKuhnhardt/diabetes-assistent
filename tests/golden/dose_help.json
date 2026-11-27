@@ -57,27 +57,27 @@
    "carbs": [
     {
      "at": "2026-10-07T10:05:00+00:00",
-     "grams": "70.0",
-     "remaining_grams": "57.1360300"
+     "grams": "70",
+     "remaining_grams": "57.13603"
     },
     {
      "at": "2026-10-07T10:35:00+00:00",
-     "grams": "15.0",
-     "remaining_grams": "15.0"
+     "grams": "15",
+     "remaining_grams": "15"
     }
    ],
    "carbs_mgdl": "308.26440497848759923106325371",
-   "carbs_remaining_g": "72.1360300",
+   "carbs_remaining_g": "72.13603",
    "doses": [
     {
      "at": "2026-10-07T06:10:00+00:00",
      "remaining_units": "0.1489680405954268908628540944",
-     "units": "8.0"
+     "units": "8"
     },
     {
      "at": "2026-10-07T10:05:00+00:00",
      "remaining_units": "6.4264501831005887671572651752",
-     "units": "7.0"
+     "units": "7"
     }
    ],
    "expected_at": "2026-10-07T14:40:00+00:00",
@@ -110,7 +110,7 @@
   "recent_rapid_doses": [
    {
     "at": "2026-10-07T10:05:00+00:00",
-    "units": "7.0"
+    "units": "7"
    }
   ],
   "split_plan": null,
@@ -138,7 +138,7 @@
   "auto_median_units_per_ke": "1.1576238221600853088508945058",
   "auto_method": "surcharge",
   "auto_percentile": "37.5",
-  "auto_q1_units_per_ke": "1.0141710029322957731814575900",
+  "auto_q1_units_per_ke": "1.01417100293229577318145759",
   "auto_surcharge_units": "1.1424434285714285714285714286",
   "auto_units_per_ke": "0.9828320607888172388109343363",
   "breakfast": false,
@@ -147,7 +147,7 @@
   "breakfast_factor_min_meals": 3,
   "breakfast_factor_units_per_ke": null,
   "carb_units": "6.6666666666666666666666666667",
-  "carbs_entry_units": "6.50",
+  "carbs_entry_units": "6.5",
   "carbs_g": "50",
   "carbs_total_units": "6.6666666666666666666666666667",
   "cautious_target_mgdl": "150",
@@ -205,13 +205,13 @@
   "activity_change_mgdl": "0",
   "activity_units": "0",
   "auto_carb_units": "7.3257880379251161031115381088",
-  "auto_carbs_entry_units": "7.50",
+  "auto_carbs_entry_units": "7.5",
   "auto_carbs_expected_glucose_mgdl": "91.43885534614991593024385023",
   "auto_carbs_total_units": "7.3257880379251161031115381088",
   "auto_cautious_entry_units": "4",
   "auto_cautious_expected_glucose_mgdl": "156.40258132737906360890383381",
   "auto_cautious_total_units": "4.1829308950679732459686809659",
-  "auto_entry_units": "6.50",
+  "auto_entry_units": "6.5",
   "auto_expected_glucose_mgdl": "126.43885534614991593024385023",
   "auto_factor_count": 28,
   "auto_factor_days": 30,
@@ -230,14 +230,14 @@
   "breakfast_factor_days": null,
   "breakfast_factor_min_meals": 3,
   "breakfast_factor_units_per_ke": null,
-  "carb_units": "7.50",
-  "carbs_entry_units": "7.50",
+  "carb_units": "7.5",
+  "carbs_entry_units": "7.5",
   "carbs_expected_glucose_mgdl": "97.53627401877085232134001642",
   "carbs_g": "60",
-  "carbs_total_units": "7.50",
+  "carbs_total_units": "7.5",
   "cautious_correction_units": "-3.1428571428571428571428571429",
-  "cautious_entry_units": "4.50",
-  "cautious_expected_glucose_mgdl": "145.00",
+  "cautious_entry_units": "4.5",
+  "cautious_expected_glucose_mgdl": "145",
   "cautious_forecast_mgdl": "40",
   "cautious_target_mgdl": "150",
   "cautious_total_units": "4.3571428571428571428571428571",
@@ -258,27 +258,27 @@
    "carbs": [
     {
      "at": "2026-10-07T10:05:00+00:00",
-     "grams": "70.0",
-     "remaining_grams": "57.1360300"
+     "grams": "70",
+     "remaining_grams": "57.13603"
     },
     {
      "at": "2026-10-07T10:35:00+00:00",
-     "grams": "15.0",
-     "remaining_grams": "15.0"
+     "grams": "15",
+     "remaining_grams": "15"
     }
    ],
    "carbs_mgdl": "308.26440497848759923106325371",
-   "carbs_remaining_g": "72.1360300",
+   "carbs_remaining_g": "72.13603",
    "doses": [
     {
      "at": "2026-10-07T06:10:00+00:00",
      "remaining_units": "0.1489680405954268908628540944",
-     "units": "8.0"
+     "units": "8"
     },
     {
      "at": "2026-10-07T10:05:00+00:00",
      "remaining_units": "6.4264501831005887671572651752",
-     "units": "7.0"
+     "units": "7"
     }
    ],
    "expected_at": "2026-10-07T14:40:00+00:00",
@@ -311,7 +311,7 @@
   "recent_rapid_doses": [
    {
     "at": "2026-10-07T10:05:00+00:00",
-    "units": "7.0"
+    "units": "7"
    }
   ],
   "split_plan": null,
@@ -328,7 +328,7 @@
   "activity_change_mgdl": "0",
   "activity_units": "0",
   "auto_carb_units": "2.4419293459750387010371793696",
-  "auto_carbs_entry_units": "2.50",
+  "auto_carbs_entry_units": "2.5",
   "auto_carbs_expected_glucose_mgdl": "95.50380112789720685764129436",
   "auto_carbs_total_units": "2.4419293459750387010371793696",
   "auto_cautious_entry_units": "0",
@@ -353,14 +353,14 @@
   "breakfast_factor_days": null,
   "breakfast_factor_min_meals": 3,
   "breakfast_factor_units_per_ke": null,
-  "carb_units": "2.50",
-  "carbs_entry_units": "2.50",
+  "carb_units": "2.5",
+  "carbs_entry_units": "2.5",
   "carbs_expected_glucose_mgdl": "97.53627401877085232134001642",
   "carbs_g": "20",
-  "carbs_total_units": "2.50",
+  "carbs_total_units": "2.5",
   "cautious_correction_units": "-3.1428571428571428571428571429",
   "cautious_entry_units": "0",
-  "cautious_expected_glucose_mgdl": "127.50",
+  "cautious_expected_glucose_mgdl": "127.5",
   "cautious_forecast_mgdl": "40",
   "cautious_target_mgdl": "150",
   "cautious_total_units": "0",
@@ -381,27 +381,27 @@
    "carbs": [
     {
      "at": "2026-10-07T10:05:00+00:00",
-     "grams": "70.0",
-     "remaining_grams": "57.1360300"
+     "grams": "70",
+     "remaining_grams": "57.13603"
     },
     {
      "at": "2026-10-07T10:35:00+00:00",
-     "grams": "15.0",
-     "remaining_grams": "15.0"
+     "grams": "15",
+     "remaining_grams": "15"
     }
    ],
    "carbs_mgdl": "308.26440497848759923106325371",
-   "carbs_remaining_g": "72.1360300",
+   "carbs_remaining_g": "72.13603",
    "doses": [
     {
      "at": "2026-10-07T06:10:00+00:00",
      "remaining_units": "0.1489680405954268908628540944",
-     "units": "8.0"
+     "units": "8"
     },
     {
      "at": "2026-10-07T10:05:00+00:00",
      "remaining_units": "6.4264501831005887671572651752",
-     "units": "7.0"
+     "units": "7"
     }
    ],
    "expected_at": "2026-10-07T14:40:00+00:00",
@@ -434,7 +434,7 @@
   "recent_rapid_doses": [
    {
     "at": "2026-10-07T10:05:00+00:00",
-    "units": "7.0"
+    "units": "7"
    }
   ],
   "split_plan": null,
@@ -451,13 +451,13 @@
   "activity_change_mgdl": "0",
   "activity_units": "0",
   "auto_carb_units": "6.2660852421854022963663370602",
-  "auto_carbs_entry_units": "6.50",
+  "auto_carbs_entry_units": "6.5",
   "auto_carbs_expected_glucose_mgdl": "191.72688510759767673720329884",
   "auto_carbs_total_units": "6.2660852421854022963663370602",
   "auto_cautious_entry_units": "6",
   "auto_cautious_expected_glucose_mgdl": "149.22688510759767673720329884",
   "auto_cautious_total_units": "5.9779110030742193353486656811",
-  "auto_entry_units": "8.50",
+  "auto_entry_units": "8.5",
   "auto_expected_glucose_mgdl": "121.72688510759767673720329884",
   "auto_factor_count": 28,
   "auto_factor_days": 30,
@@ -477,11 +477,11 @@
   "breakfast_factor_days": null,
   "breakfast_factor_min_meals": 3,
   "breakfast_factor_units_per_ke": null,
-  "carb_units": "7.50",
-  "carbs_entry_units": "7.50",
+  "carb_units": "7.5",
+  "carbs_entry_units": "7.5",
   "carbs_expected_glucose_mgdl": "199.91390163110859636438150173",
   "carbs_g": "60",
-  "carbs_total_units": "7.50",
+  "carbs_total_units": "7.5",
   "cautious_correction_units": "-0.2881742391111829610176713791",
   "cautious_entry_units": "7",
   "cautious_expected_glucose_mgdl": "157.41390163110859636438150173",
@@ -505,27 +505,27 @@
    "carbs": [
     {
      "at": "2026-10-07T10:05:00+00:00",
-     "grams": "70.0",
-     "remaining_grams": "57.1360300"
+     "grams": "70",
+     "remaining_grams": "57.13603"
     },
     {
      "at": "2026-10-07T10:35:00+00:00",
-     "grams": "15.0",
-     "remaining_grams": "15.0"
+     "grams": "15",
+     "remaining_grams": "15"
     }
    ],
    "carbs_mgdl": "263.67279925749200994077140568",
-   "carbs_remaining_g": "72.1360300",
+   "carbs_remaining_g": "72.13603",
    "doses": [
     {
      "at": "2026-10-07T06:10:00+00:00",
      "remaining_units": "0.1489680405954268908628540944",
-     "units": "8.0"
+     "units": "8"
     },
     {
      "at": "2026-10-07T10:05:00+00:00",
      "remaining_units": "6.4264501831005887671572651752",
-     "units": "7.0"
+     "units": "7"
     }
    ],
    "expected_at": "2026-10-07T15:55:00+00:00",
@@ -558,7 +558,7 @@
   "recent_rapid_doses": [
    {
     "at": "2026-10-07T10:05:00+00:00",
-    "units": "7.0"
+    "units": "7"
    }
   ],
   "split_plan": null,
@@ -576,13 +576,13 @@
   "activity_units": "0",
   "auto_carb_units": "2.0886950807284674321221123534",
   "auto_carbs_entry_units": "2",
-  "auto_carbs_expected_glucose_mgdl": "203.01822945660495648865543410",
+  "auto_carbs_expected_glucose_mgdl": "203.0182294566049564886554341",
   "auto_carbs_total_units": "2.0886950807284674321221123534",
   "auto_cautious_entry_units": "2",
-  "auto_cautious_expected_glucose_mgdl": "143.01822945660495648865543410",
+  "auto_cautious_expected_glucose_mgdl": "143.0182294566049564886554341",
   "auto_cautious_total_units": "1.8005208416172844711044409743",
-  "auto_entry_units": "4.50",
-  "auto_expected_glucose_mgdl": "115.51822945660495648865543410",
+  "auto_entry_units": "4.5",
+  "auto_expected_glucose_mgdl": "115.5182294566049564886554341",
   "auto_factor_count": 28,
   "auto_factor_days": 30,
   "auto_factor_min_meals": 4,
@@ -601,11 +601,11 @@
   "breakfast_factor_days": null,
   "breakfast_factor_min_meals": 3,
   "breakfast_factor_units_per_ke": null,
-  "carb_units": "2.50",
-  "carbs_entry_units": "2.50",
+  "carb_units": "2.5",
+  "carbs_entry_units": "2.5",
   "carbs_expected_glucose_mgdl": "199.91390163110859636438150173",
   "carbs_g": "20",
-  "carbs_total_units": "2.50",
+  "carbs_total_units": "2.5",
   "cautious_correction_units": "-0.2881742391111829610176713791",
   "cautious_entry_units": "2",
   "cautious_expected_glucose_mgdl": "157.41390163110859636438150173",
@@ -629,27 +629,27 @@
    "carbs": [
     {
      "at": "2026-10-07T10:05:00+00:00",
-     "grams": "70.0",
-     "remaining_grams": "57.1360300"
+     "grams": "70",
+     "remaining_grams": "57.13603"
     },
     {
      "at": "2026-10-07T10:35:00+00:00",
-     "grams": "15.0",
-     "remaining_grams": "15.0"
+     "grams": "15",
+     "remaining_grams": "15"
     }
    ],
    "carbs_mgdl": "263.67279925749200994077140568",
-   "carbs_remaining_g": "72.1360300",
+   "carbs_remaining_g": "72.13603",
    "doses": [
     {
      "at": "2026-10-07T06:10:00+00:00",
      "remaining_units": "0.1489680405954268908628540944",
-     "units": "8.0"
+     "units": "8"
     },
     {
      "at": "2026-10-07T10:05:00+00:00",
      "remaining_units": "6.4264501831005887671572651752",
-     "units": "7.0"
+     "units": "7"
     }
    ],
    "expected_at": "2026-10-07T15:55:00+00:00",
@@ -682,7 +682,7 @@
   "recent_rapid_doses": [
    {
     "at": "2026-10-07T10:05:00+00:00",
-    "units": "7.0"
+    "units": "7"
    }
   ],
   "split_plan": null,
@@ -719,7 +719,7 @@
   "breakfast_factor_min_meals": 3,
   "breakfast_factor_units_per_ke": "1.0960456346335937170105331826",
   "carb_units": "4.3841825385343748680421327304",
-  "carbs_entry_units": "4.50",
+  "carbs_entry_units": "4.5",
   "carbs_g": "40",
   "carbs_total_units": "4.3841825385343748680421327304",
   "cautious_target_mgdl": "150",
@@ -771,10 +771,10 @@
   "activity_change_mgdl": "-30",
   "activity_units": "-0.8571428571428571428571428571",
   "auto_carb_units": "5.4943410284438370773336535816",
-  "auto_carbs_entry_units": "4.50",
+  "auto_carbs_entry_units": "4.5",
   "auto_carbs_expected_glucose_mgdl": "102.33821001430515002801789178",
   "auto_carbs_total_units": "4.6371981713009799344765107245",
-  "auto_cautious_entry_units": "1.50",
+  "auto_cautious_entry_units": "1.5",
   "auto_cautious_expected_glucose_mgdl": "149.80193599553429770667787536",
   "auto_cautious_total_units": "1.4943410284438370773336535816",
   "auto_entry_units": "4",
@@ -802,7 +802,7 @@
   "carbs_g": "45",
   "carbs_total_units": "4.7678571428571428571428571429",
   "cautious_correction_units": "-4",
-  "cautious_entry_units": "1.50",
+  "cautious_entry_units": "1.5",
   "cautious_expected_glucose_mgdl": "154.375",
   "cautious_forecast_mgdl": "10",
   "cautious_target_mgdl": "150",
@@ -824,27 +824,27 @@
    "carbs": [
     {
      "at": "2026-10-07T10:05:00+00:00",
-     "grams": "70.0",
-     "remaining_grams": "57.1360300"
+     "grams": "70",
+     "remaining_grams": "57.13603"
     },
     {
      "at": "2026-10-07T10:35:00+00:00",
-     "grams": "15.0",
-     "remaining_grams": "15.0"
+     "grams": "15",
+     "remaining_grams": "15"
     }
    ],
    "carbs_mgdl": "308.26440497848759923106325371",
-   "carbs_remaining_g": "72.1360300",
+   "carbs_remaining_g": "72.13603",
    "doses": [
     {
      "at": "2026-10-07T06:10:00+00:00",
      "remaining_units": "0.1489680405954268908628540944",
-     "units": "8.0"
+     "units": "8"
     },
     {
      "at": "2026-10-07T10:05:00+00:00",
      "remaining_units": "6.4264501831005887671572651752",
-     "units": "7.0"
+     "units": "7"
     }
    ],
    "expected_at": "2026-10-07T14:40:00+00:00",
@@ -877,7 +877,7 @@
   "recent_rapid_doses": [
    {
     "at": "2026-10-07T10:05:00+00:00",
-    "units": "7.0"
+    "units": "7"
    }
   ],
   "split_plan": null,
