@@ -447,8 +447,8 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
             &a.get::<std::collections::HashMap<String, Value>>("durations")?, &a.get::<String>("record_id")?)?),
         "services.dose_help" => out(crate::services::dose_help(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?)?),
-        "day.compute_day" => crate::day::compute_day(&serde_json::from_value(args.clone())
-            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
+        "day.compute_day" => out(crate::day::compute_day(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?)?),
         "night.night_analysis" => {
             // The dinner of the day from its meals (only "meal" and "at" are read).
             let meals: Vec<Value> = a.get("meals")?;
@@ -457,16 +457,16 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
                 .map(|at| at.with_timezone(&Utc)).max();
             let entries: Vec<Reading> = a.get("entries")?;
             let reading_at = calculation::Interpolator::new(&entries, 15);
-            Ok(crate::day::night_analysis(day(&a, "day")?, &a.get::<Vec<Treatment>>("treatments")?, &entries, &reading_at,
-                                          dinner_at, &a.get::<Settings>("settings")?))
+            out(crate::day::night_analysis(day(&a, "day")?, &a.get::<Vec<Treatment>>("treatments")?, &entries, &reading_at,
+                                           dinner_at, &a.get::<Settings>("settings")?))
         }
         "day.meal_review" => {
             let meal: Value = a.get("meal")?;
-            Ok(crate::day::meal_review(&meal["calculation"]))
+            out(crate::day::meal_review(&meal["calculation"]))
         }
-        "day.with_checks" => Ok(crate::day::with_checks(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?,
+        "day.with_checks" => out(crate::day::with_checks(&a.get::<Vec<crate::day::StoredMeal>>("meals")?,
             &a.get("checks")?, a.get("now")?)),
-        "day.day_review" => Ok(crate::day::day_review(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?)),
+        "day.day_review" => out(crate::day::day_review(&a.get::<Vec<crate::day::ReviewedMeal>>("meals")?)),
         "factors.counted_days" => out(crate::services::counted_days(day(&a, "today")?, a.get("days_back")?,
             &a.get::<Vec<crate::services::VacationPeriod>>("periods")?, &a.get::<String>("mode")?)),
         "factors.meal_points" => {

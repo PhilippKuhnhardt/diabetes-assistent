@@ -15,6 +15,30 @@ pub fn iso(at: &Instant) -> String {
     }
 }
 
+/// Serialize an instant field as Python's isoformat (`#[serde(serialize_with = "crate::wire::py_iso")]`).
+pub fn py_iso<S: serde::Serializer>(at: &Instant, serializer: S) -> Result<S::Ok, S::Error> {
+    serializer.serialize_str(&iso(at))
+}
+
+/// The same for an optional instant: null when absent.
+pub fn py_iso_opt<S: serde::Serializer>(at: &Option<Instant>, serializer: S) -> Result<S::Ok, S::Error> {
+    match at {
+        Some(at) => serializer.serialize_str(&iso(at)),
+        None => serializer.serialize_none(),
+    }
+}
+
+/// A value serialized through `to_value`, so the instants inside read like Python's isoformat
+/// (for types whose instants other callers want in chrono's form).
+#[derive(Clone, Debug)]
+pub struct Py<T>(pub T);
+
+impl<T: serde::Serialize> serde::Serialize for Py<T> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&to_value(&self.0), serializer)
+    }
+}
+
 /// Every string chrono wrote as an RFC 3339 instant ("…Z") in Python's isoformat instead. The Nightscout
 /// profile is passed through as Nightscout wrote it.
 pub fn python_instants(value: &mut Value) {
