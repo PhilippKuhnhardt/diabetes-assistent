@@ -20,16 +20,20 @@ through the phone) can link the same crate to compute offline. Python in `app/` 
 | `glucose`, `glucose_alerts`, `correction_check` | CGM status and trend, early warnings, "BZ prüfen" |
 | `forecast`, `stats` | Automatik incl. place factor, backtest, tuning, trade-offs |
 | `services` | `app/services/dose_help.py` with the parts of `factors.py` and `store/marks.py` it reads |
+| `notifications` | which push reminders are due and their texts (`services/notifications.py`) |
+| `window` | manual-window limits, editor readings and candidate totals (`services/window_editor.py`) |
+| `dishes` | a dish's reference factor, ratio, spread, typical carbs and hint (`app/dishes.py`) |
+| `entry` | the entry form: assignment, closing a meal, chips, dose options and slider, save plan (`services/entry.py`) |
+| `diary` | a diary entry's Nightscout record and checks, card edits, sport session changes (`services/diary.py`) |
 | `zone`, `context` | travel time zones (`common.TravelZone`), language of the texts (`app/i18n.py`) |
 
 The day payload and the analysis page take a whole snapshot each (`day_view.day_snapshot`,
 `summary.summary_snapshot`): Python reads the store, the core computes the page. Coarse calls matter, since a
 call per reading would cost more in JSON than it saves.
 
-Still in Python and due to move here: the rest of `services/factors.py` (carb factor, place scales, breakfast
-median), the review overlay (`day_view.with_checks`), the entry form's rules (`services/entry.py`), diary
-edits, the window editor, reminders and the dish outcome rules. Storage, Nightscout sync, the places
-catalogue and the meal agent stay outside.
+Every rule now lives here; Python keeps only adapters that read the store and Nightscout, call the core and
+write the result (storage, Nightscout sync, the places catalogue, the meal agent, push sending and texts stay
+outside).
 
 ## Differences to the former Python reference
 

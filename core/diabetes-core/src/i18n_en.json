@@ -79,5 +79,16 @@
  "Sporteinfluss muss zwischen −500 und 500 mg/dL liegen": "Exercise effect must be between −500 and 500 mg/dL",
  "Ungültiger Eintragstyp": "Invalid entry type",
  "Ungültiger Sporteinfluss": "Invalid exercise effect",
- "Zeit fehlt": "Time missing"
+ "Zeit fehlt": "Time missing",
+ "Bitte eine BZ-Wirkung zwischen −500 und +500 mg/dL eintragen.": "Please enter a BG effect between −500 and +500 mg/dL.",
+ "Bitte eine Dauer zwischen 1 und 1440 Minuten eintragen.": "Please enter a duration between 1 and 1440 minutes.",
+ "Dieser Eintrag hat keine Kohlenhydrate": "This entry has no carbohydrates",
+ "Dieser Eintragstyp kann hier nicht bearbeitet werden": "This entry type cannot be edited here",
+ "Sportdauer muss zwischen 1 und 1440 Minuten liegen": "Exercise duration must be between 1 and 1440 minutes",
+ "Unbekannte KH-Sicherheit": "Unknown carb certainty",
+ "Ungültige Insulinmenge": "Invalid insulin amount",
+ "Ungültige Sportart": "Invalid exercise kind",
+ "Ungültiger Eintrag": "Invalid entry",
+ "Ungültiger Fett/Eiweiß-Zuschlag": "Invalid fat/protein surcharge",
+ "Ungültiger Split-Bolus": "Invalid split bolus"
 }
