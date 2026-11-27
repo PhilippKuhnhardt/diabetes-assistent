@@ -205,7 +205,8 @@ pub fn meal_kind_at(at: Instant, settings: &Settings) -> (NaiveDate, &'static st
 /// The main meal a carb entry at `at` would count as a snack for.
 #[derive(Clone, Debug, Serialize)]
 pub struct Root {
-    pub id: String,
+    /// None for a treatment without id.
+    pub id: Option<String>,
     pub at: Instant,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub end: Option<Instant>,
@@ -239,7 +240,7 @@ pub fn preceding_meal<'a>(at: Instant, treatments: impl Iterator<Item = &'a Trea
         if is_diary_main_meal(item) {
             let own = meal_kind_at(item.at, settings);
             root = Some(Root {
-                id: item.id.clone(), at: item.at, end: Some(item.at + window),
+                id: Some(item.id.clone()).filter(|id| !id.is_empty()), at: item.at, end: Some(item.at + window),
                 meal: item.meal.clone().unwrap_or_else(|| own.1.to_string()), same_kind: Some(own == kind), free: false,
             });
         } else if let Some(current) = root.as_mut() {
@@ -268,7 +269,7 @@ pub fn taken_meal<'a>(at: Instant, treatments: impl Iterator<Item = &'a Treatmen
             break;
         }
         if is_diary_main_meal(item) && meal_kind_at(item.at, settings) == kind {
-            return Some(Root { id: item.id.clone(), at: item.at, end: None,
+            return Some(Root { id: Some(item.id.clone()).filter(|id| !id.is_empty()), at: item.at, end: None,
                                meal: item.meal.clone().unwrap_or_else(|| kind.1.to_string()), same_kind: None, free: false });
         }
     }
@@ -314,7 +315,7 @@ pub fn group_diary_followups(treatments: &mut [Treatment], settings: &Settings) 
                 .map(|(_, other)| if free.contains(&other.id) { Treatment { event_type: "Meal Bolus".into(), ..other.clone() } } else { other.clone() })
                 .collect();
             match preceding_meal(item.at, view.iter(), settings) {
-                Some(joined) if free.contains(&joined.id) => {}
+                Some(joined) if free.contains(joined.id.as_deref().unwrap_or_default()) => {}
                 _ => continue,
             }
             let item = &mut treatments[index];

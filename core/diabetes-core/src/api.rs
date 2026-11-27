@@ -179,7 +179,7 @@ pub fn call(name: &str, args: &Value) -> Res<Value> {
                 .map(|(item, v)| ((item.id.clone(), item.at), decimal_of(&v))).collect();
             let scale = move |item: &Treatment| by_item.get(&(item.id.clone(), item.at)).copied().flatten();
             let options = source_options(&a, &carb_factor, if scales.is_some() { Some(&scale) } else { None })?;
-            out(on_board::sources(&treatments, a.get("now")?, &a.get::<Settings>("settings")?, &options))
+            out(on_board::sources(&treatments, a.get("now")?, &a.get::<Settings>("settings")?, &options)?)
         }
         "on_board.effects_at" => out(on_board::effects_at(&a.get::<on_board::Found>("found")?, a.get("moment")?, a.opt("cutoff")?)),
         "on_board.summary" => out(on_board::summary(&a.get::<on_board::Found>("found")?, a.get("now")?)),
@@ -189,6 +189,11 @@ pub fn call(name: &str, args: &Value) -> Res<Value> {
         "dosing.half_units" => out(dosing::half_units(a.dec_or("units", Decimal::ZERO))),
         "dosing.suggest" => {
             let on_board_value = a.raw("on_board");
+            let activity = a.raw("activity_change");
+            if !(activity.is_null() || activity == json!("")) && decimal_of(&activity).is_none() {
+                // Not a finite number (NaN, infinity): out of range, as in the reference.
+                return Err(CoreError::Value(context::t("Sporteinfluss muss zwischen -500 und 500 mg/dL liegen")));
+            }
             let options = dosing::DoseOptions {
                 activity_change: a.dec_or("activity_change", Decimal::ZERO),
                 units_per_ke: a.dec("units_per_ke"), auto_units_per_ke: a.dec("auto_units_per_ke"),
@@ -301,6 +306,8 @@ pub fn call(name: &str, args: &Value) -> Res<Value> {
             let values: Vec<Value> = a.get("values")?;
             out(stats::strong_outlier_flags(&values.iter().map(|v| decimal_of(v).unwrap_or_default()).collect::<Vec<_>>()))
         }
+        "services.dose_help" => crate::services::dose_help(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         other => Err(CoreError::Value(format!("unknown function {other}"))),
     }
 }

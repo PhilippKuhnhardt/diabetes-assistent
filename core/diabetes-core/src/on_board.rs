@@ -269,8 +269,9 @@ fn default_surcharge_minutes() -> Decimal {
 }
 
 /// Everything that may still act at `now`.
-pub fn sources(treatments: &[Treatment], now: Instant, settings: &Settings, options: &SourceOptions) -> Found {
-    let isf = |at: Instant| isf_at(at, &settings.isf_schedule, &settings.timezone).unwrap_or(Decimal::ZERO);
+/// Fails like the reference when the correction-factor schedule is missing.
+pub fn sources(treatments: &[Treatment], now: Instant, settings: &Settings, options: &SourceOptions) -> crate::Res<Found> {
+    let isf = |at: Instant| isf_at(at, &settings.isf_schedule, &settings.timezone);
     let mut ordered: Vec<&Treatment> = treatments.iter().collect();
     ordered.sort_by_key(|item| item.at);
     let mut seen = HashSet::new();
@@ -300,7 +301,7 @@ pub fn sources(treatments: &[Treatment], now: Instant, settings: &Settings, opti
         seen.insert(key);
         let age = if options.keep_all { Decimal::ZERO } else { minutes_between(now, item.at) };
         if item.has_rapid_dose() && age < insulin_total {
-            found.doses.push(DoseRow { at: item.at, units: item.insulin, mgdl_per_unit: isf(item.at) });
+            found.doses.push(DoseRow { at: item.at, units: item.insulin, mgdl_per_unit: isf(item.at)? });
         }
         if item.carbs > Decimal::ZERO && (options.keep_all || minutes_between(now, item.at) < CARBS_LOOKBACK) {
             stomach_rows.push((carb_row(item.at, item.carbs), item));
@@ -321,13 +322,13 @@ pub fn sources(treatments: &[Treatment], now: Instant, settings: &Settings, opti
         }
         if let Some(factor) = (options.carb_factor)(item.at) {
             let place = options.scale.and_then(|scale| scale(item)).unwrap_or(Decimal::ONE);
-            found.carbs.push(CarbRow { mgdl_per_gram: Some(factor * place * isf(item.at) / dec!(10)), ..row.clone() });
+            found.carbs.push(CarbRow { mgdl_per_gram: Some(factor * place * isf(item.at)? / dec!(10)), ..row.clone() });
         }
     }
     if let Some(surcharge) = options.surcharge_mgdl {
         found.surcharges = entry_surcharges(&stomach_rows, now, options, surcharge);
     }
-    found
+    Ok(found)
 }
 
 /// Effect still to come at a moment (mg/dL, positive) and the active insulin in IE.
