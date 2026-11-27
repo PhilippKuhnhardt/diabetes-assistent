@@ -20,6 +20,7 @@ pub mod glucose_alerts;
 pub mod insulin;
 pub mod on_board;
 pub mod model;
+pub mod notifications;
 pub mod services;
 pub mod split;
 pub mod stats;

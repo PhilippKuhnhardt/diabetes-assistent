@@ -390,6 +390,18 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
             let values: Vec<Value> = a.get("values")?;
             out(stats::strong_outlier_flags(&values.iter().map(|v| decimal_of(v).unwrap_or_default()).collect::<Vec<_>>()))
         }
+        "notifications.due" => out(crate::notifications::due(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("inputs: {error}")))?)?),
+        "notifications.due_reminders" => {
+            let second = a.dec("second_part");
+            out(crate::notifications::due_reminders(a.get("now")?, &a.get("settings")?, &a.get::<Vec<Treatment>>("treatments")?,
+                a.get::<Option<bool>>("basal_today")?.unwrap_or(false), &a.get("enabled")?,
+                &a.opt::<Vec<Reading>>("entries")?.unwrap_or_default(), &mut || second))
+        }
+        "notifications.warning_reminders" => out(crate::notifications::warning_reminders(a.get("now")?, &a.get("settings")?,
+            &a.get::<Vec<crate::notifications::WarningInput>>("warnings")?.into_iter().map(Into::into).collect::<Vec<_>>(), &a.get("enabled")?)),
+        "notifications.correction_reminder" => out(crate::notifications::correction_reminder(a.get("now")?, &a.get("settings")?,
+            &a.get("hit")?, a.opt::<crate::notifications::Correction>("correction")?.as_ref())),
         "services.dose_help" => crate::services::dose_help(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         "day.compute_day" => crate::day::compute_day(&serde_json::from_value(args.clone())
