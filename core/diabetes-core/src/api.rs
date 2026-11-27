@@ -435,10 +435,10 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
         "limits.sport_effect_mgdl" => out(crate::limits::sport_effect_mgdl(&a.raw("effect_mgdl"))?),
         "limits.finger_mgdl" => out(crate::limits::finger_mgdl(&a.raw("mgdl"))?),
         "entry.carbs" => out(crate::entry::carbs(&a.get::<Value>("payload")?)),
-        "entry.preview" => crate::entry::preview(&serde_json::from_value(args.clone())
-            .map_err(|error| CoreError::Value(format!("inputs: {error}")))?),
-        "entry.save_plan" => crate::entry::save_plan(&serde_json::from_value(args.clone())
-            .map_err(|error| CoreError::Value(format!("inputs: {error}")))?),
+        "entry.preview" => out(crate::entry::preview(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("inputs: {error}")))?)?),
+        "entry.save_plan" => out(crate::entry::save_plan(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("inputs: {error}")))?)?),
         "diary.record" => crate::diary::record(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("inputs: {error}")))?),
         "diary.edit_kind" => crate::diary::edit_kind(&a.get::<Value>("payload")?),
