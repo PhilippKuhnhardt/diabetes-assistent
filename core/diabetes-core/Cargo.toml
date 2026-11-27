@@ -1,0 +1,15 @@
+[package]
+name = "diabetes-core"
+version = "0.1.0"
+edition = "2021"
+description = "Calculation core of the diabetes assistant: meal factors, Automatik, dose help, what still acts."
+license = "AGPL-3.0-only"
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["std", "serde"] }
+chrono-tz = "0.10"
+regex = "1"
+rust_decimal = { version = "1", features = ["maths", "serde-str"] }
+rust_decimal_macros = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["arbitrary_precision"] }
