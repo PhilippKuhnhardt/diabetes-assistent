@@ -23,12 +23,10 @@ class RoundLoadTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         db.DB_PATH = Path(self.temp.name) / "app.sqlite3"
         db.init()
-        summary._automatik_cache.clear()
 
     def tearDown(self):
         db.DB_PATH = self.old_path
         self.temp.cleanup()
-        summary._automatik_cache.clear()
 
     def mirror(self, day, entries):
         start, end = local_day_range(day, "Europe/Berlin")
@@ -73,22 +71,21 @@ class RoundLoadTests(unittest.TestCase):
             day_view.day_fingerprint(TODAY)
             self.assertEqual(inputs.call_count, 4)
 
-    def test_automatik_part_is_computed_once_while_its_meals_are_unchanged(self):
+    def test_automatik_part_follows_its_meals(self):
+        # The core keeps the Automatik part while its meals and settings are unchanged (summary.rs AUTOMATIK_CACHE):
+        # another period gives the same part, a new meal a new one.
         points = []
         with patch("app.services.day_view.day_payload", return_value={"meals": []}), \
-                patch("app.services.factors.meal_points", side_effect=lambda *args, **kwargs: list(points)), \
-                patch("app.forecast.backtest", wraps=summary.forecast.backtest) as backtest:
+                patch("app.services.factors.meal_points", side_effect=lambda *args, **kwargs: list(points)):
             first = summary.compute_summary(14, date(2026, 10, 30))
-            calls = backtest.call_count
-            self.assertGreater(calls, 0)
             self.assertEqual(summary.compute_summary(30, date(2026, 10, 30))["suggestion_derivation"],
                              first["suggestion_derivation"])
-            self.assertEqual(backtest.call_count, calls)
-            points.append({"id": "m", "day": date(2026, 10, 29), "at": datetime(2026, 10, 29, 6, tzinfo=timezone.utc),
-                           "key": ("breakfast", "work"), "day_type": "work", "value": summary.Decimal(1),
-                           "end_glucose": None, "carbs_isf": None, "carbs_g": None})
-            summary.compute_summary(14, date(2026, 10, 30))
-            self.assertEqual(backtest.call_count, 2 * calls)
+            points.extend({"id": f"m{age}", "day": date(2026, 10, 30 - age),
+                           "at": datetime(2026, 10, 30 - age, 6, tzinfo=timezone.utc), "key": ("breakfast", None),
+                           "day_type": None, "value": summary.Decimal(1), "end_glucose": None,
+                           "carbs_isf": summary.Decimal(4000), "carbs_g": summary.Decimal(40)} for age in range(1, 6))
+            changed = summary.compute_summary(14, date(2026, 10, 30))["suggestion_derivation"]
+            self.assertNotEqual(changed, first["suggestion_derivation"])
 
 
 if __name__ == "__main__":

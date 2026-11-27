@@ -53,7 +53,12 @@ pub struct Snapshot {
     #[serde(default)]
     pub own_sport_sessions: HashSet<String>,
     /// Day payloads by day (ISO date).
+    #[serde(default)]
     pub payloads: HashMap<String, Value>,
+    /// The meal points over history_days(days) (factors.meal_points), when the caller already has them;
+    /// else they are taken from `payloads`.
+    #[serde(default)]
+    pub points: Option<Vec<MealPoint>>,
 }
 
 /// How many days before today the analysis reads (period, 90-day matrix with lookback, stress tile).
@@ -97,7 +102,7 @@ fn python_instants(value: &mut Value) {
 }
 
 /// The Automatik's configured percentile, half-life and lookback (factors.forecast_settings).
-struct Configured {
+pub struct Configured {
     percentile: Decimal,
     half_life: Decimal,
     lookback: i64,
@@ -109,7 +114,7 @@ struct Configured {
 }
 
 impl Configured {
-    fn of(settings: &Value) -> Res<Configured> {
+    pub fn of(settings: &Value) -> Res<Configured> {
         let number = |key: &str, default: Decimal| dec_of(settings.get(key)).unwrap_or(default);
         Ok(Configured {
             percentile: dec_of(settings.get("auto_percentile")).ok_or_else(|| CoreError::Value("auto_percentile".into()))?,
@@ -119,7 +124,8 @@ impl Configured {
             method: settings.get("auto_method").and_then(Value::as_str).unwrap_or("percentile").to_string(),
             surcharge_mgdl: number("auto_surcharge_mgdl", forecast::SURCHARGE_MGDL),
             fat_mgdl: number("auto_fat_surcharge_mgdl", forecast::FAT_SURCHARGE_MGDL),
-            target: dec_of(settings.get("dose_target_mgdl")).ok_or_else(|| CoreError::Value("dose_target_mgdl".into()))?,
+            // config.py's default; only the backtest reads it.
+            target: number("dose_target_mgdl", dec!(100)),
             day_types: settings.get("day_types").map(|v| v.as_bool().unwrap_or(true)).unwrap_or(false),
         })
     }
@@ -145,6 +151,11 @@ impl Configured {
 }
 
 /// Valid, non-excluded meal factors from today back over days_back days (factors.meal_points).
+/// The misses of every point against the suggestion from the points before it (summary.miss_trend's input).
+pub fn point_misses(points: &[MealPoint], configured: &Configured) -> HashMap<String, (Option<Decimal>, Option<Decimal>)> {
+    points.iter().map(|point| (point_id(point), suggestion_miss(points, point, configured))).collect()
+}
+
 pub fn meal_points(today: NaiveDate, days_back: i64, snapshot: &Snapshot, mode: &str) -> Vec<MealPoint> {
     let own_places: HashSet<i64> = snapshot.places.iter().filter(|place| place.adjust).map(|place| place.id).collect();
     let mut points = Vec::new();
@@ -178,7 +189,7 @@ pub fn meal_points(today: NaiveDate, days_back: i64, snapshot: &Snapshot, mode: 
 }
 
 /// The Automatik suggestion a meal would have got from the days before it, and the factor error in mg/dL.
-fn suggestion_miss(points: &[MealPoint], point: &MealPoint, configured: &Configured) -> (Option<Decimal>, Option<Decimal>) {
+pub fn suggestion_miss(points: &[MealPoint], point: &MealPoint, configured: &Configured) -> (Option<Decimal>, Option<Decimal>) {
     let Some(carbs_isf) = point.carbs_isf.filter(|v| !v.is_zero()) else { return (None, None) };
     let suggested = if configured.surcharge() {
         let values = forecast::base_history(points, &point.key, point.day, configured.lookback, configured.surcharge_mgdl, configured.fat_mgdl);
@@ -310,6 +321,10 @@ fn compute_automatik(today: NaiveDate, points: &[MealPoint], c: &Configured) -> 
                     if key == "lookback" {
                         let days = option.get("value").and_then(decimal_of).and_then(|v| i64::try_from(v.trunc()).ok());
                         option["value"] = json!(days);
+                    } else if let Some(number) = option.get("value").and_then(decimal_of)
+                        .and_then(|v| v.normalize().to_string().parse::<serde_json::Number>().ok()) {
+                        // A number like the page's settings, not text.
+                        option["value"] = Value::Number(number);
                     }
                     let apply = tuning_apply(key, &option["value"]);
                     option["apply"] = apply;
@@ -352,7 +367,7 @@ fn compute_automatik(today: NaiveDate, points: &[MealPoint], c: &Configured) -> 
     derivation["weights"] = Value::Array(ages.into_iter().filter(|age| (1..=c.lookback).contains(age))
         .map(|age| json!({"age_days": age, "weight": s(forecast::weight(age, c.half_life))})).collect());
     let day_type_ratio = if c.day_types { to_value(&forecast::day_type_ratios(points, today)) } else { Value::Null };
-    let misses = points.iter().map(|point| (point_id(point), suggestion_miss(points, point, c))).collect();
+    let misses = point_misses(points, c);
     Automatik { predictions, derivation, day_type_ratio, misses }
 }
 
@@ -603,7 +618,7 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Value> {
         }
     }
     let mode = settings.get("auto_vacation").and_then(Value::as_str).unwrap_or(services::DEFAULT_AUTO_VACATION);
-    let points = meal_points(today, history_days(days), snapshot, mode);
+    let points = snapshot.points.clone().unwrap_or_else(|| meal_points(today, history_days(days), snapshot, mode));
     let part = automatik(today, &points, settings, &c);
     let by_id: HashMap<String, &MealPoint> = points.iter().map(|point| (point_id(point), point)).collect();
     // Erwartet / Delta per meal, the typical miss per meal kind, carb certainty and "Schnell" mark.
@@ -641,7 +656,7 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Value> {
         }).collect())
     };
     let misses = json!({"certainty": levels(certainty), "fast": levels(fast)});
-    let trend = miss_trend(&points, today, &part);
+    let trend = miss_trend(&points, today, &part.misses);
     for (kind, row) in by_day_type.iter_mut() {
         let key: MealKey = ("breakfast".into(), Some(kind.clone()));
         row["suggestion"] = suggestion_factor(&part.predictions[&key], &c);
@@ -709,7 +724,7 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Value> {
 
 /// The miss week by week over the last TREND_WEEKS weeks before today, per meal kind; `drift` names a
 /// direction when the last DRIFT_WEEKS weeks with meals all missed the same way by at least DRIFT_MGDL.
-fn miss_trend(points: &[MealPoint], today: NaiveDate, part: &Automatik) -> Value {
+pub fn miss_trend(points: &[MealPoint], today: NaiveDate, misses: &HashMap<String, (Option<Decimal>, Option<Decimal>)>) -> Value {
     let weeks: Vec<Value> = (0..TREND_WEEKS).rev().map(|index| json!({
         "start": (today - Duration::days(7 * (index + 1))).to_string(),
         "end": (today - Duration::days(7 * index + 1)).to_string()})).collect();
@@ -719,7 +734,7 @@ fn miss_trend(points: &[MealPoint], today: NaiveDate, part: &Automatik) -> Value
         if !(1..=7 * TREND_WEEKS).contains(&age) || point.own_place || !MEALS.contains(&point.key.0.as_str()) {
             continue;
         }
-        if let Some((_, Some(deviation))) = part.misses.get(&point_id(point)) {
+        if let Some((_, Some(deviation))) = misses.get(&point_id(point)) {
             buckets.get_mut(point.key.0.as_str()).unwrap()[(TREND_WEEKS - 1 - (age - 1) / 7) as usize].push(*deviation);
         }
     }
@@ -808,7 +823,7 @@ fn raw_factor(result: &Value) -> Option<Decimal> {
 }
 
 /// The kind's standard drop that would have matched what the meals measured (sport_analysis.suggested_drop).
-fn suggested_drop(standard: Option<Decimal>, ratios: &[Decimal]) -> Value {
+pub fn suggested_drop(standard: Option<Decimal>, ratios: &[Decimal]) -> Value {
     let Some(standard) = standard.filter(|v| !v.is_zero()) else { return Value::Null };
     if ratios.len() < SPORT_SUGGEST_MIN_MEALS {
         return Value::Null;
@@ -823,7 +838,7 @@ fn suggested_drop(standard: Option<Decimal>, ratios: &[Decimal]) -> Value {
 }
 
 /// Link sport sessions to meals and estimate each meal's sport effect (sport_analysis.analyze).
-fn sport_analysis(meals: &[Value], exercises: &[Value], lookback_minutes: i64, window_minutes: i64,
+pub fn sport_analysis(meals: &[Value], exercises: &[Value], lookback_minutes: i64, window_minutes: i64,
                   labels: &HashMap<String, String>, standards: &HashMap<String, Decimal>, own_sessions: &HashSet<String>) -> Value {
     struct Session { item: Value, start: Instant, end: Instant, duration: i64, meal_ids: Vec<String> }
     let mut sessions: Vec<Session> = exercises.iter().filter_map(|item| {

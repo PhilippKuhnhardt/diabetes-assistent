@@ -410,6 +410,40 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
             Ok(crate::day::meal_review(&meal["calculation"]))
         }
         "day.day_review" => Ok(crate::day::day_review(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?)),
+        "factors.counted_days" => out(crate::services::counted_days(day(&a, "today")?, a.get("days_back")?,
+            &a.get::<Vec<crate::services::VacationPeriod>>("periods")?, &a.get::<String>("mode")?)),
+        "factors.meal_points" => {
+            let snapshot: crate::summary::Snapshot = serde_json::from_value(json!({
+                "today": args["today"], "days": 1, "settings": Value::Null, "payloads": args["payloads"],
+                "analysis_exclusions": args["analysis_exclusions"], "places": args["places"],
+                "day_types": args["day_types"], "vacation_periods": args["vacation_periods"]}))
+                .map_err(|error| CoreError::Value(format!("meal points: {error}")))?;
+            out(crate::summary::meal_points(day(&a, "today")?, a.get("days_back")?, &snapshot, &a.get::<String>("mode")?))
+        }
+        "summary.history_days" => out(crate::summary::history_days(a.get("days")?)),
+        "summary.suggestion_miss" => {
+            let configured = crate::summary::Configured::of(&a.get::<Value>("settings")?)?;
+            let (suggested, deviation) = crate::summary::suggestion_miss(&a.get::<Vec<forecast::MealPoint>>("points")?,
+                                                                          &a.get::<forecast::MealPoint>("point")?, &configured);
+            out((suggested, deviation))
+        }
+        "summary.miss_trend" => {
+            let points: Vec<forecast::MealPoint> = a.get("points")?;
+            let configured = crate::summary::Configured::of(&a.get::<Value>("settings")?)?;
+            Ok(crate::summary::miss_trend(&points, day(&a, "today")?, &crate::summary::point_misses(&points, &configured)))
+        }
+        "sport_analysis.suggested_drop" => {
+            let ratios: Vec<Value> = a.get("ratios")?;
+            Ok(crate::summary::suggested_drop(a.dec("standard"), &ratios.iter().filter_map(decimal_of).collect::<Vec<_>>()))
+        }
+        "sport_analysis.analyze" => {
+            let labels: HashMap<String, String> = a.get("labels")?;
+            let standards: HashMap<String, Value> = a.get::<Option<HashMap<String, Value>>>("standards")?.unwrap_or_default();
+            let standards = standards.into_iter().filter_map(|(key, value)| decimal_of(&value).map(|v| (key, v))).collect();
+            let own: std::collections::HashSet<String> = a.get::<Option<Vec<String>>>("own_sessions")?.unwrap_or_default().into_iter().collect();
+            Ok(crate::summary::sport_analysis(&a.get::<Vec<Value>>("meals")?, &a.get::<Vec<Value>>("exercises")?,
+                a.get("lookback_minutes")?, a.get("window_minutes")?, &labels, &standards, &own))
+        }
         "summary.compute_summary" => crate::summary::compute_summary(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         other => Err(CoreError::Value(format!("unknown function {other}"))),

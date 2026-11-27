@@ -218,6 +218,46 @@
    "datetime"
   ]
  },
+ "factors.counted_days": {
+  "$[]": [
+   "tuple"
+  ],
+  "$[][]": [
+   "date"
+  ]
+ },
+ "factors.meal_points": {
+  "$[].at": [
+   "datetime"
+  ],
+  "$[].carbs_g": [
+   "Decimal"
+  ],
+  "$[].carbs_isf": [
+   "Decimal"
+  ],
+  "$[].day": [
+   "date"
+  ],
+  "$[].end_glucose": [
+   "Decimal"
+  ],
+  "$[].key": [
+   "tuple"
+  ],
+  "$[].place_id": [
+   "int"
+  ],
+  "$[].real_day": [
+   "date"
+  ],
+  "$[].surcharge_mgdl": [
+   "Decimal"
+  ],
+  "$[].value": [
+   "Decimal"
+  ]
+ },
  "forecast.backtest": {
   "$.rows[].glucose[]": [
    "Decimal"
@@ -934,6 +974,16 @@
  },
  "stats.quartile": {
   "$": [
+   "Decimal"
+  ]
+ },
+ "summary.history_days": {
+  "$": [
+   "int"
+  ]
+ },
+ "summary.suggestion_miss": {
+  "$[]": [
    "Decimal"
   ]
  }

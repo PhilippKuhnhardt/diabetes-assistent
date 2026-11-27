@@ -1,12 +1,12 @@
 """Calculated meal factors over past days, as the dose help and analysis use them."""
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime
 from decimal import Decimal
 
 
-from app import calculation, forecast
-from app.common import MEALS, local_zone, parse_instant
+from app import calculation, core, forecast
+from app.common import local_zone
 from app.services import day_view
 from app.store import config, marks
 from app.store import places as place_store
@@ -25,23 +25,8 @@ def counted_days(today: date, days_back: int, periods: list[dict], mode: str) ->
     vacation's length, so after coming home the lookback and the half-life reach the meals before
     the vacation as if it had not happened, and new meals take over as usual. During a vacation
     "separate" counts every day as before; "vacation_only" counts only vacation days. "all" counts
-    every day everywhere."""
-    calendar = [today - timedelta(days=offset) for offset in range(days_back + 1)]
-    if mode not in ("separate", "vacation_only") or not periods:
-        return [(day, day) for day in calendar]
-    if marks.in_vacation(today.isoformat(), periods):
-        if mode == "vacation_only":
-            calendar = [day for day in calendar if marks.in_vacation(day.isoformat(), periods)]
-        return [(day, day) for day in calendar]
-    result = []
-    offset = 0
-    # Bounded so a pathological set of periods cannot loop for long.
-    while len(result) <= days_back and offset <= days_back + 732:
-        day = today - timedelta(days=offset)
-        offset += 1
-        if not marks.in_vacation(day.isoformat(), periods):
-            result.append((day, today - timedelta(days=len(result))))
-    return result
+    every day everywhere. (The rule: services.rs counted_days.)"""
+    return core.call("factors.counted_days", today=today, days_back=days_back, periods=periods, mode=mode)
 
 
 def meal_keys(settings: dict) -> tuple:
@@ -90,41 +75,21 @@ def meal_points(today: date, days_back: int, overrides: dict[str, str], periods:
                 loaded: dict[str, dict] | None = None, mode: str = config.DEFAULT_AUTO_VACATION) -> list[dict]:
     """Valid, non-excluded meal factors from today back to days_back days, for the suggestion.
     Breakfast is keyed by the day type of its day. `day` is the day as the Automatik counts it
-    (counted_days: vacation days skipped after a vacation), `real_day` the calendar day."""
-    excluded = marks.analysis_exclusions()
-    own_places = {place["id"] for place in place_store.all_places() if place.get("adjust")}
-    points = []
-    for real_day, day in counted_days(today, days_back, periods, mode):
+    (counted_days: vacation days skipped after a vacation), `real_day` the calendar day.
+    (The rule: summary.rs meal_points; this reads the stored days it needs.)"""
+    payloads = {}
+    for real_day, _ in counted_days(today, days_back, periods, mode):
         text = real_day.isoformat()
         payload = loaded[text] if loaded is not None and text in loaded else day_view.day_payload(text, refresh=False)
         if loaded is not None:
             loaded[text] = payload
-        day_type = marks.day_type_for(text, overrides, periods)[0]
-        for meal in payload.get("meals", []):
-            result = meal.get("calculation") or {}
-            factor = result.get("factor_units_per_ke")
-            if meal.get("meal") not in MEALS or meal["id"] in excluded or factor is None:
-                continue
-            at = (parse_instant(meal["at"]) if meal.get("at")
-                  else datetime.combine(real_day, time(hour=12), tzinfo=timezone.utc))
-            points.append({
-                "id": meal["id"], "day": day, "real_day": real_day, "at": at,
-                "key": (meal["meal"], day_type if meal["meal"] == "breakfast" else None),
-                "day_type": day_type,
-                "value": Decimal(factor),
-                "end_glucose": Decimal(result["g3"]) if result.get("g3") is not None else None,
-                "carbs_isf": (Decimal(result["carbs_times_isf_total"])
-                              if result.get("carbs_times_isf_total") is not None else None),
-                "carbs_g": Decimal(result["carbs_total"]) if result.get("carbs_total") is not None else None,
-                "fat": bool((meal.get("quality") or {}).get("fat_protein")),
-                # Dosed with the calculated fat/protein surcharge: that one replaces the static one (app/fpe.py).
-                "surcharge_mgdl": (Decimal((meal.get("fpe_surcharge") or {})["mgdl"])
-                                   if meal.get("fpe_surcharge") else None),
-                "place_id": (meal.get("place") or {}).get("id"),
-                # A meal at a place with its own place factor stays out of the Automatik's history.
-                "own_place": (meal.get("place") or {}).get("id") in own_places,
-            })
-    return points
+        payloads[text] = {"meals": [{key: meal.get(key) for key in ("id", "meal", "at", "calculation", "quality",
+                                                                     "fpe_surcharge", "place")}
+                                    for meal in payload.get("meals", [])]}
+    return core.call("factors.meal_points", today=today, days_back=days_back, mode=mode, payloads=payloads,
+                     analysis_exclusions=sorted(marks.analysis_exclusions()),
+                     places=[{"id": place["id"], "adjust": bool(place.get("adjust"))} for place in place_store.all_places()],
+                     day_types=overrides, vacation_periods=periods)
 
 
 def surcharge_mgdl(settings: dict) -> Decimal:

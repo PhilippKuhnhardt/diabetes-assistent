@@ -22,9 +22,14 @@ through the phone) can link the same crate to compute offline. Python in `app/` 
 | `services` | `app/services/dose_help.py` with the parts of `factors.py` and `store/marks.py` it reads |
 | `zone`, `context` | travel time zones (`common.TravelZone`), language of the texts (`app/i18n.py`) |
 
-Still in Python and due to move here: meal points (`services/factors.py`), the day payload assembly
-(`day_view.compute_day`), the analysis pages (`analysis/summary.py`, `night.py`, `sport_analysis.py`) and
-the dish outcome rules. Storage, Nightscout sync, the places catalogue and the meal agent stay outside.
+The day payload and the analysis page take a whole snapshot each (`day_view.day_snapshot`,
+`summary.summary_snapshot`): Python reads the store, the core computes the page. Coarse calls matter, since a
+call per reading would cost more in JSON than it saves.
+
+Still in Python and due to move here: the rest of `services/factors.py` (carb factor, place scales, breakfast
+median), the review overlay (`day_view.with_checks`), the entry form's rules (`services/entry.py`), diary
+edits, the window editor, reminders and the dish outcome rules. Storage, Nightscout sync, the places
+catalogue and the meal agent stay outside.
 
 ## Differences to the former Python reference
 
