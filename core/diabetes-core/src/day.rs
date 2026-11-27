@@ -11,7 +11,7 @@ use crate::context::{local_zone, t, tr};
 use crate::episodes;
 use crate::fpe;
 use crate::glucose;
-use crate::model::{decimal_of, Instant, Reading, Settings, SurchargePlan, Treatment};
+use crate::model::{decimal_of, Certainty, DayType, Instant, MealKind, Reading, Settings, SurchargePlan, Treatment};
 use crate::on_board;
 use crate::services::{self, VacationPeriod};
 pub use crate::wire::iso;
@@ -80,7 +80,7 @@ pub struct Snapshot {
     #[serde(default)]
     pub analysis_exclusions: HashSet<String>,
     #[serde(default)]
-    pub day_types: Option<HashMap<NaiveDate, String>>,
+    pub day_types: Option<HashMap<NaiveDate, DayType>>,
     #[serde(default)]
     pub vacation_periods: Vec<VacationPeriod>,
     #[serde(default)]
@@ -441,7 +441,7 @@ pub struct MealSport {
 /// The marks of a meal's counted carb entries: the least certain level and each factor any entry has.
 #[derive(Clone, Debug, Serialize)]
 pub struct Quality {
-    pub carbs_certainty: Option<String>,
+    pub carbs_certainty: Option<Certainty>,
     pub fat_protein: bool,
     pub alcohol: bool,
     pub fast: bool,
@@ -490,7 +490,7 @@ pub struct MealView {
     pub imported: bool,
     #[serde(serialize_with = "py_iso")]
     pub at: Instant,
-    pub meal: String,
+    pub meal: MealKind,
     /// Nightscout's amount as it came.
     pub carbs: Value,
     pub notes: String,
@@ -558,7 +558,7 @@ pub struct EntryPoint {
 #[derive(Clone, Debug, Serialize)]
 pub struct SportShare {
     pub meal_id: String,
-    pub meal: String,
+    pub meal: MealKind,
     pub effect_mgdl: Decimal,
 }
 
@@ -620,7 +620,7 @@ pub struct TimelineRow {
     pub notes: String,
     #[serde(flatten)]
     pub session: Option<SportSession>,
-    pub carbs_certainty: Option<String>,
+    pub carbs_certainty: Option<Certainty>,
     pub fat_protein: bool,
     pub alcohol: bool,
     pub fast: bool,
@@ -660,7 +660,7 @@ pub struct DayPayload {
     #[serde(serialize_with = "py_iso")]
     pub day_end: Instant,
     pub timezone: String,
-    pub day_type: Option<String>,
+    pub day_type: Option<DayType>,
     pub day_type_source: &'static str,
     pub vacation: bool,
     pub review: DayReview,
@@ -766,7 +766,7 @@ pub fn compute_day(snapshot: &Snapshot) -> Res<DayPayload> {
         carb_ids.extend(associated.iter().filter(|item| item.carbs > Decimal::ZERO).map(|item| item.id.clone()));
         let counted: Vec<&Treatment> = treatments.iter().filter(|item| carb_ids.contains(&item.id)).collect();
         let quality = Quality {
-            carbs_certainty: episodes::least_certain(counted.iter().filter_map(|item| item.carbs_certainty.as_deref())).map(str::to_string),
+            carbs_certainty: crate::kinds::least_certain(counted.iter().filter_map(|item| item.carbs_certainty)),
             fat_protein: counted.iter().any(|item| item.fat_protein),
             alcohol: counted.iter().any(|item| item.alcohol),
             fast: counted.iter().any(|item| item.fast),
@@ -787,7 +787,7 @@ pub fn compute_day(snapshot: &Snapshot) -> Res<DayPayload> {
             source_id: meal.source_id.clone(),
             imported: meal.imported,
             at: meal.at,
-            meal: meal.meal.clone(),
+            meal: meal.meal,
             carbs: source.map(|item| raw.get(item, "carbs")).unwrap_or_else(|| Value::String(meal.carbs.to_string())),
             notes: meal.notes.clone(),
             review: MealReview::new(result.is_some_and(|r| r.factor_units_per_ke.is_some())),
@@ -804,7 +804,7 @@ pub fn compute_day(snapshot: &Snapshot) -> Res<DayPayload> {
             calculation: calc,
         });
     }
-    let dinner_at = meals.iter().filter(|meal| meal.meal == "dinner").map(|meal| meal.at).max();
+    let dinner_at = meals.iter().filter(|meal| meal.meal == MealKind::Dinner).map(|meal| meal.at).max();
     let night = night_analysis(day, &treatments, &entries, &reading_at, dinner_at, &settings);
     let meal_sources: HashSet<&str> = meals.iter().map(|meal| meal.source_id.as_str()).collect();
     let episode_ids: HashSet<&str> = meals.iter().filter(|meal| !meal.imported).map(|meal| meal.id.as_str()).collect();
@@ -980,7 +980,7 @@ fn timeline(snapshot: &Snapshot, treatments: &[Treatment], entries: &[Reading], 
             sport_kind: item.sport_type.clone(),
             notes: note,
             session,
-            carbs_certainty: item.carbs_certainty.clone(),
+            carbs_certainty: item.carbs_certainty,
             fat_protein: item.fat_protein,
             alcohol: item.alcohol,
             fast: item.fast,
@@ -1012,7 +1012,7 @@ fn block_meal_id(item: &Treatment, meals: &[MealView]) -> Option<String> {
 /// acts between or after the meals.
 fn sport_shares(item: &Treatment, session: &SportSession, meals: &[MealView]) -> SportShares {
     let shares: Vec<SportShare> = meals.iter().flat_map(|meal| meal.sport.events.iter().filter(|event| event.id == item.id)
-        .map(|event| SportShare { meal_id: meal.id.clone(), meal: meal.meal.clone(), effect_mgdl: event.effect_mgdl })).collect();
+        .map(|event| SportShare { meal_id: meal.id.clone(), meal: meal.meal, effect_mgdl: event.effect_mgdl })).collect();
     let taken: Decimal = shares.iter().map(|share| share.effect_mgdl).sum();
     let total = session.sport_effect_mgdl;
     let rest = (total - taken).round_dp_with_strategy(1, rust_decimal::RoundingStrategy::MidpointNearestEven);
@@ -1103,7 +1103,7 @@ pub fn night_analysis(day: NaiveDate, treatments: &[Treatment], entries: &[Readi
         return Night::Missing { reason: t("Für diesen Tag ist kein Abendessen erfasst.") };
     };
     let next_meals = episodes::meals_for_day(treatments, day + Duration::days(1), settings);
-    let Some(breakfast) = next_meals.iter().filter(|meal| meal.meal == "breakfast" && meal.at > dinner_at).min_by_key(|meal| meal.at) else {
+    let Some(breakfast) = next_meals.iter().filter(|meal| meal.meal == MealKind::Breakfast && meal.at > dinner_at).min_by_key(|meal| meal.at) else {
         return Night::Missing { reason: t("Für den folgenden Tag ist kein Frühstück erfasst.") };
     };
     let breakfast_at = breakfast.at;

@@ -97,8 +97,12 @@ fn variants(raw: &Value, surcharge_percentile: Decimal, surcharge_mgdl: Decimal)
 }
 
 fn key(args: &Args, name: &str) -> Res<forecast::MealKey> {
-    let parts: Vec<Option<String>> = args.get(name)?;
-    Ok((parts.first().cloned().flatten().unwrap_or_default(), parts.get(1).cloned().flatten()))
+    forecast::key_of(args.raw(name)).map_err(|error| CoreError::Value(format!("{name}: {error}")))
+}
+
+/// The Automatik method by name; an unknown one is the percentile method, as it always behaved.
+fn method(args: &Args) -> crate::model::AutoMethod {
+    crate::model::AutoMethod::parse(&args.str("method")).unwrap_or_default()
 }
 
 /// Set the process context: {"language": "de"|"en", "insulin": "fiasp", "switches": [[instant, zone], ...]}.
@@ -294,10 +298,10 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
             a.dec_or("percentile", Decimal::ZERO), a.dec_or("half_life", Decimal::ONE), a.int_or("lookback", 30))),
         "forecast.predict_method" => out(forecast::predict_method(&a.get::<Vec<forecast::MealPoint>>("points")?, &key(&a, "key")?,
             day(&a, "day")?, a.dec_or("percentile", Decimal::ZERO), a.dec_or("half_life", Decimal::ONE), a.int_or("lookback", 30),
-            &a.str("method"), a.dec_or("mgdl", forecast::SURCHARGE_MGDL), a.dec_or("fat_mgdl", Decimal::ZERO))),
+            method(&a), a.dec_or("mgdl", forecast::SURCHARGE_MGDL), a.dec_or("fat_mgdl", Decimal::ZERO))),
         "forecast.place_scale" => out(forecast::place_scale(&a.get::<Vec<forecast::MealPoint>>("points")?, a.int_or("place_id", 0),
             day(&a, "day")?, a.dec_or("percentile", Decimal::ZERO), a.dec_or("half_life", Decimal::ONE), a.int_or("lookback", 30),
-            &a.str("method"), a.dec_or("mgdl", forecast::SURCHARGE_MGDL), a.dec_or("fat_mgdl", Decimal::ZERO))),
+            method(&a), a.dec_or("mgdl", forecast::SURCHARGE_MGDL), a.dec_or("fat_mgdl", Decimal::ZERO))),
         "forecast.median" => {
             let values: Vec<Value> = a.get("values")?;
             out(forecast::median(&values.iter().map(|v| decimal_of(v).unwrap_or_default()).collect::<Vec<_>>()))
@@ -337,8 +341,9 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
         "episodes.split_plan" => out(episodes::split_plan(&a.str("notes"))),
         "episodes.surcharge_plan" => out(episodes::surcharge_plan(&a.str("notes"))),
         "episodes.least_certain" => {
-            let levels: Vec<Option<String>> = a.get("levels")?;
-            out(episodes::least_certain(levels.iter().flatten().map(String::as_str)))
+            // Unknown names are left out.
+            let levels: Vec<Value> = a.get("levels")?;
+            out(crate::kinds::least_certain(levels.into_iter().filter_map(|level| serde_json::from_value(level).ok())))
         }
         "on_board.attach_stomach" => {
             let mut rows: Vec<on_board::CarbRow> = a.get("rows")?;

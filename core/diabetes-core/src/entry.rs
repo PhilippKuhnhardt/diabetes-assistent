@@ -10,7 +10,7 @@ use crate::wire::iso;
 use crate::dosing::half_units;
 use crate::episodes::{self, Root};
 use crate::fpe::{self, Estimate};
-use crate::model::{decimal_of, Instant, Settings, Treatment};
+use crate::model::{decimal_of, DayType, Instant, MealKind, Settings, Treatment};
 use crate::services::{self, DoseHelp, OnBoardView, Snapshot};
 use crate::split;
 use crate::window;
@@ -69,8 +69,8 @@ pub struct Inputs {
     /// Whether the day already has a basal dose.
     #[serde(default)]
     pub basal_today: bool,
-    #[serde(default)]
-    pub day_type: Option<String>,
+    #[serde(default, deserialize_with = "crate::kinds::opt_name")]
+    pub day_type: Option<DayType>,
     #[serde(default)]
     pub day_type_source: Option<String>,
     /// The place chips (places.chips) for a carb entry, and the place the entry will be saved with.
@@ -184,9 +184,9 @@ impl<'a> Form<'a> {
 /// whether it can end that meal instead.
 #[derive(Clone, Debug)]
 struct Assignment {
-    meal: Option<String>,
+    meal: Option<MealKind>,
     at: Option<Instant>,
-    own_meal: &'static str,
+    own_meal: MealKind,
     snack: bool,
     own_meal_taken: bool,
     close: Option<Close>,
@@ -194,7 +194,7 @@ struct Assignment {
 
 #[derive(Clone, Debug)]
 struct Close {
-    meal: String,
+    meal: MealKind,
     at: Instant,
     meal_id: String,
     start: Instant,
@@ -205,9 +205,9 @@ struct Close {
 /// What the form shows of the assignment: the meal a snack belongs to and the chip that ends that meal.
 #[derive(Clone, Debug, Serialize)]
 pub struct AssignmentView {
-    pub meal: Option<String>,
+    pub meal: Option<MealKind>,
     pub at: Option<String>,
-    pub own_meal: &'static str,
+    pub own_meal: MealKind,
     pub snack: bool,
     pub own_meal_taken: bool,
     pub close: Option<CloseView>,
@@ -215,7 +215,7 @@ pub struct AssignmentView {
 
 #[derive(Clone, Debug, Serialize)]
 pub struct CloseView {
-    pub meal: String,
+    pub meal: MealKind,
     pub at: String,
     pub end: String,
     pub active: bool,
@@ -224,9 +224,9 @@ pub struct CloseView {
 impl Assignment {
     fn view(&self) -> AssignmentView {
         AssignmentView {
-            meal: self.meal.clone(), at: self.at.map(|at| iso(&at)), own_meal: self.own_meal, snack: self.snack,
+            meal: self.meal, at: self.at.map(|at| iso(&at)), own_meal: self.own_meal, snack: self.snack,
             own_meal_taken: self.own_meal_taken,
-            close: self.close.as_ref().map(|c| CloseView { meal: c.meal.clone(), at: iso(&c.at), end: iso(&c.end), active: c.active }),
+            close: self.close.as_ref().map(|c| CloseView { meal: c.meal, at: iso(&c.at), end: iso(&c.end), active: c.active }),
         }
     }
 }
@@ -258,11 +258,11 @@ fn assignment(form: &Form) -> Option<Assignment> {
         return Some(Assignment { meal: None, at: None, own_meal, snack: !as_meal, own_meal_taken: false, close: None });
     }
     let result = if taken.is_some() {
-        Assignment { meal: root.as_ref().map(|r| r.meal.clone()), at: root.as_ref().map(|r| r.at), own_meal, snack: true,
+        Assignment { meal: root.as_ref().map(|r| r.meal), at: root.as_ref().map(|r| r.at), own_meal, snack: true,
                      own_meal_taken: true, close: None }
     } else {
         let root = root.as_ref().unwrap();
-        Assignment { meal: Some(root.meal.clone()), at: Some(root.at), own_meal, snack: !as_meal, own_meal_taken: false, close: None }
+        Assignment { meal: Some(root.meal), at: Some(root.at), own_meal, snack: !as_meal, own_meal_taken: false, close: None }
     };
     Some(closing(form, root.as_ref(), result))
 }
@@ -282,7 +282,7 @@ fn closing(form: &Form, root: Option<&Root>, mut result: Assignment) -> Assignme
         return result; // Too soon after the meal to end it here.
     }
     let active = form.flag("close_meal");
-    result.close = Some(Close { meal: root.meal.clone(), at: root.at, meal_id: meal.id.clone(), start, end: at, active });
+    result.close = Some(Close { meal: root.meal, at: root.at, meal_id: meal.id.clone(), start, end: at, active });
     if active {
         result.meal = None;
         result.at = None;
@@ -573,7 +573,7 @@ fn on_board(form: &Form, dose: &Dose) -> Option<OnBoardView> {
 
 #[derive(Clone, Debug, Serialize)]
 pub struct DayTypeView {
-    pub value: Option<String>,
+    pub value: Option<DayType>,
     pub source: Option<String>,
 }
 
@@ -598,7 +598,7 @@ pub fn preview(inputs: &Inputs) -> Res<Preview> {
     let assignment = assignment(&form);
     // The day type is asked once, with the day's first meal; later it is changed in "Verlauf".
     let first_meal = !inputs.treatments.iter().any(|item| item.carbs > Decimal::ZERO);
-    let day_type_visible = form.mode == "meal" && inputs.day_type.as_deref().is_some_and(|d| !d.is_empty())
+    let day_type_visible = form.mode == "meal" && inputs.day_type.is_some()
         && form.before_breakfast_end() && first_meal;
     let split = split_chip(&form, assignment.as_ref());
     let (dose, split) = dose(&form, assignment.as_ref(), split)?;
@@ -607,7 +607,7 @@ pub fn preview(inputs: &Inputs) -> Res<Preview> {
         day: inputs.day.clone(),
         assignment: assignment.as_ref().map(Assignment::view),
         basal_units: basal_units(&form),
-        day_type: day_type_visible.then(|| DayTypeView { value: inputs.day_type.clone(), source: inputs.day_type_source.clone() }),
+        day_type: day_type_visible.then(|| DayTypeView { value: inputs.day_type, source: inputs.day_type_source.clone() }),
         split,
         place: if form.mode == "meal" && has_carbs { inputs.place.clone() } else { Value::Null },
         on_board: on_board(&form, &dose),

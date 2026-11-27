@@ -2,7 +2,7 @@
 
 use crate::wire::truthy;
 use crate::context::{local_zone, t};
-use crate::model::{decimal_of, Instant, Reading, Settings, SplitPlan, SurchargePlan, Treatment};
+use crate::model::{decimal_of, Certainty, Instant, MealKind, Reading, Role, Settings, SplitPlan, SurchargePlan, Treatment};
 use crate::{value_error, Res};
 use chrono::{DateTime, Duration, NaiveDate, Utc};
 use regex::Regex;
@@ -39,7 +39,6 @@ pub const SNACK_GAP_MINUTES: i64 = 120;
 pub const SMALL_SNACK_GRAMS: Decimal = dec!(20);
 /// A history reading (no trend arrow) this close to a live one is dropped.
 pub const HISTORY_SECONDS: i64 = 10;
-pub const CERTAINTIES: [&str; 3] = ["weighed", "known", "unsure"];
 pub const SPORT_LABELS: [(&str, &str); 4] =
     [("jogging", "Joggen"), ("gym", "Gym"), ("light_cardio", "Leichtes Cardio"), ("racing", "Rennsport")];
 
@@ -47,8 +46,8 @@ pub fn event_id(notes: &str) -> Option<String> {
     dae_re().captures(notes).map(|c| c[1].to_string())
 }
 
-pub fn carbs_certainty(notes: &str) -> Option<String> {
-    certainty_re().captures(notes).map(|c| c[1].to_string())
+pub fn carbs_certainty(notes: &str) -> Option<Certainty> {
+    certainty_re().captures(notes).and_then(|c| Certainty::parse(&c[1]))
 }
 
 pub fn split_plan(notes: &str) -> Option<SplitPlan> {
@@ -68,14 +67,8 @@ pub fn surcharge_tag(mgdl: Decimal, minutes: i64) -> String {
     format!("[DAZ:{}@{minutes}]", mgdl.normalize())
 }
 
-/// The least certain of the marked carb certainties.
-pub fn least_certain<'a>(levels: impl IntoIterator<Item = &'a str>) -> Option<&'a str> {
-    levels.into_iter().filter(|level| CERTAINTIES.contains(level))
-        .max_by_key(|level| CERTAINTIES.iter().position(|c| c == level))
-}
-
 pub fn tag(episode_id: &str, meal: &str, role: &str) -> Res<String> {
-    if !["breakfast", "lunch", "dinner"].contains(&meal) || !["meal", "meal-dose", "correction", "snack"].contains(&role) {
+    if MealKind::parse(meal).is_none() || Role::parse(role).is_none() {
         return value_error(t("Ungültiger Ereignistyp"));
     }
     if !episode_id_re().is_match(episode_id) {
@@ -177,8 +170,8 @@ pub fn normalize_treatments(raw: &[Value]) -> Vec<Treatment> {
             split: split_plan(&notes), surcharge: surcharge_plan(&notes), finger_mgdl: finger_mgdl(item),
             event_id: event_id(&notes),
             episode_id: marker.as_ref().map(|c| c[1].to_string()),
-            meal: marker.as_ref().map(|c| c[2].to_string()),
-            role: marker.as_ref().map(|c| c[3].to_string()),
+            meal: marker.as_ref().and_then(|c| MealKind::parse(&c[2])),
+            role: marker.as_ref().and_then(|c| Role::parse(&c[3])),
             notes,
         });
     }
@@ -187,12 +180,9 @@ pub fn normalize_treatments(raw: &[Value]) -> Vec<Treatment> {
 }
 
 /// (local date, clock-based meal kind) of an instant.
-pub fn meal_kind_at(at: Instant, settings: &Settings) -> (NaiveDate, &'static str) {
+pub fn meal_kind_at(at: Instant, settings: &Settings) -> (NaiveDate, MealKind) {
     let zone = local_zone(&settings.timezone);
-    let minute = zone.minute_of_day(&at);
-    let kind = if minute < settings.breakfast_end_minute { "breakfast" }
-               else if minute < settings.lunch_end_minute { "lunch" } else { "dinner" };
-    (zone.local(&at).date(), kind)
+    (zone.local(&at).date(), MealKind::at_minute(zone.minute_of_day(&at), settings))
 }
 
 /// The main meal a carb entry at `at` would count as a snack for.
@@ -203,7 +193,7 @@ pub struct Root {
     pub at: Instant,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub end: Option<Instant>,
-    pub meal: String,
+    pub meal: MealKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub same_kind: Option<bool>,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
@@ -234,7 +224,7 @@ pub fn preceding_meal<'a>(at: Instant, treatments: impl Iterator<Item = &'a Trea
             let own = meal_kind_at(item.at, settings);
             root = Some(Root {
                 id: Some(item.id.clone()).filter(|id| !id.is_empty()), at: item.at, end: Some(item.at + window),
-                meal: item.meal.clone().unwrap_or_else(|| own.1.to_string()), same_kind: Some(own == kind), free: false,
+                meal: item.meal.unwrap_or(own.1), same_kind: Some(own == kind), free: false,
             });
         } else if let Some(current) = root.as_mut() {
             if item.at < current.end.unwrap() && item.insulin > Decimal::ZERO
@@ -263,7 +253,7 @@ pub fn taken_meal<'a>(at: Instant, treatments: impl Iterator<Item = &'a Treatmen
         }
         if is_diary_main_meal(item) && meal_kind_at(item.at, settings) == kind {
             return Some(Root { id: Some(item.id.clone()).filter(|id| !id.is_empty()), at: item.at, end: None,
-                               meal: item.meal.clone().unwrap_or_else(|| kind.1.to_string()), same_kind: None, free: false });
+                               meal: item.meal.unwrap_or(kind.1), same_kind: None, free: false });
         }
     }
     None
@@ -330,7 +320,7 @@ pub struct MealRoot {
     pub source_id: String,
     pub imported: bool,
     pub at: Instant,
-    pub meal: String,
+    pub meal: MealKind,
     pub carbs: Decimal,
     pub notes: String,
 }
@@ -339,19 +329,17 @@ pub fn meals_for_day(treatments: &[Treatment], day: NaiveDate, settings: &Settin
     let zone = local_zone(&settings.timezone);
     let mut roots = Vec::new();
     for item in treatments {
-        let tagged = item.role.as_deref() == Some("meal") && item.episode_id.is_some();
+        let tagged = item.role == Some(Role::Meal) && item.episode_id.is_some();
         let imported = item.episode_id.is_none() && item.event_type == "Meal Bolus" && item.carbs > Decimal::ZERO;
         if !(tagged || imported) || zone.local(&item.at).date() != day {
             continue;
         }
-        let minute = zone.minute_of_day(&item.at);
-        let inferred = if minute < settings.breakfast_end_minute { "breakfast" }
-                       else if minute < settings.lunch_end_minute { "lunch" } else { "dinner" };
+        let inferred = MealKind::at_minute(zone.minute_of_day(&item.at), settings);
         let notes = quality_re().replace_all(&event_tag_re().replace_all(&tag_re().replace_all(&item.notes, ""), ""), "").trim().to_string();
         roots.push(MealRoot {
             id: if tagged { item.episode_id.clone().unwrap() } else { item.id.clone() },
             source_id: item.id.clone(), imported,
-            at: item.at, meal: if tagged { item.meal.clone().unwrap_or_default() } else { inferred.to_string() },
+            at: item.at, meal: if tagged { item.meal.unwrap_or(inferred) } else { inferred },
             carbs: item.carbs, notes,
         });
     }
