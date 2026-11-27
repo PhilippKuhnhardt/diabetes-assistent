@@ -196,12 +196,15 @@ def compute_summary(days: int, today: date) -> dict:
     key = json.dumps([today.isoformat(), settings, points], default=str, sort_keys=True)
     cached = _automatik_cache.get(key)
     if cached is None:
-        cached = _automatik(today, points, settings)
+        # Each meal's miss against its own Automatik suggestion reads the same inputs, so it is kept
+        # with them: Erwartet/Delta of every period and the weekly trend look it up.
+        point_misses = {point["id"]: suggestion_miss(points, point, settings) for point in points}
+        cached = (*_automatik(today, points, settings), point_misses)
         _automatik_cache.clear()  # only the latest is ever asked for again
         _automatik_cache[key] = cached
-    predictions, suggestion_derivation, day_type_ratio = cached
-    misses = expect_from_automatik(groups, points, settings)
-    trend = miss_trend(points, settings, today)
+    predictions, suggestion_derivation, day_type_ratio, point_misses = cached
+    misses = expect_from_automatik(groups, points, settings, point_misses)
+    trend = miss_trend(points, settings, today, point_misses)
     for kind in breakfast["by_day_type"]:
         breakfast["by_day_type"][kind]["suggestion"] = factors.suggestion_factor(
             predictions[("breakfast", kind)], configured, surcharge_mgdl)
@@ -227,11 +230,12 @@ def compute_summary(days: int, today: date) -> dict:
     }
 
 
-def expect_from_automatik(groups: dict, points: list[dict], settings: dict) -> dict:
+def expect_from_automatik(groups: dict, points: list[dict], settings: dict, point_misses: dict | None = None) -> dict:
     """What each meal was expected to do (user decision 2026-11-27): the glucose change had its factor
     been the Automatik suggestion that meal would have got from the days before it, with the doses given.
     Delta = measured − expected = (actual − suggested factor) × Σ[g × KF] / 10, the same factor error the
-    backtest counts. Adds the typical miss per meal kind and per carb certainty and "Schnell" mark."""
+    backtest counts. Adds the typical miss per meal kind and per carb certainty and "Schnell" mark.
+    `point_misses` holds suggestion_miss() by meal id when the caller already computed it."""
     by_id = {point["id"]: point for point in points}
     misses = {"certainty": {}, "fast": {}}
     for group in groups.values():
@@ -240,7 +244,8 @@ def expect_from_automatik(groups: dict, points: list[dict], settings: dict) -> d
             point = by_id.get(item["id"])
             if point is None or result.get("delta_mgdl") is None:
                 continue  # blocked or excluded: no comparison
-            suggested, deviation = suggestion_miss(points, point, settings)
+            suggested, deviation = (point_misses[point["id"]] if point_misses is not None
+                                    else suggestion_miss(points, point, settings))
             if suggested is None:
                 continue  # too few meals before it
             item["expected_units_per_ke"] = str(suggested)
@@ -277,7 +282,7 @@ DRIFT_WEEKS = 3
 DRIFT_MGDL = Decimal(20)
 
 
-def miss_trend(points: list[dict], settings: dict, today: date) -> dict:
+def miss_trend(points: list[dict], settings: dict, today: date, point_misses: dict | None = None) -> dict:
     """The miss week by week (user question 2026-11-27: is there a trend the Automatik does not follow
     fast enough?): per meal kind the median signed miss of each of the last TREND_WEEKS weeks before
     today, independent of the analysis period like the backtest matrix. `drift` names a direction when
@@ -289,7 +294,8 @@ def miss_trend(points: list[dict], settings: dict, today: date) -> dict:
         age = (today - point["day"]).days
         if not 1 <= age <= 7 * TREND_WEEKS or point.get("own_place") or point["key"][0] not in buckets:
             continue
-        deviation = suggestion_miss(points, point, settings)[1]
+        deviation = (point_misses[point["id"]] if point_misses is not None
+                     else suggestion_miss(points, point, settings))[1]
         if deviation is not None:
             buckets[point["key"][0]][TREND_WEEKS - 1 - (age - 1) // 7].append(deviation)
     kinds = {}
@@ -369,7 +375,7 @@ def night_overview(records: list[dict], days: int) -> dict:
 
 
 # The last Automatik part computed, by its inputs (see compute_summary). Callers only read it.
-_automatik_cache: dict[str, tuple[dict, dict, dict]] = {}
+_automatik_cache: dict[str, tuple[dict, dict, dict, dict]] = {}
 
 
 def _automatik(today: date, points: list[dict], settings: dict) -> tuple[dict, dict, dict]:

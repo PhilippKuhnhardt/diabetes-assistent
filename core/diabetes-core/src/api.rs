@@ -308,6 +308,8 @@ pub fn call(name: &str, args: &Value) -> Res<Value> {
         }
         "services.dose_help" => crate::services::dose_help(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
+        "day.compute_day" => crate::day::compute_day(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         other => Err(CoreError::Value(format!("unknown function {other}"))),
     }
 }

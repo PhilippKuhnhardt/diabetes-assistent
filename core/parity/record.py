@@ -212,12 +212,42 @@ def wrap_dose_help():
     module.dose_help = recorded
 
 
+def wrap_compute_day():
+    """Record day_view.compute_day with the snapshot it reads from the store (day.rs Snapshot)."""
+    from unittest import mock
+    from app.services import day_view
+    from app.store import basal_doses, config, dishes, marks, mirror
+    from app.store import places as place_store
+    original = day_view.compute_day
+    owners = ((config, "get_settings"), (config, "get_settings_at"), (mirror, "cached_between"),
+              (basal_doses, "basal_doses_between"), (marks, "analysis_windows"), (marks, "analysis_exclusions"),
+              (marks, "sport_session_effects"), (marks, "sport_session_minutes"), (marks, "analysis_day_types"),
+              (marks, "vacation_periods"), (marks, "day_type_for"), (place_store, "all_places"),
+              (place_store, "entry_places"), (dishes, "all_dishes"), (dishes, "records"))
+
+    def recorded(day):
+        try:
+            result = original(day)
+        except (ValueError, ArithmeticError):
+            raise
+        if not any(isinstance(getattr(owner, name), mock.NonCallableMock) for owner, name in owners):
+            try:
+                outcome = {"ok": json.loads(json.dumps(result, default=str))}
+                store("day.compute_day", json.dumps(day_view.day_snapshot(day), sort_keys=True, default=str), outcome)
+            except Exception as error:  # noqa: BLE001 - recording must never change the test run
+                print("compute_day not recorded:", repr(error), file=sys.stderr)
+        return result
+
+    day_view.compute_day = recorded
+
+
 def main():
     global handle
     for module, names in TARGETS.items():
         for function_name in names:
             setattr(module, function_name, wrap(module, getattr(module, function_name)))
     wrap_dose_help()
+    wrap_compute_day()
     handle = OUT.open("w")
     suite = unittest.defaultTestLoader.discover(str(ROOT / "tests"), *sys.argv[1:2])
     result = unittest.TextTestRunner(verbosity=0).run(suite)

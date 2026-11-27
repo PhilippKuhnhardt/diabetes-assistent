@@ -14,7 +14,7 @@ use std::sync::OnceLock;
 
 macro_rules! pattern {
     ($name:ident, $text:expr) => {
-        fn $name() -> &'static Regex {
+        pub(crate) fn $name() -> &'static Regex {
             static PATTERN: OnceLock<Regex> = OnceLock::new();
             PATTERN.get_or_init(|| Regex::new($text).unwrap())
         }

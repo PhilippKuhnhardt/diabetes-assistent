@@ -15,6 +15,7 @@ from app import glucose as cgm
 from app.common import json_safe, local_day_range, local_zone, parse_instant, zone_name_at
 from app.ingestion import nightscout, sync
 from app.services import settings as settings_service
+from app.store.db import connect
 from app.store import basal_doses as basal_store, config, dishes as dish_store, marks, mirror, places as place_store, results
 from app.analysis.night import night_analysis, quiet_periods
 from app import i18n
@@ -146,6 +147,47 @@ def day_fingerprint(day: str) -> str:
     if memo is not None:
         memo[("fingerprint", day)] = value
     return value
+
+
+def day_snapshot(day: str) -> dict:
+    """Everything compute_day reads from the store, as JSON for the Rust core (core/diabetes-core/src/day.rs):
+    the day's raw Nightscout rows and basal doses, the settings (current and the versions in force during the
+    day), the marks and the names of places and dishes its entries carry."""
+    settings_id, settings = config.get_settings()
+    start, end = local_day_range(day, settings["timezone"])
+    raw_entries, raw_treatments = mirror.cached_between(start, end)
+    event_ids = {episodes.event_id(item) for item in raw_treatments} - {None}
+    with connect() as db:
+        rows = db.execute("SELECT id, effective_at, payload FROM settings_versions ORDER BY effective_at, id").fetchall()
+    # get_settings_at(moment): the newest version in force at the moment, else the current one. Versions
+    # that took effect before the day's range only matter through the last of them.
+    versions, before = [], None
+    for row in rows:
+        effective = parse_instant(row["effective_at"])
+        if effective <= start:
+            before = row
+        elif effective < end:
+            versions.append(row)
+    versions = ([before] if before is not None else []) + versions
+    meal_records = dish_store.records()
+    entry_places = place_store.entry_places()
+    return json_safe({
+        "day": day, "connected": nightscout.is_configured(), "synced_at": mirror.synced_at(day),
+        "settings_id": settings_id, "settings": settings,
+        "settings_versions": [{"id": row["id"], "effective_at": parse_instant(row["effective_at"]),
+                               "settings": config._with_nightscout_profile(json.loads(row["payload"]))}
+                              for row in versions],
+        "raw_entries": raw_entries, "raw_treatments": raw_treatments,
+        "basal_doses": basal_store.basal_doses_between(start, end),
+        "sport_session_effects": marks.sport_session_effects(), "sport_session_minutes": marks.sport_session_minutes(),
+        "analysis_windows": marks.analysis_windows(), "analysis_exclusions": sorted(marks.analysis_exclusions()),
+        "day_types": marks.analysis_day_types(), "vacation_periods": marks.vacation_periods(),
+        "places": [{"id": place["id"], "name": place["name"]} for place in place_store.all_places()],
+        "entry_places": {key: value for key, value in entry_places.items() if key in event_ids},
+        "dishes": [{"id": dish["id"], "name": dish["name"]} for dish in dish_store.all_dishes()],
+        "meal_records": {key: {"dish_id": value.get("dish_id"), "description": value.get("description") or ""}
+                         for key, value in meal_records.items() if key in event_ids},
+    })
 
 
 def compute_day(day: str) -> dict:
