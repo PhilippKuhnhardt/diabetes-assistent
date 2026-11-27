@@ -405,6 +405,12 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
         "factors.place_scales" => out(crate::services::place_scales(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?)),
         "factors.meal_surcharge_mgdl" => out(crate::services::meal_surcharge_mgdl(&a.get("settings")?, a.get::<Option<bool>>("fat")?.unwrap_or(false))),
+        "window.limits" => Ok(crate::window::limits()),
+        "window.problem" => out(crate::window::problem(a.get("meal_at")?, a.get("start")?, a.get("end")?)),
+        "window.editor" => Ok(crate::window::editor(&a.get("meal")?, &a.get::<Vec<Reading>>("entries")?,
+            &a.get::<Vec<Treatment>>("treatments")?, &a.get("settings")?)),
+        "window.preview" => Ok(crate::window::preview(&a.get("meal")?, &a.get::<Vec<Reading>>("entries")?,
+            &a.get::<Vec<Treatment>>("treatments")?, &a.get("settings")?, a.get("start")?, a.get("end")?)),
         "services.dose_help" => crate::services::dose_help(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         "day.compute_day" => crate::day::compute_day(&serde_json::from_value(args.clone())
