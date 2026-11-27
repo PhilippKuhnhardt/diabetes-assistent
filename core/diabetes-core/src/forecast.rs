@@ -5,7 +5,7 @@
 //! meal surcharge from past factors and adds the meal's own share to the dose. The backtest replays
 //! every option combination on past meals. Model choices for experimentation, not dosing advice.
 
-use crate::model::{opt_amount, Instant};
+use crate::model::{opt_amount, AutoMethod, DayType, Instant, MealKind};
 use chrono::NaiveDate;
 use rust_decimal::{Decimal, MathematicalOps};
 use rust_decimal_macros::dec;
@@ -37,12 +37,15 @@ pub const TUNING_SURCHARGES: [Decimal; 5] = [dec!(0), dec!(20), dec!(40), dec!(6
 pub const NOISE_MEALS: Decimal = dec!(2);
 pub const NOISE_SHARE: Decimal = dec!(0.05);
 
-/// A meal kind, breakfast also by day type: ("breakfast", Some("work")), ("lunch", None).
-pub type MealKey = (String, Option<String>);
+/// A meal kind, breakfast also by day type: (Breakfast, Some(Work)), (Lunch, None).
+pub type MealKey = (MealKind, Option<DayType>);
 
-fn key_of<'de, D: Deserializer<'de>>(deserializer: D) -> Result<MealKey, D::Error> {
+/// A key as the server writes it: ["breakfast", "work"] or ["lunch", null].
+pub fn key_of<'de, D: Deserializer<'de>>(deserializer: D) -> Result<MealKey, D::Error> {
     let parts: Vec<Option<String>> = Vec::deserialize(deserializer)?;
-    Ok((parts.first().cloned().flatten().unwrap_or_default(), parts.get(1).cloned().flatten()))
+    let kind = parts.first().cloned().flatten().unwrap_or_default();
+    let kind = MealKind::parse(&kind).ok_or_else(|| serde::de::Error::custom(format!("unknown meal kind {kind:?}")))?;
+    Ok((kind, parts.get(1).cloned().flatten().and_then(|day_type| DayType::parse(&day_type))))
 }
 
 /// A valid, non-excluded meal factor (app/services/factors.py meal_points).
@@ -58,8 +61,8 @@ pub struct MealPoint {
     pub at: Instant,
     #[serde(deserialize_with = "key_of")]
     pub key: MealKey,
-    #[serde(default)]
-    pub day_type: Option<String>,
+    #[serde(default, deserialize_with = "crate::kinds::opt_name")]
+    pub day_type: Option<DayType>,
     #[serde(deserialize_with = "crate::model::amount")]
     pub value: Decimal,
     #[serde(default, deserialize_with = "opt_amount")]
@@ -191,8 +194,8 @@ pub fn base_history(points: &[MealPoint], key: &MealKey, day: NaiveDate, lookbac
 /// Like predict; with the surcharge method the percentile of factors without surcharge.
 #[allow(clippy::too_many_arguments)]
 pub fn predict_method(points: &[MealPoint], key: &MealKey, day: NaiveDate, percentile: Decimal, half_life: Decimal,
-                      lookback: i64, method: &str, mgdl: Decimal, fat_mgdl: Decimal) -> Prediction {
-    if method != SURCHARGE {
+                      lookback: i64, method: AutoMethod, mgdl: Decimal, fat_mgdl: Decimal) -> Prediction {
+    if method != AutoMethod::Surcharge {
         return predict(points, key, day, percentile, half_life, lookback);
     }
     predict_from(&base_history(points, key, day, lookback, mgdl, fat_mgdl), percentile, half_life)
@@ -219,14 +222,14 @@ pub struct PlaceScale {
 /// actual ÷ suggested factor over its meals of the last PLACE_LOOKBACK_DAYS, clamped.
 #[allow(clippy::too_many_arguments)]
 pub fn place_scale(points: &[MealPoint], place_id: i64, day: NaiveDate, percentile: Decimal, half_life: Decimal,
-                   lookback: i64, method: &str, mgdl: Decimal, fat_mgdl: Decimal) -> PlaceScale {
+                   lookback: i64, method: AutoMethod, mgdl: Decimal, fat_mgdl: Decimal) -> PlaceScale {
     let mut pairs = Vec::new();
     for point in points {
         let days = age(day, point);
         if point.place_id != Some(place_id) || !(1..=PLACE_LOOKBACK_DAYS).contains(&days) || point.value <= Decimal::ZERO {
             continue;
         }
-        let suggested = if method == SURCHARGE {
+        let suggested = if method == AutoMethod::Surcharge {
             predict_surcharge(&base_history(points, &point.key, point.day, lookback, mgdl, fat_mgdl), percentile, half_life, point, mgdl, fat_mgdl)
         } else {
             predict(points, &point.key, point.day, percentile, half_life, lookback).units_per_ke
@@ -279,23 +282,23 @@ pub struct DayTypeRatios {
     pub days: i64,
     pub reference_days: i64,
     pub neighbours: usize,
-    pub meals: HashMap<String, KindRatio>,
+    pub meals: HashMap<MealKind, KindRatio>,
 }
 
 /// Stress surcharge of work days over free days at breakfast (information only).
 pub fn day_type_ratios(points: &[MealPoint], today: NaiveDate) -> DayTypeRatios {
     let (days, reference_days, neighbours) = (RATIO_DAYS, RATIO_REFERENCE_DAYS, RATIO_NEIGHBOURS);
     let mut meals = HashMap::new();
-    for kind in ["breakfast"] {
+    for kind in [MealKind::Breakfast] {
         let recent: Vec<&MealPoint> = points.iter().filter(|p| p.key.0 == kind && (0..days).contains(&age(today, p))).collect();
-        let of_type = |t: &str| sorted(recent.iter().filter(|p| p.day_type.as_deref() == Some(t)).map(|p| p.value).collect());
-        let (work, free) = (of_type("work"), of_type("free"));
-        let mut work_days: Vec<&MealPoint> = points.iter().filter(|p| p.key.0 == kind && p.day_type.as_deref() == Some("work")).collect();
+        let of_type = |t: DayType| sorted(recent.iter().filter(|p| p.day_type == Some(t)).map(|p| p.value).collect());
+        let (work, free) = (of_type(DayType::Work), of_type(DayType::Free));
+        let mut work_days: Vec<&MealPoint> = points.iter().filter(|p| p.key.0 == kind && p.day_type == Some(DayType::Work)).collect();
         work_days.sort_by_key(|p| p.at);
         let mut ordered = recent.clone();
         ordered.sort_by_key(|p| p.at);
         let mut singles = Vec::new();
-        for point in ordered.iter().filter(|p| p.day_type.as_deref() == Some("free")) {
+        for point in ordered.iter().filter(|p| p.day_type == Some(DayType::Free)) {
             let before: Vec<&&MealPoint> = work_days.iter().filter(|w| (1..=reference_days).contains(&(point.day - w.day).num_days())).collect();
             let after: Vec<&&MealPoint> = work_days.iter().filter(|w| (1..=reference_days).contains(&(w.day - point.day).num_days())).collect();
             let before = &before[before.len().saturating_sub(neighbours)..];
@@ -307,7 +310,7 @@ pub fn day_type_ratios(points: &[MealPoint], today: NaiveDate) -> DayTypeRatios 
             }
         }
         let surcharges = sorted(singles.iter().map(|s| s.surcharge).collect());
-        meals.insert(kind.to_string(), KindRatio {
+        meals.insert(kind, KindRatio {
             work_count: work.len(), work_median: median(&work), free_count: free.len(), free_median: median(&free),
             surcharge: match (median(&work), median(&free)) {
                 (Some(w), Some(f)) if !f.is_zero() => Some(w / f - Decimal::ONE),
@@ -517,8 +520,8 @@ pub fn judge(options: &mut [TuningOption]) -> Verdict {
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Explanation {
-    pub meal: String,
-    pub day_type: Option<String>,
+    pub meal: MealKind,
+    pub day_type: Option<DayType>,
     pub count: usize,
     pub min_meals: usize,
     pub units_per_ke: Option<Decimal>,
@@ -550,7 +553,7 @@ pub fn explain(points: &[MealPoint], key: &MealKey, day: NaiveDate, lookback: i6
         surcharge_units = Some(if surcharge_mgdl.is_zero() { Decimal::ZERO } else { surcharge_mgdl * surcharge_share(grams) / isf.unwrap() });
     }
     Explanation {
-        meal: key.0.clone(), day_type: key.1.clone(), count: values.len(), min_meals: MIN_MEALS, units_per_ke: factor,
+        meal: key.0, day_type: key.1, count: values.len(), min_meals: MIN_MEALS, units_per_ke: factor,
         carbs_g: grams, isf, carb_units, surcharge_units, total_units: carb_units.zip(surcharge_units).map(|(c, s)| c + s),
     }
 }

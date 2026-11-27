@@ -415,7 +415,8 @@ pub fn calculate_episode(episode: &Episode, treatments: &[Treatment], entries: &
         insulin_effect += effect;
         doses.push(DoseEffect {
             id: Some(item.id.clone()), at: item.at, units: item.insulin,
-            role: item.role.clone().unwrap_or_else(|| if item.event_type.is_empty() { "Bolus".into() } else { item.event_type.clone() }),
+            role: item.role.map(|role| role.to_string())
+                .unwrap_or_else(|| if item.event_type.is_empty() { "Bolus".into() } else { item.event_type.clone() }),
             event_type: item.event_type.clone(), isf: sensitivity, effect_mgdl: effect,
         });
     }

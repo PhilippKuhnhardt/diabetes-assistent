@@ -21,6 +21,7 @@ pub mod fpe;
 pub mod glucose;
 pub mod glucose_alerts;
 pub mod insulin;
+pub mod kinds;
 pub mod limits;
 pub mod on_board;
 pub mod model;

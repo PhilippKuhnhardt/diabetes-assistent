@@ -8,7 +8,8 @@ use crate::limits::{MAX_CARBS_G, MAX_UNITS, SPORT_DURATION_MINUTES, SPORT_EFFECT
 use crate::wire::truthy;
 use crate::context::{local_zone, t};
 use crate::day::{iso, sport_names};
-use crate::episodes::{self, CERTAINTIES};
+use crate::episodes;
+use crate::model::Certainty;
 use crate::fpe;
 use crate::model::{decimal_of, Instant, Settings};
 use crate::{CoreError, Res};
@@ -146,7 +147,7 @@ pub fn record(inputs: &Inputs) -> Res<DiaryRecord> {
         let certainty = match &certainty {
             Value::Null => None,
             Value::String(text) if text.is_empty() => None,
-            Value::String(text) if CERTAINTIES.contains(&text.as_str()) => Some(text.clone()),
+            Value::String(text) if Certainty::parse(text).is_some() => Some(text.clone()),
             _ => return Err(invalid(t("Unbekannte KH-Sicherheit"))),
         };
         // "keep" leaves a mark as the edited entry has it (the Alkohol chip is gone since 2026-11-15, its old marks stay).

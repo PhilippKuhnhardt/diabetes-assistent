@@ -8,7 +8,7 @@ use crate::context::t;
 use crate::day::QuietPeriod;
 use crate::forecast::{self, CloudPoint, DayTypeRatios, Explanation, MealKey, MealPoint, Prediction, TradeoffOption, Variant,
                       VariantStats, Verdict};
-use crate::model::{decimal_of, lenient, opt_amount, Instant};
+use crate::model::{decimal_of, lenient, opt_amount, AutoMethod, DayType, Instant, MealKind};
 use crate::services::{self, VacationPeriod};
 use crate::stats::{median, quartile, strong_outlier_flags};
 use crate::wire::{py_iso, py_iso_opt, to_value};
@@ -21,7 +21,7 @@ use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::Mutex;
 
-pub const MEALS: [&str; 3] = ["breakfast", "lunch", "dinner"];
+const MEALS: &[MealKind] = MealKind::ALL;
 pub const TREND_WEEKS: i64 = 8;
 pub const DRIFT_WEEKS: usize = 3;
 pub const DRIFT_MGDL: Decimal = dec!(20);
@@ -46,7 +46,7 @@ pub struct Snapshot {
     #[serde(default)]
     pub analysis_exclusions: HashSet<String>,
     #[serde(default)]
-    pub day_types: Option<HashMap<NaiveDate, String>>,
+    pub day_types: Option<HashMap<NaiveDate, DayType>>,
     #[serde(default)]
     pub vacation_periods: Vec<VacationPeriod>,
     #[serde(default)]
@@ -87,8 +87,8 @@ fn empty_object() -> Value {
 pub struct StoredMeal {
     #[serde(default, deserialize_with = "lenient")]
     pub id: String,
-    #[serde(default, deserialize_with = "lenient")]
-    pub meal: String,
+    #[serde(default, deserialize_with = "crate::kinds::opt_name")]
+    pub meal: Option<MealKind>,
     #[serde(default, deserialize_with = "lenient")]
     pub at: Option<String>,
     #[serde(default, deserialize_with = "lenient")]
@@ -250,7 +250,7 @@ pub struct Configured {
     percentile: Decimal,
     half_life: Decimal,
     lookback: i64,
-    method: String,
+    method: AutoMethod,
     surcharge_mgdl: Decimal,
     fat_mgdl: Decimal,
     target: Decimal,
@@ -265,7 +265,7 @@ impl Configured {
             half_life: dec_of(settings.get("auto_half_life_days")).ok_or_else(|| CoreError::Value("auto_half_life_days".into()))?,
             lookback: dec_of(settings.get("auto_lookback_days")).and_then(|v| v.trunc().try_into().ok())
                 .ok_or_else(|| CoreError::Value("auto_lookback_days".into()))?,
-            method: settings.get("auto_method").and_then(Value::as_str).unwrap_or("percentile").to_string(),
+            method: settings.get("auto_method").cloned().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default(),
             surcharge_mgdl: number("auto_surcharge_mgdl", forecast::SURCHARGE_MGDL),
             fat_mgdl: number("auto_fat_surcharge_mgdl", forecast::FAT_SURCHARGE_MGDL),
             // config.py's default; only the backtest reads it.
@@ -275,7 +275,7 @@ impl Configured {
     }
 
     fn surcharge(&self) -> bool {
-        self.method == forecast::SURCHARGE
+        self.method == AutoMethod::Surcharge
     }
 
     fn active_surcharge(&self) -> Decimal {
@@ -284,12 +284,12 @@ impl Configured {
 
     fn keys(&self) -> Vec<MealKey> {
         let mut keys: Vec<MealKey> = if self.day_types {
-            vec![("breakfast".into(), Some("work".into())), ("breakfast".into(), Some("free".into()))]
+            vec![(MealKind::Breakfast, Some(DayType::Work)), (MealKind::Breakfast, Some(DayType::Free))]
         } else {
-            vec![("breakfast".into(), None)]
+            vec![(MealKind::Breakfast, None)]
         };
-        keys.push(("lunch".into(), None));
-        keys.push(("dinner".into(), None));
+        keys.push((MealKind::Lunch, None));
+        keys.push((MealKind::Dinner, None));
         keys
     }
 }
@@ -309,7 +309,8 @@ pub fn meal_points(today: NaiveDate, days_back: i64, snapshot: &Snapshot, mode: 
         for meal in &payload.meals {
             let result = &meal.calculation;
             let Some(factor) = result.factor_units_per_ke else { continue };
-            if !MEALS.contains(&meal.meal.as_str()) || snapshot.analysis_exclusions.contains(&meal.id) {
+            let Some(kind) = meal.meal else { continue };
+            if snapshot.analysis_exclusions.contains(&meal.id) {
                 continue;
             }
             let at = instant(meal.at.as_deref())
@@ -317,8 +318,8 @@ pub fn meal_points(today: NaiveDate, days_back: i64, snapshot: &Snapshot, mode: 
             let place_id = meal.place.as_ref().and_then(|place| place.id);
             points.push(MealPoint {
                 id: json!(meal.id), day, real_day: Some(real_day), at,
-                key: (meal.meal.clone(), if meal.meal == "breakfast" { day_type.clone() } else { None }),
-                day_type: day_type.clone(), value: factor,
+                key: (kind, if kind == MealKind::Breakfast { day_type } else { None }),
+                day_type, value: factor,
                 end_glucose: result.g3, carbs_isf: result.carbs_times_isf_total, carbs_g: result.carbs_total,
                 fat: meal.quality.fat_protein,
                 surcharge_mgdl: meal.fpe_surcharge.as_ref().and_then(|plan| plan.mgdl),
@@ -384,7 +385,7 @@ pub struct SettingsPatch {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auto_lookback_days: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub auto_method: Option<&'static str>,
+    pub auto_method: Option<AutoMethod>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auto_surcharge_mgdl: Option<Decimal>,
 }
@@ -397,10 +398,10 @@ impl SettingsPatch {
             "half_life" => self.auto_half_life_days = Some(value),
             "lookback" => self.auto_lookback_days = i64::try_from(value.trunc()).ok(),
             _ if !value.is_zero() => {
-                self.auto_method = Some(forecast::SURCHARGE);
+                self.auto_method = Some(AutoMethod::Surcharge);
                 self.auto_surcharge_mgdl = Some(value);
             }
-            _ => self.auto_method = Some("percentile"),
+            _ => self.auto_method = Some(AutoMethod::Percentile),
         }
         self
     }
@@ -513,7 +514,7 @@ pub struct Derivation {
     pub percentile: Decimal,
     pub half_life_days: Decimal,
     pub lookback_days: i64,
-    pub method: String,
+    pub method: AutoMethod,
     pub surcharge_mgdl: Decimal,
     pub fat_surcharge_mgdl: Decimal,
     pub surcharge_full_grams: Decimal,
@@ -558,7 +559,7 @@ fn automatik(today: NaiveDate, points: &[MealPoint], settings: &Value, configure
 
 fn compute_automatik(today: NaiveDate, points: &[MealPoint], c: &Configured) -> Automatik {
     let predictions: HashMap<MealKey, Prediction> = c.keys().into_iter().map(|key| {
-        let prediction = forecast::predict_method(points, &key, today, c.percentile, c.half_life, c.lookback, &c.method,
+        let prediction = forecast::predict_method(points, &key, today, c.percentile, c.half_life, c.lookback, c.method,
                                                   c.surcharge_mgdl, c.fat_mgdl);
         (key, prediction)
     }).collect();
@@ -616,7 +617,7 @@ fn compute_automatik(today: NaiveDate, points: &[MealPoint], c: &Configured) -> 
         ages.insert(i64::try_from((c.half_life * Decimal::from(k)).trunc()).unwrap_or(0));
     }
     let derivation = Derivation {
-        percentile: c.percentile, half_life_days: c.half_life, lookback_days: c.lookback, method: c.method.clone(),
+        percentile: c.percentile, half_life_days: c.half_life, lookback_days: c.lookback, method: c.method,
         surcharge_mgdl: c.surcharge_mgdl, fat_surcharge_mgdl: c.fat_mgdl, surcharge_full_grams: forecast::SURCHARGE_FULL_GRAMS,
         min_meals: forecast::MIN_MEALS, meal_count: test.rows.len(), backtest_days: forecast::BACKTEST_DAYS,
         variants: matrix,
@@ -749,7 +750,7 @@ pub struct MealItem {
     pub id: String,
     pub day: String,
     pub at: Option<String>,
-    pub day_type: Option<String>,
+    pub day_type: Option<DayType>,
     pub units_per_ke: Option<Decimal>,
     pub carbs_total: Option<Decimal>,
     pub rapid_units_in_window: Option<Decimal>,
@@ -805,7 +806,7 @@ pub struct MealGroup {
     pub suggestion: Option<Suggestion>,
     pub nightscout_units_per_ke: Vec<Decimal>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub by_day_type: Option<BTreeMap<&'static str, DayTypeGroup>>,
+    pub by_day_type: Option<BTreeMap<DayType, DayTypeGroup>>,
     pub calculations: Vec<MealItem>,
 }
 
@@ -826,7 +827,7 @@ pub struct KindApply {
 #[derive(Clone, Debug, Serialize)]
 pub struct Summary {
     pub days: i64,
-    pub groups: BTreeMap<&'static str, MealGroup>,
+    pub groups: BTreeMap<MealKind, MealGroup>,
     pub misses: Misses,
     pub trend: Trend,
     pub profile_sync_error: Option<String>,
@@ -848,9 +849,9 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Summary> {
     let settings = &snapshot.settings;
     let c = Configured::of(settings)?;
     let day_types = snapshot.day_types.as_ref();
-    let mut groups: BTreeMap<&'static str, MealGroup> = MEALS.iter().map(|name| (*name, MealGroup::default())).collect();
-    let mut values: HashMap<&str, (Vec<Decimal>, Vec<Decimal>)> = MEALS.iter().map(|name| (*name, (Vec::new(), Vec::new()))).collect();
-    let mut calculations: HashMap<&str, Vec<MealItem>> = MEALS.iter().map(|name| (*name, Vec::new())).collect();
+    let mut groups: BTreeMap<MealKind, MealGroup> = MEALS.iter().map(|name| (*name, MealGroup::default())).collect();
+    let mut values: HashMap<MealKind, (Vec<Decimal>, Vec<Decimal>)> = MEALS.iter().map(|name| (*name, (Vec::new(), Vec::new()))).collect();
+    let mut calculations: HashMap<MealKind, Vec<MealItem>> = MEALS.iter().map(|name| (*name, Vec::new())).collect();
     let mut night_records = Vec::new();
     let mut quiet_records = Vec::new();
     let mut sport_meals = Vec::new();
@@ -874,11 +875,11 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Summary> {
             let excluded = snapshot.analysis_exclusions.contains(&meal.id);
             let result = &meal.calculation;
             sport_meals.push(SportMeal {
-                id: meal.id.clone(), day: Some(key.clone()), meal: meal.meal.clone(), at: meal.at.clone(), excluded,
+                id: meal.id.clone(), day: Some(key.clone()), meal: meal.meal, at: meal.at.clone(), excluded,
                 calculation: result.clone(), sport: serde_json::from_value(meal.sport.clone()).unwrap_or_default(),
             });
-            let Some(name) = MEALS.iter().find(|name| meal.meal == **name).copied() else { continue };
-            let group = groups.get_mut(name).unwrap();
+            let Some(name) = meal.meal else { continue };
+            let group = groups.get_mut(&name).unwrap();
             group.total += 1;
             if result.end_reason.as_deref() == Some("before_next_meal") {
                 group.shortened_count += 1;
@@ -894,14 +895,14 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Summary> {
                         group.excluded_count += 1;
                     } else {
                         group.count += 1;
-                        let entry = values.get_mut(name).unwrap();
+                        let entry = values.get_mut(&name).unwrap();
                         entry.0.push(value);
                         entry.1.push(result.ratio_g_per_unit.unwrap_or_default());
                     }
                 }
             }
-            calculations.get_mut(name).unwrap().push(MealItem {
-                id: meal.id.clone(), day: key.clone(), at: meal.at.clone(), day_type: day_type.clone(),
+            calculations.get_mut(&name).unwrap().push(MealItem {
+                id: meal.id.clone(), day: key.clone(), at: meal.at.clone(), day_type,
                 units_per_ke: result.factor_units_per_ke, carbs_total: result.carbs_total,
                 rapid_units_in_window: result.rapid_units_in_window, delta_mgdl: result.delta_mgdl,
                 end: result.end.clone(), reason: result.reason.clone(), manual_window: result.manual_window, excluded,
@@ -911,11 +912,11 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Summary> {
             });
         }
     }
-    for name in MEALS {
-        let items = calculations.get_mut(name).unwrap();
+    for &name in MEALS {
+        let items = calculations.get_mut(&name).unwrap();
         let comparable: Vec<usize> = (0..items.len()).filter(|i| items[*i].units_per_ke.is_some()).collect();
-        let sets: Vec<Vec<usize>> = if name == "breakfast" && day_types.is_some() {
-            ["work", "free"].iter().map(|kind| comparable.iter().copied().filter(|i| items[*i].day_type.as_deref() == Some(*kind)).collect()).collect()
+        let sets: Vec<Vec<usize>> = if name == MealKind::Breakfast && day_types.is_some() {
+            DayType::ALL.iter().map(|kind| comparable.iter().copied().filter(|i| items[*i].day_type == Some(*kind)).collect()).collect()
         } else {
             vec![comparable.clone()]
         };
@@ -925,9 +926,9 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Summary> {
                 items[*index].strong_outlier = flag;
             }
         }
-        let group = groups.get_mut(name).unwrap();
+        let group = groups.get_mut(&name).unwrap();
         group.strong_outlier_count = comparable.iter().filter(|i| items[**i].strong_outlier).count();
-        let (own, nightscout) = values.remove(name).unwrap();
+        let (own, nightscout) = values.remove(&name).unwrap();
         group.stats = FactorStats::of(&sorted(own));
         group.median_g_per_unit = median(&sorted(nightscout));
         let mut chronological: Vec<&MealItem> = items.iter().filter(|item| item.units_per_ke.is_some() && !item.excluded).collect();
@@ -943,10 +944,10 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Summary> {
     let mode = settings.get("auto_vacation").and_then(Value::as_str).unwrap_or(services::DEFAULT_AUTO_VACATION);
     let points = snapshot.points.clone().unwrap_or_else(|| meal_points(today, history_days(days), snapshot, mode));
     let part = automatik(today, &points, settings, &c);
-    let by_day_type: Option<BTreeMap<&'static str, DayTypeGroup>> = day_types.map(|_| ["work", "free"].into_iter().map(|kind| {
-        let mine: Vec<&MealItem> = calculations["breakfast"].iter().filter(|item| item.day_type.as_deref() == Some(kind)).collect();
+    let by_day_type: Option<BTreeMap<DayType, DayTypeGroup>> = day_types.map(|_| DayType::ALL.iter().map(|&kind| {
+        let mine: Vec<&MealItem> = calculations[&MealKind::Breakfast].iter().filter(|item| item.day_type == Some(kind)).collect();
         let kind_values = sorted(mine.iter().filter(|item| !item.excluded).filter_map(|item| item.units_per_ke).collect());
-        let key: MealKey = ("breakfast".into(), Some(kind.into()));
+        let key: MealKey = (MealKind::Breakfast, Some(kind));
         (kind, DayTypeGroup {
             total: mine.len(),
             count: kind_values.len(),
@@ -983,9 +984,9 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Summary> {
     let levels = |list: BTreeMap<String, Vec<Decimal>>| list.into_iter().map(|(key, values)| (key, MissCell::of(&values))).collect();
     let misses = Misses { certainty: levels(certainty), fast: levels(fast) };
     let trend = miss_trend(&points, today, &part.misses);
-    let named: &[&str] = if day_types.is_some() { &["lunch", "dinner"] } else { &MEALS };
+    let named: &[MealKind] = if day_types.is_some() { &[MealKind::Lunch, MealKind::Dinner] } else { MEALS };
     for name in named {
-        let key: MealKey = (name.to_string(), None);
+        let key: MealKey = (*name, None);
         groups.get_mut(name).unwrap().suggestion = Some(Suggestion::of(&part.predictions[&key], &c));
     }
     let timezone = settings.get("timezone").and_then(Value::as_str).unwrap_or("UTC");
@@ -1006,7 +1007,7 @@ pub fn compute_summary(snapshot: &Snapshot) -> Res<Summary> {
         current.sort();
         let group = groups.get_mut(name).unwrap();
         group.nightscout_units_per_ke = current;
-        if name == "breakfast" {
+        if *name == MealKind::Breakfast {
             group.by_day_type = Some(by_day_type.clone().unwrap_or_default());
         }
         group.calculations = calculations.remove(name).unwrap_or_default();
@@ -1058,7 +1059,7 @@ pub struct TrendKind {
 #[derive(Clone, Debug, Serialize)]
 pub struct Trend {
     pub weeks: Vec<TrendWeek>,
-    pub kinds: BTreeMap<&'static str, TrendKind>,
+    pub kinds: BTreeMap<MealKind, TrendKind>,
 }
 
 /// The miss week by week over the last TREND_WEEKS weeks before today, per meal kind; `drift` names a
@@ -1068,14 +1069,14 @@ pub fn miss_trend(points: &[MealPoint], today: NaiveDate, misses: &HashMap<Strin
         start: (today - Duration::days(7 * (index + 1))).to_string(),
         end: (today - Duration::days(7 * index + 1)).to_string(),
     }).collect();
-    let mut buckets: HashMap<&str, Vec<Vec<Decimal>>> = MEALS.iter().map(|meal| (*meal, vec![Vec::new(); TREND_WEEKS as usize])).collect();
+    let mut buckets: HashMap<MealKind, Vec<Vec<Decimal>>> = MEALS.iter().map(|meal| (*meal, vec![Vec::new(); TREND_WEEKS as usize])).collect();
     for point in points {
         let age = (today - point.day).num_days();
-        if !(1..=7 * TREND_WEEKS).contains(&age) || point.own_place || !MEALS.contains(&point.key.0.as_str()) {
+        if !(1..=7 * TREND_WEEKS).contains(&age) || point.own_place {
             continue;
         }
         if let Some((_, Some(deviation))) = misses.get(&point_id(point)) {
-            buckets.get_mut(point.key.0.as_str()).unwrap()[(TREND_WEEKS - 1 - (age - 1) / 7) as usize].push(*deviation);
+            buckets.get_mut(&point.key.0).unwrap()[(TREND_WEEKS - 1 - (age - 1) / 7) as usize].push(*deviation);
         }
     }
     let kinds = MEALS.iter().map(|meal| {
@@ -1203,8 +1204,8 @@ pub struct SportMeal {
     pub id: String,
     #[serde(default, deserialize_with = "lenient")]
     pub day: Option<String>,
-    #[serde(default, deserialize_with = "lenient")]
-    pub meal: String,
+    #[serde(default, deserialize_with = "crate::kinds::opt_name")]
+    pub meal: Option<MealKind>,
     #[serde(default, deserialize_with = "lenient")]
     pub at: Option<String>,
     #[serde(default, deserialize_with = "lenient")]
@@ -1250,7 +1251,7 @@ pub struct Baseline {
 pub struct InfluencedMeal {
     pub id: String,
     pub day: Option<String>,
-    pub meal: String,
+    pub meal: Option<MealKind>,
     #[serde(serialize_with = "py_iso")]
     pub start: Instant,
     #[serde(serialize_with = "py_iso")]
@@ -1304,7 +1305,7 @@ pub struct SportKindView {
 
 #[derive(Clone, Debug, Serialize)]
 pub struct SportAnalysis {
-    pub baselines: BTreeMap<&'static str, Baseline>,
+    pub baselines: BTreeMap<MealKind, Baseline>,
     pub kinds: Vec<SportKindView>,
     pub sessions: Vec<SessionView>,
     pub lookback_minutes: i64,
@@ -1334,8 +1335,8 @@ pub fn sport_analysis(meals: &[SportMeal], exercises: &[SportSessionIn], lookbac
         prepared.push(Prepared { meal, start, end, sessions: linked, confirmed: meal.sport.status.as_deref() == Some("affected"),
                                  factor: raw_factor(result) });
     }
-    let baselines: BTreeMap<&'static str, Baseline> = MEALS.iter().map(|kind| {
-        let found: Vec<Decimal> = prepared.iter().filter(|item| item.meal.meal == *kind && item.sessions.is_empty() && !item.confirmed
+    let baselines: BTreeMap<MealKind, Baseline> = MEALS.iter().map(|kind| {
+        let found: Vec<Decimal> = prepared.iter().filter(|item| item.meal.meal == Some(*kind) && item.sessions.is_empty() && !item.confirmed
                 && !item.meal.excluded).filter_map(|item| item.factor).filter(|f| *f > Decimal::ZERO).collect();
         (*kind, Baseline { median_units_per_ke: sport_median(&found), count: found.len() })
     }).collect();
@@ -1346,7 +1347,7 @@ pub fn sport_analysis(meals: &[SportMeal], exercises: &[SportSessionIn], lookbac
         }
         let meal = item.meal;
         let result = &meal.calculation;
-        let baseline = baselines.get(meal.meal.as_str()).and_then(|b| b.median_units_per_ke);
+        let baseline = meal.meal.and_then(|kind| baselines.get(&kind)).and_then(|b| b.median_units_per_ke);
         let (mut expected, mut effect, mut reason) = (None, None, None);
         if item.factor.is_none() {
             reason = Some(result.reason.clone().filter(|r| !r.is_empty()).unwrap_or_else(|| t("Mahlzeit nicht berechenbar")));
@@ -1358,7 +1359,7 @@ pub fn sport_analysis(meals: &[SportMeal], exercises: &[SportSessionIn], lookbac
             reason = Some(t("Keine Vergleichsmahlzeiten ohne Sport"));
         }
         influenced.push(InfluencedMeal {
-            id: meal.id.clone(), day: meal.day.clone(), meal: meal.meal.clone(), start: item.start, end: item.end,
+            id: meal.id.clone(), day: meal.day.clone(), meal: meal.meal, start: item.start, end: item.end,
             excluded: meal.excluded, carbs_total: result.carbs_total, rapid_units_in_window: result.rapid_units_in_window,
             delta_mgdl: result.delta_mgdl, expected_delta_mgdl: expected, effect_mgdl: effect,
             factor_without_sport_units_per_ke: item.factor, baseline_units_per_ke: baseline,

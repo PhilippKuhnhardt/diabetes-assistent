@@ -4,6 +4,7 @@
 //! so a snapshot from the server or the phone's own store deserializes directly. Numbers may come
 //! as JSON numbers or strings; a missing or empty amount is 0, as in the reference (`value or 0`).
 
+pub use crate::kinds::{AutoMethod, Certainty, DayType, MealKind, Role};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -136,8 +137,8 @@ pub struct Treatment {
     pub notes: String,
     #[serde(default, deserialize_with = "opt_text")]
     pub sport_type: Option<String>,
-    #[serde(default, deserialize_with = "opt_text")]
-    pub carbs_certainty: Option<String>,
+    #[serde(default, deserialize_with = "crate::kinds::opt_name")]
+    pub carbs_certainty: Option<Certainty>,
     #[serde(default, deserialize_with = "truthy")]
     pub fat_protein: bool,
     #[serde(default, deserialize_with = "truthy")]
@@ -154,10 +155,10 @@ pub struct Treatment {
     pub event_id: Option<String>,
     #[serde(default, deserialize_with = "opt_text")]
     pub episode_id: Option<String>,
-    #[serde(default, deserialize_with = "opt_text")]
-    pub meal: Option<String>,
-    #[serde(default, deserialize_with = "opt_text")]
-    pub role: Option<String>,
+    #[serde(default, deserialize_with = "crate::kinds::opt_name")]
+    pub meal: Option<MealKind>,
+    #[serde(default, deserialize_with = "crate::kinds::opt_name")]
+    pub role: Option<Role>,
 }
 
 impl Treatment {
@@ -167,13 +168,13 @@ impl Treatment {
 
     /// calculation.is_rapid_insulin: a bolus by role or Nightscout event type.
     pub fn is_rapid(&self) -> bool {
-        matches!(self.role.as_deref(), Some("meal" | "meal-dose" | "correction"))
+        matches!(self.role, Some(Role::Meal | Role::MealDose | Role::Correction))
             || matches!(self.event_type.as_str(), "Meal Bolus" | "Correction Bolus" | "Snack Bolus" | "Bolus")
     }
 
     /// on_board.is_main_meal / calculation._is_main_meal.
     pub fn is_main_meal(&self) -> bool {
-        (self.role.as_deref() == Some("meal") || self.event_type == "Meal Bolus") && self.carbs > Decimal::ZERO
+        (self.role == Some(Role::Meal) || self.event_type == "Meal Bolus") && self.carbs > Decimal::ZERO
     }
 
     pub fn has_rapid_dose(&self) -> bool {
@@ -221,7 +222,6 @@ default_fns! {
     split_delay_minutes: i64 = 120;
     split_min_units: Decimal = Decimal::new(65, 1);
     fpe_default: Decimal = d(20);
-    percentile_method: String = "percentile".into();
     auto_percentile: Decimal = Decimal::new(375, 1);
     auto_half_life: Decimal = d(7);
     auto_lookback: i64 = 30;
@@ -273,8 +273,8 @@ pub struct Settings {
     pub basal_default_units: Decimal,
     #[serde(default = "fpe_default", deserialize_with = "amount")]
     pub fpe_surcharge_mgdl: Decimal,
-    #[serde(default = "percentile_method")]
-    pub auto_method: String,
+    #[serde(default, deserialize_with = "lenient")]
+    pub auto_method: AutoMethod,
     #[serde(default = "auto_percentile", deserialize_with = "amount")]
     pub auto_percentile: Decimal,
     #[serde(default = "auto_half_life", deserialize_with = "amount")]
@@ -289,6 +289,6 @@ pub struct Settings {
 
 impl Settings {
     pub fn surcharge_method(&self) -> bool {
-        self.auto_method == "surcharge"
+        self.auto_method == AutoMethod::Surcharge
     }
 }

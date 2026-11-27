@@ -12,7 +12,7 @@ use crate::correction_scale;
 use crate::dosing::{self, DoseOptions, Finger};
 use crate::forecast::{self, MealKey, MealPoint, PlaceScale};
 use crate::fpe;
-use crate::model::{decimal_of, Instant, Reading, Settings, Treatment};
+use crate::model::{decimal_of, AutoMethod, DayType, Instant, MealKind, Reading, Settings, Treatment};
 use crate::on_board::{self, SourceOptions, Summary};
 use crate::split;
 use crate::stats;
@@ -57,7 +57,7 @@ pub struct Snapshot {
     pub treatments: Vec<Treatment>,
     /// Manual work/free days, or null while day types are off.
     #[serde(default)]
-    pub day_types: Option<HashMap<NaiveDate, String>>,
+    pub day_types: Option<HashMap<NaiveDate, DayType>>,
     #[serde(default)]
     pub vacation_periods: Vec<VacationPeriod>,
     /// Valid, non-excluded meal factors; `day` may be the calendar day (it is recounted here).
@@ -80,15 +80,15 @@ pub fn in_vacation(day: NaiveDate, periods: &[VacationPeriod]) -> bool {
 }
 
 /// (day type, source): a manual choice wins, then vacation, then Mon–Fri work; (None, "off") while off.
-pub fn day_type_for(day: NaiveDate, overrides: Option<&HashMap<NaiveDate, String>>, periods: &[VacationPeriod]) -> (Option<String>, &'static str) {
+pub fn day_type_for(day: NaiveDate, overrides: Option<&HashMap<NaiveDate, DayType>>, periods: &[VacationPeriod]) -> (Option<DayType>, &'static str) {
     let Some(overrides) = overrides else { return (None, "off") };
     if let Some(kind) = overrides.get(&day) {
-        return (Some(kind.clone()), "manual");
+        return (Some(*kind), "manual");
     }
     if in_vacation(day, periods) {
-        return (Some("free".into()), "vacation");
+        return (Some(DayType::Free), "vacation");
     }
-    (Some(if day.weekday().number_from_monday() >= 6 { "free" } else { "work" }.into()), "weekday")
+    (Some(if day.weekday().number_from_monday() >= 6 { DayType::Free } else { DayType::Work }), "weekday")
 }
 
 /// (calendar day, day as the Automatik counts it) from today back over days_back days, newest
@@ -136,12 +136,12 @@ impl Snapshot {
     }
 
     /// factors.meal_factor_values: sorted IE/KE of one meal kind over the past 28 days.
-    fn meal_factor_values(&self, kind: &str, day_type: Option<&str>, today: NaiveDate) -> Vec<Decimal> {
+    fn meal_factor_values(&self, kind: MealKind, day_type: Option<DayType>, today: NaiveDate) -> Vec<Decimal> {
         let days = counted_days(today, BREAKFAST_FACTOR_DAYS, &self.vacation_periods, self.mode());
         let mut values = Vec::new();
         for (real, _) in days.into_iter().skip(1) {
             if let Some(wanted) = day_type {
-                if day_type_for(real, self.day_types.as_ref(), &self.vacation_periods).0.as_deref() != Some(wanted) {
+                if day_type_for(real, self.day_types.as_ref(), &self.vacation_periods).0 != Some(wanted) {
                     continue;
                 }
             }
@@ -150,10 +150,6 @@ impl Snapshot {
         values.sort();
         values
     }
-}
-
-fn meal_kind(minute: i64, settings: &Settings) -> &'static str {
-    if minute < settings.breakfast_end_minute { "breakfast" } else if minute < settings.lunch_end_minute { "lunch" } else { "dinner" }
 }
 
 fn fat_surcharge(settings: &Settings) -> Decimal {
@@ -170,7 +166,7 @@ pub fn meal_surcharge_mgdl(settings: &Settings, fat: bool) -> Option<Decimal> {
 pub(crate) struct Factors<'a> {
     snapshot: &'a Snapshot,
     today: NaiveDate,
-    day_type: Option<String>,
+    day_type: Option<DayType>,
     points: Vec<MealPoint>,
     predictions: RefCell<HashMap<MealKey, forecast::Prediction>>,
     pub scales: HashMap<i64, (String, PlaceScale)>,
@@ -187,7 +183,7 @@ impl<'a> Factors<'a> {
         let scales = if chosen.is_empty() { HashMap::new() } else {
             let place_points = snapshot.points(today, lookback + forecast::PLACE_LOOKBACK_DAYS);
             chosen.iter().map(|place| (place.id, (place.name.clone(), forecast::place_scale(&place_points, place.id, today, percentile,
-                half_life, lookback, &settings.auto_method, settings.auto_surcharge_mgdl, fat_surcharge(settings))))).collect()
+                half_life, lookback, settings.auto_method, settings.auto_surcharge_mgdl, fat_surcharge(settings))))).collect()
         };
         Factors { snapshot, today, day_type, points, predictions: RefCell::new(HashMap::new()), scales }
     }
@@ -195,16 +191,16 @@ impl<'a> Factors<'a> {
     /// The Automatik suggestion of one meal key today.
     pub fn prediction(&self, key: &MealKey) -> forecast::Prediction {
         let settings = &self.snapshot.settings;
-        self.predictions.borrow_mut().entry(key.clone()).or_insert_with(|| forecast::predict_method(
+        self.predictions.borrow_mut().entry(*key).or_insert_with(|| forecast::predict_method(
             &self.points, key, self.today, settings.auto_percentile, settings.auto_half_life_days, settings.auto_lookback_days,
-            &settings.auto_method, settings.auto_surcharge_mgdl, fat_surcharge(settings))).clone()
+            settings.auto_method, settings.auto_surcharge_mgdl, fat_surcharge(settings))).clone()
     }
 
     /// IE/KE that values a carb entry at `at`: the Automatik factor of its clock-time meal kind, else Nightscout's I:C.
     pub fn carb_factor(&self, at: Instant) -> Option<Decimal> {
         let settings = &self.snapshot.settings;
-        let kind = meal_kind(local_zone(&settings.timezone).minute_of_day(&at), settings);
-        let key: MealKey = (kind.to_string(), if kind == "breakfast" { self.day_type.clone() } else { None });
+        let kind = MealKind::at_minute(local_zone(&settings.timezone).minute_of_day(&at), settings);
+        let key: MealKey = (kind, if kind == MealKind::Breakfast { self.day_type } else { None });
         self.prediction(&key).units_per_ke
             .or_else(|| schedule_value_at(at, &settings.ic_schedule, &settings.timezone, ScheduleKey::GramsPerUnit).ok().map(|ratio| dec!(10) / ratio))
     }
@@ -342,9 +338,9 @@ pub struct DoseHelp {
     pub correction_scale: Option<Option<correction_scale::Scale>>,
     pub split_plan: Option<SplitPlanView>,
     pub on_board: Option<OnBoardView>,
-    pub auto_meal: &'static str,
+    pub auto_meal: MealKind,
     pub auto_factor_count: usize,
-    pub auto_method: String,
+    pub auto_method: AutoMethod,
     pub auto_fat_surcharge_mgdl: Option<Decimal>,
     pub surcharge_levels: bool,
     pub surcharge_choice: Option<SurchargeOffer>,
@@ -355,7 +351,7 @@ pub struct DoseHelp {
     pub auto_factor_days: i64,
     pub auto_median_units_per_ke: Option<Decimal>,
     pub auto_q1_units_per_ke: Option<Decimal>,
-    pub day_type: Option<String>,
+    pub day_type: Option<DayType>,
     pub day_type_source: &'static str,
     pub breakfast: bool,
     pub factor_source: &'static str,
@@ -407,13 +403,12 @@ pub fn dose_help(snapshot: &Snapshot) -> Res<DoseHelp> {
     let (day_type, day_type_source) = day_type_for(today, snapshot.day_types.as_ref(), periods);
     let minute = zone.minute_of_day(&now);
     let is_breakfast = minute < settings.breakfast_end_minute;
-    let kind = meal_kind(minute, settings);
-    let key: MealKey = (kind.to_string(), if is_breakfast { day_type.clone() } else { None });
-    let meal_values = snapshot.meal_factor_values(kind, if is_breakfast { day_type.as_deref() } else { None }, today);
+    let kind = MealKind::at_minute(minute, settings);
+    let key: MealKey = (kind, if is_breakfast { day_type } else { None });
+    let meal_values = snapshot.meal_factor_values(kind, if is_breakfast { day_type } else { None }, today);
     let breakfast_median = stats::median(&meal_values);
     let use_factor = is_breakfast && meal_values.len() >= BREAKFAST_FACTOR_MIN_MEALS && breakfast_median.is_some_and(|m| m > Decimal::ZERO);
     let (percentile, half_life, lookback) = (settings.auto_percentile, settings.auto_half_life_days, settings.auto_lookback_days);
-    let method = settings.auto_method.as_str();
     let fat_mgdl = fat_surcharge(settings);
     let factors = Factors::new(snapshot);
     let prediction = factors.prediction(&key);
@@ -472,7 +467,7 @@ pub fn dose_help(snapshot: &Snapshot) -> Res<DoseHelp> {
     });
     Ok(DoseHelp {
         suggestion, correction_scale, split_plan, on_board,
-        auto_meal: kind, auto_factor_count: prediction.count, auto_method: method.to_string(),
+        auto_meal: kind, auto_factor_count: prediction.count, auto_method: settings.auto_method,
         auto_fat_surcharge_mgdl: (surcharge && fat && !use_fpe).then_some(fat_mgdl),
         surcharge_levels: surcharge && meal_surcharge.is_some(),
         surcharge_choice,
