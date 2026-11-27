@@ -1,5 +1,6 @@
 //! Normalize Nightscout records and associate app-entered meal episodes (app/episodes.py).
 
+use crate::wire::truthy;
 use crate::context::{local_zone, t};
 use crate::model::{decimal_of, Instant, Reading, Settings, SplitPlan, SurchargePlan, Treatment};
 use crate::{value_error, Res};
@@ -51,11 +52,12 @@ pub fn carbs_certainty(notes: &str) -> Option<String> {
 }
 
 pub fn split_plan(notes: &str) -> Option<SplitPlan> {
-    split_re().captures(notes).map(|c| SplitPlan { units: c[1].parse().unwrap(), delay_minutes: c[2].parse().unwrap() })
+    // A marker whose numbers do not fit (typed by hand into Nightscout) counts as no plan instead of failing the day.
+    split_re().captures(notes).and_then(|c| Some(SplitPlan { units: c[1].parse().ok()?, delay_minutes: c[2].parse().ok()? }))
 }
 
 pub fn surcharge_plan(notes: &str) -> Option<SurchargePlan> {
-    surcharge_re().captures(notes).map(|c| SurchargePlan { mgdl: c[1].parse().unwrap(), minutes: c[2].parse().unwrap() })
+    surcharge_re().captures(notes).and_then(|c| Some(SurchargePlan { mgdl: c[1].parse().ok()?, minutes: c[2].parse().ok()? }))
 }
 
 pub fn split_tag(units: Decimal, delay_minutes: i64) -> String {
@@ -98,15 +100,6 @@ fn text_of(value: &Value) -> String {
     }
 }
 
-fn truthy(value: &Value) -> bool {
-    match value {
-        Value::Null => false,
-        Value::Bool(flag) => *flag,
-        Value::String(text) => !text.is_empty(),
-        Value::Number(number) => number.to_string().parse::<f64>().map(|v| v != 0.0).unwrap_or(true),
-        _ => true,
-    }
-}
 
 /// CGM readings from raw Nightscout entries, sorted, without LibreLinkUp history readings that lie
 /// next to a live one.
@@ -363,4 +356,16 @@ pub fn meals_for_day(treatments: &[Treatment], day: NaiveDate, settings: &Settin
         });
     }
     roots
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn markers_with_numbers_out_of_range_count_as_none() {
+        assert_eq!(split_plan("[DASP:2.5@120]"), Some(SplitPlan { units: dec!(2.5), delay_minutes: 120 }));
+        assert_eq!(split_plan("[DASP:1@99999999999999999999]"), None);
+        assert_eq!(surcharge_plan("[DAZ:99999999999999999999999999999999@60]"), None);
+    }
 }

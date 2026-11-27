@@ -7,7 +7,7 @@
 
 use crate::context::{english, local_zone, t, tr};
 use crate::correction_check;
-use crate::day::iso;
+use crate::wire::iso;
 use crate::glucose::{limits, shown};
 use crate::glucose_alerts::{self, Warning};
 use crate::model::{decimal_of, Instant, Reading, Settings, Treatment};

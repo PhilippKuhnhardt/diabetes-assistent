@@ -1,4 +1,9 @@
-//! Rapid-insulin action profile (app/insulin.py): Loop's exponential activity curve.
+//! Rapid-insulin action profiles: Loop's exponential activity curve (delay, peak, duration).
+//!
+//! The app is built and tested with Fiasp; its curve fits the author's CGM data. A fork adds another
+//! profile to PROFILES and picks it with APP_INSULIN (app/insulin.py passes the key to the core's context).
+//! Every calculation (meal factors, "Wirkt noch", dose help, warnings) reads the active profile, and stored
+//! days are recalculated when it changes (its key is part of every day's fingerprint).
 
 use rust_decimal::{Decimal, MathematicalOps};
 use rust_decimal_macros::dec;
@@ -42,6 +47,36 @@ pub const FIASP: InsulinProfile = InsulinProfile {
     key: "fiasp", name: "Fiasp", delay_minutes: dec!(10), peak_minutes: dec!(55), duration_minutes: dec!(360),
 };
 
+/// Every profile a deployment can pick with APP_INSULIN.
+pub const PROFILES: [&InsulinProfile; 1] = [&FIASP];
+
+/// The profile the process runs with (context::set_insulin, Fiasp by default).
 pub fn active() -> &'static InsulinProfile {
-    &FIASP
+    crate::context::insulin()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fiasp_matches_the_approved_table() {
+        for (minutes, share) in [(0, dec!(1)), (15, dec!(1)), (60, dec!(0.75)), (90, dec!(0.54)), (180, dec!(0.14)), (360, dec!(0))] {
+            let remaining = FIASP.remaining(Decimal::from(minutes));
+            assert!((remaining - share).abs() < dec!(0.01), "{minutes} min: {remaining}");
+        }
+    }
+
+    #[test]
+    fn a_slower_profile_leaves_more_and_ends_after_its_delay_and_duration() {
+        let slower = InsulinProfile { key: "slow", name: "Slow", delay_minutes: dec!(15), peak_minutes: dec!(75), duration_minutes: dec!(360) };
+        assert!(slower.remaining(dec!(90)) > FIASP.remaining(dec!(90)));
+        assert_eq!(slower.remaining(dec!(375)), Decimal::ZERO);
+    }
+
+    #[test]
+    fn unknown_profiles_are_refused() {
+        assert!(crate::context::set_insulin("nope").is_err());
+        assert_eq!(active().key, "fiasp");
+    }
 }

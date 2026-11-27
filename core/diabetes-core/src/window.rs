@@ -5,7 +5,7 @@
 
 use crate::calculation::{window_totals, Episode, Interpolator};
 use crate::context::t;
-use crate::day::iso;
+use crate::wire::iso;
 use crate::glucose::{tone, trend};
 use crate::model::{Instant, Reading, Settings, Treatment};
 use chrono::{Duration, Timelike};

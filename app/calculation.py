@@ -8,7 +8,6 @@ from __future__ import annotations
 from app import core
 from datetime import datetime, timedelta
 from decimal import Decimal, getcontext
-from app import insulin
 
 
 getcontext().prec = 28
@@ -16,12 +15,6 @@ getcontext().prec = 28
 
 def dec(value: object) -> Decimal:
     return Decimal(str(value))
-
-
-# Activity curve of a rapid dose: the active profile of app/insulin.py (APP_INSULIN, default Fiasp).
-INSULIN_PEAK = insulin.ACTIVE.peak_minutes
-INSULIN_DURATION = insulin.ACTIVE.duration_minutes
-INSULIN_DELAY = insulin.ACTIVE.delay_minutes
 
 
 def insulin_remaining(minutes: Decimal) -> Decimal:

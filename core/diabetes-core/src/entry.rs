@@ -6,7 +6,7 @@
 
 use crate::context::{local_zone, t};
 use crate::correction_scale;
-use crate::day::iso;
+use crate::wire::iso;
 use crate::dosing::half_units;
 use crate::episodes::{self, Root};
 use crate::fpe::{self, Estimate};
@@ -33,8 +33,7 @@ pub const SPLIT_VARIANT: &str = "split";
 pub const DOSE_CHECK_KEYS: [&str; 12] = [
     "carbs_g", "glucose_at", "glucose_mgdl", "isf_mgdl_per_unit", "target_mgdl", "cautious_target_mgdl",
     "units_per_ke", "factor_source", "day_type", "activity_change_mgdl", "auto_units_per_ke", "recent_rapid_doses"];
-const MAX_CARBS: Decimal = dec!(500);
-const MAX_UNITS: Decimal = dec!(100);
+use crate::limits::{FINGER_MGDL, MAX_CARBS_G as MAX_CARBS, MAX_UNITS, SPORT_EFFECT_MAX_MGDL, SPORT_EFFECT_MINUTES};
 
 fn invalid(message: String) -> CoreError {
     CoreError::Value(message)
@@ -117,7 +116,7 @@ pub fn carbs(payload: &Value) -> Option<Decimal> {
 pub fn sport_drop(payload: &Value) -> Res<Option<Decimal>> {
     match amount(payload.get("sport_effect_mgdl")) {
         Ok(None) => Ok(None),
-        Ok(Some(change)) if dec!(-500) <= change && change <= dec!(500) => Ok(Some(-change)),
+        Ok(Some(change)) if change.abs() <= SPORT_EFFECT_MAX_MGDL => Ok(Some(-change)),
         Ok(Some(_)) => Err(invalid(t("Sporteinfluss muss zwischen −500 und 500 mg/dL liegen"))),
         Err(()) => Err(invalid(t("Ungültiger Sporteinfluss"))),
     }
@@ -129,7 +128,7 @@ pub fn sport_minutes(payload: &Value) -> Res<Option<i64>> {
         None | Some(Value::Null) => Ok(None),
         Some(Value::String(text)) if text.is_empty() => Ok(None),
         Some(Value::Number(number)) => match number.as_f64() {
-            Some(minutes) if (30.0..=1440.0).contains(&minutes) => Ok(Some(minutes.round_ties_even() as i64)),
+            Some(minutes) if (*SPORT_EFFECT_MINUTES.start() as f64..=*SPORT_EFFECT_MINUTES.end() as f64).contains(&minutes) => Ok(Some(minutes.round_ties_even() as i64)),
             _ => Err(invalid(t("Die Wirkdauer muss zwischen 0,5 und 24 h liegen."))),
         },
         _ => Err(invalid(t("Die Wirkdauer muss zwischen 0,5 und 24 h liegen."))),
@@ -140,7 +139,7 @@ pub fn sport_minutes(payload: &Value) -> Res<Option<i64>> {
 pub fn finger(payload: &Value) -> Res<Option<Decimal>> {
     match amount(payload.get("finger_mgdl")) {
         Ok(None) => Ok(None),
-        Ok(Some(value)) if dec!(20) <= value && value <= dec!(600) => Ok(Some(value)),
+        Ok(Some(value)) if FINGER_MGDL.contains(&value) => Ok(Some(value)),
         _ => Err(invalid(t("Blutig gemessener BZ muss zwischen 20 und 600 mg/dL liegen"))),
     }
 }

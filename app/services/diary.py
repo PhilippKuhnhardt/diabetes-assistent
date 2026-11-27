@@ -179,8 +179,7 @@ def save_glucose_check(at: datetime, mgdl: Decimal, event_id: str) -> None:
     help only; meal factors and the CGM curve never read it."""
     if not nightscout.is_configured():
         raise ValueError(tr("Zuerst Nightscout verbinden"))
-    if not mgdl.is_finite() or not 20 <= mgdl <= 600:
-        raise ValueError(tr("Blutzucker muss zwischen 20 und 600 mg/dL liegen"))
+    mgdl = calculation.dec(core.call("limits.finger_mgdl", mgdl=mgdl))
     _, settings = config.get_settings()
     day = at.astimezone(local_zone(settings["timezone"])).date().isoformat()
     if not ensure_not_duplicate(day, event_id):

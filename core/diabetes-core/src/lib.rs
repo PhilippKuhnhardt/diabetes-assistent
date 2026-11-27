@@ -21,6 +21,7 @@ pub mod fpe;
 pub mod glucose;
 pub mod glucose_alerts;
 pub mod insulin;
+pub mod limits;
 pub mod on_board;
 pub mod model;
 pub mod notifications;
@@ -29,6 +30,7 @@ pub mod split;
 pub mod stats;
 pub mod summary;
 pub mod window;
+pub mod wire;
 pub mod zone;
 
 /// An error the Python reference raises: ValueError with its (translated) message, or an

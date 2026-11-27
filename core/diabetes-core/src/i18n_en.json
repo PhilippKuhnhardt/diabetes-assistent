@@ -90,5 +90,9 @@
  "Ungültige Sportart": "Invalid exercise kind",
  "Ungültiger Eintrag": "Invalid entry",
  "Ungültiger Fett/Eiweiß-Zuschlag": "Invalid fat/protein surcharge",
- "Ungültiger Split-Bolus": "Invalid split bolus"
+ "Ungültiger Split-Bolus": "Invalid split bolus",
+ "Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen": "Exercise duration of effect must be between 30 and 1440 minutes",
+ "Ungültige Wirkdauer": "Invalid duration of effect",
+ "Basal muss zwischen 0,5 und 100 IE in 0,5er-Schritten liegen": "Basal must be between 0.5 and 100 U in steps of 0.5",
+ "Blutzucker muss zwischen 20 und 600 mg/dL liegen": "Blood glucose must be between 20 and 600 mg/dL"
 }

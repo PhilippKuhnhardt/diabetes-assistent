@@ -5,7 +5,7 @@
 
 use crate::calculation::{schedule_value_at, ScheduleKey};
 use crate::context::{t, tr};
-use crate::day::iso;
+use crate::wire::{iso, to_value};
 use crate::forecast::{self, MealKey, MealPoint, Variant};
 use crate::model::{decimal_of, Instant};
 use crate::services::{self, VacationPeriod};
@@ -80,25 +80,6 @@ fn dec_of(value: Option<&Value>) -> Option<Decimal> {
 
 fn instant(value: &Value) -> Option<Instant> {
     value.as_str().and_then(|text| chrono::DateTime::parse_from_rfc3339(text).ok()).map(|at| at.with_timezone(&chrono::Utc))
-}
-
-fn to_value<T: serde::Serialize>(value: &T) -> Value {
-    let mut value = serde_json::to_value(value).unwrap_or(Value::Null);
-    python_instants(&mut value);
-    value
-}
-
-fn python_instants(value: &mut Value) {
-    match value {
-        Value::String(text) if text.len() >= 20 && text.ends_with('Z') && text.as_bytes().get(10) == Some(&b'T') => {
-            if let Ok(parsed) = chrono::DateTime::parse_from_rfc3339(text) {
-                *text = iso(&parsed.with_timezone(&chrono::Utc));
-            }
-        }
-        Value::Array(items) => items.iter_mut().for_each(python_instants),
-        Value::Object(map) => map.values_mut().for_each(python_instants),
-        _ => {}
-    }
 }
 
 /// The Automatik's configured percentile, half-life and lookback (factors.forecast_settings).
@@ -254,13 +235,13 @@ static AUTOMATIK_CACHE: Mutex<Option<(String, std::sync::Arc<Automatik>)>> = Mut
 
 fn automatik(today: NaiveDate, points: &[MealPoint], settings: &Value, configured: &Configured) -> std::sync::Arc<Automatik> {
     let key = serde_json::to_string(&json!([today.to_string(), settings, to_value(&points)])).unwrap_or_default();
-    if let Some((cached_key, cached)) = AUTOMATIK_CACHE.lock().unwrap().as_ref() {
+    if let Some((cached_key, cached)) = AUTOMATIK_CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref() {
         if *cached_key == key {
             return cached.clone();
         }
     }
     let computed = std::sync::Arc::new(compute_automatik(today, points, configured));
-    *AUTOMATIK_CACHE.lock().unwrap() = Some((key, computed.clone()));
+    *AUTOMATIK_CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((key, computed.clone()));
     computed
 }
 

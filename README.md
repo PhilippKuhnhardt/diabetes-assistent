@@ -48,7 +48,7 @@ The database lives in `APP_DATA_DIR` (default `./data`) as `app.sqlite3` and sur
 | `NIGHTSCOUT_AUTH_MODE` | `secret` (default, sends the SHA-1 of `API_SECRET`) or `token`. |
 | `APP_LANGUAGE` | `de` (default) or `en`: language of server texts, push messages and the meal agent. |
 | `APP_TIMEZONE` | Home time zone if the Nightscout profile has none (default `Europe/Berlin`). |
-| `APP_INSULIN` | Rapid-insulin action profile from [app/insulin.py](app/insulin.py) (default and only upstream profile: `fiasp`; a fork can add its own there). |
+| `APP_INSULIN` | Rapid-insulin action profile from [core/diabetes-core/src/insulin.rs](core/diabetes-core/src/insulin.rs) (default and only upstream profile: `fiasp`; a fork can add its own there). |
 | `APP_SYNC_MINUTES` | Background sync with Nightscout every N minutes (default `2`, `0` = off). |
 | `APP_BIND_ADDRESS`, `APP_PORT` | Where Compose publishes the app (default `127.0.0.1:8765`). |
 | `APP_DATA_DIR`, `APP_UID`, `APP_GID` | Data directory and the user it belongs to (default `./data`, `1000`). |

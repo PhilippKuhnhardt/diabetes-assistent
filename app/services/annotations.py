@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from app import calculation
+from app import core
 from app.common import parse_instant
 from app.services import day_view, settings as settings_service
 from app.store import marks
@@ -22,25 +22,16 @@ def set_sport_session(payload: dict) -> dict:
         raise ValueError(tr("Sporteinheit nicht gefunden"))
     # The effect duration is optional: "minutes" set (a number) or reset (null) it, absent leaves it.
     if "minutes" in payload:
-        minutes = payload["minutes"]
-        if minutes is not None:
-            try:
-                minutes = int(minutes)
-            except (TypeError, ValueError):
-                raise ValueError(tr("Ungültige Wirkdauer")) from None
-            if not 30 <= minutes <= 1440:
-                raise ValueError(tr("Sport-Wirkdauer muss zwischen 30 und 1440 Minuten liegen"))
+        minutes = core.call("limits.sport_effect_minutes", minutes=payload["minutes"])
         marks.set_sport_session_minutes(session_id, minutes)
     if payload.get("reset"):
         marks.set_sport_session_effect(session_id, None)
         return {"id": session_id, "effect_mgdl": None}
     if "effect_mgdl" not in payload and "minutes" in payload:
         return {"id": session_id, "minutes": payload["minutes"]}
-    effect = calculation.dec(payload.get("effect_mgdl", 0))
-    if not effect.is_finite() or not -500 <= effect <= 500:
-        raise ValueError(tr("Ungültiger Sporteffekt"))
-    marks.set_sport_session_effect(session_id, str(effect))
-    return {"id": session_id, "effect_mgdl": str(effect)}
+    effect = str(core.call("limits.sport_effect_mgdl", effect_mgdl=payload.get("effect_mgdl", 0)))
+    marks.set_sport_session_effect(session_id, effect)
+    return {"id": session_id, "effect_mgdl": effect}
 
 
 def set_window(payload: dict) -> dict:

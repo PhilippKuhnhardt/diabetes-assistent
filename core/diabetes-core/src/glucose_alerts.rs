@@ -10,8 +10,7 @@ use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::Serialize;
 
-pub const LOW_MGDL: Decimal = dec!(70);
-pub const HIGH_MGDL: Decimal = dec!(250);
+pub use crate::glucose::{HIGH_MGDL, LOW_MGDL};
 pub const HORIZON_MINUTES: i64 = 60;
 pub const STEP_MINUTES: i64 = 5;
 pub const MISS_MINUTES: i64 = 15;

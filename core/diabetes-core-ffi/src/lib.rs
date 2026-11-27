@@ -1,6 +1,6 @@
 //! C interface for native apps: `core_call(name, json)` returns `{"ok": …}` or `{"error": …}` as JSON;
-//! free the returned string with `core_free`. `core_configure(json)` sets the language and the travel
-//! switches. Build for iPhone with `cargo build --release --target aarch64-apple-ios`.
+//! free the returned string with `core_free`. `core_configure(json)` sets the language, the insulin
+//! profile and the travel switches and answers like `core_call` (`{"ok": null}` or `{"error": …}`). Build for iPhone with `cargo build --release --target aarch64-apple-ios`.
 
 use std::ffi::{c_char, CStr, CString};
 
@@ -32,8 +32,11 @@ pub unsafe extern "C" fn core_call(name: *const c_char, args: *const c_char) -> 
 /// # Safety
 /// `context` must be a valid NUL-terminated string.
 #[no_mangle]
-pub unsafe extern "C" fn core_configure(context: *const c_char) {
-    diabetes_core::api::configure(&serde_json::from_str(&text(context)).unwrap_or_default());
+pub unsafe extern "C" fn core_configure(context: *const c_char) -> *mut c_char {
+    answer(match diabetes_core::api::configure(&serde_json::from_str(&text(context)).unwrap_or_default()) {
+        Ok(()) => serde_json::json!({"ok": null}),
+        Err(error) => serde_json::json!({"error": error.to_string()}),
+    })
 }
 
 /// # Safety
