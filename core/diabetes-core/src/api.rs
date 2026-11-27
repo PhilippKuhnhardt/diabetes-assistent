@@ -445,8 +445,8 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
         "diary.sport_changes" => crate::diary::sport_changes(&a.get::<Value>("payload")?,
             &a.get::<std::collections::HashMap<String, Value>>("effects")?,
             &a.get::<std::collections::HashMap<String, Value>>("durations")?, &a.get::<String>("record_id")?),
-        "services.dose_help" => crate::services::dose_help(&serde_json::from_value(args.clone())
-            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
+        "services.dose_help" => out(crate::services::dose_help(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?)?),
         "day.compute_day" => crate::day::compute_day(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         "night.night_analysis" => {
