@@ -87,3 +87,17 @@ class SportAnalysisTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SuggestedDropTests(unittest.TestCase):
+    """"Übernehmen" for a sport kind's standard (2026-11-27): scaled by measured ÷ assumed, kept sane."""
+
+    def test_scales_rounds_and_clamps(self):
+        from decimal import Decimal as D
+        from app.sport_analysis import suggested_drop
+        self.assertEqual(suggested_drop(D(40), [D("0.6"), D("0.65")]), "25")
+        self.assertIsNone(suggested_drop(D(40), [D("0.6")]))  # one meal is too few
+        self.assertIsNone(suggested_drop(D(40), [D("1"), D("1.02")]))  # no change
+        self.assertEqual(suggested_drop(D(40), [D(-2), D(-1)]), "0")  # rose instead: no effect, never a rise
+        self.assertEqual(suggested_drop(D(40), [D(5), D(6)]), "80")  # at most double
+        self.assertEqual(suggested_drop(D(-30), [D(2), D(2)]), "-60")  # racing raises glucose

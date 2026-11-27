@@ -1223,7 +1223,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(summary["days"], 1)
         self.assertEqual(summary["sport_analysis"]["sessions"], [])
 
-    def test_expected_change_uses_current_time_specific_nightscout_profile(self):
+    def test_expected_change_needs_an_automatik_suggestion(self):
         meal = {"id": "lunch-with-snack", "meal": "lunch", "at": "2026-09-23T10:00:00+02:00",
                 "calculation": {
                     "factor_units_per_ke": "1", "ratio_g_per_unit": "10",
@@ -1235,10 +1235,12 @@ class IntegrationTests(unittest.TestCase):
                 }}
         with fake_days(side_effect=then_empty([{"meals": [meal]}])):
             row = self.request("/api/summary?days=7")["groups"]["lunch"]["calculations"][0]
-        self.assertEqual(Decimal(row["expected_delta_mgdl"]), Decimal("27.5"))
-        self.assertEqual(Decimal(row["deviation_mgdl"]), Decimal("12.5"))
+        # Expected comes from the Automatik suggestion (user decision 2026-11-27), which needs at least
+        # four meals of the kind before this one; without them there is nothing to compare.
+        self.assertIsNone(row["expected_delta_mgdl"])
+        self.assertIsNone(row["deviation_mgdl"])
 
-    def test_deviation_uses_ie_per_ke_conversion_and_hides_blocked_meals(self):
+    def test_summary_hides_the_deviation_of_blocked_meals(self):
         FakeNightscout.profile["store"]["Default"]["sens"] = [
             {"time": "00:00", "timeAsSeconds": 0, "value": 30}]
         FakeNightscout.profile["store"]["Default"]["carbratio"] = [
@@ -1255,8 +1257,8 @@ class IntegrationTests(unittest.TestCase):
                                    "reason": "CGM-Lücke"}}
         with fake_days(side_effect=then_empty([{"meals": [calculated, blocked]}])):
             rows = self.request("/api/summary?days=7")["groups"]["dinner"]["calculations"]
-        self.assertEqual(Decimal(rows[0]["expected_delta_mgdl"]), Decimal("-3"))
-        self.assertEqual(Decimal(rows[0]["deviation_mgdl"]), Decimal("39.8"))
+        self.assertEqual(rows[0]["units_per_ke"], "0.8")
+        self.assertIsNone(rows[1]["units_per_ke"])
         self.assertIsNone(rows[1]["deviation_mgdl"])
 
     def test_sensitivity_write_converts_to_nightscout_mmol_units(self):
@@ -1460,9 +1462,8 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(changed["by_day_type"]["work"]["count"], 0)
             self.assertEqual(changed["by_day_type"]["free"]["mean_units_per_ke"], "1.5")
             self.assertEqual(changed["count"], 2)
-            self.assertEqual([item["expected_delta_mgdl"] for item in changed["calculations"]], ["50", "50"])
-            # Saturday may lie before or after Monday depending on the weekday the test runs.
-            self.assertEqual(sorted(item["deviation_mgdl"] for item in changed["calculations"]), ["0", "50"])
+            # Two breakfasts are too few for an Automatik suggestion, so there is no expectation.
+            self.assertEqual([item["expected_delta_mgdl"] for item in changed["calculations"]], [None, None])
             self.assertEqual(marks.analysis_day_types()[monday], "free")
             self.request("/api/analysis/exclusion", method="POST", body={
                 "meal_id": "work-breakfast", "day": monday, "excluded": True,
@@ -1471,7 +1472,7 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(filtered["by_day_type"]["free"]["count"], 1)
             self.assertEqual(filtered["by_day_type"]["free"]["excluded_count"], 1)
             self.assertEqual(filtered["by_day_type"]["free"]["mean_units_per_ke"], "2")
-            self.assertEqual([item["expected_delta_mgdl"] for item in filtered["calculations"]], ["50", "50"])
+            self.assertEqual([item["expected_delta_mgdl"] for item in filtered["calculations"]], [None, None])
 
     def test_vacation_marks_every_day_free_until_switched_off(self):
         today = datetime.now(ZoneInfo("Europe/Berlin")).date()

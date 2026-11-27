@@ -125,13 +125,17 @@
     {
      "at": "2026-10-07T06:10:00+00:00",
      "carbs_total": "40",
+     "certainty": null,
      "day": "2026-10-07",
      "day_type": "work",
      "delta_mgdl": "-87.94350724776043407004312060",
-     "deviation_mgdl": "-42.61017391442710073670978727",
+     "deviation_mgdl": "28.32570453640897060704289788",
+     "dish": null,
      "end": "2026-10-07T09:00:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "-45.33333333333333333333333333",
+     "expected_delta_mgdl": "-116.2692117841694046770860185",
+     "expected_units_per_ke": "1.075534346243032738802060957",
+     "fast": false,
      "id": "t-0145",
      "manual_window": false,
      "rapid_units_in_window": "8.0",
@@ -159,9 +163,11 @@
    ],
    "count": 1,
    "excluded_count": 0,
+   "expected_count": 1,
    "max_units_per_ke": "1.311581884046440827194085106",
    "mean_units_per_ke": "1.311581884046440827194085106",
-   "median_abs_deviation_mgdl": "42.61017391442710073670978727",
+   "median_abs_deviation_mgdl": "28.32570453640897060704289788",
+   "median_deviation_mgdl": "28.32570453640897060704289788",
    "median_g_per_unit": "7.624381002540530240656442218",
    "median_units_per_ke": "1.311581884046440827194085106",
    "min_units_per_ke": "1.311581884046440827194085106",
@@ -184,9 +190,11 @@
    "calculations": [],
    "count": 0,
    "excluded_count": 0,
+   "expected_count": 0,
    "max_units_per_ke": null,
    "mean_units_per_ke": null,
    "median_abs_deviation_mgdl": null,
+   "median_deviation_mgdl": null,
    "median_g_per_unit": null,
    "median_units_per_ke": null,
    "min_units_per_ke": null,
@@ -219,13 +227,17 @@
     {
      "at": "2026-10-07T10:05:00+00:00",
      "carbs_total": null,
+     "certainty": "known",
      "day": "2026-10-07",
      "day_type": "work",
      "delta_mgdl": null,
      "deviation_mgdl": null,
+     "dish": null,
      "end": null,
      "excluded": false,
      "expected_delta_mgdl": null,
+     "expected_units_per_ke": null,
+     "fast": false,
      "id": "ns-0002",
      "manual_window": false,
      "rapid_units_in_window": null,
@@ -253,9 +265,11 @@
    ],
    "count": 0,
    "excluded_count": 0,
+   "expected_count": 0,
    "max_units_per_ke": null,
    "mean_units_per_ke": null,
    "median_abs_deviation_mgdl": null,
+   "median_deviation_mgdl": null,
    "median_g_per_unit": null,
    "median_units_per_ke": null,
    "min_units_per_ke": null,
@@ -283,6 +297,22 @@
    "total": 1,
    "trend_units_per_ke": null,
    "valid_count": 0
+  }
+ },
+ "misses": {
+  "certainty": {
+   "none": {
+    "count": 1,
+    "median_abs_deviation_mgdl": "28.32570453640897060704289788",
+    "median_deviation_mgdl": "28.32570453640897060704289788"
+   }
+  },
+  "fast": {
+   "other": {
+    "count": 1,
+    "median_abs_deviation_mgdl": "28.32570453640897060704289788",
+    "median_deviation_mgdl": "28.32570453640897060704289788"
+   }
   }
  },
  "night": {
@@ -318,6 +348,12 @@
   "with_carbs_count": 0
  },
  "profile_sync_error": null,
+ "quiet": {
+  "count": 0,
+  "hours": "0",
+  "median_rate_mgdl_per_hour": null,
+  "periods": []
+ },
  "sport_analysis": {
   "baselines": {
    "breakfast": {
@@ -335,6 +371,7 @@
   },
   "kinds": [
    {
+    "apply": null,
     "effect_count": 0,
     "kind": "jogging",
     "label": "Joggen",
@@ -343,7 +380,9 @@
     "median_applied_mgdl": null,
     "median_effect_mgdl": null,
     "min_effect_mgdl": null,
-    "session_count": 1
+    "session_count": 1,
+    "standard_drop_mgdl": "40",
+    "suggested_drop_mgdl": null
    }
   ],
   "lookback_minutes": 360,
@@ -3502,5 +3541,178 @@
    }
   ]
  },
- "sync_error_days": []
+ "sync_error_days": [],
+ "trend": {
+  "kinds": {
+   "breakfast": {
+    "drift": null,
+    "weeks": [
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 5,
+      "median_abs_deviation_mgdl": "81.76195708147022877575522003",
+      "median_deviation_mgdl": "-79.99925305443941480545805836"
+     },
+     {
+      "count": 6,
+      "median_abs_deviation_mgdl": "8.47766920905193833007249899",
+      "median_deviation_mgdl": "-8.47766920905193833007249899"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "15.83935540376879966690076369",
+      "median_deviation_mgdl": "6.671255293211639770300742235"
+     },
+     {
+      "count": 6,
+      "median_abs_deviation_mgdl": "77.2618069673210407976286950",
+      "median_deviation_mgdl": "77.2618069673210407976286950"
+     }
+    ]
+   },
+   "dinner": {
+    "drift": null,
+    "weeks": [
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 5,
+      "median_abs_deviation_mgdl": "27.27264267078959617497092792",
+      "median_deviation_mgdl": "-11.45749339823868596180096656"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "31.93544718530411249492030293",
+      "median_deviation_mgdl": "-7.184056689395248070863309365"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "31.02558102132614491386722726",
+      "median_deviation_mgdl": "-21.38302712990905711964619382"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "42.17596183546830507252582172",
+      "median_deviation_mgdl": "42.17596183546830507252582172"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "55.37178905946476596398449657",
+      "median_deviation_mgdl": "42.31527212119630748262383932"
+     }
+    ]
+   },
+   "lunch": {
+    "drift": null,
+    "weeks": [
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 4,
+      "median_abs_deviation_mgdl": "51.0112987238601281649837650",
+      "median_deviation_mgdl": "51.0112987238601281649837650"
+     },
+     {
+      "count": 6,
+      "median_abs_deviation_mgdl": "59.4550871957413918188661909",
+      "median_deviation_mgdl": "7.001122436078386490452337855"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "17.7902509921758223802499505",
+      "median_deviation_mgdl": "6.37966562170827121767696014"
+     },
+     {
+      "count": 6,
+      "median_abs_deviation_mgdl": "27.86467819280604813518420208",
+      "median_deviation_mgdl": "19.31564146603700699837256183"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "15.2578244677438014875623044",
+      "median_deviation_mgdl": "-3.266280465212036681489181518"
+     }
+    ]
+   }
+  },
+  "weeks": [
+   {
+    "end": "2026-08-18",
+    "start": "2026-08-12"
+   },
+   {
+    "end": "2026-08-25",
+    "start": "2026-08-19"
+   },
+   {
+    "end": "2026-09-01",
+    "start": "2026-08-26"
+   },
+   {
+    "end": "2026-09-08",
+    "start": "2026-09-02"
+   },
+   {
+    "end": "2026-09-15",
+    "start": "2026-09-09"
+   },
+   {
+    "end": "2026-09-22",
+    "start": "2026-09-16"
+   },
+   {
+    "end": "2026-09-29",
+    "start": "2026-09-23"
+   },
+   {
+    "end": "2026-10-06",
+    "start": "2026-09-30"
+   }
+  ]
+ }
 }

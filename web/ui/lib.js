@@ -142,6 +142,7 @@ export function currentPosition() {
 const ICONS = {
   diary: html`<path d="M4 4h14a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V4Z"/><path d="M8 4v16M11 9h6M11 13h6"/>`,
   check: html`<path d="m4 12 5 5L20 6"/>`,
+  chevron: html`<path d="m9 6 6 6-6 6"/>`,
   exclude: html`<circle cx="12" cy="12" r="9"/><path d="m8 8 8 8"/>`,
   plus: html`<path d="M12 5v14M5 12h14"/>`,
   remove: html`<path d="M5 12h14"/>`,

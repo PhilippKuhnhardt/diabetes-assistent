@@ -125,13 +125,17 @@
     {
      "at": "2026-10-07T06:10:00+00:00",
      "carbs_total": "40",
+     "certainty": null,
      "day": "2026-10-07",
      "day_type": "work",
      "delta_mgdl": "-87.94350724776043407004312060",
-     "deviation_mgdl": "-42.61017391442710073670978727",
+     "deviation_mgdl": "28.32570453640897060704289788",
+     "dish": null,
      "end": "2026-10-07T09:00:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "-45.33333333333333333333333333",
+     "expected_delta_mgdl": "-116.2692117841694046770860185",
+     "expected_units_per_ke": "1.075534346243032738802060957",
+     "fast": false,
      "id": "t-0145",
      "manual_window": false,
      "rapid_units_in_window": "8.0",
@@ -159,13 +163,17 @@
     {
      "at": "2026-10-06T05:20:00+00:00",
      "carbs_total": "85",
+     "certainty": null,
      "day": "2026-10-06",
      "day_type": "work",
      "delta_mgdl": "-6.4399656449098505385579712",
-     "deviation_mgdl": "-56.4399656449098505385579712",
+     "deviation_mgdl": "103.7917759223081745730537555",
+     "dish": null,
      "end": "2026-10-06T08:10:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "50.0",
+     "expected_delta_mgdl": "-110.2317415672180251116117267",
+     "expected_units_per_ke": "1.038306895814831274072110876",
+     "fast": false,
      "id": "t-0141",
      "manual_window": false,
      "rapid_units_in_window": "12.5",
@@ -183,13 +191,17 @@
     {
      "at": "2026-10-05T05:55:00+00:00",
      "carbs_total": "100",
+     "certainty": null,
      "day": "2026-10-05",
      "day_type": "work",
      "delta_mgdl": "47.0065633649640640386135981",
-     "deviation_mgdl": "-197.9934366350359359613864019",
+     "deviation_mgdl": "-27.2473270234046024036133036",
+     "dish": null,
      "end": "2026-10-05T08:45:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "245.0",
+     "expected_delta_mgdl": "74.2538903883686664422269017",
+     "expected_units_per_ke": "1.097512967961228888140756339",
+     "fast": false,
      "id": "t-0136",
      "manual_window": false,
      "rapid_units_in_window": "8.5",
@@ -207,13 +219,17 @@
     {
      "at": "2026-10-04T05:45:00+00:00",
      "carbs_total": "80",
+     "certainty": "weighed",
      "day": "2026-10-04",
      "day_type": "free",
      "delta_mgdl": "-91.09772113913814437007375360",
-     "deviation_mgdl": "-146.0977211391381443700737536",
+     "deviation_mgdl": "10.58511389406642630767821608",
+     "dish": null,
      "end": "2026-10-04T08:35:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "55.0",
+     "expected_delta_mgdl": "-101.6828350332045706777519697",
+     "expected_units_per_ke": "1.013821520694980955509366793",
+     "fast": false,
      "id": "t-0133",
      "manual_window": false,
      "rapid_units_in_window": "11.5",
@@ -231,13 +247,17 @@
     {
      "at": "2026-10-03T06:00:00+00:00",
      "carbs_total": "105",
+     "certainty": null,
      "day": "2026-10-03",
      "day_type": "free",
      "delta_mgdl": "-92.87497531788990681915770540",
-     "deviation_mgdl": "-92.87497531788990681915770540",
+     "deviation_mgdl": "122.4423142145380525220123278",
+     "dish": null,
      "end": "2026-10-03T08:50:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "0.0",
+     "expected_delta_mgdl": "-215.3172895324279593411700332",
+     "expected_units_per_ke": "0.9831197157700699703454919578",
+     "fast": false,
      "id": "t-0130",
      "manual_window": false,
      "rapid_units_in_window": "17.5",
@@ -255,13 +275,17 @@
     {
      "at": "2026-10-02T05:55:00+00:00",
      "carbs_total": "35",
+     "certainty": null,
      "day": "2026-10-02",
      "day_type": "free",
      "delta_mgdl": "-59.70364595395992288596974807",
-     "deviation_mgdl": "-84.70364595395992288596974807",
+     "deviation_mgdl": null,
+     "dish": null,
      "end": "2026-10-02T08:45:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "25.0",
+     "expected_delta_mgdl": null,
+     "expected_units_per_ke": null,
+     "fast": false,
      "id": "t-0127",
      "manual_window": false,
      "rapid_units_in_window": "5.0",
@@ -279,13 +303,17 @@
     {
      "at": "2026-10-01T05:20:00+00:00",
      "carbs_total": "100",
+     "certainty": null,
      "day": "2026-10-01",
      "day_type": "free",
      "delta_mgdl": "-93.75182257179929638696041840",
-     "deviation_mgdl": "-8.75182257179929638696041840",
+     "deviation_mgdl": null,
+     "dish": null,
      "end": "2026-10-01T08:10:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "-85.0",
+     "expected_delta_mgdl": null,
+     "expected_units_per_ke": null,
+     "fast": false,
      "id": "t-0122",
      "manual_window": false,
      "rapid_units_in_window": "19.5",
@@ -303,9 +331,11 @@
    ],
    "count": 7,
    "excluded_count": 0,
+   "expected_count": 5,
    "max_units_per_ke": "1.637493924760669012043465272",
    "mean_units_per_ke": "1.241544962163811405669713454",
-   "median_abs_deviation_mgdl": "84.70364595395992288596974807",
+   "median_abs_deviation_mgdl": "28.32570453640897060704289788",
+   "median_deviation_mgdl": "28.32570453640897060704289788",
    "median_g_per_unit": "7.624381002540530240656442218",
    "median_units_per_ke": "1.311581884046440827194085106",
    "min_units_per_ke": "0.8599652766289531153717166850",
@@ -329,13 +359,17 @@
     {
      "at": "2026-10-06T16:50:00+00:00",
      "carbs_total": "60",
+     "certainty": null,
      "day": "2026-10-06",
      "day_type": "work",
      "delta_mgdl": "-6.46051025824007105392614544",
-     "deviation_mgdl": "-76.46051025824007105392614544",
+     "deviation_mgdl": "-55.37178905946476596398449657",
+     "dish": null,
      "end": "2026-10-06T19:40:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "70.0",
+     "expected_delta_mgdl": "48.91127880122469491005835113",
+     "expected_units_per_ke": "1.232910851434403309095515958",
+     "fast": false,
      "id": "t-0143",
      "manual_window": false,
      "rapid_units_in_window": "6.0",
@@ -353,13 +387,17 @@
     {
      "at": "2026-10-05T17:15:00+00:00",
      "carbs_total": "95",
+     "certainty": null,
      "day": "2026-10-05",
      "day_type": "work",
      "delta_mgdl": "52.79880633050622325937307016",
-     "deviation_mgdl": "-5.28512644986838794738839984",
+     "deviation_mgdl": "52.73353367055819393873469021",
+     "dish": null,
      "end": "2026-10-05T20:05:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "58.0839327803746112067614700",
+     "expected_delta_mgdl": "0.06527265994802932063837995",
+     "expected_units_per_ke": "1.158841122444832335179579679",
+     "fast": false,
      "id": "t-0140",
      "manual_window": false,
      "rapid_units_in_window": "11.0",
@@ -377,13 +415,17 @@
     {
      "at": "2026-10-04T17:10:00+00:00",
      "carbs_total": "75",
+     "certainty": "weighed",
      "day": "2026-10-04",
      "day_type": "free",
      "delta_mgdl": "-54.13368236543792895925072103",
-     "deviation_mgdl": "-89.13368236543792895925072103",
+     "deviation_mgdl": "-67.79252581346287295661015864",
+     "dish": null,
      "end": "2026-10-04T20:00:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "35.0",
+     "expected_delta_mgdl": "13.65884344802494399735943761",
+     "expected_units_per_ke": "1.252033689325809310466131191",
+     "fast": false,
      "id": "t-0135",
      "manual_window": false,
      "rapid_units_in_window": "9.0",
@@ -401,13 +443,17 @@
     {
      "at": "2026-10-03T16:35:00+00:00",
      "carbs_total": "110",
+     "certainty": null,
      "day": "2026-10-03",
      "day_type": "free",
      "delta_mgdl": "-6.80016383743685432121239703",
-     "deviation_mgdl": "5.09723413291968792678154847",
+     "deviation_mgdl": "64.7421506844238849421160951",
+     "dish": null,
      "end": "2026-10-03T19:25:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "-11.8973979703565422479939455",
+     "expected_delta_mgdl": "-71.54231452186073926332849213",
+     "expected_units_per_ke": "1.178411472160595159267529316",
+     "fast": false,
      "id": "t-0132",
      "manual_window": false,
      "rapid_units_in_window": "15.0",
@@ -425,13 +471,17 @@
     {
      "at": "2026-10-02T17:15:00+00:00",
      "carbs_total": "100",
+     "certainty": null,
      "day": "2026-10-02",
      "day_type": "free",
      "delta_mgdl": "11.5084731129609547221057586",
-     "deviation_mgdl": "-122.6581935537057119445609081",
+     "deviation_mgdl": null,
+     "dish": null,
      "end": "2026-10-02T20:05:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "134.1666666666666666666666667",
+     "expected_delta_mgdl": null,
+     "expected_units_per_ke": null,
+     "fast": false,
      "id": "t-0129",
      "manual_window": false,
      "rapid_units_in_window": "9.5",
@@ -449,13 +499,17 @@
     {
      "at": "2026-10-01T16:25:00+00:00",
      "carbs_total": "50",
+     "certainty": null,
      "day": "2026-10-01",
      "day_type": "free",
      "delta_mgdl": "13.43896128816677088192576565",
-     "deviation_mgdl": "9.00785594043733195269313405",
+     "deviation_mgdl": null,
+     "dish": null,
      "end": "2026-10-01T21:35:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "4.4311053477294389292326316",
+     "expected_delta_mgdl": null,
+     "expected_units_per_ke": null,
+     "fast": false,
      "id": "t-0125",
      "manual_window": false,
      "rapid_units_in_window": "6.5",
@@ -473,9 +527,11 @@
    ],
    "count": 6,
    "excluded_count": 0,
+   "expected_count": 4,
    "max_units_per_ke": "1.384806795850118087348722671",
    "mean_units_per_ke": "1.165785229978445383224075503",
-   "median_abs_deviation_mgdl": "42.73418309933870150330963974",
+   "median_abs_deviation_mgdl": "60.05696987194432545305029585",
+   "median_deviation_mgdl": "-1.31912769445328601262490318",
    "median_g_per_unit": "8.826557025780669075208189785",
    "median_units_per_ke": "1.155607332161268524367259178",
    "min_units_per_ke": "0.9692356654369520426003516886",
@@ -510,13 +566,17 @@
     {
      "at": "2026-10-07T10:05:00+00:00",
      "carbs_total": null,
+     "certainty": "known",
      "day": "2026-10-07",
      "day_type": "work",
      "delta_mgdl": null,
      "deviation_mgdl": null,
+     "dish": null,
      "end": null,
      "excluded": false,
      "expected_delta_mgdl": null,
+     "expected_units_per_ke": null,
+     "fast": false,
      "id": "ns-0002",
      "manual_window": false,
      "rapid_units_in_window": null,
@@ -544,13 +604,17 @@
     {
      "at": "2026-10-06T09:40:00+00:00",
      "carbs_total": "55",
+     "certainty": null,
      "day": "2026-10-06",
      "day_type": "work",
      "delta_mgdl": "29.9251984245202507739572230",
-     "deviation_mgdl": "-26.5277067206794579258602684",
+     "deviation_mgdl": "-27.53939778282108792293984971",
+     "dish": null,
      "end": "2026-10-06T12:30:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "56.4529051451997086998174914",
+     "expected_delta_mgdl": "57.46459620734133869689707271",
+     "expected_units_per_ke": "1.255255537985151324660153669",
+     "fast": false,
      "id": "t-0142",
      "manual_window": false,
      "rapid_units_in_window": "5.0",
@@ -568,13 +632,17 @@
     {
      "at": "2026-10-05T10:40:00+00:00",
      "carbs_total": "110",
+     "certainty": "unsure",
      "day": "2026-10-05",
      "day_type": "work",
      "delta_mgdl": "-112.9231742574146624468692535",
-     "deviation_mgdl": "-188.6410809023707079938484480",
+     "deviation_mgdl": "-191.6739506138198090869755086",
+     "dish": null,
      "end": "2026-10-05T15:05:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "75.7179066449560455469791945",
+     "expected_delta_mgdl": "78.7507763564051466401062551",
+     "expected_units_per_ke": "1.257877583666101561280849508",
+     "fast": false,
      "id": "t-0138",
      "manual_window": false,
      "rapid_units_in_window": "11.5",
@@ -592,13 +660,17 @@
     {
      "at": "2026-10-04T09:50:00+00:00",
      "carbs_total": "95",
+     "certainty": "weighed",
      "day": "2026-10-04",
      "day_type": "free",
      "delta_mgdl": "72.88878086784550179289036570",
-     "deviation_mgdl": "2.08069478709037744212014380",
+     "deviation_mgdl": "-3.266280465212036681489181518",
+     "dish": null,
      "end": "2026-10-04T12:40:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "70.8080860807551243507702219",
+     "expected_delta_mgdl": "76.15506133305753847437954722",
+     "expected_units_per_ke": "1.266081128578353125183787445",
+     "fast": false,
      "id": "t-0134",
      "manual_window": false,
      "rapid_units_in_window": "9.5",
@@ -616,13 +688,17 @@
     {
      "at": "2026-10-03T10:55:00+00:00",
      "carbs_total": "55",
+     "certainty": null,
      "day": "2026-10-03",
      "day_type": "free",
      "delta_mgdl": "0E-26",
-     "deviation_mgdl": "8.85036940967399269533965900",
+     "deviation_mgdl": "6.881074103725708970114130522",
+     "dish": null,
      "end": "2026-10-03T13:45:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "-8.8503694096739926953396590",
+     "expected_delta_mgdl": "-6.881074103725708970114130522",
+     "expected_units_per_ke": "1.260230105485445629741431317",
+     "fast": false,
      "id": "t-0131",
      "manual_window": false,
      "rapid_units_in_window": "7.0",
@@ -640,13 +716,17 @@
     {
      "at": "2026-10-02T10:30:00+00:00",
      "carbs_total": "100",
+     "certainty": null,
      "day": "2026-10-02",
      "day_type": "free",
      "delta_mgdl": "52.89916184439685655943636746",
-     "deviation_mgdl": "-84.68159498763176613908087894",
+     "deviation_mgdl": null,
+     "dish": null,
      "end": "2026-10-02T13:20:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "137.5807568320286226985172464",
+     "expected_delta_mgdl": null,
+     "expected_units_per_ke": null,
+     "fast": false,
      "id": "t-0128",
      "manual_window": false,
      "rapid_units_in_window": "8.5",
@@ -664,13 +744,17 @@
     {
      "at": "2026-10-01T10:40:00+00:00",
      "carbs_total": "115",
+     "certainty": null,
      "day": "2026-10-01",
      "day_type": "free",
      "delta_mgdl": "0E-26",
-     "deviation_mgdl": "6.17856000378170205964140580",
+     "deviation_mgdl": null,
+     "dish": null,
      "end": "2026-10-01T15:05:00+00:00",
      "excluded": false,
-     "expected_delta_mgdl": "-6.1785600037817020596414058",
+     "expected_delta_mgdl": null,
+     "expected_units_per_ke": null,
+     "fast": false,
      "id": "t-0123",
      "manual_window": false,
      "rapid_units_in_window": "14.5",
@@ -688,9 +772,11 @@
    ],
    "count": 6,
    "excluded_count": 0,
+   "expected_count": 4,
    "max_units_per_ke": "1.295975944985319442573193034",
    "mean_units_per_ke": "1.116308936143856792632569504",
-   "median_abs_deviation_mgdl": "17.68903806517672531059996370",
+   "median_abs_deviation_mgdl": "17.21023594327339844652699012",
+   "median_deviation_mgdl": "-15.40283912401656230221451562",
    "median_g_per_unit": "8.47569467250117299964352385",
    "median_units_per_ke": "1.184225730002062125942853928",
    "min_units_per_ke": "0.7600231664873488104055884468",
@@ -718,6 +804,32 @@
    "total": 7,
    "trend_units_per_ke": "-0.153156728315579052501601725",
    "valid_count": 6
+  }
+ },
+ "misses": {
+  "certainty": {
+   "none": {
+    "count": 9,
+    "median_abs_deviation_mgdl": "52.73353367055819393873469021",
+    "median_deviation_mgdl": "28.32570453640897060704289788"
+   },
+   "unsure": {
+    "count": 1,
+    "median_abs_deviation_mgdl": "191.6739506138198090869755086",
+    "median_deviation_mgdl": "-191.6739506138198090869755086"
+   },
+   "weighed": {
+    "count": 3,
+    "median_abs_deviation_mgdl": "10.58511389406642630767821608",
+    "median_deviation_mgdl": "-3.266280465212036681489181518"
+   }
+  },
+  "fast": {
+   "other": {
+    "count": 13,
+    "median_abs_deviation_mgdl": "52.73353367055819393873469021",
+    "median_deviation_mgdl": "6.881074103725708970114130522"
+   }
   }
  },
  "night": {
@@ -867,6 +979,157 @@
   "with_carbs_count": 0
  },
  "profile_sync_error": null,
+ "quiet": {
+  "count": 12,
+  "hours": "76.50000000000000000000000000",
+  "median_rate_mgdl_per_hour": "2.241047934769415198622185361",
+  "periods": [
+   {
+    "day": "2026-10-06",
+    "delta_mgdl": "43.67294162899282916020081947",
+    "end": "2026-10-07T06:10:00+00:00",
+    "end_glucose": "127.9435072477604340700431206",
+    "hours": "10.33333333333333333333333333",
+    "minimum_at": "2026-10-06T19:50:08.773000+00:00",
+    "minimum_glucose": "84",
+    "rate_mgdl_per_hour": "4.226413706031564112277498660",
+    "start": "2026-10-06T19:50:00+00:00",
+    "start_glucose": "84.27056561876760490984230113"
+   },
+   {
+    "day": "2026-10-06",
+    "delta_mgdl": "-46.39288150174109653445941162",
+    "end": "2026-10-06T16:50:00+00:00",
+    "end_glucose": "98.42377757106490600265489948",
+    "hours": "4.166666666666666666666666667",
+    "minimum_at": "2026-10-06T16:50:00+00:00",
+    "minimum_glucose": "98.42377757106490600265489948",
+    "rate_mgdl_per_hour": "-11.13429156041786316827025879",
+    "start": "2026-10-06T12:40:00+00:00",
+    "start_glucose": "144.8166590728060025371143111"
+   },
+   {
+    "day": "2026-10-05",
+    "delta_mgdl": "11.5093074235731298706182546",
+    "end": "2026-10-06T05:20:00+00:00",
+    "end_glucose": "127.4998796417123817004725646",
+    "hours": "9.083333333333333333333333333",
+    "minimum_at": "2026-10-06T00:45:05.132000+00:00",
+    "minimum_glucose": "113",
+    "rate_mgdl_per_hour": "1.267079716356674848141459222",
+    "start": "2026-10-05T20:15:00+00:00",
+    "start_glucose": "115.9905722181392518298543100"
+   },
+   {
+    "day": "2026-10-05",
+    "delta_mgdl": "15.22523255006219275198525898",
+    "end": "2026-10-05T17:15:00+00:00",
+    "end_glucose": "69.16373581132741280950420514",
+    "hours": "2",
+    "minimum_at": "2026-10-05T15:20:05.328000+00:00",
+    "minimum_glucose": "48",
+    "rate_mgdl_per_hour": "7.61261627503109637599262949",
+    "start": "2026-10-05T15:15:00+00:00",
+    "start_glucose": "53.93850326126522005751894616"
+   },
+   {
+    "day": "2026-10-04",
+    "delta_mgdl": "91.00831699303108190466096080",
+    "end": "2026-10-05T05:55:00+00:00",
+    "end_glucose": "131.0083169930310819046609608",
+    "hours": "9.75",
+    "minimum_at": "2026-10-04T20:10:00+00:00",
+    "minimum_glucose": "40.00000000000000000000000000",
+    "rate_mgdl_per_hour": "9.334186358259598144067790851",
+    "start": "2026-10-04T20:10:00+00:00",
+    "start_glucose": "40.00000000000000000000000000"
+   },
+   {
+    "day": "2026-10-04",
+    "delta_mgdl": "-26.57976464809351347099764337",
+    "end": "2026-10-04T17:10:00+00:00",
+    "end_glucose": "94.13368236543792895925072103",
+    "hours": "4.333333333333333333333333333",
+    "minimum_at": "2026-10-04T17:10:00+00:00",
+    "minimum_glucose": "94.13368236543792895925072103",
+    "rate_mgdl_per_hour": "-6.133791841867733877922533086",
+    "start": "2026-10-04T12:50:00+00:00",
+    "start_glucose": "120.7134470135314424302483644"
+   },
+   {
+    "day": "2026-10-03",
+    "delta_mgdl": "91.09772113913814437007375360",
+    "end": "2026-10-04T05:45:00+00:00",
+    "end_glucose": "131.0977211391381443700737536",
+    "hours": "10.16666666666666666666666667",
+    "minimum_at": "2026-10-03T19:35:00+00:00",
+    "minimum_glucose": "40.00000000000000000000000000",
+    "rate_mgdl_per_hour": "8.960431587456210921646598712",
+    "start": "2026-10-03T19:35:00+00:00",
+    "start_glucose": "40.00000000000000000000000000"
+   },
+   {
+    "day": "2026-10-03",
+    "delta_mgdl": "6.80016383743685432121239703",
+    "end": "2026-10-03T16:35:00+00:00",
+    "end_glucose": "46.80016383743685432121239703",
+    "hours": "2.666666666666666666666666667",
+    "minimum_at": "2026-10-03T13:55:00+00:00",
+    "minimum_glucose": "40.00000000000000000000000000",
+    "rate_mgdl_per_hour": "2.550061439038820370454648886",
+    "start": "2026-10-03T13:55:00+00:00",
+    "start_glucose": "40.00000000000000000000000000"
+   },
+   {
+    "day": "2026-10-02",
+    "delta_mgdl": "18.8373356973750977611997879",
+    "end": "2026-10-03T06:00:00+00:00",
+    "end_glucose": "132.8749753178899068191577054",
+    "hours": "9.75",
+    "minimum_at": "2026-10-02T20:25:01.656000+00:00",
+    "minimum_glucose": "112",
+    "rate_mgdl_per_hour": "1.932034430500010026789721836",
+    "start": "2026-10-02T20:15:00+00:00",
+    "start_glucose": "114.0376396205148090579579175"
+   },
+   {
+    "day": "2026-10-02",
+    "delta_mgdl": "-21.5139378486642975665888776",
+    "end": "2026-10-02T17:15:00+00:00",
+    "end_glucose": "105.6005785973070891688747093",
+    "hours": "3.75",
+    "minimum_at": "2026-10-02T17:10:18.885000+00:00",
+    "minimum_glucose": "98",
+    "rate_mgdl_per_hour": "-5.737050092977146017757034027",
+    "start": "2026-10-02T13:30:00+00:00",
+    "start_glucose": "127.1145164459713867354635869"
+   },
+   {
+    "day": "2026-10-01",
+    "delta_mgdl": "68.95326612572739939349233669",
+    "end": "2026-10-02T05:55:00+00:00",
+    "end_glucose": "125.0000000000000000000000000",
+    "hours": "8.166666666666666666666666667",
+    "minimum_at": "2026-10-01T22:35:05.228000+00:00",
+    "minimum_glucose": "48",
+    "rate_mgdl_per_hour": "8.443257076619681558386816737",
+    "start": "2026-10-01T21:45:00+00:00",
+    "start_glucose": "56.04673387427260060650766331"
+   },
+   {
+    "day": "2026-10-01",
+    "delta_mgdl": "0E-26",
+    "end": "2026-10-01T10:40:00+00:00",
+    "end_glucose": "40.00000000000000000000000000",
+    "hours": "2.333333333333333333333333333",
+    "minimum_at": "2026-10-01T08:20:00+00:00",
+    "minimum_glucose": "40.00000000000000000000000000",
+    "rate_mgdl_per_hour": "0E+1",
+    "start": "2026-10-01T08:20:00+00:00",
+    "start_glucose": "40.00000000000000000000000000"
+   }
+  ]
+ },
  "sport_analysis": {
   "baselines": {
    "breakfast": {
@@ -884,6 +1147,7 @@
   },
   "kinds": [
    {
+    "apply": null,
     "effect_count": 1,
     "kind": "jogging",
     "label": "Joggen",
@@ -892,7 +1156,9 @@
     "median_applied_mgdl": "-5.333333333333333333333333332",
     "median_effect_mgdl": "6.27139452614598903564821410",
     "min_effect_mgdl": "6.27139452614598903564821410",
-    "session_count": 1
+    "session_count": 1,
+    "standard_drop_mgdl": "40",
+    "suggested_drop_mgdl": null
    }
   ],
   "lookback_minutes": 360,
@@ -4051,5 +4317,178 @@
    }
   ]
  },
- "sync_error_days": []
+ "sync_error_days": [],
+ "trend": {
+  "kinds": {
+   "breakfast": {
+    "drift": null,
+    "weeks": [
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 5,
+      "median_abs_deviation_mgdl": "81.76195708147022877575522003",
+      "median_deviation_mgdl": "-79.99925305443941480545805836"
+     },
+     {
+      "count": 6,
+      "median_abs_deviation_mgdl": "8.47766920905193833007249899",
+      "median_deviation_mgdl": "-8.47766920905193833007249899"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "15.83935540376879966690076369",
+      "median_deviation_mgdl": "6.671255293211639770300742235"
+     },
+     {
+      "count": 6,
+      "median_abs_deviation_mgdl": "77.2618069673210407976286950",
+      "median_deviation_mgdl": "77.2618069673210407976286950"
+     }
+    ]
+   },
+   "dinner": {
+    "drift": null,
+    "weeks": [
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 5,
+      "median_abs_deviation_mgdl": "27.27264267078959617497092792",
+      "median_deviation_mgdl": "-11.45749339823868596180096656"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "31.93544718530411249492030293",
+      "median_deviation_mgdl": "-7.184056689395248070863309365"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "31.02558102132614491386722726",
+      "median_deviation_mgdl": "-21.38302712990905711964619382"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "42.17596183546830507252582172",
+      "median_deviation_mgdl": "42.17596183546830507252582172"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "55.37178905946476596398449657",
+      "median_deviation_mgdl": "42.31527212119630748262383932"
+     }
+    ]
+   },
+   "lunch": {
+    "drift": null,
+    "weeks": [
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 0,
+      "median_abs_deviation_mgdl": null,
+      "median_deviation_mgdl": null
+     },
+     {
+      "count": 4,
+      "median_abs_deviation_mgdl": "51.0112987238601281649837650",
+      "median_deviation_mgdl": "51.0112987238601281649837650"
+     },
+     {
+      "count": 6,
+      "median_abs_deviation_mgdl": "59.4550871957413918188661909",
+      "median_deviation_mgdl": "7.001122436078386490452337855"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "17.7902509921758223802499505",
+      "median_deviation_mgdl": "6.37966562170827121767696014"
+     },
+     {
+      "count": 6,
+      "median_abs_deviation_mgdl": "27.86467819280604813518420208",
+      "median_deviation_mgdl": "19.31564146603700699837256183"
+     },
+     {
+      "count": 7,
+      "median_abs_deviation_mgdl": "15.2578244677438014875623044",
+      "median_deviation_mgdl": "-3.266280465212036681489181518"
+     }
+    ]
+   }
+  },
+  "weeks": [
+   {
+    "end": "2026-08-18",
+    "start": "2026-08-12"
+   },
+   {
+    "end": "2026-08-25",
+    "start": "2026-08-19"
+   },
+   {
+    "end": "2026-09-01",
+    "start": "2026-08-26"
+   },
+   {
+    "end": "2026-09-08",
+    "start": "2026-09-02"
+   },
+   {
+    "end": "2026-09-15",
+    "start": "2026-09-09"
+   },
+   {
+    "end": "2026-09-22",
+    "start": "2026-09-16"
+   },
+   {
+    "end": "2026-09-29",
+    "start": "2026-09-23"
+   },
+   {
+    "end": "2026-10-06",
+    "start": "2026-09-30"
+   }
+  ]
+ }
 }
