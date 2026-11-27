@@ -258,6 +258,11 @@
    "Decimal"
   ]
  },
+ "factors.meal_surcharge_mgdl": {
+  "$": [
+   "Decimal"
+  ]
+ },
  "forecast.backtest": {
   "$.rows[].glucose[]": [
    "Decimal"

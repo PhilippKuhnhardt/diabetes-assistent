@@ -402,6 +402,9 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
             &a.get::<Vec<crate::notifications::WarningInput>>("warnings")?.into_iter().map(Into::into).collect::<Vec<_>>(), &a.get("enabled")?)),
         "notifications.correction_reminder" => out(crate::notifications::correction_reminder(a.get("now")?, &a.get("settings")?,
             &a.get("hit")?, a.opt::<crate::notifications::Correction>("correction")?.as_ref())),
+        "factors.place_scales" => out(crate::services::place_scales(&serde_json::from_value(args.clone())
+            .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?)),
+        "factors.meal_surcharge_mgdl" => out(crate::services::meal_surcharge_mgdl(&a.get("settings")?, a.get::<Option<bool>>("fat")?.unwrap_or(false))),
         "services.dose_help" => crate::services::dose_help(&serde_json::from_value(args.clone())
             .map_err(|error| CoreError::Value(format!("snapshot: {error}")))?),
         "day.compute_day" => crate::day::compute_day(&serde_json::from_value(args.clone())

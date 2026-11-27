@@ -161,7 +161,7 @@ fn fat_surcharge(settings: &Settings) -> Decimal {
 }
 
 /// Surcharge of one main meal as the dose help uses it; None without the surcharge method.
-fn meal_surcharge_mgdl(settings: &Settings, fat: bool) -> Option<Decimal> {
+pub fn meal_surcharge_mgdl(settings: &Settings, fat: bool) -> Option<Decimal> {
     settings.surcharge_method().then(|| settings.auto_surcharge_mgdl + if fat { fat_surcharge(settings) } else { Decimal::ZERO })
 }
 
@@ -236,6 +236,11 @@ impl<'a> Factors<'a> {
         };
         on_board::sources(&snapshot.treatments, snapshot.now, settings, &options)
     }
+}
+
+/// The place factor of every place switched on for it, by place id (the place settings show it).
+pub fn place_scales(snapshot: &Snapshot) -> HashMap<i64, PlaceScale> {
+    Factors::new(snapshot).scales.into_iter().map(|(id, (_, scale))| (id, scale)).collect()
 }
 
 /// The dose help result for the entry in `snapshot.payload` (the server's /api/entry/preview dose part).
