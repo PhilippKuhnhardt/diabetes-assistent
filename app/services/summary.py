@@ -59,6 +59,24 @@ def history_days(days: int) -> int:
                forecast.RATIO_DAYS + forecast.RATIO_REFERENCE_DAYS)
 
 
+def summary_snapshot(days: int, today: date) -> dict:
+    """Everything compute_summary reads from the store, as JSON (core/diabetes-core/src/summary.rs Snapshot)."""
+    from app.store import places as place_store
+    _, settings = config.get_settings()
+    payloads = {}
+    for offset in range(history_days(days) + 1):
+        day = (today - timedelta(days=offset)).isoformat()
+        payloads[day] = day_view.day_payload(day, refresh=False)
+    return json_safe({
+        "today": today.isoformat(), "days": days, "settings": settings,
+        "analysis_exclusions": sorted(marks.analysis_exclusions()),
+        "day_types": marks.analysis_day_types(), "vacation_periods": marks.vacation_periods(),
+        "places": [{"id": place["id"], "adjust": bool(place.get("adjust"))} for place in place_store.all_places()],
+        "own_sport_sessions": sorted(marks.sport_session_effects()),
+        "payloads": payloads,
+    })
+
+
 def compute_summary(days: int, today: date) -> dict:
     """The analysis page for the last `days` days, from stored diary days only."""
     profile_sync_error = None

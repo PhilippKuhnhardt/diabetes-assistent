@@ -241,6 +241,32 @@ def wrap_compute_day():
     day_view.compute_day = recorded
 
 
+def wrap_compute_summary():
+    """Record summary.compute_summary with the snapshot it reads from the store (summary.rs Snapshot)."""
+    from unittest import mock
+    from app.services import day_view, factors, summary
+    from app.store import config, marks
+    from app.store import places as place_store
+    original = summary.compute_summary
+    owners = ((config, "get_settings"), (day_view, "day_payload"), (marks, "analysis_exclusions"),
+              (marks, "analysis_day_types"), (marks, "vacation_periods"), (marks, "day_type_for"),
+              (marks, "sport_session_effects"), (place_store, "all_places"), (factors, "meal_points"),
+              (summary, "_automatik"))
+
+    def recorded(days, today):
+        result = original(days, today)
+        if not any(isinstance(getattr(owner, name), mock.NonCallableMock) for owner, name in owners):
+            try:
+                outcome = {"ok": json.loads(json.dumps(summary.json_safe(result), default=str))}
+                store("summary.compute_summary", json.dumps(summary.summary_snapshot(days, today), sort_keys=True,
+                                                            default=str), outcome)
+            except Exception as error:  # noqa: BLE001 - recording must never change the test run
+                print("compute_summary not recorded:", repr(error), file=sys.stderr)
+        return result
+
+    summary.compute_summary = recorded
+
+
 def main():
     global handle
     for module, names in TARGETS.items():
@@ -248,6 +274,7 @@ def main():
             setattr(module, function_name, wrap(module, getattr(module, function_name)))
     wrap_dose_help()
     wrap_compute_day()
+    wrap_compute_summary()
     handle = OUT.open("w")
     suite = unittest.defaultTestLoader.discover(str(ROOT / "tests"), *sys.argv[1:2])
     result = unittest.TextTestRunner(verbosity=0).run(suite)

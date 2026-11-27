@@ -23,6 +23,7 @@ pub mod model;
 pub mod services;
 pub mod split;
 pub mod stats;
+pub mod summary;
 pub mod zone;
 
 /// An error the Python reference raises: ValueError with its (translated) message, or an
