@@ -362,15 +362,21 @@ async function review(page, name) {
 // Analyse (web/ui/analysis.js): Werte with the summary and every calculation, exclusion and day type,
 // another period, Automatik and Gerichte, and a calculation opening its day (then reviewed there).
 async function analysis(page, name) {
-  await page.waitForSelector("#calculations tbody tr .open-meal-day");
-  check((await page.$$("#summary .summary-card")).length === 3, `${name}: Werte shows three meal cards`);
-  check((await page.$$("#calculations td[data-label]")).length > 0, `${name}: calculation cells carry their column`);
+  await page.waitForSelector("#calculations .open-meal-day");
+  check((await page.$$("#summary .miss-row")).length === 3, `${name}: Werte shows the miss of three meal kinds`);
   // Read only since 2026-11-26: exclusion, day type and loading from Nightscout are gone from Werte.
   check(!(await page.$("#calculations .exclude-meal, #calculations select.day-type, #sync-range")), `${name}: Werte is read only and loads by itself`);
-  await page.click("#summary-days [data-days='7']");
-  await page.waitForFunction(() => document.querySelector("#summary-days [data-days='7']")?.getAttribute("aria-selected") === "true");
-  await page.waitForSelector("#calculations tbody tr");
+  await page.selectOption("#summary-days", "7");
+  await page.waitForFunction(() => document.querySelector("#summary-days")?.value === "7");
+  await page.waitForSelector("#calculations .open-meal-day");
   check(true, `${name}: another period loads`);
+  for (const section of ["sport", "basal", "meals"]) {
+    await page.click(`#werte-sections [data-section=${section}]`);
+    await page.waitForSelector(section === "meals" ? "#calculations" : section === "sport" ? "#analysis-werte .werte-card" : "#quiet");
+  }
+  check(true, `${name}: Werte switches between meals, sport and basal`);
+  const tight = await widerThanScreen(page);
+  check(!tight.length, `${name}: Werte fits the screen ${tight.join(" | ")}`);
   await page.click("[data-analysis-tab=automatik]");
   await page.waitForSelector("#automatik-explain .automatik-chips");
   check(page.url().includes("tab=automatik"), `${name}: Automatik tab in the URL`);
@@ -379,14 +385,14 @@ async function analysis(page, name) {
   check(true, `${name}: Gerichte lists the dishes`);
   await page.click("[data-analysis-tab=werte]");
   await page.waitForSelector("#calculations .open-meal-day");
-  await page.click("#calculations .open-meal-day >> nth=0");
+  await page.click("#calculations .open-meal-day:not(.is-muted) >> nth=0");
   await page.waitForSelector("#timeline .history-meal");
   check(await page.isVisible("#diary-view"), `${name}: a calculation opens its day`);
   await review(page, name);
   const wide = await widerThanScreen(page);
   check(!wide.length, `${name}: the day review fits the screen ${wide.join(" | ")}`);
   await clickNav(page, "analysis");
-  await page.waitForSelector("#calculations tbody tr");
+  await page.waitForSelector("#calculations .open-meal-day");
 }
 
 // Settings (web/ui/settings.js): the model form saves and keeps the value, places can be created,

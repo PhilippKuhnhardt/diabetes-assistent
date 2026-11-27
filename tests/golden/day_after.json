@@ -17,6 +17,7 @@
  "other_events": [],
  "place_options": [],
  "profile_sync_error": null,
+ "quiet_periods": [],
  "review": {
   "blocked": 0,
   "calculated": 0,

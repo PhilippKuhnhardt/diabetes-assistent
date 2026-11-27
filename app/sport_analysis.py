@@ -46,7 +46,8 @@ def raw_factor(result: dict) -> Decimal | None:
 
 
 def analyze(meals: list[dict], exercises: list[dict], lookback_minutes: int,
-            window_minutes: int, labels: dict[str, str]) -> dict:
+            window_minutes: int, labels: dict[str, str], standards: dict[str, Decimal] | None = None,
+            own_sessions: set | None = None) -> dict:
     """Link sport sessions to meals and estimate each meal's sport effect.
 
     meals: {id, day, meal, at, excluded, calculation, sport}
@@ -147,7 +148,7 @@ def analyze(meals: list[dict], exercises: list[dict], lookback_minutes: int,
     for session in rendered_sessions:
         group = by_kind.setdefault(session["kind"] or "", {
             "kind": session["kind"], "label": session["label"], "session_count": 0,
-            "meal_count": 0, "effects": [], "applied": []})
+            "meal_count": 0, "effects": [], "applied": [], "ratios": []})
         group["session_count"] += 1
         for meal in session["meals"]:
             group["meal_count"] += 1
@@ -156,9 +157,14 @@ def analyze(meals: list[dict], exercises: list[dict], lookback_minutes: int,
                 group["effects"].append(Decimal(meal["effect_mgdl"]))
                 if meal["applied_mgdl"] is not None:
                     group["applied"].append(Decimal(meal["applied_mgdl"]))
+                    # Measured ÷ assumed, for sessions on the kind's standard effect only.
+                    if Decimal(meal["applied_mgdl"]) and session["id"] not in (own_sessions or set()):
+                        group["ratios"].append(Decimal(meal["effect_mgdl"]) / Decimal(meal["applied_mgdl"]))
     kinds = []
     for group in by_kind.values():
         effects = group.pop("effects")
+        ratios = group.pop("ratios")
+        group["suggested_drop_mgdl"] = suggested_drop((standards or {}).get(group["kind"]), ratios)
         applied = _median(group.pop("applied"))
         group["median_applied_mgdl"] = str(applied) if applied is not None else None
         median = _median(effects)
@@ -170,3 +176,21 @@ def analyze(meals: list[dict], exercises: list[dict], lookback_minutes: int,
     kinds.sort(key=lambda group: group["label"])
     return {"baselines": baselines, "kinds": kinds, "sessions": rendered_sessions,
             "lookback_minutes": int(lookback_minutes)}
+
+
+SUGGEST_MIN_MEALS = 2
+SUGGEST_MAX_RATIO = Decimal(2)
+
+
+def suggested_drop(standard: Decimal | None, ratios: list[Decimal]) -> str | None:
+    """The kind's standard drop that would have matched what the meals measured (user decision 2026-11-27):
+    the standard scaled by the median of measured ÷ assumed over meals after sessions on the standard,
+    rounded to 5 mg/dL within the settings' −500..500; None without a standard, too few meals or no change.
+    The ratio stays within 0..SUGGEST_MAX_RATIO: meals that went the other way (glucose rose after jogging)
+    say the session did little, not that the kind raises glucose, and a few meals never more than double it."""
+    if not standard or len(ratios) < SUGGEST_MIN_MEALS:
+        return None
+    ratio = max(Decimal(0), min(SUGGEST_MAX_RATIO, _median(ratios)))
+    value = max(Decimal(-500), min(Decimal(500), (Decimal(standard) * ratio / 5).quantize(Decimal(1)) * 5))
+    value = value if value else Decimal(0)  # no "-0"
+    return str(value) if value != Decimal(standard) else None

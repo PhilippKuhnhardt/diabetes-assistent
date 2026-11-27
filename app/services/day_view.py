@@ -16,7 +16,7 @@ from app.common import json_safe, local_day_range, local_zone, parse_instant, zo
 from app.ingestion import nightscout, sync
 from app.services import settings as settings_service
 from app.store import basal_doses as basal_store, config, dishes as dish_store, marks, mirror, places as place_store, results
-from app.analysis.night import night_analysis
+from app.analysis.night import night_analysis, quiet_periods
 from app import i18n
 from app.i18n import tr
 
@@ -373,6 +373,7 @@ def compute_day(day: str) -> dict:
     parsed = date.fromisoformat(day)
     day_bounds = [datetime.combine(parsed + timedelta(days=offset), datetime.min.time(), tzinfo=local)
                   .astimezone(timezone.utc) for offset in (0, 1)]
+    quiet = quiet_periods(day, day_bounds[0], day_bounds[1], treatments, entries, settings, session_minutes)
     return json_safe({
         "day": day, "connected": nightscout.is_configured(),
         "day_start": day_bounds[0], "day_end": day_bounds[1],
@@ -387,6 +388,7 @@ def compute_day(day: str) -> dict:
                    "nightscout_synced": dose["nightscout_synced"]} for dose in basal_doses],
         "basal_sync_error": basal_sync_error,
         "night": night,
+        "quiet_periods": quiet,
         "entries": [{"at": item["at"], "sgv": item["sgv"], "tone": cgm.tone(item["sgv"], item["at"], settings)}
                     for item in entries],
         "target_bands": cgm.target_bands(start, end, settings),

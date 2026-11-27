@@ -392,3 +392,34 @@ class VacationTests(unittest.TestCase):
             self.assertEqual(len(during), 5)
             mixed = factors.meal_points(date(2026, 11, 12), 30, {}, self.PERIODS, mode="separate")
             self.assertEqual(len(mixed), 31)
+
+
+class MissTrendTests(unittest.TestCase):
+    """Analyse → Werte: the miss against the Automatik suggestion, week by week (2026-11-27)."""
+
+    SETTINGS = {"auto_percentile": "37.5", "auto_half_life_days": 7, "auto_lookback_days": 30, "auto_method": "percentile"}
+
+    def points(self, values):
+        # One dinner a day, newest last; Σ[g × KF] = 500, so a factor 0.1 above the suggestion is +5 mg/dL.
+        return [{**point(len(values) - index, value), "carbs_isf": Decimal(500), "carbs_g": Decimal(50)}
+                for index, value in enumerate(values)]
+
+    def test_suggestion_miss_is_the_factor_error_in_mgdl(self):
+        from app.services import summary
+        points = self.points(["1"] * 6 + ["1.4"])
+        suggested, deviation = summary.suggestion_miss(points, points[-1], self.SETTINGS)
+        self.assertEqual(suggested, Decimal(1))
+        self.assertEqual(deviation, Decimal(20))
+        self.assertEqual(summary.suggestion_miss(points, points[2], self.SETTINGS), (None, None))  # < 4 before
+
+    def test_trend_names_a_drift_only_after_three_weeks_the_same_way(self):
+        from app.services import summary
+        rising = [str(1 + Decimal(index) / 20) for index in range(56)]  # the need grows every day
+        trend = summary.miss_trend(self.points(rising), self.SETTINGS, TODAY)
+        self.assertEqual(len(trend["weeks"]), summary.TREND_WEEKS)
+        self.assertEqual(trend["kinds"]["dinner"]["drift"], "up")
+        self.assertIsNone(trend["kinds"]["lunch"]["drift"])
+        self.assertTrue(all(cell["count"] == 0 for cell in trend["kinds"]["lunch"]["weeks"]))
+        steady = summary.miss_trend(self.points(["1"] * 56), self.SETTINGS, TODAY)
+        self.assertIsNone(steady["kinds"]["dinner"]["drift"])
+        self.assertEqual(Decimal(steady["kinds"]["dinner"]["weeks"][-1]["median_deviation_mgdl"]), 0)
