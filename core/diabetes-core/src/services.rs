@@ -169,6 +169,75 @@ fn text(value: Option<Decimal>) -> Value {
     value.map(|v| json!(v.to_string())).unwrap_or(Value::Null)
 }
 
+/// The Automatik factors of `today` as "Wirkt noch" values carb entries with them (factors.carb_factor), and
+/// the place factor of every place switched on for it (factors.place_scales, factors.entry_scale).
+pub(crate) struct Factors<'a> {
+    snapshot: &'a Snapshot,
+    today: NaiveDate,
+    day_type: Option<String>,
+    points: Vec<MealPoint>,
+    predictions: RefCell<HashMap<MealKey, forecast::Prediction>>,
+    pub scales: HashMap<i64, (String, PlaceScale)>,
+}
+
+impl<'a> Factors<'a> {
+    pub fn new(snapshot: &'a Snapshot) -> Factors<'a> {
+        let settings = &snapshot.settings;
+        let today = local_zone(&settings.timezone).local(&snapshot.now).date();
+        let day_type = day_type_for(today, snapshot.day_types.as_ref(), &snapshot.vacation_periods).0;
+        let (percentile, half_life, lookback) = (settings.auto_percentile, settings.auto_half_life_days, settings.auto_lookback_days);
+        let points = snapshot.points(today, lookback);
+        let chosen: Vec<&Place> = snapshot.places.iter().filter(|p| p.adjust).collect();
+        let scales = if chosen.is_empty() { HashMap::new() } else {
+            let place_points = snapshot.points(today, lookback + forecast::PLACE_LOOKBACK_DAYS);
+            chosen.iter().map(|place| (place.id, (place.name.clone(), forecast::place_scale(&place_points, place.id, today, percentile,
+                half_life, lookback, &settings.auto_method, settings.auto_surcharge_mgdl, fat_surcharge(settings))))).collect()
+        };
+        Factors { snapshot, today, day_type, points, predictions: RefCell::new(HashMap::new()), scales }
+    }
+
+    /// The Automatik suggestion of one meal key today.
+    pub fn prediction(&self, key: &MealKey) -> forecast::Prediction {
+        let settings = &self.snapshot.settings;
+        self.predictions.borrow_mut().entry(key.clone()).or_insert_with(|| forecast::predict_method(
+            &self.points, key, self.today, settings.auto_percentile, settings.auto_half_life_days, settings.auto_lookback_days,
+            &settings.auto_method, settings.auto_surcharge_mgdl, fat_surcharge(settings))).clone()
+    }
+
+    /// IE/KE that values a carb entry at `at`: the Automatik factor of its clock-time meal kind, else Nightscout's I:C.
+    pub fn carb_factor(&self, at: Instant) -> Option<Decimal> {
+        let settings = &self.snapshot.settings;
+        let kind = meal_kind(local_zone(&settings.timezone).minute_of_day(&at), settings);
+        let key: MealKey = (kind.to_string(), if kind == "breakfast" { self.day_type.clone() } else { None });
+        self.prediction(&key).units_per_ke
+            .or_else(|| schedule_value_at(at, &settings.ic_schedule, &settings.timezone, ScheduleKey::GramsPerUnit).ok().map(|ratio| dec!(10) / ratio))
+    }
+
+    /// The place factor of the place recorded for a diary entry.
+    pub fn entry_scale(&self, item: &Treatment) -> Option<Decimal> {
+        let place = self.snapshot.entry_places.get(item.event_id.as_deref().unwrap_or_default())?;
+        self.scales.get(place).and_then(|(_, s)| s.scale)
+    }
+
+    /// What still acts now ("Wirkt noch"), as the dose help, warnings and reminders read it.
+    pub fn sources(&self) -> Res<on_board::Found> {
+        let snapshot = self.snapshot;
+        let settings = &snapshot.settings;
+        let carb_factor = |at: Instant| self.carb_factor(at);
+        let entry_scale = |item: &Treatment| self.entry_scale(item);
+        let options = SourceOptions {
+            carb_factor: &carb_factor,
+            surcharge_mgdl: settings.surcharge_method().then_some(settings.auto_surcharge_mgdl),
+            fat_surcharge_mgdl: fat_surcharge(settings), keep_all: false,
+            sport_overrides: snapshot.sport_overrides.iter().filter_map(|(k, v)| decimal_of(v).map(|v| (k.clone(), v))).collect(),
+            sport_minutes_overrides: snapshot.sport_minutes_overrides.iter()
+                .filter_map(|(k, v)| decimal_of(v).map(|v| (k.clone(), v.trunc().try_into().unwrap_or(0)))).collect(),
+            scale: if self.scales.values().any(|(_, s)| s.scale.is_some()) { Some(&entry_scale) } else { None },
+        };
+        on_board::sources(&snapshot.treatments, snapshot.now, settings, &options)
+    }
+}
+
 /// The dose help result for the entry in `snapshot.payload` (the server's /api/entry/preview dose part).
 pub fn dose_help(snapshot: &Snapshot) -> Res<Value> {
     let settings = &snapshot.settings;
@@ -192,47 +261,15 @@ pub fn dose_help(snapshot: &Snapshot) -> Res<Value> {
     let breakfast_median = stats::median(&meal_values);
     let use_factor = is_breakfast && meal_values.len() >= BREAKFAST_FACTOR_MIN_MEALS && breakfast_median.is_some_and(|m| m > Decimal::ZERO);
     let (percentile, half_life, lookback) = (settings.auto_percentile, settings.auto_half_life_days, settings.auto_lookback_days);
-    let points = snapshot.points(today, lookback);
     let method = settings.auto_method.as_str();
-    let (surcharge_mgdl, fat_mgdl) = (settings.auto_surcharge_mgdl, fat_surcharge(settings));
-    let prediction = forecast::predict_method(&points, &key, today, percentile, half_life, lookback, method, surcharge_mgdl, fat_mgdl);
+    let fat_mgdl = fat_surcharge(settings);
+    let factors = Factors::new(snapshot);
+    let prediction = factors.prediction(&key);
     let auto_value = prediction.units_per_ke;
-
-    // Place factor of every place switched on for it.
-    let chosen: Vec<&Place> = snapshot.places.iter().filter(|p| p.adjust).collect();
-    let scales: HashMap<i64, (String, PlaceScale)> = if chosen.is_empty() { HashMap::new() } else {
-        let place_points = snapshot.points(today, lookback + forecast::PLACE_LOOKBACK_DAYS);
-        chosen.iter().map(|place| (place.id, (place.name.clone(), forecast::place_scale(&place_points, place.id, today, percentile,
-            half_life, lookback, method, surcharge_mgdl, fat_mgdl)))).collect()
-    };
-    let place = payload.get("place_id").and_then(Value::as_i64).and_then(|id| scales.get(&id));
+    let place = payload.get("place_id").and_then(Value::as_i64).and_then(|id| factors.scales.get(&id));
     let place_scale = place.and_then(|(_, s)| s.scale).unwrap_or(Decimal::ONE);
-
-    // factors.carb_factor: the Automatik factor of the entry's clock-time meal kind, else Nightscout's I:C.
-    let predictions: RefCell<HashMap<MealKey, Option<Decimal>>> = RefCell::new(HashMap::from([(key.clone(), auto_value)]));
-    let carb_factor = |at: Instant| -> Option<Decimal> {
-        let kind = meal_kind(zone.minute_of_day(&at), settings);
-        let entry_key: MealKey = (kind.to_string(), if kind == "breakfast" { day_type.clone() } else { None });
-        let value = *predictions.borrow_mut().entry(entry_key.clone()).or_insert_with(|| forecast::predict_method(
-            &points, &entry_key, today, percentile, half_life, lookback, method, surcharge_mgdl, fat_mgdl).units_per_ke);
-        value.or_else(|| schedule_value_at(at, &settings.ic_schedule, &settings.timezone, ScheduleKey::GramsPerUnit).ok().map(|ratio| dec!(10) / ratio))
-    };
-    let any_scale = scales.values().any(|(_, s)| s.scale.is_some());
-    let entry_scale = |item: &Treatment| -> Option<Decimal> {
-        let place = snapshot.entry_places.get(item.event_id.as_deref().unwrap_or_default())?;
-        scales.get(place).and_then(|(_, s)| s.scale)
-    };
-    let options = SourceOptions {
-        carb_factor: &carb_factor,
-        surcharge_mgdl: settings.surcharge_method().then_some(surcharge_mgdl),
-        fat_surcharge_mgdl: fat_mgdl, keep_all: false,
-        sport_overrides: snapshot.sport_overrides.iter().filter_map(|(k, v)| decimal_of(v).map(|v| (k.clone(), v))).collect(),
-        sport_minutes_overrides: snapshot.sport_minutes_overrides.iter()
-            .filter_map(|(k, v)| decimal_of(v).map(|v| (k.clone(), v.trunc().try_into().unwrap_or(0)))).collect(),
-        scale: if any_scale { Some(&entry_scale) } else { None },
-    };
     let treatments = &snapshot.treatments;
-    let active: Option<Summary> = on_board::sources(treatments, now, settings, &options).ok().map(|found| on_board::summary(&found, now));
+    let active: Option<Summary> = factors.sources().ok().map(|found| on_board::summary(&found, now));
 
     // The surcharge follows the stomach: this entry gets the share its carbs add to what is in it.
     let surcharge = settings.surcharge_method() && auto_value.is_some();
