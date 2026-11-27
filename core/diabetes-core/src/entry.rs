@@ -11,7 +11,7 @@ use crate::dosing::half_units;
 use crate::episodes::{self, Root};
 use crate::fpe::{self, Estimate};
 use crate::model::{decimal_of, Instant, Settings, Treatment};
-use crate::services::{self, DoseHelp, Snapshot};
+use crate::services::{self, DoseHelp, OnBoardView, Snapshot};
 use crate::split;
 use crate::window;
 use crate::{CoreError, Res};
@@ -19,8 +19,8 @@ use chrono::Duration;
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::{Decimal, RoundingStrategy};
 use rust_decimal_macros::dec;
-use serde::Deserialize;
-use serde_json::{json, Map, Value};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 pub const MODES: [&str; 3] = ["meal", "exercise", "basal"];
 /// fast / slow: the ends of a correction without food after a recent meal; they take the cautious option's place there.
@@ -202,13 +202,32 @@ struct Close {
     active: bool,
 }
 
+/// What the form shows of the assignment: the meal a snack belongs to and the chip that ends that meal.
+#[derive(Clone, Debug, Serialize)]
+pub struct AssignmentView {
+    pub meal: Option<String>,
+    pub at: Option<String>,
+    pub own_meal: &'static str,
+    pub snack: bool,
+    pub own_meal_taken: bool,
+    pub close: Option<CloseView>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct CloseView {
+    pub meal: String,
+    pub at: String,
+    pub end: String,
+    pub active: bool,
+}
+
 impl Assignment {
-    fn view(&self) -> Value {
-        json!({
-            "meal": self.meal, "at": self.at.map(|at| iso(&at)), "own_meal": self.own_meal, "snack": self.snack,
-            "own_meal_taken": self.own_meal_taken,
-            "close": self.close.as_ref().map(|c| json!({"meal": c.meal, "at": iso(&c.at), "end": iso(&c.end), "active": c.active})),
-        })
+    fn view(&self) -> AssignmentView {
+        AssignmentView {
+            meal: self.meal.clone(), at: self.at.map(|at| iso(&at)), own_meal: self.own_meal, snack: self.snack,
+            own_meal_taken: self.own_meal_taken,
+            close: self.close.as_ref().map(|c| CloseView { meal: c.meal.clone(), at: iso(&c.at), end: iso(&c.end), active: c.active }),
+        }
     }
 }
 
@@ -289,8 +308,23 @@ fn fpe_surcharge(form: &Form) -> Option<Estimate> {
     found.filter(|f| fpe::chosen(Some(f), &form.inputs.payload))
 }
 
+/// The split-bolus chip as the form shows it.
+#[derive(Clone, Debug, Serialize)]
+pub struct SplitChip {
+    pub first_percent: i64,
+    pub delay_minutes: i64,
+    /// Present (true) when the calculated fat/protein surcharge is the later part.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fpe: Option<bool>,
+    pub active: bool,
+    pub due_at: String,
+    /// With the calculated surcharge: the later part in IE, whatever total is chosen.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub later_units: Option<Decimal>,
+}
+
 /// The split-bolus chip: offered and preselected for a large or fat/protein main meal; the form can switch it off.
-fn split_chip(form: &Form, assignment: Option<&Assignment>) -> Option<Map<String, Value>> {
+fn split_chip(form: &Form, assignment: Option<&Assignment>) -> Option<SplitChip> {
     let (carbs, at) = (form.carbs.filter(|c| !c.is_zero())?, form.inputs.at?);
     if form.mode != "meal" {
         return None;
@@ -299,19 +333,13 @@ fn split_chip(form: &Form, assignment: Option<&Assignment>) -> Option<Map<String
     // With the calculated surcharge every main meal may split ("carbs now, surcharge later"); the dose drops the
     // split again when the surcharge part stays small.
     let offer = split::offer(carbs, assignment.is_some_and(|a| a.snack), form.settings(), form.flag("fat_protein") || calculated.is_some())?;
-    let mut chip = Map::new();
-    chip.insert("first_percent".into(), json!(offer.first_percent));
-    chip.insert("delay_minutes".into(), json!(offer.delay_minutes));
-    if calculated.is_some() {
-        chip.insert("fpe".into(), json!(true));
-    }
-    chip.insert("active".into(), json!(form.payload("split") != Some(&Value::Bool(false))));
-    chip.insert("due_at".into(), json!(iso(&(at + Duration::minutes(offer.delay_minutes)))));
-    Some(chip)
-}
-
-fn number(value: Option<&Value>) -> Option<Decimal> {
-    value.and_then(decimal_of)
+    Some(SplitChip {
+        first_percent: offer.first_percent, delay_minutes: offer.delay_minutes,
+        fpe: calculated.is_some().then_some(true),
+        active: form.payload("split") != Some(&Value::Bool(false)),
+        due_at: iso(&(at + Duration::minutes(offer.delay_minutes))),
+        later_units: None,
+    })
 }
 
 fn dose_help(snapshot: &Snapshot, payload: Value) -> Res<DoseHelp> {
@@ -320,14 +348,91 @@ fn dose_help(snapshot: &Snapshot, payload: Value) -> Res<DoseHelp> {
     services::dose_help(&snapshot)
 }
 
-fn opt_text(value: Option<Decimal>) -> Value {
-    value.map(|v| json!(v.to_string())).unwrap_or(Value::Null)
+/// One dose option of the form: normal, carbs only, the fast/slow ends of a correction or the planned second
+/// part of a split.
+#[derive(Clone, Debug, Serialize)]
+pub struct DoseOption {
+    pub variant: &'static str,
+    /// IE to inject now (the first part while a split is active).
+    pub units: Decimal,
+    pub expected_mgdl: Option<Decimal>,
+    pub savable: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suggested: Option<bool>,
+    /// Split active: the whole dose, the later part and when it is due.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub full_units: Option<Decimal>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub later_units: Option<Decimal>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub later_at: Option<String>,
+    /// The open second part of a split (variant "split").
+    #[serde(flatten)]
+    pub second_part: Option<SecondPart>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct SecondPart {
+    pub due_at: Instant,
+    pub planned_units: Decimal,
+    pub state: &'static str,
+    pub latest_at: Instant,
+    pub from_forecast: bool,
+}
+
+impl DoseOption {
+    fn new(variant: &'static str, units: Decimal, expected_mgdl: Option<Decimal>) -> DoseOption {
+        DoseOption { variant, units, expected_mgdl, savable: units <= MAX_UNITS, suggested: None, full_units: None,
+                     later_units: None, later_at: None, second_part: None }
+    }
+}
+
+/// The dose slider around the normal dose (correction_scale.dose_range): ends, recommendation, where glucose
+/// likely ends and, for a split meal, how a total is divided.
+#[derive(Clone, Debug, Serialize)]
+pub struct Slider {
+    #[serde(flatten)]
+    pub range: correction_scale::DoseRange,
+    pub expected_mgdl: Option<Decimal>,
+    pub isf_mgdl_per_unit: Option<Decimal>,
+    pub first_percent: Option<i64>,
+    pub later_at: Option<String>,
+    pub later_units: Option<Decimal>,
+}
+
+/// The dose part of the form for today: the dose help with its options resolved for display.
+#[derive(Clone, Debug, Serialize)]
+pub struct DoseView {
+    #[serde(flatten)]
+    pub help: DoseHelp,
+    pub options: Vec<DoseOption>,
+    /// What the adapter hashes into the dose check a tapped suggestion is saved with.
+    pub check_material: Value,
+    pub finger_offer: bool,
+    pub slider: Option<Slider>,
+}
+
+/// The form's dose part: the options, or a message why there are none.
+#[derive(Clone, Debug, Serialize)]
+#[serde(untagged)]
+pub enum Dose {
+    Shown(Box<DoseView>),
+    Message { message: String },
+}
+
+impl Dose {
+    fn view(&self) -> Option<&DoseView> {
+        match self {
+            Dose::Shown(view) => Some(view),
+            Dose::Message { .. } => None,
+        }
+    }
 }
 
 /// The suggestion for today, with its options already resolved for display; `split` is the chip as the dose
 /// leaves it (dropped when the dose is too small to split, re-divided for the calculated surcharge).
-fn dose(form: &Form, assignment: Option<&Assignment>, split: Option<Map<String, Value>>) -> Res<(Map<String, Value>, Option<Map<String, Value>>)> {
-    let message = |text: String| { let mut map = Map::new(); map.insert("message".into(), json!(text)); map };
+fn dose(form: &Form, assignment: Option<&Assignment>, split: Option<SplitChip>) -> Res<(Dose, Option<SplitChip>)> {
+    let message = |text: String| Dose::Message { message: text };
     let Some(carbs) = form.carbs.filter(|_| form.mode == "meal") else { return Ok((message(String::new()), split)) };
     let Some(snapshot) = form.inputs.snapshot.as_ref().filter(|_| form.is_today()) else {
         let text = if carbs > Decimal::ZERO { t("Eine aktuelle Empfehlung gibt es nur für den heutigen Tag.") } else { String::new() };
@@ -355,7 +460,7 @@ fn dose(form: &Form, assignment: Option<&Assignment>, split: Option<Map<String, 
         // The normal dose is too small to split (e.g. shrunk by a low glucose): all of it now, no chip.
         split = None;
     }
-    if let Some(chip) = split.clone().filter(|chip| chip.contains_key("fpe")) {
+    if let Some(chip) = split.clone().filter(|chip| chip.fpe.is_some()) {
         // Calculated surcharge: the carbs (and correction) now, the surcharge later.
         let chosen = fpe_surcharge(form).is_some();
         let minimum = Decimal::from(settings.split_min_grams);
@@ -369,20 +474,19 @@ fn dose(form: &Form, assignment: Option<&Assignment>, split: Option<Map<String, 
             if later < fpe::SPLIT_LATER_MIN_UNITS && carbs < minimum {
                 split = None;
             } else {
-                let full = normal_units;
-                let share = match full { Some(full) if full > Decimal::ZERO => dec!(100) * (full - later) / full, _ => dec!(100) };
-                let mut chip = chip;
-                chip.insert("later_units".into(), json!(later.to_string()));
-                chip.insert("first_percent".into(), json!(share.clamp(Decimal::ZERO, dec!(100))
-                    .round_dp_with_strategy(0, RoundingStrategy::MidpointNearestEven).to_i64().unwrap_or(100)));
-                split = Some(chip);
+                let share = match normal_units { Some(full) if full > Decimal::ZERO => dec!(100) * (full - later) / full, _ => dec!(100) };
+                split = Some(SplitChip {
+                    later_units: Some(later),
+                    first_percent: share.clamp(Decimal::ZERO, dec!(100))
+                        .round_dp_with_strategy(0, RoundingStrategy::MidpointNearestEven).to_i64().unwrap_or(100),
+                    ..chip
+                });
             }
         }
     }
     let scale = help.scale().filter(|_| carbs.is_zero());
-    let active = split.as_ref().filter(|chip| chip.get("active") == Some(&Value::Bool(true)));
-    let mut options: Vec<Map<String, Value>> = Vec::new();
-    let savable = |units: &Value| decimal_of(units).is_some_and(|u| u <= MAX_UNITS);
+    let active = split.as_ref().filter(|chip| chip.active);
+    let mut options: Vec<DoseOption> = Vec::new();
     for variant in DOSE_VARIANTS {
         if variant == "carbs" && !has_carbs {
             continue;
@@ -391,14 +495,7 @@ fn dose(form: &Form, assignment: Option<&Assignment>, split: Option<Map<String, 
             if let Some(scale) = scale {
                 let (units, expected) = if variant == "fast" { (scale.fast_entry_units, scale.fast_expected_glucose_mgdl) }
                                         else { (scale.slow_entry_units, scale.slow_expected_glucose_mgdl) };
-                let units = json!(units.to_string());
-                let mut option = Map::new();
-                option.insert("variant".into(), json!(variant));
-                option.insert("savable".into(), json!(savable(&units)));
-                option.insert("units".into(), units);
-                option.insert("expected_mgdl".into(), json!(expected.to_string()));
-                option.insert("suggested".into(), json!(scale.tempo.as_deref() == Some(variant)));
-                options.push(option);
+                options.push(DoseOption { suggested: Some(scale.tempo.as_deref() == Some(variant)), ..DoseOption::new(variant, units, Some(expected)) });
             }
             continue;
         }
@@ -406,24 +503,19 @@ fn dose(form: &Form, assignment: Option<&Assignment>, split: Option<Map<String, 
             continue; // The slider replaces the cautious target.
         }
         let (units, expected) = if variant == "normal" { (normal_units, normal_expected) } else { help.carbs_only() };
-        let Some(units) = units.map(|u| json!(u.to_string())) else { continue };
-        let mut option = Map::new();
-        option.insert("variant".into(), json!(variant));
-        option.insert("units".into(), units.clone());
-        option.insert("expected_mgdl".into(), opt_text(expected));
+        let Some(units) = units else { continue };
+        let mut option = DoseOption::new(variant, units, expected);
         if let Some(chip) = active {
             // The shown units are the first part; the expected value assumes the planned second part too.
-            let percent = chip["first_percent"].as_i64().unwrap_or(100);
-            let (first, later) = split::parts(decimal_of(&units).unwrap_or_default(), percent, number(chip.get("later_units")));
-            option.insert("units".into(), json!(first.to_string()));
-            option.insert("full_units".into(), units);
-            option.insert("later_units".into(), json!(later.to_string()));
-            option.insert("later_at".into(), chip["due_at"].clone());
+            let (first, later) = split::parts(units, chip.first_percent, chip.later_units);
+            option.units = first;
+            option.full_units = Some(units);
+            option.later_units = Some(later);
+            option.later_at = Some(chip.due_at.clone());
+            option.savable = first <= MAX_UNITS;
         }
-        let ok = savable(&option["units"]);
-        option.insert("savable".into(), json!(ok));
         if let (Some(scale), "normal") = (scale, variant) {
-            option.insert("suggested".into(), json!(scale.tempo.as_deref() == Some("normal")));
+            option.suggested = Some(scale.tempo.as_deref() == Some("normal"));
         }
         options.push(option);
     }
@@ -433,70 +525,75 @@ fn dose(form: &Form, assignment: Option<&Assignment>, split: Option<Map<String, 
         let s = &help.suggestion;
         let forecast_units = s.entry_units;
         let units = forecast_units.unwrap_or(plan.units);
-        let expected = opt_text(s.forecast_mgdl.zip(s.isf_mgdl_per_unit).map(|(forecast, isf)| forecast - units * isf));
-        let mut option = Map::new();
-        option.insert("variant".into(), json!(SPLIT_VARIANT));
-        option.insert("units".into(), json!(units.to_string()));
-        option.insert("due_at".into(), json!(plan.due_at));
-        option.insert("planned_units".into(), json!(plan.units.to_string()));
-        option.insert("state".into(), json!(plan.state));
-        option.insert("latest_at".into(), json!(plan.latest_at));
-        option.insert("from_forecast".into(), json!(forecast_units.is_some()));
-        option.insert("expected_mgdl".into(), expected);
-        option.insert("savable".into(), json!(Decimal::ZERO < units && units <= MAX_UNITS));
-        options.insert(0, option);
+        let expected = s.forecast_mgdl.zip(s.isf_mgdl_per_unit).map(|(forecast, isf)| forecast - units * isf);
+        options.insert(0, DoseOption {
+            savable: Decimal::ZERO < units && units <= MAX_UNITS,
+            second_part: Some(SecondPart { due_at: plan.due_at, planned_units: plan.units, state: plan.state, latest_at: plan.latest_at,
+                                           from_forecast: forecast_units.is_some() }),
+            ..DoseOption::new(SPLIT_VARIANT, units, expected)
+        });
     }
     // Without a fresh CGM value the form offers its field for blood glucose measured by hand.
     let finger_offer = !help.suggestion.glucose_fresh || help.suggestion.glucose_source == Some("finger");
-    let result = match serde_json::to_value(&help).map_err(|error| CoreError::Value(error.to_string()))? {
-        Value::Object(map) => map,
-        _ => Map::new(),
-    };
-    let shown: Vec<Value> = options.iter().map(|o| json!([o.get("variant"), o.get("units"), o.get("later_units")])).collect();
-    let material = json!([DOSE_CHECK_KEYS.iter().map(|key| result.get(*key).cloned().unwrap_or(Value::Null)).collect::<Vec<_>>(), shown]);
+    let fields = serde_json::to_value(&help).map_err(|error| CoreError::Value(error.to_string()))?;
+    let shown: Vec<Value> = options.iter().map(|o| json!([o.variant, o.units.to_string(), o.later_units.map(|u| u.to_string())])).collect();
+    let material = json!([DOSE_CHECK_KEYS.iter().map(|key| fields.get(*key).cloned().unwrap_or(Value::Null)).collect::<Vec<_>>(), shown]);
     let slider = slider(help.suggestion.isf_mgdl_per_unit, &options, carbs, scale, split.as_ref());
-    let mut out = result;
-    out.insert("options".into(), Value::Array(options.into_iter().map(Value::Object).collect()));
-    out.insert("check_material".into(), material);
-    out.insert("finger_offer".into(), json!(finger_offer));
-    out.insert("slider".into(), slider);
-    Ok((out, split))
+    Ok((Dose::Shown(Box::new(DoseView { help, options, check_material: material, finger_offer, slider })), split))
 }
 
-/// The dose slider around the normal dose (correction_scale.dose_range): ends, recommendation, where glucose
-/// likely ends and, for a split meal, how a total is divided.
-fn slider(isf: Option<Decimal>, options: &[Map<String, Value>], carbs: Decimal, scale: Option<&correction_scale::Scale>,
-          split: Option<&Map<String, Value>>) -> Value {
-    let find = |variant: &str| options.iter().find(|o| o["variant"] == variant);
-    let Some(base) = find(SPLIT_VARIANT).or_else(|| find("normal")) else { return Value::Null };
-    let normal = number(base.get("full_units").filter(|v| !v.is_null())).or_else(|| number(base.get("units"))).unwrap_or_default();
+fn slider(isf: Option<Decimal>, options: &[DoseOption], carbs: Decimal, scale: Option<&correction_scale::Scale>,
+          split: Option<&SplitChip>) -> Option<Slider> {
+    let find = |variant: &str| options.iter().find(|o| o.variant == variant);
+    let base = find(SPLIT_VARIANT).or_else(|| find("normal"))?;
+    let normal = base.full_units.unwrap_or(base.units);
     let tempo = scale.and_then(|s| s.tempo.as_deref());
-    let mut out = serde_json::to_value(correction_scale::dose_range(normal, carbs.is_zero(), tempo)).unwrap();
-    let active = split.filter(|chip| chip.get("active") == Some(&Value::Bool(true)));
-    out["expected_mgdl"] = base.get("expected_mgdl").cloned().unwrap_or(Value::Null);
-    out["isf_mgdl_per_unit"] = opt_text(isf);
-    out["first_percent"] = active.map(|c| c["first_percent"].clone()).unwrap_or(Value::Null);
-    out["later_at"] = active.map(|c| c["due_at"].clone()).unwrap_or(Value::Null);
-    // Calculated surcharge: the later part is that surcharge, whatever total is chosen.
-    out["later_units"] = active.and_then(|c| c.get("later_units").cloned()).unwrap_or(Value::Null);
-    out
+    let active = split.filter(|chip| chip.active);
+    Some(Slider {
+        range: correction_scale::dose_range(normal, carbs.is_zero(), tempo),
+        expected_mgdl: base.expected_mgdl,
+        isf_mgdl_per_unit: isf,
+        first_percent: active.map(|c| c.first_percent),
+        later_at: active.map(|c| c.due_at.clone()),
+        // Calculated surcharge: the later part is that surcharge, whatever total is chosen.
+        later_units: active.and_then(|c| c.later_units),
+    })
 }
 
 /// Today's "Wirkt noch" card, whatever the form currently holds.
-fn on_board(form: &Form, dose: &Map<String, Value>) -> Value {
+fn on_board(form: &Form, dose: &Dose) -> Option<OnBoardView> {
     if !form.is_today() {
-        return Value::Null;
+        return None;
     }
-    if let Some(found) = dose.get("on_board") {
-        return found.clone();
+    if let Some(view) = dose.view() {
+        return view.help.on_board.clone();
     }
-    form.inputs.snapshot.as_ref().and_then(|snapshot| dose_help(snapshot, json!({"carbs": "0"})).ok())
-        .and_then(|result| result.on_board).and_then(|card| serde_json::to_value(&card).ok()).unwrap_or(Value::Null)
+    form.inputs.snapshot.as_ref().and_then(|snapshot| dose_help(snapshot, json!({"carbs": "0"})).ok()).and_then(|result| result.on_board)
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct DayTypeView {
+    pub value: Option<String>,
+    pub source: Option<String>,
+}
+
+/// Everything the entry form shows for the values typed so far.
+#[derive(Clone, Debug, Serialize)]
+pub struct Preview {
+    pub day: String,
+    pub assignment: Option<AssignmentView>,
+    pub basal_units: Decimal,
+    /// Asked once, with the day's first meal before breakfast end.
+    pub day_type: Option<DayTypeView>,
+    pub split: Option<SplitChip>,
+    pub place: Value,
+    pub on_board: Option<OnBoardView>,
+    pub dose: Dose,
 }
 
 /// Everything the entry form shows for the values typed so far.
 /// (`carbs` alone: the parsed carbs the adapter needs to decide whether to look up the place chips.)
-pub fn preview(inputs: &Inputs) -> Res<Value> {
+pub fn preview(inputs: &Inputs) -> Res<Preview> {
     let form = Form::new(inputs)?;
     let assignment = assignment(&form);
     // The day type is asked once, with the day's first meal; later it is changed in "Verlauf".
@@ -506,40 +603,77 @@ pub fn preview(inputs: &Inputs) -> Res<Value> {
     let split = split_chip(&form, assignment.as_ref());
     let (dose, split) = dose(&form, assignment.as_ref(), split)?;
     let has_carbs = form.carbs.is_some_and(|c| c > Decimal::ZERO);
-    Ok(json!({
-        "day": inputs.day,
-        "assignment": assignment.as_ref().map(Assignment::view),
-        "basal_units": basal_units(&form).to_string(),
-        "day_type": if day_type_visible { json!({"value": inputs.day_type, "source": inputs.day_type_source}) } else { Value::Null },
-        "split": split,
-        "place": if form.mode == "meal" && has_carbs { inputs.place.clone() } else { Value::Null },
-        "on_board": on_board(&form, &dose),
-        "dose": dose,
-    }))
+    Ok(Preview {
+        day: inputs.day.clone(),
+        assignment: assignment.as_ref().map(Assignment::view),
+        basal_units: basal_units(&form),
+        day_type: day_type_visible.then(|| DayTypeView { value: inputs.day_type.clone(), source: inputs.day_type_source.clone() }),
+        split,
+        place: if form.mode == "meal" && has_carbs { inputs.place.clone() } else { Value::Null },
+        on_board: on_board(&form, &dose),
+        dose,
+    })
 }
 
 /// The tapped option still offers exactly the dose that was shown and is being saved.
-fn same_dose(dose: &Map<String, Value>, payload: &Value, insulin: Decimal) -> bool {
+fn same_dose(dose: Option<&DoseView>, payload: &Value, insulin: Decimal) -> bool {
     let Some(shown) = payload.get("dose_shown").filter(|s| s.is_object()) else { return false };
-    let variant = payload.get("dose_variant");
-    let option = dose.get("options").and_then(Value::as_array)
-        .and_then(|options| options.iter().find(|o| o.get("variant") == variant));
-    let Some(option) = option.filter(|o| o.get("savable") == Some(&Value::Bool(true))) else { return false };
-    fn value(v: Option<&Value>) -> Option<&Value> {
-        v.filter(|v| !v.is_null())
-    }
-    let same = |a: Option<&Value>, b: Option<&Value>| match (value(a), value(b)) {
+    let variant = payload.get("dose_variant").and_then(Value::as_str);
+    let option = dose.and_then(|view| view.options.iter().find(|o| Some(o.variant) == variant));
+    let Some(option) = option.filter(|o| o.savable) else { return false };
+    let shown_value = |key: &str| shown.get(key).filter(|v| !v.is_null()).map(decimal_of);
+    let same = |a: Option<Decimal>, b: Option<Option<Decimal>>| match (a, b) {
         (None, None) => true,
-        (Some(a), Some(b)) => decimal_of(a).is_some() && decimal_of(a) == decimal_of(b),
+        (Some(a), Some(b)) => b == Some(a),
         _ => false,
     };
-    let units = option.get("units");
-    same(units, shown.get("units")) && same(units, Some(&json!(insulin.to_string())))
-        && same(option.get("later_units"), shown.get("later_units"))
+    same(Some(option.units), shown_value("units")) && option.units == insulin && same(option.later_units, shown_value("later_units"))
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct SurchargeMark {
+    pub mgdl: Decimal,
+    pub minutes: i64,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct CloseWindow {
+    pub meal_id: String,
+    pub start: String,
+    pub end: String,
+}
+
+/// What saving the entry stores. A blood glucose value alone is only that check.
+#[derive(Clone, Debug, Serialize)]
+#[serde(untagged)]
+pub enum SavePlan {
+    Finger { carbs: Decimal, insulin: Decimal, finger_mgdl: Option<Decimal>, kind: &'static str, day: String },
+    Entry(Box<EntryPlan>),
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct EntryPlan {
+    pub carbs: Decimal,
+    pub insulin: Decimal,
+    pub finger_mgdl: Option<Decimal>,
+    /// meal, snack, correction or exercise.
+    pub kind: &'static str,
+    pub at: String,
+    pub main_meal: bool,
+    pub basal_units: Decimal,
+    pub sport_drop: Option<Decimal>,
+    pub sport_minutes: Option<i64>,
+    pub split_units: Option<Decimal>,
+    pub split_delay_minutes: Option<i64>,
+    pub fpe_surcharge: Option<SurchargeMark>,
+    pub close: Option<CloseWindow>,
+    pub tapped: bool,
+    pub same_dose: bool,
+    pub check_material: Value,
 }
 
 /// What saving the entry stores, after the same checks the form shows. The adapter writes it.
-pub fn save_plan(inputs: &Inputs) -> Res<Value> {
+pub fn save_plan(inputs: &Inputs) -> Res<SavePlan> {
     let form = Form::new(inputs)?;
     let payload = &inputs.payload;
     let mode = form.mode;
@@ -554,16 +688,12 @@ pub fn save_plan(inputs: &Inputs) -> Res<Value> {
         return Err(invalid(t("Bitte Kohlenhydrate, Insulin oder beides eintragen.")));
     }
     let at = inputs.at.ok_or_else(|| invalid(t("Zeit fehlt")))?;
-    let base = json!({"carbs": carbs.to_string(), "insulin": insulin.to_string(), "finger_mgdl": finger.map(|f| f.to_string())});
     if finger.is_some() && carbs <= Decimal::ZERO && insulin <= Decimal::ZERO {
-        let mut plan = base;
-        plan["kind"] = json!("finger");
-        plan["day"] = json!(local_zone(&inputs.settings.timezone).local(&at).date().to_string());
-        return Ok(plan);
+        return Ok(SavePlan::Finger { carbs, insulin, finger_mgdl: finger, kind: "finger",
+                                     day: local_zone(&inputs.settings.timezone).local(&at).date().to_string() });
     }
     let assignment = assignment(&form);
-    let basal = if payload.get("with_basal").is_some_and(|v| !v.is_null() && v != &json!(false) && v != &json!(0) && v != &json!(""))
-        { basal_units(&form) } else { Decimal::ZERO };
+    let basal = if payload.get("with_basal").is_some_and(crate::wire::truthy) { basal_units(&form) } else { Decimal::ZERO };
     let (sport_drop, sport_minutes) = if mode == "exercise" { (sport_drop(payload)?, sport_minutes(payload)?) } else { (None, None) };
     // A session's own drop is stored only where it differs from its kind's setting.
     let kind_drop = payload.get("sport_kind").and_then(Value::as_str)
@@ -571,13 +701,13 @@ pub fn save_plan(inputs: &Inputs) -> Res<Value> {
     let sport_drop = sport_drop.filter(|drop| *drop != kind_drop);
     let split = if carbs > Decimal::ZERO { split_chip(&form, assignment.as_ref()) } else { None };
     let tapped = payload.get("dose_check").is_some_and(|v| !v.is_null() && v != &json!(""));
-    let split_active = split.as_ref().is_some_and(|chip| chip.get("active") == Some(&Value::Bool(true)));
-    let (dose, split) = if tapped || split_active { dose(&form, assignment.as_ref(), split)? } else { (Map::new(), split) };
+    let split_active = split.as_ref().is_some_and(|chip| chip.active);
+    let (dose, split) = if tapped || split_active { dose(&form, assignment.as_ref(), split)? } else { (Dose::Message { message: String::new() }, split) };
+    let view = dose.view();
     let mut split_units = None;
-    if split.as_ref().is_some_and(|chip| chip.get("active") == Some(&Value::Bool(true))) && form.is_today() {
+    if split.as_ref().is_some_and(|chip| chip.active) && form.is_today() {
         // The second part completes the chosen suggestion (normal unless another was tapped).
-        let options = dose.get("options").and_then(Value::as_array).cloned().unwrap_or_default();
-        let by = |variant: &str| options.iter().find(|o| o["variant"] == variant).cloned();
+        let by = |variant: &str| view.and_then(|v| v.options.iter().find(|o| o.variant == variant));
         let option = payload.get("dose_variant").and_then(Value::as_str).and_then(by).or_else(|| by("normal")).or_else(|| by("carbs"));
         match payload.get("dose_total_units").filter(|v| !v.is_null() && **v != json!("")) {
             Some(total) => {
@@ -587,7 +717,7 @@ pub fn save_plan(inputs: &Inputs) -> Res<Value> {
                 split_units = Some(total - insulin).filter(|later| *later > Decimal::ZERO);
             }
             None => {
-                if let Some(full) = option.as_ref().and_then(|o| number(o.get("full_units").filter(|v| !v.is_null()))) {
+                if let Some(full) = option.and_then(|o| o.full_units) {
                     split_units = Some(full - insulin).filter(|later| *later > Decimal::ZERO);
                 }
             }
@@ -598,21 +728,15 @@ pub fn save_plan(inputs: &Inputs) -> Res<Value> {
         else { "correction" };
     let calculated = if carbs > Decimal::ZERO { fpe_surcharge(&form) } else { None };
     let close = assignment.as_ref().and_then(|a| a.close.as_ref()).filter(|c| carbs > Decimal::ZERO && c.active);
-    let mut plan = base;
-    let extra = json!({
-        "kind": kind, "at": iso(&at),
-        "main_meal": assignment.as_ref().is_some_and(|a| !a.snack),
-        "basal_units": basal.to_string(),
-        "sport_drop": sport_drop.map(|d| d.to_string()), "sport_minutes": sport_minutes,
-        "split_units": split_units.filter(|_| kind == "meal").map(|u| u.to_string()),
-        "split_delay_minutes": split.as_ref().and_then(|chip| chip.get("delay_minutes").cloned()),
-        "fpe_surcharge": calculated.map(|c| json!({"mgdl": c.mgdl.to_string(), "minutes": c.minutes})),
-        "close": close.map(|c| json!({"meal_id": c.meal_id, "start": iso(&c.start), "end": iso(&c.end)})),
-        "tapped": tapped, "same_dose": tapped && same_dose(&dose, payload, insulin),
-        "check_material": dose.get("check_material").cloned().unwrap_or(Value::Null),
-    });
-    if let (Value::Object(plan), Value::Object(extra)) = (&mut plan, extra) {
-        plan.extend(extra);
-    }
-    Ok(plan)
+    Ok(SavePlan::Entry(Box::new(EntryPlan {
+        carbs, insulin, finger_mgdl: finger, kind, at: iso(&at),
+        main_meal: assignment.as_ref().is_some_and(|a| !a.snack),
+        basal_units: basal, sport_drop, sport_minutes,
+        split_units: split_units.filter(|_| kind == "meal"),
+        split_delay_minutes: split.as_ref().map(|chip| chip.delay_minutes),
+        fpe_surcharge: calculated.map(|c| SurchargeMark { mgdl: c.mgdl, minutes: c.minutes }),
+        close: close.map(|c| CloseWindow { meal_id: c.meal_id.clone(), start: iso(&c.start), end: iso(&c.end) }),
+        tapped, same_dose: tapped && same_dose(view, payload, insulin),
+        check_material: view.map(|v| v.check_material.clone()).unwrap_or(Value::Null),
+    })))
 }
