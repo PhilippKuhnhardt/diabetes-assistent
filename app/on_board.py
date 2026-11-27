@@ -31,8 +31,7 @@ from __future__ import annotations
 from app import core
 from datetime import datetime, timedelta
 from decimal import Decimal
-from app import calculation
-from app.calculation import INSULIN_DELAY, INSULIN_DURATION, INSULIN_PEAK, insulin_remaining  # noqa: F401
+from app.calculation import insulin_remaining  # noqa: F401
 
 
 # Stomach: every carb entry reaches the stomach
@@ -74,28 +73,13 @@ def stomach(entries: list[tuple[datetime, Decimal]]) -> list[list[float]]:
 
 def attach_stomach(rows: list[dict]) -> list[dict]:
     """Give each carb row ({"at", "grams"}) its absorption curve from the stomach shared with the others."""
-    if not rows:
-        return rows
-    first = min(row["at"] for row in rows)
-    for row, curve in zip(rows, stomach([(row["at"], row["grams"]) for row in rows])):
-        row["absorbed"], row["origin"] = curve, first
+    core.update_in_place(rows, core.call("on_board.attach_stomach", rows=rows))
     return rows
 
 
 def carb_left(row: dict, moment: datetime) -> Decimal:
     """Share of a carb row not yet absorbed at `moment` (a row without a curve digests alone)."""
-    if "absorbed" not in row:
-        attach_stomach([row])
-    if moment <= row["at"]:
-        return Decimal(1)
-    curve = row["absorbed"]
-    position = float(_minutes(moment, row["origin"]))
-    index = int(position)
-    if index + 1 >= len(curve):
-        done = curve[-1]
-    else:
-        done = curve[index] + (curve[index + 1] - curve[index]) * (position - index)
-    return max(Decimal(0), Decimal(1) - Decimal(str(round(done, 6))))
+    return core.call("on_board.carb_left", row=row, moment=moment)
 
 
 def stomach_grams(treatments: list[dict], now: datetime) -> Decimal:
@@ -115,61 +99,17 @@ def sport_remaining(minutes_after_end: Decimal, duration: Decimal = SPORT_MINUTE
 def sport_minutes(item: dict, settings: dict, overrides: dict | None = None) -> Decimal:
     """Minutes after its end over which a session acts: the user's value for this session, else the
     setting of its kind."""
-    if overrides and item.get("id") in overrides:
-        return Decimal(int(overrides[item["id"]]))
-    return Decimal(int(settings.get("sport_durations_minutes", {}).get(item.get("sport_type"), SPORT_MINUTES)))
+    return core.call("on_board.sport_minutes", item=item, settings=settings, overrides=overrides)
 
 
 def sport_effect(item: dict, settings: dict, overrides: dict | None = None) -> Decimal:
     """A session's glucose drop in mg/dL: the user's value for this session, else the setting of its kind."""
-    if overrides and item.get("id") in overrides:
-        return calculation.dec(overrides[item["id"]])
-    return calculation.dec(settings.get("sport_effects_mgdl", {}).get(item.get("sport_type"), 0))
-
-
-def sport_end(item: dict) -> datetime:
-    return item["at"] + timedelta(minutes=int(item.get("duration") or 0))
+    return core.call("on_board.sport_effect", item=item, settings=settings, overrides=overrides)
 
 
 def sport_share(item: dict, start: datetime, end: datetime, duration: Decimal = SPORT_MINUTES) -> Decimal:
     """Share of a session's effect that acts between start and end."""
-    finish = sport_end(item)
-    return sport_remaining(_minutes(start, finish), duration) - sport_remaining(_minutes(end, finish), duration)
-
-
-def _minutes(later: datetime, earlier: datetime) -> Decimal:
-    return Decimal(str((later - earlier).total_seconds())) / 60
-
-
-def is_main_meal(item: dict) -> bool:
-    return ((item.get("role") == "meal" or item.get("eventType") == "Meal Bolus")
-            and calculation.dec(item.get("carbs") or 0) > 0)
-
-
-def entry_surcharges(carbs: list[dict], treatments: list[dict], now: datetime, surcharge_mgdl: Decimal, surcharge_share,
-                     fat_surcharge_mgdl: Decimal, keep_all: bool, scale=None) -> list[dict]:
-    """The surcharge of each carb entry: the share
-    its carbs add to what is still in the stomach, share(in stomach + carbs) − share(in stomach), of the full
-    surcharge (the configured one, plus the fat surcharge with the entry's fat/protein mark, or the calculated
-    fat/protein surcharge the entry was dosed with, app/fpe.py). So a bite, starter, main and dessert in one entry
-    or in several get the same surcharge in total, capped as one meal, without grouping by time; once the stomach
-    is empty again, the next entry starts afresh. Each part acts linearly from its entry over SURCHARGE_MINUTES
-    (fat/protein SURCHARGE_MINUTES_FAT, calculated: its own minutes). `carbs` are the rows with stomach curves."""
-    rows = []
-    by_id = {item.get("id") or (item["at"], item.get("insulin"), item.get("carbs")): item for item in treatments}
-    for index, row in enumerate(carbs):
-        item = by_id.get(row["key"], {})
-        before = sum((other["grams"] * carb_left(other, row["at"]) for other in carbs[:index]), Decimal(0))
-        own = item.get("surcharge")
-        fat = bool(item.get("fat_protein"))
-        full = calculation.dec(own["mgdl"]) if own else surcharge_mgdl + (fat_surcharge_mgdl if fat else Decimal(0))
-        duration = (Decimal(int(own["minutes"])) if own else SURCHARGE_MINUTES_FAT if fat else SURCHARGE_MINUTES)
-        part = full * (surcharge_share(before + row["grams"]) - surcharge_share(before))
-        place = (scale(item) if scale and item else None) or Decimal(1)
-        age = Decimal(0) if keep_all else _minutes(now, row["at"])
-        if part > 0 and age < duration:
-            rows.append({"at": row["at"], "fat": fat, "minutes": duration, "mgdl": part * place})
-    return rows
+    return core.call("on_board.sport_share", item=item, start=start, end=end, duration=duration)
 
 
 def sources(treatments: list[dict], now: datetime, settings: dict, carb_factor, surcharge_mgdl: Decimal | None,

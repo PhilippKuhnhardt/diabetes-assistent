@@ -7,7 +7,7 @@ import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
-from app import calculation, correction_scale, episodes, fpe, split as split_bolus
+from app import calculation, correction_scale, dosing, episodes, fpe, split as split_bolus
 from app.common import local_zone, parse_instant
 from app.ingestion import nightscout
 from app.services import basal, day_view, diary, dose_help, places, settings as settings_service
@@ -281,7 +281,7 @@ def _dose(context: dict, payload: dict, assignment: dict | None, split: dict | N
     if split and split.get("fpe"):
         # Calculated surcharge: the carbs (and correction) now, the surcharge later.
         chosen = _fpe_surcharge(context, assignment, payload) is not None
-        later = split_bolus.dosing.half_units(Decimal(str(result.get("auto_surcharge_units") or 0))) if chosen else None
+        later = dosing.half_units(Decimal(str(result.get("auto_surcharge_units") or 0))) if chosen else None
         full = result.get(prefix + "entry_units")
         if not chosen:
             # The static surcharge was used after all: the usual rule (carbs, fat mark) decides.

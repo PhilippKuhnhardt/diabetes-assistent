@@ -14,10 +14,8 @@ tertiles: below 1.0 flat, above about 2.0 steep).
 from __future__ import annotations
 
 from app import core
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from app import calculation, on_board
-from app.dosing import half_units
 
 
 FAST_FACTOR, SLOW_FACTOR = Decimal("0.6"), Decimal("1.4")

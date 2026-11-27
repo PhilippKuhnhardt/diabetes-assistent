@@ -294,6 +294,61 @@ pub fn call(name: &str, args: &Value) -> Res<Value> {
         "correction_check.due" => out(correction_check::due(&a.get::<Vec<Reading>>("entries")?, &a.get("found")?,
             &a.get::<Vec<Treatment>>("treatments")?, a.get("now")?)),
 
+        "calculation.is_rapid_insulin" => out(a.get::<Treatment>("treatment")?.is_rapid()),
+        "episodes.carbs_certainty" => out(episodes::carbs_certainty(&a.str("notes"))),
+        "episodes.split_plan" => out(episodes::split_plan(&a.str("notes"))),
+        "episodes.surcharge_plan" => out(episodes::surcharge_plan(&a.str("notes"))),
+        "episodes.least_certain" => {
+            let levels: Vec<Option<String>> = a.get("levels")?;
+            out(episodes::least_certain(levels.iter().flatten().map(String::as_str)))
+        }
+        "on_board.attach_stomach" => {
+            let mut rows: Vec<on_board::CarbRow> = a.get("rows")?;
+            on_board::attach_stomach(&mut rows);
+            out(rows)
+        }
+        "on_board.carb_left" => out(a.get::<on_board::CarbRow>("row")?.left(a.get("moment")?)),
+        "on_board.sport_minutes" => out(on_board::sport_minutes(&a.get::<Treatment>("item")?, &a.get::<Settings>("settings")?,
+            &a.opt::<HashMap<String, Value>>("overrides")?.unwrap_or_default().into_iter()
+                .filter_map(|(k, v)| decimal_of(&v).map(|v| (k, v.trunc().try_into().unwrap_or(0)))).collect())),
+        "on_board.sport_effect" => out(on_board::sport_effect(&a.get::<Treatment>("item")?, &a.get::<Settings>("settings")?,
+            &a.opt::<HashMap<String, Value>>("overrides")?.unwrap_or_default().into_iter()
+                .filter_map(|(k, v)| decimal_of(&v).map(|v| (k, v))).collect())),
+        "on_board.sport_share" => out(on_board::sport_share(&a.get::<Treatment>("item")?, a.get("start")?, a.get("end")?,
+            a.dec_or("duration", on_board::SPORT_MINUTES))),
+        "fpe.chosen" => {
+            let found = a.raw("found");
+            let estimate = (!found.is_null()).then(|| fpe::Estimate {
+                fpe: found.get("fpe").and_then(decimal_of).unwrap_or_default(),
+                mgdl: found.get("mgdl").and_then(decimal_of).unwrap_or_default(),
+                minutes: found.get("minutes").and_then(decimal_of).and_then(|v| v.trunc().try_into().ok()).unwrap_or(0),
+                level: found.get("level").and_then(Value::as_str)
+                    .and_then(|name| fpe::LEVELS.iter().find(|(level, _)| *level == name).map(|(level, _)| *level)),
+            });
+            out(fpe::chosen(estimate.as_ref(), &a.raw("payload")))
+        }
+        "fpe.level_of" => {
+            let minutes = a.raw("surcharge").get("minutes").and_then(decimal_of).and_then(|v| v.trunc().try_into().ok());
+            out(fpe::level_of(minutes, a.bool("fat_mark")))
+        }
+        "fpe.per_fpe_mgdl" => out(a.get::<Settings>("settings")?.fpe_surcharge_mgdl),
+        "forecast.surcharge_units_per_ke" => out(forecast::surcharge_units_per_ke(a.dec_or("grams", Decimal::ZERO),
+            a.dec_or("carbs_isf", Decimal::ONE), a.dec_or("mgdl", forecast::SURCHARGE_MGDL))),
+        "forecast.base_factor" => out(forecast::base_factor(&a.get::<forecast::MealPoint>("point")?, a.dec_or("mgdl", forecast::SURCHARGE_MGDL),
+            a.dec_or("fat_mgdl", Decimal::ZERO))),
+        "forecast.base_history" => out(forecast::base_history(&a.get::<Vec<forecast::MealPoint>>("points")?, &key(&a, "key")?, day(&a, "day")?,
+            a.int_or("lookback", 30), a.dec_or("mgdl", forecast::SURCHARGE_MGDL), a.dec_or("fat_mgdl", Decimal::ZERO))),
+        "forecast.predict_surcharge" => {
+            let values: Vec<(Value, i64)> = a.get("values")?;
+            let values: Vec<(Decimal, i64)> = values.iter().map(|(v, age)| (decimal_of(v).unwrap_or_default(), *age)).collect();
+            out(forecast::predict_surcharge(&values, a.dec_or("percentile", Decimal::ZERO), a.dec_or("half_life", Decimal::ONE),
+                &a.get::<forecast::MealPoint>("target")?, a.dec_or("mgdl", forecast::SURCHARGE_MGDL), a.dec_or("fat_mgdl", Decimal::ZERO)))
+        }
+        "forecast.judge" => {
+            let mut options: Vec<forecast::TuningOption> = a.get("options")?;
+            let verdict = forecast::judge(&mut options);
+            out(json!({"options": options, "verdict": verdict}))
+        }
         "stats.median" => {
             let values: Vec<Value> = a.get("values")?;
             out(stats::median(&values.iter().map(|v| decimal_of(v).unwrap_or_default()).collect::<Vec<_>>()))

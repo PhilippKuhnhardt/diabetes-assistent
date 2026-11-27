@@ -18,7 +18,6 @@ from __future__ import annotations
 from app import core
 from datetime import datetime, timedelta
 from decimal import Decimal
-from app import calculation, dosing, glucose, on_board
 
 
 # A plan stays open this long past its due time, then it is no longer offered.

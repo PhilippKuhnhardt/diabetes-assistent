@@ -62,7 +62,7 @@
   },
   "meals": {
    "rows": 115,
-   "sha256": "e5f5e135a52278d5fa69987b76e5b66f5d334c060a0d0b0abb848f21a3794c05"
+   "sha256": "5a7d954255943d0bdb312562cfd07a786fcbedf091dc33f38e8130997e614e87"
   },
   "treatments": {
    "rows": 149,
@@ -750,7 +750,7 @@
     "meal_isf": "35",
     "place": null,
     "rapid_units": "7.0",
-    "sport_effect_mgdl": "24.0",
+    "sport_effect_mgdl": "24.00",
     "sport_status": "auto",
     "vacation": false,
     "window_end": "2026-09-04T21:20:00+02:00",
@@ -1773,7 +1773,7 @@
     "meal_isf": "35",
     "place": null,
     "rapid_units": "7.5",
-    "sport_effect_mgdl": "-24.0",
+    "sport_effect_mgdl": "-24.00",
     "sport_status": "auto",
     "vacation": false,
     "window_end": "2026-09-15T21:10:00+02:00",
@@ -4175,7 +4175,7 @@
     "meal_isf": "35",
     "place": null,
     "rapid_units": "7.0",
-    "sport_effect_mgdl": "24.0",
+    "sport_effect_mgdl": "24.00",
     "sport_status": "auto",
     "vacation": false,
     "window_end": "2026-09-04T21:20:00+02:00",

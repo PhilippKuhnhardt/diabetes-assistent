@@ -2,11 +2,8 @@
 from __future__ import annotations
 
 from app import core
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from decimal import Decimal
-from app.common import local_zone
-from app import calculation
-from app.i18n import english
 
 
 TREND_WINDOW_MINUTES = Decimal(15)

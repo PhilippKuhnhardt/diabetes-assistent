@@ -7,8 +7,6 @@ EN = {
     "Frühstück oder Morgendosis kommen vor dem Nachtstart drei Stunden nach der letzten Injektion.": "Breakfast or a morning dose comes before the night start three hours after the last injection.",
     "Kohlenhydrate müssen positiv sein": "Carbohydrates must be positive",
     "Ungültiger Sporteffekt": "Invalid exercise effect",
-    "CGM-Werte um den Messzeitpunkt fehlen": "CGM values around the measurement time are missing",
-    "CGM-Lücke am Messzeitpunkt ist zu groß": "CGM gap at the measurement time is too large",
     "Zeitpunkt benötigt eine Zeitzone": "Instant needs a time zone",
     "brauchte {need} ({count} Mahlzeiten)": "needed {need} ({count} meals)",
     "Bitte einen Namen für das Gericht eingeben": "Please enter a name for the dish",

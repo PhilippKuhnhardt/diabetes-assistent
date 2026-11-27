@@ -5273,7 +5273,7 @@
      "ratio_g_per_unit": "7.1577398990766383315091546143",
      "reason": null,
      "settings_version": 1,
-     "sport_effect_mgdl": "24.0",
+     "sport_effect_mgdl": "24.00",
      "start": "2026-09-04T16:20:00+00:00",
      "window_minutes": 180
     },
@@ -5325,12 +5325,12 @@
     },
     "source_id": "t-0025",
     "sport": {
-     "effect_mgdl": "24.0",
+     "effect_mgdl": "24.00",
      "events": [
       {
        "at": "2026-09-04T13:50:00+00:00",
        "effect_from": "2026-09-04T14:50:00+00:00",
-       "effect_mgdl": "24.0",
+       "effect_mgdl": "24.00",
        "effect_until": "2026-09-04T19:50:00+00:00",
        "id": "t-0024",
        "kind": "gym",
@@ -5339,7 +5339,7 @@
      ],
      "status": "auto",
      "suggested": true,
-     "suggested_effect_mgdl": "24.0"
+     "suggested_effect_mgdl": "24.00"
     },
     "vacation": false,
     "window": {
@@ -5495,7 +5495,7 @@
     "sport_rest_mgdl": "16.0",
     "sport_shares": [
      {
-      "effect_mgdl": "24.0",
+      "effect_mgdl": "24.00",
       "meal": "dinner",
       "meal_id": "t-0025"
      }
@@ -14223,7 +14223,7 @@
      "ratio_g_per_unit": "11.055879203400319238872261182",
      "reason": null,
      "settings_version": 1,
-     "sport_effect_mgdl": "-24.0",
+     "sport_effect_mgdl": "-24.00",
      "start": "2026-09-15T16:10:00+00:00",
      "window_minutes": 180
     },
@@ -14275,12 +14275,12 @@
     },
     "source_id": "t-0066",
     "sport": {
-     "effect_mgdl": "-24.0",
+     "effect_mgdl": "-24.00",
      "events": [
       {
        "at": "2026-09-15T13:40:00+00:00",
        "effect_from": "2026-09-15T14:40:00+00:00",
-       "effect_mgdl": "-24.0",
+       "effect_mgdl": "-24.00",
        "effect_until": "2026-09-15T19:40:00+00:00",
        "id": "t-0065",
        "kind": "racing",
@@ -14289,7 +14289,7 @@
      ],
      "status": "auto",
      "suggested": true,
-     "suggested_effect_mgdl": "-24.0"
+     "suggested_effect_mgdl": "-24.00"
     },
     "vacation": false,
     "window": {
@@ -14474,7 +14474,7 @@
       "meal_id": "t-0063"
      },
      {
-      "effect_mgdl": "-24.0",
+      "effect_mgdl": "-24.00",
       "meal": "dinner",
       "meal_id": "t-0066"
      }

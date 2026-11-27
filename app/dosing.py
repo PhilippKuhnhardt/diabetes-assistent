@@ -2,11 +2,8 @@
 from __future__ import annotations
 
 from app import core
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal, ROUND_HALF_UP
-from app import calculation, glucose
-from app.on_board import FORECAST_SPREAD_MGDL
-from app.i18n import tr
+from datetime import datetime
+from decimal import Decimal
 
 
 def half_units(units: Decimal) -> Decimal:

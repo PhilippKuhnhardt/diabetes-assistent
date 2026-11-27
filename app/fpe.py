@@ -38,17 +38,13 @@ def units(fat_g, protein_g) -> Decimal | None:
     return core.call("fpe.units", fat_g=fat_g, protein_g=protein_g)
 
 
-def surcharge_mgdl(fpe: Decimal, per_fpe: Decimal = PER_FPE_MGDL) -> Decimal:
-    return min(MAX_MGDL, per_fpe * fpe)
-
-
 def minutes(fpe: Decimal) -> int:
     """How long the surcharge acts, linearly from the meal start."""
     return core.call("fpe.minutes", fpe=fpe)
 
 
 def per_fpe_mgdl(settings: dict) -> Decimal:
-    return Decimal(str(settings.get("fpe_surcharge_mgdl", PER_FPE_MGDL)))
+    return core.call("fpe.per_fpe_mgdl", settings=settings)
 
 
 def estimate(values: dict | None, settings: dict) -> dict | None:
@@ -62,17 +58,13 @@ def estimate(values: dict | None, settings: dict) -> dict | None:
 def chosen(found: dict | None, payload: dict) -> bool:
     """Whether the dose and the saved entry use the calculated surcharge: always for a level, for the agent's
     grams when the form picked it (surcharge_mode "fpe")."""
-    return found is not None and (found["level"] is not None or payload.get("surcharge_mode") == "fpe")
+    return core.call("fpe.chosen", found=found, payload=payload)
 
 
 def level_of(surcharge: dict | None, fat_mark: bool) -> str:
     """The level a saved entry shows: from its stored surcharge's duration ([DAZ], unique per level), else
     from the former fat mark (fat) or the static surcharge (normal)."""
-    if surcharge:
-        for level, value in LEVELS.items():
-            if int(surcharge["minutes"]) == minutes(value):
-                return level
-    return "fat" if fat_mark else DEFAULT_LEVEL
+    return core.call("fpe.level_of", surcharge=surcharge, fat_mark=fat_mark)
 
 
 def plan(found: dict) -> dict:

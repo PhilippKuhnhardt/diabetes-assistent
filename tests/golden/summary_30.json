@@ -1533,12 +1533,12 @@
      "rapid_units_in_window": "7.5",
      "reason": null,
      "sport": {
-      "effect_mgdl": "-24.0",
+      "effect_mgdl": "-24.00",
       "events": [
        {
         "at": "2026-09-15T13:40:00+00:00",
         "effect_from": "2026-09-15T14:40:00+00:00",
-        "effect_mgdl": "-24.0",
+        "effect_mgdl": "-24.00",
         "effect_until": "2026-09-15T19:40:00+00:00",
         "id": "t-0065",
         "kind": "racing",
@@ -1547,7 +1547,7 @@
       ],
       "status": "auto",
       "suggested": true,
-      "suggested_effect_mgdl": "-24.0"
+      "suggested_effect_mgdl": "-24.00"
      },
      "strong_outlier": false,
      "units_per_ke": "0.9044961342309550915940630212"
@@ -4231,7 +4231,7 @@
       "start": "2026-09-15T10:30:00+00:00"
      },
      {
-      "applied_mgdl": "24.0",
+      "applied_mgdl": "24.00",
       "baseline_units_per_ke": "1.148510821376836441840243077",
       "carbs_total": "75",
       "confirmed_effect_mgdl": null,

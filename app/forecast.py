@@ -83,12 +83,6 @@ def predict(points: list[dict], key: tuple, day: date, percentile: Decimal,
         points=points, key=key, day=day, percentile=percentile, half_life=half_life, lookback=lookback)
 
 
-def predict_from(values: list[tuple[Decimal, int]], percentile: Decimal, half_life: Decimal) -> dict:
-    value = (weighted_quantile([(factor, weight(age, half_life)) for factor, age in values], percentile / 100)
-             if len(values) >= MIN_MEALS else None)
-    return {"count": len(values), "units_per_ke": value if value is not None and value > 0 else None}
-
-
 SURCHARGE = "surcharge"
 SURCHARGE_MGDL = Decimal(40)
 SURCHARGE_FULL_GRAMS = Decimal(40)
@@ -113,37 +107,19 @@ def surcharge_share(grams: Decimal) -> Decimal:
 
 def surcharge_units_per_ke(grams: Decimal, carbs_isf: Decimal, mgdl: Decimal = SURCHARGE_MGDL) -> Decimal:
     """The surcharge expressed in IE/KE of a meal with Σ[g × KF] = carbs_isf."""
-    return 10 * mgdl * surcharge_share(grams) / carbs_isf
-
-
-def meal_surcharge(point: dict, mgdl: Decimal, fat_mgdl: Decimal = Decimal(0)) -> Decimal:
-    """The surcharge of one main meal: the configured one, plus the fat surcharge for a fat/protein meal.
-    Without a surcharge (plain percentile) there is no fat surcharge either. A meal dosed with the calculated
-    fat/protein surcharge (app/fpe.py) carries that one instead (transition phase from 2026-11-19)."""
-    if mgdl and point.get("surcharge_mgdl") is not None:
-        return point["surcharge_mgdl"]
-    return mgdl + fat_mgdl if mgdl and point.get("fat") else mgdl
+    return core.call("forecast.surcharge_units_per_ke", grams=grams, carbs_isf=carbs_isf, mgdl=mgdl)
 
 
 def base_factor(point: dict, mgdl: Decimal = SURCHARGE_MGDL, fat_mgdl: Decimal = Decimal(0)) -> Decimal | None:
     """A meal's factor without its surcharge share; None without carbs or meal size."""
-    grams, carbs_isf = point.get("carbs_g"), point.get("carbs_isf")
-    if not grams or not carbs_isf or carbs_isf <= 0:
-        return None
-    return point["value"] - surcharge_units_per_ke(grams, carbs_isf, meal_surcharge(point, mgdl, fat_mgdl))
+    return core.call("forecast.base_factor", point=point, mgdl=mgdl, fat_mgdl=fat_mgdl)
 
 
 def base_history(points: list[dict], key: tuple, day: date, lookback: int,
                  mgdl: Decimal = SURCHARGE_MGDL, fat_mgdl: Decimal = Decimal(0)) -> list[tuple[Decimal, int]]:
     """(factor without surcharge, age in days) of the same meal key before day."""
-    result = []
-    for point in points:
-        age = (day - point["day"]).days
-        if point["key"] == key and 1 <= age <= lookback and not point.get("own_place"):
-            base = base_factor(point, mgdl, fat_mgdl)
-            if base is not None:
-                result.append((base, age))
-    return result
+    return core.call("forecast.base_history", points=points, key=key, day=day, lookback=lookback, mgdl=mgdl,
+                     fat_mgdl=fat_mgdl)
 
 
 def predict_method(points: list[dict], key: tuple, day: date, percentile: Decimal,
@@ -187,10 +163,8 @@ def day_type_ratios(points: list[dict], today: date, days: int = RATIO_DAYS,
 def predict_surcharge(values: list[tuple[Decimal, int]], percentile: Decimal, half_life: Decimal,
                       target: dict, mgdl: Decimal = SURCHARGE_MGDL, fat_mgdl: Decimal = Decimal(0)) -> Decimal | None:
     """Full factor for the target meal: percentile without surcharge plus the meal's surcharge share."""
-    base = predict_from(values, percentile, half_life)["units_per_ke"]
-    if base is None or not target.get("carbs_g") or not target.get("carbs_isf"):
-        return None
-    return base + surcharge_units_per_ke(target["carbs_g"], target["carbs_isf"], meal_surcharge(target, mgdl, fat_mgdl))
+    return core.call("forecast.predict_surcharge", values=values, percentile=percentile, half_life=half_life,
+                     target=target, mgdl=mgdl, fat_mgdl=fat_mgdl)
 
 
 def backtest(points: list[dict], since: date, variants: list[tuple],
@@ -222,25 +196,10 @@ def judge(options: list[dict]) -> dict:
     below. It is 'better' when it beats the configured option by more than chance; otherwise a
     spread of the lows or highs beyond chance means the setting trades lows against highs ('shift');
     else the setting makes no difference ('none')."""
-    total = options[0]["glucose_count"] if options else 0
-    noise = max(Decimal(NOISE_MEALS), NOISE_SHARE * total)
-    best = None
-    for option in options:
-        option["best"] = False
-        if best is None or (option["in_range"], -option["below"]) > (best["in_range"], -best["below"]):
-            best = option
-    active = next((option for option in options if option["active"]), None)
-    if not total or best is None or active is None:
-        return {"verdict": "none", "noise_meals": noise}
-    best["best"] = True
-    spread = lambda key: max(option[key] for option in options) - min(option[key] for option in options)
-    if best["in_range"] - active["in_range"] > noise:
-        verdict = "better"
-    elif spread("below") > noise or spread("above") > noise:
-        verdict = "shift"
-    else:
-        verdict = "none"
-    return {"verdict": verdict, "noise_meals": noise}
+    result = core.call("forecast.judge", options=options)
+    for option, judged in zip(options, result["options"]):
+        option["best"] = judged["best"]
+    return result["verdict"]
 
 
 def explain(points: list[dict], key: tuple, day: date, lookback: int, half_life: Decimal,

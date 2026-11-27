@@ -130,7 +130,7 @@ class SurchargeTests(unittest.TestCase):
         # 60 g at KF 30: Σ[g × KF] = 1800, the surcharge is 10 × 40 / 1800 IE/KE.
         meal = point(1, "1.2")
         meal.update({"carbs_g": Decimal(60), "carbs_isf": Decimal(1800)})
-        self.assertEqual(forecast.base_factor(meal), Decimal("1.2") - Decimal(400) / Decimal(1800))
+        self.assertAlmostEqual(forecast.base_factor(meal), Decimal("1.2") - Decimal(400) / Decimal(1800), places=20)
         self.assertIsNone(forecast.base_factor(point(1, "1.2")))
 
     def test_backtest_surcharge_column_fits_small_and_large_meals(self):
@@ -148,9 +148,10 @@ class SurchargeTests(unittest.TestCase):
     def test_fat_meals_carry_the_fat_surcharge(self):
         meal = point(1, "1.2")
         meal.update({"carbs_g": Decimal(60), "carbs_isf": Decimal(1800), "fat": True})
-        self.assertEqual(forecast.base_factor(meal, Decimal(80), Decimal(120)), Decimal("1.2") - Decimal(2000) / Decimal(1800))
-        self.assertEqual(forecast.base_factor({**meal, "fat": False}, Decimal(80), Decimal(120)),
-                         Decimal("1.2") - Decimal(800) / Decimal(1800))
+        self.assertAlmostEqual(forecast.base_factor(meal, Decimal(80), Decimal(120)),
+                               Decimal("1.2") - Decimal(2000) / Decimal(1800), places=20)
+        self.assertAlmostEqual(forecast.base_factor({**meal, "fat": False}, Decimal(80), Decimal(120)),
+                               Decimal("1.2") - Decimal(800) / Decimal(1800), places=20)
         # Without a surcharge (plain percentile) there is no fat surcharge either.
         self.assertEqual(forecast.base_factor(meal, Decimal(0), Decimal(120)), Decimal("1.2"))
 
@@ -285,7 +286,7 @@ class TuningTests(unittest.TestCase):
 
     def test_surcharge_amount_is_configurable(self):
         meal = self.sized(1, "1.2")
-        self.assertEqual(forecast.base_factor(meal, Decimal(20)), Decimal("1.2") - Decimal(200) / Decimal(1800))
+        self.assertAlmostEqual(forecast.base_factor(meal, Decimal(20)), Decimal("1.2") - Decimal(200) / Decimal(1800), places=20)
         self.assertEqual(forecast.base_factor(meal, Decimal(0)), Decimal("1.2"))
 
     def test_a_zero_surcharge_variant_is_the_plain_percentile(self):

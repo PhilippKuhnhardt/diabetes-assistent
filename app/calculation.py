@@ -6,12 +6,9 @@ absorption and full dose effect at the endpoint are explicit assumptions.
 from __future__ import annotations
 
 from app import core
-from bisect import bisect_left
 from datetime import datetime, timedelta
 from decimal import Decimal, getcontext
 from app import insulin
-from app.common import local_zone
-from app.i18n import tr
 
 
 getcontext().prec = 28
@@ -47,8 +44,7 @@ def minutes_between(later: datetime, earlier: datetime) -> Decimal:
 
 
 def is_rapid_insulin(treatment: dict) -> bool:
-    return (treatment.get("role") in ("meal", "meal-dose", "correction")
-            or treatment.get("eventType") in ("Meal Bolus", "Correction Bolus", "Snack Bolus", "Bolus"))
+    return core.call("calculation.is_rapid_insulin", treatment=treatment)
 
 
 def interpolate_glucose(entries: list[dict], moment: datetime, max_gap_minutes: int = 15) -> dict:
@@ -56,27 +52,6 @@ def interpolate_glucose(entries: list[dict], moment: datetime, max_gap_minutes: 
     return core.call(
         "calculation.interpolate_glucose",
         entries=entries, moment=moment, max_gap_minutes=max_gap_minutes)
-
-
-def glucose_interpolator(entries: list[dict], max_gap_minutes: int = 15):
-    """interpolate_glucose for many moments over the same readings, sorted only once."""
-    points = sorted((entry["at"], dec(entry["sgv"])) for entry in entries if entry.get("sgv") is not None)
-    times = [at for at, _ in points]
-
-    def at_moment(moment: datetime) -> dict:
-        index = bisect_left(times, moment)
-        if index < len(times) and times[index] == moment:
-            return {"value": points[index][1], "before": moment, "after": moment}
-        if index == 0 or index == len(times):
-            raise ValueError(tr("CGM-Werte um den Messzeitpunkt fehlen"))
-        before, after = points[index - 1], points[index]
-        gap = minutes_between(after[0], before[0])
-        if gap > max_gap_minutes:
-            raise ValueError(tr("CGM-Lücke am Messzeitpunkt ist zu groß"))
-        fraction = minutes_between(moment, before[0]) / gap
-        value = before[1] + (after[1] - before[1]) * fraction
-        return {"value": value, "before": before[0], "after": after[0]}
-    return at_moment
 
 
 def finger_glucose(treatments: list[dict], moment: datetime, max_gap_minutes: int = 15) -> dict | None:

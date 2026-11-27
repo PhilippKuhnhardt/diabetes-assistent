@@ -3,10 +3,8 @@ from __future__ import annotations
 
 from app import core
 import re
-from bisect import bisect_left
 from datetime import datetime, timezone, timedelta
-from decimal import Decimal, InvalidOperation
-from app.common import local_zone
+from decimal import Decimal
 from app.i18n import tr
 
 
@@ -45,13 +43,11 @@ def event_id(item: dict) -> str | None:
 
 
 def carbs_certainty(notes: str) -> str | None:
-    match = CERTAINTY_TAG.search(notes)
-    return match.group(1) if match else None
+    return core.call("episodes.carbs_certainty", notes=notes)
 
 
 def split_plan(notes: str) -> dict | None:
-    match = SPLIT_TAG.search(notes)
-    return {"units": match.group(1), "delay_minutes": int(match.group(2))} if match else None
+    return core.call("episodes.split_plan", notes=notes)
 
 
 def split_tag(units, delay_minutes: int) -> str:
@@ -59,8 +55,7 @@ def split_tag(units, delay_minutes: int) -> str:
 
 
 def surcharge_plan(notes: str) -> dict | None:
-    match = SURCHARGE_TAG.search(notes)
-    return {"mgdl": match.group(1), "minutes": int(match.group(2))} if match else None
+    return core.call("episodes.surcharge_plan", notes=notes)
 
 
 def surcharge_tag(mgdl, minutes: int) -> str:
@@ -68,8 +63,7 @@ def surcharge_tag(mgdl, minutes: int) -> str:
 
 
 def least_certain(levels) -> str | None:
-    marked = [level for level in levels if level in CERTAINTIES]
-    return max(marked, key=CERTAINTIES.index) if marked else None
+    return core.call("episodes.least_certain", levels=list(levels))
 
 
 SPORT_LABELS = {"jogging": "Joggen", "gym": "Gym", "light_cardio": "Leichtes Cardio", "racing": "Rennsport"}
@@ -116,21 +110,6 @@ def normalize_entries(raw: list[dict]) -> list[dict]:
     return core.call("episodes.normalize_entries", raw=raw)
 
 
-def finger_mgdl(item: dict) -> Decimal | None:
-    """A Nightscout BG Check (blood glucose measured by hand) in mg/dL, else None."""
-    if item.get("eventType") != "BG Check":
-        return None
-    try:
-        value = Decimal(str(item.get("glucose")))
-    except (InvalidOperation, ValueError):
-        return None
-    if not value.is_finite() or value <= 0:
-        return None
-    if "mmol" in str(item.get("units") or "").lower():
-        value = (value * Decimal("18.0182")).quantize(Decimal(1))
-    return value
-
-
 def normalize_treatments(raw: list[dict]) -> list[dict]:
     return core.call("episodes.normalize_treatments", raw=raw)
 
@@ -150,27 +129,6 @@ def group_diary_followups(treatments: list[dict], settings: dict) -> None:
     """
     core.update_in_place(treatments, core.call("episodes.group_diary_followups", treatments=treatments,
                                                settings=settings))
-
-
-def classify_diary_entry(item: dict, treatments: list[dict], settings: dict) -> dict | None:
-    """Reclassify one diary main meal in place; return the meal it joins as snack.
-
-    A snack of no meal (its kind is taken, no meal precedes it closely) returns that
-    taken meal marked `free`."""
-    if item.get("eventType") != "Meal Bolus" or float(item.get("carbs") or 0) <= 0:
-        return None
-    notes = item.get("notes") or ""
-    if not EVENT_TAG.search(notes) or item.get("episode_id"):
-        return None
-    others = [other for other in treatments if other is not item]
-    regular = None if "[DA2:meal]" in notes else preceding_meal(item["at"], others, settings)
-    taken = taken_meal(item["at"], others, settings)
-    root = regular or (taken and {**taken, "free": True})
-    if root is None:
-        return None
-    item["eventType"] = "Snack Bolus" if float(item.get("insulin") or 0) > 0 else "Carb Correction"
-    item["notes"] = (notes + " [DA2:snack]").strip()
-    return root
 
 
 def meal_kind_at(at: datetime, settings: dict) -> tuple:

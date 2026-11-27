@@ -28,10 +28,8 @@ carb entry.
 from __future__ import annotations
 
 from app import core
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from app.common import local_zone
-from app import calculation, on_board
 
 
 LOW_MGDL, HIGH_MGDL = Decimal(70), Decimal(250)
