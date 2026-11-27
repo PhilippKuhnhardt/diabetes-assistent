@@ -195,7 +195,7 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
     setPhotos([]);
     setBusy(true);
     try {
-      const data = await api("/api/agent/estimate", { method: "POST", body: JSON.stringify(followUp
+      const data = await api("/api/agent/estimate", { method: "POST", timeout: null, body: JSON.stringify(followUp
         ? { session_id: session, text: words, photos: sending, at, place_id: placeId }
         : { text: words, photos: sending, at, place_id: placeId }) });
       setSession(data.session_id);
@@ -218,7 +218,7 @@ export function MealChat({ info, eventId, sessionId, initialText, previousCarbs,
         if (!blob) { setVoiceStatus(""); return; }
         setVoiceStatus(t("chat.transcribing"));
         try {
-          const data = await api("/api/agent/transcribe", { method: "POST",
+          const data = await api("/api/agent/transcribe", { method: "POST", timeout: null,
             body: JSON.stringify({ audio: await recordingToWav(blob), format: "wav" }) });
           setText(current => (current.trim() ? current.trim() + " " : "") + data.text);
           setVoiceStatus(data.text ? "" : t("chat.notUnderstood"));

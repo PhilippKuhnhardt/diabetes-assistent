@@ -71,6 +71,7 @@ def compute_summary(days: int, today: date) -> dict:
                      "calculations": [], "multi_carb_count": 0, "shortened_count": 0}
               for name in MEALS}
     night_records = []
+    quiet_records = []
     sport_meals = []
     sport_sessions = []
     loaded_days = {}
@@ -78,6 +79,7 @@ def compute_summary(days: int, today: date) -> dict:
         day = (today - timedelta(days=offset)).isoformat()
         payload = loaded_days[day] = day_view.day_payload(day, refresh=False)
         night_records.append(night_record(day, payload))
+        quiet_records.extend({"day": day, **item} for item in payload.get("quiet_periods") or [])
         day_type, _ = marks.day_type_for(day, day_types, vacations)
         sport_sessions.extend(
             {"id": item["id"], "at": item["at"], "duration_minutes": item["duration_minutes"],
@@ -111,21 +113,12 @@ def compute_summary(days: int, today: date) -> dict:
                 "sport": meal.get("sport", {}),
             })
             item = group["calculations"][-1]
-            item["expected_delta_mgdl"] = None
-            item["deviation_mgdl"] = None
-            if (factor_text is not None and settings["ic_schedule"]
-                    and result.get("carb_events") is not None
-                    and result.get("insulin_effect_mgdl") is not None
-                    and result.get("delta_mgdl") is not None):
-                carb_effect = sum((
-                    Decimal(event["carbs"]) * Decimal(event["isf"]) /
-                    calculation.schedule_value_at(
-                        datetime.fromisoformat(event["at"]), settings["ic_schedule"],
-                        settings["timezone"], "grams_per_unit")
-                    for event in result["carb_events"]), Decimal(0))
-                expected = carb_effect - Decimal(result["insulin_effect_mgdl"]) - Decimal(result.get("sport_effect_mgdl", "0"))
-                item["expected_delta_mgdl"] = str(expected)
-                item["deviation_mgdl"] = str(Decimal(result["delta_mgdl"]) - expected)
+            quality = meal.get("quality") or {}
+            item["certainty"] = quality.get("carbs_certainty")
+            item["fast"] = bool(quality.get("fast"))
+            item["dish"] = (meal.get("dish") or {}).get("name")
+            item["expected_delta_mgdl"] = item["deviation_mgdl"] = item["expected_units_per_ke"] = None
+            item["_calculation"] = result
             if factor_text is None:
                 group["blocked_count"] += 1
             else:
@@ -150,10 +143,6 @@ def compute_summary(days: int, today: date) -> dict:
             for item, flag in zip(comparison, flags):
                 item["strong_outlier"] = flag
         group["strong_outlier_count"] = sum(item["strong_outlier"] for item in comparable)
-        # How far the meals ended from what the factor expected (what "Werte" is for, user request 2026-11-26).
-        misses = sorted(abs(Decimal(item["deviation_mgdl"])) for item in comparable
-                        if item["deviation_mgdl"] is not None and not item["excluded"])
-        group["median_abs_deviation_mgdl"] = str(median(misses)) if misses else None
         values = sorted(group.pop("values"))
         ns_values = sorted(group.pop("nightscout_values"))
         group["median_units_per_ke"] = str(median(values)) if values else None
@@ -211,6 +200,8 @@ def compute_summary(days: int, today: date) -> dict:
         _automatik_cache.clear()  # only the latest is ever asked for again
         _automatik_cache[key] = cached
     predictions, suggestion_derivation, day_type_ratio = cached
+    misses = expect_from_automatik(groups, points, settings)
+    trend = miss_trend(points, settings, today)
     for kind in breakfast["by_day_type"]:
         breakfast["by_day_type"][kind]["suggestion"] = factors.suggestion_factor(
             predictions[("breakfast", kind)], configured, surcharge_mgdl)
@@ -226,15 +217,100 @@ def compute_summary(days: int, today: date) -> dict:
                 current.add(Decimal(10) / grams)
         group["nightscout_units_per_ke"] = [str(value) for value in sorted(current)]
     return {
-        "days": days, "groups": groups, "profile_sync_error": profile_sync_error,
+        "days": days, "groups": groups, "misses": misses, "trend": trend, "profile_sync_error": profile_sync_error,
         "suggestion_derivation": json_safe(suggestion_derivation),
         "day_types": day_types is not None,
         "day_type_ratio": json_safe(day_type_ratio),
-        "sport_analysis": sport_analysis.analyze(
-            sport_meals, sport_sessions, settings["sport_lookback_minutes"],
-            settings["window_minutes"], episodes.sport_names(config.get_settings()[1])),
+        "sport_analysis": sport_view(sport_meals, sport_sessions, settings),
         "night": night_overview(night_records, days),
+        "quiet": quiet_overview(quiet_records),
     }
+
+
+def expect_from_automatik(groups: dict, points: list[dict], settings: dict) -> dict:
+    """What each meal was expected to do (user decision 2026-11-27): the glucose change had its factor
+    been the Automatik suggestion that meal would have got from the days before it, with the doses given.
+    Delta = measured − expected = (actual − suggested factor) × Σ[g × KF] / 10, the same factor error the
+    backtest counts. Adds the typical miss per meal kind and per carb certainty and "Schnell" mark."""
+    by_id = {point["id"]: point for point in points}
+    misses = {"certainty": {}, "fast": {}}
+    for group in groups.values():
+        for item in group["calculations"]:
+            result = item.pop("_calculation")
+            point = by_id.get(item["id"])
+            if point is None or result.get("delta_mgdl") is None:
+                continue  # blocked or excluded: no comparison
+            suggested, deviation = suggestion_miss(points, point, settings)
+            if suggested is None:
+                continue  # too few meals before it
+            item["expected_units_per_ke"] = str(suggested)
+            item["expected_delta_mgdl"] = str(Decimal(result["delta_mgdl"]) - deviation)
+            item["deviation_mgdl"] = str(deviation)
+            misses["certainty"].setdefault(item["certainty"] or "none", []).append(deviation)
+            misses["fast"].setdefault("fast" if item["fast"] else "other", []).append(deviation)
+        values = [Decimal(item["deviation_mgdl"]) for item in group["calculations"] if item["deviation_mgdl"] is not None]
+        group.update(miss_stats(values))
+        group["expected_count"] = len(values)
+    return {kind: {level: {"count": len(values), **miss_stats(values)} for level, values in levels.items()}
+            for kind, levels in misses.items()}
+
+
+def suggestion_miss(points: list[dict], point: dict, settings: dict) -> tuple[Decimal | None, Decimal | None]:
+    """The Automatik suggestion a meal would have got from the days before it, and the factor error in
+    mg/dL: (actual − suggested) × Σ[g × KF] / 10 (> 0: the meal ended higher, it needed more)."""
+    if not point.get("carbs_isf"):
+        return None, None
+    percentile, half_life, lookback = factors.forecast_settings(settings)
+    if settings.get("auto_method", "percentile") == forecast.SURCHARGE:
+        mgdl, fat_mgdl = factors.surcharge_mgdl(settings), factors.fat_surcharge_mgdl(settings)
+        values = forecast.base_history(points, point["key"], point["day"], lookback, mgdl, fat_mgdl)
+        suggested = forecast.predict_surcharge(values, percentile, half_life, point, mgdl, fat_mgdl)
+    else:
+        suggested = forecast.predict(points, point["key"], point["day"], percentile, half_life, lookback)["units_per_ke"]
+    if suggested is None:
+        return None, None
+    return suggested, (point["value"] - suggested) * point["carbs_isf"] / 10
+
+
+TREND_WEEKS = 8
+DRIFT_WEEKS = 3
+DRIFT_MGDL = Decimal(20)
+
+
+def miss_trend(points: list[dict], settings: dict, today: date) -> dict:
+    """The miss week by week (user question 2026-11-27: is there a trend the Automatik does not follow
+    fast enough?): per meal kind the median signed miss of each of the last TREND_WEEKS weeks before
+    today, independent of the analysis period like the backtest matrix. `drift` names a direction when
+    the last DRIFT_WEEKS weeks with meals all missed the same way by at least DRIFT_MGDL."""
+    weeks = [{"start": (today - timedelta(days=7 * (index + 1))).isoformat(),
+              "end": (today - timedelta(days=7 * index + 1)).isoformat()} for index in reversed(range(TREND_WEEKS))]
+    buckets: dict[str, list[list[Decimal]]] = {meal: [[] for _ in weeks] for meal in MEALS}
+    for point in points:
+        age = (today - point["day"]).days
+        if not 1 <= age <= 7 * TREND_WEEKS or point.get("own_place") or point["key"][0] not in buckets:
+            continue
+        deviation = suggestion_miss(points, point, settings)[1]
+        if deviation is not None:
+            buckets[point["key"][0]][TREND_WEEKS - 1 - (age - 1) // 7].append(deviation)
+    kinds = {}
+    for meal, columns in buckets.items():
+        cells = [{"count": len(values), **miss_stats(values)} for values in columns]
+        recent = [Decimal(cell["median_deviation_mgdl"]) for cell in cells if cell["count"]][-DRIFT_WEEKS:]
+        drift = None
+        if len(recent) == DRIFT_WEEKS and all(value >= DRIFT_MGDL for value in recent):
+            drift = "up"
+        elif len(recent) == DRIFT_WEEKS and all(value <= -DRIFT_MGDL for value in recent):
+            drift = "down"
+        kinds[meal] = {"weeks": cells, "drift": drift}
+    return {"weeks": weeks, "kinds": kinds}
+
+
+def miss_stats(deviations: list[Decimal]) -> dict:
+    """The typical miss (median of |Delta|) and its direction (median Delta: > 0 ended higher than expected)."""
+    if not deviations:
+        return {"median_abs_deviation_mgdl": None, "median_deviation_mgdl": None}
+    return {"median_abs_deviation_mgdl": str(median(sorted(abs(value) for value in deviations))),
+            "median_deviation_mgdl": str(median(sorted(deviations)))}
 
 
 def night_record(day: str, payload: dict) -> dict:
@@ -245,6 +321,30 @@ def night_record(day: str, payload: dict) -> dict:
     basal = sum((Decimal(str(dose["units"])) for dose in payload.get("basal") or []), Decimal(0))
     return {"day": day, **{key: night.get(key) for key in keys},
             "basal_units": str(basal) if payload.get("basal") else None}
+
+
+def sport_view(meals: list[dict], sessions: list[dict], settings: dict) -> dict:
+    """The sport analysis, with an "Übernehmen" for a kind whose measured effect suggests another standard."""
+    standards = {kind: Decimal(str(value)) for kind, value in settings["sport_effects_mgdl"].items()}
+    result = sport_analysis.analyze(meals, sessions, settings["sport_lookback_minutes"], settings["window_minutes"],
+                                    episodes.sport_names(config.get_settings()[1]), standards,
+                                    set(marks.sport_session_effects()))
+    for group in result["kinds"]:
+        suggested = group["suggested_drop_mgdl"]
+        group["standard_drop_mgdl"] = str(standards[group["kind"]]) if group["kind"] in standards else None
+        group["apply"] = ({"sport_effects_mgdl": {**settings["sport_effects_mgdl"], group["kind"]: suggested}}
+                          if suggested is not None else None)
+    return result
+
+
+def quiet_overview(records: list[dict]) -> dict:
+    """Stretches without bolus and food (night.quiet_periods), newest first, with the median change per
+    hour weighted by nothing: each stretch counts once."""
+    rates = sorted(Decimal(str(item["rate_mgdl_per_hour"])) for item in records)
+    hours = sum((Decimal(str(item["hours"])) for item in records), Decimal(0))
+    return {"count": len(records), "hours": str(hours),
+            "median_rate_mgdl_per_hour": str(median(rates)) if rates else None,
+            "periods": sorted(records, key=lambda item: str(item["start"]), reverse=True)}
 
 
 def night_overview(records: list[dict], days: int) -> dict:

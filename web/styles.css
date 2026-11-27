@@ -1212,3 +1212,77 @@ label textarea { display: block; margin-top: 7px; background: var(--surface); co
 
 /* "Darstellung" in settings (web/ui/theme.js): three equal choices. */
 .entry-switch.theme-switch:has(> :nth-child(3)) { grid-template-columns: repeat(3, 1fr); margin-bottom: 0; }
+
+/* Analyse → Werte (web/ui/analysis.js, redesign 2026-11-27): sub-section tabs, cards in the style of
+   Heute/Verlauf, every row a grid with right-aligned values in fixed columns. */
+.werte { --blue: light-dark(#2b5c9e, #8fb3e6); display: flex; flex-direction: column; gap: 14px; max-width: 760px; }
+.werte-head { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); }
+.werte .section-tabs { display: flex; gap: 20px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.werte .section-tabs button[role="tab"] { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 10px 0; min-height: 44px; color: var(--muted); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.werte .section-tabs button[aria-selected="true"] { color: var(--green); border-bottom-color: var(--green); }
+.period-select select { width: auto; min-height: 36px; padding: 6px 10px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+.werte > .hint { margin: 0; }
+.werte-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.werte-card > header h2 { margin: 0; font-size: 16px; }
+.werte-card > header .hint { margin: 4px 0 0; font-size: 13px; }
+.werte-card > .hint { margin: 0; }
+.werte-sub { margin: 4px 0 -4px; color: var(--muted); font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; }
+.werte .change { font-variant-numeric: tabular-nums; }
+.werte .is-up { color: var(--amber); }
+.werte .is-down { color: var(--blue); }
+.miss-list, .werte-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.miss-row { display: grid; grid-template-columns: 92px minmax(0, 1fr) 64px; align-items: center; gap: 12px; min-height: 48px; padding: 4px 0; }
+.miss-label, .miss-value, .value-text, .meal-miss-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.miss-label b { font-size: 14px; font-weight: 600; }
+.miss-label small, .miss-value small, .value-text small, .meal-miss-text small, .werte-pair small { color: var(--muted); font-size: 12px; }
+.miss-bar { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.werte .meter { display: block; height: 8px; border-radius: 4px; background: var(--green-light); overflow: hidden; }
+.werte .meter > span { display: block; height: 100%; border-radius: 4px; background: var(--green); }
+.werte .meter > span.is-up { background: var(--amber); }
+.werte .meter > span.is-down { background: var(--blue); }
+.tendency { font-size: 12px; color: var(--muted); }
+.miss-value { align-items: flex-end; text-align: right; }
+.miss-value strong { font-size: 18px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.werte-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.werte-pair > div { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; background: var(--canvas); min-width: 0; }
+.werte-pair > div > span { color: var(--muted); font-size: 12px; }
+.werte-pair strong { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.werte-list > li + li { border-top: 1px solid var(--line); }
+.werte button.meal-miss { display: grid; grid-template-columns: minmax(0, 1fr) auto 16px; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 0; border: 0; border-radius: 0; background: none; color: inherit; text-align: left; font-weight: 400; }
+.meal-miss-text b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meal-miss .ui-icon { width: 16px; height: 16px; color: var(--muted); }
+.werte .is-muted { opacity: .6; }
+.werte-cols, .value-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px 64px; gap: 10px; align-items: center; }
+.werte-cols { margin-bottom: -6px; color: var(--muted); font-size: 11px; text-align: right; }
+.werte-cols > span:first-child { text-align: left; }
+.value-row { min-height: 48px; padding: 8px 0; }
+.value-row > strong { text-align: right; font-size: 15px; font-weight: 650; }
+.value-text b { font-size: 14px; font-weight: 600; }
+.show-more-row { padding-top: 10px; }
+.werte button.show-more { width: 100%; min-height: 44px; border-radius: 12px; color: var(--green-dark); }
+.sport-kinds { display: flex; flex-direction: column; }
+.sport-kind { display: flex; flex-direction: column; gap: 10px; padding: 14px 0; border-top: 1px solid var(--line); }
+.sport-kind:first-child { border-top: 0; padding-top: 0; }
+.sport-kind header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.sport-kind header small { color: var(--muted); font-size: 12px; }
+.sport-bar { display: grid; grid-template-columns: 88px minmax(0, 1fr) 52px; gap: 10px; align-items: center; font-size: 13px; }
+.sport-bar > span:first-child { color: var(--muted); }
+.sport-bar strong { text-align: right; font-variant-numeric: tabular-nums; }
+.werte .sport-bar .meter { height: 10px; background: var(--canvas); }
+.werte .sport-apply { width: 100%; min-height: 44px; border-radius: 12px; }
+.trend-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.trend-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; align-items: center; }
+.trend-weeks { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; height: 52px; }
+.trend-week { display: grid; grid-template-rows: 1fr 1fr; background: var(--canvas); border-radius: 4px; overflow: hidden; }
+.trend-up { display: flex; align-items: flex-end; border-bottom: 1px solid light-dark(#9fbfae, #4c6658); }
+.trend-down { display: flex; align-items: flex-start; }
+.trend-week i { display: block; width: 100%; }
+.trend-week i.is-up { background: var(--amber); }
+.trend-week i.is-down { background: var(--blue); }
+.trend-axis { display: flex; justify-content: space-between; margin: -4px 0 0 104px; color: var(--muted); font-size: 11px; }
+/* Connection: no answer from the server, and entries whose save got none (web/ui/unsent.js). */
+.offline-banner { margin: 0 0 16px; }
+.unsent p { margin: 4px 0 8px; }
+.unsent ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.unsent li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
+.unsent-actions { display: flex; gap: 6px; }
