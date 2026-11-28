@@ -541,12 +541,12 @@ struct Automatik {
     misses: HashMap<String, (Option<Decimal>, Option<Decimal>)>,
 }
 
-/// The last Automatik part computed, by its inputs: across the five periods of a background round and
+/// The last Automatik part computed, by its inputs and the call's context: across the five periods of a background round and
 /// across rounds while new readings change no meal factor, it is the same.
 static AUTOMATIK_CACHE: Mutex<Option<(String, std::sync::Arc<Automatik>)>> = Mutex::new(None);
 
 fn automatik(today: NaiveDate, points: &[MealPoint], settings: &Value, configured: &Configured) -> std::sync::Arc<Automatik> {
-    let key = serde_json::to_string(&json!([today.to_string(), settings, to_value(&points)])).unwrap_or_default();
+    let key = serde_json::to_string(&json!([today.to_string(), crate::context::get().fingerprint(), settings, to_value(&points)])).unwrap_or_default();
     if let Some((cached_key, cached)) = AUTOMATIK_CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref() {
         if *cached_key == key {
             return cached.clone();

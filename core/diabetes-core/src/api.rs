@@ -105,29 +105,11 @@ fn method(args: &Args) -> crate::model::AutoMethod {
     crate::model::AutoMethod::parse(&args.str("method")).unwrap_or_default()
 }
 
-/// Set the process context: {"language": "de"|"en", "insulin": "fiasp", "switches": [[instant, zone], ...]}.
-/// An unknown insulin profile is an error (and leaves the context as it was).
-pub fn configure(context_value: &Value) -> Res<()> {
-    if let Some(key) = context_value.get("insulin").and_then(Value::as_str) {
-        context::set_insulin(key).map_err(CoreError::Value)?;
-    }
-    if let Some(language) = context_value.get("language").and_then(Value::as_str) {
-        context::set_language(language);
-    }
-    if let Some(switches) = context_value.get("switches").and_then(Value::as_array) {
-        let parsed = switches.iter().filter_map(|pair| {
-            let at = DateTime::parse_from_rfc3339(pair.get(0)?.as_str()?).ok()?.with_timezone(&Utc);
-            Some((at, pair.get(1)?.as_str().unwrap_or_default().to_string()))
-        }).collect();
-        context::set_switches(parsed);
-    }
-    Ok(())
-}
-
-/// Run one core function on JSON arguments. Decimal numbers come back in their natural form
-/// ("2.5", not "2.50"), whatever scale the arithmetic left them with.
-pub fn call(name: &str, args: &Value) -> Res<Value> {
-    let mut value = dispatch(name, args)?;
+/// Run one core function on JSON arguments with its context (language, insulin profile, travel
+/// switches; see context::Context). Decimal numbers come back in their natural form ("2.5", not
+/// "2.50"), whatever scale the arithmetic left them with.
+pub fn call(name: &str, args: &Value, context: &context::Context) -> Res<Value> {
+    let mut value = context::scope(context, || dispatch(name, args))?;
     natural(&mut value);
     Ok(value)
 }

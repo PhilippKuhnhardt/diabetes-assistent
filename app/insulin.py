@@ -24,10 +24,9 @@ class InsulinProfile:
 def _configured() -> InsulinProfile:
     key = os.environ.get("APP_INSULIN", DEFAULT).strip().lower() or DEFAULT
     try:
-        diabetes_core.configure(json.dumps({"insulin": key}))
+        profile = json.loads(diabetes_core.call("insulin.active", "{}", json.dumps({"insulin": key})))
     except ValueError as error:
         raise SystemExit(f"APP_INSULIN={key!r}: {error}") from None
-    profile = json.loads(diabetes_core.call("insulin.active", "{}"))
     return InsulinProfile(profile["key"], profile["name"])
 
 
