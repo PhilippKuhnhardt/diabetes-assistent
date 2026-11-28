@@ -67,7 +67,7 @@ fn day(args: &Args, name: &str) -> Res<NaiveDate> {
 
 /// Callables of on_board.sources as data.
 fn source_options<'a>(args: &Args, carb_factor: &'a dyn Fn(Instant) -> Option<Decimal>,
-                      scale: Option<&'a dyn Fn(&Treatment) -> Option<Decimal>>) -> Res<on_board::SourceOptions<'a>> {
+                      scale: Option<on_board::EntryScale<'a>>) -> Res<on_board::SourceOptions<'a>> {
     Ok(on_board::SourceOptions {
         carb_factor, scale,
         surcharge_mgdl: args.dec("surcharge_mgdl"),
@@ -94,6 +94,12 @@ fn variants(raw: &Value, surcharge_percentile: Decimal, surcharge_mgdl: Decimal)
         };
         Ok(forecast::Variant { lookback, half_life, percentile, surcharge_mgdl: surcharge })
     }).collect()
+}
+
+/// The configured Automatik strategy of forecast.tuning and forecast.tradeoffs.
+fn configured_variant(args: &Args) -> forecast::Variant {
+    forecast::Variant { lookback: args.int_or("lookback", 30), half_life: args.dec_or("half_life", Decimal::ONE),
+                        percentile: args.dec_or("percentile", Decimal::ZERO), surcharge_mgdl: Some(args.dec_or("surcharge_mgdl", Decimal::ZERO)) }
 }
 
 fn key(args: &Args, name: &str) -> Res<forecast::MealKey> {
@@ -227,7 +233,7 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
                     on_board_value.get("raising_mgdl").and_then(decimal_of).unwrap_or_default())),
                 finger: a.opt("finger")?.unwrap_or_default(), hold_rise: a.bool("hold_rise"),
             };
-            let carbs = a.dec("carbs").ok_or_else(|| CoreError::Arithmetic("[<class 'decimal.ConversionSyntax'>]".into()))?;
+            let carbs = a.dec("carbs").ok_or_else(|| CoreError::Arithmetic("carbs: not a number".into()))?;
             out(dosing::suggest(carbs, &a.get::<Settings>("settings")?, &a.get::<Vec<Reading>>("entries")?,
                 &a.get::<Vec<Treatment>>("treatments")?, a.get("now")?, &options)?)
         }
@@ -295,11 +301,9 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
             out(forecast::backtest(&a.get::<Vec<forecast::MealPoint>>("points")?, day(&a, "since")?, &variants,
                 a.dec_or("target_glucose", Decimal::from(120)), a.dec_or("fat_mgdl", Decimal::ZERO)))
         }
-        "forecast.tuning" => out(forecast::tuning(&a.get::<Vec<forecast::MealPoint>>("points")?, day(&a, "since")?, a.int_or("lookback", 30),
-            a.dec_or("half_life", Decimal::ONE), a.dec_or("percentile", Decimal::ZERO), a.dec_or("surcharge_mgdl", Decimal::ZERO),
+        "forecast.tuning" => out(forecast::tuning(&a.get::<Vec<forecast::MealPoint>>("points")?, day(&a, "since")?, configured_variant(&a),
             a.dec_or("target_glucose", Decimal::from(120)), a.dec_or("fat_mgdl", Decimal::ZERO))),
-        "forecast.tradeoffs" => out(forecast::tradeoffs(&a.get::<Vec<forecast::MealPoint>>("points")?, day(&a, "since")?, a.int_or("lookback", 30),
-            a.dec_or("half_life", Decimal::ONE), a.dec_or("percentile", Decimal::ZERO), a.dec_or("surcharge_mgdl", Decimal::ZERO),
+        "forecast.tradeoffs" => out(forecast::tradeoffs(&a.get::<Vec<forecast::MealPoint>>("points")?, day(&a, "since")?, configured_variant(&a),
             a.dec_or("target_glucose", Decimal::from(120)), a.dec_or("fat_mgdl", Decimal::ZERO))),
         "forecast.explain" => out(forecast::explain(&a.get::<Vec<forecast::MealPoint>>("points")?, &key(&a, "key")?, day(&a, "day")?,
             a.int_or("lookback", 30), a.dec_or("half_life", Decimal::ONE), a.dec_or("percentile", Decimal::ZERO),
@@ -407,8 +411,7 @@ fn dispatch(name: &str, args: &Value) -> Res<Value> {
             &a.get::<Vec<Treatment>>("treatments")?, &a.get("settings")?)),
         "window.preview" => out(crate::window::preview(&a.get("meal")?, &a.get::<Vec<Reading>>("entries")?,
             &a.get::<Vec<Treatment>>("treatments")?, &a.get("settings")?, a.get("start")?, a.get("end")?)),
-        "dishes.typical_carbs" => out(crate::dishes::typical_carbs(&a.get::<Vec<Value>>("carbs")?.iter()
-            .map(|v| v.as_f64().or_else(|| v.as_str().and_then(|t| t.parse().ok()))).collect::<Vec<_>>())),
+        "dishes.typical_carbs" => out(crate::dishes::typical_carbs(&a.get::<Vec<Value>>("carbs")?.iter().map(decimal_of).collect::<Vec<_>>())),
         "dishes.reference_factor" => out(crate::dishes::reference_factor(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, &a.get("meal")?)),
         "dishes.with_ratio" => out(crate::dishes::with_ratio(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, &a.get("meal")?)),
         "dishes.history" => out(crate::dishes::history(&a.get::<Vec<serde_json::Map<String, Value>>>("meals")?, a.get("dish_id")?)),

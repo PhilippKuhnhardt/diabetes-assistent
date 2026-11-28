@@ -120,16 +120,59 @@
   ],
   "$[].id": [
    "int"
+  ],
+  "$[].outcome.ratio": [
+   "float"
+  ],
+  "$[].outcome.ratio_low": [
+   "float"
+  ],
+  "$[].outcome.ratio_high": [
+   "float"
+  ],
+  "$[].history[].ratio": [
+   "float"
+  ],
+  "$[].history[].reference_factor": [
+   "float"
   ]
  },
  "dishes.history": {
   "$[].at": [
    "str"
+  ],
+  "$[].ratio": [
+   "float"
+  ],
+  "$[].reference_factor": [
+   "float"
+  ]
+ },
+ "dishes.outcome": {
+  "$.ratio": [
+   "float"
+  ],
+  "$.ratio_low": [
+   "float"
+  ],
+  "$.ratio_high": [
+   "float"
+  ]
+ },
+ "dishes.reference_factor": {
+  "$": [
+   "float"
   ]
  },
  "dishes.with_ratio": {
   "$.at": [
    "str"
+  ],
+  "$.ratio": [
+   "float"
+  ],
+  "$.reference_factor": [
+   "float"
   ]
  },
  "dosing.half_units": {

@@ -6,7 +6,12 @@
 //! names, categories and descriptions are checked there.
 
 use crate::context::tr;
+use crate::model::decimal_of;
+use crate::stats;
 use chrono::{Duration, NaiveDate};
+use rust_decimal::prelude::ToPrimitive;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 
@@ -22,12 +27,8 @@ pub const HISTORY_ROWS: usize = 12;
 
 type Row = Map<String, Value>;
 
-fn number(value: Option<&Value>) -> Option<f64> {
-    match value? {
-        Value::Number(n) => n.as_f64(),
-        Value::String(text) => text.trim().parse().ok(),
-        _ => None,
-    }
+fn number(value: Option<&Value>) -> Option<Decimal> {
+    value.and_then(decimal_of)
 }
 
 fn text<'a>(row: &'a Row, key: &str) -> &'a str {
@@ -38,42 +39,36 @@ fn excluded(row: &Row) -> bool {
     row.get("excluded").and_then(Value::as_bool).unwrap_or(false)
 }
 
-/// statistics.median of floats.
-fn median(values: &[f64]) -> Option<f64> {
+fn median(values: &[Decimal]) -> Option<Decimal> {
     let mut sorted = values.to_vec();
-    sorted.sort_by(f64::total_cmp);
-    let n = sorted.len();
-    match n {
-        0 => None,
-        _ if n % 2 == 1 => Some(sorted[n / 2]),
-        _ => Some((sorted[n / 2 - 1] + sorted[n / 2]) / 2.0),
-    }
+    sorted.sort();
+    stats::median(&sorted)
 }
 
-/// Python's round(x, digits): the exact value rounded, ties to even.
-fn round_to(value: f64, digits: usize) -> f64 {
-    format!("{value:.digits$}").parse().unwrap_or(value)
+/// To `digits` decimal places, ties to even.
+fn round_to(value: Decimal, digits: u32) -> Decimal {
+    value.round_dp(digits).normalize()
 }
 
-/// Python's round(x): to a whole number, ties to even.
-fn whole(value: f64) -> i64 {
-    value.round_ties_even() as i64
+/// To a whole number, ties to even.
+fn whole(value: Decimal) -> i64 {
+    value.round().to_i64().unwrap_or_default()
 }
 
 /// Carbs a new entry of the dish starts with: the median of its last entries (oldest first).
-pub fn typical_carbs(carbs: &[Option<f64>]) -> Option<i64> {
-    let positive: Vec<f64> = carbs.iter().flatten().copied().filter(|v| *v > 0.0).collect();
+pub fn typical_carbs(carbs: &[Option<Decimal>]) -> Option<i64> {
+    let positive: Vec<Decimal> = carbs.iter().flatten().copied().filter(|v| v.is_sign_positive() && !v.is_zero()).collect();
     let recent = &positive[positive.len().saturating_sub(TYPICAL_ENTRIES)..];
     median(recent).map(whole)
 }
 
 /// The usual factor when the meal was eaten: median factor of the valid, not excluded main meals of its
 /// kind in the REFERENCE_DAYS before its day (the meal itself and its day stay out).
-pub fn reference_factor(meals: &[Row], meal: &Row) -> Option<f64> {
+pub fn reference_factor(meals: &[Row], meal: &Row) -> Option<Decimal> {
     let day = text(meal, "day");
     let first = NaiveDate::parse_from_str(day, "%Y-%m-%d").ok()? - Duration::days(REFERENCE_DAYS);
     let first = first.to_string();
-    let values: Vec<f64> = meals.iter()
+    let values: Vec<Decimal> = meals.iter()
         .filter(|other| other.get("meal") == meal.get("meal") && !excluded(other))
         .filter(|other| first.as_str() <= text(other, "day") && text(other, "day") < day)
         .filter_map(|other| number(other.get("factor"))).collect();
@@ -82,7 +77,7 @@ pub fn reference_factor(meals: &[Row], meal: &Row) -> Option<f64> {
 
 /// The main meal with the usual factor of its kind then and its ratio to it.
 pub fn with_ratio(meals: &[Row], meal: &Row) -> Row {
-    let reference = reference_factor(meals, meal).filter(|r| *r != 0.0);
+    let reference = reference_factor(meals, meal).filter(|r| !r.is_zero());
     let factor = number(meal.get("factor")).filter(|_| !excluded(meal));
     let mut row = meal.clone();
     row.insert("reference_factor".into(), json!(reference.map(|r| round_to(r, 3))));
@@ -99,20 +94,14 @@ pub fn history(meals: &[Row], dish_id: i64) -> Vec<Row> {
 }
 
 /// The middle half of the values (quartiles) from 4 values on, else their range.
-fn spread(values: &[f64]) -> (f64, f64) {
+fn spread(values: &[Decimal]) -> (Decimal, Decimal) {
     let mut ordered = values.to_vec();
-    ordered.sort_by(f64::total_cmp);
+    ordered.sort();
     let n = ordered.len();
     if n < 4 {
         return (ordered[0], ordered[n - 1]);
     }
-    let quantile = |share: f64| {
-        let position = (n - 1) as f64 * share;
-        let low = position as usize;
-        let high = (low + 1).min(n - 1);
-        ordered[low] + (ordered[high] - ordered[low]) * (position - low as f64)
-    };
-    (quantile(0.25), quantile(0.75))
+    (stats::quartile(&ordered, dec!(0.25)), stats::quartile(&ordered, dec!(0.75)))
 }
 
 /// How a dish turned out over its main meals.
@@ -121,9 +110,12 @@ fn spread(values: &[f64]) -> (f64, f64) {
 pub struct Outcome {
     pub meals: usize,
     pub valid: usize,
-    pub ratio: Option<f64>,
-    pub ratio_low: Option<f64>,
-    pub ratio_high: Option<f64>,
+    #[serde(deserialize_with = "crate::model::opt_amount")]
+    pub ratio: Option<Decimal>,
+    #[serde(deserialize_with = "crate::model::opt_amount")]
+    pub ratio_low: Option<Decimal>,
+    #[serde(deserialize_with = "crate::model::opt_amount")]
+    pub ratio_high: Option<Decimal>,
     pub effective_carbs: Option<i64>,
     pub effective_low: Option<i64>,
     pub effective_high: Option<i64>,
@@ -134,8 +126,8 @@ pub struct Outcome {
 /// How a dish turned out over its main meals (history rows): how many, the ratio to the usual factor with
 /// its spread, and the carbs the typical entry behaved like.
 pub fn outcome(rows: &[Row], typical: Option<i64>) -> Outcome {
-    let ratios: Vec<f64> = rows.iter().filter_map(|row| number(row.get("ratio"))).collect();
-    let valid = |key: &str| -> Vec<f64> { rows.iter().filter(|row| !excluded(row)).filter_map(|row| number(row.get(key))).collect() };
+    let ratios: Vec<Decimal> = rows.iter().filter_map(|row| number(row.get("ratio"))).collect();
+    let valid = |key: &str| -> Vec<Decimal> { rows.iter().filter(|row| !excluded(row)).filter_map(|row| number(row.get(key))).collect() };
     let mut result = Outcome {
         meals: rows.len(), valid: ratios.len(),
         delta_mgdl: median(&valid("delta_mgdl")).map(whole), end_mgdl: median(&valid("g_end_mgdl")).map(whole),
@@ -148,7 +140,7 @@ pub fn outcome(rows: &[Row], typical: Option<i64>) -> Outcome {
         result.ratio_low = Some(round_to(low, 2));
         result.ratio_high = Some(round_to(high, 2));
         if let Some(typical) = typical.filter(|t| *t != 0) {
-            let typical = typical as f64;
+            let typical = Decimal::from(typical);
             result.effective_carbs = Some(whole(typical * middle));
             result.effective_low = Some(whole(typical * low));
             result.effective_high = Some(whole(typical * high));
@@ -165,15 +157,13 @@ pub fn hint(count: usize, typical: Option<i64>, result: Option<&Outcome>) -> Str
         parts.push(tr("meist {grams} g", &[("grams", grams.to_string())]));
     }
     if let Some((result, ratio)) = result.and_then(|r| r.ratio.map(|ratio| (r, ratio))) {
-        let percent = whole((ratio - 1.0) * 100.0);
+        let percent = whole((ratio - Decimal::ONE) * dec!(100));
         let need = if percent.abs() < 5 { tr("wie üblich", &[]) }
             else if percent > 0 { tr("{percent} % mehr Insulin als üblich", &[("percent", percent.abs().to_string())]) }
             else { tr("{percent} % weniger Insulin als üblich", &[("percent", percent.abs().to_string())]) };
         let mut line = tr("brauchte {need} ({count} Mahlzeiten)", &[("need", need), ("count", result.valid.to_string())]);
-        if typical.is_some() && percent.abs() >= 5 {
-            // Python prints a missing number as None.
-            let shown = |value: Option<i64>| value.map_or_else(|| "None".to_string(), |v| v.to_string());
-            line += &tr(", verhielt sich wie {low}–{high} g", &[("low", shown(result.effective_low)), ("high", shown(result.effective_high))]);
+        if let Some((low, high)) = result.effective_low.zip(result.effective_high).filter(|_| typical.is_some() && percent.abs() >= 5) {
+            line += &tr(", verhielt sich wie {low}–{high} g", &[("low", low.to_string()), ("high", high.to_string())]);
         }
         parts.push(line);
     }
@@ -213,4 +203,31 @@ pub fn catalogue(meals: &[Row], dish_ids: &[i64], records: &[Row]) -> Vec<Catalo
                 .map(|row| { let mut row = row.clone(); row.remove("dish_id"); row }).collect(),
         }
     }).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn row(value: Value) -> Row {
+        value.as_object().cloned().unwrap()
+    }
+
+    #[test]
+    fn a_dish_that_needed_more_insulin_behaved_like_more_carbs() {
+        let rows: Vec<Row> = ["1.1", "1.2", "1.3"].iter().map(|ratio| row(json!({"ratio": ratio, "delta_mgdl": 10, "g_end_mgdl": 120}))).collect();
+        let result = outcome(&rows, Some(50));
+        assert_eq!((result.ratio, result.ratio_low, result.ratio_high), (Some(dec!(1.2)), Some(dec!(1.1)), Some(dec!(1.3))));
+        assert_eq!((result.effective_carbs, result.effective_low, result.effective_high), (Some(60), Some(55), Some(65)));
+        assert_eq!(hint(3, Some(50), Some(&result)),
+                   "3× eingetragen, meist 50 g, brauchte 20 % mehr Insulin als üblich (3 Mahlzeiten), verhielt sich wie 55–65 g");
+    }
+
+    #[test]
+    fn typical_carbs_are_the_median_of_the_last_five_positive_entries() {
+        let carbs = [Some(dec!(200)), Some(dec!(40)), None, Some(dec!(0)), Some(dec!(50)), Some(dec!(60)), Some(dec!(45)), Some(dec!(55))];
+        assert_eq!(typical_carbs(&carbs), Some(50));
+        assert_eq!(typical_carbs(&[Some(dec!(2.5))]), Some(2));
+        assert_eq!(typical_carbs(&[]), None);
+    }
 }

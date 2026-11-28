@@ -593,7 +593,8 @@ fn compute_automatik(today: NaiveDate, points: &[MealPoint], c: &Configured) -> 
     }).collect();
     mark_best(&mut matrix);
     let active = c.active_surcharge();
-    let tuning: Vec<TuningView> = forecast::tuning(points, since, c.lookback, c.half_life, c.percentile, active, c.target, c.fat_mgdl)
+    let configured = forecast::Variant { lookback: c.lookback, half_life: c.half_life, percentile: c.percentile, surcharge_mgdl: Some(active) };
+    let tuning: Vec<TuningView> = forecast::tuning(points, since, configured, c.target, c.fat_mgdl)
         .into_iter().map(|row| TuningView {
             key: row.key,
             meal_count: row.meal_count,
@@ -611,7 +612,7 @@ fn compute_automatik(today: NaiveDate, points: &[MealPoint], c: &Configured) -> 
             }).collect(),
             verdict: row.verdict,
         }).collect();
-    let tradeoffs = forecast::tradeoffs(points, since, c.lookback, c.half_life, c.percentile, active, c.target, c.fat_mgdl);
+    let tradeoffs = forecast::tradeoffs(points, since, configured, c.target, c.fat_mgdl);
     let mut ages: BTreeSet<i64> = BTreeSet::from([1, c.lookback]);
     for k in [1, 2, 4] {
         ages.insert(i64::try_from((c.half_life * Decimal::from(k)).trunc()).unwrap_or(0));

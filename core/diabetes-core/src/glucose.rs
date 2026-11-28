@@ -36,7 +36,7 @@ pub fn shown(mgdl: Decimal, settings: &Settings, signed: bool) -> String {
 }
 
 /// The target range row in force at the local clock time of `at`.
-pub fn target_at<'a>(at: Instant, settings: &'a Settings) -> Option<&'a TargetRow> {
+pub fn target_at(at: Instant, settings: &Settings) -> Option<&TargetRow> {
     let minute = local_zone(&settings.timezone).minute_of_day(&at);
     settings.target_schedule.iter().filter(|row| row.start_minute <= minute)
         .fold(None, |best: Option<&TargetRow>, row| if best.is_none_or(|b| row.start_minute > b.start_minute) { Some(row) } else { best })

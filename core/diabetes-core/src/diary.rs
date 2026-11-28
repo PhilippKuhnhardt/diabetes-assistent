@@ -165,8 +165,8 @@ pub fn record(inputs: &Inputs) -> Res<DiaryRecord> {
         }
         let mut split = String::new();
         let split_units = payload.get("split_units").filter(|v| !v.is_null());
-        if kind == "meal" && split_units.is_some() {
-            let later = decimal_of(split_units.unwrap());
+        if let Some(split_units) = split_units.filter(|_| kind == "meal") {
+            let later = decimal_of(split_units);
             let delay = amount(payload.get("split_delay_minutes")).and_then(|d| d.trunc().to_i64()).unwrap_or(-1);
             match later {
                 Some(later) if Decimal::ZERO < later && later <= dec!(100) && (30..=300).contains(&delay) =>
