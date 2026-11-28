@@ -50,7 +50,7 @@ pub const FIASP: InsulinProfile = InsulinProfile {
 /// Every profile a deployment can pick with APP_INSULIN.
 pub const PROFILES: [&InsulinProfile; 1] = [&FIASP];
 
-/// The profile the process runs with (context::set_insulin, Fiasp by default).
+/// The profile the running call uses (its context, Fiasp by default).
 pub fn active() -> &'static InsulinProfile {
     crate::context::insulin()
 }
@@ -72,11 +72,5 @@ mod tests {
         let slower = InsulinProfile { key: "slow", name: "Slow", delay_minutes: dec!(15), peak_minutes: dec!(75), duration_minutes: dec!(360) };
         assert!(slower.remaining(dec!(90)) > FIASP.remaining(dec!(90)));
         assert_eq!(slower.remaining(dec!(375)), Decimal::ZERO);
-    }
-
-    #[test]
-    fn unknown_profiles_are_refused() {
-        assert!(crate::context::set_insulin("nope").is_err());
-        assert_eq!(active().key, "fiasp");
     }
 }

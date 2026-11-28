@@ -462,12 +462,16 @@ pub struct TuningRow {
     pub verdict: Verdict,
 }
 
+/// A tuning row's setting: its name, its options, its configured value and the variant for an option.
+type TuningSetting = (&'static str, Vec<Decimal>, Decimal, Box<dyn Fn(Decimal) -> Variant>);
+
 /// One row per setting: every option of it with the others as configured.
-pub fn tuning(points: &[MealPoint], since: NaiveDate, lookback: i64, half_life: Decimal, percentile: Decimal,
-              surcharge_mgdl: Decimal, target_glucose: Decimal, fat_mgdl: Decimal) -> Vec<TuningRow> {
+pub fn tuning(points: &[MealPoint], since: NaiveDate, configured: Variant, target_glucose: Decimal, fat_mgdl: Decimal) -> Vec<TuningRow> {
+    let Variant { lookback, half_life, percentile, .. } = configured;
+    let surcharge_mgdl = configured.surcharge_mgdl.unwrap_or_default();
     let variant = |l: i64, h: Decimal, p: Decimal, s: Decimal| Variant { lookback: l, half_life: h, percentile: p, surcharge_mgdl: Some(s) };
     let lookbacks: Vec<Decimal> = options_of(&LOOKBACKS.map(Decimal::from), Decimal::from(lookback));
-    let rows: Vec<(&'static str, Vec<Decimal>, Decimal, Box<dyn Fn(Decimal) -> Variant>)> = vec![
+    let rows: Vec<TuningSetting> = vec![
         ("percentile", options_of(&TUNING_PERCENTILES, percentile), percentile, Box::new(move |v| variant(lookback, half_life, v, surcharge_mgdl))),
         ("surcharge", options_of(&TUNING_SURCHARGES, surcharge_mgdl), surcharge_mgdl, Box::new(move |v| variant(lookback, half_life, percentile, v))),
         ("half_life", options_of(&HALF_LIVES, half_life), half_life, Box::new(move |v| variant(lookback, v, percentile, surcharge_mgdl))),
@@ -488,10 +492,7 @@ pub fn judge(options: &mut [TuningOption]) -> Verdict {
     let total = options.first().map(|o| o.stats.glucose_count).unwrap_or(0);
     let noise = NOISE_MEALS.max(NOISE_SHARE * Decimal::from(total));
     let mut best: Option<usize> = None;
-    for (index, option) in options.iter_mut().enumerate() {
-        option.best = false;
-        let _ = index;
-    }
+    options.iter_mut().for_each(|option| option.best = false);
     for index in 0..options.len() {
         let rank = |o: &TuningOption| (o.stats.in_range as i64, -(o.stats.below as i64));
         if best.is_none_or(|b| rank(&options[index]) > rank(&options[b])) {
@@ -596,9 +597,10 @@ pub struct Tradeoffs {
 
 /// Every combination of the tuning options on the same meals: the trade-off line holds those no
 /// other one beats on both fewer endpoints below and fewer above the range.
-pub fn tradeoffs(points: &[MealPoint], since: NaiveDate, lookback: i64, half_life: Decimal, percentile: Decimal,
-                 surcharge_mgdl: Decimal, target_glucose: Decimal, fat_mgdl: Decimal) -> Tradeoffs {
-    let configured = Variant { lookback, half_life, percentile, surcharge_mgdl: Some(surcharge_mgdl) };
+pub fn tradeoffs(points: &[MealPoint], since: NaiveDate, configured: Variant, target_glucose: Decimal, fat_mgdl: Decimal) -> Tradeoffs {
+    let Variant { lookback, half_life, percentile, .. } = configured;
+    let surcharge_mgdl = configured.surcharge_mgdl.unwrap_or_default();
+    let configured = Variant { surcharge_mgdl: Some(surcharge_mgdl), ..configured };
     let mut variants = Vec::new();
     for days in options_of(&LOOKBACKS.map(Decimal::from), Decimal::from(lookback)) {
         for strength in options_of(&HALF_LIVES, half_life) {

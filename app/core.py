@@ -24,6 +24,7 @@ _INSTANT = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d(:\d\d(\.\d+)?)?(Z|[+-]\d\d:\d
 _DAY = re.compile(r"^\d{4}-\d\d-\d\d$")
 _NUMBER = re.compile(r"^-?\d+(\.\d+)?([eE][+-]?\d+)?$")
 _context: tuple | None = None
+_context_json = "{}"
 
 
 def encode(value):
@@ -89,21 +90,23 @@ def _decode(value, path: str, types: dict[str, list[str]]):
     return value
 
 
-def _configure() -> None:
-    global _context
+def context() -> str:
+    """What every core call runs with besides its arguments, as JSON: language, insulin profile and the
+    travel switches (core context::Context). Encoded again only when one of them changed."""
+    global _context, _context_json
     from app import i18n, insulin
     from app.store import timezones
-    context = (i18n.LANGUAGE, insulin.ACTIVE.key, timezones.switches())
-    if context != _context:
-        diabetes_core.configure(json.dumps({"language": context[0], "insulin": context[1],
-                                            "switches": [[at.isoformat(), zone] for at, zone in context[2]]}))
-        _context = context
+    current = (i18n.LANGUAGE, insulin.ACTIVE.key, timezones.switches())
+    if current != _context:
+        _context_json = json.dumps({"language": current[0], "insulin": current[1],
+                                    "switches": [[at.isoformat(), zone] for at, zone in current[2]]})
+        _context = current
+    return _context_json
 
 
 def call(name: str, **args):
     """Run `module.function` in the Rust core with the reference's parameter names."""
-    _configure()
-    result = json.loads(diabetes_core.call(name, json.dumps(encode(args))))
+    result = json.loads(diabetes_core.call(name, json.dumps(encode(args)), context()))
     return _decode(result, "$", TYPES.get(name, {}))
 
 

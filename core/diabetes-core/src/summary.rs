@@ -541,12 +541,12 @@ struct Automatik {
     misses: HashMap<String, (Option<Decimal>, Option<Decimal>)>,
 }
 
-/// The last Automatik part computed, by its inputs: across the five periods of a background round and
+/// The last Automatik part computed, by its inputs and the call's context: across the five periods of a background round and
 /// across rounds while new readings change no meal factor, it is the same.
 static AUTOMATIK_CACHE: Mutex<Option<(String, std::sync::Arc<Automatik>)>> = Mutex::new(None);
 
 fn automatik(today: NaiveDate, points: &[MealPoint], settings: &Value, configured: &Configured) -> std::sync::Arc<Automatik> {
-    let key = serde_json::to_string(&json!([today.to_string(), settings, to_value(&points)])).unwrap_or_default();
+    let key = serde_json::to_string(&json!([today.to_string(), crate::context::get().fingerprint(), settings, to_value(&points)])).unwrap_or_default();
     if let Some((cached_key, cached)) = AUTOMATIK_CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref() {
         if *cached_key == key {
             return cached.clone();
@@ -593,7 +593,8 @@ fn compute_automatik(today: NaiveDate, points: &[MealPoint], c: &Configured) -> 
     }).collect();
     mark_best(&mut matrix);
     let active = c.active_surcharge();
-    let tuning: Vec<TuningView> = forecast::tuning(points, since, c.lookback, c.half_life, c.percentile, active, c.target, c.fat_mgdl)
+    let configured = forecast::Variant { lookback: c.lookback, half_life: c.half_life, percentile: c.percentile, surcharge_mgdl: Some(active) };
+    let tuning: Vec<TuningView> = forecast::tuning(points, since, configured, c.target, c.fat_mgdl)
         .into_iter().map(|row| TuningView {
             key: row.key,
             meal_count: row.meal_count,
@@ -611,7 +612,7 @@ fn compute_automatik(today: NaiveDate, points: &[MealPoint], c: &Configured) -> 
             }).collect(),
             verdict: row.verdict,
         }).collect();
-    let tradeoffs = forecast::tradeoffs(points, since, c.lookback, c.half_life, c.percentile, active, c.target, c.fat_mgdl);
+    let tradeoffs = forecast::tradeoffs(points, since, configured, c.target, c.fat_mgdl);
     let mut ages: BTreeSet<i64> = BTreeSet::from([1, c.lookback]);
     for k in [1, 2, 4] {
         ages.insert(i64::try_from((c.half_life * Decimal::from(k)).trunc()).unwrap_or(0));

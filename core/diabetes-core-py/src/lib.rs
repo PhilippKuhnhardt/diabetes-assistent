@@ -1,20 +1,23 @@
 //! Python binding of the calculation core: the server imports it as `app.diabetes_core` and reaches it
-//! only through app/core.py. Arguments and results are JSON text, the same interface as `api::call`;
+//! only through app/core.py. Arguments, context and results are JSON text, the same interface as `api::call`;
 //! the GIL is released while the core computes, so request threads keep answering during a round.
 
 use pyo3::exceptions::{PyArithmeticError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
-/// Run `module.function` on JSON arguments and return the JSON result. A rule error raises
+/// Run `module.function` on JSON arguments with a JSON context ({"language", "insulin", "switches"},
+/// see context::Context) and return the JSON result. A rule error raises
 /// ValueError (ArithmeticError for an arithmetic one), as the former Python modules did. A panic (a bug in
 /// the core) raises RuntimeError, so the server's usual `except Exception` handling sees it instead of
 /// PyO3's PanicException, which derives from BaseException and would end a request or background thread.
 #[pyfunction]
-fn call(py: Python<'_>, name: &str, args: &str) -> PyResult<String> {
+fn call(py: Python<'_>, name: &str, args: &str, context: &str) -> PyResult<String> {
     let outcome = py.detach(|| {
         std::panic::catch_unwind(|| {
             let args: serde_json::Value = serde_json::from_str(args).map_err(|error| core_lib::CoreError::Value(error.to_string()))?;
-            core_lib::api::call(name, &args).map(|value| value.to_string())
+            let context: serde_json::Value = serde_json::from_str(context).map_err(|error| core_lib::CoreError::Value(error.to_string()))?;
+            let context = core_lib::context::Context::from_value(&context)?;
+            core_lib::api::call(name, &args, &context).map(|value| value.to_string())
         })
     });
     let outcome = outcome.map_err(|panic| {
@@ -29,16 +32,8 @@ fn call(py: Python<'_>, name: &str, args: &str) -> PyResult<String> {
     })
 }
 
-/// Set the process context: {"language": "de"|"en", "insulin": "fiasp", "switches": [[instant, zone], ...]}.
-#[pyfunction]
-fn configure(context: &str) -> PyResult<()> {
-    let value = serde_json::from_str(context).map_err(|error| PyValueError::new_err(error.to_string()))?;
-    core_lib::api::configure(&value).map_err(|error| PyValueError::new_err(error.to_string()))
-}
-
 #[pymodule]
 fn diabetes_core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(call, module)?)?;
-    module.add_function(wrap_pyfunction!(configure, module)?)?;
     Ok(())
 }

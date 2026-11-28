@@ -234,8 +234,11 @@ pub struct SourceOptions<'a> {
     pub sport_overrides: HashMap<String, Decimal>,
     pub sport_minutes_overrides: HashMap<String, i64>,
     /// The place factor of an entry (None = 1), for its carbs and surcharge.
-    pub scale: Option<&'a dyn Fn(&Treatment) -> Option<Decimal>>,
+    pub scale: Option<EntryScale<'a>>,
 }
+
+/// The place factor of an entry (factors.entry_scale), None = 1.
+pub type EntryScale<'a> = &'a dyn Fn(&Treatment) -> Option<Decimal>;
 
 fn key_of(item: &Treatment) -> String {
     if item.id.is_empty() { format!("{}|{}|{}", item.at.timestamp_micros(), item.insulin, item.carbs) } else { item.id.clone() }

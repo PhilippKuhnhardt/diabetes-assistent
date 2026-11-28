@@ -950,7 +950,7 @@ fn timeline(snapshot: &Snapshot, treatments: &[Treatment], entries: &[Reading], 
             match reading_at.at(item.at) {
                 Ok(point) => (Some(point.value), Some(item.at)),
                 Err(_) => {
-                    let previous = entries.iter().filter(|point| point.at <= item.at && item.at - point.at <= Duration::minutes(15)).last();
+                    let previous = entries.iter().rfind(|point| point.at <= item.at && item.at - point.at <= Duration::minutes(15));
                     match previous {
                         Some(point) => (point.sgv, Some(point.at)),
                         None => match calculation::finger_glucose(treatments, item.at, 15) {

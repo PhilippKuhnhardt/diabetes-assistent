@@ -27,7 +27,7 @@ through the phone) can link the same crate to compute offline. Python in `app/` 
 | `diary` | a diary entry's Nightscout record and checks, card edits, sport session changes (`services/diary.py`) |
 | `insulin` | rapid-insulin profiles (`APP_INSULIN` picks one, `app/insulin.py` passes the key) |
 | `limits` | input limits shared by the entry form, the card, the sport-session and basal endpoints and MCP |
-| `zone`, `context` | travel time zones (`common.TravelZone`), language of the texts (`app/i18n.py`), active insulin |
+| `zone`, `context` | travel time zones (`common.TravelZone`); the per-call context: language of the texts (`app/i18n.py`), insulin profile, travel switches |
 | `wire` | the JSON shape exchanged with the server (Python isoformat instants, truthiness of loose values) |
 
 The day payload and the analysis page take a whole snapshot each (`day_view.day_snapshot`,
@@ -47,9 +47,12 @@ exactly on the recorded calls. Numbers in JSON results are strings in their natu
 
 ## Interface
 
-One function, JSON in and out: `api::call("module.function", args)` with the reference's parameter
-names; `services.dose_help` takes a whole snapshot (see `services::Snapshot`). `core-call` exposes it
-as a line protocol on stdin/stdout:
+One function, JSON in and out: `api::call("module.function", args, context)` with the reference's
+parameter names; `services.dose_help` takes a whole snapshot (see `services::Snapshot`). The context
+(`context::Context`: language, insulin profile, travel switches) comes with every call and holds only
+for it, so the core keeps no settings between calls; the server builds it in `app/core.py context()`,
+a native app passes it to `core_call(name, args, context)`. `core-call` exposes it as a line protocol on
+stdin/stdout (a line's `context` holds until another line brings one):
 
 ```
 {"fn": "dosing.half_units", "args": {"units": "2.26"}}
